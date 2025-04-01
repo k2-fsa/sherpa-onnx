@@ -159,6 +159,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc
     ./rknn/online-zipformer-ctc-model-rknn.cc
     ./rknn/online-zipformer-transducer-model-rknn.cc
+    ./rknn/silero-vad-model-rknn.cc
     ./rknn/utils.cc
   )
 
@@ -468,6 +469,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+
   add_executable(sherpa-onnx-microphone-offline
     sherpa-onnx-microphone-offline.cc
     microphone.cc
@@ -498,11 +500,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   )
 
   set(exes
-    sherpa-onnx-microphone
     sherpa-onnx-keyword-spotter-microphone
+    sherpa-onnx-microphone
     sherpa-onnx-microphone-offline
-    sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-microphone-offline-audio-tagging
+    sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-with-offline-asr

@@ -7,6 +7,9 @@
 #include <sstream>
 #include <string>
 
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
+
 namespace sherpa_onnx {
 
 void VadModelConfig::Register(ParseOptions *po) {
@@ -26,7 +29,27 @@ void VadModelConfig::Register(ParseOptions *po) {
                "true to display debug information when loading vad models");
 }
 
-bool VadModelConfig::Validate() const { return silero_vad.Validate(); }
+bool VadModelConfig::Validate() const {
+  if (provider != "rknn") {
+    if (!silero_vad.model.empty() && EndsWith(silero_vad.model, ".rknn")) {
+      SHERPA_ONNX_LOGE(
+          "--provider is %s, which is not rknn, but you pass an rknn model "
+          "'%s'",
+          provider.c_str(), silero_vad.model.c_str());
+      return false;
+    }
+  }
+
+  if (provider == "rknn") {
+    if (!silero_vad.model.empty() && EndsWith(silero_vad.model, ".onnx")) {
+      SHERPA_ONNX_LOGE("--provider is rknn, but you pass an onnx model '%s'",
+                       silero_vad.model.c_str());
+      return false;
+    }
+  }
+
+  return silero_vad.Validate();
+}
 
 std::string VadModelConfig::ToString() const {
   std::ostringstream os;
