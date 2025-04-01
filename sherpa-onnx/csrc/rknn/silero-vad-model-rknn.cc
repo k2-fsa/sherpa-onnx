@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/rknn/silero-vad-model-rknn.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,6 +40,8 @@ class SileroVadModelRknn::Impl {
     auto buf = ReadFile(config.silero_vad.model);
     Init(buf.data(), buf.size());
 
+    SetCoreMask(ctx_, config_.num_threads);
+
     if (sample_rate_ != 16000) {
       SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
                        config.sample_rate);
@@ -56,6 +59,8 @@ class SileroVadModelRknn::Impl {
       : config_(config), sample_rate_(config.sample_rate) {
     auto buf = ReadFile(mgr, config.silero_vad.model);
     Init(buf.data(), buf.size());
+
+    SetCoreMask(ctx_, config_.num_threads);
 
     if (sample_rate_ != 16000) {
       SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
@@ -172,80 +177,13 @@ class SileroVadModelRknn::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    auto ret = rknn_init(&ctx_, model_data, model_data_length, 0, nullptr);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to init silero vad model '%s'",
-                           config_.silero_vad.model.c_str());
+    InitContext(model_data, model_data_length, config_.debug, &ctx_);
 
-    if (config_.debug) {
-      rknn_sdk_version v;
-      ret = rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &v, sizeof(v));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get rknn sdk version");
+    InitInputOutputAttrs(ctx_, config_.debug, &input_attrs_, &output_attrs_);
 
-      SHERPA_ONNX_LOGE("sdk api version: %s, driver version: %s", v.api_version,
-                       v.drv_version);
-    }
+    rknn_custom_string custom_string = GetCustomString(ctx_, config_.debug);
 
-    rknn_input_output_num io_num;
-    ret = rknn_query(ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get I/O information for the model");
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("model: %d inputs, %d outputs",
-                       static_cast<int32_t>(io_num.n_input),
-                       static_cast<int32_t>(io_num.n_output));
-    }
-
-    input_attrs_.resize(io_num.n_input);
-    output_attrs_.resize(io_num.n_output);
-
-    int32_t i = 0;
-    for (auto &attr : input_attrs_) {
-      memset(&attr, 0, sizeof(attr));
-      attr.index = i;
-      ret = rknn_query(ctx_, RKNN_QUERY_INPUT_ATTR, &attr, sizeof(attr));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for model input %d", i);
-      i += 1;
-    }
-
-    if (config_.debug) {
-      std::ostringstream os;
-      std::string sep;
-      for (auto &attr : input_attrs_) {
-        os << sep << ToString(attr);
-        sep = "\n";
-      }
-      SHERPA_ONNX_LOGE("\n----------Model inputs info----------\n%s",
-                       os.str().c_str());
-    }
-
-    i = 0;
-    for (auto &attr : output_attrs_) {
-      memset(&attr, 0, sizeof(attr));
-      attr.index = i;
-      ret = rknn_query(ctx_, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for model output %d", i);
-      i += 1;
-    }
-
-    if (config_.debug) {
-      std::ostringstream os;
-      std::string sep;
-      for (auto &attr : output_attrs_) {
-        os << sep << ToString(attr);
-        sep = "\n";
-      }
-      SHERPA_ONNX_LOGE("\n----------Model outputs info----------\n%s",
-                       os.str().c_str());
-    }
-
-    rknn_custom_string custom_string;
-    ret = rknn_query(ctx_, RKNN_QUERY_CUSTOM_STRING, &custom_string,
-                     sizeof(custom_string));
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to read custom string from the model");
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("customs string: %s", custom_string.string);
-    }
-    auto meta = Parse(custom_string);
+    auto meta = Parse(custom_string, config_.debug);
 
     if (config_.silero_vad.window_size != 512) {
       SHERPA_ONNX_LOGE("we require window_size to be 512. Given: %d",
