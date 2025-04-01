@@ -22,18 +22,22 @@
 namespace sherpa_onnx {
 
 std::unique_ptr<VadModel> VadModel::Create(const VadModelConfig &config) {
+#if SHERPA_ONNX_ENABLE_RKNN
   if (config.provider == "rknn") {
     return std::make_unique<SileroVadModelRknn>(config);
   }
+#endif
   return std::make_unique<SileroVadModel>(config);
 }
 
 template <typename Manager>
 std::unique_ptr<VadModel> VadModel::Create(Manager *mgr,
                                            const VadModelConfig &config) {
+#if SHERPA_ONNX_ENABLE_RKNN
   if (config.provider == "rknn") {
     return std::make_unique<SileroVadModelRknn>(mgr, config);
   }
+#endif
   return std::make_unique<SileroVadModel>(mgr, config);
 }
 
