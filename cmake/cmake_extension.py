@@ -62,6 +62,7 @@ def get_binaries():
         "sherpa-onnx-online-punctuation",
         "sherpa-onnx-online-websocket-client",
         "sherpa-onnx-online-websocket-server",
+        "sherpa-onnx-vad",
         "sherpa-onnx-vad-microphone",
         "sherpa-onnx-vad-microphone-offline-asr",
         "sherpa-onnx-vad-with-offline-asr",

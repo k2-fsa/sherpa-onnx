@@ -100,12 +100,11 @@ int32_t main() {
 
   while (!is_eof) {
     if (i + window_size < wave->num_samples) {
-        SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
-            window_size);
-    }
-    else {
-        SherpaOnnxVoiceActivityDetectorFlush(vad);
-        is_eof = 1;
+      SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
+                                                    window_size);
+    } else {
+      SherpaOnnxVoiceActivityDetectorFlush(vad);
+      is_eof = 1;
     }
     while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
       const SherpaOnnxSpeechSegment *segment =
