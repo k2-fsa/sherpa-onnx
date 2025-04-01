@@ -97,10 +97,26 @@ def main():
     h, c = model.get_init_states()
     window_size = 512
     num_windows = samples.shape[0] // window_size
+
     for i in range(num_windows):
         start = i * window_size
         end = start + window_size
+
+        #  print(
+        #      len(probs),
+        #      "at input",
+        #      np.sum(samples[start:end]),
+        #      np.mean(samples[start:end]),
+        #  )
+        #  print("h", np.sum(h), np.mean(h))
+        #  print("c", np.sum(c), np.mean(c))
+
         p, h, c = model(samples[start:end], h, c)
+
+        #  print(len(probs), "at output")
+        #  print("h", np.sum(h), np.mean(h))
+        #  print("c", np.sum(c), np.mean(c))
+
         probs.append(p[0].item())
 
     threshold = 0.5

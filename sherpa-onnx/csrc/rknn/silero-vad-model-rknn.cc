@@ -87,7 +87,7 @@ class SileroVadModelRknn::Impl {
     }
 
     float prob = Run(samples, n);
-    SHERPA_ONNX_LOGE("prob: %.3f", prob);
+    // SHERPA_ONNX_LOGE("prob: %.3f", prob);
 
     float threshold = config_.silero_vad.threshold;
 
@@ -343,13 +343,13 @@ class SileroVadModelRknn::Impl {
   }
 
   float Run(const float *samples, int32_t n) {
-    {
-      float sum = 0;
-      for (int32_t i = 0; i < n; ++i) {
-        sum += samples[i];
-      }
-      SHERPA_ONNX_LOGE("sum samples: %.3f, %.3f", sum, sum / n);
-    }
+    // {
+    //   float sum = 0;
+    //   for (int32_t i = 0; i < n; ++i) {
+    //     sum += samples[i];
+    //   }
+    //   SHERPA_ONNX_LOGE("sum samples: %.3f, %.3f", sum, sum / n);
+    // }
 
     std::vector<rknn_input> inputs(input_attrs_.size());
 
@@ -379,8 +379,8 @@ class SileroVadModelRknn::Impl {
     }
 
     std::vector<float> out(output_attrs_[0].n_elems);
-    SHERPA_ONNX_LOGE("at input, out size: %d", (int)out.size());
-    ComputeStatesSum();
+    // SHERPA_ONNX_LOGE("at input, out size: %d", (int)out.size());
+    // ComputeStatesSum();
 
     auto &next_states = states_;
 
@@ -420,8 +420,8 @@ class SileroVadModelRknn::Impl {
     ret = rknn_outputs_get(ctx_, outputs.size(), outputs.data(), nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get model output");
 
-    SHERPA_ONNX_LOGE("at output");
-    ComputeStatesSum();
+    // SHERPA_ONNX_LOGE("at output");
+    // ComputeStatesSum();
 
     return out[0];
   }

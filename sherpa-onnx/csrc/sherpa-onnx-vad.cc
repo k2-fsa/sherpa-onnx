@@ -78,7 +78,6 @@ input.wav should be 16kHz.
   bool is_eof = false;
 
   std::vector<float> samples_without_silence;
-  int32_t k = 0;
 
   while (!is_eof) {
     if (i + window_size < samples.size()) {
@@ -87,10 +86,6 @@ input.wav should be 16kHz.
     } else {
       vad->Flush();
       is_eof = true;
-    }
-    k += 1;
-    if (k > 10) {
-      break;
     }
 
     while (!vad->Empty()) {
