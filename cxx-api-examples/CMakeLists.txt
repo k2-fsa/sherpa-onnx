@@ -24,6 +24,9 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(dolphin-ctc-cxx-api ./dolphin-ctc-cxx-api.cc)
+target_link_libraries(dolphin-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(vad-cxx-api ./vad-cxx-api.cc)
 target_link_libraries(vad-cxx-api sherpa-onnx-cxx-api)
 

@@ -246,6 +246,8 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.model_config.fire_red_asr.decoder =
       config.model_config.fire_red_asr.decoder.c_str();
 
+  c.model_config.dolphin.model = config.model_config.dolphin.model.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 

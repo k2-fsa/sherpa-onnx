@@ -448,7 +448,7 @@ def get_models():
             idx=25,
             lang="multi_lang",
             lang2="multi_lang",
-            short_name="multi_lang",
+            short_name="dolphin_base_ctc",
             cmd="""
             pushd $model_name
 
