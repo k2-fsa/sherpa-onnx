@@ -27,6 +27,8 @@ set(sources
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
+  offline-dolphin-model-config.cc
+  offline-dolphin-model.cc
   offline-fire-red-asr-greedy-search-decoder.cc
   offline-fire-red-asr-model-config.cc
   offline-fire-red-asr-model.cc
