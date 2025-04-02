@@ -179,6 +179,10 @@ jobs:
           go build
           ls -lh
 
+          echo "Test Dolphin CTC"
+          ./run-dolphin-ctc-base.sh
+          rm -rf sherpa-onnx-dolphin-*
+
           echo "Test FireRedAsr"
           ./run-fire-red-asr.sh
           rm -rf sherpa-onnx-fire-red-asr-*

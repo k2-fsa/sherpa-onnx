@@ -84,7 +84,7 @@ int32_t main() {
   vadConfig.num_threads = 1;
   vadConfig.debug = 1;
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&vadConfig, 30);
 
   if (vad == NULL) {
