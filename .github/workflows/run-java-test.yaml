@@ -105,6 +105,16 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (VAD + Non-streaming Dolphin CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-non-streaming-dolphin-ctc.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
+          rm -rf sherpa-onnx-dolphin-*
+
       - name:  Run speech enhancement (GTCRN)
         shell: bash
         run: |
@@ -134,6 +144,9 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+
+          ./run-non-streaming-decode-file-dolphin-ctc.sh
+          rm -rf sherpa-onnx-dolphin-*
 
           ./run-non-streaming-decode-file-moonshine.sh
           rm -rf sherpa-onnx-moonshine-*
