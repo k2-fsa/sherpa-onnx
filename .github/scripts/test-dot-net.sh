@@ -39,6 +39,9 @@ rm -rfv sherpa-onnx-pyannote-*
 
 cd ../offline-decode-files
 
+./run-dolphin-ctc.sh
+rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
+
 ./run-fire-red-asr.sh
 rm -rf sherpa-onnx-fire-red-asr-*
 
