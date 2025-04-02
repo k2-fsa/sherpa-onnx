@@ -75,6 +75,9 @@ class OfflineDecodeFiles
     [Option("nemo-ctc", Required = false, HelpText = "Path to model.onnx. Used only for NeMo CTC models")]
     public string NeMoCtc { get; set; } = string.Empty;
 
+    [Option("dolphin-model", Required = false, Default = "", HelpText = "Path to dolphin ctc model")]
+    public string DolphinModel { get; set; } = string.Empty;
+
     [Option("telespeech-ctc", Required = false, HelpText = "Path to model.onnx. Used only for TeleSpeech CTC models")]
     public string TeleSpeechCtc { get; set; } = string.Empty;
 
@@ -232,6 +235,10 @@ to download pre-trained Tdnn models.
     else if (!string.IsNullOrEmpty(options.NeMoCtc))
     {
       config.ModelConfig.NeMoCtc.Model = options.NeMoCtc;
+    }
+    else if (!string.IsNullOrEmpty(options.DolphinModel))
+    {
+      config.ModelConfig.Dolphin.Model = options.DolphinModel;
     }
     else if (!string.IsNullOrEmpty(options.TeleSpeechCtc))
     {
