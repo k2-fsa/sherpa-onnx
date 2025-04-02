@@ -341,6 +341,14 @@ func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineDolphinModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineDolphinModelConfig {
+  return SherpaOnnxOfflineDolphinModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
   decoder: String = "",
@@ -427,7 +435,8 @@ func sherpaOnnxOfflineModelConfig(
   teleSpeechCtc: String = "",
   senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig(),
   moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig(),
-  fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig()
+  fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig(),
+  dolphin: SherpaOnnxOfflineDolphinModelConfig = sherpaOnnxOfflineDolphinModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -445,7 +454,8 @@ func sherpaOnnxOfflineModelConfig(
     telespeech_ctc: toCPointer(teleSpeechCtc),
     sense_voice: senseVoice,
     moonshine: moonshine,
-    fire_red_asr: fireRedAsr
+    fire_red_asr: fireRedAsr,
+    dolphin: dolphin
   )
 }
 
