@@ -41,6 +41,9 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   std::string text;
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
+    if (sym == "<unk>") {
+      continue;
+    }
 
     text.append(sym);
 
