@@ -263,6 +263,48 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01",
+            idx=15,
+            lang="zh",
+            short_name="int8_small_zipformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -f bpe.model
+
+            rm -rf test_wavs
+            rm README.md
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-2025-04-01",
+            idx=16,
+            lang="zh",
+            short_name="small_zipformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -f bpe.model
+
+            rm -rf test_wavs
+            rm README.md
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models
