@@ -1,4 +1,4 @@
-// Copyright 2024 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 
 // This file shows how to use an offline Dolphin CTC model, i.e.,
 // non-streaming Dolphin CTC model, to decode files.

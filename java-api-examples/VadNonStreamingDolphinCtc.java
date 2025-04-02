@@ -1,4 +1,4 @@
-// Copyright 2024 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 
 // This file shows how to use a silero_vad model with a non-streaming Dolphin
 // CTC model for speech recognition.
