@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_RKNN_SILERO_VAD_MODEL_RKNN_H_
 #define SHERPA_ONNX_CSRC_RKNN_SILERO_VAD_MODEL_RKNN_H_
 
+#include <memory>
+
 #include "rknn_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/vad-model.h"

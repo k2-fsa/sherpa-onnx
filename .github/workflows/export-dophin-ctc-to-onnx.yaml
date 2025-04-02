@@ -1,9 +1,6 @@
 name: export-dolphin-ctc-to-onnx
 
 on:
-  push:
-    branches:
-      - support-dolphin
   workflow_dispatch:
 
 concurrency:
@@ -13,34 +10,32 @@ concurrency:
 jobs:
   export-dolphin-ctc-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export dolphin ctc models to ONNX
+    name: ${{ matrix.model_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
+        model_type: [small, base]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download (base)
+      - name: Download ${{ matrix.model_type }}
         shell: bash
         run: |
           git lfs install
+          type=${{ matrix.model_type }}
 
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-small-ctc-multi-lang-int8-2025-04-02
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-small-ctc-multi-lang-2025-04-02
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-base-ctc-multi-lang-2025-04-02
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02
 
-          rm -rf sherpa-onnx-/*.git*
+          rm -rf sherpa-onnx-dolphin-*/.git*
 
-          ls -lh sherpa-onnx-dolphin-*/
+          ls -lha sherpa-onnx-dolphin-*/
 
-          tar cjfv sherpa-onnx-dolphin-small-ctc-multi-lang-int8-2025-04-02.tar.bz2 sherpa-onnx-dolphin-small-ctc-multi-lang-int8-2025-04-02
-          tar cjfv sherpa-onnx-dolphin-small-ctc-multi-lang-2025-04-02.tar.bz2 sherpa-onnx-dolphin-small-ctc-multi-lang-2025-04-02
-          tar cjfv sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2 sherpa-onnx-dolphin-small-ctc-multi-lang-int8-2025-04-02
-          tar cjfv sherpa-onnx-dolphin-base-ctc-multi-lang-2025-04-02.tar.bz2 sherpa-onnx-dolphin-small-ctc-multi-lang-2025-04-02
+          tar cjfv sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2 sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02
+          tar cjfv sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2 sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02
 
       - name: Release
         uses: svenstaro/upload-release-action@v2

@@ -15,6 +15,39 @@ echo "PATH: $PATH"
 
 which $EXE
 
+for type in base small; do
+  log "------------------------------------------------------------"
+  log "Run Dolphin CTC models ($type int8)"
+  log "------------------------------------------------------------"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+
+  $EXE \
+    --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/model.int8.onnx \
+    --tokens=./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/tokens.txt \
+    --debug=1 \
+    ./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/test_wavs/0.wav
+
+  rm -rf sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02
+
+  log "------------------------------------------------------------"
+  log "Run Dolphin CTC models ($type)"
+  log "------------------------------------------------------------"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+
+  $EXE \
+    --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/model.onnx \
+    --tokens=./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/tokens.txt \
+    --debug=1 \
+    ./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/test_wavs/0.wav
+
+  rm -rf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02
+done
+
+
 log "------------------------------------------------------------"
 log "Run NeMo GigaAM Russian models"
 log "------------------------------------------------------------"

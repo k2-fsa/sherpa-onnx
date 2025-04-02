@@ -65,7 +65,7 @@ class OfflineCtcModel {
   // return false otherwise
   virtual bool IsGigaAM() const { return false; }
 
-  // For Dolphine models, they use global CMVN
+  // For Dolphin models, they use global CMVN
   virtual void NormalizeFeatures(float *features, int32_t num_frames,
                                  int32_t feat_dim) const {}
 };

@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-dolphin-model-config.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-dolphin-model-config.h"
 
