@@ -25,6 +25,10 @@ data class OfflineNemoEncDecCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineDolphinModelConfig(
+    var model: String = "",
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -59,6 +63,7 @@ data class OfflineModelConfig(
     var moonshine: OfflineMoonshineModelConfig = OfflineMoonshineModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
+    var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -477,6 +482,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 fireRedAsr = OfflineFireRedAsrModelConfig(
                     encoder = "$modelDir/encoder.int8.onnx",
                     decoder = "$modelDir/decoder.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        25 -> {
+            val modelDir = "sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02"
+            return OfflineModelConfig(
+                dolphin = OfflineDolphinModelConfig(
+                    model = "$modelDir/model.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
             )
