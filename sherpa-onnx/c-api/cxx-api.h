@@ -229,6 +229,10 @@ struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
   bool use_itn = false;
 };
 
+struct SHERPA_ONNX_API OfflineDolphinModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -254,6 +258,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineSenseVoiceModelConfig sense_voice;
   OfflineMoonshineModelConfig moonshine;
   OfflineFireRedAsrModelConfig fire_red_asr;
+  OfflineDolphinModelConfig dolphin;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {

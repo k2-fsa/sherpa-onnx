@@ -467,6 +467,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.fire_red_asr.decoder =
       SHERPA_ONNX_OR(config->model_config.fire_red_asr.decoder, "");
 
+  recognizer_config.model_config.dolphin.model =
+      SHERPA_ONNX_OR(config->model_config.dolphin.model, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =

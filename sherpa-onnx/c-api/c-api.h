@@ -416,6 +416,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSenseVoiceModelConfig {
   int32_t use_itn;
 } SherpaOnnxOfflineSenseVoiceModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineDolphinModelConfig {
+  const char *model;
+} SherpaOnnxOfflineDolphinModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineTransducerModelConfig transducer;
   SherpaOnnxOfflineParaformerModelConfig paraformer;
@@ -438,6 +442,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineSenseVoiceModelConfig sense_voice;
   SherpaOnnxOfflineMoonshineModelConfig moonshine;
   SherpaOnnxOfflineFireRedAsrModelConfig fire_red_asr;
+  SherpaOnnxOfflineDolphinModelConfig dolphin;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

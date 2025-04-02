@@ -277,7 +277,6 @@ def get_models():
             rm -f bpe.model
 
             rm -rf test_wavs
-            rm README.md
 
             ls -lh
 
@@ -298,7 +297,6 @@ def get_models():
             rm -f bpe.model
 
             rm -rf test_wavs
-            rm README.md
 
             ls -lh
 
