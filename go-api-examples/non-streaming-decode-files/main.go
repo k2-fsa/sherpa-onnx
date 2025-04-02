@@ -28,6 +28,8 @@ func main() {
 
 	flag.StringVar(&config.ModelConfig.NemoCTC.Model, "nemo-ctc", "", "Path to the NeMo CTC model")
 
+	flag.StringVar(&config.ModelConfig.Dolphin.Model, "dolphin-model", "", "Path to the Dolphin CTC model")
+
 	flag.StringVar(&config.ModelConfig.FireRedAsr.Encoder, "fire-red-asr-encoder", "", "Path to the FireRedAsr encoder model")
 	flag.StringVar(&config.ModelConfig.FireRedAsr.Decoder, "fire-red-asr-decoder", "", "Path to the FireRedAsr decoder model")
 
