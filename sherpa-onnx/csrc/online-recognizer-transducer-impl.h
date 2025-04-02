@@ -388,16 +388,20 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     auto r = decoder_->GetEmptyResult();
     auto last_result = s->GetResult();
     // if last result is not empty, then
-    // preserve last tokens as the context for next result
+    // truncate all last hyps and save as the context for next result
     if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
-      std::vector<int64_t> context(last_result.tokens.end() - context_size,
-                                   last_result.tokens.end());
+      for (const auto &it : last_result.hyps) {
+        auto h = it.second;
+        r.hyps.Add({std::vector<int64_t>(h.ys.end() - context_size,
+                                         h.ys.end()),
+                    h.log_prob});
+      }
 
-      Hypotheses context_hyp({{context, 0}});
-      r.hyps = std::move(context_hyp);
-      r.tokens = std::move(context);
+      r.tokens = std::vector<int64_t> (last_result.tokens.end() - context_size,
+                                       last_result.tokens.end());
     }
 
+    // but reset all contextual biasing graph states to root
     if (config_.decoding_method == "modified_beam_search" &&
         nullptr != s->GetContextGraph()) {
       for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
