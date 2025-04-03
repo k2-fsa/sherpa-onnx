@@ -9,6 +9,13 @@ git status
 ls -lh
 ls -lh node_modules
 
+# asr with offline dolphin ctc
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+node ./test-offline-dolphin-ctc.js
+rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
+
 # speech enhancement
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
