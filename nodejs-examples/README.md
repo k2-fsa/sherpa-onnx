@@ -140,6 +140,20 @@ node ./test-offline-tts-vits-zh.js
 In the following, we demonstrate how to decode files and how to perform
 speech recognition with a microphone with `nodejs`.
 
+## ./test-offline-dolphin-ctc.js
+
+[./test-offline-dolphin-ctc.js](./test-offline-dolphin-ctc.js) demonstrates
+how to decode a file with a [Dolphin](https://github.com/DataoceanAI/Dolphin) CTC model.
+
+You can use the following command to run it:
+
+```bash
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+node ./test-offline-dolphin-ctc.js
+```
+
 ## ./test-offline-nemo-ctc.js
 
 [./test-offline-nemo-ctc.js](./test-offline-nemo-ctc.js) demonstrates
