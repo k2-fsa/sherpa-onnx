@@ -1,14 +1,14 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
+{ Copyright (c)  2025  Xiaomi Corporation }
 
 {
-This file shows how to use a non-streaming SenseVoice model
+This file shows how to use a non-streaming Dolphin model
 with silero VAD to decode files.
 
 You can download the model files from
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 }
 
-program vad_with_sense_voice;
+program vad_with_dolphin;
 
 {$mode objfpc}
 
@@ -47,10 +47,8 @@ var
 begin
   Initialize(Config);
 
-  Config.ModelConfig.SenseVoice.Model := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx';
-  Config.ModelConfig.SenseVoice.Language := 'auto';
-  Config.ModelConfig.SenseVoice.UseItn := False;
-  Config.ModelConfig.Tokens := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt';
+  Config.ModelConfig.Dolphin.Model := './sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/model.int8.onnx';
+  Config.ModelConfig.Tokens := './sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 1;
   Config.ModelConfig.Debug := False;

@@ -270,6 +270,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineDolphinModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineWhisperModelConfig = record
     Encoder: AnsiString;
     Decoder: AnsiString;
@@ -331,6 +336,7 @@ type
     SenseVoice: TSherpaOnnxOfflineSenseVoiceModelConfig;
     Moonshine: TSherpaOnnxOfflineMoonshineModelConfig;
     FireRedAsr: TSherpaOnnxOfflineFireRedAsrModelConfig;
+    Dolphin: TSherpaOnnxOfflineDolphinModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -694,6 +700,9 @@ type
   SherpaOnnxOfflineNemoEncDecCtcModelConfig = record
     Model: PAnsiChar;
   end;
+  SherpaOnnxOfflineDolphinModelConfig = record
+    Model: PAnsiChar;
+  end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -740,6 +749,7 @@ type
     SenseVoice:  SherpaOnnxOfflineSenseVoiceModelConfig;
     Moonshine: SherpaOnnxOfflineMoonshineModelConfig;
     FireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig;
+    Dolphin: SherpaOnnxOfflineDolphinModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1461,6 +1471,12 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineDolphinModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineDolphinModelConfig(Model := %s)',
+    [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineWhisperModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineWhisperModelConfig(' +
@@ -1534,14 +1550,15 @@ begin
     'TeleSpeechCtc := %s, ' +
     'SenseVoice := %s, ' +
     'Moonshine := %s, ' +
-    'FireRedAsr := %s' +
+    'FireRedAsr := %s, ' +
+    'Dolphin := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
      Self.Tokens, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
      Self.TeleSpeechCtc, Self.SenseVoice.ToString, Self.Moonshine.ToString,
-     Self.FireRedAsr.ToString
+     Self.FireRedAsr.ToString, Self.Dolphin.ToString
      ]);
 end;
 
@@ -1609,6 +1626,8 @@ begin
 
   C.ModelConfig.FireRedAsr.Encoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Encoder);
   C.ModelConfig.FireRedAsr.Decoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Decoder);
+
+  C.ModelConfig.Dolphin.Model := PAnsiChar(Config.ModelConfig.Dolphin.Model);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
