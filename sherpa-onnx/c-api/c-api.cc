@@ -1969,7 +1969,7 @@ int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
   return p->impl->GetOutputSamplingRate();
 }
 
-void SherpaOnnxLinearResamplerReset(SherpaOnnxLinearResampler *p) {
+void SherpaOnnxLinearResamplerReset(const SherpaOnnxLinearResampler *p) {
   p->impl->Reset();
 }
 
