@@ -61,6 +61,11 @@ echo '----------ced----------'
 popd
 
 pushd vad-with-non-streaming-asr
+
+echo '----------Dolphin CTC----------'
+./run-dolphin-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh
 rm -rf sherpa-onnx-*
@@ -108,6 +113,10 @@ rm -rf sherpa-onnx-*
 
 echo '----------NeMo transducer----------'
 ./run-nemo-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Dolphin CTC----------'
+./run-dolphin-ctc.sh
 rm -rf sherpa-onnx-*
 
 echo '----------NeMo CTC----------'
