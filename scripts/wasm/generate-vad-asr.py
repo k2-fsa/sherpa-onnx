@@ -197,6 +197,21 @@ def get_models():
             git diff
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-multi-lang-dophin-ctc",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-multi-lang-dophin-ctc",
+            short_name="vad-asr-multi_lang-dolphin_ctc",
+            cmd="""
+            pushd $model_name
+            mv model.int8.onnx ../dolphin.onnx
+            mv tokens.txt ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's%Zipformer%<a href="https://github.com/DataoceanAI/Dolphin">Dolphin</a> (多种中文方言及非常多种语言)%g' ../index.html
+            git diff
+            """,
+        ),
     ]
     return models
 
