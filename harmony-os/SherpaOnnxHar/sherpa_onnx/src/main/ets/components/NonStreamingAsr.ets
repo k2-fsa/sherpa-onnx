@@ -45,6 +45,10 @@ export class OfflineNemoEncDecCtcModelConfig {
   public model: string = '';
 }
 
+export class OfflineDolphinModelConfig {
+  public model: string = '';
+}
+
 export class OfflineWhisperModelConfig {
   public encoder: string = '';
   public decoder: string = '';
@@ -86,6 +90,7 @@ export class OfflineModelConfig {
   public telespeechCtc: string = '';
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
+  public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
 }
 
 export class OfflineLMConfig {

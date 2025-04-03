@@ -6,6 +6,7 @@ export { CircularBuffer, SileroVadConfig, SpeechSegment, Vad, VadConfig, } from 
 export { Samples,
   OfflineStream,
   FeatureConfig,
+  OfflineDolphinModelConfig,
   OfflineTransducerModelConfig,
   OfflineParaformerModelConfig,
   OfflineNemoEncDecCtcModelConfig,
