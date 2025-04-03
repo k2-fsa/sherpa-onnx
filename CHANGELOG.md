@@ -1,3 +1,30 @@
+## 1.11.3
+
+* fix vits dict dir config (#2036)
+* fix case (#2037)
+* Fix building wheels for RKNN (#2041)
+* Change scale factor to 32767 (#2056)
+* Fix length scale for kokoro tts (#2060)
+* Allow building repository as CMake subdirectory (#2059)
+* Export silero_vad v4 to RKNN (#2067)
+* fix dml with preinstall ort (#2066)
+* Fix building aar to include speech denoiser (#2069)
+* Add CXX API for VAD (#2077)
+* Add C++ runtime for silero_vad with RKNN (#2078)
+* Refactor rknn code (#2079)
+* Fix building for android (#2081)
+* Add C++ and Python API for Dolphin CTC models (#2085)
+* Add Kotlin and Java API for Dolphin CTC models (#2086)
+* Add C and CXX API for Dolphin CTC models (#2088)
+* Preserve more context after endpointing in transducer (#2061)
+* Add C# API for Dolphin CTC models (#2089)
+* Add Go API for Dolphin CTC models (#2090)
+* Add Swift API for Dolphin CTC models (#2091)
+* Add Javascript (WebAssembly) API for Dolphin CTC models (#2093)
+* Add Javascript (node-addon) API for Dolphin CTC models (#2094)
+* Add Dart API for Dolphin CTC models (#2095)
+* Add Pascal API for Dolphin CTC models (#2096)
+
 ## 1.11.2
 
 * Fix CI (#2016)
