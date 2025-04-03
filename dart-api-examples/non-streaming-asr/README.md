@@ -4,6 +4,7 @@ This folder contains examples for non-streaming ASR with Dart API.
 
 | File | Description|
 |------|------------|
+|[./bin/dolphin-ctc.dart](./bin/dolphin-ctc.dart)| Use a [Dolphin](https://github.com/DataoceanAI/Dolphin) Ctc model for speech recognition. See [./run-dolphin-ctc.sh](./run-dolphin-ctc.sh)|
 |[./bin/nemo-ctc.dart](./bin/nemo-ctc.dart)| Use a NeMo Ctc model for speech recognition. See [./run-nemo-ctc.sh](./run-nemo-ctc.sh)|
 |[./bin/nemo-transducer.dart](./bin/nemo-transducer.dart)| Use a NeMo transducer model for speech recognition. See [./run-nemo-transducer.sh](./run-nemo-transducer.sh)|
 |[./bin/paraformer.dart](./bin/paraformer.dart)|Use a paraformer model for speech recognition. See [./run-paraformer.sh](./run-paraformer.sh)|
