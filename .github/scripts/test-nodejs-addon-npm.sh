@@ -10,6 +10,16 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------non-streaming ASR dolphin CTC----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+
+node ./test_asr_non_streaming_dolphin_ctc.js
+
+rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
+
 echo "----------non-streaming speech denoiser----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
