@@ -136,8 +136,11 @@ kokoro-multi-lang-v1_0
 sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 cmake-build-debug
 README-DEV.txt
-*.rknn
-*.jit
+
 ##clion
 .idea
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfo.cs
+scripts/dotnet/examples/obj/Debug/net8.0/Common.GeneratedMSBuildEditorConfig.editorconfig
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfoInputs.cache
+
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherpa-ONNX TTS Demo</title>
+  <link rel="stylesheet" href="common.css">
+  
+  <!-- Load the common JS first -->
+  <script src="common.js"></script>
+  
+  <!-- Load WASM module first -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  
+  <!-- Load the combined module loader script -->
+  <script src="../sherpa-onnx-combined.js"></script>
+</head>
+<body>
+  <h1>Sherpa-ONNX TTS Demo</h1>
+  
+  <div class="nav-menu">
+    <a href="index.html">Home</a>
+    <a href="asr.html">ASR</a>
+    <a href="tts.html" class="active">TTS</a>
+    <a href="vad.html">VAD</a>
+    <a href="kws.html">KWS</a>
+  </div>
+  
+  <div id="status">Loading WebAssembly module...</div>
+  
+  <section id="tts-section">
+    <h2>Text-to-Speech (TTS)</h2>
+    
+    <div class="model-config">
+      <h3>Model Configuration</h3>
+      <div class="form-group">
+        <label for="tts-model-type">Model Type:</label>
+        <select id="tts-model-type">
+          <option value="vits">VITS</option>
+          <option value="matcha">Matcha</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="tts-model-dir">Model Directory:</label>
+        <input type="text" id="tts-model-dir" value="tts-models">
+        <small>(The directory where model files will be stored)</small>
+      </div>
+      <div class="form-group">
+        <label for="tts-model-url">Model URL:</label>
+        <input type="text" id="tts-model-url" value="../assets/tts/model.onnx">
+      </div>
+      <div class="form-group">
+        <label for="tts-tokens-url">Tokens URL:</label>
+        <input type="text" id="tts-tokens-url" value="../assets/tts/tokens.txt">
+      </div>
+      <div class="form-group">
+        <label for="tts-espeak-url">Espeak-ng-data URL:</label>
+        <input type="text" id="tts-espeak-url" value="../assets/tts/espeak-ng-data.zip">
+        <small>(Required for VITS models)</small>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="tts-debug" checked>
+        <label for="tts-debug">Enable debug logging</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="tts-clean-start">
+        <label for="tts-clean-start">Clean start (remove existing files)</label>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="tts-text">Text to synthesize:</label>
+      <textarea id="tts-text" rows="3" placeholder="Enter text to synthesize">Hello, this is a test of the text-to-speech system.</textarea>
+    </div>
+    
+    <div class="controls">
+      <button id="load-tts-model">Load TTS Model</button>
+      <button id="generate-tts" disabled>Generate Speech</button>
+      <!-- Unload button will be added dynamically -->
+    </div>
+    <div id="tts-status">Status: Not active</div>
+    <div id="tts-output"></div>
+  </section>
+
+  <script>
+    // TTS-specific initialization code
+    let tts = null;
+    let audioIdx = 0;
+    
+    function initializeUI() {
+      document.getElementById('status').textContent = 'WebAssembly module loaded. Ready to load models.';
+      setupTTS();
+    }
+    
+    function setupTTS() {
+      const loadBtn = document.getElementById('load-tts-model');
+      const genBtn = document.getElementById('generate-tts');
+      const statusElem = document.getElementById('tts-status');
+      const textInput = document.getElementById('tts-text');
+      const outputContainer = document.getElementById('tts-output');
+      const controlsDiv = document.querySelector('.controls');
+      
+      let unloadBtn = null;
+      
+      loadBtn.addEventListener('click', async () => {
+        loadBtn.disabled = true;
+        loadBtn.textContent = 'Loading...';
+        statusElem.textContent = 'Status: Loading model...';
+        
+        try {
+          // Get options from UI
+          const modelType = document.getElementById('tts-model-type').value;
+          const modelDir = document.getElementById('tts-model-dir').value || 'tts-models';
+          const debug = document.getElementById('tts-debug').checked;
+          const cleanStart = document.getElementById('tts-clean-start').checked;
+          
+          // Build the model config with all options
+          const modelConfig = {
+            modelDir: modelDir,
+            type: modelType,
+            debug: debug,
+            cleanStart: cleanStart
+          };
+          
+          // Add model-specific URLs
+          if (modelType === 'vits') {
+            modelConfig.model = document.getElementById('tts-model-url').value;
+            modelConfig.tokens = document.getElementById('tts-tokens-url').value;
+            modelConfig.espeakDataZip = document.getElementById('tts-espeak-url').value;
+          } else if (modelType === 'matcha') {
+            modelConfig.acousticModel = document.getElementById('tts-model-url').value;
+            modelConfig.vocoder = document.getElementById('tts-model-url').value.replace('model.onnx', 'vocoder.onnx');
+            modelConfig.tokens = document.getElementById('tts-tokens-url').value;
+          }
+          
+          console.log(`TTS setup: Using model configuration:`, modelConfig);
+          
+          // Load the model
+          const loadedModel = await SherpaOnnx.TTS.loadModel(modelConfig);
+          
+          // Create the TTS engine
+          tts = SherpaOnnx.TTS.createOfflineTts(loadedModel, {
+            debug: debug
+          });
+          
+          loadBtn.textContent = 'Model Loaded';
+          statusElem.textContent = 'Status: Model loaded successfully';
+          genBtn.disabled = false;
+          
+          // Add unload button if it doesn't exist
+          if (!unloadBtn) {
+            unloadBtn = createUnloadButton(controlsDiv, 'TTS', tts, statusElem);
+            unloadBtn.id = 'unload-tts-model';
+          } else {
+            unloadBtn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Failed to load TTS model:', error);
+          loadBtn.textContent = 'Load Failed';
+          statusElem.textContent = `Status: Error - ${error.message}`;
+          loadBtn.disabled = false;
+        }
+      });
+      
+      genBtn.addEventListener('click', async () => {
+        try {
+          const text = textInput.value.trim();
+          
+          if (!text) {
+            statusElem.textContent = 'Status: No text provided';
+            return;
+          }
+          
+          statusElem.textContent = 'Status: Generating speech...';
+          genBtn.disabled = true;
+          
+          // Generate speech
+          const result = tts.generate(text, 0, 1.0);
+          
+          // Convert to WAV
+          const blob = tts.saveAsWav(result.samples, result.sampleRate);
+          const url = URL.createObjectURL(blob);
+          
+          // Create audio element
+          const audioContainer = document.createElement('div');
+          audioContainer.className = 'audio-item';
+          
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = url;
+          
+          const textDiv = document.createElement('div');
+          textDiv.className = 'audio-text';
+          textDiv.textContent = text;
+          
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.onclick = () => {
+            outputContainer.removeChild(audioContainer);
+            URL.revokeObjectURL(url);
+            if (result.free) {
+              result.free(); // Free the individual audio result if possible
+            }
+          };
+          
+          audioContainer.appendChild(audio);
+          audioContainer.appendChild(textDiv);
+          audioContainer.appendChild(deleteBtn);
+          
+          outputContainer.insertBefore(audioContainer, outputContainer.firstChild);
+          
+          audio.play();
+          
+          statusElem.textContent = 'Status: Speech generated successfully';
+          genBtn.disabled = false;
+          
+          // Auto-increment audio index
+          audioIdx++;
+        } catch (error) {
+          console.error('Failed to generate speech:', error);
+          statusElem.textContent = `Status: Error - ${error.message}`;
+          genBtn.disabled = false;
+        }
+      });
+    }
+  </script>
+</body>
+</html>

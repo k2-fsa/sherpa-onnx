@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherpa-ONNX KWS Demo</title>
+  <link rel="stylesheet" href="common.css">
+  
+  <!-- Load the common JS first -->
+  <script src="common.js"></script>
+  
+  <!-- Load WASM module first -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  
+  <!-- Load the combined module loader script -->
+  <script src="../sherpa-onnx-combined.js"></script>
+</head>
+<body>
+  <h1>Sherpa-ONNX KWS Demo</h1>
+  
+  <div class="nav-menu">
+    <a href="index.html">Home</a>
+    <a href="asr.html">ASR</a>
+    <a href="tts.html">TTS</a>
+    <a href="vad.html">VAD</a>
+    <a href="kws.html" class="active">KWS</a>
+  </div>
+  
+  <div id="status">Loading WebAssembly module...</div>
+  
+  <section id="kws-section">
+    <h2>Keyword Spotting (KWS)</h2>
+    
+    <div class="model-config">
+      <h3>Model Configuration</h3>
+      <div class="form-group">
+        <label for="kws-model-dir">Model Directory:</label>
+        <input type="text" id="kws-model-dir" value="kws-models">
+        <small>(The directory where model files will be stored)</small>
+      </div>
+      <div class="form-group">
+        <label for="kws-encoder-url">Encoder Model URL:</label>
+        <input type="text" id="kws-encoder-url" value="../assets/kws/encoder.onnx">
+      </div>
+      <div class="form-group">
+        <label for="kws-decoder-url">Decoder Model URL:</label>
+        <input type="text" id="kws-decoder-url" value="../assets/kws/decoder.onnx">
+      </div>
+      <div class="form-group">
+        <label for="kws-joiner-url">Joiner Model URL:</label>
+        <input type="text" id="kws-joiner-url" value="../assets/kws/joiner.onnx">
+      </div>
+      <div class="form-group">
+        <label for="kws-tokens-url">Tokens URL:</label>
+        <input type="text" id="kws-tokens-url" value="../assets/kws/tokens.txt">
+      </div>
+      <div class="form-group">
+        <label for="kws-keywords">Keywords to spot:</label>
+        <textarea id="kws-keywords" rows="3" placeholder="Format: h e l l o @Hello">h e l l o @Hello
+c o m p u t e r @Computer</textarea>
+        <small>Format: Phonetic tokens with spaces between letters, followed by @ and the keyword label</small>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="kws-debug" checked>
+        <label for="kws-debug">Enable debug logging</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="kws-clean-start">
+        <label for="kws-clean-start">Clean start (remove existing files)</label>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="load-kws-model">Load KWS Model</button>
+      <button id="start-kws" disabled>Start</button>
+      <button id="stop-kws" disabled>Stop</button>
+      <!-- Unload button will be added dynamically -->
+    </div>
+    <div id="kws-status">Status: Not active</div>
+    <div id="kws-result" class="result-box"></div>
+  </section>
+
+  <script>
+    // KWS-specific initialization code
+    let kws = null;
+    let stream = null;
+    let kwsProcessor = null;
+    
+    function initializeUI() {
+      document.getElementById('status').textContent = 'WebAssembly module loaded. Ready to load models.';
+      setupKWS();
+    }
+    
+    function setupKWS() {
+      const loadBtn = document.getElementById('load-kws-model');
+      const startBtn = document.getElementById('start-kws');
+      const stopBtn = document.getElementById('stop-kws');
+      const statusElem = document.getElementById('kws-status');
+      const resultElem = document.getElementById('kws-result');
+      const controlsDiv = document.querySelector('.controls');
+      
+      let unloadBtn = null;
+      
+      loadBtn.addEventListener('click', async () => {
+        loadBtn.disabled = true;
+        loadBtn.textContent = 'Loading...';
+        statusElem.textContent = 'Status: Loading model...';
+        
+        try {
+          // Get options from UI
+          const modelDir = document.getElementById('kws-model-dir').value || 'kws-models';
+          const debug = document.getElementById('kws-debug').checked;
+          const cleanStart = document.getElementById('kws-clean-start').checked;
+          const keywords = document.getElementById('kws-keywords').value || 'h e l l o @Hello';
+          
+          // Build the model config with all options
+          const modelConfig = {
+            modelDir: modelDir,
+            encoder: document.getElementById('kws-encoder-url').value,
+            decoder: document.getElementById('kws-decoder-url').value,
+            joiner: document.getElementById('kws-joiner-url').value,
+            tokens: document.getElementById('kws-tokens-url').value,
+            debug: debug,
+            cleanStart: cleanStart
+          };
+          
+          console.log(`KWS setup: Using model configuration:`, modelConfig);
+          
+          // Load the model
+          const loadedModel = await SherpaOnnx.KWS.loadModel(modelConfig);
+          
+          // Create the KWS detector with custom keywords
+          kws = SherpaOnnx.KWS.createKeywordSpotter(loadedModel, {
+            debug: debug,
+            keywords: keywords  // Use keywords from the input field
+          });
+          
+          loadBtn.textContent = 'Model Loaded';
+          statusElem.textContent = 'Status: Model loaded successfully';
+          startBtn.disabled = false;
+          
+          // Add unload button if it doesn't exist
+          if (!unloadBtn) {
+            unloadBtn = createUnloadButton(controlsDiv, 'KWS', kws, statusElem);
+            unloadBtn.id = 'unload-kws-model';
+          } else {
+            unloadBtn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Failed to load KWS model:', error);
+          loadBtn.textContent = 'Load Failed';
+          statusElem.textContent = `Status: Error - ${error.message}`;
+          loadBtn.disabled = false;
+        }
+      });
+      
+      startBtn.addEventListener('click', async () => {
+        try {
+          await getMicrophoneInput();
+          
+          // Create a stream
+          stream = kws.createStream();
+          
+          const bufferSize = 4096;
+          kwsProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+          
+          kwsProcessor.onaudioprocess = function(e) {
+            const samples = new Float32Array(e.inputBuffer.getChannelData(0));
+            
+            // Feed audio to the recognizer
+            stream.acceptWaveform(audioContext.sampleRate, samples);
+            
+            // Check if the stream is ready to be decoded
+            if (kws.isReady(stream)) {
+              // Decode the audio
+              kws.decode(stream);
+              
+              // Get the result
+              const result = kws.getResult(stream);
+              
+              // Display the result if a keyword is detected
+              if (result && result.keyword) {
+                statusElem.textContent = `Status: Keyword detected: ${result.keyword}`;
+                statusElem.style.backgroundColor = '#c8e6c9';
+                
+                // Add the result to the output
+                const item = document.createElement('div');
+                item.textContent = `Detected: ${result.keyword} (${new Date().toLocaleTimeString()})`;
+                resultElem.insertBefore(item, resultElem.firstChild);
+                
+                // Reset the stream after detection
+                kws.reset(stream);
+              }
+            }
+          };
+          
+          mediaStream.connect(kwsProcessor);
+          kwsProcessor.connect(audioContext.destination);
+          
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          statusElem.textContent = 'Status: Listening for keywords...';
+        } catch (error) {
+          console.error('Failed to start KWS:', error);
+          statusElem.textContent = `Status: Error - ${error.message}`;
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (kwsProcessor) {
+          kwsProcessor.disconnect();
+          mediaStream.disconnect();
+          kwsProcessor = null;
+        }
+        
+        if (stream) {
+          // We don't free the stream here since it's tracked by the kws
+          // and will be freed when the kws is freed
+          stream = null;
+        }
+        
+        statusElem.textContent = 'Status: Not active';
+        statusElem.style.backgroundColor = '';
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+    }
+  </script>
+</body>
+</html>
