@@ -83,17 +83,14 @@ The included `index.html` demonstrates how to use the combined module. It shows:
 
 ## Building the Module
 
-The WebAssembly module is built using Emscripten. To rebuild it:
+The WebAssembly module can be built using the provided build script:
 
 ```bash
 cd /path/to/sherpa-onnx
-mkdir -p build-wasm-combined
-cd build-wasm-combined
-emcmake cmake -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_WASM=ON -DSHERPA_ONNX_ENABLE_CHECK=OFF ..
-make -j$(nproc)
+./build-wasm-combined.sh
 ```
 
-The built files will be located in `build-wasm-combined/wasm/combined/`.
+The built files will be located in `bin/wasm/combined/` and are also copied to `wasm/combined/`.
 
 ## Setting Up Models
 
