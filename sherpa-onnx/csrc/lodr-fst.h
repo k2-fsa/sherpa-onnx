@@ -59,6 +59,8 @@ class LodrStateCost {
   float Score() const;
 
  private:
+  // The fst_ is not owned by this class and borrowed from the caller
+  // (e.g. OnlineRnnLM).
   LodrFst* fst_;
   std::unordered_map<int, float> state_cost_;
 };

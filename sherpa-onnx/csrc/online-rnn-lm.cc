@@ -38,8 +38,7 @@ class OnlineRnnLM::Impl {
       hyp->nn_lm_states = Convert(std::move(init_states.second));
       // if LODR enabled, we need to initialize the LODR state
       if (lodr_fst_ != nullptr) {
-        hyp->lodr_state = std::move(
-                             std::make_shared<LodrStateCost>(lodr_fst_.get()));
+        hyp->lodr_state = std::make_unique<LodrStateCost>(lodr_fst_.get());
       }
     }
 
@@ -49,7 +48,7 @@ class OnlineRnnLM::Impl {
 
     // if LODR enabled, we need to update the LODR state
     if (lodr_fst_ != nullptr) {
-      auto next_lodr_state = std::make_shared<LodrStateCost>(
+      auto next_lodr_state = std::make_unique<LodrStateCost>(
                             hyp->lodr_state->ForwardOneStep(hyp->ys.back()));
       // calculate the score of the latest token
       auto score = next_lodr_state->Score() - hyp->lodr_state->Score();
