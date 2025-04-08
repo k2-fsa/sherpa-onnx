@@ -137,6 +137,13 @@ sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 cmake-build-debug
 README-DEV.txt
 
+# WASM combined build artifacts
+wasm/combined/*.wasm
+wasm/combined/sherpa-onnx-wasm-combined.js
+build-wasm-combined/
+# Don't ignore the build script
+!build-wasm-combined.sh
+
 ##clion
 .idea
 scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfo.cs
