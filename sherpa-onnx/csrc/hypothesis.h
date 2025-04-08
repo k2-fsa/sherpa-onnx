@@ -77,8 +77,7 @@ struct Hypothesis {
   Hypothesis() = default;
   Hypothesis(const std::vector<int64_t> &ys, double log_prob,
              const ContextState *context_state = nullptr)
-      : ys(ys), log_prob(log_prob), context_state(context_state),
-        lodr_state(nullptr) {}
+      : ys(ys), log_prob(log_prob), context_state(context_state) {}
 
   double TotalLogProb() const { return log_prob + lm_log_prob; }
 
