@@ -262,7 +262,7 @@ class MainActivity : AppCompatActivity() {
         // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
         // modelDir = "matcha-icefall-zh-baker"
         // acousticModelName = "model-steps-3.onnx"
-        // vocoder = "vocos-22khz-univ.onnx"
+        // vocoder = "vocos-22khz-univ.onnx"    // Vocoder should be download separately; place in the **root directory of your resources folder**, not under modelDir.
         // lexicon = "lexicon.txt"
         // dictDir = "matcha-icefall-zh-baker/dict"
 
