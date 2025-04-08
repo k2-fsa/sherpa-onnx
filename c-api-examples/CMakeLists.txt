@@ -1,6 +1,6 @@
 include(cargs)
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 
@@ -55,6 +55,9 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
+
+add_executable(dolphin-ctc-c-api dolphin-ctc-c-api.c)
+target_link_libraries(dolphin-ctc-c-api sherpa-onnx-c-api)
 
 add_executable(moonshine-c-api moonshine-c-api.c)
 target_link_libraries(moonshine-c-api sherpa-onnx-c-api)

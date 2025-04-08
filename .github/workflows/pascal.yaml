@@ -149,6 +149,11 @@ jobs:
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+
+          ./run-dolphin-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-zipformer-transducer.sh
           rm -rf sherpa-onnx-*
           echo "---"
@@ -253,7 +258,13 @@ jobs:
 
           cd ./pascal-api-examples
 
+
           pushd vad-with-non-streaming-asr
+
+          time ./run-vad-with-dolphin-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           time ./run-vad-with-moonshine.sh
           rm -rf sherpa-onnx-*
           echo "---"

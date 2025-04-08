@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 
 if(NOT DEFINED ANDROID_ABI)
   if(NOT DEFINED ENV{JAVA_HOME})

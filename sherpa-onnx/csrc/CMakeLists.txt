@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 
 if(SHERPA_ONNX_ENABLE_PYTHON)
   message(STATUS "PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
@@ -27,6 +27,8 @@ set(sources
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
+  offline-dolphin-model-config.cc
+  offline-dolphin-model.cc
   offline-fire-red-asr-greedy-search-decoder.cc
   offline-fire-red-asr-model-config.cc
   offline-fire-red-asr-model.cc
@@ -159,6 +161,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc
     ./rknn/online-zipformer-ctc-model-rknn.cc
     ./rknn/online-zipformer-transducer-model-rknn.cc
+    ./rknn/silero-vad-model-rknn.cc
     ./rknn/utils.cc
   )
 
@@ -216,6 +219,16 @@ endif()
 # Always static build
 add_library(sherpa-onnx-core STATIC ${sources})
 
+
+if(WIN32 AND SHERPA_ONNX_LINK_D3D)
+    target_link_libraries(sherpa-onnx-core dxguid.lib d3d12.lib dxgi.lib dxcore.lib)
+endif()
+
+
+if(TARGET directml)
+    target_link_libraries(sherpa-onnx-core directml)
+endif()
+
 set_target_properties(
     sherpa-onnx-core
   PROPERTIES
@@ -260,7 +273,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS AND NOT DEFINED onnxruntime_lib_files)
+if((BUILD_SHARED_LIBS OR SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE) AND NOT DEFINED onnxruntime_lib_files)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
@@ -307,11 +320,12 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
   add_executable(sherpa-onnx-offline-audio-tagging sherpa-onnx-offline-audio-tagging.cc)
+  add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
   add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
-  add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
+  add_executable(sherpa-onnx-vad sherpa-onnx-vad.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -326,11 +340,12 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-keyword-spotter
     sherpa-onnx-offline
     sherpa-onnx-offline-audio-tagging
+    sherpa-onnx-offline-denoiser
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
-    sherpa-onnx-offline-denoiser
     sherpa-onnx-online-punctuation
+    sherpa-onnx-vad
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
@@ -456,6 +471,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+
   add_executable(sherpa-onnx-microphone-offline
     sherpa-onnx-microphone-offline.cc
     microphone.cc
@@ -486,11 +502,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   )
 
   set(exes
-    sherpa-onnx-microphone
     sherpa-onnx-keyword-spotter-microphone
+    sherpa-onnx-microphone
     sherpa-onnx-microphone-offline
-    sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-microphone-offline-audio-tagging
+    sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-with-offline-asr
@@ -648,7 +664,7 @@ endforeach()
 # For clang-tidy
 add_custom_target(
   clang-tidy-check
-  clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json --config-file ${CMAKE_SOURCE_DIR}/.clang-tidy ${srcs_to_check}
+  clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json --config-file ${PROJECT_SOURCE_DIR}/.clang-tidy ${srcs_to_check}
   DEPENDS ${sources})
 
 add_custom_target(check DEPENDS clang-tidy-check)

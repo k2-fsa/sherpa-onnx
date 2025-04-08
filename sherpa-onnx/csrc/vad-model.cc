@@ -13,19 +13,31 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/silero-vad-model-rknn.h"
+#endif
+
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
 namespace sherpa_onnx {
 
 std::unique_ptr<VadModel> VadModel::Create(const VadModelConfig &config) {
-  // TODO(fangjun): Support other VAD models.
+#if SHERPA_ONNX_ENABLE_RKNN
+  if (config.provider == "rknn") {
+    return std::make_unique<SileroVadModelRknn>(config);
+  }
+#endif
   return std::make_unique<SileroVadModel>(config);
 }
 
 template <typename Manager>
 std::unique_ptr<VadModel> VadModel::Create(Manager *mgr,
                                            const VadModelConfig &config) {
-  // TODO(fangjun): Support other VAD models.
+#if SHERPA_ONNX_ENABLE_RKNN
+  if (config.provider == "rknn") {
+    return std::make_unique<SileroVadModelRknn>(mgr, config);
+  }
+#endif
   return std::make_unique<SileroVadModel>(mgr, config);
 }
 

@@ -39,6 +39,10 @@ function freeConfig(config, Module) {
     freeConfig(config.fireRedAsr, Module)
   }
 
+  if ('dolphin' in config) {
+    freeConfig(config.dolphin, Module)
+  }
+
   if ('moonshine' in config) {
     freeConfig(config.moonshine, Module)
   }
@@ -562,6 +566,23 @@ function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineDolphinModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
@@ -769,6 +790,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('dolphin' in config)) {
+    config.dolphin = {
+      model: '',
+    };
+  }
+
   if (!('whisper' in config)) {
     config.whisper = {
       encoder: '',
@@ -832,8 +859,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const fireRedAsr =
       initSherpaOnnxOfflineFireRedAsrModelConfig(config.fireRedAsr, Module);
 
+  const dolphin =
+      initSherpaOnnxOfflineDolphinModelConfig(config.dolphin, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
-      tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len;
+      tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
+      dolphin.len;
 
   const ptr = Module._malloc(len);
 
@@ -932,10 +963,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(fireRedAsr.ptr, fireRedAsr.len, ptr + offset);
   offset += fireRedAsr.len;
 
+  Module._CopyHeap(dolphin.ptr, dolphin.len, ptr + offset);
+  offset += dolphin.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
         paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
-        senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr
+        senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr,
+        dolphin: dolphin
   }
 }
 

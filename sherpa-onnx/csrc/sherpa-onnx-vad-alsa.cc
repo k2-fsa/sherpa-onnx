@@ -7,9 +7,9 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <iomanip>
 
 #include "sherpa-onnx/csrc/alsa.h"
-#include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
@@ -84,8 +84,6 @@ as the device_name.
     exit(-1);
   }
 
-  int32_t chunk = 0.1 * alsa.GetActualSampleRate();
-
   auto vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(config);
 
   fprintf(stderr, "Started. Please speak\n");
@@ -95,36 +93,34 @@ as the device_name.
 
   int32_t k = 0;
   while (!stop) {
-    {
-      const std::vector<float> &samples = alsa.Read(chunk);
+    const std::vector<float> &samples = alsa.Read(window_size);
 
-      vad->AcceptWaveform(samples.data(), samples.size());
+    vad->AcceptWaveform(samples.data(), samples.size());
 
-      if (vad->IsSpeechDetected() && !printed) {
-        printed = true;
-        fprintf(stderr, "\nDetected speech!\n");
-      }
-      if (!vad->IsSpeechDetected()) {
-        printed = false;
-      }
+    if (vad->IsSpeechDetected() && !printed) {
+      printed = true;
+      fprintf(stderr, "\nDetected speech!\n");
+    }
+    if (!vad->IsSpeechDetected()) {
+      printed = false;
+    }
 
-      while (!vad->Empty()) {
-        const auto &segment = vad->Front();
-        float duration =
-            segment.samples.size() / static_cast<float>(sample_rate);
+    while (!vad->Empty()) {
+      const auto &segment = vad->Front();
+      float duration = segment.samples.size() / static_cast<float>(sample_rate);
 
-        fprintf(stderr, "Duration: %.3f seconds\n", duration);
+      fprintf(stderr, "Duration: %.3f seconds\n", duration);
 
-        char filename[128];
-        snprintf(filename, sizeof(filename), "seg-%d-%.3fs.wav", k, duration);
-        k += 1;
-        sherpa_onnx::WriteWave(filename, 16000, segment.samples.data(),
-                               segment.samples.size());
-        fprintf(stderr, "Saved to %s\n", filename);
-        fprintf(stderr, "----------\n");
+      std::ostringstream os;
+      os << "seg-" << k << "-" << std::fixed << std::setprecision(3) << duration
+         << "s.wav";
+      k += 1;
+      sherpa_onnx::WriteWave(os.str(), 16000, segment.samples.data(),
+                             segment.samples.size());
+      fprintf(stderr, "Saved to %s\n", os.str().c_str());
+      fprintf(stderr, "----------\n");
 
-        vad->Pop();
-      }
+      vad->Pop();
     }
   }
 

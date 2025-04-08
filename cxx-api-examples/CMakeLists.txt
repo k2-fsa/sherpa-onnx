@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 
 add_executable(streaming-zipformer-cxx-api ./streaming-zipformer-cxx-api.cc)
 target_link_libraries(streaming-zipformer-cxx-api sherpa-onnx-cxx-api)
@@ -23,6 +23,12 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(dolphin-ctc-cxx-api ./dolphin-ctc-cxx-api.cc)
+target_link_libraries(dolphin-ctc-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(vad-cxx-api ./vad-cxx-api.cc)
+target_link_libraries(vad-cxx-api sherpa-onnx-cxx-api)
 
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(matcha-tts-zh-cxx-api ./matcha-tts-zh-cxx-api.cc)

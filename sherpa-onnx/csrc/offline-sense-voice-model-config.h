@@ -23,9 +23,8 @@ struct OfflineSenseVoiceModelConfig {
   bool use_itn = false;
 
   OfflineSenseVoiceModelConfig() = default;
-  explicit OfflineSenseVoiceModelConfig(const std::string &model,
-                                        const std::string &language,
-                                        bool use_itn)
+  OfflineSenseVoiceModelConfig(const std::string &model,
+                               const std::string &language, bool use_itn)
       : model(model), language(language), use_itn(use_itn) {}
 
   void Register(ParseOptions *po);

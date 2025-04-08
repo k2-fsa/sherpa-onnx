@@ -8,7 +8,7 @@ You can download the model files from
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 }
 
-program vad_with_whisper;
+program vad_with_sense_voice;
 
 {$mode objfpc}
 

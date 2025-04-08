@@ -129,15 +129,13 @@ as the device_name.
     exit(-1);
   }
 
-  int32_t chunk = 0.1 * alsa.GetActualSampleRate();
-
   fprintf(stderr, "Started. Please speak\n");
 
   int32_t window_size = vad_config.silero_vad.window_size;
   int32_t index = 0;
 
   while (!stop) {
-    const std::vector<float> &samples = alsa.Read(chunk);
+    const std::vector<float> &samples = alsa.Read(window_size);
     vad->AcceptWaveform(samples.data(), samples.size());
 
     while (!vad->Empty()) {

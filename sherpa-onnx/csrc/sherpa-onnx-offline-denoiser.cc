@@ -24,8 +24,8 @@ Usage:
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
 ./bin/sherpa-onnx-offline-denoiser \
   --speech-denoiser-gtcrn-model=gtcrn_simple.onnx \
-  --input-wav input.wav \
-  --output-wav output_16k.wav
+  --input-wav=input.wav \
+  --output-wav=output_16k.wav
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

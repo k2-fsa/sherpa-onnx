@@ -1,0 +1,114 @@
+name: export-silero-vad-to-rknn
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-silero-vad-to-rknn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-silero-vad-to-rknn:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export silero-vad to rknn
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade \
+            pip \
+            "numpy<2" \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+            onnx \
+            onnxruntime==1.17.1 \
+            librosa \
+            soundfile \
+            onnxsim
+
+          curl -SL -O https://huggingface.co/csukuangfj/rknn-toolkit2/resolve/main/rknn_toolkit2-2.1.0%2B708089d1-cp310-cp310-linux_x86_64.whl
+          pip install ./*.whl "numpy<=1.26.4"
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/silero_vad/v4
+          curl -SL -O https://github.com/snakers4/silero-vad/raw/refs/tags/v4.0/files/silero_vad.jit
+          ./export-onnx.py
+          ./show.py
+
+          ls -lh m.onnx
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+          ./test-onnx.py  --model ./m.onnx --wav ./lei-jun-test.wav
+
+          for platform in rk3588 rk3576 rk3568 rk3566 rk3562; do
+          echo "Platform: $platform"
+            ./export-rknn.py --in-model ./m.onnx --out-model silero-vad-v4-$platform.rknn  --target-platform $platform
+            ls -lh silero-vad-v4-$platform.rknn
+          done
+
+      - name: Collect files
+        shell: bash
+        run: |
+          cd scripts/silero_vad/v4
+          ls -lh
+          mv *.rknn ../../..
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.rknn
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Upload model to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-rknn-models huggingface
+            cd huggingface
+
+            git fetch
+            git pull
+            git lfs track "*.rknn"
+            git merge -m "merge remote" --ff origin main
+            dst=vad
+            mkdir -p $dst
+            cp ../*.rknn $dst/ || true
+
+            ls -lh $dst
+            git add .
+            git status
+            git commit -m "update models"
+            git status
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-rknn-models main || true
+            rm -rf huggingface

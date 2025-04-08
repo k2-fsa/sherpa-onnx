@@ -5,6 +5,7 @@ APIs with non-streaming models for speech recognition.
 
 |File|Description|
 |----|-----------|
+|[run-dolphin-ctc.sh](./run-dolphin-ctc.sh)|Use a non-streaming [Dolphin](https://github.com/DataoceanAI/Dolphin) CTC model for speech recognition|
 |[run-nemo-ctc.sh](./run-nemo-ctc.sh)|Use a non-streaming NeMo CTC model for speech recognition|
 |[run-nemo-transducer.sh](./run-nemo-transducer.sh)|Use a non-streaming NeMo transducer model for speech recognition|
 |[run-paraformer-itn.sh](./run-paraformer-itn.sh)|Use a non-streaming Paraformer model for speech recognition with inverse text normalization for numbers|

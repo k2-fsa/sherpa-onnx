@@ -1,4 +1,4 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 
 set(srcs
   audio-tagging.cc
@@ -9,6 +9,7 @@ set(srcs
   features.cc
   keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc
+  offline-dolphin-model-config.cc
   offline-fire-red-asr-model-config.cc
   offline-lm-config.cc
   offline-model-config.cc
@@ -51,7 +52,7 @@ set(srcs
   wave-writer.cc
 )
 if(SHERPA_ONNX_HAS_ALSA)
-  list(APPEND srcs ${CMAKE_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
+  list(APPEND srcs ${PROJECT_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
 else()
   list(APPEND srcs faked-alsa.cc)
 endif()

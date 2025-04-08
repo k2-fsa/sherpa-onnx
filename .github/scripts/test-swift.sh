@@ -7,6 +7,9 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-dolphin-ctc-asr.sh
+rm -rf sherpa-onnx-dolphin-*
+
 ./run-speech-enhancement-gtcrn.sh
 ls -lh *.wav
 

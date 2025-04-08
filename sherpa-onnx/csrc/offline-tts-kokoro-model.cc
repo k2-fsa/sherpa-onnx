@@ -84,6 +84,9 @@ class OfflineTtsKokoroModel::Impl {
         style_embedding_shape.size());
 
     int64_t speed_shape = 1;
+    if (config_.kokoro.length_scale != 1 && speed == 1) {
+      speed = 1. / config_.kokoro.length_scale;
+    }
 
     Ort::Value speed_tensor =
         Ort::Value::CreateTensor(memory_info, &speed, 1, &speed_shape, 1);

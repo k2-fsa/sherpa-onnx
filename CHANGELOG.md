@@ -1,3 +1,43 @@
+## 1.11.3
+
+* fix vits dict dir config (#2036)
+* fix case (#2037)
+* Fix building wheels for RKNN (#2041)
+* Change scale factor to 32767 (#2056)
+* Fix length scale for kokoro tts (#2060)
+* Allow building repository as CMake subdirectory (#2059)
+* Export silero_vad v4 to RKNN (#2067)
+* fix dml with preinstall ort (#2066)
+* Fix building aar to include speech denoiser (#2069)
+* Add CXX API for VAD (#2077)
+* Add C++ runtime for silero_vad with RKNN (#2078)
+* Refactor rknn code (#2079)
+* Fix building for android (#2081)
+* Add C++ and Python API for Dolphin CTC models (#2085)
+* Add Kotlin and Java API for Dolphin CTC models (#2086)
+* Add C and CXX API for Dolphin CTC models (#2088)
+* Preserve more context after endpointing in transducer (#2061)
+* Add C# API for Dolphin CTC models (#2089)
+* Add Go API for Dolphin CTC models (#2090)
+* Add Swift API for Dolphin CTC models (#2091)
+* Add Javascript (WebAssembly) API for Dolphin CTC models (#2093)
+* Add Javascript (node-addon) API for Dolphin CTC models (#2094)
+* Add Dart API for Dolphin CTC models (#2095)
+* Add Pascal API for Dolphin CTC models (#2096)
+
+## 1.11.2
+
+* Fix CI (#2016)
+* Publish jar for more java versions (#2017)
+* add alsa example for vad+offline asr (#2020)
+* Support cuda12 and cudnn8 for Linux aarch64. (#2021)
+* Update README to include more projects using sherpa-onnx (#2022)
+* Fix a bug in vad.reset() (#2023)
+* Fix Matcha + vocos for Android (#2024)
+* Fix crash in Android tts engine demo. (#2029)
+* Fix build script: add 'cd build' after 'mkdir build' to ensure the correct working directory for CMake (#2033)
+* fix static linking (#2032)
+
 ## 1.11.1
 
 * Export vocos to sherpa-onnx (#2012)

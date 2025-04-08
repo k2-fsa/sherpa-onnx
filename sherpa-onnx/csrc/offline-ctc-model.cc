@@ -20,6 +20,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-dolphin-model.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-telespeech-ctc-model.h"
@@ -110,6 +111,10 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     const OfflineModelConfig &config) {
+  if (!config.dolphin.model.empty()) {
+    return std::make_unique<OfflineDolphinModel>(config);
+  }
+
   // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
@@ -160,6 +165,10 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 template <typename Manager>
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     Manager *mgr, const OfflineModelConfig &config) {
+  if (!config.dolphin.model.empty()) {
+    return std::make_unique<OfflineDolphinModel>(mgr, config);
+  }
+
   // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 

@@ -64,6 +64,10 @@ class OfflineCtcModel {
   // return true for models from https://github.com/salute-developers/GigaAM
   // return false otherwise
   virtual bool IsGigaAM() const { return false; }
+
+  // For Dolphin models, they use global CMVN
+  virtual void NormalizeFeatures(float *features, int32_t num_frames,
+                                 int32_t feat_dim) const {}
 };
 
 }  // namespace sherpa_onnx

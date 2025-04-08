@@ -377,6 +377,10 @@ type OfflineNemoEncDecCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineDolphinModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineWhisperModelConfig struct {
 	Encoder      string
 	Decoder      string
@@ -422,6 +426,7 @@ type OfflineModelConfig struct {
 	SenseVoice OfflineSenseVoiceModelConfig
 	Moonshine  OfflineMoonshineModelConfig
 	FireRedAsr OfflineFireRedAsrModelConfig
+	Dolphin    OfflineDolphinModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -511,6 +516,8 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
+
+	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 

@@ -82,6 +82,27 @@ class OfflineNemoEncDecCtcModelConfig {
   final String model;
 }
 
+class OfflineDolphinModelConfig {
+  const OfflineDolphinModelConfig({this.model = ''});
+
+  factory OfflineDolphinModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineDolphinModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineDolphinModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig(
       {this.encoder = '',
@@ -265,6 +286,7 @@ class OfflineModelConfig {
     this.senseVoice = const OfflineSenseVoiceModelConfig(),
     this.moonshine = const OfflineMoonshineModelConfig(),
     this.fireRedAsr = const OfflineFireRedAsrModelConfig(),
+    this.dolphin = const OfflineDolphinModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -309,6 +331,10 @@ class OfflineModelConfig {
           ? OfflineFireRedAsrModelConfig.fromJson(
               json['fireRedAsr'] as Map<String, dynamic>)
           : const OfflineFireRedAsrModelConfig(),
+      dolphin: json['dolphin'] != null
+          ? OfflineDolphinModelConfig.fromJson(
+              json['dolphin'] as Map<String, dynamic>)
+          : const OfflineDolphinModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -322,7 +348,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -334,6 +360,7 @@ class OfflineModelConfig {
         'senseVoice': senseVoice.toJson(),
         'moonshine': moonshine.toJson(),
         'fireRedAsr': fireRedAsr.toJson(),
+        'dolphin': dolphin.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -352,6 +379,7 @@ class OfflineModelConfig {
   final OfflineSenseVoiceModelConfig senseVoice;
   final OfflineMoonshineModelConfig moonshine;
   final OfflineFireRedAsrModelConfig fireRedAsr;
+  final OfflineDolphinModelConfig dolphin;
 
   final String tokens;
   final int numThreads;
@@ -544,6 +572,8 @@ class OfflineRecognizer {
     c.ref.model.fireRedAsr.decoder =
         config.model.fireRedAsr.decoder.toNativeUtf8();
 
+    c.ref.model.dolphin.model = config.model.dolphin.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -581,6 +611,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
     calloc.free(c.ref.model.fireRedAsr.encoder);
     calloc.free(c.ref.model.moonshine.cachedDecoder);

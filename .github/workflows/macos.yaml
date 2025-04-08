@@ -162,6 +162,14 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*osx-universal2*.tar.bz2
 
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+
       - name: Test offline speech denoiser
         shell: bash
         run: |
@@ -225,14 +233,6 @@ jobs:
           export EXE=sherpa-onnx-online-punctuation
 
           .github/scripts/test-online-punctuation.sh
-
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-ctc.sh
 
       - name: Test online CTC
         shell: bash
