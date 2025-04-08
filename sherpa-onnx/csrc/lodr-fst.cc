@@ -13,33 +13,33 @@
 
 namespace sherpa_onnx {
 
-LODRFST::LODRFST(const std::string &fst_path) {
+  LodrFst::LodrFst(const std::string &fst_path) {
   fst_ = std::unique_ptr<fst::StdConstFst>(
     CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
 }
 
-std::vector<std::tuple<int, float>> LODRFST::process_backoff_arcs(
-    int state, float cost) {
-  std::vector<std::tuple<int, float>> ans;
-  auto next = next_states_costs_no_backoff(state, backoff_id);
+std::vector<std::tuple<int32_t, float>> LodrFst::ProcessBackoffArcs(
+  int32_t state, float cost) {
+  std::vector<std::tuple<int32_t, float>> ans;
+  auto next = GetNextStatesCostsNoBackoff(state, backoff_id_);
   if (!next.has_value()) {
     return ans;
   }
   auto [next_state, next_cost] = next.value();
   ans.emplace_back(next_state, next_cost + cost);
-  auto recursive_result = process_backoff_arcs(next_state, next_cost + cost);
+  auto recursive_result = ProcessBackoffArcs(next_state, next_cost + cost);
   ans.insert(ans.end(), recursive_result.begin(), recursive_result.end());
   return ans;
 }
 
-std::optional<std::tuple<int, float>> LODRFST::next_states_costs_no_backoff(
-    int state, int label) {
+std::optional<std::tuple<int32_t, float>> LodrFst::GetNextStatesCostsNoBackoff(
+  int32_t state, int32_t label) {
   fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
-  int num_arcs = fst_->NumArcs(state);
+  int32_t num_arcs = fst_->NumArcs(state);
 
-  int left = 0, right = num_arcs - 1;
+  int32_t left = 0, right = num_arcs - 1;
   while (left <= right) {
-    int mid = (left + right) / 2;
+    int32_t mid = (left + right) / 2;
     arc_iter.Seek(mid);
     auto arc = arc_iter.Value();
     if (arc.ilabel < label) {
@@ -53,21 +53,21 @@ std::optional<std::tuple<int, float>> LODRFST::next_states_costs_no_backoff(
   return std::nullopt;
 }
 
-std::pair<std::vector<int>, std::vector<float>> LODRFST::get_next_states_costs(
-    int state, int label) {
-  std::vector<int> states = {state};
+std::pair<std::vector<int32_t>, std::vector<float>> LodrFst::GetNextStateCosts(
+  int32_t state, int32_t label) {
+  std::vector<int32_t> states = {state};
   std::vector<float> costs = {0};
 
-  auto extra_states_costs = process_backoff_arcs(state, 0);
+  auto extra_states_costs = ProcessBackoffArcs(state, 0);
   for (const auto& [s, c] : extra_states_costs) {
     states.push_back(s);
     costs.push_back(c);
   }
 
-  std::vector<int> next_states;
+  std::vector<int32_t> next_states;
   std::vector<float> next_costs;
   for (size_t i = 0; i < states.size(); ++i) {
-    auto next = next_states_costs_no_backoff(states[i], label);
+    auto next = GetNextStatesCostsNoBackoff(states[i], label);
     if (next.has_value()) {
       auto [ns, nc] = next.value();
       next_states.push_back(ns);
@@ -78,7 +78,7 @@ std::pair<std::vector<int>, std::vector<float>> LODRFST::get_next_states_costs(
   return std::make_pair(next_states, next_costs);
 }
 
-void LODRFST::ComputeScore(float scale, Hypothesis *hyp, int32_t offset) {
+void LodrFst::ComputeScore(float scale, Hypothesis *hyp, int32_t offset) {
   if (scale == 0) {
     return;
   }
@@ -139,7 +139,7 @@ void LODRFST::ComputeScore(float scale, Hypothesis *hyp, int32_t offset) {
   hyp->log_prob += scale * total_weight.Value();
 }
 
-fst::StdVectorFst LODRFST::YsToFst(
+fst::StdVectorFst LodrFst::YsToFst(
     const std::vector<int64_t> &ys, int32_t offset) {
   using Weight = typename fst::StdArc::Weight;
   using Arc = fst::StdArc;
@@ -160,8 +160,8 @@ fst::StdVectorFst LODRFST::YsToFst(
   return ans;
 }
 
-LODRStateCost::LODRStateCost(
-    LODRFST* fst, std::unordered_map<int, float> state_cost)
+LodrStateCost::LodrStateCost(
+    LodrFst* fst, std::unordered_map<int, float> state_cost)
     : fst_(fst) {
   if (state_cost.empty()) {
     state_cost_[0] = 0.0;
@@ -170,10 +170,10 @@ LODRStateCost::LODRStateCost(
   }
 }
 
-LODRStateCost LODRStateCost::forward_one_step(int label) {
+LodrStateCost LodrStateCost::ForwardOneStep(int label) {
   std::unordered_map<int, float> state_cost;
   for (const auto& [s, c] : state_cost_) {
-    auto [next_states, next_costs] = fst_->get_next_states_costs(s, label);
+    auto [next_states, next_costs] = fst_->GetNextStateCosts(s, label);
     for (size_t i = 0; i < next_states.size(); ++i) {
       int ns = next_states[i];
       float nc = next_costs[i];
@@ -183,10 +183,10 @@ LODRStateCost LODRStateCost::forward_one_step(int label) {
       state_cost[ns] = std::min(state_cost[ns], c + nc);
     }
   }
-  return LODRStateCost(fst_, state_cost);
+  return LodrStateCost(fst_, state_cost);
 }
 
-float LODRStateCost::lm_score() const {
+float LodrStateCost::Score() const {
   if (state_cost_.empty()) {
     return -std::numeric_limits<float>::infinity();
   }

@@ -19,7 +19,7 @@ class OfflineLM {
  public:
   explicit OfflineLM(const OfflineLMConfig &config) : config_(config) {
     if (config_.lodr_fst != "") {
-      lodr_fst_ = std::make_unique<LODRFST>(LODRFST(config_.lodr_fst));
+      lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst));
     }
   }
   virtual ~OfflineLM() = default;
@@ -51,7 +51,7 @@ class OfflineLM {
                       std::vector<Hypotheses> *hyps);
 
  private:
-  std::unique_ptr<LODRFST> lodr_fst_;
+  std::unique_ptr<LodrFst> lodr_fst_;
   float lodr_scale_ = 0.01;
   OfflineLMConfig config_;
 };

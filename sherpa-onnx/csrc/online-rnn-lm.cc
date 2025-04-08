@@ -39,7 +39,7 @@ class OnlineRnnLM::Impl {
       // if LODR enabled, we need to initialize the LODR state
       if (lodr_fst_ != nullptr) {
         hyp->lodr_state = std::move(
-                             std::make_shared<LODRStateCost>(lodr_fst_.get()));
+                             std::make_shared<LodrStateCost>(lodr_fst_.get()));
       }
     }
 
@@ -49,10 +49,10 @@ class OnlineRnnLM::Impl {
 
     // if LODR enabled, we need to update the LODR state
     if (lodr_fst_ != nullptr) {
-      auto next_lodr_state = std::make_shared<LODRStateCost>(
-                            hyp->lodr_state->forward_one_step(hyp->ys.back()));
+      auto next_lodr_state = std::make_shared<LodrStateCost>(
+                            hyp->lodr_state->ForwardOneStep(hyp->ys.back()));
       // calculate the score of the latest token
-      auto score = next_lodr_state->lm_score() - hyp->lodr_state->lm_score();
+      auto score = next_lodr_state->Score() - hyp->lodr_state->Score();
       hyp->lodr_state = std::move(next_lodr_state);
       // apply LODR to hyp score
       hyp->log_prob += score * config_.lodr_scale;
@@ -179,7 +179,7 @@ class OnlineRnnLM::Impl {
     ComputeInitStates();
 
     if (!config_.lodr_fst.empty()) {
-      lodr_fst_ = std::make_unique<LODRFST>(LODRFST(config_.lodr_fst));
+      lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst));
     }
   }
 
@@ -231,7 +231,7 @@ class OnlineRnnLM::Impl {
   int32_t rnn_hidden_size_ = 512;
   int32_t sos_id_ = 1;
 
-  std::unique_ptr<LODRFST> lodr_fst_;
+  std::unique_ptr<LodrFst> lodr_fst_;
 };
 
 OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)

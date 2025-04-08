@@ -2,6 +2,8 @@
 //
 // Contains code copied from icefall/utils/ngram_lm.py
 // Copyright (c)  2023 Xiaomi Corporation
+//
+// Copyright (c)  2025 Tilde SIA (Askars Salimbajevs)
 
 
 #ifndef SHERPA_ONNX_CSRC_LODR_FST_H_
@@ -23,11 +25,11 @@ namespace sherpa_onnx {
 
 class Hypothesis;
 
-class LODRFST {
+class LodrFst {
  public:
-  explicit LODRFST(const std::string &fst_path);
+  explicit LodrFst(const std::string &fst_path);
 
-  std::pair<std::vector<int>, std::vector<float>> get_next_states_costs(
+  std::pair<std::vector<int32_t>, std::vector<float>> GetNextStateCosts(
     int state, int label);
 
   void ComputeScore(float scale, Hypothesis *hyp, int32_t offset);
@@ -35,29 +37,29 @@ class LODRFST {
  private:
   fst::StdVectorFst YsToFst(const std::vector<int64_t> &ys, int32_t offset);
 
-  std::vector<std::tuple<int, float>> process_backoff_arcs(
+  std::vector<std::tuple<int, float>> ProcessBackoffArcs(
     int state, float cost);
 
-  std::optional<std::tuple<int, float>> next_states_costs_no_backoff(
+  std::optional<std::tuple<int32_t, float>> GetNextStatesCostsNoBackoff(
     int state, int label);
 
 
-  int backoff_id;
+  int32_t backoff_id_ = 0;
   std::unique_ptr<fst::StdConstFst> fst_;
 };
 
-class LODRStateCost {
+class LodrStateCost {
  public:
-  explicit LODRStateCost(
-    LODRFST* fst,
+  explicit LodrStateCost(
+    LodrFst* fst,
     std::unordered_map<int, float> state_cost = {});
 
-  LODRStateCost forward_one_step(int label);
+    LodrStateCost ForwardOneStep(int label);
 
-  float lm_score() const;
+  float Score() const;
 
  private:
-  LODRFST* fst_;
+  LodrFst* fst_;
   std::unordered_map<int, float> state_cost_;
 };
 

@@ -64,7 +64,7 @@ struct Hypothesis {
   std::vector<CopyableOrtValue> nn_lm_states;
 
   // the LODR states
-  std::shared_ptr<LODRStateCost> lodr_state;
+  std::shared_ptr<LodrStateCost> lodr_state;
 
   const ContextState *context_state;
 
