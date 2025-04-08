@@ -140,7 +140,9 @@ README-DEV.txt
 # WASM combined build artifacts
 wasm/combined/*.wasm
 wasm/combined/sherpa-onnx-wasm-combined.js
-build-wasm-combined
+build-wasm-combined/
+# Don't ignore the build script
+!build-wasm-combined.sh
 
 ##clion
 .idea
