@@ -271,7 +271,7 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   jobject dolphin_config = env->GetObjectField(model_config, fid);
   jclass dolphin_config_cls = env->GetObjectClass(dolphin_config);
 
-  fid = env->GetFieldID(nemo_config_cls, "model", "Ljava/lang/String;");
+  fid = env->GetFieldID(dolphin_config_cls, "model", "Ljava/lang/String;");
 
   s = (jstring)env->GetObjectField(dolphin_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
