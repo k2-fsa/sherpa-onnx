@@ -103,6 +103,17 @@ cd /path/to/sherpa-onnx/wasm/combined
 
 This script will download necessary model files to the `assets/` directory.
 
+## Testing the Demos
+
+After building the module and setting up the models, you can test the demos using Python's built-in HTTP server:
+
+```bash
+cd /path/to/sherpa-onnx/wasm/combined
+python3 -m http.server 8080
+```
+
+Then navigate to http://localhost:8080/demos/ in your web browser to access the demos.
+
 ## Troubleshooting
 
 - **Module load errors**: Ensure the WASM module is loaded before any other scripts
