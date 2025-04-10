@@ -90,6 +90,9 @@ struct OnlineRecognizerConfig {
   /// used only for modified_beam_search
   std::string hotwords_file;
   float hotwords_score = 1.5;
+  /// Whether to tokenize the input hotwords, normally should be true
+  /// if false, you have to tokenize hotwords by yourself.
+  bool tokenize_hotwords = true;
 
   float blank_penalty = 0.0;
 
@@ -115,8 +118,9 @@ struct OnlineRecognizerConfig {
       const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
       bool enable_endpoint, const std::string &decoding_method,
       int32_t max_active_paths, const std::string &hotwords_file,
-      float hotwords_score, float blank_penalty, float temperature_scale,
-      const std::string &rule_fsts, const std::string &rule_fars)
+      float hotwords_score, bool tokenize_hotwords, float blank_penalty,
+      float temperature_scale, const std::string &rule_fsts,
+      const std::string &rule_fars)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -127,6 +131,7 @@ struct OnlineRecognizerConfig {
         max_active_paths(max_active_paths),
         hotwords_file(hotwords_file),
         hotwords_score(hotwords_score),
+        tokenize_hotwords(tokenize_hotwords),
         blank_penalty(blank_penalty),
         temperature_scale(temperature_scale),
         rule_fsts(rule_fsts),
@@ -155,9 +160,10 @@ class OnlineRecognizer {
   /** Create a stream for decoding.
    *
    *  @param The hotwords for this string, it might contain several hotwords,
-   *         the hotwords are separated by "/". In each of the hotwords, there
-   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
-   *         For example, hotwords I LOVE YOU and HELLO WORLD, looks like:
+   *         the hotwords are separated by "/". For eaxmple, I LOVE YOU/HELLO
+   *         WORLD. if tokenize_hotwords is false, the hotwords should be
+   *         tokenized, so hotwords I LOVE YOU and HELLO WORLD, should look
+   *         like:
    *
    *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
    */
