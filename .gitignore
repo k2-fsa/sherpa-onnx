@@ -138,6 +138,17 @@ cmake-build-debug
 README-DEV.txt
 *.rknn
 *.jit
+# WASM combined build artifacts
+wasm/combined/*.wasm
+wasm/combined/sherpa-onnx-wasm-combined.js
+build-wasm-combined/
+# Don't ignore the build script
+!build-wasm-combined.sh
+
 ##clion
 .idea
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
+
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfo.cs
+scripts/dotnet/examples/obj/Debug/net8.0/Common.GeneratedMSBuildEditorConfig.editorconfig
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfoInputs.cache
