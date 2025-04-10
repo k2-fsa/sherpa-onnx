@@ -1,3 +1,6 @@
+# TODO: this needs refinement. After disabling some parts
+# in the cmake build, certain Classes are not available.
+# Should it by `try ... except loop` ? But how to do it ?
 from _sherpa_onnx import (
     Alsa,
     AudioEvent,
