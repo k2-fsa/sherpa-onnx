@@ -153,7 +153,9 @@ class BuildExtension(build_ext):
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")
             cmake_args += f" -DPYTHON_EXECUTABLE={sys.executable}"
 
-        cmake_args += extra_cmake_args
+        # putting `cmake_args` from env variable ${SHERPA_ONNX_CMAKE_ARGS} last,
+        # so they can onverride the "defaults" stored in `extra_cmake_args`
+        cmake_args = extra_cmake_args + cmake_args
 
         if is_windows():
             build_cmd = f"""
