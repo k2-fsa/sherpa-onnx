@@ -153,7 +153,9 @@ class BuildExtension(build_ext):
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")
             cmake_args += f" -DPYTHON_EXECUTABLE={sys.executable}"
 
-        cmake_args += extra_cmake_args
+        # putting `cmake_args` from env variable ${SHERPA_ONNX_CMAKE_ARGS} last,
+        # so they can onverride the "defaults" stored in `extra_cmake_args`
+        cmake_args = extra_cmake_args + cmake_args
 
         if is_windows():
             build_cmd = f"""
@@ -216,12 +218,18 @@ class BuildExtension(build_ext):
             if not src_file.is_file():
                 src_file = install_dir / ".." / (f + suffix)
 
+            if not src_file.is_file():
+                continue
+
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 
-        shutil.rmtree(f"{install_dir}/bin")
-        shutil.rmtree(f"{install_dir}/share")
-        shutil.rmtree(f"{install_dir}/lib/pkgconfig")
+        if Path(f"{install_dir}/bin").is_dir():
+            shutil.rmtree(f"{install_dir}/bin")
+        if Path(f"{install_dir}/share").is_dir():
+            shutil.rmtree(f"{install_dir}/share")
+        if Path(f"{install_dir}/lib/pkgconfig").is_dir():
+            shutil.rmtree(f"{install_dir}/lib/pkgconfig")
 
         if is_macos():
             os.remove(f"{install_dir}/lib/libonnxruntime.dylib")

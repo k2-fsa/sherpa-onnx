@@ -45,6 +45,10 @@ with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
 
 
 def get_binaries_to_install():
+    cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
+    if '-DSHERPA_ONNX_ENABLE_BINARY=OFF' in cmake_args:
+        return None
+
     bin_dir = Path("build") / "sherpa_onnx" / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
     suffix = ".exe" if is_windows() else ""
@@ -69,7 +73,7 @@ setuptools.setup(
         "sherpa_onnx": "sherpa-onnx/python/sherpa_onnx",
     },
     packages=["sherpa_onnx"],
-    data_files=[("bin", get_binaries_to_install())],
+    data_files=[("bin", get_binaries_to_install())] if get_binaries_to_install() else None,
     url="https://github.com/k2-fsa/sherpa-onnx",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",

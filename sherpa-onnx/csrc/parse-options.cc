@@ -262,7 +262,7 @@ static bool MustBeQuoted(const std::string &str, ShellType st) {
 // will get passed to the program in the same way.
 static std::string QuoteAndEscape(const std::string &str, ShellType /*st*/) {
   // Only Bash is supported (for the moment).
-  SHERPA_ONNX_CHECK_EQ(st, kBash) << "Invalid shell type.";
+  // SHERPA_ONNX_CHECK_EQ(st, kBash) << "Invalid shell type.";
 
   // For now we use the following rules:
   // In the normal case, we quote with single-quote "'", and to escape
