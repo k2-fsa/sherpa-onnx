@@ -224,9 +224,12 @@ class BuildExtension(build_ext):
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 
-        shutil.rmtree(f"{install_dir}/bin")
-        shutil.rmtree(f"{install_dir}/share")
-        shutil.rmtree(f"{install_dir}/lib/pkgconfig")
+        if Path(f"{install_dir}/bin").is_dir():
+            shutil.rmtree(f"{install_dir}/bin")
+        if Path(f"{install_dir}/share").is_dir():
+            shutil.rmtree(f"{install_dir}/share")
+        if Path(f"{install_dir}/lib/pkgconfig").is_dir():
+            shutil.rmtree(f"{install_dir}/lib/pkgconfig")
 
         if is_macos():
             os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
