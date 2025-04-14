@@ -56,44 +56,105 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
         with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}-gpu
+            image: quay.io/pypa/manylinux_2_28_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
 
-      - name: Configure CMake
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              mkdir build
+              cd build
+
+              cmake \
+                -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                -D BUILD_SHARED_LIBS=ON \
+                -D SHERPA_ONNX_ENABLE_GPU=ON \
+                ..
+
+              make -j2
+              make install
+
+              ls -lh lib
+              ls -lh bin
+
+              echo "----"
+              ls -lh install/lib
+
+              echo "----"
+              ls -lh install/bin
+
+      - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+          du -h -d1 .
+          sudo chown -R $USER ./build
+          ls -lh build/bin
+          ls -lh build/_deps/onnxruntime-src/lib/
 
-          mkdir build
-          cd build
-          cmake \
-            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -D CMAKE_INSTALL_PREFIX=./install \
-            -D BUILD_SHARED_LIBS=ON \
-            -D SHERPA_ONNX_ENABLE_GPU=ON \
-            ..
+          echo "strip"
+          strip build/bin/*
+          echo "after strip"
+          ls -lh build/bin
 
-      - name: Build sherpa-onnx for ubuntu
+          file build/bin/sherpa-onnx
+          file build/bin/sherpa-onnx
+          ls -lh build/bin/sherpa-onnx
+          readelf -d build/bin/sherpa-onnx
+
+          rm -fv build/install/include/cargs.h
+          rm -fv build/install/lib/cargs.h
+          rm -fv build/install/lib/libcargs.so
+          rm -rfv build/install/lib/pkgconfig
+
+          strings build/install/lib/*.so | grep "^GLIBC_"
+
+      - name: Copy files
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         shell: bash
         run: |
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          cd build
-          make -j2
-          make install
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
+          mkdir $dst
 
-          ls -lh lib
-          ls -lh bin
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
 
-          echo "----"
-          ls -lh install/lib
+          tree $dst
 
-          echo "----"
-          ls -lh install/bin
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-x64-gpu.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.11.3
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
@@ -174,27 +235,6 @@ jobs:
 
           .github/scripts/test-online-transducer.sh
 
-      - name: Copy files
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        shell: bash
-        run: |
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
-          mkdir $dst
 
-          cp -a build/install/bin $dst/
-          cp -a build/install/lib $dst/
-          cp -a build/install/include $dst/
 
-          tree $dst
-
-          tar cjvf ${dst}.tar.bz2 $dst
-
-      - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*linux-x64-gpu.tar.bz2
