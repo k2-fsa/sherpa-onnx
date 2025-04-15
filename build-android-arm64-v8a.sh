@@ -97,6 +97,23 @@ fi
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 
+if [ -z $SHERPA_ONNX_ENABLE_RKNN ]; then
+  SHERPA_ONNX_ENABLE_RKNN=OFF
+fi
+
+if [ $SHERPA_ONNX_ENABLE_RKNN == ON ]; then
+  rknn_version=2.2.0
+  if [ ! -d ./librknnrt-android ]; then
+    rm -fv librknnrt-android.tar.bz2
+    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/librknnrt-android.tar.bz2
+    tar xvf librknnrt-android.tar.bz2
+    rm librknnrt-android.tar.bz2
+  fi
+
+  export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$PWD/librknnrt-android/v$rknn_version/arm64-v8a/
+  export CPLUS_INCLUDE_PATH=$PWD/librknnrt-android/v$rknn_version/include:$CPLUS_INCLUDE_PATH
+fi
+
 if [ -z $SHERPA_ONNX_ENABLE_TTS ]; then
   SHERPA_ONNX_ENABLE_TTS=ON
 fi
@@ -135,6 +152,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
     -DSHERPA_ONNX_ENABLE_C_API=$SHERPA_ONNX_ENABLE_C_API \
     -DCMAKE_INSTALL_PREFIX=./install \
+    -DSHERPA_ONNX_ENABLE_RKNN=$SHERPA_ONNX_ENABLE_RKNN \
     -DANDROID_ABI="arm64-v8a" \
     -DANDROID_PLATFORM=android-21 ..
 
@@ -147,6 +165,11 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 make -j4
 make install/strip
 cp -fv $onnxruntime_version/jni/arm64-v8a/libonnxruntime.so install/lib 2>/dev/null || true
+
+if [ $SHERPA_ONNX_ENABLE_RKNN == ON ]; then
+  cp -fv $SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR/librknnrt.so install/lib
+fi
+
 rm -rf install/share
 rm -rf install/lib/pkgconfig
 rm -rf install/lib/lib*.a
@@ -186,3 +209,19 @@ fi
 # It should show the help message of sherpa-onnx.
 #
 # Please use the above approach to copy model files to your phone.
+#
+# ----------------------------------------
+# For android rknn
+# ----------------------------------------
+# If you get the following error from the logcat
+# 2025-04-15 15:27:43.441 19568-19646 RKNN                    com.k2fsa.sherpa.onnx                E  Meet unsupported input dtype for gather
+# 2025-04-15 15:27:43.442 19568-19646 RKNN                    com.k2fsa.sherpa.onnx                E  Op type:Gather, name: Gather:/Concat_78_2gather, fallback cpu failed. If using rknn, update to the latest toolkit2 and runtime from: https://console.zbox.filez.com/l/I00fc3 (PWD: rknn). If using rknn-llm, update from: https://github.com/airockchip/rknn-llm
+# 2025-04-15 15:27:43.442 19568-19646 sherpa-onnx             com.k2fsa.sherpa.onnx                W  Return code is: -1
+# 2025-04-15 15:27:43.442 19568-19646 sherpa-onnx             com.k2fsa.sherpa.onnx                W  Failed to run encoder
+#
+# You need to update /vendor/lib64/librknnrt.so and /vendor/lib/librknnrt.so
+#
+# adb root
+# adb remount /vendor
+# adb push ./install/lib/librknnrt.so /vendor/lib64
+# adb push ./install/lib/librknnrt.so /vendor/lib

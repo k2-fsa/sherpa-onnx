@@ -252,7 +252,7 @@ OnlineZipformerCtcModelRknn::OnlineZipformerCtcModelRknn(
 template <typename Manager>
 OnlineZipformerCtcModelRknn::OnlineZipformerCtcModelRknn(
     Manager *mgr, const OnlineModelConfig &config)
-    : impl_(std::make_unique<OnlineZipformerCtcModelRknn>(mgr, config)) {}
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 std::vector<std::vector<uint8_t>> OnlineZipformerCtcModelRknn::GetInitStates()
     const {
