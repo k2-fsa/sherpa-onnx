@@ -435,8 +435,7 @@ OnlineZipformerTransducerModelRknn::OnlineZipformerTransducerModelRknn(
 template <typename Manager>
 OnlineZipformerTransducerModelRknn::OnlineZipformerTransducerModelRknn(
     Manager *mgr, const OnlineModelConfig &config)
-    : impl_(std::make_unique<OnlineZipformerTransducerModelRknn>(mgr, config)) {
-}
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 std::vector<std::vector<uint8_t>>
 OnlineZipformerTransducerModelRknn::GetEncoderInitStates() const {

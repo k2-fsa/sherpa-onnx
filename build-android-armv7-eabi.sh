@@ -98,6 +98,23 @@ fi
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 
+if [ -z $SHERPA_ONNX_ENABLE_RKNN ]; then
+  SHERPA_ONNX_ENABLE_RKNN=OFF
+fi
+
+if [ $SHERPA_ONNX_ENABLE_RKNN == ON ]; then
+  rknn_version=2.2.0
+  if [ ! -d ./librknnrt-android ]; then
+    rm -fv librknnrt-android.tar.bz2
+    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/librknnrt-android.tar.bz2
+    tar xvf librknnrt-android.tar.bz2
+    rm librknnrt-android.tar.bz2
+  fi
+
+  export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$PWD/librknnrt-android/v$rknn_version/armeabi-v7a/
+  export CPLUS_INCLUDE_PATH=$PWD/librknnrt-android/v$rknn_version/include:$CPLUS_INCLUDE_PATH
+fi
+
 if [ -z $SHERPA_ONNX_ENABLE_TTS ]; then
   SHERPA_ONNX_ENABLE_TTS=ON
 fi
@@ -136,6 +153,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
     -DSHERPA_ONNX_ENABLE_C_API=$SHERPA_ONNX_ENABLE_C_API \
     -DCMAKE_INSTALL_PREFIX=./install \
+    -DSHERPA_ONNX_ENABLE_RKNN=$SHERPA_ONNX_ENABLE_RKNN \
     -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
     -DANDROID_PLATFORM=android-21 ..
 
@@ -146,6 +164,11 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 make -j4
 make install/strip
 cp -fv $onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so install/lib 2>/dev/null || true
+
+if [ $SHERPA_ONNX_ENABLE_RKNN == ON ]; then
+  cp -fv $SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR/librknnrt.so install/lib
+fi
+
 rm -rf install/share
 rm -rf install/lib/pkgconfig
 rm -rf install/lib/lib*.a
