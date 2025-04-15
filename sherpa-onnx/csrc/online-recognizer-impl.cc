@@ -53,7 +53,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
     SHERPA_ONNX_EXIT(-1);
-    return nullptr
+    return nullptr;
 #endif
   }
 
@@ -112,7 +112,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
     SHERPA_ONNX_EXIT(-1);
-    return nullptr
+    return nullptr;
 #endif
   }
 

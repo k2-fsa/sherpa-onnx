@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/rknn/silero-vad-model-rknn.h"
 #endif
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
 namespace sherpa_onnx {
