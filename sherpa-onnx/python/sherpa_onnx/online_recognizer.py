@@ -68,6 +68,7 @@ class OnlineRecognizer(object):
         lm_scale: float = 0.1,
         lm_shallow_fusion: bool = True,
         temperature_scale: float = 2.0,
+        reset_encoder: bool = False,
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
@@ -162,6 +163,10 @@ class OnlineRecognizer(object):
             Temperature scaling for output symbol confidence estiamation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
+          reset_encoder:
+            True to reset `encoder_state` on an endpoint after empty segment.
+            Done in `Reset()` method, after an endpoint was detected,
+            currently only in `OnlineRecognizerTransducerImpl`.
           model_type:
             Online transducer model type. Valid values are: conformer, lstm,
             zipformer, zipformer2. All other values lead to loading the model twice.
@@ -305,6 +310,7 @@ class OnlineRecognizer(object):
             temperature_scale=temperature_scale,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            reset_encoder=reset_encoder,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

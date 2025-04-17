@@ -399,8 +399,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       r.tokens = std::vector<int64_t> (last_result.tokens.end() - context_size,
                                        last_result.tokens.end());
     } else {
-      // reset encoder states, use blanks as 'ys' context
-      s->SetStates(model_->GetEncoderInitStates());
+      if(config_.reset_encoder) {
+        // reset encoder states, use blanks as 'ys' context
+        s->SetStates(model_->GetEncoderInitStates());
+      }
     }
 
     // but reset all contextual biasing graph states to root

@@ -121,6 +121,10 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
       "rule-fars", &rule_fars,
       "If not empty, it specifies fst archives for inverse text normalization. "
       "If there are multiple archives, they are separated by a comma.");
+
+  po->Register("reset-encoder", &reset_encoder,
+               "True to reset encoder_state on an endpoint after empty segment."
+               "Done in `Reset()` method, after an endpoint was detected.");
 }
 
 bool OnlineRecognizerConfig::Validate() const {
@@ -198,7 +202,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "blank_penalty=" << blank_penalty << ", ";
   os << "temperature_scale=" << temperature_scale << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
-  os << "rule_fars=\"" << rule_fars << "\")";
+  os << "rule_fars=\"" << rule_fars << "\", ";
+  os << "reset_encoder=\"" << (reset_encoder ? "True" : "False") << "\")";
 
   return os.str();
 }
