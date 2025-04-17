@@ -49,6 +49,7 @@ class OfflineRecognizer(object):
         num_threads: int = 1,
         sample_rate: int = 16000,
         feature_dim: int = 80,
+        dither: float = 0.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
         hotwords_file: str = "",
@@ -89,6 +90,11 @@ class OfflineRecognizer(object):
             Sample rate of the training data used to train the model.
           feature_dim:
             Dimension of the feature used to train the model.
+          dither:
+            Dithering constant (0.0 means no dither).
+            By default the audio samples are in range [-1,+1],
+            so dithering constant 0.00003 is a good value,
+            equivalent to the default 1.0 from kaldi
           decoding_method:
             Valid values: greedy_search, modified_beam_search.
           max_active_paths:
@@ -142,6 +148,7 @@ class OfflineRecognizer(object):
         feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
+            dither=dither,
         )
 
         if len(hotwords_file) > 0 and decoding_method != "modified_beam_search":
