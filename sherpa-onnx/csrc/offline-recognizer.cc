@@ -56,6 +56,11 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
                "Used only when decoding_method is modified_beam_search");
 
   po->Register(
+      "tokenize-hotwords", &tokenize_hotwords,
+      "Whether to tokenize hotwords, default true, if false the input hotwords "
+      "should be tokenized into tokens");
+
+  po->Register(
       "rule-fsts", &rule_fsts,
       "If not empty, it specifies fsts for inverse text normalization. "
       "If there are multiple fsts, they are separated by a comma.");
@@ -135,6 +140,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ", ";
+  os << "tokenize_hotwords=" << (tokenize_hotwords ? "True" : "False") << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
   os << "rule_fars=\"" << rule_fars << "\")";

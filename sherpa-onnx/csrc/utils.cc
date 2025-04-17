@@ -70,6 +70,9 @@ static bool EncodeBase(const std::vector<std::string> &lines,
         }
       }
     }
+    if (tmp_ids.empty()) {
+      continue;
+    }
     ids->push_back(std::move(tmp_ids));
     tmp_ids = {};
     tmp_scores.push_back(score);
@@ -101,13 +104,21 @@ static bool EncodeBase(const std::vector<std::string> &lines,
 }
 
 bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
-                    const SymbolTable &symbol_table,
+                    const SymbolTable &symbol_table, bool tokenize_hotwords,
                     const ssentencepiece::Ssentencepiece *bpe_encoder,
                     std::vector<std::vector<int32_t>> *hotwords,
                     std::vector<float> *boost_scores) {
   std::vector<std::string> lines;
   std::string line;
   std::string word;
+
+  if (!tokenize_hotwords) {
+    while (std::getline(is, line)) {
+      lines.push_back(line);
+    }
+    return EncodeBase(lines, symbol_table, hotwords, nullptr, boost_scores,
+                      nullptr);
+  }
 
   while (std::getline(is, line)) {
     std::string score;

@@ -107,6 +107,10 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
       "The file containing hotwords, one words/phrases per line, For example: "
       "HELLO WORLD"
       "你好世界");
+  po->Register(
+      "tokenize-hotwords", &tokenize_hotwords,
+      "Whether to tokenize hotwords, default true, if false the input hotwords "
+      "should be tokenized into tokens");
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
@@ -194,6 +198,7 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
+  os << "tokenize_hotwords=" << (tokenize_hotwords ? "True" : "False") << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "blank_penalty=" << blank_penalty << ", ";
   os << "temperature_scale=" << temperature_scale << ", ";

@@ -59,6 +59,7 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
         hotwords_score: float = 1.5,
+        tokenize_hotwords: bool = True,
         blank_penalty: float = 0.0,
         hotwords_file: str = "",
         model_type: str = "",
@@ -158,6 +159,9 @@ class OnlineRecognizer(object):
           hotwords_score:
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
+          tokenize_hotwords:
+            Whether to tokenize hotwords, true will tokenize hotwords in the engine
+            if false, you have to tokenize hotwords by yourself.
           temperature_scale:
             Temperature scaling for output symbol confidence estiamation.
             It affects only confidence values, the decoding uses the original
@@ -300,6 +304,7 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
             hotwords_score=hotwords_score,
+            tokenize_hotwords=tokenize_hotwords,
             hotwords_file=hotwords_file,
             blank_penalty=blank_penalty,
             temperature_scale=temperature_scale,
