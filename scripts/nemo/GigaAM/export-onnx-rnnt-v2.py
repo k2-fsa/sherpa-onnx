@@ -1,3 +1,5 @@
+import os
+
 import gigaam
 import onnx
 import torch
@@ -26,8 +28,10 @@ def add_meta_data(filename: str, meta_data: dict[str, str]):
 
 
 def main() -> None:
-    model_name = "v2_ctc"
-    model = gigaam.load_model(model_name, fp16_encoder=False, use_flash=False, download_root=".")
+    model_name = "v2_rnnt"
+    model = gigaam.load_model(
+        model_name, fp16_encoder=False, use_flash=False, download_root="."
+    )
     with open("./tokens.txt", "w", encoding="utf-8") as f:
         for i, s in enumerate(model.cfg["labels"]):
             f.write(f"{s} {i}\n")
@@ -35,23 +39,29 @@ def main() -> None:
         print("Saved to tokens.txt")
     model.to_onnx(".")
     meta_data = {
-        "vocab_size": len(model.cfg["labels"]) + 1,
+        "vocab_size": model.cfg["head"]["decoder"]["num_classes"],
+        "pred_rnn_layers": model.cfg["head"]["decoder"]["pred_rnn_layers"],
+        "pred_hidden": model.cfg["head"]["decoder"]["pred_hidden"],
         "normalize_type": "",
         "subsampling_factor": 4,
-        "model_type": "EncDecCTCModel",
+        "model_type": "EncDecRNNTBPEModel",
         "version": "1",
         "model_author": "https://github.com/salute-developers/GigaAM",
         "license": "https://github.com/salute-developers/GigaAM/blob/main/LICENSE",
         "language": "Russian",
         "is_giga_am": 1,
     }
-    add_meta_data(f"./{model_name}.onnx", meta_data)
+
+    add_meta_data(f"./{model_name}_encoder.onnx", meta_data)
     quantize_dynamic(
-        model_input=f"./{model_name}.onnx",
-        model_output="./model.int8.onnx",
+        model_input=f"./{model_name}_encoder.onnx",
+        model_output="./encoder.int8.onnx",
         weight_type=QuantType.QUInt8,
     )
+    os.rename(f"./{model_name}_decoder.onnx", "decoder.onnx")
+    os.rename(f"./{model_name}_joint.onnx", "joiner.onnx")
+    os.remove(f"./{model_name}_encoder.onnx")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -19,7 +19,7 @@ def create_fbank():
     opts.frame_opts.window_type = "hann"
 
     # Even though GigaAM uses 400 for fft, here we use 512
-    # since kaldi-native-fbank only support fft for power of 2.
+    # since kaldi-native-fbank only supports fft for power of 2.
     opts.frame_opts.round_to_power_of_two = True
 
     opts.mel_opts.low_freq = 0
