@@ -208,8 +208,12 @@ def main():
     id2token = dict()
     with open("./tokens.txt", encoding="utf-8") as f:
         for line in f:
-            t, idx = line.split()
-            id2token[int(idx)] = t
+            fields = line.split()
+            if len(fields) == 1:
+                id2token[int(fields[0])] = " "
+            else:
+                t, idx = fields
+                id2token[int(idx)] = t
 
     fbank = create_fbank()
     audio, sample_rate = sf.read("./example.wav", dtype="float32", always_2d=True)

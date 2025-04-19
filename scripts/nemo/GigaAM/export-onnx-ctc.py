@@ -82,6 +82,9 @@ def main():
     model.load_state_dict(ckpt, strict=False)
     model.eval()
 
+    # use characters
+    # space is 0
+    # <blk> is the last token
     with open("tokens.txt", "w", encoding="utf-8") as f:
         for i, t in enumerate(model.cfg.labels):
             f.write(f"{t} {i}\n")

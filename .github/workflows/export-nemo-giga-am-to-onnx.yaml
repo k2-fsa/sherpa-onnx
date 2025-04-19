@@ -27,7 +27,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run CTC
-        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -44,7 +43,8 @@ jobs:
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-ctc.sh $d/
-          cp -v scripts/nemo/GigaAM/*-ctc.py $d/
+          mv -v scripts/nemo/GigaAM/export-onnx-ctc.py $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-ctc.py $d/
 
           ls -lh scripts/nemo/GigaAM/
 
@@ -53,7 +53,6 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run Transducer
-        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -73,7 +72,8 @@ jobs:
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-rnnt.sh $d/
-          cp -v scripts/nemo/GigaAM/*-rnnt.py $d/
+          mv -v scripts/nemo/GigaAM/export-onnx-rnnt.py $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
 
           ls -lh scripts/nemo/GigaAM/
 
@@ -98,7 +98,7 @@ jobs:
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-ctc-v2.sh $d/
           mv -v scripts/nemo/GigaAM/*-ctc-v2.py $d/
-          cp -v scripts/nemo/GigaAM/*-ctc.py $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-ctc.py $d/
 
           ls -lh scripts/nemo/GigaAM/
 
@@ -126,7 +126,6 @@ jobs:
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-rnnt-v2.sh $d/
-          cp -v scripts/nemo/GigaAM/*-rnnt-v2.py $d/
           cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
 
           ls -lh scripts/nemo/GigaAM/
@@ -156,7 +155,6 @@ jobs:
           tag: asr-models
 
       - name: Publish to huggingface (CTC)
-        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -184,7 +182,6 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
 
       - name: Publish to huggingface (Transducer)
-        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

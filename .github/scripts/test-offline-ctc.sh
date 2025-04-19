@@ -47,9 +47,23 @@ for type in base small; do
   rm -rf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02
 done
 
+log "------------------------------------------------------------"
+log "Run NeMo GigaAM Russian models v2"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+tar xvf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+rm sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+
+$EXE \
+  --nemo-ctc-model=./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/model.int8.onnx \
+  --tokens=./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/tokens.txt \
+  --debug=1 \
+  ./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/test_wavs/example.wav
+
+rm -rf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19
 
 log "------------------------------------------------------------"
-log "Run NeMo GigaAM Russian models"
+log "Run NeMo GigaAM Russian models v1"
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
 tar xvf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
