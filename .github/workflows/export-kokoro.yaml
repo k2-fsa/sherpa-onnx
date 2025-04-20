@@ -3,7 +3,7 @@ name: export-kokoro-to-onnx
 on:
   push:
     branches:
-      - export-kokoro-2
+      - fix-export-kokoro-1.0-2
 
   workflow_dispatch:
 
@@ -111,6 +111,26 @@ jobs:
 
           ls -lh $d.tar.bz2
 
+          d=kokoro-int8-multi-lang-v1_0
+          mkdir $d
+          cp -v LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro.int8.onnx $d/model.int8.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/lexicon*.txt $d/
+          cp -v $src/README.md $d/README.md
+          cp -av dict $d/
+          cp -v ./*.fst $d/
+          ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -lh $d.tar.bz2
+
       - name: Collect results 1.1-zh
         if: matrix.version == '1.1-zh'
         shell: bash
@@ -166,6 +186,25 @@ jobs:
           echo "---"
           ls -lh *.tar.bz2
 
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: tts-models
 
       - name: Publish to huggingface 0.19
         if: matrix.version == '0.19'
@@ -216,7 +255,7 @@ jobs:
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
 
-      - name: Publish to huggingface 1.0
+      - name: Publish to huggingface 1.0 float32
         if: matrix.version == '1.0'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -267,6 +306,69 @@ jobs:
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 main || true
 
+      - name: Publish to huggingface 1.0 int8
+        if: matrix.version == '1.0'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_0 huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+            git lfs track "af_dict"
+            git lfs track "ar_dict"
+            git lfs track "da_dict"
+            git lfs track "en_dict"
+            git lfs track "fa_dict"
+            git lfs track "hu_dict"
+            git lfs track "ia_dict"
+            git lfs track "it_dict"
+            git lfs track "lb_dict"
+            git lfs track "phondata"
+            git lfs track "ta_dict"
+            git lfs track "ur_dict"
+            git lfs track "yue_dict"
+            git lfs track "*.wav"
+            git lfs track "lexicon*.txt"
+
+            cp -a ../espeak-ng-data ./
+
+            cp -v ../scripts/kokoro/v1.0/kokoro.int8.onnx ./model.int8.onnx
+
+            cp -v ../scripts/kokoro/v1.0/tokens.txt .
+            cp -v ../scripts/kokoro/v1.0/voices.bin .
+            cp -v ../scripts/kokoro/v1.0/lexicon*.txt .
+            cp -v ../scripts/kokoro/v1.0/README.md ./README.md
+            cp -v ../LICENSE ./
+            cp -av ../dict ./
+            cp -v ../*.fst ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_0 main || true
+
       - name: Publish to huggingface 1.1-zh
         if: matrix.version == '1.1-zh'
         env:
@@ -298,7 +400,6 @@ jobs:
             cp -a ../espeak-ng-data ./
 
             cp -v ../scripts/kokoro/v1.1-zh/kokoro.onnx ./model.onnx
-
 
             cp -v ../scripts/kokoro/v1.1-zh/tokens.txt .
             cp -v ../scripts/kokoro/v1.1-zh/voices.bin .
@@ -350,7 +451,6 @@ jobs:
 
             cp -v ../scripts/kokoro/v1.1-zh/kokoro.int8.onnx ./model.int8.onnx
 
-
             cp -v ../scripts/kokoro/v1.1-zh/tokens.txt .
             cp -v ../scripts/kokoro/v1.1-zh/voices.bin .
             cp -v ../scripts/kokoro/v1.1-zh/lexicon*.txt .
@@ -368,23 +468,3 @@ jobs:
 
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1 main || true
-
-      - name: Release
-        if: github.repository_owner == 'csukuangfj'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: ./*.tar.bz2
-          overwrite: true
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: tts-models
-
-      - name: Release
-        if: github.repository_owner == 'k2-fsa'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: ./*.tar.bz2
-          overwrite: true
-          tag: tts-models
