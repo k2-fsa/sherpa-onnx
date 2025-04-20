@@ -9,7 +9,7 @@ function install_nemo() {
 
   pip install torch==2.4.0 torchaudio==2.4.0 -f https://download.pytorch.org/whl/torch_stable.html
 
-  pip install -qq wget text-unidecode matplotlib>=3.3.2 onnx onnxruntime pybind11 Cython einops kaldi-native-fbank soundfile librosa
+  pip install -qq wget text-unidecode "matplotlib>=3.3.2" onnx onnxruntime==1.17.1 pybind11 Cython einops kaldi-native-fbank soundfile librosa
   pip install -qq ipython
 
   # sudo apt-get install -q -y sox libsndfile1 ffmpeg python3-pip ipython

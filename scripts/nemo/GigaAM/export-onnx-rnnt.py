@@ -83,6 +83,7 @@ def main():
     model.load_state_dict(ckpt, strict=False)
     model.eval()
 
+    # use bpe
     with open("./tokens.txt", "w", encoding="utf-8") as f:
         for i, s in enumerate(model.joint.vocabulary):
             f.write(f"{s} {i}\n")
@@ -94,7 +95,9 @@ def main():
     model.joint.export("joiner.onnx")
 
     meta_data = {
-        "vocab_size": model.decoder.vocab_size,  # not including the blank
+        # not including the blank
+        # we increase vocab_size in the C++ code
+        "vocab_size": model.decoder.vocab_size,
         "pred_rnn_layers": model.decoder.pred_rnn_layers,
         "pred_hidden": model.decoder.pred_hidden,
         "normalize_type": "",
