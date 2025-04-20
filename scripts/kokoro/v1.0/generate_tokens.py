@@ -6,7 +6,7 @@ import json
 
 
 def main():
-    with open("config.json") as f:
+    with open("Kokoro-82M/config.json") as f:
         config = json.load(f)
     vocab = config["vocab"]
 
