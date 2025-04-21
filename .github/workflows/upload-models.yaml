@@ -1,0 +1,216 @@
+name: upload-models
+
+on:
+  push:
+    branches:
+      - upload-models
+  workflow_dispatch:
+
+concurrency:
+  group: upload-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: upload models
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vietnamese (zipformer)
+        shell: bash
+        run: |
+          rm -rf models
+          mkdir models
+          cd models
+          cat >README.md <<EOF
+          # Introduction
+          Models in this directory are from
+          https://huggingface.co/zzasdf/viet_iter3_pseudo_label
+          which are trained on about 70k hours of data.
+          EOF
+
+          git lfs install
+          git clone https://huggingface.co/csukuangfj/viet_iter3_pseudo_label hf
+
+          ls -lh
+
+          d=sherpa-onnx-zipformer-vi-2025-04-20
+          mkdir -p $d
+          cp -v hf/exp/encoder-epoch-12-avg-8.onnx $d/
+          cp -v hf/exp/decoder-epoch-12-avg-8.onnx $d/
+          cp -v hf/exp/joiner-epoch-12-avg-8.onnx $d/
+          cp -v hf/data/Vietnam_bpe_2000_new/bpe.model $d/
+          cp -v hf/data/Vietnam_bpe_2000_new/tokens.txt $d/
+          cp -av hf/test_wavs $d
+          cp -v README.md $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          d=sherpa-onnx-zipformer-vi-int8-2025-04-20
+          mkdir -p $d
+
+          cp -v hf/exp/encoder-epoch-12-avg-8.int8.onnx $d/
+          cp -v hf/exp/decoder-epoch-12-avg-8.onnx $d/
+          cp -v hf/exp/joiner-epoch-12-avg-8.int8.onnx $d/
+          cp -v hf/data/Vietnam_bpe_2000_new/bpe.model $d/
+          cp -v hf/data/Vietnam_bpe_2000_new/tokens.txt $d/
+          cp -av hf/test_wavs $d
+          cp -v README.md $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          rm -rf hf
+
+          ls -lh
+
+          cd ..
+
+          mv models/* .
+
+      - name: Publish to huggingface (Vietnamese zipformer)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            models=(
+              sherpa-onnx-zipformer-vi-2025-04-20
+              sherpa-onnx-zipformer-vi-int8-2025-04-20
+            )
+            for d in ${models[@]}; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* huggingface
+
+              pushd huggingface
+              git lfs track "*.onnx"
+              git lfs track "bpe.model"
+              git lfs track "*.wav"
+              git status
+              git add .
+
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+
+              popd
+            done
+
+      - name: vosk-model-ru (zipformer)
+        if: false
+        shell: bash
+        run: |
+          rm -rf models
+          mkdir models
+          cd models
+          cat >README.md <<EOF
+          # Introduction
+          Models in this directory are from
+          https://huggingface.co/alphacep/vosk-model-ru/tree/main
+          EOF
+
+          git lfs install
+          git clone https://huggingface.co/alphacep/vosk-model-ru hf
+
+          ls -lh
+
+          mkdir test_wavs
+          pushd test_wavs
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/russian-i-love-you.wav
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/test.wav
+
+          mv russian-i-love-you.wav 0.wav
+          mv test.wav 1.wav
+          popd
+
+          d=sherpa-onnx-zipformer-ru-2025-04-20
+          mkdir $d
+          cp -v hf/am-onnx/encoder.onnx $d
+          cp -v hf/am-onnx/decoder.onnx $d
+          cp -v hf/am-onnx/joiner.onnx $d
+          cp -v hf/lang/bpe.model $d
+          cp -v hf/lang/tokens.txt $d
+          cp -av test_wavs $d/
+          cp -v README.md $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          d=sherpa-onnx-zipformer-ru-int8-2025-04-20
+          mkdir $d
+          cp -v hf/am-onnx/encoder.int8.onnx $d
+          cp -v hf/am-onnx/decoder.onnx $d
+          cp -v hf/am-onnx/joiner.int8.onnx $d
+          cp -v hf/lang/bpe.model $d
+          cp -v hf/lang/tokens.txt $d
+          cp -av test_wavs $d
+          cp -v README.md $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          rm -rf hf
+
+          ls -lh
+
+          cd ..
+
+          mv models/* .
+
+      - name: Publish to huggingface (Russian zipformer)
+        if: false
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            models=(
+              sherpa-onnx-zipformer-ru-2025-04-20
+              sherpa-onnx-zipformer-ru-int8-2025-04-20
+            )
+            for d in ${models[@]}; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* huggingface
+
+              pushd huggingface
+              git lfs track "*.onnx"
+              git lfs track "bpe.model"
+              git lfs track "*.wav"
+              git status
+              git add .
+
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+
+              popd
+            done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

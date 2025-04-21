@@ -496,6 +496,55 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        26 -> {
+            val modelDir = "sherpa-onnx-zipformer-vi-int8-2025-04-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-12-avg-8.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-12-avg-8.onnx",
+                    joiner = "$modelDir/joiner-epoch-12-avg-8.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+            )
+        }
+
+        27 -> {
+            val modelDir = "sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        28 -> {
+            val modelDir = "sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "nemo_transducer",
+            )
+        }
+
+        29 -> {
+            val modelDir = "sherpa-onnx-zipformer-ru-int8-2025-04-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+            )
+        }
     }
     return null
 }

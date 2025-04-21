@@ -459,6 +459,79 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-vi-int8-2025-04-20",
+            idx=26,
+            lang="vi",
+            lang2="Vietnamese",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19",
+            idx=27,
+            lang="ru",
+            lang2="Russian",
+            short_name="nemo_ctc_giga_am_v2",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv *.sh
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19",
+            idx=28,
+            lang="ru",
+            lang2="Russian",
+            short_name="nemo_transducer_giga_am",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv *.sh
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ru-int8-2025-04-20",
+            idx=29,
+            lang="ru",
+            lang2="Russian",
+            short_name="v2_zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
