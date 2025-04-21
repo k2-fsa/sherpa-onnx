@@ -196,7 +196,8 @@ static Napi::Object AudioTaggingComputeWrapper(const Napi::CallbackInfo &info) {
             Napi::Number::New(env, events[i]->index));
     obj.Set(Napi::String::New(env, "prob"),
             Napi::Number::New(env, events[i]->prob));
-    ans[i] = obj;
+    // ans[i] = obj; // see #2120
+    ans.Set(i, obj);
   }
 
   SherpaOnnxAudioTaggingFreeResults(events);

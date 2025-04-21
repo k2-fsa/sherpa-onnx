@@ -66,7 +66,9 @@ static Napi::Array ListRawFileDir(const Napi::CallbackInfo &info) {
   auto files = GetFilenames(mgr.get(), dir);
   Napi::Array ans = Napi::Array::New(env, files.size());
   for (int32_t i = 0; i != files.size(); ++i) {
-    ans[i] = Napi::String::New(env, files[i]);
+    // Fix #2120
+    // ans[i] = Napi::String::New(env, files[i]);
+    ans.Set(i, Napi::String::New(env, files[i]));
   }
   return ans;
 }

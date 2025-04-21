@@ -766,7 +766,8 @@ static Napi::Array SpeakerEmbeddingManagerGetAllSpeakersWrapper(
 
   Napi::Array ans = Napi::Array::New(env, num_speakers);
   for (uint32_t i = 0; i != num_speakers; ++i) {
-    ans[i] = Napi::String::New(env, all_speaker_names[i]);
+    // ans[i] = Napi::String::New(env, all_speaker_names[i]); // see #2120
+    ans.Set(i, Napi::String::New(env, all_speaker_names[i]));
   }
   SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(all_speaker_names);
   return ans;
