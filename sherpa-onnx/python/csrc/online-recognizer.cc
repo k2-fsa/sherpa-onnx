@@ -67,7 +67,7 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
            py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
            py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0,
            py::arg("temperature_scale") = 2.0, py::arg("rule_fsts") = "",
-           py::arg("rule_fars") = "", py::arg("reset_encoder"))
+           py::arg("rule_fars") = "", py::arg("reset_encoder") = false)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
