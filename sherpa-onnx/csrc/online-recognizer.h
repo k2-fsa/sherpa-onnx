@@ -79,6 +79,7 @@ struct OnlineRecognizerConfig {
   OnlineLMConfig lm_config;
   EndpointConfig endpoint_config;
   OnlineCtcFstDecoderConfig ctc_fst_decoder_config;
+
   bool enable_endpoint = true;
 
   std::string decoding_method = "greedy_search";
@@ -101,6 +102,11 @@ struct OnlineRecognizerConfig {
   // If there are multiple FST archives, they are applied from left to right.
   std::string rule_fars;
 
+  // True to reset encoder_state on an endpoint after empty segment.
+  // Done in `Reset()` method, after an endpoint was detected,
+  // currently only in `OnlineRecognizerTransducerImpl`.
+  bool reset_encoder = false;
+
   /// used only for modified_beam_search, if hotwords_buf is non-empty,
   /// the hotwords will be loaded from the buffered string instead of from the
   /// "hotwords_file"
@@ -116,7 +122,8 @@ struct OnlineRecognizerConfig {
       bool enable_endpoint, const std::string &decoding_method,
       int32_t max_active_paths, const std::string &hotwords_file,
       float hotwords_score, float blank_penalty, float temperature_scale,
-      const std::string &rule_fsts, const std::string &rule_fars)
+      const std::string &rule_fsts, const std::string &rule_fars,
+      bool reset_encoder)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -130,7 +137,8 @@ struct OnlineRecognizerConfig {
         blank_penalty(blank_penalty),
         temperature_scale(temperature_scale),
         rule_fsts(rule_fsts),
-        rule_fars(rule_fars) {}
+        rule_fars(rule_fars),
+        reset_encoder(reset_encoder) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
