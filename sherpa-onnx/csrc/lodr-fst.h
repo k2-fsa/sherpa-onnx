@@ -30,18 +30,18 @@ class LodrFst {
   explicit LodrFst(const std::string &fst_path);
 
   std::pair<std::vector<int32_t>, std::vector<float>> GetNextStateCosts(
-    int state, int label);
+    int32_t state, int32_t label);
 
   void ComputeScore(float scale, Hypothesis *hyp, int32_t offset);
 
  private:
   fst::StdVectorFst YsToFst(const std::vector<int64_t> &ys, int32_t offset);
 
-  std::vector<std::tuple<int, float>> ProcessBackoffArcs(
-    int state, float cost);
+  std::vector<std::tuple<int32_t, float>> ProcessBackoffArcs(
+    int32_t state, float cost);
 
   std::optional<std::tuple<int32_t, float>> GetNextStatesCostsNoBackoff(
-    int state, int label);
+    int32_t state, int32_t label);
 
 
   int32_t backoff_id_ = 0;
@@ -52,9 +52,9 @@ class LodrStateCost {
  public:
   explicit LodrStateCost(
     LodrFst* fst,
-    std::unordered_map<int, float> state_cost = {});
+    const std::unordered_map<int32_t, float> &state_cost = {});
 
-    LodrStateCost ForwardOneStep(int label);
+    LodrStateCost ForwardOneStep(int32_t label);
 
   float Score() const;
 
@@ -62,7 +62,7 @@ class LodrStateCost {
   // The fst_ is not owned by this class and borrowed from the caller
   // (e.g. OnlineRnnLM).
   LodrFst* fst_;
-  std::unordered_map<int, float> state_cost_;
+  std::unordered_map<int32_t, float> state_cost_;
 };
 
 }  // namespace sherpa_onnx

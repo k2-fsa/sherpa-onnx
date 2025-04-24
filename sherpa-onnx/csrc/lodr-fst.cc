@@ -2,6 +2,8 @@
 //
 // Contains code copied from icefall/utils/ngram_lm.py
 // Copyright (c)  2023 Xiaomi Corporation
+//
+// Copyright (c)  2025 Tilde SIA (Askars Salimbajevs)
 
 #include <algorithm>
 #include <utility>
@@ -161,7 +163,7 @@ fst::StdVectorFst LodrFst::YsToFst(
 }
 
 LodrStateCost::LodrStateCost(
-    LodrFst* fst, std::unordered_map<int, float> state_cost)
+    LodrFst* fst, const std::unordered_map<int32_t, float> &state_cost)
     : fst_(fst) {
   if (state_cost.empty()) {
     state_cost_[0] = 0.0;
@@ -170,12 +172,12 @@ LodrStateCost::LodrStateCost(
   }
 }
 
-LodrStateCost LodrStateCost::ForwardOneStep(int label) {
-  std::unordered_map<int, float> state_cost;
+LodrStateCost LodrStateCost::ForwardOneStep(int32_t label) {
+  std::unordered_map<int32_t, float> state_cost;
   for (const auto& [s, c] : state_cost_) {
     auto [next_states, next_costs] = fst_->GetNextStateCosts(s, label);
     for (size_t i = 0; i < next_states.size(); ++i) {
-      int ns = next_states[i];
+      int32_t ns = next_states[i];
       float nc = next_costs[i];
       if (state_cost.find(ns) == state_cost.end()) {
         state_cost[ns] = std::numeric_limits<float>::infinity();

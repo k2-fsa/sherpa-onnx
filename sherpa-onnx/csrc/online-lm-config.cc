@@ -32,6 +32,11 @@ bool OnlineLMConfig::Validate() const {
     return false;
   }
 
+  if (!lodr_fst.empty() && !FileExists(lodr_fst)) {
+    SHERPA_ONNX_LOGE("'%s' does not exist", lodr_fst.c_str());
+    return false;
+  }
+
   return true;
 }
 

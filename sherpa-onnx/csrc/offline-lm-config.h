@@ -20,7 +20,7 @@ struct OfflineLMConfig {
   std::string lm_provider = "cpu";
 
   // LODR
-  std::string lodr_fst = "";
+  std::string lodr_fst;
   float lodr_scale = 0.01;
 
   OfflineLMConfig() = default;
