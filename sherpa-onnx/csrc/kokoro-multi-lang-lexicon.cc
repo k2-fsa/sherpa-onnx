@@ -134,7 +134,8 @@ class KokoroMultiLangLexicon::Impl {
           if (ans.empty()) {
             ans.emplace_back(ids);
           } else {
-            if (ans.back().tokens.size() + ids.size() < 50) {
+            if ((ans.back().tokens.size() + ids.size() < 50) ||
+                (ids.size() < 5)) {
               ans.back().tokens.back() = ids[1];
               ans.back().tokens.insert(ans.back().tokens.end(), ids.begin() + 2,
                                        ids.end());
