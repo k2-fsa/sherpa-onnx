@@ -12,12 +12,39 @@
 #include "sherpa-onnx/csrc/lodr-fst.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
-  LodrFst::LodrFst(const std::string &fst_path) {
+  int32_t LodrFst::FindBackoffId() {
+    // assume that the backoff id is the only input label with epsilon output
+
+    for (int32_t state = 0; state < fst_->NumStates(); ++state) {
+      for (fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state); !arc_iter.Done(); arc_iter.Next()) {
+        const auto& arc = arc_iter.Value();
+        if (arc.olabel == 0) {  // Check if the output label is epsilon (0)
+          return arc.ilabel;    // Return the input label
+        }
+      }
+    }
+
+    return -1;  // Return -1 if no such input symbol is found
+  }
+
+  LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id) {
   fst_ = std::unique_ptr<fst::StdConstFst>(
     CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
+
+  backoff_id_ = backoff_id;
+  if (backoff_id < 0) {
+    // backoff_id_ is not provided, find it automatically
+    backoff_id_ = FindBackoffId();
+    if (backoff_id_ < 0) {
+      SHERPA_ONNX_LOGE(
+        "Failed to initialize LodrFst: No backoff (epsilon output) arc found in FST.");
+      exit(-1);
+    }
+  }
 }
 
 std::vector<std::tuple<int32_t, float>> LodrFst::ProcessBackoffArcs(

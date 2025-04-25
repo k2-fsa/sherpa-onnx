@@ -27,7 +27,7 @@ class Hypothesis;
 
 class LodrFst {
  public:
-  explicit LodrFst(const std::string &fst_path);
+  explicit LodrFst(const std::string &fst_path, int32_t backoff_id = -1);
 
   std::pair<std::vector<int32_t>, std::vector<float>> GetNextStateCosts(
     int32_t state, int32_t label);
@@ -43,8 +43,10 @@ class LodrFst {
   std::optional<std::tuple<int32_t, float>> GetNextStatesCostsNoBackoff(
     int32_t state, int32_t label);
 
+  int32_t FindBackoffId();
 
-  int32_t backoff_id_ = 0;
+
+  int32_t backoff_id_ = -1;
   std::unique_ptr<fst::StdConstFst> fst_;
 };
 

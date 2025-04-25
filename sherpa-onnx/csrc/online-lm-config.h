@@ -20,7 +20,7 @@ struct OnlineLMConfig {
   std::string lm_provider = "cpu";
   std::string lodr_fst = "";
   float lodr_scale = 0.01;
-  int lodr_backoff_id = 0;
+  int lodr_backoff_id = -1;
   // enable shallow fusion
   bool shallow_fusion = true;
 
