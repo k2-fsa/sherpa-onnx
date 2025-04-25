@@ -20,7 +20,8 @@ namespace sherpa_onnx {
     // assume that the backoff id is the only input label with epsilon output
 
     for (int32_t state = 0; state < fst_->NumStates(); ++state) {
-      for (fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state); !arc_iter.Done(); arc_iter.Next()) {
+      fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
+      for ( ; !arc_iter.Done(); arc_iter.Next()) {
         const auto& arc = arc_iter.Value();
         if (arc.olabel == 0) {  // Check if the output label is epsilon (0)
           return arc.ilabel;    // Return the input label
@@ -41,7 +42,7 @@ namespace sherpa_onnx {
     backoff_id_ = FindBackoffId();
     if (backoff_id_ < 0) {
       SHERPA_ONNX_LOGE(
-        "Failed to initialize LodrFst: No backoff (epsilon output) arc found in FST.");
+        "Failed to initialize LODR: No backoff arc found in FST.");
       exit(-1);
     }
   }
