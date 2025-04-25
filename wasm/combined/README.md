@@ -1,122 +1,60 @@
-# Sherpa-ONNX Combined WebAssembly Module
+# Sherpa-ONNX WASM Combined Module
 
-This directory contains a combined WebAssembly module for the Sherpa-ONNX project, which integrates multiple features:
-
+This directory contains the WebAssembly (WASM) combined module for Sherpa-ONNX, which includes support for:
 - Automatic Speech Recognition (ASR)
 - Voice Activity Detection (VAD)
-- Text-to-Speech Synthesis (TTS)
-- Speech Enhancement
+- Text-to-Speech (TTS)
+- Keyword Spotting (KWS)
 - Speaker Diarization
-- Keyword Spotting
+- Speech Enhancement
 
-## How to Use
+## File Structure
 
-### Loading the Module
+When built, the following files are generated:
+- `sherpa-onnx-wasm-combined.js` - The main JavaScript glue code
+- `sherpa-onnx-wasm-combined.wasm` - The WebAssembly binary
+- `sherpa-onnx-wasm-combined.data` - The preloaded assets (models)
+- JS library files:
+  - `sherpa-onnx-core.js` - Core functionality
+  - `sherpa-onnx-asr.js` - ASR functionality
+  - `sherpa-onnx-vad.js` - VAD functionality
+  - `sherpa-onnx-tts.js` - TTS functionality
+  - `sherpa-onnx-kws.js` - Keyword Spotting functionality
+  - `sherpa-onnx-speaker.js` - Speaker Diarization functionality
+  - `sherpa-onnx-enhancement.js` - Speech Enhancement functionality
+  - `sherpa-onnx-combined.js` - Combined functionality wrapper
 
-You can use the combined module in two ways:
+## Building
 
-#### Option 1: Load Individual Modules (Recommended)
-
-This approach loads only the components you need:
-
-```html
-<!-- First load the WASM module -->
-<script src="sherpa-onnx-wasm-combined.js"></script>
-
-<!-- Load the core module which is required by all other modules -->
-<script src="sherpa-onnx-core.js"></script>
-
-<!-- Then load only the modules you need -->
-<script src="sherpa-onnx-vad.js"></script>
-<!-- Add other modules as needed -->
-
-<script>
-  // This callback is called when the WASM module is loaded
-  window.onModuleReady = function() {
-    // Your initialization code here
-    console.log("Module ready!");
-  };
-</script>
-```
-
-#### Option 2: Load All Modules via the Combined Loader
-
-This approach loads all available modules:
-
-```html
-<!-- First load the WASM module -->
-<script src="sherpa-onnx-wasm-combined.js"></script>
-
-<!-- Then load the combined module that will load all other modules -->
-<script src="sherpa-onnx-combined.js"></script>
-
-<script>
-  // This callback is called when all modules are loaded
-  window.onSherpaOnnxReady = function() {
-    // Your initialization code here
-    console.log("All modules loaded!");
-  };
-</script>
-```
-
-### Module Structure
-
-The codebase has been organized into modular files:
-
-- `sherpa-onnx-core.js`: Core functionality, utilities, and file system operations
-- `sherpa-onnx-vad.js`: Voice Activity Detection functionality
-- `sherpa-onnx-combined.js`: Loader that loads all individual modules
-
-Additional modules will be added in the future:
-- `sherpa-onnx-asr.js`: Automatic Speech Recognition functionality
-- `sherpa-onnx-tts.js`: Text-to-Speech functionality
-- And more...
-
-## Demo Application
-
-The included `index.html` demonstrates how to use the combined module. It shows:
-
-1. How to load models from URLs
-2. How to initialize each component (ASR, VAD, TTS)
-3. How to stream audio from the microphone
-4. How to get results from each component
-
-## Building the Module
-
-The WebAssembly module can be built using the provided build script:
+To build the WASM module:
 
 ```bash
 cd /path/to/sherpa-onnx
 ./build-wasm-combined.sh
 ```
 
-The built files will be located in `bin/wasm/combined/` and are also copied to `wasm/combined/`.
+This script will:
+1. Create a `build-wasm-combined` directory
+2. Configure CMake with the necessary options
+3. Build the WASM module
+4. Install the files to `bin/wasm/combined`
+5. Copy the files to the original repo at `wasm/combined`
 
-## Setting Up Models
+## Important Notes
 
-Before using the demo, you need to set up model files:
+1. **Large Asset Bundle**: The `.data` file can be very large (300MB+) as it contains all preloaded models. For production, consider using dynamic loading of models instead.
 
-```bash
-cd /path/to/sherpa-onnx/wasm/combined
-./setup-assets.sh
-```
+2. **File Locations**: All files must be in the same directory for the WASM module to work correctly. The `.data` file MUST be in the same directory as the `.js` and `.wasm` files.
 
-This script will download necessary model files to the `assets/` directory.
-
-## Testing the Demos
-
-After building the module and setting up the models, you can test the demos using Python's built-in HTTP server:
+3. **Local Testing**: To test locally, run a web server from the `wasm/combined` directory:
 
 ```bash
 cd /path/to/sherpa-onnx/wasm/combined
-python3 -m http.server 8080
+python -m http.server 8000
 ```
 
-Then navigate to http://localhost:8080/demos/ in your web browser to access the demos.
+Then open `http://localhost:8000` in your browser.
 
-## Troubleshooting
+## License
 
-- **Module load errors**: Ensure the WASM module is loaded before any other scripts
-- **Model load errors**: Check the browser console for specific error messages
-- **Audio capture issues**: Make sure your browser has permission to access the microphone
-- **Performance issues**: Try reducing buffer sizes or using smaller models 
+Same as Sherpa-ONNX. 

@@ -169,3 +169,204 @@ select {
 .nav-menu a.active {
   background-color: #4285f4;
 }
+
+/* Filesystem Validation Styles */
+#fs-validation-section {
+  margin-top: 30px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+}
+
+.inspect-button {
+  background-color: #009688;
+}
+
+.inspect-button:hover {
+  background-color: #00796b;
+}
+
+.filesystem-inspector {
+  font-family: monospace;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.fs-section {
+  margin-bottom: 15px;
+  padding: 8px;
+  border-bottom: 1px dashed #ccc;
+}
+
+.fs-section:last-child {
+  border-bottom: none;
+}
+
+.fs-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+  color: #333;
+  background-color: #e0e0e0;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.path-info {
+  margin: 8px 0;
+  padding: 5px 0 5px 10px;
+  border-left: 3px solid #4285f4;
+}
+
+.error {
+  color: #cc0000;
+  font-weight: bold;
+  padding: 5px;
+  background-color: #ffeeee;
+  border-radius: 3px;
+}
+
+.warning {
+  color: #cc7700;
+  padding: 5px;
+  background-color: #fff8e1;
+  border-radius: 3px;
+}
+
+.filesystem-inspector ul {
+  margin: 5px 0;
+  padding-left: 20px;
+  list-style-type: square;
+}
+
+.filesystem-inspector li {
+  padding: 2px 0;
+}
+
+.info-box {
+  background-color: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.info-box p {
+  margin: 5px 0;
+  color: #2e7d32;
+}
+
+.info-box code {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-family: monospace;
+}
+
+.debug-button {
+  background-color: #673ab7;
+}
+
+.debug-button:hover {
+  background-color: #512da8;
+}
+
+#debug-console {
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #f8f8f8;
+}
+
+.debug-log {
+  height: 300px;
+  overflow-y: auto;
+  font-family: monospace;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.log-entry {
+  margin-bottom: 5px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+.log-entry.error {
+  color: #f44336;
+  font-weight: bold;
+}
+
+/* Tabs styling */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  margin-right: 5px;
+  color: #333;
+  font-weight: 500;
+}
+
+.tab-button:hover {
+  background-color: #e0e0e0;
+}
+
+.tab-button.active {
+  background-color: #4285f4;
+  color: white;
+}
+
+.tab-content {
+  display: none;
+  padding: 15px 0;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  width: 100%;
+  margin: 5px 0;
+}
+
+input[type="range"] + span {
+  display: inline-block;
+  width: 40px;
+  text-align: center;
+  font-weight: bold;
+  color: #4285f4;
+}
+
+/* Model parameters styling */
+.model-params {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+#model-config h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}

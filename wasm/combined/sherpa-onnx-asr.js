@@ -26,13 +26,77 @@
      * @returns {Promise<Object>} - Information about the loaded model
      */
     loadModel: async function(modelConfig) {
+      const debug = modelConfig.debug || false;
       const modelDir = modelConfig.modelDir || 'asr-models';
+      
+      // First check for preloaded assets
+      if (!modelConfig.forceDownload) {
+        const assetPath = SherpaOnnx.Config.assetPaths.asr;
+        if (debug) console.log(`Checking for preloaded ASR assets at ${assetPath}`);
+        
+        if (SherpaOnnx.FileSystem.fileExists(assetPath)) {
+          const files = SherpaOnnx.FileSystem.listFiles(assetPath);
+          if (debug) console.log(`Found preloaded files: ${files.join(', ')}`);
+          
+          // Check for model files based on type
+          if (modelConfig.type === 'transducer' || !modelConfig.type) {
+            if (files.includes('encoder.onnx') && 
+                files.includes('decoder.onnx') && 
+                files.includes('joiner.onnx') &&
+                files.includes('tokens.txt')) {
+              if (debug) console.log("Using preloaded transducer model");
+              return {
+                modelDir: assetPath,
+                type: 'transducer',
+                actualPaths: {
+                  encoder: `${assetPath}/encoder.onnx`,
+                  decoder: `${assetPath}/decoder.onnx`,
+                  joiner: `${assetPath}/joiner.onnx`,
+                  tokens: `${assetPath}/tokens.txt`
+                },
+                preloaded: true
+              };
+            }
+          } else if (modelConfig.type === 'ctc') {
+            if (files.includes('model.onnx') && files.includes('tokens.txt')) {
+              if (debug) console.log("Using preloaded CTC model");
+              return {
+                modelDir: assetPath,
+                type: 'ctc',
+                actualPaths: {
+                  model: `${assetPath}/model.onnx`,
+                  tokens: `${assetPath}/tokens.txt`
+                },
+                preloaded: true
+              };
+            }
+          } else if (modelConfig.type === 'paraformer') {
+            if (files.includes('encoder.onnx') && 
+                files.includes('decoder.onnx') && 
+                files.includes('tokens.txt')) {
+              if (debug) console.log("Using preloaded paraformer model");
+              return {
+                modelDir: assetPath,
+                type: 'paraformer',
+                actualPaths: {
+                  encoder: `${assetPath}/encoder.onnx`,
+                  decoder: `${assetPath}/decoder.onnx`,
+                  tokens: `${assetPath}/tokens.txt`
+                },
+                preloaded: true
+              };
+            }
+          }
+          
+          if (debug) console.log("Preloaded ASR assets found but missing required files for model type");
+        }
+      }
       
       // Create directory if it doesn't exist
       try {
-        global.Module.FS.mkdir(modelDir, 0o777);
+        SherpaOnnx.FileSystem.ensureDirectory(modelDir);
       } catch(e) {
-        if (e.code !== 'EEXIST') throw e;
+        console.error(`Failed to create directory ${modelDir}:`, e);
       }
       
       // Collection for actual file paths
@@ -41,10 +105,10 @@
       // Load model files based on type
       if (modelConfig.type === 'transducer') {
         const results = await Promise.all([
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.encoder || 'assets/asr/encoder.onnx', `${modelDir}/encoder.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.decoder || 'assets/asr/decoder.onnx', `${modelDir}/decoder.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.joiner || 'assets/asr/joiner.onnx', `${modelDir}/joiner.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, modelConfig.debug)
+          SherpaOnnx.FileSystem.loadFile(modelConfig.encoder || 'assets/asr/encoder.onnx', `${modelDir}/encoder.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.decoder || 'assets/asr/decoder.onnx', `${modelDir}/decoder.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.joiner || 'assets/asr/joiner.onnx', `${modelDir}/joiner.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, debug)
         ]);
         
         // Collect actual paths
@@ -55,9 +119,9 @@
         
       } else if (modelConfig.type === 'paraformer') {
         const results = await Promise.all([
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.encoder || 'assets/asr/encoder.onnx', `${modelDir}/encoder.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.decoder || 'assets/asr/decoder.onnx', `${modelDir}/decoder.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, modelConfig.debug)
+          SherpaOnnx.FileSystem.loadFile(modelConfig.encoder || 'assets/asr/encoder.onnx', `${modelDir}/encoder.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.decoder || 'assets/asr/decoder.onnx', `${modelDir}/decoder.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, debug)
         ]);
         
         // Collect actual paths
@@ -67,8 +131,8 @@
         
       } else if (modelConfig.type === 'ctc') {
         const results = await Promise.all([
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.model || 'assets/asr/model.onnx', `${modelDir}/model.onnx`, modelConfig.debug),
-          SherpaOnnx.FileSystem.safeLoadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, modelConfig.debug)
+          SherpaOnnx.FileSystem.loadFile(modelConfig.model || 'assets/asr/model.onnx', `${modelDir}/model.onnx`, debug),
+          SherpaOnnx.FileSystem.loadFile(modelConfig.tokens || 'assets/asr/tokens.txt', `${modelDir}/tokens.txt`, debug)
         ]);
         
         // Collect actual paths
@@ -76,19 +140,10 @@
         actualPaths.tokens = results[1].path;
       }
       
-      // Get base directory from the tokens path
-      let effectiveModelDir = modelDir;
-      if (actualPaths.tokens) {
-        const lastSlash = actualPaths.tokens.lastIndexOf('/');
-        if (lastSlash > 0) {
-          effectiveModelDir = actualPaths.tokens.substring(0, lastSlash);
-        }
-      }
-      
       return {
-        modelDir: effectiveModelDir,
+        modelDir,
         type: modelConfig.type,
-        actualPaths: actualPaths
+        actualPaths
       };
     },
     

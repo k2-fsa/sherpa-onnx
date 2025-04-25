@@ -1,5 +1,22 @@
 if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
-  message(FATAL_ERROR "Please use ./build-wasm-combined.sh to build")
+  message(FATAL_ERROR "Please use ./build-wasm-combined.sh to build for wasm combined module")
+endif()
+
+# Check for asset directories
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/asr")
+  message(WARNING "ASR assets directory not found at ${CMAKE_CURRENT_SOURCE_DIR}/assets/asr")
+endif()
+
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/vad")
+  message(WARNING "VAD assets directory not found at ${CMAKE_CURRENT_SOURCE_DIR}/assets/vad")
+endif()
+
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/tts")
+  message(WARNING "TTS assets directory not found at ${CMAKE_CURRENT_SOURCE_DIR}/assets/tts")
+endif()
+
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/kws")
+  message(WARNING "KWS assets directory not found at ${CMAKE_CURRENT_SOURCE_DIR}/assets/kws")
 endif()
 
 # Collect all exported functions from all modules
@@ -100,6 +117,31 @@ string(APPEND MY_FLAGS " -sEXPORTED_FUNCTIONS=[_malloc,_free,${all_exported_func
 # No preloaded assets - all models will be loaded dynamically
 string(APPEND MY_FLAGS " -sEXPORTED_RUNTIME_METHODS=['ccall','stringToUTF8','setValue','getValue','lengthBytesUTF8','UTF8ToString','FS'] ")
 
+# Load precompiled assets using structured paths
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/asr")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/asr@/sherpa_assets/asr ")
+endif()
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/vad")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/vad@/sherpa_assets/vad ")
+endif()
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/tts")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/tts@/sherpa_assets/tts ")
+endif()
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/kws")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/kws@/sherpa_assets/kws ")
+endif()
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/speakers")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/speakers@/sherpa_assets/speakers ")
+endif()
+
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/enhancement")
+  string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets/enhancement@/sherpa_assets/enhancement ")
+endif()
+
 message(STATUS "MY_FLAGS: ${MY_FLAGS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_FLAGS}")
@@ -113,9 +155,16 @@ install(TARGETS sherpa-onnx-wasm-combined DESTINATION bin/wasm/combined)
 install(
   FILES
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-combined>/sherpa-onnx-wasm-combined.js"
-    "index.html"
-    "sherpa-onnx-combined.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-combined>/sherpa-onnx-wasm-combined.wasm"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-combined>/sherpa-onnx-wasm-combined.data"
+    "sherpa-onnx-core.js"
+    "sherpa-onnx-asr.js"
+    "sherpa-onnx-vad.js"
+    "sherpa-onnx-tts.js"
+    "sherpa-onnx-kws.js"
+    "sherpa-onnx-speaker.js"
+    "sherpa-onnx-enhancement.js"
+    "sherpa-onnx-combined.js"
   DESTINATION
     bin/wasm/combined
 )
@@ -142,6 +191,13 @@ if(SHERPA_ONNX_INSTALL_TO_REPO)
       -DSRC_DIR=${CMAKE_BINARY_DIR}/bin
       -DDEST_DIR=${SHERPA_ONNX_REPO_PATH}
       -DCOPY_FILES="sherpa-onnx-wasm-combined.wasm"
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/copy_with_confirm.cmake
+    
+    # Copy the DATA file
+    COMMAND ${CMAKE_COMMAND} 
+      -DSRC_DIR=${CMAKE_BINARY_DIR}/bin
+      -DDEST_DIR=${SHERPA_ONNX_REPO_PATH}
+      -DCOPY_FILES="sherpa-onnx-wasm-combined.data"
       -P ${CMAKE_CURRENT_SOURCE_DIR}/copy_with_confirm.cmake
     
     # Copy the index.html file

@@ -31,40 +31,92 @@
   <section id="tts-section">
     <h2>Text-to-Speech (TTS)</h2>
     
-    <div class="model-config">
-      <h3>Model Configuration</h3>
+    <div class="info-box">
+      <p>This demo uses either the preloaded TTS models from the <code>/sherpa_assets/tts</code> directory in the WASM filesystem or a custom model you upload.</p>
+      <p>Use the "Inspect Filesystem Assets" button below to verify available models.</p>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab-button active" data-tab="preloaded">Use Preloaded Model</button>
+      <button class="tab-button" data-tab="custom">Upload Custom Model</button>
+    </div>
+    
+    <div id="preloaded-tab" class="tab-content active">
+      <p>Use the preloaded VITS model included with Sherpa-ONNX.</p>
+    </div>
+    
+    <div id="custom-tab" class="tab-content">
       <div class="form-group">
-        <label for="tts-model-type">Model Type:</label>
-        <select id="tts-model-type">
+        <label for="model-archive">Upload Model Archive (.zip):</label>
+        <input type="file" id="model-archive" accept=".zip">
+        <small>The archive should contain the model file (.onnx), tokens.txt, and other required files.</small>
+      </div>
+    </div>
+    
+    <div id="model-config" class="form-group" style="display: none;">
+      <h3>Model Configuration</h3>
+      
+      <div class="form-group">
+        <label for="model-type">Model Type:</label>
+        <select id="model-type">
           <option value="vits">VITS</option>
           <option value="matcha">Matcha</option>
+          <option value="kokoro">Kokoro</option>
         </select>
       </div>
+      
+      <!-- Dynamic parameter sections will be shown based on model type -->
+      <div id="vits-params" class="model-params">
+        <div class="form-group">
+          <label for="noise-scale">Noise Scale:</label>
+          <input type="range" id="noise-scale" min="0.1" max="2.0" step="0.01" value="0.667">
+          <span id="noise-scale-value">0.667</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="noise-scale-w">Noise Scale W:</label>
+          <input type="range" id="noise-scale-w" min="0.1" max="2.0" step="0.01" value="0.8">
+          <span id="noise-scale-w-value">0.8</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="length-scale">Length Scale:</label>
+          <input type="range" id="length-scale" min="0.1" max="2.0" step="0.01" value="1.0">
+          <span id="length-scale-value">1.0</span>
+        </div>
+      </div>
+      
+      <div id="matcha-params" class="model-params" style="display: none;">
+        <div class="form-group">
+          <label for="matcha-noise-scale">Noise Scale:</label>
+          <input type="range" id="matcha-noise-scale" min="0.1" max="2.0" step="0.01" value="0.667">
+          <span id="matcha-noise-scale-value">0.667</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="matcha-length-scale">Length Scale:</label>
+          <input type="range" id="matcha-length-scale" min="0.1" max="2.0" step="0.01" value="1.0">
+          <span id="matcha-length-scale-value">1.0</span>
+        </div>
+      </div>
+      
+      <div id="kokoro-params" class="model-params" style="display: none;">
+        <div class="form-group">
+          <label for="kokoro-length-scale">Length Scale:</label>
+          <input type="range" id="kokoro-length-scale" min="0.1" max="2.0" step="0.01" value="1.0">
+          <span id="kokoro-length-scale-value">1.0</span>
+        </div>
+      </div>
+      
       <div class="form-group">
-        <label for="tts-model-dir">Model Directory:</label>
-        <input type="text" id="tts-model-dir" value="tts-models">
-        <small>(The directory where model files will be stored)</small>
+        <label for="num-threads">Number of Threads:</label>
+        <input type="number" id="num-threads" min="1" max="8" value="1">
       </div>
+      
       <div class="form-group">
-        <label for="tts-model-url">Model URL:</label>
-        <input type="text" id="tts-model-url" value="../assets/tts/model.onnx">
-      </div>
-      <div class="form-group">
-        <label for="tts-tokens-url">Tokens URL:</label>
-        <input type="text" id="tts-tokens-url" value="../assets/tts/tokens.txt">
-      </div>
-      <div class="form-group">
-        <label for="tts-espeak-url">Espeak-ng-data URL:</label>
-        <input type="text" id="tts-espeak-url" value="../assets/tts/espeak-ng-data.zip">
-        <small>(Required for VITS models)</small>
-      </div>
-      <div class="form-check">
-        <input type="checkbox" id="tts-debug" checked>
-        <label for="tts-debug">Enable debug logging</label>
-      </div>
-      <div class="form-check">
-        <input type="checkbox" id="tts-clean-start">
-        <label for="tts-clean-start">Clean start (remove existing files)</label>
+        <label for="silence-scale">Silence Scale:</label>
+        <input type="range" id="silence-scale" min="0.1" max="2.0" step="0.01" value="1.0">
+        <span id="silence-scale-value">1.0</span>
       </div>
     </div>
     
@@ -76,20 +128,380 @@
     <div class="controls">
       <button id="load-tts-model">Load TTS Model</button>
       <button id="generate-tts" disabled>Generate Speech</button>
+      <button id="show-debug" class="debug-button">Show Debug Console</button>
       <!-- Unload button will be added dynamically -->
     </div>
     <div id="tts-status">Status: Not active</div>
     <div id="tts-output"></div>
+    
+    <div id="debug-console" style="display: none;">
+      <h3>Debug Console</h3>
+      <div id="debug-log" class="debug-log"></div>
+      <button id="clear-debug" class="debug-button">Clear Log</button>
+    </div>
+  </section>
+
+  <section id="fs-validation-section">
+    <h2>WASM Filesystem Validation</h2>
+    <p>Use this tool to verify that TTS assets are correctly loaded in the WASM virtual filesystem.</p>
+    
+    <div class="controls" id="validation-controls">
+      <!-- Inspect button will be added here -->
+    </div>
+    
+    <div id="fs-validation-output"></div>
   </section>
 
   <script>
     // TTS-specific initialization code
     let tts = null;
     let audioIdx = 0;
+    let customModelPath = null;
+    
+    // Set up debug console
+    const debugLog = document.getElementById('debug-log');
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    
+    // Override console.log and console.error to also show in our debug console
+    console.log = function() {
+      const args = Array.from(arguments);
+      originalConsoleLog.apply(console, args);
+      
+      // Add to our debug console
+      const msg = args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' ');
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      logEntry.textContent = msg;
+      debugLog.appendChild(logEntry);
+      debugLog.scrollTop = debugLog.scrollHeight;
+    };
+    
+    console.error = function() {
+      const args = Array.from(arguments);
+      originalConsoleError.apply(console, args);
+      
+      // Add to our debug console with error formatting
+      const msg = args.map(arg => {
+        if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' ');
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry error';
+      logEntry.textContent = msg;
+      debugLog.appendChild(logEntry);
+      debugLog.scrollTop = debugLog.scrollHeight;
+    };
     
     function initializeUI() {
       document.getElementById('status').textContent = 'WebAssembly module loaded. Ready to load models.';
       setupTTS();
+      setupValidation();
+      setupDebug();
+      setupTabs();
+      setupSliders();
+    }
+    
+    function setupTabs() {
+      // Tab switching logic
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const modelConfig = document.getElementById('model-config');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          // Remove active class from all buttons and contents
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Add active class to clicked button and corresponding content
+          button.classList.add('active');
+          const tabId = button.getAttribute('data-tab');
+          document.getElementById(`${tabId}-tab`).classList.add('active');
+          
+          // Show model config section for custom uploads
+          if (tabId === 'custom') {
+            modelConfig.style.display = 'block';
+          } else {
+            modelConfig.style.display = 'none';
+          }
+        });
+      });
+      
+      // Handle model type selection to show appropriate parameters
+      const modelTypeSelect = document.getElementById('model-type');
+      modelTypeSelect.addEventListener('change', () => {
+        const modelType = modelTypeSelect.value;
+        
+        // Hide all parameter sections first
+        document.querySelectorAll('.model-params').forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        // Show the selected one
+        document.getElementById(`${modelType}-params`).style.display = 'block';
+      });
+      
+      // Handle file upload
+      const fileInput = document.getElementById('model-archive');
+      fileInput.addEventListener('change', async () => {
+        if (!fileInput.files.length) return;
+        
+        const statusElem = document.getElementById('tts-status');
+        statusElem.textContent = 'Status: Archive selected. Click "Load TTS Model" to extract and load.';
+      });
+    }
+    
+    function setupSliders() {
+      // Set up all range sliders to update their value displays
+      const sliders = document.querySelectorAll('input[type="range"]');
+      sliders.forEach(slider => {
+        const valueDisplay = document.getElementById(`${slider.id}-value`);
+        if (valueDisplay) {
+          // Initial value
+          valueDisplay.textContent = slider.value;
+          
+          // Update on change
+          slider.addEventListener('input', () => {
+            valueDisplay.textContent = slider.value;
+          });
+        }
+      });
+    }
+    
+    function setupDebug() {
+      const showDebugBtn = document.getElementById('show-debug');
+      const clearDebugBtn = document.getElementById('clear-debug');
+      const debugConsole = document.getElementById('debug-console');
+      
+      showDebugBtn.addEventListener('click', () => {
+        if (debugConsole.style.display === 'none') {
+          debugConsole.style.display = 'block';
+          showDebugBtn.textContent = 'Hide Debug Console';
+        } else {
+          debugConsole.style.display = 'none';
+          showDebugBtn.textContent = 'Show Debug Console';
+        }
+      });
+      
+      clearDebugBtn.addEventListener('click', () => {
+        debugLog.innerHTML = '';
+      });
+    }
+
+    function setupValidation() {
+      const validationControls = document.getElementById('validation-controls');
+      const validationOutput = document.getElementById('fs-validation-output');
+      
+      if (typeof createInspectAssetsButton === 'function') {
+        // Only inspect TTS assets by default since this is the TTS demo
+        const inspectButton = createInspectAssetsButton(validationControls, validationOutput);
+        
+        // Add a custom check button focused only on TTS assets
+        const ttsFocusedButton = document.createElement('button');
+        ttsFocusedButton.textContent = 'Inspect TTS Assets Only';
+        ttsFocusedButton.classList.add('inspect-button');
+        ttsFocusedButton.addEventListener('click', function() {
+          validateAssets(validationOutput, ['tts']);
+        });
+        
+        validationControls.appendChild(ttsFocusedButton);
+      }
+    }
+    
+    async function handleArchiveUpload(file) {
+      const statusElem = document.getElementById('tts-status');
+      statusElem.textContent = 'Status: Extracting archive...';
+      
+      try {
+        // Read the file as ArrayBuffer
+        const buffer = await file.arrayBuffer();
+        
+        // Create a unique directory name based on time
+        const timestamp = new Date().getTime();
+        const dirName = file.name.replace(/\.zip$/i, '').replace(/[^a-z0-9]/gi, '_');
+        const targetDir = `/custom-models/${dirName}_${timestamp}`;
+        
+        console.log(`Extracting archive to ${targetDir}`);
+        
+        // Create the target directory
+        try {
+          SherpaOnnx.FileSystem.ensureDirectory('/custom-models');
+          SherpaOnnx.FileSystem.ensureDirectory(targetDir);
+        } catch (e) {
+          console.warn('Error creating directories, may already exist:', e);
+        }
+        
+        // Extract the archive
+        const result = await SherpaOnnx.FileSystem.extractZip(buffer, targetDir, true);
+        
+        if (!result.success) {
+          throw new Error(`Failed to extract archive: ${result.error}`);
+        }
+        
+        console.log(`Extracted ${result.files.length} files to ${targetDir}`);
+        
+        // Find key files in the extracted archive
+        const files = SherpaOnnx.FileSystem.listFiles(targetDir);
+        console.log('Files in extracted directory:', files);
+        
+        // Some archives may have nested directories, so we should handle that
+        let modelDir = targetDir;
+        let foundModel = false;
+        
+        // Check if we have the necessary files directly in the root
+        const hasModel = files.some(f => f.endsWith('.onnx'));
+        const hasTokens = files.some(f => f === 'tokens.txt');
+        
+        // If we don't have the necessary files in the root, check subdirectories
+        if (!hasModel || !hasTokens) {
+          for (const item of files) {
+            // Check if this is a directory
+            try {
+              const subdir = `${targetDir}/${item}`;
+              const subFiles = SherpaOnnx.FileSystem.listFiles(subdir);
+              
+              if (subFiles.some(f => f.endsWith('.onnx')) && 
+                  subFiles.some(f => f === 'tokens.txt')) {
+                modelDir = subdir;
+                foundModel = true;
+                console.log(`Found model files in subdirectory: ${modelDir}`);
+                break;
+              }
+            } catch (e) {
+              // Not a directory, skip
+            }
+          }
+        } else {
+          foundModel = true;
+        }
+        
+        if (!foundModel) {
+          throw new Error('Could not find required model files (.onnx and tokens.txt) in the archive');
+        }
+        
+        return modelDir;
+      } catch (error) {
+        console.error('Error extracting archive:', error);
+        statusElem.textContent = `Status: Error - ${error.message}`;
+        throw error;
+      }
+    }
+    
+    function getModelParameters() {
+      // Get active tab
+      const isCustom = document.querySelector('.tab-button[data-tab="custom"]').classList.contains('active');
+      
+      if (!isCustom) {
+        // Use defaults for preloaded model
+        return {
+          modelType: 'vits',
+          noiseScale: 0.667,
+          noiseScaleW: 0.8,
+          lengthScale: 1.0,
+          numThreads: 1,
+          silenceScale: 1.0
+        };
+      }
+      
+      // Get model type
+      const modelType = document.getElementById('model-type').value;
+      
+      // Get parameters based on model type
+      let params = {
+        modelType: modelType,
+        numThreads: parseInt(document.getElementById('num-threads').value) || 1,
+        silenceScale: parseFloat(document.getElementById('silence-scale').value) || 1.0
+      };
+      
+      if (modelType === 'vits') {
+        params.noiseScale = parseFloat(document.getElementById('noise-scale').value) || 0.667;
+        params.noiseScaleW = parseFloat(document.getElementById('noise-scale-w').value) || 0.8;
+        params.lengthScale = parseFloat(document.getElementById('length-scale').value) || 1.0;
+      } else if (modelType === 'matcha') {
+        params.noiseScale = parseFloat(document.getElementById('matcha-noise-scale').value) || 0.667;
+        params.lengthScale = parseFloat(document.getElementById('matcha-length-scale').value) || 1.0;
+      } else if (modelType === 'kokoro') {
+        params.lengthScale = parseFloat(document.getElementById('kokoro-length-scale').value) || 1.0;
+      }
+      
+      return params;
+    }
+    
+    async function findModelFiles(dirPath) {
+      try {
+        const files = SherpaOnnx.FileSystem.listFiles(dirPath);
+        
+        // Find key files
+        const modelFile = files.find(f => f.endsWith('.onnx'));
+        const tokensFile = files.find(f => f === 'tokens.txt');
+        const lexiconFile = files.find(f => f === 'lexicon.txt');
+        
+        // Check for espeak-ng-data directory or common subdirectories
+        let espeakDataDir = null;
+        if (files.includes('espeak-ng-data')) {
+          espeakDataDir = `${dirPath}/espeak-ng-data`;
+        }
+        
+        // For Matcha models
+        const vocoderFile = files.find(f => f.includes('vocoder') && f.endsWith('.onnx'));
+        
+        // For Kokoro models
+        const voicesFile = files.find(f => f === 'voices.txt' || f === 'voices');
+        
+        // Determine the likely model type
+        let detectedType = 'vits'; // Default
+        
+        if (vocoderFile) {
+          detectedType = 'matcha';
+        } else if (voicesFile) {
+          detectedType = 'kokoro';
+        }
+        
+        // Set the model type in the UI
+        document.getElementById('model-type').value = detectedType;
+        // Trigger the change event to update parameter visibility
+        document.getElementById('model-type').dispatchEvent(new Event('change'));
+        
+        return {
+          modelDir: dirPath,
+          modelType: detectedType,
+          actualPaths: {
+            // VITS paths
+            model: modelFile ? `${dirPath}/${modelFile}` : null,
+            tokens: tokensFile ? `${dirPath}/${tokensFile}` : null,
+            lexicon: lexiconFile ? `${dirPath}/${lexiconFile}` : null,
+            dataDir: espeakDataDir,
+            
+            // Matcha specific paths
+            acousticModel: modelFile && detectedType === 'matcha' ? `${dirPath}/${modelFile}` : null,
+            vocoder: vocoderFile ? `${dirPath}/${vocoderFile}` : null,
+            
+            // Kokoro specific paths
+            voices: voicesFile ? `${dirPath}/${voicesFile}` : null
+          }
+        };
+      } catch (error) {
+        console.error('Error finding model files:', error);
+        throw new Error(`Failed to analyze model directory: ${error.message}`);
+      }
     }
     
     function setupTTS() {
@@ -99,6 +511,7 @@
       const textInput = document.getElementById('tts-text');
       const outputContainer = document.getElementById('tts-output');
       const controlsDiv = document.querySelector('.controls');
+      const fileInput = document.getElementById('model-archive');
       
       let unloadBtn = null;
       
@@ -108,39 +521,43 @@
         statusElem.textContent = 'Status: Loading model...';
         
         try {
-          // Get options from UI
-          const modelType = document.getElementById('tts-model-type').value;
-          const modelDir = document.getElementById('tts-model-dir').value || 'tts-models';
-          const debug = document.getElementById('tts-debug').checked;
-          const cleanStart = document.getElementById('tts-clean-start').checked;
+          // Check if we're using custom model
+          const isCustom = document.querySelector('.tab-button[data-tab="custom"]').classList.contains('active');
+          let modelConfig = { debug: true };
           
-          // Build the model config with all options
-          const modelConfig = {
-            modelDir: modelDir,
-            type: modelType,
-            debug: debug,
-            cleanStart: cleanStart
-          };
-          
-          // Add model-specific URLs
-          if (modelType === 'vits') {
-            modelConfig.model = document.getElementById('tts-model-url').value;
-            modelConfig.tokens = document.getElementById('tts-tokens-url').value;
-            modelConfig.espeakDataZip = document.getElementById('tts-espeak-url').value;
-          } else if (modelType === 'matcha') {
-            modelConfig.acousticModel = document.getElementById('tts-model-url').value;
-            modelConfig.vocoder = document.getElementById('tts-model-url').value.replace('model.onnx', 'vocoder.onnx');
-            modelConfig.tokens = document.getElementById('tts-tokens-url').value;
+          if (isCustom && fileInput.files.length > 0) {
+            // Extract and process the archive
+            customModelPath = await handleArchiveUpload(fileInput.files[0]);
+            
+            // Find model files and detect type
+            const modelInfo = await findModelFiles(customModelPath);
+            
+            // Get user-configured parameters
+            const params = getModelParameters();
+            
+            // Build model config
+            modelConfig = {
+              debug: true,
+              customModel: modelInfo.actualPaths,
+              modelType: params.modelType,
+              options: params
+            };
+            
+            console.log(`TTS setup: Using custom model from ${customModelPath}`);
+          } else {
+            console.log(`TTS setup: Using preloaded TTS model`);
           }
-          
-          console.log(`TTS setup: Using model configuration:`, modelConfig);
           
           // Load the model
           const loadedModel = await SherpaOnnx.TTS.loadModel(modelConfig);
           
-          // Create the TTS engine
+          // Get parameters for TTS engine creation
+          const params = getModelParameters();
+          
+          // Create the TTS engine with parameters
           tts = SherpaOnnx.TTS.createOfflineTts(loadedModel, {
-            debug: debug
+            debug: true,
+            ...params
           });
           
           loadBtn.textContent = 'Model Loaded';
@@ -174,8 +591,15 @@
           statusElem.textContent = 'Status: Generating speech...';
           genBtn.disabled = true;
           
+          // Get current parameters for speech generation
+          const params = getModelParameters();
+          
           // Generate speech
-          const result = tts.generate(text, 0, 1.0);
+          const result = tts.generate(
+            text, 
+            0, // sid (speaker ID)
+            params.speedFactor || 1.0
+          );
           
           // Convert to WAV
           const blob = tts.saveAsWav(result.samples, result.sampleRate);

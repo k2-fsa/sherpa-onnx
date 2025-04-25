@@ -21,159 +21,160 @@
   // Define the TTS module functionality
   SherpaOnnx.TTS = {
     /**
-     * Load a TTS model from URLs
+     * Load a Text-to-Speech model
      * @param {Object} modelConfig - Configuration for the model
      * @returns {Promise<Object>} - Information about the loaded model
      */
     loadModel: async function(modelConfig) {
       const debug = modelConfig.debug || false;
-      const modelDir = modelConfig.modelDir || 'tts-models';
+      if (debug) console.log("TTS.loadModel: ModelConfig:", JSON.stringify(modelConfig));
       
-      if (debug) console.log(`TTS.loadModel: Starting with base dir ${modelDir}`);
-      
-      try {
-        // Always use clean start to avoid conflicts
-        if (debug) console.log(`Cleaning model directory to prevent conflicts: ${modelDir}`);
-        SherpaOnnx.FileSystem.removePath(modelDir, debug);
+      // Handle custom model upload case
+      if (modelConfig.customModel) {
+        if (debug) console.log("Using custom uploaded model");
         
-        // Flag to track if we need espeak data
-        let needsEspeakData = false;
-        
-        // Prepare file list based on model type
-        const files = [];
-        
-        if (modelConfig.type === 'vits') {
-          // Add model file
-          files.push({
-            url: modelConfig.model || 'assets/tts/model.onnx',
-            filename: 'model.onnx'
-          });
-          
-          // Add tokens file
-          files.push({
-            url: modelConfig.tokens || 'assets/tts/tokens.txt',
-            filename: 'tokens.txt'
-          });
-          
-          // Add lexicon if provided
-          if (modelConfig.lexicon) {
-            files.push({
-              url: modelConfig.lexicon,
-              filename: 'lexicon.txt'
-            });
-          }
-          
-          // Flag that we need espeak-ng-data
-          if (debug) console.log("Will load espeak-ng-data after model directory creation");
-          needsEspeakData = true;
-        } else if (modelConfig.type === 'matcha') {
-          // Add required files for matcha
-          files.push({
-            url: modelConfig.acousticModel || 'assets/tts/acoustic_model.onnx',
-            filename: 'acoustic_model.onnx'
-          });
-          
-          files.push({
-            url: modelConfig.vocoder || 'assets/tts/vocoder.onnx',
-            filename: 'vocoder.onnx'
-          });
-          
-          files.push({
-            url: modelConfig.tokens || 'assets/tts/tokens.txt',
-            filename: 'tokens.txt'
-          });
-          
-          if (modelConfig.lexicon) {
-            files.push({
-              url: modelConfig.lexicon,
-              filename: 'lexicon.txt'
-            });
-          }
-        } else if (modelConfig.type === 'kokoro') {
-          // Add required files for kokoro
-          files.push({
-            url: modelConfig.model || 'assets/tts/kokoro/model.onnx',
-            filename: 'kokoro_model.onnx'
-          });
-          
-          files.push({
-            url: modelConfig.tokens || 'assets/tts/kokoro/tokens.txt',
-            filename: 'tokens.txt'
-          });
-          
-          if (modelConfig.voices) {
-            files.push({
-              url: modelConfig.voices,
-              filename: 'voices.txt'
-            });
-          }
+        // Validate basic requirements
+        if (!modelConfig.customModel.model && !modelConfig.customModel.acousticModel) {
+          throw new Error("Missing required model file in custom model");
         }
         
-        if (debug) console.log(`Prepared ${files.length} files to load for TTS model`);
-        
-        // Create unique model directory and load files
-        const result = await SherpaOnnx.FileSystem.prepareModelDirectory(
-          files, 
-          modelDir, 
-          debug
-        );
-        
-        if (!result.success) {
-          console.error("Failed to load model files:", result);
-          throw new Error("Failed to load TTS model files");
+        if (!modelConfig.customModel.tokens) {
+          throw new Error("Missing required tokens.txt file in custom model");
         }
         
-        // Handle espeak-ng-data for VITS models
-        if (modelConfig.type === 'vits' && needsEspeakData) {
-          if (debug) console.log(`Loading espeak-ng-data.zip into ${result.modelDir}`);
-          
-          try {
-            // Use configurable URL if provided, otherwise use default
-            const espeakZipUrl = modelConfig.espeakDataZip || 'assets/tts/espeak-ng-data.zip';
-            if (debug) console.log(`Fetching espeak-ng-data from ${espeakZipUrl}`);
-            
-            const zipResponse = await fetch(espeakZipUrl);
-            const zipData = await zipResponse.arrayBuffer();
-            
-            await SherpaOnnx.FileSystem.extractZip(
-              zipData,
-              result.modelDir,
-              debug
-            );
-          } catch (zipError) {
-            console.error("Error processing espeak-ng-data.zip:", zipError);
-          }
-        }
-        
-        // Organize files by type
-        const modelFiles = {};
-        const successFiles = result.files.filter(f => f.success);
-        
-        if (debug) console.log(`Successfully loaded ${successFiles.length} of ${result.files.length} files`);
-        
-        // Map files to their proper keys
-        successFiles.forEach(file => {
-          const filename = file.original.filename;
-          
-          if (filename === 'model.onnx') modelFiles.model = file.path;
-          else if (filename === 'acoustic_model.onnx') modelFiles.acousticModel = file.path;
-          else if (filename === 'vocoder.onnx') modelFiles.vocoder = file.path;
-          else if (filename === 'tokens.txt') modelFiles.tokens = file.path;
-          else if (filename === 'lexicon.txt') modelFiles.lexicon = file.path;
-          else if (filename === 'voices.txt') modelFiles.voices = file.path;
-          else if (filename === 'kokoro_model.onnx') modelFiles.kokoroModel = file.path;
-        });
-        
-        // Return the model information
         return {
-          modelDir: result.modelDir,
-          type: modelConfig.type,
-          files: modelFiles
+          modelDir: modelConfig.customModel.dataDir || 
+                   (modelConfig.customModel.model 
+                    ? modelConfig.customModel.model.split('/').slice(0, -1).join('/') 
+                    : modelConfig.customModel.acousticModel.split('/').slice(0, -1).join('/')),
+          modelType: modelConfig.modelType || 'vits',
+          actualPaths: modelConfig.customModel,
+          preloaded: false,
+          options: modelConfig.options || {}
         };
-      } catch(e) {
-        console.error(`TTS.loadModel: Error loading model:`, e);
-        throw e;
       }
+      
+      // Default model directory and type handling
+      const modelDir = modelConfig.modelDir || 'tts-models';
+      const modelType = modelConfig.modelType || 'vits';
+      
+      // First check for preloaded assets
+      if (!modelConfig.forceDownload) {
+        const assetPath = SherpaOnnx.Config.assetPaths.tts;
+        if (debug) console.log(`Checking for preloaded TTS assets at ${assetPath}`);
+        
+        if (SherpaOnnx.FileSystem.fileExists(assetPath)) {
+          const files = SherpaOnnx.FileSystem.listFiles(assetPath);
+          if (debug) console.log(`Found preloaded files: ${files.join(', ')}`);
+          
+          // Check for required model files based on type
+          let hasRequiredFiles = false;
+          const actualPaths = {};
+          
+          if (modelType === 'vits') {
+            // VITS model requires model, lexicon, and tokens files
+            const modelFile = files.find(f => f.endsWith('.onnx'));
+            const tokensFile = files.find(f => f === 'tokens.txt');
+            
+            // Check for espeak data directory or zip
+            let hasEspeakData = files.find(f => f === 'espeak-ng-data' || f === 'espeak-ng-data.zip');
+            
+            if (modelFile && tokensFile) {
+              hasRequiredFiles = true;
+              actualPaths.model = `${assetPath}/${modelFile}`;
+              actualPaths.tokens = `${assetPath}/${tokensFile}`;
+              
+              // Add espeak data if found
+              if (hasEspeakData) {
+                if (hasEspeakData === 'espeak-ng-data') {
+                  actualPaths.dataDir = `${assetPath}/espeak-ng-data`;
+                } else {
+                  // Will need to extract this later
+                  actualPaths.espeakZip = `${assetPath}/espeak-ng-data.zip`;
+                }
+              }
+            }
+          }
+          
+          if (hasRequiredFiles) {
+            if (debug) console.log("Using preloaded TTS model with paths:", actualPaths);
+            return {
+              modelDir: assetPath,
+              modelType,
+              actualPaths,
+              preloaded: true,
+              options: modelConfig.options || {}
+            };
+          }
+          
+          if (debug) console.log("Preloaded TTS assets found but missing required files");
+        } else if (debug) {
+          console.log(`Asset path ${assetPath} not found, will need to download models`);
+        }
+        
+        // Also check alternative locations for preloaded assets
+        const alternativePaths = [
+          `/sherpa_assets/tts`,
+          `/assets/tts`,
+          `/preloaded/tts`
+        ];
+        
+        for (const altPath of alternativePaths) {
+          if (altPath === assetPath) continue; // Skip if we've already checked this path
+          
+          if (debug) console.log(`Checking alternative path: ${altPath}`);
+          
+          if (SherpaOnnx.FileSystem.fileExists(altPath)) {
+            const files = SherpaOnnx.FileSystem.listFiles(altPath);
+            if (debug) console.log(`Found files at ${altPath}: ${files.join(', ')}`);
+            
+            // Similar check for required files
+            let hasRequiredFiles = false;
+            const actualPaths = {};
+            
+            if (modelType === 'vits') {
+              const modelFile = files.find(f => f.endsWith('.onnx'));
+              const tokensFile = files.find(f => f === 'tokens.txt');
+              
+              // Check for espeak data directory or zip
+              let hasEspeakData = files.find(f => f === 'espeak-ng-data' || f === 'espeak-ng-data.zip');
+              
+              if (modelFile && tokensFile) {
+                hasRequiredFiles = true;
+                actualPaths.model = `${altPath}/${modelFile}`;
+                actualPaths.tokens = `${altPath}/${tokensFile}`;
+                
+                // Add espeak data if found
+                if (hasEspeakData) {
+                  if (hasEspeakData === 'espeak-ng-data') {
+                    actualPaths.dataDir = `${altPath}/espeak-ng-data`;
+                  } else {
+                    // Will need to extract this later
+                    actualPaths.espeakZip = `${altPath}/espeak-ng-data.zip`;
+                  }
+                }
+              }
+            }
+            
+            if (hasRequiredFiles) {
+              if (debug) console.log(`Using alternative preloaded TTS model path: ${altPath}`);
+              // Update the config to use this path in the future
+              SherpaOnnx.Config.assetPaths.tts = altPath;
+              
+              return {
+                modelDir: altPath,
+                modelType,
+                actualPaths,
+                preloaded: true,
+                options: modelConfig.options || {}
+              };
+            }
+          }
+        }
+      }
+      
+      // If we reached here, we couldn't find preloaded assets
+      throw new Error("No preloaded TTS model found and dynamic loading is not implemented");
     },
     
     /**
@@ -189,33 +190,118 @@
         console.log("Creating TTS engine with loaded model:", loadedModel);
       }
       
+      // Always use a single consistent property name for model type
+      const modelType = loadedModel.modelType || 'vits';
+      
+      if (debug) {
+        console.log(`Using model type: ${modelType}`);
+      }
+      
+      // Merge options from loadedModel with function options, prioritizing function options
+      const mergedOptions = {
+        ...loadedModel.options,
+        ...options
+      };
+      
+      if (debug) {
+        console.log("Using merged options:", mergedOptions);
+      }
+      
       let config = null;
       
-      if (loadedModel.type === 'vits') {
-        if (!loadedModel.files || !loadedModel.files.model || !loadedModel.files.tokens) {
+      if (modelType === 'vits') {
+        // For preloaded assets, we use actualPaths
+        const paths = loadedModel.actualPaths || loadedModel.files || {};
+        
+        if (debug) {
+          console.log("Using model paths:", paths);
+        }
+        
+        if (!paths.model || !paths.tokens) {
           throw new Error("Missing required files for VITS model configuration");
         }
         
         const offlineTtsVitsModelConfig = {
-          model: loadedModel.files.model,
-          lexicon: loadedModel.files.lexicon || '',
-          tokens: loadedModel.files.tokens,
-          dataDir: `${loadedModel.modelDir}/espeak-ng-data`, // Path to espeak-ng-data in model directory
-          dictDir: '',
-          noiseScale: options.noiseScale || 0.667,
-          noiseScaleW: options.noiseScaleW || 0.8,
-          lengthScale: options.lengthScale || 1.0,
+          model: paths.model,
+          lexicon: paths.lexicon || '',
+          tokens: paths.tokens,
+          dataDir: paths.dataDir || `${loadedModel.modelDir}/espeak-ng-data`, // Path to espeak-ng-data in model directory
+          dictDir: paths.dictDir || '',
+          noiseScale: mergedOptions.noiseScale || 0.667,
+          noiseScaleW: mergedOptions.noiseScaleW || 0.8,
+          lengthScale: mergedOptions.lengthScale || 1.0,
         };
         
+        if (debug) {
+          console.log("VITS model config:", offlineTtsVitsModelConfig);
+        }
+        
         const offlineTtsMatchaModelConfig = {
-          acousticModel: '',
-          vocoder: '',
+          acousticModel: paths.acousticModel || '',
+          vocoder: paths.vocoder || '',
+          lexicon: paths.lexicon || '',
+          tokens: paths.tokens || '',
+          dataDir: paths.dataDir || '',
+          dictDir: paths.dictDir || '',
+          noiseScale: mergedOptions.noiseScale || 0.667,
+          lengthScale: mergedOptions.lengthScale || 1.0,
+        };
+        
+        const offlineTtsKokoroModelConfig = {
+          model: paths.model || '',
+          voices: paths.voices || '',
+          tokens: paths.tokens || '',
+          dataDir: paths.dataDir || '',
+          lengthScale: mergedOptions.lengthScale || 1.0,
+          dictDir: paths.dictDir || '',
+          lexicon: paths.lexicon || '',
+        };
+        
+        // Use the correct field names expected by the C API
+        const offlineTtsModelConfig = {
+          offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
+          offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
+          offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
+          numThreads: mergedOptions.numThreads || 1,
+          debug: debug ? 1 : 0,
+          provider: mergedOptions.provider || 'cpu',
+        };
+        
+        config = {
+          offlineTtsModelConfig: offlineTtsModelConfig,
+          ruleFsts: mergedOptions.ruleFsts || '',
+          ruleFars: mergedOptions.ruleFars || '',
+          maxNumSentences: mergedOptions.maxNumSentences || 1,
+          silenceScale: mergedOptions.silenceScale || 1.0
+        };
+      } else if (modelType === 'matcha') {
+        // Similar configuration for matcha...
+        const paths = loadedModel.actualPaths || loadedModel.files || {};
+        
+        if (!paths.acousticModel || !paths.vocoder || !paths.tokens) {
+          throw new Error("Missing required files for Matcha model configuration");
+        }
+        
+        const offlineTtsVitsModelConfig = {
+          model: '',
           lexicon: '',
           tokens: '',
           dataDir: '',
           dictDir: '',
           noiseScale: 0.667,
+          noiseScaleW: 0.8,
           lengthScale: 1.0,
+        };
+        
+        const offlineTtsMatchaModelConfig = {
+          acousticModel: paths.acousticModel,
+          vocoder: paths.vocoder,
+          lexicon: paths.lexicon || '',
+          tokens: paths.tokens,
+          dataDir: paths.dataDir || '',
+          dictDir: paths.dictDir || '',
+          noiseScale: mergedOptions.noiseScale || 0.667,
+          lengthScale: mergedOptions.lengthScale || 1.0,
         };
         
         const offlineTtsKokoroModelConfig = {
@@ -232,26 +318,76 @@
           offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
           offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
           offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
-          numThreads: options.numThreads || 1,
+          numThreads: mergedOptions.numThreads || 1,
           debug: debug ? 1 : 0,
-          provider: 'cpu',
+          provider: mergedOptions.provider || 'cpu',
         };
         
         config = {
           offlineTtsModelConfig: offlineTtsModelConfig,
-          ruleFsts: '',
-          ruleFars: '',
-          maxNumSentences: 1,
-          silenceScale: options.silenceScale || 1.0
+          ruleFsts: mergedOptions.ruleFsts || '',
+          ruleFars: mergedOptions.ruleFars || '',
+          maxNumSentences: mergedOptions.maxNumSentences || 1,
+          silenceScale: mergedOptions.silenceScale || 1.0
         };
-      } else if (loadedModel.type === 'matcha') {
-        // Similar configuration for matcha...
-        // (Omitted for brevity)
-      } else if (loadedModel.type === 'kokoro') {
+      } else if (modelType === 'kokoro') {
         // Similar configuration for kokoro...
-        // (Omitted for brevity)
+        const paths = loadedModel.actualPaths || loadedModel.files || {};
+        
+        if (!paths.model || !paths.voices || !paths.tokens) {
+          throw new Error("Missing required files for Kokoro model configuration");
+        }
+        
+        const offlineTtsVitsModelConfig = {
+          model: '',
+          lexicon: '',
+          tokens: '',
+          dataDir: '',
+          dictDir: '',
+          noiseScale: 0.667,
+          noiseScaleW: 0.8,
+          lengthScale: 1.0,
+        };
+        
+        const offlineTtsMatchaModelConfig = {
+          acousticModel: '',
+          vocoder: '',
+          lexicon: '',
+          tokens: '',
+          dataDir: '',
+          dictDir: '',
+          noiseScale: 0.667,
+          lengthScale: 1.0,
+        };
+        
+        const offlineTtsKokoroModelConfig = {
+          model: paths.model,
+          voices: paths.voices,
+          tokens: paths.tokens,
+          dataDir: paths.dataDir || '',
+          lengthScale: mergedOptions.lengthScale || 1.0,
+          dictDir: paths.dictDir || '',
+          lexicon: paths.lexicon || '',
+        };
+        
+        const offlineTtsModelConfig = {
+          offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
+          offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
+          offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
+          numThreads: mergedOptions.numThreads || 1,
+          debug: debug ? 1 : 0,
+          provider: mergedOptions.provider || 'cpu',
+        };
+        
+        config = {
+          offlineTtsModelConfig: offlineTtsModelConfig,
+          ruleFsts: mergedOptions.ruleFsts || '',
+          ruleFars: mergedOptions.ruleFars || '',
+          maxNumSentences: mergedOptions.maxNumSentences || 1,
+          silenceScale: mergedOptions.silenceScale || 1.0
+        };
       } else {
-        throw new Error(`Unsupported TTS model type: ${loadedModel.type}`);
+        throw new Error(`Unsupported TTS model type: ${modelType}`);
       }
       
       if (debug) {
@@ -520,52 +656,51 @@
    * @returns {Object} - Configuration with pointers
    */
   function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
-    if (!('offlineTtsVitsModelConfig' in config)) {
-      config.offlineTtsVitsModelConfig = {
-        model: './model.onnx',
-        lexicon: '',
-        tokens: './tokens.txt',
-        dataDir: './espeak-ng-data',  // Use relative path in the model directory
-        dictDir: '',
-        noiseScale: 0.667,
-        noiseScaleW: 0.8,
-        lengthScale: 1.0,
-      };
+    if (Module.debug) {
+      console.log("Initializing offline TTS model config:", JSON.stringify(config));
     }
+    
+    // Get configurations, supporting both old and new formats
+    const vitsConfig = config.vits || config.offlineTtsVitsModelConfig || {
+      model: './model.onnx',
+      lexicon: '',
+      tokens: './tokens.txt',
+      dataDir: './espeak-ng-data',  // Use relative path in the model directory
+      dictDir: '',
+      noiseScale: 0.667,
+      noiseScaleW: 0.8,
+      lengthScale: 1.0,
+    };
 
-    if (!('offlineTtsMatchaModelConfig' in config)) {
-      config.offlineTtsMatchaModelConfig = {
-        acousticModel: '',
-        vocoder: '',
-        lexicon: '',
-        tokens: '',
-        dataDir: '',
-        dictDir: '',
-        noiseScale: 0.667,
-        lengthScale: 1.0,
-      };
-    }
+    const matchaConfig = config.matcha || config.offlineTtsMatchaModelConfig || {
+      acousticModel: '',
+      vocoder: '',
+      lexicon: '',
+      tokens: '',
+      dataDir: '',
+      dictDir: '',
+      noiseScale: 0.667,
+      lengthScale: 1.0,
+    };
 
-    if (!('offlineTtsKokoroModelConfig' in config)) {
-      config.offlineTtsKokoroModelConfig = {
-        model: '',
-        voices: '',
-        tokens: '',
-        lengthScale: 1.0,
-        dataDir: '',
-        dictDir: '',
-        lexicon: '',
-      };
-    }
+    const kokoroConfig = config.kokoro || config.offlineTtsKokoroModelConfig || {
+      model: '',
+      voices: '',
+      tokens: '',
+      dataDir: '',
+      lengthScale: 1.0,
+      dictDir: '',
+      lexicon: '',
+    };
 
     const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
-      config.offlineTtsVitsModelConfig, Module);
+      vitsConfig, Module);
 
     const matchaModelConfig = initSherpaOnnxOfflineTtsMatchaModelConfig(
-      config.offlineTtsMatchaModelConfig, Module);
+      matchaConfig, Module);
 
     const kokoroModelConfig = initSherpaOnnxOfflineTtsKokoroModelConfig(
-      config.offlineTtsKokoroModelConfig, Module);
+      kokoroConfig, Module);
 
     const len = vitsModelConfig.len + matchaModelConfig.len +
       kokoroModelConfig.len + 3 * 4;
@@ -607,14 +742,64 @@
    * @returns {Object} - Configuration with pointers
    */
   function initSherpaOnnxOfflineTtsConfig(config, Module) {
-    const modelConfig = 
+    // Log for debugging
+    if (Module.debug) {
+      console.log("Initializing TTS config:", JSON.stringify(config));
+    }
+    
+    // Make sure we have an offlineTtsModelConfig
+    if (!config.offlineTtsModelConfig) {
+      if (Module.debug) {
+        console.log("No offlineTtsModelConfig found, creating default");
+      }
+      
+      // Use provided defaults or create new ones
+      config.offlineTtsModelConfig = {
+        offlineTtsVitsModelConfig: {
+          model: './model.onnx',
+          lexicon: '',
+          tokens: './tokens.txt',
+          dataDir: './espeak-ng-data',
+          dictDir: '',
+          noiseScale: 0.667,
+          noiseScaleW: 0.8,
+          lengthScale: 1.0,
+        },
+        offlineTtsMatchaModelConfig: {
+          acousticModel: '',
+          vocoder: '',
+          lexicon: '',
+          tokens: '',
+          dataDir: '',
+          dictDir: '',
+          noiseScale: 0.667,
+          lengthScale: 1.0,
+        },
+        offlineTtsKokoroModelConfig: {
+          model: '',
+          voices: '',
+          tokens: '',
+          dataDir: '',
+          lengthScale: 1.0,
+          dictDir: '',
+          lexicon: '',
+        },
+        numThreads: 1,
+        debug: Module.debug ? 1 : 0,
+        provider: 'cpu',
+      };
+    }
+    
+    // Initialize model config
+    const initializedModelConfig = 
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
-    const len = modelConfig.len + 4 * 4;
+    
+    const len = initializedModelConfig.len + 4 * 4;
     const ptr = Module._malloc(len);
 
     let offset = 0;
-    Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset);
-    offset += modelConfig.len;
+    Module._CopyHeap(initializedModelConfig.ptr, initializedModelConfig.len, ptr + offset);
+    offset += initializedModelConfig.len;
 
     const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
     const ruleFarsLen = Module.lengthBytesUTF8(config.ruleFars || '') + 1;
@@ -636,7 +821,7 @@
     offset += 4;
 
     return {
-      buffer: buffer, ptr: ptr, len: len, config: modelConfig,
+      buffer: buffer, ptr: ptr, len: len, config: initializedModelConfig,
     };
   }
   
@@ -644,35 +829,74 @@
    * OfflineTts class for text-to-speech synthesis
    */
   global.OfflineTts = global.OfflineTts || function(configObj, Module) {
-    if (Module.debug) {
+    if (!Module) {
+      throw new Error("WASM Module is required for OfflineTts");
+    }
+    
+    this.Module = Module;
+    this.handle = null;
+    this.sampleRate = 0;
+    this.numSpeakers = 0;
+    this.generatedAudios = []; // Track generated audios for cleanup
+    
+    const debug = Module.debug || (configObj && configObj.debug);
+    
+    if (debug) {
       console.log("Creating OfflineTts with config:", JSON.stringify(configObj));
     }
     
-    const config = initSherpaOnnxOfflineTtsConfig(configObj, Module);
-    
-    if (Module.debug) {
-      try {
-        Module._MyPrintTTS(config.ptr);
-      } catch (e) {
-        console.warn("Failed to print TTS config:", e);
+    try {
+      // Initialize the TTS configuration
+      const config = initSherpaOnnxOfflineTtsConfig(configObj, Module);
+      
+      if (debug) {
+        try {
+          Module._MyPrintTTS(config.ptr);
+        } catch (e) {
+          console.warn("Failed to print TTS config:", e);
+        }
       }
-    }
-    
-    const handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
-    
-    if (!handle) {
-      const error = new Error("Failed to create TTS engine - null handle returned");
+      
+      // Create the TTS engine
+      const handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
+      
+      if (!handle || handle === 0) {
+        const error = new Error("Failed to create TTS engine - null handle returned");
+        freeConfig(config, Module);
+        throw error;
+      }
+      
+      // Free the configuration memory now that we have the handle
       freeConfig(config, Module);
-      throw error;
+      
+      // Store the handle and get basic information about the TTS engine
+      this.handle = handle;
+      
+      try {
+        this.sampleRate = Module._SherpaOnnxOfflineTtsSampleRate(this.handle);
+        this.numSpeakers = Module._SherpaOnnxOfflineTtsNumSpeakers(this.handle);
+        
+        if (debug) {
+          console.log(`TTS engine initialized. Sample rate: ${this.sampleRate}Hz, Number of speakers: ${this.numSpeakers}`);
+        }
+      } catch (e) {
+        console.error("Error getting TTS engine information:", e);
+        // Don't throw here, we can continue with defaults
+      }
+    } catch (e) {
+      // Clean up any resources if initialization failed
+      if (this.handle) {
+        try {
+          Module._SherpaOnnxDestroyOfflineTts(this.handle);
+        } catch (cleanupError) {
+          console.error("Error cleaning up after failed initialization:", cleanupError);
+        }
+        this.handle = null;
+      }
+      
+      // Re-throw the original error
+      throw e;
     }
-
-    freeConfig(config, Module);
-
-    this.handle = handle;
-    this.sampleRate = Module._SherpaOnnxOfflineTtsSampleRate(this.handle);
-    this.numSpeakers = Module._SherpaOnnxOfflineTtsNumSpeakers(this.handle);
-    this.Module = Module;
-    this.generatedAudios = []; // Track generated audios for cleanup
     
     /**
      * Generate speech from text
@@ -682,6 +906,10 @@
      * @returns {Object} - Object containing audio samples and sample rate
      */
     this.generate = function(text, sid = 0, speed = 1.0) {
+      if (this.Module.debug) {
+        console.log(`Generating speech for text: "${text}", sid: ${sid}, speed: ${speed}`);
+      }
+      
       const textLen = this.Module.lengthBytesUTF8(text) + 1;
       const textPtr = this.Module._malloc(textLen);
       this.Module.stringToUTF8(text, textPtr, textLen);
@@ -691,34 +919,62 @@
       
       this.Module._free(textPtr);
       
-      if (!h) {
+      if (!h || h === 0) {
         throw new Error("Failed to generate speech - null pointer returned");
       }
 
-      const numSamples = this.Module.HEAP32[h / 4 + 1];
-      const sampleRate = this.Module.HEAP32[h / 4 + 2];
-
-      const samplesPtr = this.Module.HEAP32[h / 4] / 4;
-      const samples = new Float32Array(numSamples);
-      for (let i = 0; i < numSamples; i++) {
-        samples[i] = this.Module.HEAPF32[samplesPtr + i];
-      }
-
-      // Add to our tracking list
-      this.generatedAudios.push(h);
-      
-      return {
-        samples: samples, 
-        sampleRate: sampleRate,
-        // Add a cleanup function for this specific audio
-        free: () => {
-          const index = this.generatedAudios.indexOf(h);
-          if (index !== -1) {
-            this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(h);
-            this.generatedAudios.splice(index, 1);
-          }
+      // Access the generated audio structure
+      // The structure has this format in C:
+      // struct SherpaOnnxOfflineTtsGeneratedAudio {
+      //   float *samples;
+      //   int32_t n;
+      //   int32_t sample_rate;
+      // };
+      try {
+        // Read the number of samples and sample rate from memory
+        const numSamples = this.Module.getValue(h + 4, 'i32');
+        const sampleRate = this.Module.getValue(h + 8, 'i32');
+        
+        if (this.Module.debug) {
+          console.log(`Generated ${numSamples} samples at ${sampleRate}Hz`);
         }
-      };
+        
+        // Get the pointer to the audio samples array
+        const samplesPtr = this.Module.getValue(h, '*');
+        
+        if (!samplesPtr) {
+          throw new Error("Failed to read audio samples pointer");
+        }
+        
+        // Copy samples to a new Float32Array
+        const samples = new Float32Array(numSamples);
+        for (let i = 0; i < numSamples; i++) {
+          samples[i] = this.Module.getValue(samplesPtr + (i * 4), 'float');
+        }
+
+        // Add to our tracking list
+        this.generatedAudios.push(h);
+        
+        return {
+          samples: samples, 
+          sampleRate: sampleRate,
+          // Add a cleanup function for this specific audio
+          free: () => {
+            const index = this.generatedAudios.indexOf(h);
+            if (index !== -1) {
+              this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(h);
+              this.generatedAudios.splice(index, 1);
+            }
+          }
+        };
+      } catch (error) {
+        // Clean up on error to avoid memory leaks
+        if (h) {
+          this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(h);
+        }
+        console.error("Error accessing generated audio data:", error);
+        throw new Error("Failed to process generated audio: " + error.message);
+      }
     };
     
     /**

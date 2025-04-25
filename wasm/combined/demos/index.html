@@ -9,7 +9,10 @@
   <!-- Load the common JS first -->
   <script src="common.js"></script>
   
-  <!-- We don't load WASM for the index page -->
+  <!-- Load WASM module for validation -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  <script src="../sherpa-onnx-core.js"></script>
+  <script src="../sherpa-onnx-combined.js"></script>
 </head>
 <body>
   <h1>Sherpa-ONNX Demos</h1>
@@ -37,5 +40,37 @@
       <li>Prevents memory leaks in long-running applications</li>
     </ul>
   </section>
+  
+  <section>
+    <h2>WASM Filesystem Validation</h2>
+    <p>Use this tool to verify that assets are correctly loaded in the WASM virtual filesystem.</p>
+    
+    <div class="controls" id="validation-controls">
+      <!-- Inspect button will be added here -->
+    </div>
+    
+    <div id="fs-validation-output"></div>
+  </section>
+  
+  <script>
+    // Initialize UI for the index page
+    function initializeUI() {
+      // Create filesystem validation button
+      const validationControls = document.getElementById('validation-controls');
+      const validationOutput = document.getElementById('fs-validation-output');
+      
+      if (typeof createInspectAssetsButton === 'function') {
+        createInspectAssetsButton(validationControls, validationOutput);
+      }
+    }
+    
+    // Execute when WASM module is ready
+    if (window.Module && window.Module.ready) {
+      initializeUI();
+    } else if (window.onSherpaOnnxReady) {
+      // Module not ready yet, will be handled by onSherpaOnnxReady
+      document.getElementById('status').textContent = 'Waiting for WASM module to initialize...';
+    }
+  </script>
 </body>
 </html>

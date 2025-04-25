@@ -15,6 +15,9 @@
   // Get a reference to the SherpaOnnx namespace
   const SherpaOnnx = global.SherpaOnnx;
   
+  // Create or use existing VAD namespace
+  SherpaOnnx.VAD = SherpaOnnx.VAD || {};
+  
   // Internal class for voice activity detection
   class VoiceActivityDetector {
     constructor(handle, Module) {
@@ -74,61 +77,63 @@
   // Define the VAD module functionality
   SherpaOnnx.VAD = {
     /**
-     * Load a VAD model from URL
+     * Load a Voice Activity Detection model
      * @param {Object} modelConfig - Configuration for the model
      * @returns {Promise<Object>} - Information about the loaded model
      */
     loadModel: async function(modelConfig) {
-      const debug = modelConfig.debug !== false;
-      
-      if (debug) console.log("VAD.loadModel: ModelConfig received:", JSON.stringify(modelConfig));
-      
-      // Use configurable model directory with default
+      const debug = modelConfig.debug || false;
       const modelDir = modelConfig.modelDir || 'vad-models';
-      const fileName = modelConfig.fileName || 'silero_vad.onnx';
-      const destPath = `${modelDir}/${fileName}`;
       
-      if (debug) console.log(`VAD.loadModel: Using model directory: ${modelDir}`);
-      if (debug) console.log(`VAD.loadModel: Target file path: ${destPath}`);
-      
-      try {
-        // Clean up existing path if needed for fresh start
-        if (modelConfig.cleanStart) {
-          if (debug) console.log(`VAD.loadModel: Clean start requested, removing existing paths`);
-          SherpaOnnx.FileSystem.removePath(modelDir, debug);
+      // First check for preloaded assets
+      if (!modelConfig.forceDownload) {
+        const assetPath = SherpaOnnx.Config.assetPaths.vad;
+        if (debug) console.log(`Checking for preloaded VAD assets at ${assetPath}`);
+        
+        if (SherpaOnnx.FileSystem.fileExists(assetPath)) {
+          const files = SherpaOnnx.FileSystem.listFiles(assetPath);
+          if (debug) console.log(`Found preloaded files: ${files.join(', ')}`);
+          
+          // Check for required model file
+          if (files.includes('silero_vad.onnx')) {
+            if (debug) console.log("Using preloaded VAD model");
+            return {
+              modelDir: assetPath,
+              actualPaths: {
+                model: `${assetPath}/silero_vad.onnx`
+              },
+              preloaded: true
+            };
+          }
+          
+          if (debug) console.log("Preloaded VAD assets found but missing required files");
         }
-        
-        // Load the model using the safe loader
-        if (debug) console.log(`VAD.loadModel: Loading model from ${modelConfig.model || 'assets/vad/silero_vad.onnx'} to ${destPath}`);
-        
-        const loadResult = await SherpaOnnx.FileSystem.safeLoadFile(
-          modelConfig.model || 'assets/vad/silero_vad.onnx', 
-          destPath,
-          debug
-        );
-        
-        if (!loadResult || (typeof loadResult === 'object' && !loadResult.success)) {
-          throw new Error(`Failed to load model from ${modelConfig.model || 'assets/vad/silero_vad.onnx'} to ${destPath}`);
-        }
-        
-        // Update the path if it was changed
-        const actualPath = (typeof loadResult === 'object' && loadResult.path) ? loadResult.path : destPath;
-        if (actualPath !== destPath) {
-          if (debug) console.log(`VAD.loadModel: Note - Model loaded to alternate path: ${actualPath}`);
-        }
-        
-        if (debug) console.log(`VAD.loadModel: Model loaded successfully`);
-        
-        // Return model information with the actual path used
-        return { 
-          modelDir,
-          fileName,
-          modelPath: actualPath
-        };
-      } catch (error) {
-        console.error(`VAD.loadModel: Error loading model:`, error);
-        throw error;
       }
+      
+      // Create directory if it doesn't exist
+      try {
+        SherpaOnnx.FileSystem.ensureDirectory(modelDir);
+      } catch(e) {
+        console.error(`Failed to create directory ${modelDir}:`, e);
+      }
+      
+      // Collection for actual file paths
+      const actualPaths = {};
+      
+      // Load VAD model file
+      const result = await SherpaOnnx.FileSystem.loadFile(
+        modelConfig.model || 'assets/vad/silero_vad.onnx', 
+        `${modelDir}/silero_vad.onnx`, 
+        debug
+      );
+      
+      // Collect actual path
+      actualPaths.model = result.path;
+      
+      return {
+        modelDir,
+        actualPaths
+      };
     },
     
     /**
@@ -204,7 +209,15 @@
         // Free configuration memory
         SherpaOnnx.Utils.freeConfig(vadConfig, global.Module);
         
-        return new VoiceActivityDetector(vadPtr, global.Module);
+        // Create the detector object
+        const detector = new VoiceActivityDetector(vadPtr, global.Module);
+        
+        // Track the resource for cleanup if tracking function is available
+        if (SherpaOnnx.trackResource) {
+          SherpaOnnx.trackResource('vad', detector);
+        }
+        
+        return detector;
       } catch (error) {
         console.error("Error creating VAD detector:", error);
         throw error;
