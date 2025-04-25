@@ -17,6 +17,14 @@ public class OfflineRecognizer {
         decode(ptr, s.getPtr());
     }
 
+    public void decode(OfflineStream[] ss) {
+        long[] streamPtrs = new long[ss.length];
+        for (int i = 0; i < ss.length; ++i) {
+            streamPtrs[i] = ss[i].getPtr();
+        }
+        decodeStreams(ptr, streamPtrs);
+    }
+
     public OfflineStream createStream() {
         long p = createStream(ptr);
         return new OfflineStream(p);
@@ -54,6 +62,8 @@ public class OfflineRecognizer {
     private native long createStream(long ptr);
 
     private native void decode(long ptr, long streamPtr);
+
+    private native void decodeStreams(long ptr, long[] streamPtrs);
 
     private native Object[] getResult(long streamPtr);
 }

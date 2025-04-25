@@ -166,6 +166,8 @@ jobs:
           rm -rf sherpa-onnx-fire-red-*
 
           ./run-non-streaming-decode-file-whisper.sh
+
+          ./run-non-streaming-decode-file-whisper-multiple.sh
           rm -rf sherpa-onnx-whisper-*
 
           ./run-non-streaming-decode-file-nemo.sh

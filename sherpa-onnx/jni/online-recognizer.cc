@@ -340,6 +340,22 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_decode(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_decodeStreams(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlongArray stream_ptrs) {
+  auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+
+  jlong *p = env->GetLongArrayElements(stream_ptrs, nullptr);
+  jsize n = env->GetArrayLength(stream_ptrs);
+
+  auto ss = reinterpret_cast<sherpa_onnx::OnlineStream **>(p);
+
+  recognizer->DecodeStreams(ss, n);
+
+  env->ReleaseLongArrayElements(stream_ptrs, p, JNI_ABORT);
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_createStream(JNIEnv *env,
                                                          jobject /*obj*/,
