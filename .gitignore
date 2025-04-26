@@ -149,5 +149,8 @@ build-wasm-combined/
 scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfo.cs
 scripts/dotnet/examples/obj/Debug/net8.0/Common.GeneratedMSBuildEditorConfig.editorconfig
 scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfoInputs.cache
+wasm/asr/sherpa-onnx-wasm-main-asr.data
+wasm/asr/sherpa-onnx-wasm-main-asr.js
+wasm/asr/sherpa-onnx-wasm-main-asr.wasm
 
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
