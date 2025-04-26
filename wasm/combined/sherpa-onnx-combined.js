@@ -28,13 +28,13 @@
 
   // Define module paths relative to the base path
   const defaultModules = [
-    'sherpa-onnx-core.js',
-    'sherpa-onnx-vad.js',
-    'sherpa-onnx-asr.js',
-    'sherpa-onnx-tts.js',
-    'sherpa-onnx-speaker.js',
-    'sherpa-onnx-enhancement.js',
-    'sherpa-onnx-kws.js'
+    'sherpa-onnx-combined-core.js',
+    'sherpa-onnx-combined-vad.js',
+    'sherpa-onnx-combined-asr.js',
+    'sherpa-onnx-combined-tts.js',
+    'sherpa-onnx-combined-speaker.js',
+    'sherpa-onnx-combined-enhancement.js',
+    'sherpa-onnx-combined-kws.js'
   ];
   
   // Use custom module paths if provided, otherwise use defaults with base path
@@ -198,25 +198,25 @@
   
   // Main initialization function
   const initialize = function() {
+    console.log("initialize() function called. Starting module loading process.");
     // Browser environment: load scripts
     if (typeof window !== 'undefined') {
-      // Set up a backup timeout to ensure callback is called even if loading fails
-      const timeoutPromise = new Promise((resolve) => {
-        setTimeout(() => {
-          console.warn("Module loading timeout reached - some modules may not have loaded correctly");
-          resolve();
-        }, 30000); // 30 second timeout
-      });
-      
-      // Load modules with timeout protection
-      Promise.race([loadModulesSequentially(), timeoutPromise])
+      console.log("Browser environment detected. Proceeding to load modules sequentially.");
+      // Load modules sequentially and handle completion/errors
+      loadModulesSequentially()
         .catch(error => {
           console.error("Module loading failed:", error);
-          
+          // Ensure the callback is still called on failure, passing the error
           if (global.onSherpaOnnxReady) {
-            global.onSherpaOnnxReady(false, error);
+            console.log("Calling onSherpaOnnxReady with failure status due to error.");
+            // Determine if any modules loaded successfully before the error
+            let anyLoaded = Object.values(loadedModules).some(status => status === true);
+            let missingModules = modulePaths.filter(path => !loadedModules[path]);
+            global.onSherpaOnnxReady(anyLoaded && missingModules.length < modulePaths.length, error || missingModules);
           }
         });
+    } else {
+      console.log("Non-browser environment detected. Skipping module loading.");
     }
   };
   
@@ -225,22 +225,88 @@
     const originalOnRuntimeInitialized = global.Module.onRuntimeInitialized;
     
     global.Module.onRuntimeInitialized = function() {
-      console.log("WASM module runtime initialized, now loading JavaScript modules");
+      console.log("WASM module runtime initialized, checking for full initialization including HEAPF32...");
       
       if (originalOnRuntimeInitialized) {
         originalOnRuntimeInitialized();
       }
       
-      initialize();
+      // Wait for full initialization including HEAPF32
+      let attempt = 0;
+      const checkHeapInterval = setInterval(() => {
+        attempt++;
+        console.log(`Attempt ${attempt}: Checking if HEAPF32 is available...`);
+        console.log(`global.Module.HEAPF32 exists: ${!!global.Module.HEAPF32}`);
+        if (global.Module.HEAPF32) {
+          console.log("HEAPF32 is available. Proceeding with JavaScript module initialization.");
+          clearInterval(checkHeapInterval);
+          initialize();
+        } else if (attempt > 120) { // Wait up to 60 seconds (120 * 500ms)
+          console.error("HEAPF32 not available after 60 seconds. Proceeding anyway with potential issues.");
+          clearInterval(checkHeapInterval);
+          initialize();
+        }
+      }, 500);
     };
   } else {
     // No WASM module yet, set up a listener
     global.onModuleReady = function() {
       console.log("WASM module ready, proceeding with module initialization");
-      initialize();
+      // Ensure HEAPF32 is available before proceeding
+      if (global.Module && global.Module.HEAPF32) {
+        console.log("HEAPF32 confirmed available via onModuleReady.");
+        initialize();
+      } else {
+        console.error("onModuleReady called but HEAPF32 not available. Waiting for initialization.");
+        let attempt = 0;
+        const readyCheckInterval = setInterval(() => {
+          attempt++;
+          console.log(`Ready check attempt ${attempt}: Waiting for HEAPF32...`);
+          if (global.Module && global.Module.HEAPF32) {
+            console.log("HEAPF32 now available. Proceeding with initialization.");
+            clearInterval(readyCheckInterval);
+            initialize();
+          } else if (attempt > 120) {
+            console.error("HEAPF32 still not available after 60 seconds in onModuleReady. Proceeding with risk.");
+            clearInterval(readyCheckInterval);
+            initialize();
+          }
+        }, 500);
+      }
     };
     
-    // Also start loading anyway in case the event was missed
-    setTimeout(initialize, 1000);
+    // Since HEAPF32 availability was logged, check if it's already available and proceed
+    if (typeof global.Module !== 'undefined' && global.Module.HEAPF32) {
+      console.log("HEAPF32 already available. Triggering initialization immediately.");
+      initialize();
+    } else {
+      console.log("Waiting for WASM module initialization or HEAPF32 availability before loading dependent scripts.");
+      // Force initialization after a short timeout if no response
+      console.log("Checking for HEAPF32 availability immediately for debugging.");
+      if (typeof global.Module !== 'undefined') {
+        console.log("Module exists. Current HEAPF32 status: ", !!global.Module.HEAPF32);
+        if (global.Module.HEAPF32) {
+          console.log("HEAPF32 detected. Proceeding with initialization NOW.");
+          initialize();
+        } else {
+          console.log("No HEAPF32 yet. Waiting a very short period before forcing initialization.");
+          setTimeout(() => {
+            console.log("Immediate timeout reached. Forcing initialization regardless of HEAPF32 status to debug.");
+            if (typeof global.Module !== 'undefined') {
+              console.log("Module status at force: ", !!global.Module, "HEAPF32 status: ", !!global.Module.HEAPF32);
+            } else {
+              console.log("Module still not defined at force time.");
+            }
+            initialize();
+          }, 1000); // Force after just 1 second for faster debugging
+        }
+      } else {
+        console.log("Module not yet defined. Waiting for it to appear.");
+        setTimeout(() => {
+          console.log("Secondary timeout reached. Forcing initialization regardless of status.");
+          initialize();
+        }, 1000); // Force after just 1 second if Module isn't even defined
+      }
+    }
   }
 })(typeof window !== 'undefined' ? window : global); 

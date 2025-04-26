@@ -15,13 +15,13 @@ When built, the following files are generated:
 - `sherpa-onnx-wasm-combined.wasm` - The WebAssembly binary
 - `sherpa-onnx-wasm-combined.data` - The preloaded assets (models)
 - JS library files:
-  - `sherpa-onnx-core.js` - Core functionality
-  - `sherpa-onnx-asr.js` - ASR functionality
-  - `sherpa-onnx-vad.js` - VAD functionality
-  - `sherpa-onnx-tts.js` - TTS functionality
-  - `sherpa-onnx-kws.js` - Keyword Spotting functionality
-  - `sherpa-onnx-speaker.js` - Speaker Diarization functionality
-  - `sherpa-onnx-enhancement.js` - Speech Enhancement functionality
+  - `sherpa-onnx-combined-core.js` - Core functionality
+  - `sherpa-onnx-combined-asr.js` - ASR functionality
+  - `sherpa-onnx-combined-vad.js` - VAD functionality
+  - `sherpa-onnx-combined-tts.js` - TTS functionality
+  - `sherpa-onnx-combined-kws.js` - Keyword Spotting functionality
+  - `sherpa-onnx-combined-speaker.js` - Speaker Diarization functionality
+  - `sherpa-onnx-combined-enhancement.js` - Speech Enhancement functionality
   - `sherpa-onnx-combined.js` - Combined functionality wrapper
 
 ## Building

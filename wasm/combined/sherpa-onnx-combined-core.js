@@ -12,13 +12,224 @@
   const SherpaOnnx = {};
   
   // Check if Module already exists and extend it
-  if (typeof global.Module !== 'undefined') {
-    const originalOnRuntimeInitialized = global.Module.onRuntimeInitialized;
-    global.Module.onRuntimeInitialized = function() {
-      console.log("SherpaOnnx Core module initialized");
-      if (originalOnRuntimeInitialized) originalOnRuntimeInitialized();
-      if (global.onModuleReady) global.onModuleReady();
+  if (typeof window.Module !== 'undefined') {
+    console.log('Module already defined at script load time. Checking initialization status...');
+    console.log('Module properties at load:', Object.keys(window.Module).slice(0, 10), '... (first 10 shown)');
+    console.log('Module.onRuntimeInitialized exists:', !!window.Module.onRuntimeInitialized);
+    console.log('Module.calledRun status at load:', !!window.Module.calledRun);
+    // Immediate attempt to initialize HEAPF32 at load time
+    if (!window.Module.HEAPF32) {
+      try {
+        if (window.Module.HEAP8) {
+          window.Module.HEAPF32 = new Float32Array(window.Module.HEAP8.buffer);
+          console.log('Successfully initialized HEAPF32 dynamically from HEAP8 at load time in core module.');
+        } else if (window.Module.asm && window.Module.asm.memory) {
+          window.Module.HEAPF32 = new Float32Array(window.Module.asm.memory.buffer);
+          console.log('Successfully initialized HEAPF32 directly from WebAssembly memory at load time in core module.');
+        } else if (window.Module.memory) {
+          window.Module.HEAPF32 = new Float32Array(window.Module.memory.buffer);
+          console.log('Successfully initialized HEAPF32 from Module.memory at load time in core module.');
+        } else if (window.Module._memory) {
+          window.Module.HEAPF32 = new Float32Array(window.Module._memory.buffer);
+          console.log('Successfully initialized HEAPF32 from Module._memory at load time in core module.');
+        } else if (typeof WebAssembly !== 'undefined' && WebAssembly.Memory && window.Module.asm) {
+          for (const prop in window.Module.asm) {
+            if (window.Module.asm[prop] instanceof WebAssembly.Memory) {
+              window.Module.HEAPF32 = new Float32Array(window.Module.asm[prop].buffer);
+              console.log(`Successfully initialized HEAPF32 from WebAssembly.Memory found in asm.${prop} at load time in core module.`);
+              break;
+            }
+          }
+          if (!window.Module.HEAPF32) {
+            console.warn('No WebAssembly.Memory found in asm properties at load time in core module.');
+          }
+        } else {
+          console.warn('No standard method found to initialize HEAPF32 at load time in core module.');
+          // Simplified deeper inspection of window.Module for any memory buffer
+          console.log('Inspecting window.Module for potential memory buffers...');
+          let foundBuffer = false;
+          for (const prop in window.Module) {
+            try {
+              if (window.Module[prop] && typeof window.Module[prop] === 'object') {
+                if (window.Module[prop] instanceof ArrayBuffer) {
+                  window.Module.HEAPF32 = new Float32Array(window.Module[prop]);
+                  console.log(`Initialized HEAPF32 from ArrayBuffer in Module.${prop} at load time.`);
+                  foundBuffer = true;
+                  break;
+                } else if (window.Module[prop].buffer && window.Module[prop].buffer instanceof ArrayBuffer) {
+                  window.Module.HEAPF32 = new Float32Array(window.Module[prop].buffer);
+                  console.log(`Initialized HEAPF32 from buffer in Module.${prop}.buffer at load time.`);
+                  foundBuffer = true;
+                  break;
+                }
+              }
+            } catch (e) {
+              console.error(`Error inspecting Module.${prop} at load time:`, e.message);
+            }
+          }
+          if (!foundBuffer) {
+            console.log('No suitable memory buffer found in deep inspection at load time.');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to initialize HEAPF32 dynamically at load time in core module:', e.message);
+      }
+      console.log(`Post-workaround at load time - HEAPF32 exists: ${!!window.Module.HEAPF32}`);
+    }
+    const originalOnRuntimeInitialized = window.Module.onRuntimeInitialized;
+    window.Module.onRuntimeInitialized = function() {
+      console.log('onRuntimeInitialized triggered. SherpaOnnx Core module initialized.');
+      console.log('Module.calledRun status when onRuntimeInitialized triggered:', !!window.Module.calledRun);
+      console.log('Checking for HEAPF32 availability after initialization:', !!window.Module.HEAPF32);
+      global.SherpaOnnx.isReady = true; // Custom readiness flag
+      console.log('SherpaOnnx readiness flag set to true');
+      if (originalOnRuntimeInitialized) {
+        console.log('Calling original onRuntimeInitialized callback.');
+        originalOnRuntimeInitialized();
+      }
+      if (global.onModuleReady) {
+        console.log('Calling global.onModuleReady callback.');
+        global.onModuleReady();
+      }
     };
+    console.log('onRuntimeInitialized hook set. Waiting for initialization...');
+    // Additional check if calledRun is already true but onRuntimeInitialized hasn't fired
+    if (window.Module.calledRun && !global.SherpaOnnx.isReady) {
+      console.warn('Module.calledRun is true but onRuntimeInitialized has not fired. Forcing readiness check.');
+      // Start a continuous check for HEAPF32 availability
+      let heapCheckAttempts = 0;
+      const heapCheckInterval = setInterval(() => {
+        heapCheckAttempts++;
+        console.log(`HEAPF32 check attempt ${heapCheckAttempts}: HEAPF32 exists: ${!!window.Module.HEAPF32}`);
+        if (!window.Module.HEAPF32) {
+          try {
+            if (window.Module.HEAP8) {
+              window.Module.HEAPF32 = new Float32Array(window.Module.HEAP8.buffer);
+              console.log('Initialized HEAPF32 from HEAP8 during continuous check.');
+            } else if (window.Module.asm && window.Module.asm.memory) {
+              window.Module.HEAPF32 = new Float32Array(window.Module.asm.memory.buffer);
+              console.log('Initialized HEAPF32 from WebAssembly memory during continuous check.');
+            } else if (window.Module.memory) {
+              window.Module.HEAPF32 = new Float32Array(window.Module.memory.buffer);
+              console.log('Initialized HEAPF32 from Module.memory during continuous check.');
+            } else if (window.Module._memory) {
+              window.Module.HEAPF32 = new Float32Array(window.Module._memory.buffer);
+              console.log('Initialized HEAPF32 from Module._memory during continuous check.');
+            } else if (typeof WebAssembly !== 'undefined' && WebAssembly.Memory && window.Module.asm) {
+              for (const prop in window.Module.asm) {
+                if (window.Module.asm[prop] instanceof WebAssembly.Memory) {
+                  window.Module.HEAPF32 = new Float32Array(window.Module.asm[prop].buffer);
+                  console.log(`Initialized HEAPF32 from WebAssembly.Memory in asm.${prop} during continuous check.`);
+                  break;
+                }
+              }
+              if (!window.Module.HEAPF32) {
+                console.warn('No WebAssembly.Memory found in asm properties during continuous check.');
+              }
+            } else {
+              console.warn('No standard method found to initialize HEAPF32 during continuous check.');
+              // Simplified deeper inspection during continuous check
+              console.log(`Check ${heapCheckAttempts}: Inspecting window.Module for memory buffers...`);
+              let foundBuffer = false;
+              for (const prop in window.Module) {
+                try {
+                  if (window.Module[prop] && typeof window.Module[prop] === 'object') {
+                    if (window.Module[prop] instanceof ArrayBuffer) {
+                      window.Module.HEAPF32 = new Float32Array(window.Module[prop]);
+                      console.log(`Initialized HEAPF32 from ArrayBuffer in Module.${prop} during check ${heapCheckAttempts}.`);
+                      foundBuffer = true;
+                      break;
+                    } else if (window.Module[prop].buffer && window.Module[prop].buffer instanceof ArrayBuffer) {
+                      window.Module.HEAPF32 = new Float32Array(window.Module[prop].buffer);
+                      console.log(`Initialized HEAPF32 from buffer in Module.${prop}.buffer during check ${heapCheckAttempts}.`);
+                      foundBuffer = true;
+                      break;
+                    }
+                  }
+                } catch (e) {
+                  console.error(`Error inspecting Module.${prop} during check ${heapCheckAttempts}:`, e.message);
+                }
+              }
+              if (!foundBuffer) {
+                console.log(`Check ${heapCheckAttempts}: No suitable memory buffer found in deep inspection.`);
+              }
+            }
+          } catch (e) {
+            console.error('Failed to initialize HEAPF32 during continuous check:', e.message);
+          }
+        }
+        if (window.Module.HEAPF32 || heapCheckAttempts >= 10) {
+          clearInterval(heapCheckInterval);
+          console.log(`Stopping HEAPF32 checks after ${heapCheckAttempts} attempts. Final status - HEAPF32 exists: ${!!window.Module.HEAPF32}`);
+          if (!window.Module.HEAPF32) {
+            console.error('HEAPF32 initialization failed after maximum attempts. Proceeding anyway to unblock UI.');
+          }
+          if (!global.SherpaOnnx.isReady) {
+            global.SherpaOnnx.isReady = true;
+            console.log('SherpaOnnx readiness flag manually set to true after HEAPF32 check.');
+            if (global.onModuleReady) {
+              console.log('Calling global.onModuleReady callback after HEAPF32 check.');
+              global.onModuleReady();
+            }
+          }
+        }
+      }, 500); // Check every 500ms up to 10 attempts (5 seconds)
+      setTimeout(() => {
+        if (!global.SherpaOnnx.isReady) {
+          console.error('onRuntimeInitialized still not triggered after extended delay. Manually setting readiness flag.');
+          global.SherpaOnnx.isReady = true;
+          console.log('SherpaOnnx readiness flag manually set to true due to timeout.');
+          if (!window.Module.HEAPF32) {
+            console.log('HEAPF32 still not available after timeout. Final attempt to initialize.');
+            try {
+              if (window.Module.HEAP8) {
+                window.Module.HEAPF32 = new Float32Array(window.Module.HEAP8.buffer);
+                console.log('Initialized HEAPF32 from HEAP8 during final timeout check.');
+              } else if (window.Module.asm && window.Module.asm.memory) {
+                window.Module.HEAPF32 = new Float32Array(window.Module.asm.memory.buffer);
+                console.log('Initialized HEAPF32 from WebAssembly memory during final timeout check.');
+              }
+            } catch (e) {
+              console.error('Final attempt to initialize HEAPF32 failed:', e.message);
+            }
+            console.log(`Final status after timeout - HEAPF32 exists: ${!!window.Module.HEAPF32}`);
+          }
+          if (global.onModuleReady) {
+            console.log('Calling global.onModuleReady callback due to forced readiness.');
+            global.onModuleReady();
+          }
+        }
+      }, 10000); // Wait 10 seconds before forcing readiness
+    }
+  } else {
+    console.log('Module not defined at script load time. Setting up property trap...');
+    console.log("Waiting for Module to be defined...");
+    Object.defineProperty(global, 'Module', {
+      set: function(mod) {
+        console.log('Module being set. Capturing initialization...');
+        console.log('Module properties at set:', Object.keys(mod).slice(0, 10), '... (first 10 shown)');
+        this._Module = mod;
+        console.log("Module defined, waiting for runtime initialization");
+        const originalOnRuntimeInitialized = mod.onRuntimeInitialized;
+        mod.onRuntimeInitialized = function() {
+          console.log("onRuntimeInitialized triggered from setter. SherpaOnnx Core module initialized.");
+          global.SherpaOnnx.isReady = true; // Custom readiness flag
+          console.log("SherpaOnnx readiness flag set to true from setter");
+          if (originalOnRuntimeInitialized) {
+            console.log('Calling original onRuntimeInitialized callback from setter.');
+            originalOnRuntimeInitialized();
+          }
+          if (global.onModuleReady) {
+            console.log('Calling global.onModuleReady callback from setter.');
+            global.onModuleReady();
+          }
+        };
+        console.log('onRuntimeInitialized hook set in setter. Waiting for initialization...');
+      },
+      get: function() {
+        return this._Module;
+      }
+    });
   }
   
   // Configuration for SherpaOnnx

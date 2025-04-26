@@ -1,3 +1,20 @@
+// common.js - Shared utilities for Sherpa-ONNX WASM demos
+
+// --- Emscripten Module configuration ---
+// This MUST run before sherpa-onnx-wasm-combined.js is loaded
+var Module = Module || {};
+Module.locateFile = function(path, prefix) {
+  // If the path is the wasm or data file, load it from the parent directory
+  if (path.endsWith('.wasm') || path.endsWith('.data')) {
+    // Assumes demos are in a subdirectory (like /demos/)
+    // Adjust this path if your structure is different
+    return `../${path}`;
+  }
+  // Otherwise, use the default logic (usually prefix + path)
+  return prefix + path;
+};
+// --- End Emscripten Module configuration ---
+
 // Set up initialization callback
 window.onSherpaOnnxReady = function(success, error) {
   if (success) {
