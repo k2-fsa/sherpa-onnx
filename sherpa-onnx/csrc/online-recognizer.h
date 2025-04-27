@@ -11,6 +11,7 @@
 
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/homophone-replacer.h"
 #include "sherpa-onnx/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
@@ -107,6 +108,8 @@ struct OnlineRecognizerConfig {
   // currently only in `OnlineRecognizerTransducerImpl`.
   bool reset_encoder = false;
 
+  HomophoneReplacerConfig hr;
+
   /// used only for modified_beam_search, if hotwords_buf is non-empty,
   /// the hotwords will be loaded from the buffered string instead of from the
   /// "hotwords_file"
@@ -123,7 +126,7 @@ struct OnlineRecognizerConfig {
       int32_t max_active_paths, const std::string &hotwords_file,
       float hotwords_score, float blank_penalty, float temperature_scale,
       const std::string &rule_fsts, const std::string &rule_fars,
-      bool reset_encoder)
+      bool reset_encoder, const HomophoneReplacerConfig &hr)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -138,7 +141,8 @@ struct OnlineRecognizerConfig {
         temperature_scale(temperature_scale),
         rule_fsts(rule_fsts),
         rule_fars(rule_fars),
-        reset_encoder(reset_encoder) {}
+        reset_encoder(reset_encoder),
+        hr(hr) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

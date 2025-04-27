@@ -349,6 +349,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                      s->GetCurrentSegment(), s->GetNumFramesSinceStart());
     r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 
@@ -391,15 +392,14 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       // (the encoder state buffers are kept)
       for (const auto &it : last_result.hyps) {
         auto h = it.second;
-        r.hyps.Add({std::vector<int64_t>(h.ys.end() - context_size,
-                                         h.ys.end()),
+        r.hyps.Add({std::vector<int64_t>(h.ys.end() - context_size, h.ys.end()),
                     h.log_prob});
       }
 
-      r.tokens = std::vector<int64_t> (last_result.tokens.end() - context_size,
-                                       last_result.tokens.end());
+      r.tokens = std::vector<int64_t>(last_result.tokens.end() - context_size,
+                                      last_result.tokens.end());
     } else {
-      if(config_.reset_encoder) {
+      if (config_.reset_encoder) {
         // reset encoder states, use blanks as 'ys' context
         s->SetStates(model_->GetEncoderInitStates());
       }

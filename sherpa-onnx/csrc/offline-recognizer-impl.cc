@@ -408,6 +408,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 OfflineRecognizerImpl::OfflineRecognizerImpl(
     const OfflineRecognizerConfig &config)
     : config_(config) {
+  // TODO(fangjun): Refactor this function
+
   if (!config.rule_fsts.empty()) {
     std::vector<std::string> files;
     SplitStringToVector(config.rule_fsts, ",", false, &files);
@@ -447,6 +449,13 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
     if (config.model_config.debug) {
       SHERPA_ONNX_LOGE("FST archives loaded!");
     }
+  }
+
+  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
+      !config.hr.rule_fsts.empty()) {
+    auto hr_config = config.hr;
+    hr_config.debug = config.model_config.debug;
+    hr_ = std::make_unique<HomophoneReplacer>(hr_config);
   }
 }
 
@@ -495,6 +504,13 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
       }  // for (; !reader->Done(); reader->Next())
     }    // for (const auto &f : files)
   }      // if (!config.rule_fars.empty())
+
+  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
+      !config.hr.rule_fsts.empty()) {
+    auto hr_config = config.hr;
+    hr_config.debug = config.model_config.debug;
+    hr_ = std::make_unique<HomophoneReplacer>(mgr, hr_config);
+  }
 }
 
 std::string OfflineRecognizerImpl::ApplyInverseTextNormalization(
@@ -505,6 +521,15 @@ std::string OfflineRecognizerImpl::ApplyInverseTextNormalization(
     for (const auto &tn : itn_list_) {
       text = tn->Normalize(text);
     }
+  }
+
+  return text;
+}
+
+std::string OfflineRecognizerImpl::ApplyHomophoneReplacer(
+    std::string text) const {
+  if (hr_) {
+    text = hr_->Apply(text);
   }
 
   return text;

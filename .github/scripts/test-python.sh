@@ -95,6 +95,18 @@ rm $name
 ls -lh $repo
 python3 ./python-api-examples/offline-sense-voice-ctc-decode-files.py
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+tar xf dict.tar.bz2
+rm dict.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+python3 ./python-api-examples/offline-sense-voice-ctc-decode-files-with-hr.py
+
+rm -rf dict replace.fst test-hr.wav lexicon.txt
+
 if [[ $(uname) == Linux ]]; then
   # It needs ffmpeg
   log  "generate subtitles (Chinese)"

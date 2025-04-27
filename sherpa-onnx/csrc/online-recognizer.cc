@@ -88,6 +88,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
   endpoint_config.Register(po);
   lm_config.Register(po);
   ctc_fst_decoder_config.Register(po);
+  hr.Register(po);
 
   po->Register("enable-endpoint", &enable_endpoint,
                "True to enable endpoint detection. False to disable it.");
@@ -182,6 +183,11 @@ bool OnlineRecognizerConfig::Validate() const {
     }
   }
 
+  if (!hr.dict_dir.empty() && !hr.lexicon.empty() && !hr.rule_fsts.empty() &&
+      !hr.Validate()) {
+    return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -203,7 +209,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "temperature_scale=" << temperature_scale << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
   os << "rule_fars=\"" << rule_fars << "\", ";
-  os << "reset_encoder=\"" << (reset_encoder ? "True" : "False") << "\")";
+  os << "reset_encoder=" << (reset_encoder ? "True" : "False") << ", ";
+  os << "hr=" << hr.ToString() << ")";
 
   return os.str();
 }

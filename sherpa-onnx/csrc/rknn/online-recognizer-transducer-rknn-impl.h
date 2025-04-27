@@ -177,6 +177,7 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
     auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                      s->GetCurrentSegment(), s->GetNumFramesSinceStart());
     r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 

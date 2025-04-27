@@ -98,6 +98,29 @@ for m in model.onnx model.int8.onnx; do
   done
 done
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+tar xf dict.tar.bz2
+rm dict.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+for m in model.onnx model.int8.onnx; do
+  for use_itn in 0 1; do
+    echo "$m $w $use_itn"
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --sense-voice-model=$repo/$m \
+      --sense-voice-use-itn=$use_itn \
+      --hr-lexicon=./lexicon.txt \
+      --hr-dict-dir=./dict \
+      --hr-rule-fsts=./replace.fst \
+      ./test-hr.wav
+  done
+done
+
+rm -rf dict replace.fst test-hr.wav lexicon.txt
 
 # test wav reader for non-standard wav files
 waves=(

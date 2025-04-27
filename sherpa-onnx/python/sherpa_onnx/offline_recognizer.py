@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from _sherpa_onnx import (
     FeatureExtractorConfig,
+    HomophoneReplacerConfig,
     OfflineCtcFstDecoderConfig,
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,
@@ -64,6 +65,9 @@ class OfflineRecognizer(object):
         rule_fars: str = "",
         lm: str = "",
         lm_scale: float = 0.1,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -181,6 +185,11 @@ class OfflineRecognizer(object):
             blank_penalty=blank_penalty,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -201,6 +210,9 @@ class OfflineRecognizer(object):
         use_itn: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -263,6 +275,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -281,6 +298,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -336,6 +356,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -354,6 +379,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -411,6 +439,9 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir, lexicon=hr_lexicon, rule_fsts=hr_rule_fsts
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -429,6 +460,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -483,6 +517,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -501,6 +540,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -557,6 +599,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -577,6 +624,9 @@ class OfflineRecognizer(object):
         tail_paddings: int = -1,
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -647,6 +697,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -664,6 +719,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -719,6 +777,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -738,6 +801,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -800,6 +866,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -818,6 +889,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -873,6 +947,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -891,6 +970,9 @@ class OfflineRecognizer(object):
         provider: str = "cpu",
         rule_fsts: str = "",
         rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -947,6 +1029,11 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
