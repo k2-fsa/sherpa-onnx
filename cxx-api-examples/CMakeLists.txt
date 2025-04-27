@@ -3,6 +3,9 @@ include_directories(${PROJECT_SOURCE_DIR})
 add_executable(streaming-zipformer-cxx-api ./streaming-zipformer-cxx-api.cc)
 target_link_libraries(streaming-zipformer-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(streaming-zipformer-with-hr-cxx-api ./streaming-zipformer-with-hr-cxx-api.cc)
+target_link_libraries(streaming-zipformer-with-hr-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(speech-enhancement-gtcrn-cxx-api ./speech-enhancement-gtcrn-cxx-api.cc)
 target_link_libraries(speech-enhancement-gtcrn-cxx-api sherpa-onnx-cxx-api)
 
@@ -23,6 +26,9 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(sense-voice-with-hr-cxx-api ./sense-voice-with-hr-cxx-api.cc)
+target_link_libraries(sense-voice-with-hr-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(dolphin-ctc-cxx-api ./dolphin-ctc-cxx-api.cc)
 target_link_libraries(dolphin-ctc-cxx-api sherpa-onnx-cxx-api)

@@ -99,6 +99,10 @@ OnlineRecognizer OnlineRecognizer::Create(
   c.hotwords_buf = config.hotwords_buf.c_str();
   c.hotwords_buf_size = config.hotwords_buf.size();
 
+  c.hr.dict_dir = config.hr.dict_dir.c_str();
+  c.hr.lexicon = config.hr.lexicon.c_str();
+  c.hr.rule_fsts = config.hr.rule_fsts.c_str();
+
   auto p = SherpaOnnxCreateOnlineRecognizer(&c);
   return OnlineRecognizer(p);
 }
@@ -260,6 +264,10 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.rule_fars = config.rule_fars.c_str();
 
   c.blank_penalty = config.blank_penalty;
+
+  c.hr.dict_dir = config.hr.dict_dir.c_str();
+  c.hr.lexicon = config.hr.lexicon.c_str();
+  c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
   auto p = SherpaOnnxCreateOfflineRecognizer(&c);
   return OfflineRecognizer(p);

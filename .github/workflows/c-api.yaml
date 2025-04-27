@@ -79,6 +79,48 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test streaming zipformer with homophone replacer
+        shell: bash
+        run: |
+          name=streaming-zipformer-with-hr-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          echo "---"
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+          tar xf dict.tar.bz2
+          rm dict.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm -rf sherpa-onnx-streaming-zipformer-*
+          rm -rf dict lexicon.txt test-hr.wav replace.fst
+          rm -v $name
+
       - name: Test Dolphin CTC
         shell: bash
         run: |

@@ -55,6 +55,12 @@ struct OnlineCtcFstDecoderConfig {
   int32_t max_active = 3000;
 };
 
+struct HomophoneReplacerConfig {
+  std::string dict_dir;
+  std::string lexicon;
+  std::string rule_fsts;
+};
+
 struct OnlineRecognizerConfig {
   FeatureConfig feat_config;
   OnlineModelConfig model_config;
@@ -81,6 +87,7 @@ struct OnlineRecognizerConfig {
   float blank_penalty = 0;
 
   std::string hotwords_buf;
+  HomophoneReplacerConfig hr;
 };
 
 struct OnlineRecognizerResult {
@@ -280,6 +287,7 @@ struct SHERPA_ONNX_API OfflineRecognizerConfig {
   std::string rule_fsts;
   std::string rule_fars;
   float blank_penalty = 0;
+  HomophoneReplacerConfig hr;
 };
 
 struct SHERPA_ONNX_API OfflineRecognizerResult {
