@@ -89,7 +89,8 @@ class OnlineRecognizerCtcRknnImpl : public OnlineRecognizerImpl {
     auto r =
         ConvertCtc(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                    s->GetCurrentSegment(), s->GetNumFramesSinceStart());
-    r.text = ApplyInverseTextNormalization(r.text);
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 

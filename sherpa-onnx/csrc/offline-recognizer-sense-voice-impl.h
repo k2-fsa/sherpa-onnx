@@ -222,6 +222,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
       auto r = ConvertSenseVoiceResult(results[i], symbol_table_,
                                        frame_shift_ms, subsampling_factor);
       r.text = ApplyInverseTextNormalization(std::move(r.text));
+      r.text = ApplyHomophoneReplacer(std::move(r.text));
       ss[i]->SetResult(r);
     }
   }
@@ -295,6 +296,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
                                      subsampling_factor);
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     s->SetResult(r);
   }
 

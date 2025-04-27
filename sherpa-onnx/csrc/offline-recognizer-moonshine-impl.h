@@ -121,6 +121,7 @@ class OfflineRecognizerMoonshineImpl : public OfflineRecognizerImpl {
 
       auto r = Convert(results[0], symbol_table_);
       r.text = ApplyInverseTextNormalization(std::move(r.text));
+      r.text = ApplyHomophoneReplacer(std::move(r.text));
       s->SetResult(r);
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE(

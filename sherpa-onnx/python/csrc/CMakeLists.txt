@@ -7,6 +7,7 @@ set(srcs
   display.cc
   endpoint.cc
   features.cc
+  homophone-replacer.cc
   keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc

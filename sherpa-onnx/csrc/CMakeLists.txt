@@ -20,7 +20,9 @@ set(sources
   features.cc
   file-utils.cc
   fst-utils.cc
+  homophone-replacer.cc
   hypothesis.cc
+  jieba.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc

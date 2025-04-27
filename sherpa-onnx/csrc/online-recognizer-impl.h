@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/homophone-replacer.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -57,6 +58,7 @@ class OnlineRecognizerImpl {
   virtual void Reset(OnlineStream *s) const = 0;
 
   std::string ApplyInverseTextNormalization(std::string text) const;
+  std::string ApplyHomophoneReplacer(std::string text) const;
 
  private:
   OnlineRecognizerConfig config_;
@@ -64,6 +66,7 @@ class OnlineRecognizerImpl {
   // config.rule_fsts is not empty or
   // config.rule_fars is not empty
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> itn_list_;
+  std::unique_ptr<HomophoneReplacer> hr_;
 };
 
 }  // namespace sherpa_onnx

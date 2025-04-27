@@ -169,7 +169,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     auto decoder_result = s->GetParaformerResult();
 
     auto r = Convert(decoder_result, sym_);
-    r.text = ApplyInverseTextNormalization(r.text);
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 
