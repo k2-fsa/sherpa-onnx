@@ -92,7 +92,18 @@ if [[ $arch != "ia32" && $platform != "win32" ]]; then
   rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
 
   node ./test_asr_non_streaming_sense_voice.js
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+  tar xf dict.tar.bz2
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+  node ./test_asr_non_streaming_sense_voice_with_hr.js
+
   rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+  rm -rf dict replace.fst test-hr.wav lexicon.txt
 
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
@@ -253,12 +264,21 @@ rm -f itn*
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+tar xf dict.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
 if [[ $arch != "ia32" && $platform != "win32" ]]; then
   node test_asr_streaming_transducer_itn.js
   node test_asr_streaming_transducer.js
+  node test_asr_streaming_transducer_with_hr.js
 fi
 
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+rm -rf dict lexicon.txt replace.fst test-hr.wav
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2

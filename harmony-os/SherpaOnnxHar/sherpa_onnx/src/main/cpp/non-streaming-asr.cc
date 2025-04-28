@@ -9,6 +9,7 @@
 
 // defined in ./streaming-asr.cc
 SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj);
+SherpaOnnxHomophoneReplacerConfig GetHomophoneReplacerConfig(Napi::Object obj);
 
 static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
     Napi::Object obj) {
@@ -261,6 +262,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   c.feat_config = GetFeatureConfig(o);
   c.model_config = GetOfflineModelConfig(o);
   c.lm_config = GetOfflineLMConfig(o);
+  c.hr = GetHomophoneReplacerConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
@@ -324,6 +326,9 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_DELETE_C_STR(c.hotwords_file);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
+  SHERPA_ONNX_DELETE_C_STR(c.hr.dict_dir);
+  SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
+  SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
 
   if (!recognizer) {
     Napi::TypeError::New(env, "Please check your config!")
