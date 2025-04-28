@@ -26,7 +26,8 @@ static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
                       sizeof(SherpaOnnxOnlineModelConfig) + 8 * 4 +
-                      sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) + 5 * 4 +
+                      sizeof(SherpaOnnxHomophoneReplacerConfig),
               "");
 
 void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
@@ -82,6 +83,11 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   fprintf(stdout, "graph: %s\n", config->ctc_fst_decoder_config.graph);
   fprintf(stdout, "max_active: %d\n",
           config->ctc_fst_decoder_config.max_active);
+
+  fprintf(stdout, "----------hr config----------\n");
+  fprintf(stdout, "dict_dir: %s\n", config->hr.dict_dir);
+  fprintf(stdout, "lexicon: %s\n", config->hr.lexicon);
+  fprintf(stdout, "rule_fsts: %s\n", config->hr.rule_fsts);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {
