@@ -20,6 +20,7 @@ namespace SherpaOnnx
             RuleFsts = "";
             RuleFars = "";
             BlankPenalty = 0.0F;
+            Hr = new HomophoneReplacerConfig();
         }
         public FeatureConfig FeatConfig;
         public OfflineModelConfig ModelConfig;
@@ -42,5 +43,7 @@ namespace SherpaOnnx
         public string RuleFars;
 
         public float BlankPenalty;
+
+        public HomophoneReplacerConfig Hr;
     }
 }

@@ -28,6 +28,7 @@ namespace SherpaOnnx
             BlankPenalty = 0.0F;
             HotwordsBuf = "";
             HotwordsBufSize = 0;
+            Hr = new HomophoneReplacerConfig();
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -79,5 +80,7 @@ namespace SherpaOnnx
         public string HotwordsBuf;
 
         public int HotwordsBufSize;
+
+        public HomophoneReplacerConfig Hr;
     }
 }
