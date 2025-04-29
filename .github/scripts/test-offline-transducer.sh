@@ -30,7 +30,7 @@ $EXE \
   --model-type=nemo_transducer \
   ./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/test_wavs/example.wav
 
-rm sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19
+rm -rf sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19
 
 
 log "------------------------------------------------------------------------"
