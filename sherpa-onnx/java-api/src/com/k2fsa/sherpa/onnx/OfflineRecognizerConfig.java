@@ -5,6 +5,7 @@ package com.k2fsa.sherpa.onnx;
 public class OfflineRecognizerConfig {
     private final FeatureConfig featConfig;
     private final OfflineModelConfig modelConfig;
+    private final HomophoneReplacerConfig hr;
     private final String decodingMethod;
     private final int maxActivePaths;
     private final String hotwordsFile;
@@ -16,6 +17,7 @@ public class OfflineRecognizerConfig {
     private OfflineRecognizerConfig(Builder builder) {
         this.featConfig = builder.featConfig;
         this.modelConfig = builder.modelConfig;
+        this.hr = builder.hr;
         this.decodingMethod = builder.decodingMethod;
         this.maxActivePaths = builder.maxActivePaths;
         this.hotwordsFile = builder.hotwordsFile;
@@ -36,6 +38,7 @@ public class OfflineRecognizerConfig {
     public static class Builder {
         private FeatureConfig featConfig = FeatureConfig.builder().build();
         private OfflineModelConfig modelConfig = OfflineModelConfig.builder().build();
+        private HomophoneReplacerConfig hr = HomophoneReplacerConfig.builder().build();
         private String decodingMethod = "greedy_search";
         private int maxActivePaths = 4;
         private String hotwordsFile = "";
@@ -55,6 +58,11 @@ public class OfflineRecognizerConfig {
 
         public Builder setOfflineModelConfig(OfflineModelConfig modelConfig) {
             this.modelConfig = modelConfig;
+            return this;
+        }
+
+        public Builder setHr(HomophoneReplacerConfig hr) {
+            this.hr = hr;
             return this;
         }
 

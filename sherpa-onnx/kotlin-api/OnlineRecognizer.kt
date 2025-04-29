@@ -57,14 +57,6 @@ data class OnlineCtcFstDecoderConfig(
     var maxActive: Int = 3000,
 )
 
-
-data class HomophoneReplacerConfig(
-    var dictDir: String = "",
-    var lexicon: String = "",
-    var ruleFsts: String = "",
-)
-
-
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig = OnlineModelConfig(),

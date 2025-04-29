@@ -87,6 +87,7 @@ function testOnlineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_online_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
@@ -244,6 +245,7 @@ function testOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
     WaveReader.kt \
@@ -272,6 +274,7 @@ function testInverseTextNormalizationOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_itn_offline_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
     WaveReader.kt \
@@ -300,6 +303,7 @@ function testInverseTextNormalizationOnlineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_itn_online_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
@@ -433,6 +437,7 @@ function testOfflineSenseVoiceWithHr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
 testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
@@ -445,4 +450,3 @@ testOfflinePunctuation
 testOnlinePunctuation
 testInverseTextNormalizationOfflineAsr
 testInverseTextNormalizationOnlineAsr
-testOfflineSenseVoiceWithHr

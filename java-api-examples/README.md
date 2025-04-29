@@ -31,6 +31,11 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-decode-file-nemo.sh
 ```
 
+## Non-Streaming Speech recognition with homophone replacer
+
+```bash
+./run-non-streaming-decode-file-sense-voice-with-hr.sh
+```
 
 ## Non-Streaming text-to-speech
 
