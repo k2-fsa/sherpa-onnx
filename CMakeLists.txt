@@ -393,8 +393,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
   set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
   message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
   include(piper-phonemize)
-  include(cppjieba) # For Chinese TTS. It is a header-only C++ library
 endif()
+
+include(cppjieba) # It is a header-only C++ library
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   include(hclust-cpp)
