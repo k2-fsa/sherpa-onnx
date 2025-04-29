@@ -87,6 +87,7 @@ function testOnlineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_online_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
@@ -244,6 +245,7 @@ function testOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
     WaveReader.kt \
@@ -272,6 +274,7 @@ function testInverseTextNormalizationOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_itn_offline_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
     WaveReader.kt \
@@ -300,6 +303,7 @@ function testInverseTextNormalizationOnlineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_itn_online_asr.kt \
     FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
@@ -402,6 +406,38 @@ function testOfflineSpeechDenoiser() {
   ls -lh *.wav
 }
 
+function testOfflineSenseVoiceWithHr() {
+  if [ ! -f ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+    tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+    rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+  fi
+
+  if [ ! -d dict ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+    tar xf dict.tar.bz2
+    rm dict.tar.bz2
+
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+  fi
+
+  out_filename=test_offline_sense_voice_with_hr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_sense_voice_with_hr.kt \
+    FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
 testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor

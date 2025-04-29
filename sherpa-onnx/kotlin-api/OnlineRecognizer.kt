@@ -57,12 +57,12 @@ data class OnlineCtcFstDecoderConfig(
     var maxActive: Int = 3000,
 )
 
-
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig = OnlineModelConfig(),
     var lmConfig: OnlineLMConfig = OnlineLMConfig(),
     var ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
+    var hr: HomophoneReplacerConfig = HomophoneReplacerConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",

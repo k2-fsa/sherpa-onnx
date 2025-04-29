@@ -78,6 +78,7 @@ data class OfflineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OfflineModelConfig = OfflineModelConfig(),
     // var lmConfig: OfflineLMConfig(), // TODO(fangjun): enable it
+    var hr: HomophoneReplacerConfig = HomophoneReplacerConfig(),
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
     var hotwordsFile: String = "",

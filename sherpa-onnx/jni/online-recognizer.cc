@@ -253,6 +253,30 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   ans.ctc_fst_decoder_config.max_active =
       env->GetIntField(fst_decoder_config, fid);
 
+  // homophone replacer config
+  fid = env->GetFieldID(cls, "hr",
+                        "Lcom/k2fsa/sherpa/onnx/HomophoneReplacerConfig;");
+  jobject hr_config = env->GetObjectField(config, fid);
+  jclass hr_config_cls = env->GetObjectClass(hr_config);
+
+  fid = env->GetFieldID(hr_config_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.dict_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(hr_config_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(hr_config_cls, "ruleFsts", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.rule_fsts = p;
+  env->ReleaseStringUTFChars(s, p);
+
   return ans;
 }
 }  // namespace sherpa_onnx

@@ -10,6 +10,7 @@ public class OnlineRecognizerConfig {
 
     private final OnlineCtcFstDecoderConfig ctcFstDecoderConfig;
     private final EndpointConfig endpointConfig;
+    private final HomophoneReplacerConfig hr;
     private final boolean enableEndpoint;
     private final String decodingMethod;
     private final int maxActivePaths;
@@ -25,6 +26,7 @@ public class OnlineRecognizerConfig {
         this.lmConfig = builder.lmConfig;
         this.ctcFstDecoderConfig = builder.ctcFstDecoderConfig;
         this.endpointConfig = builder.endpointConfig;
+        this.hr = builder.hr;
         this.enableEndpoint = builder.enableEndpoint;
         this.decodingMethod = builder.decodingMethod;
         this.maxActivePaths = builder.maxActivePaths;
@@ -49,6 +51,7 @@ public class OnlineRecognizerConfig {
         private OnlineLMConfig lmConfig = OnlineLMConfig.builder().build();
         private OnlineCtcFstDecoderConfig ctcFstDecoderConfig = OnlineCtcFstDecoderConfig.builder().build();
         private EndpointConfig endpointConfig = EndpointConfig.builder().build();
+        private HomophoneReplacerConfig hr = HomophoneReplacerConfig.builder().build();
         private boolean enableEndpoint = true;
         private String decodingMethod = "greedy_search";
         private int maxActivePaths = 4;
@@ -84,6 +87,11 @@ public class OnlineRecognizerConfig {
 
         public Builder setEndpointConfig(EndpointConfig endpointConfig) {
             this.endpointConfig = endpointConfig;
+            return this;
+        }
+
+        public Builder setHr(HomophoneReplacerConfig hr) {
+            this.hr = hr;
             return this;
         }
 
