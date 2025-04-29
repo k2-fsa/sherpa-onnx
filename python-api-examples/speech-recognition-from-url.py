@@ -110,6 +110,26 @@ def get_args():
         """,
     )
 
+    parser.add_argument(
+        "--hr-dict-dir",
+        type=str,
+        default="",
+        help="If not empty, it is the jieba dict directory for homophone replacer",
+    )
+
+    parser.add_argument(
+        "--hr-lexicon",
+        type=str,
+        default="",
+        help="If not empty, it is the lexicon.txt for homophone replacer",
+    )
+
+    parser.add_argument(
+        "--hr-rule-fsts",
+        type=str,
+        default="",
+        help="If not empty, it is the replace.fst for homophone replacer",
+    )
 
     return parser.parse_args()
 
@@ -133,6 +153,9 @@ def create_recognizer(args):
         rule3_min_utterance_length=300,  # it essentially disables this rule
         hotwords_file=args.hotwords_file,
         hotwords_score=args.hotwords_score,
+        hr_dict_dir=args.hr_dict_dir,
+        hr_rule_fsts=args.hr_rule_fsts,
+        hr_lexicon=args.hr_lexicon,
     )
     return recognizer
 

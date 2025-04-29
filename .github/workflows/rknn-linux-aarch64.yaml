@@ -28,7 +28,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: aarch64-linux-gnu-shared-${{ github.ref }}
+  group: rknn-linux-aarch64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

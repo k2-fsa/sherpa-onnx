@@ -273,6 +273,27 @@ def get_args():
         help="Feature dimension. Must match the one expected by the model",
     )
 
+    parser.add_argument(
+        "--hr-dict-dir",
+        type=str,
+        default="",
+        help="If not empty, it is the jieba dict directory for homophone replacer",
+    )
+
+    parser.add_argument(
+        "--hr-lexicon",
+        type=str,
+        default="",
+        help="If not empty, it is the lexicon.txt for homophone replacer",
+    )
+
+    parser.add_argument(
+        "--hr-rule-fsts",
+        type=str,
+        default="",
+        help="If not empty, it is the replace.fst for homophone replacer",
+    )
+
     return parser.parse_args()
 
 
@@ -312,6 +333,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             decoding_method=args.decoding_method,
             blank_penalty=args.blank_penalty,
             debug=args.debug,
+            hr_dict_dir=args.hr_dict_dir,
+            hr_rule_fsts=args.hr_rule_fsts,
+            hr_lexicon=args.hr_lexicon,
         )
     elif args.paraformer:
         assert len(args.sense_voice) == 0, args.sense_voice
@@ -334,6 +358,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
             debug=args.debug,
+            hr_dict_dir=args.hr_dict_dir,
+            hr_rule_fsts=args.hr_rule_fsts,
+            hr_lexicon=args.hr_lexicon,
         )
     elif args.sense_voice:
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
@@ -352,6 +379,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             num_threads=args.num_threads,
             use_itn=True,
             debug=args.debug,
+            hr_dict_dir=args.hr_dict_dir,
+            hr_rule_fsts=args.hr_rule_fsts,
+            hr_lexicon=args.hr_lexicon,
         )
     elif args.whisper_encoder:
         assert_file_exists(args.whisper_encoder)
@@ -373,6 +403,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             language=args.whisper_language,
             task=args.whisper_task,
             tail_paddings=args.whisper_tail_paddings,
+            hr_dict_dir=args.hr_dict_dir,
+            hr_rule_fsts=args.hr_rule_fsts,
+            hr_lexicon=args.hr_lexicon,
         )
     elif args.moonshine_preprocessor:
         assert_file_exists(args.moonshine_preprocessor)
@@ -389,6 +422,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             num_threads=args.num_threads,
             decoding_method=args.decoding_method,
             debug=args.debug,
+            hr_dict_dir=args.hr_dict_dir,
+            hr_rule_fsts=args.hr_rule_fsts,
+            hr_lexicon=args.hr_lexicon,
         )
     else:
         raise ValueError("Please specify at least one model")
