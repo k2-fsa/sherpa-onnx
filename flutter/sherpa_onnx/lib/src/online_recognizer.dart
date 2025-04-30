@@ -5,6 +5,7 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
 import './feature_config.dart';
+import './homophone_replacer_config.dart';
 import './online_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
@@ -194,6 +195,7 @@ class OnlineRecognizerConfig {
     this.ruleFsts = '',
     this.ruleFars = '',
     this.blankPenalty = 0.0,
+    this.hr = const HomophoneReplacerConfig(),
   });
 
   factory OnlineRecognizerConfig.fromJson(Map<String, dynamic> json) {
@@ -217,12 +219,14 @@ class OnlineRecognizerConfig {
       ruleFsts: json['ruleFsts'] as String? ?? '',
       ruleFars: json['ruleFars'] as String? ?? '',
       blankPenalty: (json['blankPenalty'] as num?)?.toDouble() ?? 0.0,
+      hr: HomophoneReplacerConfig.fromJson(
+          json['hr'] as Map<String, dynamic>? ?? const {}),
     );
   }
 
   @override
   String toString() {
-    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty)';
+    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty, hr: $hr)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -240,6 +244,7 @@ class OnlineRecognizerConfig {
         'ruleFsts': ruleFsts,
         'ruleFars': ruleFars,
         'blankPenalty': blankPenalty,
+        'hr': hr.toJson(),
       };
 
   final FeatureConfig feat;
@@ -265,6 +270,7 @@ class OnlineRecognizerConfig {
   final String ruleFars;
 
   final double blankPenalty;
+  final HomophoneReplacerConfig hr;
 }
 
 class OnlineRecognizerResult {
@@ -352,8 +358,15 @@ class OnlineRecognizer {
 
     c.ref.blankPenalty = config.blankPenalty;
 
+    c.ref.hr.dictDir = config.hr.dictDir.toNativeUtf8();
+    c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
+    c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
+
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.hr.dictDir);
+    calloc.free(c.ref.hr.lexicon);
+    calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.ctcFstDecoderConfig.graph);

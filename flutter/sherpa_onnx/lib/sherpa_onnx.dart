@@ -4,6 +4,7 @@ import 'dart:ffi';
 
 export 'src/audio_tagging.dart';
 export 'src/feature_config.dart';
+export 'src/homophone_replacer_config.dart';
 export 'src/keyword_spotter.dart';
 export 'src/offline_punctuation.dart';
 export 'src/offline_recognizer.dart';
