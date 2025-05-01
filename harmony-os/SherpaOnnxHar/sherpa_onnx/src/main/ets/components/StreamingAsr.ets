@@ -10,7 +10,7 @@ import {
   reset,
 } from 'libsherpa_onnx.so';
 
-import { FeatureConfig, Samples } from './NonStreamingAsr';
+import { FeatureConfig, HomophoneReplacerConfig, Samples } from './NonStreamingAsr';
 
 export class OnlineStream {
   public handle: object;
@@ -79,6 +79,7 @@ export class OnlineRecognizerConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
+  public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
 }
 
 interface OnlineRecognizerResultJson {
