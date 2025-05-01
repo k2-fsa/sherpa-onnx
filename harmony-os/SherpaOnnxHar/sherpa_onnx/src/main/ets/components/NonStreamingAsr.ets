@@ -26,6 +26,12 @@ export class OfflineStream {
   }
 }
 
+export class HomophoneReplacerConfig {
+  public dictDir: string = '';
+  public lexicon: string = '';
+  public ruleFsts: string = '';
+}
+
 export class FeatureConfig {
   public sampleRate: number = 16000;
   public featureDim: number = 80;
@@ -109,6 +115,7 @@ export class OfflineRecognizerConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
+  public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
 }
 
 export class OfflineRecognizerResult {
