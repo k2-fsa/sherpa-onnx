@@ -138,6 +138,12 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
  private:
   void PostInit() {
+    int32_t feat_dim = model_->FeatureDim();
+
+    if (feat_dim > 0) {
+      config_.feat_config.feature_dim = feat_dim;
+    }
+
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 
