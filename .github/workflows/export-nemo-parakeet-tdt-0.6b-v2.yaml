@@ -1,0 +1,131 @@
+name: export-nemo-parakeet-tdt-0.6b-v2
+
+on:
+  push:
+    branches:
+      - export-nemo-parakeet-tdt-0.6b-v2
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemo-parakeet-tdt-0.6b-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-nemo-parakeet-tdt-0_6b-v2:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: parakeet tdt 0.6b v2
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-v2
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v tokens.txt ../../..
+          mv 2086-149220-0033.wav ../../../0.wav
+
+      - name: Collect files (fp32)
+        shell: bash
+        run: |
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
+          mkdir -p $d
+          cp encoder.int8.onnx $d
+          cp decoder.onnx $d
+          cp joiner.onnx $d
+          cp tokens.txt $d
+
+          mkdir $d/test_wavs
+          cp 0.wav $d/test_wavs
+
+          tar cjfv $d.tar.bz2 $d
+
+      - name: Collect files (int8)
+        shell: bash
+        run: |
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
+          mkdir -p $d
+          cp encoder.int8.onnx $d
+          cp decoder.int8.onnx $d
+          cp joiner.int8.onnx $d
+          cp tokens.txt $d
+
+          mkdir $d/test_wavs
+          cp 0.wav $d/test_wavs
+
+          tar cjfv $d.tar.bz2 $d
+
+      - name: Collect files (fp16)
+        shell: bash
+        run: |
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
+          mkdir -p $d
+          cp encoder.fp16.onnx $d
+          cp decoder.fp16.onnx $d
+          cp joiner.fp16.onnx $d
+          cp tokens.txt $d
+
+          mkdir $d/test_wavs
+          cp 0.wav $d/test_wavs
+
+          tar cjfv $d.tar.bz2 $d
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            models=(
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
+            )
+
+            for m in ${models[@]}; do
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
+              cp -av $m/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "first commit"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m main
+              cd ..
+            done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
