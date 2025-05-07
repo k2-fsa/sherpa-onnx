@@ -58,7 +58,8 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
                     const OnlineLMConfig &, const EndpointConfig &,
                     const OnlineCtcFstDecoderConfig &, bool,
                     const std::string &, int32_t, const std::string &, float,
-                    float, float, const std::string &, const std::string &>(),
+                    float, float, const std::string &, const std::string &,
+                    bool, const HomophoneReplacerConfig &>(),
            py::arg("feat_config"), py::arg("model_config"),
            py::arg("lm_config") = OnlineLMConfig(),
            py::arg("endpoint_config") = EndpointConfig(),
@@ -67,7 +68,8 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
            py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
            py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0,
            py::arg("temperature_scale") = 2.0, py::arg("rule_fsts") = "",
-           py::arg("rule_fars") = "")
+           py::arg("rule_fars") = "", py::arg("reset_encoder") = false,
+           py::arg("hr") = HomophoneReplacerConfig{})
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
@@ -82,6 +84,8 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
       .def_readwrite("temperature_scale", &PyClass::temperature_scale)
       .def_readwrite("rule_fsts", &PyClass::rule_fsts)
       .def_readwrite("rule_fars", &PyClass::rule_fars)
+      .def_readwrite("reset_encoder", &PyClass::reset_encoder)
+      .def_readwrite("hr", &PyClass::hr)
       .def("__str__", &PyClass::ToString);
 }
 

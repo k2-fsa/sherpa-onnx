@@ -25,6 +25,10 @@ data class OfflineNemoEncDecCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineDolphinModelConfig(
+    var model: String = "",
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -59,6 +63,7 @@ data class OfflineModelConfig(
     var moonshine: OfflineMoonshineModelConfig = OfflineMoonshineModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
+    var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -73,6 +78,7 @@ data class OfflineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OfflineModelConfig = OfflineModelConfig(),
     // var lmConfig: OfflineLMConfig(), // TODO(fangjun): enable it
+    var hr: HomophoneReplacerConfig = HomophoneReplacerConfig(),
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
     var hotwordsFile: String = "",
@@ -479,6 +485,65 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     decoder = "$modelDir/decoder.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        25 -> {
+            val modelDir = "sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02"
+            return OfflineModelConfig(
+                dolphin = OfflineDolphinModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        26 -> {
+            val modelDir = "sherpa-onnx-zipformer-vi-int8-2025-04-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-12-avg-8.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-12-avg-8.onnx",
+                    joiner = "$modelDir/joiner-epoch-12-avg-8.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+            )
+        }
+
+        27 -> {
+            val modelDir = "sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        28 -> {
+            val modelDir = "sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "nemo_transducer",
+            )
+        }
+
+        29 -> {
+            val modelDir = "sherpa-onnx-zipformer-ru-int8-2025-04-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
             )
         }
     }

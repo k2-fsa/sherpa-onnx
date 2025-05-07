@@ -205,6 +205,16 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
 
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+          du -h -d1 .
+
       - name: Test offline speech denoiser
         shell: bash
         run: |
@@ -247,16 +257,6 @@ jobs:
           readelf -d build/bin/sherpa-onnx-offline
 
           .github/scripts/test-offline-moonshine.sh
-          du -h -d1 .
-
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-ctc.sh
           du -h -d1 .
 
       - name: Test C++ API

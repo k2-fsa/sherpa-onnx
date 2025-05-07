@@ -57,12 +57,12 @@ data class OnlineCtcFstDecoderConfig(
     var maxActive: Int = 3000,
 )
 
-
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig = OnlineModelConfig(),
     var lmConfig: OnlineLMConfig = OnlineLMConfig(),
     var ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
+    var hr: HomophoneReplacerConfig = HomophoneReplacerConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -372,6 +372,54 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",
+            )
+        }
+
+        15 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        16 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-small-ctc-zh-2025-04-01"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        1000 -> {
+            val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.rknn",
+                    decoder = "$modelDir/decoder.rknn",
+                    joiner = "$modelDir/joiner.rknn",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+                provider = "rknn",
+            )
+        }
+
+        1001 -> {
+            val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-small-bilingual-zh-en-2023-02-16"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.rknn",
+                    decoder = "$modelDir/decoder.rknn",
+                    joiner = "$modelDir/joiner.rknn",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+                provider = "rknn",
             )
         }
     }

@@ -3,25 +3,26 @@ from pathlib import Path
 from typing import List, Optional
 
 from _sherpa_onnx import (
+    CudaConfig,
     EndpointConfig,
     FeatureExtractorConfig,
+    HomophoneReplacerConfig,
+    OnlineCtcFstDecoderConfig,
     OnlineLMConfig,
     OnlineModelConfig,
+    OnlineNeMoCtcModelConfig,
     OnlineParaformerModelConfig,
 )
 from _sherpa_onnx import OnlineRecognizer as _Recognizer
 from _sherpa_onnx import (
-    CudaConfig,
-    TensorrtConfig,
-    ProviderConfig,
     OnlineRecognizerConfig,
     OnlineRecognizerResult,
     OnlineStream,
     OnlineTransducerModelConfig,
     OnlineWenetCtcModelConfig,
-    OnlineNeMoCtcModelConfig,
     OnlineZipformer2CtcModelConfig,
-    OnlineCtcFstDecoderConfig,
+    ProviderConfig,
+    TensorrtConfig,
 )
 
 
@@ -68,6 +69,7 @@ class OnlineRecognizer(object):
         lm_scale: float = 0.1,
         lm_shallow_fusion: bool = True,
         temperature_scale: float = 2.0,
+        reset_encoder: bool = False,
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
@@ -81,9 +83,12 @@ class OnlineRecognizer(object):
         trt_detailed_build_log: bool = False,
         trt_engine_cache_enable: bool = True,
         trt_timing_cache_enable: bool = True,
-        trt_engine_cache_path: str ="",
-        trt_timing_cache_path: str ="",
+        trt_engine_cache_path: str = "",
+        trt_timing_cache_path: str = "",
         trt_dump_subgraphs: bool = False,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -162,6 +167,10 @@ class OnlineRecognizer(object):
             Temperature scaling for output symbol confidence estiamation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
+          reset_encoder:
+            True to reset `encoder_state` on an endpoint after empty segment.
+            Done in `Reset()` method, after an endpoint was detected,
+            currently only in `OnlineRecognizerTransducerImpl`.
           model_type:
             Online transducer model type. Valid values are: conformer, lstm,
             zipformer, zipformer2. All other values lead to loading the model twice.
@@ -223,27 +232,27 @@ class OnlineRecognizer(object):
         )
 
         cuda_config = CudaConfig(
-          cudnn_conv_algo_search=cudnn_conv_algo_search,
+            cudnn_conv_algo_search=cudnn_conv_algo_search,
         )
 
         trt_config = TensorrtConfig(
-          trt_max_workspace_size=trt_max_workspace_size,
-          trt_max_partition_iterations=trt_max_partition_iterations,
-          trt_min_subgraph_size=trt_min_subgraph_size,
-          trt_fp16_enable=trt_fp16_enable,
-          trt_detailed_build_log=trt_detailed_build_log,
-          trt_engine_cache_enable=trt_engine_cache_enable,
-          trt_timing_cache_enable=trt_timing_cache_enable,
-          trt_engine_cache_path=trt_engine_cache_path,
-          trt_timing_cache_path=trt_timing_cache_path,
-          trt_dump_subgraphs=trt_dump_subgraphs,
+            trt_max_workspace_size=trt_max_workspace_size,
+            trt_max_partition_iterations=trt_max_partition_iterations,
+            trt_min_subgraph_size=trt_min_subgraph_size,
+            trt_fp16_enable=trt_fp16_enable,
+            trt_detailed_build_log=trt_detailed_build_log,
+            trt_engine_cache_enable=trt_engine_cache_enable,
+            trt_timing_cache_enable=trt_timing_cache_enable,
+            trt_engine_cache_path=trt_engine_cache_path,
+            trt_timing_cache_path=trt_timing_cache_path,
+            trt_dump_subgraphs=trt_dump_subgraphs,
         )
 
         provider_config = ProviderConfig(
-          trt_config=trt_config,
-          cuda_config=cuda_config,
-          provider=provider,
-          device=device,
+            trt_config=trt_config,
+            cuda_config=cuda_config,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -305,6 +314,12 @@ class OnlineRecognizer(object):
             temperature_scale=temperature_scale,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            reset_encoder=reset_encoder,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -330,6 +345,9 @@ class OnlineRecognizer(object):
         rule_fsts: str = "",
         rule_fars: str = "",
         device: int = 0,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -396,8 +414,8 @@ class OnlineRecognizer(object):
         )
 
         provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -428,6 +446,11 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -454,6 +477,9 @@ class OnlineRecognizer(object):
         rule_fsts: str = "",
         rule_fars: str = "",
         device: int = 0,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -520,8 +546,8 @@ class OnlineRecognizer(object):
         zipformer2_ctc_config = OnlineZipformer2CtcModelConfig(model=model)
 
         provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -557,6 +583,11 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -581,6 +612,9 @@ class OnlineRecognizer(object):
         rule_fsts: str = "",
         rule_fars: str = "",
         device: int = 0,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -644,8 +678,8 @@ class OnlineRecognizer(object):
         )
 
         provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -675,6 +709,11 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -701,6 +740,9 @@ class OnlineRecognizer(object):
         rule_fsts: str = "",
         rule_fars: str = "",
         device: int = 0,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
     ):
         """
         Please refer to
@@ -769,8 +811,8 @@ class OnlineRecognizer(object):
         )
 
         provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -800,6 +842,11 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
         )
 
         self.recognizer = _Recognizer(recognizer_config)

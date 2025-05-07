@@ -112,6 +112,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineCtcFstDecoderConfig {
   int32_t max_active;
 } SherpaOnnxOnlineCtcFstDecoderConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxHomophoneReplacerConfig {
+  const char *dict_dir;
+  const char *lexicon;
+  const char *rule_fsts;
+} SherpaOnnxHomophoneReplacerConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
   SherpaOnnxOnlineModelConfig model_config;
@@ -157,6 +163,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   const char *hotwords_buf;
   /// byte size excluding the tailing '\0'
   int32_t hotwords_buf_size;
+  SherpaOnnxHomophoneReplacerConfig hr;
 } SherpaOnnxOnlineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
@@ -416,6 +423,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSenseVoiceModelConfig {
   int32_t use_itn;
 } SherpaOnnxOfflineSenseVoiceModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineDolphinModelConfig {
+  const char *model;
+} SherpaOnnxOfflineDolphinModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineTransducerModelConfig transducer;
   SherpaOnnxOfflineParaformerModelConfig paraformer;
@@ -438,6 +449,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineSenseVoiceModelConfig sense_voice;
   SherpaOnnxOfflineMoonshineModelConfig moonshine;
   SherpaOnnxOfflineFireRedAsrModelConfig fire_red_asr;
+  SherpaOnnxOfflineDolphinModelConfig dolphin;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
@@ -456,6 +468,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
   const char *rule_fsts;
   const char *rule_fars;
   float blank_penalty;
+
+  SherpaOnnxHomophoneReplacerConfig hr;
 } SherpaOnnxOfflineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizer
@@ -785,7 +799,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxSileroVadModelConfig {
   // in seconds
   float min_speech_duration;
 
-  int window_size;
+  int32_t window_size;
 
   // If a speech segment is longer than this value, then we increase
   // the threshold to 0.9. After finishing detecting the segment,

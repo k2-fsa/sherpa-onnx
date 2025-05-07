@@ -160,6 +160,21 @@ def get_2nd_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
+            idx=25,
+            lang="multi_lang",
+            short_name="dolphin_base_ctc",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
@@ -304,6 +319,46 @@ def get_1st_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01",
+            idx=15,
+            lang="zh",
+            short_name="int8_small_zipformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -f bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-2025-04-01",
+            idx=16,
+            lang="zh",
+            short_name="small_zipformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -f bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models
@@ -313,19 +368,25 @@ def get_models():
     first = get_1st_models()
     second = get_2nd_models()
 
-    combinations = [
-        (
-            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
-            "sherpa-onnx-paraformer-zh-2023-09-14",
-        ),
-        (
-            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
-            "icefall-asr-zipformer-wenetspeech-20230615",
-        ),
-        (
-            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
-            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
-        ),
+    combinations = []
+
+    first_zh = [
+        "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+        "sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01",
+        "sherpa-onnx-streaming-zipformer-small-ctc-zh-2025-04-01",
+    ]
+
+    second_zh = [
+        "sherpa-onnx-paraformer-zh-2023-09-14",
+        "icefall-asr-zipformer-wenetspeech-20230615",
+        "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+        "sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
+    ]
+    for first_m in first_zh:
+        for second_m in second_zh:
+            combinations.append((first_m, second_m))
+
+    combinations += [
         (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-whisper-tiny.en",

@@ -5,6 +5,7 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
 import './feature_config.dart';
+import './homophone_replacer_config.dart';
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
@@ -73,6 +74,27 @@ class OfflineNemoEncDecCtcModelConfig {
   @override
   String toString() {
     return 'OfflineNemoEncDecCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
+class OfflineDolphinModelConfig {
+  const OfflineDolphinModelConfig({this.model = ''});
+
+  factory OfflineDolphinModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineDolphinModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineDolphinModelConfig(model: $model)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -265,6 +287,7 @@ class OfflineModelConfig {
     this.senseVoice = const OfflineSenseVoiceModelConfig(),
     this.moonshine = const OfflineMoonshineModelConfig(),
     this.fireRedAsr = const OfflineFireRedAsrModelConfig(),
+    this.dolphin = const OfflineDolphinModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -309,6 +332,10 @@ class OfflineModelConfig {
           ? OfflineFireRedAsrModelConfig.fromJson(
               json['fireRedAsr'] as Map<String, dynamic>)
           : const OfflineFireRedAsrModelConfig(),
+      dolphin: json['dolphin'] != null
+          ? OfflineDolphinModelConfig.fromJson(
+              json['dolphin'] as Map<String, dynamic>)
+          : const OfflineDolphinModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -322,7 +349,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -334,6 +361,7 @@ class OfflineModelConfig {
         'senseVoice': senseVoice.toJson(),
         'moonshine': moonshine.toJson(),
         'fireRedAsr': fireRedAsr.toJson(),
+        'dolphin': dolphin.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -352,6 +380,7 @@ class OfflineModelConfig {
   final OfflineSenseVoiceModelConfig senseVoice;
   final OfflineMoonshineModelConfig moonshine;
   final OfflineFireRedAsrModelConfig fireRedAsr;
+  final OfflineDolphinModelConfig dolphin;
 
   final String tokens;
   final int numThreads;
@@ -375,6 +404,7 @@ class OfflineRecognizerConfig {
     this.ruleFsts = '',
     this.ruleFars = '',
     this.blankPenalty = 0.0,
+    this.hr = const HomophoneReplacerConfig(),
   });
 
   factory OfflineRecognizerConfig.fromJson(Map<String, dynamic> json) {
@@ -393,12 +423,13 @@ class OfflineRecognizerConfig {
       ruleFsts: json['ruleFsts'] as String? ?? '',
       ruleFars: json['ruleFars'] as String? ?? '',
       blankPenalty: (json['blankPenalty'] as num?)?.toDouble() ?? 0.0,
+      hr: HomophoneReplacerConfig.fromJson(json['hr'] as Map<String, dynamic>),
     );
   }
 
   @override
   String toString() {
-    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty)';
+    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty, hr: $hr)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -412,6 +443,7 @@ class OfflineRecognizerConfig {
         'ruleFsts': ruleFsts,
         'ruleFars': ruleFars,
         'blankPenalty': blankPenalty,
+        'hr': hr.toJson(),
       };
 
   final FeatureConfig feat;
@@ -429,6 +461,7 @@ class OfflineRecognizerConfig {
   final String ruleFars;
 
   final double blankPenalty;
+  final HomophoneReplacerConfig hr;
 }
 
 class OfflineRecognizerResult {
@@ -544,6 +577,8 @@ class OfflineRecognizer {
     c.ref.model.fireRedAsr.decoder =
         config.model.fireRedAsr.decoder.toNativeUtf8();
 
+    c.ref.model.dolphin.model = config.model.dolphin.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -568,8 +603,15 @@ class OfflineRecognizer {
 
     c.ref.blankPenalty = config.blankPenalty;
 
+    c.ref.hr.dictDir = config.hr.dictDir.toNativeUtf8();
+    c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
+    c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
+
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.hr.dictDir);
+    calloc.free(c.ref.hr.lexicon);
+    calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.hotwordsFile);
@@ -581,6 +623,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
     calloc.free(c.ref.model.fireRedAsr.encoder);
     calloc.free(c.ref.model.moonshine.cachedDecoder);

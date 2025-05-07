@@ -51,7 +51,9 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
-        "want to use rknn. Fallback to CPU");
+        "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
 #endif
   }
 
@@ -92,6 +94,28 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 template <typename Manager>
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     Manager *mgr, const OnlineRecognizerConfig &config) {
+  if (config.model_config.provider_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    // Currently, only zipformer v1 is suported for rknn
+    if (config.model_config.transducer.encoder.empty() &&
+        config.model_config.zipformer2_ctc.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers and CTC models are currently supported "
+          "by rknn. Fallback to CPU");
+    } else if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerTransducerRknnImpl>(mgr, config);
+    } else if (!config.model_config.zipformer2_ctc.model.empty()) {
+      return std::make_unique<OnlineRecognizerCtcRknnImpl>(mgr, config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
@@ -168,6 +192,13 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)
       SHERPA_ONNX_LOGE("FST archives loaded!");
     }
   }
+
+  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
+      !config.hr.rule_fsts.empty()) {
+    auto hr_config = config.hr;
+    hr_config.debug = config.model_config.debug;
+    hr_ = std::make_unique<HomophoneReplacer>(hr_config);
+  }
 }
 
 template <typename Manager>
@@ -215,6 +246,12 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(Manager *mgr,
       }  // for (; !reader->Done(); reader->Next())
     }    // for (const auto &f : files)
   }      // if (!config.rule_fars.empty())
+  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
+      !config.hr.rule_fsts.empty()) {
+    auto hr_config = config.hr;
+    hr_config.debug = config.model_config.debug;
+    hr_ = std::make_unique<HomophoneReplacer>(mgr, hr_config);
+  }
 }
 
 std::string OnlineRecognizerImpl::ApplyInverseTextNormalization(
@@ -225,6 +262,15 @@ std::string OnlineRecognizerImpl::ApplyInverseTextNormalization(
     for (const auto &tn : itn_list_) {
       text = tn->Normalize(text);
     }
+  }
+
+  return text;
+}
+
+std::string OnlineRecognizerImpl::ApplyHomophoneReplacer(
+    std::string text) const {
+  if (hr_) {
+    text = hr_->Apply(text);
   }
 
   return text;

@@ -18,6 +18,14 @@ public class OnlineRecognizer {
         decode(ptr, s.getPtr());
     }
 
+    public void decode(OnlineStream[] ss) {
+        long[] streamPtrs = new long[ss.length];
+        for (int i = 0; i < ss.length; ++i) {
+            streamPtrs[i] = ss[i].getPtr();
+        }
+        decodeStreams(ptr, streamPtrs);
+    }
+
     public boolean isReady(OnlineStream s) {
         return isReady(ptr, s.getPtr());
     }
@@ -67,6 +75,8 @@ public class OnlineRecognizer {
     private native void reset(long ptr, long streamPtr);
 
     private native void decode(long ptr, long streamPtr);
+
+    private native void decodeStreams(long ptr, long[] streamPtrs);
 
     private native boolean isEndpoint(long ptr, long streamPtr);
 

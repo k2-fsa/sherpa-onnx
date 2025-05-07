@@ -22,11 +22,11 @@
 
 #include <codecvt>
 
-#include "cppjieba/Jieba.hpp"
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -47,7 +47,7 @@ class KokoroMultiLangLexicon::Impl {
 
     InitLexicon(lexicon);
 
-    InitJieba(dict_dir);
+    jieba_ = InitJieba(dict_dir);
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
@@ -62,7 +62,7 @@ class KokoroMultiLangLexicon::Impl {
     InitLexicon(mgr, lexicon);
 
     // we assume you have copied dict_dir and data_dir from assets to some path
-    InitJieba(dict_dir);
+    jieba_ = InitJieba(dict_dir);
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
@@ -134,7 +134,8 @@ class KokoroMultiLangLexicon::Impl {
           if (ans.empty()) {
             ans.emplace_back(ids);
           } else {
-            if (ans.back().tokens.size() + ids.size() < 50) {
+            if ((ans.back().tokens.size() + ids.size() < 50) ||
+                (ids.size() < 5)) {
               ans.back().tokens.back() = ids[1];
               ans.back().tokens.insert(ans.back().tokens.end(), ids.begin() + 2,
                                        ids.end());
@@ -453,23 +454,6 @@ class KokoroMultiLangLexicon::Impl {
 
       word2ids_.insert({std::move(word), std::move(ids)});
     }
-  }
-
-  void InitJieba(const std::string &dict_dir) {
-    std::string dict = dict_dir + "/jieba.dict.utf8";
-    std::string hmm = dict_dir + "/hmm_model.utf8";
-    std::string user_dict = dict_dir + "/user.dict.utf8";
-    std::string idf = dict_dir + "/idf.utf8";
-    std::string stop_word = dict_dir + "/stop_words.utf8";
-
-    AssertFileExists(dict);
-    AssertFileExists(hmm);
-    AssertFileExists(user_dict);
-    AssertFileExists(idf);
-    AssertFileExists(stop_word);
-
-    jieba_ =
-        std::make_unique<cppjieba::Jieba>(dict, hmm, user_dict, idf, stop_word);
   }
 
  private:

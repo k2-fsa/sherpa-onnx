@@ -105,6 +105,24 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (Non-streaming SenseVoice with homophone replacer)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-sense-voice-with-hr.sh
+          rm -rf sherpa-onnx-sense-*
+          rm -rf dict lexicon.txt replace.fst
+
+      - name:  Run java test (VAD + Non-streaming Dolphin CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-non-streaming-dolphin-ctc.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
+          rm -rf sherpa-onnx-dolphin-*
+
       - name:  Run speech enhancement (GTCRN)
         shell: bash
         run: |
@@ -135,6 +153,9 @@ jobs:
         run: |
           cd ./java-api-examples
 
+          ./run-non-streaming-decode-file-dolphin-ctc.sh
+          rm -rf sherpa-onnx-dolphin-*
+
           ./run-non-streaming-decode-file-moonshine.sh
           rm -rf sherpa-onnx-moonshine-*
 
@@ -153,6 +174,8 @@ jobs:
           rm -rf sherpa-onnx-fire-red-*
 
           ./run-non-streaming-decode-file-whisper.sh
+
+          ./run-non-streaming-decode-file-whisper-multiple.sh
           rm -rf sherpa-onnx-whisper-*
 
           ./run-non-streaming-decode-file-nemo.sh

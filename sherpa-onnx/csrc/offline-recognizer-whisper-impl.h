@@ -160,6 +160,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
       std::string s = sym_table[i];
       s = ApplyInverseTextNormalization(s);
+      s = ApplyHomophoneReplacer(std::move(s));
 
       text += s;
       r.tokens.push_back(s);

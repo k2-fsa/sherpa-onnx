@@ -28,6 +28,8 @@ func main() {
 
 	flag.StringVar(&config.ModelConfig.NemoCTC.Model, "nemo-ctc", "", "Path to the NeMo CTC model")
 
+	flag.StringVar(&config.ModelConfig.Dolphin.Model, "dolphin-model", "", "Path to the Dolphin CTC model")
+
 	flag.StringVar(&config.ModelConfig.FireRedAsr.Encoder, "fire-red-asr-encoder", "", "Path to the FireRedAsr encoder model")
 	flag.StringVar(&config.ModelConfig.FireRedAsr.Decoder, "fire-red-asr-decoder", "", "Path to the FireRedAsr decoder model")
 
@@ -63,6 +65,10 @@ func main() {
 	flag.IntVar(&config.MaxActivePaths, "max-active-paths", 4, "Used only when --decoding-method is modified_beam_search")
 	flag.StringVar(&config.RuleFsts, "rule-fsts", "", "If not empty, path to rule fst for inverse text normalization")
 	flag.StringVar(&config.RuleFars, "rule-fars", "", "If not empty, path to rule fst archives for inverse text normalization")
+
+	flag.StringVar(&config.Hr.DictDir, "hr-dict-dir", "", "If not empty, path to the jieba dict dir for homonphone replacer")
+	flag.StringVar(&config.Hr.Lexicon, "hr-lexicon", "", "If not empty, path to the lexicon.txt for homonphone replacer")
+	flag.StringVar(&config.Hr.RuleFsts, "hr-rule-fsts", "", "If not empty, path to the replace.fst for homonphone replacer")
 
 	flag.Parse()
 

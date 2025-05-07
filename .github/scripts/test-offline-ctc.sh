@@ -15,8 +15,55 @@ echo "PATH: $PATH"
 
 which $EXE
 
+for type in base small; do
+  log "------------------------------------------------------------"
+  log "Run Dolphin CTC models ($type int8)"
+  log "------------------------------------------------------------"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02.tar.bz2
+
+  $EXE \
+    --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/model.int8.onnx \
+    --tokens=./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/tokens.txt \
+    --debug=1 \
+    ./sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02/test_wavs/0.wav
+
+  rm -rf sherpa-onnx-dolphin-$type-ctc-multi-lang-int8-2025-04-02
+
+  log "------------------------------------------------------------"
+  log "Run Dolphin CTC models ($type)"
+  log "------------------------------------------------------------"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+  tar xvf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+  rm sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02.tar.bz2
+
+  $EXE \
+    --dolphin-model=./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/model.onnx \
+    --tokens=./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/tokens.txt \
+    --debug=1 \
+    ./sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02/test_wavs/0.wav
+
+  rm -rf sherpa-onnx-dolphin-$type-ctc-multi-lang-2025-04-02
+done
+
 log "------------------------------------------------------------"
-log "Run NeMo GigaAM Russian models"
+log "Run NeMo GigaAM Russian models v2"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+tar xvf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+rm sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19.tar.bz2
+
+$EXE \
+  --nemo-ctc-model=./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/model.int8.onnx \
+  --tokens=./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/tokens.txt \
+  --debug=1 \
+  ./sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19/test_wavs/example.wav
+
+rm -rf sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19
+
+log "------------------------------------------------------------"
+log "Run NeMo GigaAM Russian models v1"
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
 tar xvf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
@@ -51,6 +98,29 @@ for m in model.onnx model.int8.onnx; do
   done
 done
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+tar xf dict.tar.bz2
+rm dict.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+for m in model.onnx model.int8.onnx; do
+  for use_itn in 0 1; do
+    echo "$m $w $use_itn"
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --sense-voice-model=$repo/$m \
+      --sense-voice-use-itn=$use_itn \
+      --hr-lexicon=./lexicon.txt \
+      --hr-dict-dir=./dict \
+      --hr-rule-fsts=./replace.fst \
+      ./test-hr.wav
+  done
+done
+
+rm -rf dict replace.fst test-hr.wav lexicon.txt
 
 # test wav reader for non-standard wav files
 waves=(

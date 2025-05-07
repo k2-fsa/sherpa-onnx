@@ -88,6 +88,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
   endpoint_config.Register(po);
   lm_config.Register(po);
   ctc_fst_decoder_config.Register(po);
+  hr.Register(po);
 
   po->Register("enable-endpoint", &enable_endpoint,
                "True to enable endpoint detection. False to disable it.");
@@ -121,6 +122,10 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
       "rule-fars", &rule_fars,
       "If not empty, it specifies fst archives for inverse text normalization. "
       "If there are multiple archives, they are separated by a comma.");
+
+  po->Register("reset-encoder", &reset_encoder,
+               "True to reset encoder_state on an endpoint after empty segment."
+               "Done in `Reset()` method, after an endpoint was detected.");
 }
 
 bool OnlineRecognizerConfig::Validate() const {
@@ -178,6 +183,11 @@ bool OnlineRecognizerConfig::Validate() const {
     }
   }
 
+  if (!hr.dict_dir.empty() && !hr.lexicon.empty() && !hr.rule_fsts.empty() &&
+      !hr.Validate()) {
+    return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -198,7 +208,9 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "blank_penalty=" << blank_penalty << ", ";
   os << "temperature_scale=" << temperature_scale << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
-  os << "rule_fars=\"" << rule_fars << "\")";
+  os << "rule_fars=\"" << rule_fars << "\", ";
+  os << "reset_encoder=" << (reset_encoder ? "True" : "False") << ", ";
+  os << "hr=" << hr.ToString() << ")";
 
   return os.str();
 }

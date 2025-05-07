@@ -26,6 +26,12 @@ export class OfflineStream {
   }
 }
 
+export class HomophoneReplacerConfig {
+  public dictDir: string = '';
+  public lexicon: string = '';
+  public ruleFsts: string = '';
+}
+
 export class FeatureConfig {
   public sampleRate: number = 16000;
   public featureDim: number = 80;
@@ -42,6 +48,10 @@ export class OfflineParaformerModelConfig {
 }
 
 export class OfflineNemoEncDecCtcModelConfig {
+  public model: string = '';
+}
+
+export class OfflineDolphinModelConfig {
   public model: string = '';
 }
 
@@ -86,6 +96,7 @@ export class OfflineModelConfig {
   public telespeechCtc: string = '';
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
+  public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
 }
 
 export class OfflineLMConfig {
@@ -104,6 +115,7 @@ export class OfflineRecognizerConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
+  public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
 }
 
 export class OfflineRecognizerResult {

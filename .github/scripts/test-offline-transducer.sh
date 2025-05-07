@@ -15,6 +15,24 @@ echo "PATH: $PATH"
 
 which $EXE
 
+log "------------------------------------------------------------"
+log "Run NeMo GigaAM Russian models v2"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
+tar xvf sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
+rm sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2
+
+$EXE \
+  --encoder=./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/encoder.int8.onnx \
+  --decoder=./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/decoder.onnx \
+  --joiner=./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/joiner.onnx \
+  --tokens=./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/tokens.txt \
+  --model-type=nemo_transducer \
+  ./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/test_wavs/example.wav
+
+rm -rf sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19
+
+
 log "------------------------------------------------------------------------"
 log "Run zipformer transducer models (Russian)                              "
 log "------------------------------------------------------------------------"

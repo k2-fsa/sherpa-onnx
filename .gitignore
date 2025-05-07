@@ -136,6 +136,9 @@ kokoro-multi-lang-v1_0
 sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 cmake-build-debug
 README-DEV.txt
-
+*.rknn
+*.jit
 ##clion
 .idea
+sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
+dict

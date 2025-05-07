@@ -55,6 +55,12 @@ struct OnlineCtcFstDecoderConfig {
   int32_t max_active = 3000;
 };
 
+struct HomophoneReplacerConfig {
+  std::string dict_dir;
+  std::string lexicon;
+  std::string rule_fsts;
+};
+
 struct OnlineRecognizerConfig {
   FeatureConfig feat_config;
   OnlineModelConfig model_config;
@@ -81,6 +87,7 @@ struct OnlineRecognizerConfig {
   float blank_penalty = 0;
 
   std::string hotwords_buf;
+  HomophoneReplacerConfig hr;
 };
 
 struct OnlineRecognizerResult {
@@ -229,6 +236,10 @@ struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
   bool use_itn = false;
 };
 
+struct SHERPA_ONNX_API OfflineDolphinModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -254,6 +265,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineSenseVoiceModelConfig sense_voice;
   OfflineMoonshineModelConfig moonshine;
   OfflineFireRedAsrModelConfig fire_red_asr;
+  OfflineDolphinModelConfig dolphin;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
@@ -275,6 +287,7 @@ struct SHERPA_ONNX_API OfflineRecognizerConfig {
   std::string rule_fsts;
   std::string rule_fars;
   float blank_penalty = 0;
+  HomophoneReplacerConfig hr;
 };
 
 struct SHERPA_ONNX_API OfflineRecognizerResult {
@@ -498,6 +511,84 @@ class SHERPA_ONNX_API OfflineSpeechDenoiser
 
  private:
   explicit OfflineSpeechDenoiser(const SherpaOnnxOfflineSpeechDenoiser *p);
+};
+
+// ==============================
+// VAD
+// ==============================
+
+struct SileroVadModelConfig {
+  std::string model;
+  float threshold = 0.5;
+  float min_silence_duration = 0.5;
+  float min_speech_duration = 0.25;
+  int32_t window_size = 512;
+  float max_speech_duration = 20;
+};
+
+struct VadModelConfig {
+  SileroVadModelConfig silero_vad;
+
+  int32_t sample_rate = 16000;
+  int32_t num_threads = 1;
+  std::string provider = "cpu";
+  bool debug = false;
+};
+
+struct SpeechSegment {
+  int32_t start;
+  std::vector<float> samples;
+};
+
+class SHERPA_ONNX_API CircularBuffer
+    : public MoveOnly<CircularBuffer, SherpaOnnxCircularBuffer> {
+ public:
+  static CircularBuffer Create(int32_t capacity);
+
+  void Destroy(const SherpaOnnxCircularBuffer *p) const;
+
+  void Push(const float *p, int32_t n) const;
+
+  std::vector<float> Get(int32_t start_index, int32_t n) const;
+
+  void Pop(int32_t n) const;
+
+  int32_t Size() const;
+
+  int32_t Head() const;
+
+  void Reset() const;
+
+ private:
+  explicit CircularBuffer(const SherpaOnnxCircularBuffer *p);
+};
+
+class SHERPA_ONNX_API VoiceActivityDetector
+    : public MoveOnly<VoiceActivityDetector, SherpaOnnxVoiceActivityDetector> {
+ public:
+  static VoiceActivityDetector Create(const VadModelConfig &config,
+                                      float buffer_size_in_seconds);
+
+  void Destroy(const SherpaOnnxVoiceActivityDetector *p) const;
+
+  void AcceptWaveform(const float *samples, int32_t n) const;
+
+  bool IsEmpty() const;
+
+  bool IsDetected() const;
+
+  void Pop() const;
+
+  void Clear() const;
+
+  SpeechSegment Front() const;
+
+  void Reset() const;
+
+  void Flush() const;
+
+ private:
+  explicit VoiceActivityDetector(const SherpaOnnxVoiceActivityDetector *p);
 };
 
 }  // namespace sherpa_onnx::cxx

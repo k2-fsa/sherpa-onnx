@@ -19,8 +19,8 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -34,20 +34,7 @@ class MeloTtsLexicon::Impl {
        const std::string &dict_dir,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    std::string dict = dict_dir + "/jieba.dict.utf8";
-    std::string hmm = dict_dir + "/hmm_model.utf8";
-    std::string user_dict = dict_dir + "/user.dict.utf8";
-    std::string idf = dict_dir + "/idf.utf8";
-    std::string stop_word = dict_dir + "/stop_words.utf8";
-
-    AssertFileExists(dict);
-    AssertFileExists(hmm);
-    AssertFileExists(user_dict);
-    AssertFileExists(idf);
-    AssertFileExists(stop_word);
-
-    jieba_ =
-        std::make_unique<cppjieba::Jieba>(dict, hmm, user_dict, idf, stop_word);
+    jieba_ = InitJieba(dict_dir);
 
     {
       std::ifstream is(tokens);
@@ -79,20 +66,7 @@ class MeloTtsLexicon::Impl {
        const std::string &dict_dir,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    std::string dict = dict_dir + "/jieba.dict.utf8";
-    std::string hmm = dict_dir + "/hmm_model.utf8";
-    std::string user_dict = dict_dir + "/user.dict.utf8";
-    std::string idf = dict_dir + "/idf.utf8";
-    std::string stop_word = dict_dir + "/stop_words.utf8";
-
-    AssertFileExists(dict);
-    AssertFileExists(hmm);
-    AssertFileExists(user_dict);
-    AssertFileExists(idf);
-    AssertFileExists(stop_word);
-
-    jieba_ =
-        std::make_unique<cppjieba::Jieba>(dict, hmm, user_dict, idf, stop_word);
+    jieba_ = InitJieba(dict_dir);
 
     {
       auto buf = ReadFile(mgr, tokens);

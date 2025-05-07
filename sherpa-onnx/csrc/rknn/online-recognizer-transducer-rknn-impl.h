@@ -111,9 +111,33 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         endpoint_(config_.endpoint_config),
-        model_(
-            std::make_unique<OnlineZipformerTransducerModelRknn>(mgr, config)) {
-    // TODO(fangjun): Support Android
+        model_(std::make_unique<OnlineZipformerTransducerModelRknn>(
+            mgr, config_.model_config)) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      /// assuming tokens_buf and tokens are guaranteed not being both empty
+      sym_ = SymbolTable(mgr, config.model_config.tokens);
+    }
+
+    if (sym_.Contains("<unk>")) {
+      unk_id_ = sym_["<unk>"];
+    }
+
+    if (config.decoding_method == "greedy_search") {
+      decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoderRknn>(
+          model_.get(), unk_id_);
+    } else if (config.decoding_method == "modified_beam_search") {
+      decoder_ =
+          std::make_unique<OnlineTransducerModifiedBeamSearchDecoderRknn>(
+              model_.get(), config.max_active_paths, unk_id_);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Invalid decoding method: '%s'. Support only greedy_search and "
+          "modified_beam_search.",
+          config.decoding_method.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
@@ -153,6 +177,7 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
     auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                      s->GetCurrentSegment(), s->GetNumFramesSinceStart());
     r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 

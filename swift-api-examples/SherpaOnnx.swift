@@ -128,6 +128,17 @@ func sherpaOnnxOnlineCtcFstDecoderConfig(
     max_active: Int32(maxActive))
 }
 
+func sherpaOnnxHomophoneReplacerConfig(
+  dictDir: String = "",
+  lexicon: String = "",
+  ruleFsts: String = ""
+) -> SherpaOnnxHomophoneReplacerConfig {
+  return SherpaOnnxHomophoneReplacerConfig(
+    dict_dir: toCPointer(dictDir),
+    lexicon: toCPointer(lexicon),
+    rule_fsts: toCPointer(ruleFsts))
+}
+
 func sherpaOnnxOnlineRecognizerConfig(
   featConfig: SherpaOnnxFeatureConfig,
   modelConfig: SherpaOnnxOnlineModelConfig,
@@ -144,7 +155,8 @@ func sherpaOnnxOnlineRecognizerConfig(
   ruleFars: String = "",
   blankPenalty: Float = 0.0,
   hotwordsBuf: String = "",
-  hotwordsBufSize: Int = 0
+  hotwordsBufSize: Int = 0,
+  hr: SherpaOnnxHomophoneReplacerConfig = sherpaOnnxHomophoneReplacerConfig()
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -162,7 +174,8 @@ func sherpaOnnxOnlineRecognizerConfig(
     rule_fars: toCPointer(ruleFars),
     blank_penalty: blankPenalty,
     hotwords_buf: toCPointer(hotwordsBuf),
-    hotwords_buf_size: Int32(hotwordsBufSize)
+    hotwords_buf_size: Int32(hotwordsBufSize),
+    hr: hr
   )
 }
 
@@ -341,6 +354,14 @@ func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineDolphinModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineDolphinModelConfig {
+  return SherpaOnnxOfflineDolphinModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
   decoder: String = "",
@@ -427,7 +448,8 @@ func sherpaOnnxOfflineModelConfig(
   teleSpeechCtc: String = "",
   senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig(),
   moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig(),
-  fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig()
+  fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig(),
+  dolphin: SherpaOnnxOfflineDolphinModelConfig = sherpaOnnxOfflineDolphinModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -445,7 +467,8 @@ func sherpaOnnxOfflineModelConfig(
     telespeech_ctc: toCPointer(teleSpeechCtc),
     sense_voice: senseVoice,
     moonshine: moonshine,
-    fire_red_asr: fireRedAsr
+    fire_red_asr: fireRedAsr,
+    dolphin: dolphin
   )
 }
 
@@ -459,7 +482,8 @@ func sherpaOnnxOfflineRecognizerConfig(
   hotwordsScore: Float = 1.5,
   ruleFsts: String = "",
   ruleFars: String = "",
-  blankPenalty: Float = 0.0
+  blankPenalty: Float = 0.0,
+  hr: SherpaOnnxHomophoneReplacerConfig = sherpaOnnxHomophoneReplacerConfig()
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
@@ -471,7 +495,8 @@ func sherpaOnnxOfflineRecognizerConfig(
     hotwords_score: hotwordsScore,
     rule_fsts: toCPointer(ruleFsts),
     rule_fars: toCPointer(ruleFars),
-    blank_penalty: blankPenalty
+    blank_penalty: blankPenalty,
+    hr: hr
   )
 }
 

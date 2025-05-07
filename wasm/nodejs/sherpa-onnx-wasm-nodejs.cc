@@ -13,6 +13,7 @@ extern "C" {
 static_assert(sizeof(SherpaOnnxOfflineTransducerModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
+static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) == 2 * 4, "");
@@ -29,14 +30,16 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineTdnnModelConfig) + 8 * 4 +
                       sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) +
                       sizeof(SherpaOnnxOfflineMoonshineModelConfig) +
-                      sizeof(SherpaOnnxOfflineFireRedAsrModelConfig),
+                      sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) +
+                      sizeof(SherpaOnnxOfflineDolphinModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
                       sizeof(SherpaOnnxOfflineLMConfig) +
-                      sizeof(SherpaOnnxOfflineModelConfig) + 7 * 4,
+                      sizeof(SherpaOnnxOfflineModelConfig) + 7 * 4 +
+                      sizeof(SherpaOnnxHomophoneReplacerConfig),
               "");
 
 void PrintOfflineTtsConfig(SherpaOnnxOfflineTtsConfig *tts_config) {
@@ -73,6 +76,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto sense_voice = &model_config->sense_voice;
   auto moonshine = &model_config->moonshine;
   auto fire_red_asr = &model_config->fire_red_asr;
+  auto dolphin = &model_config->dolphin;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -110,6 +114,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "encoder: %s\n", fire_red_asr->encoder);
   fprintf(stdout, "decoder: %s\n", fire_red_asr->decoder);
 
+  fprintf(stdout, "----------offline Dolphin model config----------\n");
+  fprintf(stdout, "model: %s\n", dolphin->model);
+
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);
   fprintf(stdout, "provider: %s\n", model_config->provider);
@@ -131,6 +138,10 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "rule_fsts: %s\n", config->rule_fsts);
   fprintf(stdout, "rule_fars: %s\n", config->rule_fars);
   fprintf(stdout, "blank_penalty: %f\n", config->blank_penalty);
+  fprintf(stdout, "----------hr config----------\n");
+  fprintf(stdout, "dict_dir: %s\n", config->hr.dict_dir);
+  fprintf(stdout, "lexicon: %s\n", config->hr.lexicon);
+  fprintf(stdout, "rule_fsts: %s\n", config->hr.rule_fsts);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

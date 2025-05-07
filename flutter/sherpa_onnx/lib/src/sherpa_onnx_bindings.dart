@@ -261,6 +261,10 @@ final class SherpaOnnxOfflineNemoEncDecCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineDolphinModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -327,6 +331,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineSenseVoiceModelConfig senseVoice;
   external SherpaOnnxOfflineMoonshineModelConfig moonshine;
   external SherpaOnnxOfflineFireRedAsrModelConfig fireRedAsr;
+  external SherpaOnnxOfflineDolphinModelConfig dolphin;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -348,6 +353,7 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
 
   @Float()
   external double blankPenalty;
+  external SherpaOnnxHomophoneReplacerConfig hr;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
@@ -399,6 +405,12 @@ final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {
   external int maxActive;
 }
 
+final class SherpaOnnxHomophoneReplacerConfig extends Struct {
+  external Pointer<Utf8> dictDir;
+  external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> ruleFsts;
+}
+
 final class SherpaOnnxOnlineRecognizerConfig extends Struct {
   external SherpaOnnxFeatureConfig feat;
   external SherpaOnnxOnlineModelConfig model;
@@ -436,6 +448,7 @@ final class SherpaOnnxOnlineRecognizerConfig extends Struct {
 
   @Int32()
   external int hotwordsBufSize;
+  external SherpaOnnxHomophoneReplacerConfig hr;
 }
 
 final class SherpaOnnxSileroVadModelConfig extends Struct {

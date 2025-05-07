@@ -265,10 +265,47 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.nemo_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // dolphin
+  fid = env->GetFieldID(model_config_cls, "dolphin",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineDolphinModelConfig;");
+  jobject dolphin_config = env->GetObjectField(model_config, fid);
+  jclass dolphin_config_cls = env->GetObjectClass(dolphin_config);
+
+  fid = env->GetFieldID(dolphin_config_cls, "model", "Ljava/lang/String;");
+
+  s = (jstring)env->GetObjectField(dolphin_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.dolphin.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(model_config_cls, "teleSpeech", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.telespeech_ctc = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  // homophone replacer config
+  fid = env->GetFieldID(cls, "hr",
+                        "Lcom/k2fsa/sherpa/onnx/HomophoneReplacerConfig;");
+  jobject hr_config = env->GetObjectField(config, fid);
+  jclass hr_config_cls = env->GetObjectClass(hr_config);
+
+  fid = env->GetFieldID(hr_config_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.dict_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(hr_config_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(hr_config_cls, "ruleFsts", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(hr_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hr.rule_fsts = p;
   env->ReleaseStringUTFChars(s, p);
 
   return ans;
@@ -353,18 +390,40 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   SafeJNI(env, "OfflineRecognizer_decode", [&] {
     if (!ValidatePointer(env, ptr, "OfflineRecognizer_decode",
                          "OfflineRecognizer pointer is null.") ||
-        !ValidatePointer(env, streamPtr, "OfflineRecognizer_decode",
+        !ValidatePointer(env, stream_ptr, "OfflineRecognizer_decode",
                          "OfflineStream pointer is null.")) {
       return;
     }
 
     auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
-    auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
+    auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(stream_ptr);
     recognizer->DecodeStream(stream);
+  });
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decodeStreams(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlongArray stream_ptrs) {
+  SafeJNI(env, "OfflineRecognizer_decode_streams", [&] {
+    if (!ValidatePointer(env, ptr, "OfflineRecognizer_decode_streams",
+                         "OfflineRecognizer pointer is null.")) {
+      return;
+    }
+
+    auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
+
+    jlong *p = env->GetLongArrayElements(stream_ptrs, nullptr);
+    jsize n = env->GetArrayLength(stream_ptrs);
+
+    auto ss = reinterpret_cast<sherpa_onnx::OfflineStream **>(p);
+    recognizer->DecodeStreams(ss, n);
+
+    env->ReleaseLongArrayElements(stream_ptrs, p, JNI_ABORT);
   });
 }
 

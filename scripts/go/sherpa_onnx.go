@@ -108,6 +108,12 @@ type OnlineCtcFstDecoderConfig struct {
 	MaxActive int
 }
 
+type HomophoneReplacerConfig struct {
+	DictDir  string
+	Lexicon  string
+	RuleFsts string
+}
+
 // Configuration for the online/streaming recognizer.
 type OnlineRecognizerConfig struct {
 	FeatConfig  FeatureConfig
@@ -137,6 +143,7 @@ type OnlineRecognizerConfig struct {
 	RuleFars                string
 	HotwordsBuf             string
 	HotwordsBufSize         int
+	Hr                      HomophoneReplacerConfig
 }
 
 // It contains the recognition result for a online stream.
@@ -238,6 +245,15 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.ctc_fst_decoder_config.graph = C.CString(config.CtcFstDecoderConfig.Graph)
 	defer C.free(unsafe.Pointer(c.ctc_fst_decoder_config.graph))
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
+
+	c.hr.dict_dir = C.CString(config.Hr.DictDir)
+	defer C.free(unsafe.Pointer(c.hr.dict_dir))
+
+	c.hr.lexicon = C.CString(config.Hr.Lexicon)
+	defer C.free(unsafe.Pointer(c.hr.lexicon))
+
+	c.hr.rule_fsts = C.CString(config.Hr.RuleFsts)
+	defer C.free(unsafe.Pointer(c.hr.rule_fsts))
 
 	impl := C.SherpaOnnxCreateOnlineRecognizer(&c)
 	if impl == nil {
@@ -377,6 +393,10 @@ type OfflineNemoEncDecCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineDolphinModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineWhisperModelConfig struct {
 	Encoder      string
 	Decoder      string
@@ -422,6 +442,7 @@ type OfflineModelConfig struct {
 	SenseVoice OfflineSenseVoiceModelConfig
 	Moonshine  OfflineMoonshineModelConfig
 	FireRedAsr OfflineFireRedAsrModelConfig
+	Dolphin    OfflineDolphinModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -457,6 +478,7 @@ type OfflineRecognizerConfig struct {
 	BlankPenalty   float32
 	RuleFsts       string
 	RuleFars       string
+	Hr             HomophoneReplacerConfig
 }
 
 // It wraps a pointer from C
@@ -512,6 +534,8 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
 
+	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
 	c.model_config.num_threads = C.int(config.ModelConfig.NumThreads)
@@ -542,6 +566,10 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.rule_fsts = C.CString(config.RuleFsts)
 	c.rule_fars = C.CString(config.RuleFars)
+
+	c.hr.dict_dir = C.CString(config.Hr.DictDir)
+	c.hr.lexicon = C.CString(config.Hr.Lexicon)
+	c.hr.rule_fsts = C.CString(config.Hr.RuleFsts)
 	return &c
 }
 func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig) {
@@ -669,9 +697,25 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		C.free(unsafe.Pointer(c.rule_fsts))
 		c.rule_fsts = nil
 	}
+
 	if c.rule_fars != nil {
 		C.free(unsafe.Pointer(c.rule_fars))
 		c.rule_fars = nil
+	}
+
+	if c.hr.dict_dir != nil {
+		C.free(unsafe.Pointer(c.hr.dict_dir))
+		c.hr.dict_dir = nil
+	}
+
+	if c.hr.lexicon != nil {
+		C.free(unsafe.Pointer(c.hr.lexicon))
+		c.hr.lexicon = nil
+	}
+
+	if c.hr.rule_fsts != nil {
+		C.free(unsafe.Pointer(c.hr.rule_fsts))
+		c.hr.rule_fsts = nil
 	}
 }
 

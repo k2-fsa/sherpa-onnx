@@ -128,6 +128,7 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
       r.text = ApplyInverseTextNormalization(std::move(r.text));
+      r.text = ApplyHomophoneReplacer(std::move(r.text));
 
       ss[i]->SetResult(r);
     }
@@ -137,6 +138,12 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
  private:
   void PostInit() {
+    int32_t feat_dim = model_->FeatureDim();
+
+    if (feat_dim > 0) {
+      config_.feat_config.feature_dim = feat_dim;
+    }
+
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 

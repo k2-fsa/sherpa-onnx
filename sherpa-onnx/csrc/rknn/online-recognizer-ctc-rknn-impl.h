@@ -55,9 +55,9 @@ class OnlineRecognizerCtcRknnImpl : public OnlineRecognizerImpl {
                                        const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
-        model_(
-            std::make_unique<OnlineZipformerCtcModelRknn>(config.model_config)),
-        sym_(mgr, config.model_config.tokens),
+        model_(std::make_unique<OnlineZipformerCtcModelRknn>(
+            mgr, config_.model_config)),
+        sym_(mgr, config_.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     InitDecoder();
   }
@@ -89,7 +89,8 @@ class OnlineRecognizerCtcRknnImpl : public OnlineRecognizerImpl {
     auto r =
         ConvertCtc(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                    s->GetCurrentSegment(), s->GetNumFramesSinceStart());
-    r.text = ApplyInverseTextNormalization(r.text);
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 

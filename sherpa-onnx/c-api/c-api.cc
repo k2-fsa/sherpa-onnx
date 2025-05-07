@@ -153,6 +153,10 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
+  recognizer_config.hr.dict_dir = SHERPA_ONNX_OR(config->hr.dict_dir, "");
+  recognizer_config.hr.lexicon = SHERPA_ONNX_OR(config->hr.lexicon, "");
+  recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
+
   if (config->model_config.debug) {
 #if __OHOS__
     SHERPA_ONNX_LOGE("%{public}s\n", recognizer_config.ToString().c_str());
@@ -467,6 +471,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.fire_red_asr.decoder =
       SHERPA_ONNX_OR(config->model_config.fire_red_asr.decoder, "");
 
+  recognizer_config.model_config.dolphin.model =
+      SHERPA_ONNX_OR(config->model_config.dolphin.model, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =
@@ -490,6 +497,10 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
 
   recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
+
+  recognizer_config.hr.dict_dir = SHERPA_ONNX_OR(config->hr.dict_dir, "");
+  recognizer_config.hr.lexicon = SHERPA_ONNX_OR(config->hr.lexicon, "");
+  recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
   if (config->model_config.debug) {
 #if __OHOS__
@@ -1966,7 +1977,7 @@ int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
   return p->impl->GetOutputSamplingRate();
 }
 
-void SherpaOnnxLinearResamplerReset(SherpaOnnxLinearResampler *p) {
+void SherpaOnnxLinearResamplerReset(const SherpaOnnxLinearResampler *p) {
   p->impl->Reset();
 }
 

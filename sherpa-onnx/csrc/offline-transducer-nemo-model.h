@@ -88,6 +88,8 @@ class OfflineTransducerNeMoModel {
 
   bool IsGigaAM() const;
 
+  int32_t FeatureDim() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

@@ -99,6 +99,10 @@ OnlineRecognizer OnlineRecognizer::Create(
   c.hotwords_buf = config.hotwords_buf.c_str();
   c.hotwords_buf_size = config.hotwords_buf.size();
 
+  c.hr.dict_dir = config.hr.dict_dir.c_str();
+  c.hr.lexicon = config.hr.lexicon.c_str();
+  c.hr.rule_fsts = config.hr.rule_fsts.c_str();
+
   auto p = SherpaOnnxCreateOnlineRecognizer(&c);
   return OnlineRecognizer(p);
 }
@@ -246,6 +250,8 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.model_config.fire_red_asr.decoder =
       config.model_config.fire_red_asr.decoder.c_str();
 
+  c.model_config.dolphin.model = config.model_config.dolphin.model.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 
@@ -258,6 +264,10 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.rule_fars = config.rule_fars.c_str();
 
   c.blank_penalty = config.blank_penalty;
+
+  c.hr.dict_dir = config.hr.dict_dir.c_str();
+  c.hr.lexicon = config.hr.lexicon.c_str();
+  c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
   auto p = SherpaOnnxCreateOfflineRecognizer(&c);
   return OfflineRecognizer(p);
@@ -556,6 +566,116 @@ DenoisedAudio OfflineSpeechDenoiser::Run(const float *samples, int32_t n,
 
 int32_t OfflineSpeechDenoiser::GetSampleRate() const {
   return SherpaOnnxOfflineSpeechDenoiserGetSampleRate(p_);
+}
+
+CircularBuffer CircularBuffer::Create(int32_t capacity) {
+  auto p = SherpaOnnxCreateCircularBuffer(capacity);
+  return CircularBuffer(p);
+}
+
+CircularBuffer::CircularBuffer(const SherpaOnnxCircularBuffer *p)
+    : MoveOnly<CircularBuffer, SherpaOnnxCircularBuffer>(p) {}
+
+void CircularBuffer::Destroy(const SherpaOnnxCircularBuffer *p) const {
+  SherpaOnnxDestroyCircularBuffer(p);
+}
+
+void CircularBuffer::Push(const float *samples, int32_t n) const {
+  SherpaOnnxCircularBufferPush(p_, samples, n);
+}
+
+std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
+  const float *samples = SherpaOnnxCircularBufferGet(p_, start_index, n);
+  std::vector<float> ans(n);
+  std::copy(samples, samples + n, ans.begin());
+
+  SherpaOnnxCircularBufferFree(samples);
+  return ans;
+}
+
+void CircularBuffer::Pop(int32_t n) const {
+  SherpaOnnxCircularBufferPop(p_, n);
+}
+
+int32_t CircularBuffer::Size() const {
+  return SherpaOnnxCircularBufferSize(p_);
+}
+
+int32_t CircularBuffer::Head() const {
+  return SherpaOnnxCircularBufferHead(p_);
+}
+
+void CircularBuffer::Reset() const { SherpaOnnxCircularBufferReset(p_); }
+
+VoiceActivityDetector VoiceActivityDetector::Create(
+    const VadModelConfig &config, float buffer_size_in_seconds) {
+  struct SherpaOnnxVadModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.silero_vad.model = config.silero_vad.model.c_str();
+  c.silero_vad.threshold = config.silero_vad.threshold;
+  c.silero_vad.min_silence_duration = config.silero_vad.min_silence_duration;
+  c.silero_vad.min_speech_duration = config.silero_vad.min_speech_duration;
+  c.silero_vad.window_size = config.silero_vad.window_size;
+  c.silero_vad.max_speech_duration = config.silero_vad.max_speech_duration;
+
+  c.sample_rate = config.sample_rate;
+  c.num_threads = config.num_threads;
+  c.provider = config.provider.c_str();
+  c.debug = config.debug;
+
+  auto p = SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
+  return VoiceActivityDetector(p);
+}
+
+VoiceActivityDetector::VoiceActivityDetector(
+    const SherpaOnnxVoiceActivityDetector *p)
+    : MoveOnly<VoiceActivityDetector, SherpaOnnxVoiceActivityDetector>(p) {}
+
+void VoiceActivityDetector::Destroy(
+    const SherpaOnnxVoiceActivityDetector *p) const {
+  SherpaOnnxDestroyVoiceActivityDetector(p);
+}
+
+void VoiceActivityDetector::AcceptWaveform(const float *samples,
+                                           int32_t n) const {
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform(p_, samples, n);
+}
+
+bool VoiceActivityDetector::IsEmpty() const {
+  return SherpaOnnxVoiceActivityDetectorEmpty(p_);
+}
+
+bool VoiceActivityDetector ::IsDetected() const {
+  return SherpaOnnxVoiceActivityDetectorDetected(p_);
+}
+
+void VoiceActivityDetector::Pop() const {
+  SherpaOnnxVoiceActivityDetectorPop(p_);
+}
+
+void VoiceActivityDetector::Clear() const {
+  SherpaOnnxVoiceActivityDetectorClear(p_);
+}
+
+SpeechSegment VoiceActivityDetector::Front() const {
+  auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
+
+  SpeechSegment segment;
+  segment.start = f->start;
+  segment.samples = std::vector<float>{f->samples, f->samples + f->n};
+
+  SherpaOnnxDestroySpeechSegment(f);
+
+  return segment;
+}
+
+void VoiceActivityDetector::Reset() const {
+  SherpaOnnxVoiceActivityDetectorReset(p_);
+}
+
+void VoiceActivityDetector::Flush() const {
+  SherpaOnnxVoiceActivityDetectorFlush(p_);
 }
 
 }  // namespace sherpa_onnx::cxx

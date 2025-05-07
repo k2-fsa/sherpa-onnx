@@ -28,6 +28,7 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   model_config.Register(po);
   lm_config.Register(po);
   ctc_fst_decoder_config.Register(po);
+  hr.Register(po);
 
   po->Register(
       "decoding-method", &decoding_method,
@@ -120,6 +121,11 @@ bool OfflineRecognizerConfig::Validate() const {
     }
   }
 
+  if (!hr.dict_dir.empty() && !hr.lexicon.empty() && !hr.rule_fsts.empty() &&
+      !hr.Validate()) {
+    return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -137,7 +143,8 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "blank_penalty=" << blank_penalty << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
-  os << "rule_fars=\"" << rule_fars << "\")";
+  os << "rule_fars=\"" << rule_fars << "\", ";
+  os << "hr=" << hr.ToString() << ")";
 
   return os.str();
 }

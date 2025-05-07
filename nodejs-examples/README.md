@@ -140,6 +140,20 @@ node ./test-offline-tts-vits-zh.js
 In the following, we demonstrate how to decode files and how to perform
 speech recognition with a microphone with `nodejs`.
 
+## ./test-offline-dolphin-ctc.js
+
+[./test-offline-dolphin-ctc.js](./test-offline-dolphin-ctc.js) demonstrates
+how to decode a file with a [Dolphin](https://github.com/DataoceanAI/Dolphin) CTC model.
+
+You can use the following command to run it:
+
+```bash
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
+node ./test-offline-dolphin-ctc.js
+```
+
 ## ./test-offline-nemo-ctc.js
 
 [./test-offline-nemo-ctc.js](./test-offline-nemo-ctc.js) demonstrates
@@ -168,10 +182,32 @@ tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 node ./test-offline-paraformer.js
 ```
 
+## ./test-offline-sense-voice-with-hr.js
+
+[./test-offline-sense-voice-with-hr.js](./test-offline-sense-voice-with-hr.js) demonstrates
+how to decode a file with a non-streaming SenseVoice model with homophone replacer.
+
+You can use the following command to run it:
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
+tar xf dict.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+
+node ./test-offline-sense-voice-with-hr.js
+```
+
 ## ./test-offline-sense-voice.js
 
 [./test-offline-sense-voice.js](./test-offline-sense-voice.js) demonstrates
-how to decode a file with a non-streaming Paraformer model.
+how to decode a file with a non-streaming SenseVoice model.
 
 You can use the following command to run it:
 

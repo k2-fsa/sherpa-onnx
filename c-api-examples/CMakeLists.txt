@@ -1,6 +1,6 @@
 include(cargs)
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 
@@ -56,6 +56,12 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(sense-voice-with-hr-c-api sense-voice-with-hr-c-api.c)
+target_link_libraries(sense-voice-with-hr-c-api sherpa-onnx-c-api)
+
+add_executable(dolphin-ctc-c-api dolphin-ctc-c-api.c)
+target_link_libraries(dolphin-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(moonshine-c-api moonshine-c-api.c)
 target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
 
@@ -64,6 +70,9 @@ target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-zipformer-with-hr-c-api streaming-zipformer-with-hr-c-api.c)
+target_link_libraries(streaming-zipformer-with-hr-c-api sherpa-onnx-c-api)
 
 add_executable(paraformer-c-api paraformer-c-api.c)
 target_link_libraries(paraformer-c-api sherpa-onnx-c-api)

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/homophone-replacer.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
@@ -40,6 +41,7 @@ struct OfflineRecognizerConfig {
 
   // If there are multiple FST archives, they are applied from left to right.
   std::string rule_fars;
+  HomophoneReplacerConfig hr;
 
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
@@ -52,7 +54,7 @@ struct OfflineRecognizerConfig {
       const std::string &decoding_method, int32_t max_active_paths,
       const std::string &hotwords_file, float hotwords_score,
       float blank_penalty, const std::string &rule_fsts,
-      const std::string &rule_fars)
+      const std::string &rule_fars, const HomophoneReplacerConfig &hr)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -63,7 +65,8 @@ struct OfflineRecognizerConfig {
         hotwords_score(hotwords_score),
         blank_penalty(blank_penalty),
         rule_fsts(rule_fsts),
-        rule_fars(rule_fars) {}
+        rule_fars(rule_fars),
+        hr(hr) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

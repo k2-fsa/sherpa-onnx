@@ -197,6 +197,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_);
       r.text = ApplyInverseTextNormalization(std::move(r.text));
+      r.text = ApplyHomophoneReplacer(std::move(r.text));
       ss[i]->SetResult(r);
     }
   }

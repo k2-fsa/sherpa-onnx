@@ -42,39 +42,17 @@ class OnlineZipformerCtcModelRknn::Impl {
       Init(buf.data(), buf.size());
     }
 
-    int32_t ret = RKNN_SUCC;
-    switch (config_.num_threads) {
-      case 1:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_AUTO);
-        break;
-      case 0:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_0);
-        break;
-      case -1:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_1);
-        break;
-      case -2:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_2);
-        break;
-      case -3:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_0_1);
-        break;
-      case -4:
-        ret = rknn_set_core_mask(ctx_, RKNN_NPU_CORE_0_1_2);
-        break;
-      default:
-        SHERPA_ONNX_LOGE(
-            "Valid num_threads for rk npu is 1 (auto), 0 (core 0), -1 (core "
-            "1), -2 (core 2), -3 (core 0_1), -4 (core 0_1_2). Given: %d",
-            config_.num_threads);
-        break;
+    SetCoreMask(ctx_, config_.num_threads);
+  }
+
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlineModelConfig &config) : config_(config) {
+    {
+      auto buf = ReadFile(mgr, config.zipformer2_ctc.model);
+      Init(buf.data(), buf.size());
     }
-    if (ret != RKNN_SUCC) {
-      SHERPA_ONNX_LOGE(
-          "Failed to select npu core to run the model (You can ignore it if "
-          "you "
-          "are not using RK3588.");
-    }
+
+    SetCoreMask(ctx_, config_.num_threads);
   }
 
   // TODO(fangjun): Support Android
@@ -209,86 +187,13 @@ class OnlineZipformerCtcModelRknn::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    auto ret = rknn_init(&ctx_, model_data, model_data_length, 0, nullptr);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to init model '%s'",
-                           config_.zipformer2_ctc.model.c_str());
+    InitContext(model_data, model_data_length, config_.debug, &ctx_);
 
-    if (config_.debug) {
-      rknn_sdk_version v;
-      ret = rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &v, sizeof(v));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get rknn sdk version");
+    InitInputOutputAttrs(ctx_, config_.debug, &input_attrs_, &output_attrs_);
 
-      SHERPA_ONNX_LOGE("sdk api version: %s, driver version: %s", v.api_version,
-                       v.drv_version);
-    }
+    rknn_custom_string custom_string = GetCustomString(ctx_, config_.debug);
 
-    rknn_input_output_num io_num;
-    ret = rknn_query(ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get I/O information for the model");
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("model: %d inputs, %d outputs",
-                       static_cast<int32_t>(io_num.n_input),
-                       static_cast<int32_t>(io_num.n_output));
-    }
-
-    input_attrs_.resize(io_num.n_input);
-    output_attrs_.resize(io_num.n_output);
-
-    int32_t i = 0;
-    for (auto &attr : input_attrs_) {
-      memset(&attr, 0, sizeof(attr));
-      attr.index = i;
-      ret = rknn_query(ctx_, RKNN_QUERY_INPUT_ATTR, &attr, sizeof(attr));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for model input %d", i);
-      i += 1;
-    }
-
-    if (config_.debug) {
-      std::ostringstream os;
-      std::string sep;
-      for (auto &attr : input_attrs_) {
-        os << sep << ToString(attr);
-        sep = "\n";
-      }
-      SHERPA_ONNX_LOGE("\n----------Model inputs info----------\n%s",
-                       os.str().c_str());
-    }
-
-    i = 0;
-    for (auto &attr : output_attrs_) {
-      memset(&attr, 0, sizeof(attr));
-      attr.index = i;
-      ret = rknn_query(ctx_, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for model output %d", i);
-      i += 1;
-    }
-
-    if (config_.debug) {
-      std::ostringstream os;
-      std::string sep;
-      for (auto &attr : output_attrs_) {
-        os << sep << ToString(attr);
-        sep = "\n";
-      }
-      SHERPA_ONNX_LOGE("\n----------Model outputs info----------\n%s",
-                       os.str().c_str());
-    }
-
-    rknn_custom_string custom_string;
-    ret = rknn_query(ctx_, RKNN_QUERY_CUSTOM_STRING, &custom_string,
-                     sizeof(custom_string));
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to read custom string from the model");
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("customs string: %s", custom_string.string);
-    }
-    auto meta = Parse(custom_string);
-
-    if (config_.debug) {
-      for (const auto &p : meta) {
-        SHERPA_ONNX_LOGE("%s: %s", p.first.c_str(), p.second.c_str());
-      }
-    }
+    auto meta = Parse(custom_string, config_.debug);
 
     if (meta.count("T")) {
       T_ = atoi(meta.at("T").c_str());
@@ -347,7 +252,7 @@ OnlineZipformerCtcModelRknn::OnlineZipformerCtcModelRknn(
 template <typename Manager>
 OnlineZipformerCtcModelRknn::OnlineZipformerCtcModelRknn(
     Manager *mgr, const OnlineModelConfig &config)
-    : impl_(std::make_unique<OnlineZipformerCtcModelRknn>(mgr, config)) {}
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 std::vector<std::vector<uint8_t>> OnlineZipformerCtcModelRknn::GetInitStates()
     const {

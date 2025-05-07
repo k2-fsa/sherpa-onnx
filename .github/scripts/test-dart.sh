@@ -4,6 +4,58 @@ set -ex
 
 cd dart-api-examples
 
+pushd non-streaming-asr
+
+echo '----------SenseVoice----------'
+./run-sense-voice-with-hr.sh
+./run-sense-voice.sh
+rm -rf sherpa-onnx-*
+
+echo '----------FireRedAsr----------'
+./run-fire-red-asr.sh
+rm -rf sherpa-onnx-fire-red-asr-*
+
+echo '----------NeMo transducer----------'
+./run-nemo-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Dolphin CTC----------'
+./run-dolphin-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------NeMo CTC----------'
+./run-nemo-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------TeleSpeech CTC----------'
+./run-telespeech-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------moonshine----------'
+./run-moonshine.sh
+rm -rf sherpa-onnx-*
+
+echo '----------whisper----------'
+./run-whisper.sh
+rm -rf sherpa-onnx-*
+
+echo '----------zipformer transducer----------'
+./run-zipformer-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------paraformer itn----------'
+./run-paraformer-itn.sh
+
+echo '----------paraformer----------'
+./run-paraformer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------VAD with paraformer----------'
+./run-vad-with-paraformer.sh
+rm -rf sherpa-onnx-*
+
+popd # non-streaming-asr
+
 pushd speech-enhancement-gtcrn
 echo "speech enhancement with gtcrn models"
 ./run.sh
@@ -61,6 +113,11 @@ echo '----------ced----------'
 popd
 
 pushd vad-with-non-streaming-asr
+
+echo '----------Dolphin CTC----------'
+./run-dolphin-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh
 rm -rf sherpa-onnx-*
@@ -95,53 +152,6 @@ popd
 pushd keyword-spotter
 ./run-zh.sh
 popd
-
-pushd non-streaming-asr
-
-echo '----------FireRedAsr----------'
-./run-fire-red-asr.sh
-rm -rf sherpa-onnx-fire-red-asr-*
-
-echo '----------SenseVoice----------'
-./run-sense-voice.sh
-rm -rf sherpa-onnx-*
-
-echo '----------NeMo transducer----------'
-./run-nemo-transducer.sh
-rm -rf sherpa-onnx-*
-
-echo '----------NeMo CTC----------'
-./run-nemo-ctc.sh
-rm -rf sherpa-onnx-*
-
-echo '----------TeleSpeech CTC----------'
-./run-telespeech-ctc.sh
-rm -rf sherpa-onnx-*
-
-echo '----------moonshine----------'
-./run-moonshine.sh
-rm -rf sherpa-onnx-*
-
-echo '----------whisper----------'
-./run-whisper.sh
-rm -rf sherpa-onnx-*
-
-echo '----------zipformer transducer----------'
-./run-zipformer-transducer.sh
-rm -rf sherpa-onnx-*
-
-echo '----------paraformer itn----------'
-./run-paraformer-itn.sh
-
-echo '----------paraformer----------'
-./run-paraformer.sh
-rm -rf sherpa-onnx-*
-
-echo '----------VAD with paraformer----------'
-./run-vad-with-paraformer.sh
-rm -rf sherpa-onnx-*
-
-popd # non-streaming-asr
 
 pushd streaming-asr
 

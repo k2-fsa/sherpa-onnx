@@ -39,6 +39,10 @@ function freeConfig(config, Module) {
     freeConfig(config.fireRedAsr, Module)
   }
 
+  if ('dolphin' in config) {
+    freeConfig(config.dolphin, Module)
+  }
+
   if ('moonshine' in config) {
     freeConfig(config.moonshine, Module)
   }
@@ -57,6 +61,10 @@ function freeConfig(config, Module) {
 
   if ('ctcFstDecoder' in config) {
     freeConfig(config.ctcFstDecoder, Module)
+  }
+
+  if ('hr' in config) {
+    freeConfig(config.hr, Module)
   }
 
   Module._free(config.ptr);
@@ -277,6 +285,34 @@ function initSherpaOnnxFeatureConfig(config, Module) {
   return {ptr: ptr, len: len};
 }
 
+function initSherpaOnnxHomophoneReplacerConfig(config, Module) {
+  const len = 3 * 4;
+  const ptr = Module._malloc(len);
+
+  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+  const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
+  const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
+
+  const bufferLen = dictDirLen + lexiconLen + ruleFstsLen;
+
+  const buffer = Module._malloc(bufferLen);
+  let offset = 0
+  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  offset += dictDirLen;
+
+  Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
+  offset += lexiconLen;
+
+  Module.stringToUTF8(config.ruleFsts || '', buffer + offset, ruleFstsLen);
+  offset += ruleFstsLen;
+
+  Module.setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr + 4, buffer + dictDirLen, 'i8*');
+  Module.setValue(ptr + 8, buffer + dictDirLen + lexiconLen, 'i8*');
+
+  return {ptr: ptr, len: len, buffer: buffer};
+}
+
 function initSherpaOnnxOnlineCtcFstDecoderConfig(config, Module) {
   const len = 2 * 4;
   const ptr = Module._malloc(len);
@@ -313,12 +349,21 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
     config.hotwordsBufSize = 0;
   }
 
+  if (!('hr' in config)) {
+    config.hr = {
+      dictDir: '',
+      lexicon: '',
+      ruleFsts: '',
+    };
+  }
+
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOnlineModelConfig(config.modelConfig, Module);
   const ctcFstDecoder = initSherpaOnnxOnlineCtcFstDecoderConfig(
       config.ctcFstDecoderConfig, Module)
+  const hr = initSherpaOnnxHomophoneReplacerConfig(config.hr, Module);
 
-  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len + 5 * 4;
+  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len + 5 * 4 + hr.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -407,9 +452,12 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   Module.setValue(ptr + offset, config.hotwordsBufSize || 0, 'i32');
   offset += 4;
 
+  Module._CopyHeap(hr.ptr, hr.len, ptr + offset);
+  offset += hr.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, feat: feat, model: model,
-        ctcFstDecoder: ctcFstDecoder
+        ctcFstDecoder: ctcFstDecoder, hr: hr,
   }
 }
 
@@ -546,6 +594,23 @@ function initSherpaOnnxOfflineParaformerModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
+function initSherpaOnnxOfflineDolphinModelConfig(config, Module) {
   const n = Module.lengthBytesUTF8(config.model || '') + 1;
 
   const buffer = Module._malloc(n);
@@ -769,6 +834,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('dolphin' in config)) {
+    config.dolphin = {
+      model: '',
+    };
+  }
+
   if (!('whisper' in config)) {
     config.whisper = {
       encoder: '',
@@ -832,8 +903,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const fireRedAsr =
       initSherpaOnnxOfflineFireRedAsrModelConfig(config.fireRedAsr, Module);
 
+  const dolphin =
+      initSherpaOnnxOfflineDolphinModelConfig(config.dolphin, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
-      tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len;
+      tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
+      dolphin.len;
 
   const ptr = Module._malloc(len);
 
@@ -932,10 +1007,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(fireRedAsr.ptr, fireRedAsr.len, ptr + offset);
   offset += fireRedAsr.len;
 
+  Module._CopyHeap(dolphin.ptr, dolphin.len, ptr + offset);
+  offset += dolphin.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
         paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
-        senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr
+        senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr,
+        dolphin: dolphin
   }
 }
 
@@ -954,11 +1033,20 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
     };
   }
 
+  if (!('hr' in config)) {
+    config.hr = {
+      dictDir: '',
+      lexicon: '',
+      ruleFsts: '',
+    };
+  }
+
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOfflineModelConfig(config.modelConfig, Module);
   const lm = initSherpaOnnxOfflineLMConfig(config.lmConfig, Module);
+  const hr = initSherpaOnnxHomophoneReplacerConfig(config.hr, Module);
 
-  const len = feat.len + model.len + lm.len + 7 * 4;
+  const len = feat.len + model.len + lm.len + 7 * 4 + hr.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -1021,8 +1109,12 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   Module.setValue(ptr + offset, config.blankPenalty || 0, 'float');
   offset += 4;
 
+  Module._CopyHeap(hr.ptr, hr.len, ptr + offset);
+  offset += hr.len;
+
   return {
-    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model, lm: lm
+    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model, lm: lm,
+        hr: hr,
   }
 }
 

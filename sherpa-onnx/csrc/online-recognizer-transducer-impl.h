@@ -41,6 +41,9 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   std::string text;
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
+    if (sym == "<unk>") {
+      continue;
+    }
 
     text.append(sym);
 
@@ -346,6 +349,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                      s->GetCurrentSegment(), s->GetNumFramesSinceStart());
     r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
   }
 
@@ -379,22 +383,29 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       }
     }
 
-    // reset encoder states
-    // s->SetStates(model_->GetEncoderInitStates());
-
     auto r = decoder_->GetEmptyResult();
     auto last_result = s->GetResult();
-    // if last result is not empty, then
-    // preserve last tokens as the context for next result
-    if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
-      std::vector<int64_t> context(last_result.tokens.end() - context_size,
-                                   last_result.tokens.end());
 
-      Hypotheses context_hyp({{context, 0}});
-      r.hyps = std::move(context_hyp);
-      r.tokens = std::move(context);
+    if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
+      // if last result is not empty, then
+      // truncate all last hyps and save as the 'ys' context for next result
+      // (the encoder state buffers are kept)
+      for (const auto &it : last_result.hyps) {
+        auto h = it.second;
+        r.hyps.Add({std::vector<int64_t>(h.ys.end() - context_size, h.ys.end()),
+                    h.log_prob});
+      }
+
+      r.tokens = std::vector<int64_t>(last_result.tokens.end() - context_size,
+                                      last_result.tokens.end());
+    } else {
+      if (config_.reset_encoder) {
+        // reset encoder states, use blanks as 'ys' context
+        s->SetStates(model_->GetEncoderInitStates());
+      }
     }
 
+    // but reset all contextual biasing graph states to root
     if (config_.decoding_method == "modified_beam_search" &&
         nullptr != s->GetContextGraph()) {
       for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
