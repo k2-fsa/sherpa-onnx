@@ -1,3 +1,16 @@
+## 1.11.2
+
+* Fix CI (#2016)
+* Publish jar for more java versions (#2017)
+* add alsa example for vad+offline asr (#2020)
+* Support cuda12 and cudnn8 for Linux aarch64. (#2021)
+* Update README to include more projects using sherpa-onnx (#2022)
+* Fix a bug in vad.reset() (#2023)
+* Fix Matcha + vocos for Android (#2024)
+* Fix crash in Android tts engine demo. (#2029)
+* Fix build script: add 'cd build' after 'mkdir build' to ensure the correct working directory for CMake (#2033)
+* fix static linking (#2032)
+
 ## 1.11.1
 
 * Export vocos to sherpa-onnx (#2012)
