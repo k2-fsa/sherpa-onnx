@@ -48,7 +48,7 @@ std::string OnlineLMConfig::ToString() const {
   os << "scale=" << scale << ", ";
   os << "lodr_scale=" << lodr_scale << ", ";
   os << "lodr_fst=\"" << lodr_fst << "\", ";
-  os << "lodr_baskoff_id=\"" << lodr_backoff_id << "\", ";
+  os << "lodr_backoff_id=\"" << lodr_backoff_id << "\", ";
   os << "shallow_fusion=" << (shallow_fusion ? "True" : "False") << ")";
 
   return os.str();

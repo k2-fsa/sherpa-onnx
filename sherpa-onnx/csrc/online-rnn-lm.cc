@@ -54,7 +54,7 @@ class OnlineRnnLM::Impl {
       auto score = next_lodr_state->Score() - hyp->lodr_state->Score();
       hyp->lodr_state = std::move(next_lodr_state);
       // apply LODR to hyp score
-      hyp->log_prob += score * config_.lodr_scale;
+      hyp->lm_log_prob += score * config_.lodr_scale;
     }
 
     // get lm scores for next tokens given the hyp->ys[:] and save to
