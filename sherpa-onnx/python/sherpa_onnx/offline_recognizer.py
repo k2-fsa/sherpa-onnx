@@ -68,6 +68,8 @@ class OfflineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        lodr_fst: str = "",
+        lodr_scale: float = 0.1,
     ):
         """
         Please refer to
@@ -172,6 +174,8 @@ class OfflineRecognizer(object):
             scale=lm_scale,
             lm_num_threads=num_threads,
             lm_provider=provider,
+            lodr_fst=lodr_fst,
+            lodr_scale=lodr_scale,
         )
 
         recognizer_config = OfflineRecognizerConfig(

@@ -187,6 +187,22 @@ def get_args():
     )
 
     parser.add_argument(
+        "--lodr-fst",
+        metavar="file",
+        type=str,
+        default="",
+        help="Path to LODR FST model. Used only when --lm is given.",
+    )
+
+    parser.add_argument(
+        "--lodr-scale",
+        metavar="lodr_scale",
+        type=float,
+        default=-0.1,
+        help="LODR scale for rescoring.Used only when --lodr_fst is given.",
+    )
+
+    parser.add_argument(
         "--provider",
         type=str,
         default="cpu",
@@ -320,6 +336,8 @@ def main():
             max_active_paths=args.max_active_paths,
             lm=args.lm,
             lm_scale=args.lm_scale,
+            lodr_fst=args.lodr_fst,
+            lodr_scale=args.lodr_scale,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
             modeling_unit=args.modeling_unit,
