@@ -21,6 +21,21 @@ rm sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
   ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/1.wav \
   ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/8k.wav
 
+or with RNN LM rescoring and LODR:
+
+./python-api-examples/online-decode-files.py \
+  --tokens=./sherpa-onnx-streaming-zipformer-en-2023-06-26/tokens.txt \
+  --encoder=./sherpa-onnx-streaming-zipformer-en-2023-06-26/encoder-epoch-99-avg-1-chunk-16-left-64.onnx \
+  --decoder=./sherpa-onnx-streaming-zipformer-en-2023-06-26/decoder-epoch-99-avg-1-chunk-16-left-64.onnx \
+  --joiner=./sherpa-onnx-streaming-zipformer-en-2023-06-26/joiner-epoch-99-avg-1-chunk-16-left-64.onnx \
+  --lm=/path/to/lm.onnx \
+  --lm-scale=0.1 \
+  --lodr-fst=/path/to/lodr.fst \
+  --lodr-scale=-0.1 \
+  ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav \
+  ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/1.wav \
+  ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/8k.wav
+
 (2) Streaming paraformer
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2

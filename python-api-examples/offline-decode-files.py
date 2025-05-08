@@ -35,6 +35,25 @@ file(s) with a non-streaming model.
       /path/to/0.wav \
       /path/to/1.wav
 
+    also with RNN LM rescoring and LODR (optional):
+
+    ./python-api-examples/offline-decode-files.py  \
+      --tokens=/path/to/tokens.txt \
+      --encoder=/path/to/encoder.onnx \
+      --decoder=/path/to/decoder.onnx \
+      --joiner=/path/to/joiner.onnx \
+      --num-threads=2 \
+      --decoding-method=greedy_search \
+      --debug=false \
+      --sample-rate=16000 \
+      --feature-dim=80 \
+      --lm=/path/to/lm.onnx \
+      --lm-scale=0.1 \
+      --lodr-fst=/path/to/lodr.fst \
+      --lodr-scale=-0.1 \
+      /path/to/0.wav \
+      /path/to/1.wav
+
 (3) For CTC models from NeMo
 
 python3 ./python-api-examples/offline-decode-files.py \
