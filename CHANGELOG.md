@@ -1,3 +1,9 @@
+## 1.11.5
+
+* export parakeet-tdt-0.6b-v2 to sherpa-onnx (#2180)
+* Add C++ runtime for parakeet-tdt-0.6b-v2. (#2181)
+* Avoid NaN in feature normalization. (#2186)
+
 ## 1.11.4
 
 * Disable strict hotword matching mode for offline transducer (#1837)
