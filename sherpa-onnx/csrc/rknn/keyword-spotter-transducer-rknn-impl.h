@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/keyword-spotter-transducer-impl.h
+// sherpa-onnx/csrc/rknn/keyword-spotter-transducer-rknn-impl.h
 //
-// Copyright (c)  2023-2024  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_KEYWORD_SPOTTER_TRANSDUCER_IMPL_H_
-#define SHERPA_ONNX_CSRC_KEYWORD_SPOTTER_TRANSDUCER_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_RKNN_KEYWORD_SPOTTER_TRANSDUCER_RKNN_IMPL_H_
+#define SHERPA_ONNX_CSRC_RKNN_KEYWORD_SPOTTER_TRANSDUCER_RKNN_IMPL_H_
 
 #include <algorithm>
 #include <memory>
@@ -17,49 +17,24 @@
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/online-transducer-model.h"
+#include "sherpa-onnx/csrc/rknn/online-stream-rknn.h"
+#include "sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.h"
+#include "sherpa-onnx/csrc/rknn/transducer-keyword-decoder-rknn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
-#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 #include "sherpa-onnx/csrc/utils.h"
 
 namespace sherpa_onnx {
 
 KeywordResult Convert(const TransducerKeywordResult &src,
                       const SymbolTable &sym_table, float frame_shift_ms,
-                      int32_t subsampling_factor, int32_t frames_since_start) {
-  KeywordResult r;
-  r.tokens.reserve(src.tokens.size());
-  r.timestamps.reserve(src.tokens.size());
-  r.keyword = src.keyword;
-  bool from_tokens = src.keyword.empty();
+                      int32_t subsampling_factor, int32_t frames_since_start);
 
-  for (auto i : src.tokens) {
-    auto sym = sym_table[i];
-    if (from_tokens) {
-      r.keyword.append(sym);
-    }
-    r.tokens.push_back(std::move(sym));
-  }
-  if (from_tokens && r.keyword.size()) {
-    r.keyword = r.keyword.substr(1);
-  }
-
-  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
-  for (auto t : src.timestamps) {
-    float time = frame_shift_s * t;
-    r.timestamps.push_back(time);
-  }
-
-  r.start_time = frames_since_start * frame_shift_ms / 1000.;
-
-  return r;
-}
-
-class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
+class KeywordSpotterTransducerRknnImpl : public KeywordSpotterImpl {
  public:
-  explicit KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
+  explicit KeywordSpotterTransducerRknnImpl(const KeywordSpotterConfig &config)
       : config_(config),
-        model_(OnlineTransducerModel::Create(config.model_config)) {
+        model_(std::make_unique<OnlineZipformerTransducerModelRknn>(
+            config.model_config)) {
     if (!config.model_config.tokens_buf.empty()) {
       sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
@@ -71,40 +46,39 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       unk_id_ = sym_["<unk>"];
     }
 
-    model_->SetFeatureDim(config.feat_config.feature_dim);
-
     if (config.keywords_buf.empty()) {
       InitKeywords();
     } else {
       InitKeywordsFromBufStr();
     }
 
-    decoder_ = std::make_unique<TransducerKeywordDecoder>(
+    decoder_ = std::make_unique<TransducerKeywordDecoderRknn>(
         model_.get(), config_.max_active_paths, config_.num_trailing_blanks,
         unk_id_);
   }
 
   template <typename Manager>
-  KeywordSpotterTransducerImpl(Manager *mgr, const KeywordSpotterConfig &config)
+  KeywordSpotterTransducerRknnImpl(Manager *mgr,
+                                   const KeywordSpotterConfig &config)
       : config_(config),
-        model_(OnlineTransducerModel::Create(mgr, config.model_config)),
+        model_(std::make_unique<OnlineZipformerTransducerModelRknn>(
+            mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens) {
     if (sym_.Contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
 
-    model_->SetFeatureDim(config.feat_config.feature_dim);
-
     InitKeywords(mgr);
 
-    decoder_ = std::make_unique<TransducerKeywordDecoder>(
+    decoder_ = std::make_unique<TransducerKeywordDecoderRknn>(
         model_.get(), config_.max_active_paths, config_.num_trailing_blanks,
         unk_id_);
   }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
-    auto stream =
-        std::make_unique<OnlineStream>(config_.feat_config, keywords_graph_);
+    auto stream = std::make_unique<OnlineStreamRknn>(config_.feat_config,
+                                                     keywords_graph_);
+
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -181,7 +155,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
         current_scores, current_kws, current_thresholds);
 
     auto stream =
-        std::make_unique<OnlineStream>(config_.feat_config, keywords_graph);
+        std::make_unique<OnlineStreamRknn>(config_.feat_config, keywords_graph);
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -190,81 +164,47 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     return s->GetNumProcessedFrames() + model_->ChunkSize() <
            s->NumFramesReady();
   }
-  void Reset(OnlineStream *s) const override { InitOnlineStream(s); }
 
-  void DecodeStreams(OnlineStream **ss, int32_t n) const override {
-    for (int32_t i = 0; i < n; ++i) {
-      auto s = ss[i];
-      auto r = s->GetKeywordResult(true);
-      int32_t num_trailing_blanks = r.num_trailing_blanks;
-      // assume subsampling_factor is 4
-      // assume frameshift is 0.01 second
-      float trailing_slience = num_trailing_blanks * 4 * 0.01;
+  void Reset(OnlineStream *s) const override {
+    InitOnlineStream(reinterpret_cast<OnlineStreamRknn *>(s));
+  }
 
-      // it resets automatically after detecting 1.5 seconds of silence
-      float threshold = 1.5;
-      if (trailing_slience > threshold) {
-        Reset(s);
-      }
+  void DecodeStream(OnlineStreamRknn *s) const {
+    auto r = s->GetKeywordResult(true);
+    int32_t num_trailing_blanks = r.num_trailing_blanks;
+    // assume subsampling_factor is 4
+    // assume frameshift is 0.01 second
+    float trailing_slience = num_trailing_blanks * 4 * 0.01;
+
+    // it resets automatically after detecting 1.5 seconds of silence
+    float threshold = 1.5;
+    if (trailing_slience > threshold) {
+      Reset(s);
     }
 
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
 
-    int32_t feature_dim = ss[0]->FeatureDim();
+    int32_t feature_dim = s->FeatureDim();
 
-    std::vector<TransducerKeywordResult> results(n);
-    std::vector<float> features_vec(n * chunk_size * feature_dim);
-    std::vector<std::vector<Ort::Value>> states_vec(n);
-    std::vector<int64_t> all_processed_frames(n);
+    const auto num_processed_frames = s->GetNumProcessedFrames();
 
-    for (int32_t i = 0; i != n; ++i) {
-      SHERPA_ONNX_CHECK(ss[i]->GetContextGraph() != nullptr);
+    std::vector<float> features =
+        s->GetFrames(num_processed_frames, chunk_size);
+    s->GetNumProcessedFrames() += chunk_shift;
 
-      const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
-      std::vector<float> features =
-          ss[i]->GetFrames(num_processed_frames, chunk_size);
+    auto &states = s->GetZipformerEncoderStates();
 
-      // Question: should num_processed_frames include chunk_shift?
-      ss[i]->GetNumProcessedFrames() += chunk_shift;
+    auto p = model_->RunEncoder(features, std::move(states));
 
-      std::copy(features.begin(), features.end(),
-                features_vec.data() + i * chunk_size * feature_dim);
+    states = std::move(p.second);
 
-      results[i] = std::move(ss[i]->GetKeywordResult());
-      states_vec[i] = std::move(ss[i]->GetStates());
-      all_processed_frames[i] = num_processed_frames;
-    }
+    decoder_->Decode(std::move(p.first), s);
+  }
 
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-    std::array<int64_t, 3> x_shape{n, chunk_size, feature_dim};
-
-    Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
-                                            features_vec.size(), x_shape.data(),
-                                            x_shape.size());
-
-    std::array<int64_t, 1> processed_frames_shape{
-        static_cast<int64_t>(all_processed_frames.size())};
-
-    Ort::Value processed_frames = Ort::Value::CreateTensor(
-        memory_info, all_processed_frames.data(), all_processed_frames.size(),
-        processed_frames_shape.data(), processed_frames_shape.size());
-
-    auto states = model_->StackStates(states_vec);
-
-    auto pair = model_->RunEncoder(std::move(x), std::move(states),
-                                   std::move(processed_frames));
-
-    decoder_->Decode(std::move(pair.first), ss, &results);
-
-    std::vector<std::vector<Ort::Value>> next_states =
-        model_->UnStackStates(pair.second);
-
-    for (int32_t i = 0; i != n; ++i) {
-      ss[i]->SetKeywordResult(results[i]);
-      ss[i]->SetStates(std::move(next_states[i]));
+  void DecodeStreams(OnlineStream **ss, int32_t n) const override {
+    for (int32_t i = 0; i < n; ++i) {
+      DecodeStream(reinterpret_cast<OnlineStreamRknn *>(ss[i]));
     }
   }
 
@@ -341,7 +281,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     InitKeywords(is);
   }
 
-  void InitOnlineStream(OnlineStream *stream) const {
+  void InitOnlineStream(OnlineStreamRknn *stream) const {
     auto r = decoder_->GetEmptyResult();
     SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1);
 
@@ -349,7 +289,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
 
     stream->SetKeywordResult(r);
-    stream->SetStates(model_->GetEncoderInitStates());
+    stream->SetZipformerEncoderStates(model_->GetEncoderInitStates());
   }
 
  private:
@@ -359,12 +299,13 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   std::vector<float> thresholds_;
   std::vector<std::string> keywords_;
   ContextGraphPtr keywords_graph_;
-  std::unique_ptr<OnlineTransducerModel> model_;
-  std::unique_ptr<TransducerKeywordDecoder> decoder_;
+  std::unique_ptr<OnlineZipformerTransducerModelRknn> model_;
+
+  std::unique_ptr<TransducerKeywordDecoderRknn> decoder_;
   SymbolTable sym_;
   int32_t unk_id_ = -1;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_KEYWORD_SPOTTER_TRANSDUCER_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_RKNN_KEYWORD_SPOTTER_TRANSDUCER_RKNN_IMPL_H_
