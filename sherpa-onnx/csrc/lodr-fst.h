@@ -32,6 +32,8 @@ class LodrFst {
   std::pair<std::vector<int32_t>, std::vector<float>> GetNextStateCosts(
     int32_t state, int32_t label);
 
+  float GetFinalCost(int32_t state);
+
   void ComputeScore(float scale, Hypothesis *hyp, int32_t offset);
 
  private:
@@ -59,6 +61,7 @@ class LodrStateCost {
     LodrStateCost ForwardOneStep(int32_t label);
 
   float Score() const;
+  float FinalScore() const;
 
  private:
   // The fst_ is not owned by this class and borrowed from the caller

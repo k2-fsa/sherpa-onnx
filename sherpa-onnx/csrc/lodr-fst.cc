@@ -113,81 +113,33 @@ void LodrFst::ComputeScore(float scale, Hypothesis *hyp, int32_t offset) {
     return;
   }
 
-  using Weight = typename fst::StdArc::Weight;
-  using Arc = fst::StdArc;
+  hyp->lodr_state = std::make_unique<LodrStateCost>(this);
 
-  // Step 1: Convert the input text into an FST
-  fst::StdVectorFst ys = YsToFst(hyp->ys, offset);
+  // Walk through the FST with the input text from the hypothesis
+  for (size_t i = offset; i < hyp->ys.size(); ++i) {
+    auto next_lodr_state = std::make_unique<LodrStateCost>(
+      hyp->lodr_state->ForwardOneStep(hyp->ys[i]));
 
-  // Step 2: Compose the input text with the rule FST
-  fst::StdVectorFst composed_fst;
-  fst::Compose(ys, *fst_, &composed_fst);
+    hyp->lodr_state = std::move(next_lodr_state);
+  }
 
-  // Step 3: Get the best path from the composed FST
-  fst::StdVectorFst score_fst;
-  fst::ShortestPath(composed_fst, &score_fst, 1);
+  float lodr_score = hyp->lodr_state->FinalScore();
 
-  // Step 4: Compute the total weight (i.e. score of the hypothesis)
-  Weight total_weight = Weight::One();
-  auto s = score_fst.Start();
-  if (s == fst::kNoStateId) {
-    // this is an empty FST
-    SHERPA_ONNX_LOG("Empty FST after scoring hyp with LODR! Mismatched FST?");
+  if (lodr_score == -std::numeric_limits<float>::infinity()) {
+    SHERPA_ONNX_LOGE("Failed to compute LODR. Empty or mismatched FST?");
     return;
-  }
-  while (score_fst.Final(s) == Weight::Zero()) {
-    fst::ArcIterator<fst::Fst<Arc>> aiter(score_fst, s);
-    if (aiter.Done()) {
-      // not reached final.
-      SHERPA_ONNX_LOG("LODR FST failed to reach final state. Mismatched FST?");
-      return;
-    }
-
-    const auto &arc = aiter.Value();
-
-    total_weight = Times(total_weight, arc.weight);
-
-    s = arc.nextstate;
-    if (s == fst::kNoStateId) {
-      SHERPA_ONNX_LOG("Transition to invalid state in LODR FST");
-      return;
-    }
-
-    aiter.Next();
-    if (!aiter.Done()) {
-      // not a linear FST
-      SHERPA_ONNX_LOG("Error in applying LODR FST. Not a linear FST?");
-      return;
-    }
-  }
-
-  if (score_fst.Final(s) != Weight::Zero()) {
-    total_weight = Times(total_weight, score_fst.Final(s));
   }
 
   // Update the hyp score
-  hyp->log_prob += scale * total_weight.Value();
+  hyp->log_prob += scale * lodr_score;
 }
 
-fst::StdVectorFst LodrFst::YsToFst(
-    const std::vector<int64_t> &ys, int32_t offset) {
-  using Weight = typename fst::StdArc::Weight;
-  using Arc = fst::StdArc;
-
-  fst::StdVectorFst ans;
-  ans.ReserveStates(ys.size());
-
-  auto s = ans.AddState();
-  ans.SetStart(s);
-  for (size_t i = offset; i < ys.size(); ++i) {
-    const auto nextstate = ans.AddState();
-    ans.AddArc(s, Arc(ys[i], ys[i], Weight::One(), nextstate));
-    s = nextstate;
+float LodrFst::GetFinalCost(int32_t state) {
+  auto final_weight = fst_->Final(state);
+  if (final_weight == fst::StdArc::Weight::Zero()) {
+    return 0.0;
   }
-
-  ans.SetFinal(s, Weight::One());
-
-  return ans;
+  return final_weight.Value();
 }
 
 LodrStateCost::LodrStateCost(
@@ -225,6 +177,18 @@ float LodrStateCost::Score() const {
                                      return a.second < b.second;
                                    });
   return -min_cost->second;
+}
+
+float LodrStateCost::FinalScore() const {
+  if (state_cost_.empty()) {
+    return -std::numeric_limits<float>::infinity();
+  }
+  auto min_cost = std::min_element(state_cost_.begin(), state_cost_.end(),
+                                   [](const auto& a, const auto& b) {
+                                     return a.second < b.second;
+                                   });
+  return -(min_cost->second +
+           fst_->GetFinalCost(min_cost->first));
 }
 
 }  // namespace sherpa_onnx
