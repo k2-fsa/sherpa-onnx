@@ -123,9 +123,10 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     if (!EncodeKeywords(is, sym_, &current_ids, &current_kws, &current_scores,
                         &current_thresholds)) {
 #if __OHOS__
-      SHERPA_ONNX_LOGE("Encode keywords %{public}s failed.", keywords.c_str());
+      SHERPA_ONNX_LOGE("Encode keywords '%{public}s' failed.",
+                       keywords.c_str());
 #else
-      SHERPA_ONNX_LOGE("Encode keywords %s failed.", keywords.c_str());
+      SHERPA_ONNX_LOGE("Encode keywords '%s' failed.", keywords.c_str());
 #endif
       return nullptr;
     }
@@ -303,10 +304,10 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::ifstream is(config_.keywords_file);
     if (!is) {
 #if __OHOS__
-      SHERPA_ONNX_LOGE("Open keywords file failed: %{public}s",
+      SHERPA_ONNX_LOGE("Open keywords file failed: '%{public}s'",
                        config_.keywords_file.c_str());
 #else
-      SHERPA_ONNX_LOGE("Open keywords file failed: %s",
+      SHERPA_ONNX_LOGE("Open keywords file failed: '%s'",
                        config_.keywords_file.c_str());
 #endif
       exit(-1);
@@ -325,10 +326,10 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
     if (!is) {
 #if __OHOS__
-      SHERPA_ONNX_LOGE("Open keywords file failed: %{public}s",
+      SHERPA_ONNX_LOGE("Open keywords file failed: '%{public}s'",
                        config_.keywords_file.c_str());
 #else
-      SHERPA_ONNX_LOGE("Open keywords file failed: %s",
+      SHERPA_ONNX_LOGE("Open keywords file failed: '%s'",
                        config_.keywords_file.c_str());
 #endif
       exit(-1);

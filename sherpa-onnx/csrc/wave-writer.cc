@@ -78,12 +78,12 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
   WriteWave(buffer.data(), sampling_rate, samples, n);
   std::ofstream os(filename, std::ios::binary);
   if (!os) {
-    SHERPA_ONNX_LOGE("Failed to create %s", filename.c_str());
+    SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
     return false;
   }
   os << buffer;
   if (!os) {
-    SHERPA_ONNX_LOGE("Write %s failed", filename.c_str());
+    SHERPA_ONNX_LOGE("Write '%s' failed", filename.c_str());
     return false;
   }
   return true;

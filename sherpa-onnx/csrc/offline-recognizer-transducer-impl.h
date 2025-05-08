@@ -156,7 +156,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     std::vector<float> current_scores;
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
                         bpe_encoder_.get(), &current, &current_scores)) {
-      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : '%s'",
                        hotwords.c_str());
     }
 
@@ -252,7 +252,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
     std::ifstream is(config_.hotwords_file);
     if (!is) {
-      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+      SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
                        config_.hotwords_file.c_str());
       exit(-1);
     }
@@ -276,7 +276,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     std::istringstream is(std::string(buf.begin(), buf.end()));
 
     if (!is) {
-      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+      SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
                        config_.hotwords_file.c_str());
       exit(-1);
     }
