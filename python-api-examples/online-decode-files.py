@@ -28,6 +28,7 @@ or with RNN LM rescoring and LODR:
   --encoder=./sherpa-onnx-streaming-zipformer-en-2023-06-26/encoder-epoch-99-avg-1-chunk-16-left-64.onnx \
   --decoder=./sherpa-onnx-streaming-zipformer-en-2023-06-26/decoder-epoch-99-avg-1-chunk-16-left-64.onnx \
   --joiner=./sherpa-onnx-streaming-zipformer-en-2023-06-26/joiner-epoch-99-avg-1-chunk-16-left-64.onnx \
+  --decoding-method=modified_beam_search \
   --lm=/path/to/lm.onnx \
   --lm-scale=0.1 \
   --lodr-fst=/path/to/lodr.fst \

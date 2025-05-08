@@ -43,7 +43,7 @@ file(s) with a non-streaming model.
       --decoder=/path/to/decoder.onnx \
       --joiner=/path/to/joiner.onnx \
       --num-threads=2 \
-      --decoding-method=greedy_search \
+      --decoding-method=modified_beam_search \
       --debug=false \
       --sample-rate=16000 \
       --feature-dim=80 \
