@@ -143,6 +143,12 @@ class HomophoneReplacer::Impl {
   }
 
   std::string Apply(const std::string &text) const {
+    std::string ans;
+
+    if (text.empty()) {
+      return ans;
+    }
+
     bool is_hmm = true;
 
     std::vector<std::string> words;
@@ -170,7 +176,6 @@ class HomophoneReplacer::Impl {
       pronunciations.push_back(std::move(p));
     }
 
-    std::string ans;
     for (const auto &r : replacer_list_) {
       ans = r->Normalize(words, pronunciations);
       // TODO(fangjun): We support only 1 rule fst at present.
