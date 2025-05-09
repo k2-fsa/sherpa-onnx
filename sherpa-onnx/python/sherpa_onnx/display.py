@@ -1,10 +1,10 @@
 # Copyright (c)  2025  Xiaomi Corporation
 import os
-from time import gmtime, strftime
+from time import localtime, strftime
 
 
 def get_current_time():
-    return strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    return strftime("%Y-%m-%d %H:%M:%S", localtime())
 
 
 def clear_console():
