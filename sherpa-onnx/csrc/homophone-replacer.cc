@@ -177,6 +177,10 @@ class HomophoneReplacer::Impl {
       break;
     }
 
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Output text: '%s'", ans.c_str());
+    }
+
     return ans;
   }
 
