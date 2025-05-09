@@ -46,7 +46,6 @@ python3 ./python-api-examples/two-pass-speech-recognition-from-microphone.py \
 import argparse
 import sys
 from pathlib import Path
-from typing import List
 
 import numpy as np
 
@@ -375,8 +374,7 @@ def main():
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     stream = first_recognizer.create_stream()
 
-    last_result = ""
-    segment_id = 0
+    display = sherpa_onnx.Display()
 
     sample_buffers = []
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
@@ -395,14 +393,8 @@ def main():
             result = first_recognizer.get_result(stream)
             result = result.lower().strip()
 
-            if last_result != result:
-                print(
-                    "\r{}:{}".format(segment_id, " " * len(last_result)),
-                    end="",
-                    flush=True,
-                )
-                last_result = result
-                print("\r{}:{}".format(segment_id, result), end="", flush=True)
+            display.update_text(result)
+            display.display()
 
             if is_endpoint:
                 if result:
@@ -419,14 +411,9 @@ def main():
                         sample_rate=sample_rate,
                     )
                     result = result.lower().strip()
-
-                    print(
-                        "\r{}:{}".format(segment_id, " " * len(last_result)),
-                        end="",
-                        flush=True,
-                    )
-                    print("\r{}:{}".format(segment_id, result), flush=True)
-                    segment_id += 1
+                    display.update_text(result)
+                    display.finalize_current_sentence()
+                    display.display()
                 else:
                     sample_buffers = []
 
