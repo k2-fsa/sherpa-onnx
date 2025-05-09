@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c)  2023  Xiaomi Corporation
+# Copyright (c)  2025  Xiaomi Corporation
 
 """
 This file demonstrates how to use sherpa-onnx Python APIs
@@ -25,7 +25,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-import soundfile as sf
 
 try:
     import sounddevice as sd
@@ -215,14 +214,6 @@ def main():
             # In general, this while loop is executed only once
             stream = recognizer.create_stream()
             stream.accept_waveform(sample_rate, vad.front.samples)
-            k = len(display.sentences)
-
-            sf.write(
-                f"test/{k}.wav",
-                vad.front.samples,
-                samplerate=sample_rate,
-                subtype="PCM_16",
-            )
 
             vad.pop()
             recognizer.decode_stream(stream)
