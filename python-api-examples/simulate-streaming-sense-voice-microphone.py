@@ -74,7 +74,7 @@ def get_args():
     parser.add_argument(
         "--num-threads",
         type=int,
-        default=1,
+        default=2,
         help="Number of threads for neural network computation",
     )
 
@@ -164,7 +164,13 @@ def main():
 
     config = sherpa_onnx.VadModelConfig()
     config.silero_vad.model = args.silero_vad_model
-    config.silero_vad.min_silence_duration = 0.25
+    config.silero_vad.threshold = 0.5
+    config.silero_vad.min_silence_duration = 0.1  # seconds
+    config.silero_vad.min_speech_duration = 0.25  # seconds
+    # If the current segment is larger than this value, then it increases
+    # the threshold to 0.9 internally. After detecting this segment,
+    # it resets the threshold to its original value.
+    config.silero_vad.max_speech_duration = 8  # seconds
     config.sample_rate = sample_rate
 
     window_size = config.silero_vad.window_size
@@ -184,20 +190,22 @@ def main():
     started = False
     started_time = None
 
+    offset = 0
     while not killed:
         samples = samples_queue.get()  # a blocking read
 
         buffer = np.concatenate([buffer, samples])
-        offset = 0
-        while offset + window_size < samples.shape[0]:
-            vad.accept_waveform(samples[offset : offset + window_size])
+        while offset + window_size < len(buffer):
+            vad.accept_waveform(buffer[offset : offset + window_size])
             if not started and vad.is_speech_detected():
                 started = True
                 started_time = time.time()
             offset += window_size
 
         if not started:
-            buffer = buffer[-10 * window_size :]
+            if len(buffer) > 10 * window_size:
+                offset -= len(buffer) - 10 * window_size
+                buffer = buffer[-10 * window_size :]
 
         if started and time.time() - started_time > 0.2:
             stream = recognizer.create_stream()
@@ -223,6 +231,7 @@ def main():
             display.update_text(text)
 
             buffer = []
+            offset = 0
             started = False
             started_time = None
 

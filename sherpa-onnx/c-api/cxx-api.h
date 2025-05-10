@@ -111,6 +111,7 @@ SHERPA_ONNX_API bool WriteWave(const std::string &filename, const Wave &wave);
 template <typename Derived, typename T>
 class SHERPA_ONNX_API MoveOnly {
  public:
+  MoveOnly() = default;
   explicit MoveOnly(const T *p) : p_(p) {}
 
   ~MoveOnly() { Destroy(); }
@@ -589,6 +590,28 @@ class SHERPA_ONNX_API VoiceActivityDetector
 
  private:
   explicit VoiceActivityDetector(const SherpaOnnxVoiceActivityDetector *p);
+};
+
+class SHERPA_ONNX_API LinearResampler
+    : public MoveOnly<LinearResampler, SherpaOnnxLinearResampler> {
+ public:
+  LinearResampler() = default;
+  static LinearResampler Create(int32_t samp_rate_in_hz,
+                                int32_t samp_rate_out_hz,
+                                float filter_cutoff_hz, int32_t num_zeros);
+
+  void Destroy(const SherpaOnnxLinearResampler *p) const;
+
+  void Reset() const;
+
+  std::vector<float> Resample(const float *input, int32_t input_dim,
+                              bool flush) const;
+
+  int32_t GetInputSamplingRate() const;
+  int32_t GetOutputSamplingRate() const;
+
+ private:
+  explicit LinearResampler(const SherpaOnnxLinearResampler *p);
 };
 
 }  // namespace sherpa_onnx::cxx
