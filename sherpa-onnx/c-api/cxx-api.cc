@@ -678,4 +678,42 @@ void VoiceActivityDetector::Flush() const {
   SherpaOnnxVoiceActivityDetectorFlush(p_);
 }
 
+LinearResampler LinearResampler::Create(int32_t samp_rate_in_hz,
+                                        int32_t samp_rate_out_hz,
+                                        float filter_cutoff_hz,
+                                        int32_t num_zeros) {
+  auto p = SherpaOnnxCreateLinearResampler(samp_rate_in_hz, samp_rate_out_hz,
+                                           filter_cutoff_hz, num_zeros);
+  return LinearResampler(p);
+}
+
+LinearResampler::LinearResampler(const SherpaOnnxLinearResampler *p)
+    : MoveOnly<LinearResampler, SherpaOnnxLinearResampler>(p) {}
+
+void LinearResampler::Destroy(const SherpaOnnxLinearResampler *p) const {
+  SherpaOnnxDestroyLinearResampler(p);
+}
+
+void LinearResampler::Reset() const { SherpaOnnxLinearResamplerReset(p_); }
+
+std::vector<float> LinearResampler::Resample(const float *input,
+                                             int32_t input_dim,
+                                             bool flush) const {
+  auto out = SherpaOnnxLinearResamplerResample(p_, input, input_dim, flush);
+
+  std::vector<float> ans{out->samples, out->samples + out->n};
+
+  SherpaOnnxLinearResamplerResampleFree(out);
+
+  return ans;
+}
+
+int32_t LinearResampler::GetInputSamplingRate() const {
+  return SherpaOnnxLinearResamplerResampleGetInputSampleRate(p_);
+}
+
+int32_t LinearResampler::GetOutputSamplingRate() const {
+  return SherpaOnnxLinearResamplerResampleGetOutputSampleRate(p_);
+}
+
 }  // namespace sherpa_onnx::cxx

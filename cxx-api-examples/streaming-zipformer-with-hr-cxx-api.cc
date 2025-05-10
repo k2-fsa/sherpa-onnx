@@ -59,8 +59,8 @@ int32_t main() {
   config.hr.rule_fsts = "./replace.fst";
 
   std::cout << "Loading model\n";
-  OnlineRecognizer recongizer = OnlineRecognizer::Create(config);
-  if (!recongizer.Get()) {
+  OnlineRecognizer recognizer = OnlineRecognizer::Create(config);
+  if (!recognizer.Get()) {
     std::cerr << "Please check your config\n";
     return -1;
   }
@@ -76,16 +76,16 @@ int32_t main() {
   std::cout << "Start recognition\n";
   const auto begin = std::chrono::steady_clock::now();
 
-  OnlineStream stream = recongizer.CreateStream();
+  OnlineStream stream = recognizer.CreateStream();
   stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                         wave.samples.size());
   stream.InputFinished();
 
-  while (recongizer.IsReady(&stream)) {
-    recongizer.Decode(&stream);
+  while (recognizer.IsReady(&stream)) {
+    recognizer.Decode(&stream);
   }
 
-  OnlineRecognizerResult result = recongizer.GetResult(&stream);
+  OnlineRecognizerResult result = recognizer.GetResult(&stream);
 
   const auto end = std::chrono::steady_clock::now();
   const float elapsed_seconds =

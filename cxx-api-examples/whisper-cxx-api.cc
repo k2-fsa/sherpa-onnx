@@ -32,8 +32,8 @@ int32_t main() {
   config.model_config.num_threads = 1;
 
   std::cout << "Loading model\n";
-  OfflineRecognizer recongizer = OfflineRecognizer::Create(config);
-  if (!recongizer.Get()) {
+  OfflineRecognizer recognizer = OfflineRecognizer::Create(config);
+  if (!recognizer.Get()) {
     std::cerr << "Please check your config\n";
     return -1;
   }
@@ -49,13 +49,13 @@ int32_t main() {
   std::cout << "Start recognition\n";
   const auto begin = std::chrono::steady_clock::now();
 
-  OfflineStream stream = recongizer.CreateStream();
+  OfflineStream stream = recognizer.CreateStream();
   stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                         wave.samples.size());
 
-  recongizer.Decode(&stream);
+  recognizer.Decode(&stream);
 
-  OfflineRecognizerResult result = recongizer.GetResult(&stream);
+  OfflineRecognizerResult result = recognizer.GetResult(&stream);
 
   const auto end = std::chrono::steady_clock::now();
   const float elapsed_seconds =
