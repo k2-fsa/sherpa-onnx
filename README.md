@@ -340,6 +340,12 @@ Pure Python, GUI-focused home automation/consumer grade SCADA.
 
 It uses TTS from sherpa-onnx. See also [✨ Speak command that uses the new globally configured TTS model.](https://github.com/EternityForest/KaithemAutomation/commit/8e64d2b138725e426532f7d66bb69dd0b4f53693)
 
+### [Open-XiaoAI KWS](https://github.com/idootop/open-xiaoai-kws)
+
+Enable custom wake word for XiaoAi Speakers. 让小爱音箱支持自定义唤醒词。
+
+Video demo in Chinese: [小爱同学启动～˶╹ꇴ╹˶！](https://www.bilibili.com/video/BV1YfVUz5EMj)
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
