@@ -14,7 +14,8 @@ class SherpaDisplay {
   void UpdateText(const std::string &text) { current_text_ = text; }
 
   void FinalizeCurrentSentence() {
-    if (!current_text_.empty() && current_text_[0] != ' ') {
+    if (!current_text_.empty() &&
+        (current_text_[0] != ' ' || current_text_.size() > 1)) {
       sentences_.push_back({GetCurrentDateTime(), std::move(current_text_)});
     }
   }
