@@ -36,6 +36,15 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     sherpa-onnx-cxx-api
     portaudio_static
   )
+
+  add_executable(parakeet-tdt-simulate-streaming-microphone-cxx-api
+    ./parakeet-tdt-simulate-streaming-microphone-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
+  )
+  target_link_libraries(parakeet-tdt-simulate-streaming-microphone-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
 endif()
 
 add_executable(sense-voice-with-hr-cxx-api ./sense-voice-with-hr-cxx-api.cc)
