@@ -45,10 +45,11 @@ class SherpaDisplay {
  private:
   static void ClearScreen() {
 #ifdef _MSC_VER
-    system("cls");
+    auto ret = system("cls");
 #else
-    system("clear");
+    auto ret = system("clear");
 #endif
+    (void)ret;
   }
 
   static std::string GetCurrentDateTime() {

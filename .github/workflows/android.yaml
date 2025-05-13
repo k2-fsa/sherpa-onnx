@@ -168,7 +168,7 @@ jobs:
           file: sherpa-onnx-*-android.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.11.5
 
   build-android-aar:
     needs: [build-android-libs]
@@ -297,7 +297,7 @@ jobs:
           file: ./*.aar
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.11.5
 
       - name: Release android aar
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

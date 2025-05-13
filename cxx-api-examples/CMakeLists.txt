@@ -47,6 +47,23 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   )
 endif()
 
+if(SHERPA_ONNX_HAS_ALSA)
+  add_executable(sense-voice-simulate-streaming-alsa-cxx-api
+    ./sense-voice-simulate-streaming-alsa-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/alsa.cc
+  )
+  target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
+
+  if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
+    target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+  else()
+    target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api asound)
+  endif()
+endif()
+
 add_executable(sense-voice-with-hr-cxx-api ./sense-voice-with-hr-cxx-api.cc)
 target_link_libraries(sense-voice-with-hr-cxx-api sherpa-onnx-cxx-api)
 
