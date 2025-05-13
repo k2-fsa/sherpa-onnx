@@ -53,8 +53,13 @@ struct OnlineRecognizerResult {
   /// When an endpoint is detected, it will change
   float start_time = 0;
 
-  /// True if the end of this segment is reached
+  /// True if the end of this segment is reached, i.e., an endpoint is detected
+  /// used only in ./online-websocket-server-impl.cc
   bool is_final = false;
+
+  /// used only in ./online-websocket-server-impl.cc
+  /// If it is true, it means the server has processed all received samples
+  bool is_eof = false;
 
   /** Return a json string.
    *
@@ -69,6 +74,7 @@ struct OnlineRecognizerResult {
    *     "segment": x,
    *     "start_time": x,
    *     "is_final": true|false
+   *     "is_eof": true|false
    *   }
    */
   std::string AsJsonString() const;

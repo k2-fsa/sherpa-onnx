@@ -210,6 +210,7 @@ void OnlineWebsocketDecoder::Decode() {
 
     if (!recognizer_->IsReady(c->s.get()) && c->eof) {
       result.is_final = true;
+      result.is_eof = true;
     }
 
     asio::post(server_->GetConnectionContext(),
