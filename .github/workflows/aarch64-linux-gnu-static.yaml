@@ -83,6 +83,8 @@ jobs:
 
               make install
 
+              cp bin/sense-voice-simulate-streaming-alsa-cxx-api install/bin
+
               ls -lh install/lib
 
               rm -rf install/lib/pkgconfig
@@ -164,7 +166,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.42
+          # tag: v1.11.5
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'
