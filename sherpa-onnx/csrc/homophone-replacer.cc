@@ -296,7 +296,7 @@ HomophoneReplacer::HomophoneReplacer(Manager *mgr,
 HomophoneReplacer::~HomophoneReplacer() = default;
 
 std::string HomophoneReplacer::Apply(const std::string &text) const {
-  return impl_->Apply(text);
+  return RemoveInvalidUtf8Sequences(impl_->Apply(text));
 }
 
 #if __ANDROID_API__ >= 9
