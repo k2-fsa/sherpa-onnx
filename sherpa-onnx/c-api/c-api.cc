@@ -31,6 +31,7 @@
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
@@ -158,11 +159,14 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
   if (config->model_config.debug) {
+    auto str_vec = sherpa_onnx::SplitString(recognizer_config.ToString(), 128);
+    for (const auto &s : str_vec) {
 #if __OHOS__
-    SHERPA_ONNX_LOGE("%{public}s\n", recognizer_config.ToString().c_str());
+      SHERPA_ONNX_LOGE("%{public}s\n", s.c_str());
 #else
-    SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
+      SHERPA_ONNX_LOGE("%s\n", s.c_str());
 #endif
+    }
   }
 
   return recognizer_config;
@@ -503,11 +507,14 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
   if (config->model_config.debug) {
+    auto str_vec = sherpa_onnx::SplitString(recognizer_config.ToString(), 128);
+    for (const auto &s : str_vec) {
 #if __OHOS__
-    SHERPA_ONNX_LOGE("%{public}s\n", recognizer_config.ToString().c_str());
+      SHERPA_ONNX_LOGE("%{public}s\n", s.c_str());
 #else
-    SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
+      SHERPA_ONNX_LOGE("%s\n", s.c_str());
 #endif
+    }
   }
 
   return recognizer_config;

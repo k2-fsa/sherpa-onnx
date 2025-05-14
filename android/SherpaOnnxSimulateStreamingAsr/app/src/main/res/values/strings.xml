@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SimulateStreamingAsr</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="copy">Copy</string>
+    <string name="clear">Clear</string>
 </resources>

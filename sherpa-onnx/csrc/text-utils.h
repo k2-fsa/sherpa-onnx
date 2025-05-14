@@ -147,6 +147,8 @@ std::string ToString(const std::wstring &s);
 
 bool EndsWith(const std::string &haystack, const std::string &needle);
 
+std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

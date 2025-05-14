@@ -707,4 +707,20 @@ bool EndsWith(const std::string &haystack, const std::string &needle) {
   return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
 }
 
+std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
+  std::vector<std::string> ans;
+  if (chunk_size < 1 || chunk_size > s.size()) {
+    ans.push_back(s);
+  } else {
+    int32_t n = static_cast<int32_t>(s.size());
+    int32_t i = 0;
+    while (i < n) {
+      int32_t end = std::min(i + chunk_size, n);
+      ans.push_back(s.substr(i, end - i));
+      i = end;
+    }
+  }
+  return ans;
+}
+
 }  // namespace sherpa_onnx
