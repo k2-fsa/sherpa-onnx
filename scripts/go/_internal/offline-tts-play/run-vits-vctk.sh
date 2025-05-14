@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-tts/run-vits-vctk.sh
