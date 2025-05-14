@@ -12,6 +12,9 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import kotlin.concurrent.thread
 
 private const val TAG = "sherpa-onnx"
@@ -199,8 +202,22 @@ class MainActivity : AppCompatActivity() {
         var ruleFsts : String?
         ruleFsts = null
 
+        val useHr = false
+        val hr =  HomophoneReplacerConfig(
+            // Used only when useHr is true
+            // Please download the following 3 files from
+            // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
+            //
+            // dict and lexicon.txt can be shared by different apps
+            //
+            // replace.fst is specific for an app
+            dictDir = "dict",
+            lexicon = "lexicon.txt",
+            ruleFsts = "replace.fst",
+        )
+
         Log.i(TAG, "Select model type $type")
-        val config = OnlineRecognizerConfig(
+        var config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
             // lmConfig = getOnlineLMConfig(type = type),
@@ -212,9 +229,66 @@ class MainActivity : AppCompatActivity() {
             config.ruleFsts = ruleFsts
         }
 
+        if (useHr) {
+            if (hr.dictDir.isNotEmpty() && hr.dictDir.first() != '/') {
+                // We need to copy it from the assets directory to some path
+                val newDir = copyDataDir(hr.dictDir)
+                hr.dictDir = "$newDir/${hr.dictDir}"
+            }
+            config.hr = hr
+        }
+
         recognizer = OnlineRecognizer(
             assetManager = application.assets,
             config = config,
         )
+    }
+    private fun copyDataDir(dataDir: String): String {
+        Log.i(TAG, "data dir is $dataDir")
+        copyAssets(dataDir)
+
+        val newDataDir = application.getExternalFilesDir(null)!!.absolutePath
+        Log.i(TAG, "newDataDir: $newDataDir")
+        return newDataDir
+    }
+
+    private fun copyAssets(path: String) {
+        val assets: Array<String>?
+        try {
+            assets = application.assets.list(path)
+            if (assets!!.isEmpty()) {
+                copyFile(path)
+            } else {
+                val fullPath = "${application.getExternalFilesDir(null)}/$path"
+                val dir = File(fullPath)
+                dir.mkdirs()
+                for (asset in assets.iterator()) {
+                    val p: String = if (path == "") "" else path + "/"
+                    copyAssets(p + asset)
+                }
+            }
+        } catch (ex: IOException) {
+            Log.e(TAG, "Failed to copy $path. $ex")
+        }
+    }
+
+    private fun copyFile(filename: String) {
+        try {
+            val istream = application.assets.open(filename)
+            val newFilename = application.getExternalFilesDir(null).toString() + "/" + filename
+            val ostream = FileOutputStream(newFilename)
+            // Log.i(TAG, "Copying $filename to $newFilename")
+            val buffer = ByteArray(1024)
+            var read = 0
+            while (read != -1) {
+                ostream.write(buffer, 0, read)
+                read = istream.read(buffer)
+            }
+            istream.close()
+            ostream.flush()
+            ostream.close()
+        } catch (ex: Exception) {
+            Log.e(TAG, "Failed to copy $filename, $ex")
+        }
     }
 }
