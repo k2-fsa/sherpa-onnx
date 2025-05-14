@@ -65,6 +65,9 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
   ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
 
+  fid = env->GetFieldID(feat_config_cls, "dither", "F");
+  ans.feat_config.dither = env->GetFloatField(feat_config, fid);
+
   //---------- enable endpoint ----------
   fid = env->GetFieldID(cls, "enableEndpoint", "Z");
   ans.enable_endpoint = env->GetBooleanField(config, fid);

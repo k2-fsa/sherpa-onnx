@@ -6,10 +6,12 @@ package com.k2fsa.sherpa.onnx;
 public class FeatureConfig {
     private final int sampleRate;
     private final int featureDim;
+    private final float dither;
 
     private FeatureConfig(Builder builder) {
         this.sampleRate = builder.sampleRate;
         this.featureDim = builder.featureDim;
+        this.dither = builder.dither;
     }
 
     public static Builder builder() {
@@ -24,9 +26,14 @@ public class FeatureConfig {
         return featureDim;
     }
 
+   public float getDither() {
+        return dither;
+   }
+
     public static class Builder {
         private int sampleRate = 16000;
         private int featureDim = 80;
+        private float dither = 0.0f;
 
         public FeatureConfig build() {
             return new FeatureConfig(this);
@@ -39,6 +46,10 @@ public class FeatureConfig {
 
         public Builder setFeatureDim(int featureDim) {
             this.featureDim = featureDim;
+            return this;
+        }
+        public Builder setDither(float dither) {
+            this.dither = dither;
             return this;
         }
     }
