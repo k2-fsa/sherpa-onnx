@@ -41,8 +41,13 @@ package sherpa_onnx
 
 // #include <stdlib.h>
 // #include "c-api.h"
+// extern int32_t _cgoGeneratedAudioCallback(float *samples,int32_t n,void *arg);
+// extern int32_t _cgoGeneratedAudioProgressCallback(float *samples, int32_t n, float p, void *arg);
 import "C"
-import "unsafe"
+import (
+	"runtime/cgo"
+	"unsafe"
+)
 
 // Configuration for online/streaming transducer models
 //
@@ -890,6 +895,36 @@ type OfflineTts struct {
 	impl *C.struct_SherpaOnnxOfflineTts
 }
 
+type sherpaOnnxGeneratedAudioCallbackWithArg func(samples []float32)
+
+//export _cgoGeneratedAudioCallback
+func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointer) C.int32_t {
+	h := *(*cgo.Handle)(arg)
+	val := h.Value().(sherpaOnnxGeneratedAudioCallbackWithArg)
+	all := make([]float32, n)
+	arr := unsafe.Slice(samples, n)
+	for i := 0; i < int(n); i++ {
+		all[i] = float32(arr[i])
+	}
+	val(all)
+	return 1
+}
+
+type sherpaOnnxGeneratedAudioProgressCallbackWithArg func(samples []float32, p float32)
+
+//export _cgoGeneratedAudioProgressCallback
+func _cgoGeneratedAudioProgressCallback(samples *C.float, n C.int32_t, p C.float, arg unsafe.Pointer) C.int32_t {
+	h := *(*cgo.Handle)(arg)
+	val := h.Value().(sherpaOnnxGeneratedAudioProgressCallbackWithArg)
+	all := make([]float32, n)
+	arr := unsafe.Slice(samples, n)
+	for i := 0; i < int(n); i++ {
+		all[i] = float32(arr[i])
+	}
+	val(all, float32(p))
+	return 1
+}
+
 // Free the internal pointer inside the tts to avoid memory leak.
 func DeleteOfflineTts(tts *OfflineTts) {
 	C.SherpaOnnxDestroyOfflineTts(tts.impl)
@@ -1008,6 +1043,26 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	}
 
 	return ans
+}
+
+func (tts *OfflineTts) GenerateWithCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioCallbackWithArg) {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+
+	h := cgo.NewHandle(cb)
+	defer h.Delete()
+	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback), unsafe.Pointer(&h))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+}
+
+func (tts *OfflineTts) GenerateWithProgressCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioProgressCallbackWithArg) {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+
+	h := cgo.NewHandle(cb)
+	defer h.Delete()
+	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(C._cgoGeneratedAudioProgressCallback), unsafe.Pointer(&h))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 }
 
 func (audio *GeneratedAudio) Save(filename string) bool {
