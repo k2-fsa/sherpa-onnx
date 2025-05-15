@@ -1,3 +1,23 @@
+## 1.12.0
+
+* Fix building wheels for macOS (#2192)
+* Show verbose logs in homophone replacer (#2194)
+* Fix displaying streaming speech recognition results for Python. (#2196)
+* Add real-time speech recognition example for SenseVoice. (#2197)
+* docs: add Open-XiaoAI KWS project (#2198)
+* Add C++ example for streaming ASR with SenseVoice. (#2199)
+* Add C++ example for real-time ASR with nvidia/parakeet-tdt-0.6b-v2. (#2201)
+* Add a link to YouTube video including sherpa-onnx. (#2202)
+* Support sending is_eof for online websocket server. (#2204)
+* Add alsa-based streaming ASR example for sense voice. (#2207)
+* Support homophone replacer in Android asr demo. (#2210)
+* Add Go implementation of the TTS generation callback (#2213)
+* Add Android demo for real-time ASR with non-streaming ASR models. (#2214)
+* Expose dither for JNI (#2215)
+* Add nodejs example for parakeet-tdt-0.6b-v2. (#2219)
+* Add script to build APK for simulated-streaming-asr. (#2220)
+
+
 ## 1.11.5
 
 * export parakeet-tdt-0.6b-v2 to sherpa-onnx (#2180)
