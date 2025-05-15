@@ -532,6 +532,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8",
+            idx=30,
+            lang="en",
+            lang2="English",
+            short_name="parakeet_tdt_0.6b_v2",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
@@ -567,6 +583,7 @@ def main():
     filename_list = [
         "./build-apk-vad-asr.sh",
         "./build-hap-vad-asr.sh",
+        "./build-apk-vad-asr-simulate-streaming.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()
