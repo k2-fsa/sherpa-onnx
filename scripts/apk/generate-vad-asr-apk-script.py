@@ -567,6 +567,7 @@ def main():
     filename_list = [
         "./build-apk-vad-asr.sh",
         "./build-hap-vad-asr.sh",
+        "./build-apk-vad-asr-simulate-streaming.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()
