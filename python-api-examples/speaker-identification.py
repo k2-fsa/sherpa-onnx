@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This script shows how to use Python APIs for speaker identification with
 a microphone.
@@ -41,15 +42,28 @@ python3 ./python-api-examples/speaker-identification.py \
   --model ./wespeaker_zh_cnceleb_resnet34.onnx
 """
 
+import argparse
 import functools
+import queue
+import threading
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Literal, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import sherpa_onnx
 import soundfile as sf
 from numpy.typing import NDArray
+
+try:
+    import sounddevice as sd
+except ImportError:
+    print("Please install sounddevice first. You can use\n\t")
+    print("pip install sounddevice")
+    print("\nto install it")
+    import sys
+
+    sys.exit(1)
 
 
 def load_speaker_embedding_model(
@@ -166,25 +180,6 @@ def compute_avg_speaker_embedding(
     return embeddings_sum / len(filenames)
 
 
-# %%
-# The following code is required for command line interface.
-# If you only need the packaged functions, you can use only the code above
-import argparse
-import queue
-import threading
-from typing import Optional
-
-try:
-    import sounddevice as sd
-except ImportError:
-    print("Please install sounddevice first. You can use\n\t")
-    print("pip install sounddevice")
-    print("\nto install it")
-    import sys
-
-    sys.exit(1)
-
-
 class Args(argparse.Namespace):
     speaker_file: Path
     model: Path
@@ -274,8 +269,8 @@ class AudioRecorder:
         print("Microphone device information:\n")
         print(f"Device ID: {device_info['index']}")
         print(f"Name: {device_info['name']}")
-        print(f"Default Channels: {device_info['max_input_channels']}")
-        print(f"Default SampleRate: {device_info['default_samplerate']}")
+        print(f"Default Microphone Channels: {device_info['max_input_channels']}")
+        print(f"Default Microphone SampleRate: {device_info['default_samplerate']}")
         print("=" * 50)
 
     def read_mic(self) -> None:
@@ -315,7 +310,7 @@ class AudioRecorder:
         stream.input_finished()
 
         embedding = np.array(extractor.compute(stream), dtype=np.float32)
-        name = manager.search(embedding, threshold=threshold)
+        name: str = manager.search(embedding, threshold=threshold)
         return name or "unknown"
 
 
@@ -343,9 +338,8 @@ def main() -> None:
         input("Press Enter to stop recording")
         recorder.stop_recording()
 
-        print("Compute embedding")
         name = recorder.infer_speaker(extractor, manager, args.threshold)
-        print(f"Predicted name: {name}")
+        print(f"Predicted name: {name}\n")
 
 
 if __name__ == "__main__":
@@ -353,6 +347,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\nCaught Ctrl + C. Exiting")
-    except Exception as e:
-        print(e)
-        raise
