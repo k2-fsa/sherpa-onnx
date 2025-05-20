@@ -90,7 +90,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_newFromFile(JNIEnv *env,
         auto speech_denoiser = new sherpa_onnx::OfflineSpeechDenoiser(config);
         return reinterpret_cast<jlong>(speech_denoiser);
       },
-      0L);
+      (jlong)0);
 }
 
 SHERPA_ONNX_EXTERN_C
