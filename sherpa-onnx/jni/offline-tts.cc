@@ -234,7 +234,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
         auto tts = new sherpa_onnx::OfflineTts(config);
         return reinterpret_cast<jlong>(tts);
       },
-      0L);
+      (jlong)0);
 }
 
 SHERPA_ONNX_EXTERN_C
