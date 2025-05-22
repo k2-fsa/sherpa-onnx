@@ -37,7 +37,7 @@ def load_audio(filename, sample_rate: Optional[int] = 44100):
     buffer, _ = process.communicate()
     waveform = np.frombuffer(buffer, dtype="<f4").reshape(-1, n_channels)
 
-    waveform = torch.from_numpy(waveform).to(torch.float32)
+    waveform = torch.from_numpy(np.copy(waveform)).to(torch.float32)
     if n_channels == 1:
         waveform = waveform.tile(1, 2)
 
