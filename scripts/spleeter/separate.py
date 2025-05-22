@@ -7,11 +7,9 @@ from typing import Optional
 
 import ffmpeg
 import numpy as np
-import torch
 import soundfile as sf
-import torchaudio
+import torch
 from pydub import AudioSegment
-
 
 from unet import UNet
 

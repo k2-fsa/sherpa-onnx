@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
-import torch
+import time
+
+import kaldi_native_fbank as knf
+import numpy as np
 import onnxruntime as ort
-from separate import load_audio
 import soundfile as sf
+import torch
+
+from separate import load_audio
 
 """
 ----------inputs for ./2stems/vocals.onnx----------
@@ -64,107 +69,128 @@ def main():
     accompaniment = OnnxModel("./2stems/accompaniment.onnx")
 
     waveform, sample_rate = load_audio("./qi-feng-le.mp3")
-    print("waveform", waveform.shape, sample_rate)
-    # waveform torch.Size([13760640, 2]) 44100
+    waveform = waveform[: 44100 * 10, :]
 
-    # Support only 2 channels at present. If you have only a single channel,
-    # please replicate it to get 2 channels
-    assert waveform.shape[1] == 2, waveform.shape
-
-    # torch.stft requires a 2-D input of shape (N, T), so we transpose waveform
-    stft = torch.stft(
-        waveform.t(),
+    stft_config = knf.StftConfig(
         n_fft=4096,
         hop_length=1024,
-        window=torch.hann_window(4096, periodic=True),
+        win_length=4096,
         center=False,
-        onesided=True,
-        return_complex=True,
+        window_type="hann",
     )
-    print("stft", stft.shape, stft.dtype)
-    # stft: (2, 2049, 13435), torch.complex64
-    # (num_channels, n_fft/2+1, num_frames)
+    knf_stft = knf.Stft(stft_config)
+    knf_istft = knf.IStft(stft_config)
 
-    y = stft.permute(2, 1, 0)
-    print("y0", y.shape)
-    # y: (13435, 2049, 2) -> (num_frames, n_fft/2+1, num_channels)
+    start = time.time()
 
-    y = y[:, :1024, :]
-    print("y1", y.shape)
-    # y1: (13435, 1024, 2) -> (num_frames, 1024, num_channels)
+    stft_result_c0 = knf_stft(waveform[:, 0].tolist())
+    stft_result_c1 = knf_stft(waveform[:, 1].tolist())
+    print("c0 stft", stft_result_c0.num_frames)
 
-    tensor_size = y.shape[0] - int(y.shape[0] / 512) * 512
-    pad_size = 512 - tensor_size
-    y = torch.nn.functional.pad(y, (0, 0, 0, 0, 0, pad_size))
-    print("y2", y.shape, y.dtype)
-    # y2: (13824, 1024, 2) -> (num_frames, 1024, num_channels)
-    num_splits = y.shape[0] // 512
-    y = y.reshape([num_splits, 512] + list(y.shape[1:]))
-    print("y3", y.shape)
-    # y3: (27, 512, 1024, 2) -> (num_splits, 512, 1024, num_channels)
+    orig_real0 = np.array(stft_result_c0.real, dtype=np.float32).reshape(
+        stft_result_c0.num_frames, -1
+    )
+    orig_imag0 = np.array(stft_result_c0.imag, dtype=np.float32).reshape(
+        stft_result_c0.num_frames, -1
+    )
 
-    y = y.abs()
-    print("y4", y.shape, y.dtype)
-    # y4: (27, 512, 1024, 2), torch.float32
+    orig_real1 = np.array(stft_result_c1.real, dtype=np.float32).reshape(
+        stft_result_c1.num_frames, -1
+    )
+    orig_imag1 = np.array(stft_result_c1.imag, dtype=np.float32).reshape(
+        stft_result_c1.num_frames, -1
+    )
 
-    y = y.permute(0, 3, 1, 2)
-    print("y5", y.shape)
-    # y5: (27, 2, 512, 1024) -> (num_splits, num_channels, 512, 1024)
+    real0 = torch.from_numpy(orig_real0)
+    imag0 = torch.from_numpy(orig_imag0)
+    real1 = torch.from_numpy(orig_real1)
+    imag1 = torch.from_numpy(orig_imag1)
+    # (num_frames, n_fft/2_1)
+    print("real0", real0.shape)
 
-    vocals_spec = vocals(y)
-    print("vocals_spec1", vocals_spec.shape, vocals_spec.dtype)
-    # vocals_spec1: (27, 2, 512, 1024)
+    # keep only the first 1024 bins
+    real0 = real0[:, :1024]
+    imag0 = imag0[:, :1024]
+    real1 = real1[:, :1024]
+    imag1 = imag1[:, :1024]
 
-    accompaniment_spec = accompaniment(y)
-    print("accompaniment_spec1", accompaniment_spec.shape, accompaniment_spec.dtype)
-    # accompaniment_spec1: (27, 2, 512, 1024)
+    stft0 = (real0.square() + imag0.square()).sqrt()
+    stft1 = (real1.square() + imag1.square()).sqrt()
 
-    sum_spec = (vocals_spec**2 + accompaniment_spec**2) + 1e-10
+    # pad it to multiple of 512
+    padding = 512 - real0.shape[0] % 512
+    print("padding", padding)
+    if padding > 0:
+        stft0 = torch.nn.functional.pad(stft0, (0, 0, 0, padding))
+        stft1 = torch.nn.functional.pad(stft1, (0, 0, 0, padding))
+    stft0 = stft0.reshape(-1, 1, 512, 1024)
+    stft1 = stft1.reshape(-1, 1, 512, 1024)
+
+    stft_01 = torch.cat([stft0, stft1], axis=1)
+
+    print("stft_01", stft_01.shape, stft_01.dtype)
+
+    vocals_spec = vocals(stft_01)
+    accompaniment_spec = accompaniment(stft_01)
+    # (num_splits, num_channels, 512, 1024)
+
+    sum_spec = (vocals_spec.square() + accompaniment_spec.square()) + 1e-10
 
     vocals_spec = (vocals_spec**2 + 1e-10 / 2) / sum_spec
     accompaniment_spec = (accompaniment_spec**2 + 1e-10 / 2) / sum_spec
 
-    print("vocals_spec2", vocals_spec.shape, vocals_spec.dtype)
-    # (27, 2, 512, 1024)
-    print("accompaniment_spec2", accompaniment_spec.shape, accompaniment_spec.dtype)
-    # (27, 2, 512, 1024)
-
     for name, spec in zip(
         ["vocals", "accompaniment"], [vocals_spec, accompaniment_spec]
     ):
-        spec = torch.nn.functional.pad(spec, (0, 2049 - 1024, 0, 0, 0, 0, 0, 0))
-        print("spec.shape", spec.shape)
-        # (27, 2, 512, 2049)
+        spec_c0 = spec[:, 0, :, :]
+        spec_c1 = spec[:, 1, :, :]
 
-        spec = spec.permute(0, 2, 3, 1)
-        # (27, 512, 2049, 2)
+        spec_c0 = spec_c0.reshape(-1, 1024)
+        spec_c1 = spec_c1.reshape(-1, 1024)
 
-        spec = spec.reshape(-1, spec.shape[2], spec.shape[3])
-        # (512, 2049, 2)
+        spec_c0 = spec_c0[: stft_result_c0.num_frames, :]
+        spec_c1 = spec_c1[: stft_result_c0.num_frames, :]
 
-        print("here2", spec.shape)
-        # (13824, 2049, 2)
+        spec_c0 = torch.nn.functional.pad(spec_c0, (0, 2049 - 1024, 0, 0))
+        spec_c1 = torch.nn.functional.pad(spec_c1, (0, 2049 - 1024, 0, 0))
 
-        spec = spec[: stft.shape[2], :, :]
-        # (13435, 2049, 2)
+        spec_c0_real = spec_c0 * orig_real0
+        spec_c0_imag = spec_c0 * orig_imag0
 
-        spec = spec.permute(2, 1, 0)
-        print("spec.dtype", spec.shape, spec.dtype)
-        # (2, 2049, 465)
+        spec_c1_real = spec_c1 * orig_real1
+        spec_c1_imag = spec_c1 * orig_imag1
 
-        masked_stft = spec * stft
-        print("masked_stft", masked_stft.shape, masked_stft.dtype)
+        result0 = knf.StftResult(
+            real=spec_c0_real.reshape(-1).tolist(),
+            imag=spec_c0_imag.reshape(-1).tolist(),
+            num_frames=orig_real0.shape[0],
+        )
 
-        wave = torch.istft(
-            masked_stft,
-            4096,
-            1024,
-            window=torch.hann_window(4096, periodic=True),
-            onesided=True,
-        ) * (2 / 3)
+        result1 = knf.StftResult(
+            real=spec_c1_real.reshape(-1).tolist(),
+            imag=spec_c1_imag.reshape(-1).tolist(),
+            num_frames=orig_real1.shape[0],
+        )
 
-        print(wave.shape, wave.dtype)
-        sf.write(f"{name}.wav", wave.t(), 44100)
+        wav0 = knf_istft(result0)
+        wav1 = knf_istft(result1)
+
+        wav = np.array([wav0, wav1], dtype=np.float32)
+        wav = np.transpose(wav)
+        # now wav is (num_samples, num_channels)
+
+        sf.write(f"./onnx-{name}.wav", wav, 44100)
+
+        print(f"Saved to ./onnx-{name}.wav")
+
+    end = time.time()
+    elapsed_seconds = end - start
+    audio_duration = waveform.shape[0] / sample_rate
+    real_time_factor = elapsed_seconds / audio_duration
+
+    print(f"Elapsed seconds: {elapsed_seconds:.3f}")
+    print(f"Audio duration in seconds: {audio_duration:.3f}")
+    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
 
 
 if __name__ == "__main__":

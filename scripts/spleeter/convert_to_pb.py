@@ -5,7 +5,6 @@
 #
 # Please see ./run.sh for usages
 import argparse
-import os
 
 import tensorflow as tf
 
@@ -37,7 +36,6 @@ def freeze_graph(model_dir, output_node_names, output_filename):
     input_checkpoint = checkpoint.model_checkpoint_path
 
     # We precise the file fullname of our freezed graph
-    absolute_model_dir = "/".join(input_checkpoint.split("/")[:-1])
     output_graph = output_filename
 
     # We clear devices to allow TensorFlow to control on which device it will load operations
