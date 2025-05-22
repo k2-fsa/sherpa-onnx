@@ -59,9 +59,13 @@ def main():
     state_dict = torch.load("./2stems/accompaniment.pt", map_location="cpu")
     accompaniment.load_state_dict(state_dict)
 
-    waveform, sample_rate = load_audio("./audio_example.mp3")
+    #
+    #  waveform, sample_rate = load_audio("./audio_example.mp3")
+
+    # You can download the following two mp3 from
+    # https://huggingface.co/spaces/csukuangfj/music-source-separation/tree/main/examples
     waveform, sample_rate = load_audio("./qi-feng-le.mp3")
-    waveform, sample_rate = load_audio("./Yesterday_Once_More-Carpenters.mp3")
+    #  waveform, sample_rate = load_audio("./Yesterday_Once_More-Carpenters.mp3")
     assert waveform.shape[1] == 2, waveform.shape
 
     waveform = torch.nn.functional.pad(waveform, (0, 0, 0, 4096))
