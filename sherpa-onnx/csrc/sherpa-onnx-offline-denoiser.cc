@@ -11,7 +11,7 @@
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
-Non-stremaing speech denoising with sherpa-onnx.
+Non-streaming speech denoising with sherpa-onnx.
 
 Please visit
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models

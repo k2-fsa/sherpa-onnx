@@ -12,7 +12,7 @@
 namespace sherpa_onnx {
 
 // please refer to
-// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/kokoro/add-meta-data.py
+// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/gtcrn/add_meta_data.py
 struct OfflineSpeechDenoiserGtcrnModelMetaData {
   int32_t sample_rate = 0;
   int32_t version = 1;
