@@ -46,7 +46,7 @@ def add_meta_data(filename, prefix):
 
 def export(model, prefix):
     num_splits = 1
-    x = torch.rand(num_splits, 2, 512, 1024, dtype=torch.float32)
+    x = torch.rand(2, num_splits, 512, 1024, dtype=torch.float32)
 
     filename = f"./2stems/{prefix}.onnx"
     torch.onnx.export(
@@ -56,7 +56,7 @@ def export(model, prefix):
         input_names=["x"],
         output_names=["y"],
         dynamic_axes={
-            "x": {0: "num_splits"},
+            "x": {1: "num_splits"},
         },
         opset_version=13,
     )

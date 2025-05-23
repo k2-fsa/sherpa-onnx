@@ -101,12 +101,16 @@ def main():
     print("y2", y.shape, y.dtype)
 
     y = y.abs()
-    y = y.permute(0, 3, 1, 2)
-    # (1, 2, 512, 1024)
+
+    y = y.permute(3, 0, 1, 2)
+    # (2, 1, 512, 1024)
     print("y3", y.shape, y.dtype)
 
     vocals_spec = vocals(y)
     accompaniment_spec = accompaniment(y)
+
+    vocals_spec = vocals_spec.permute(1, 0, 2, 3)
+    accompaniment_spec = accompaniment_spec.permute(1, 0, 2, 3)
 
     sum_spec = (vocals_spec**2 + accompaniment_spec**2) + 1e-10
     print(
