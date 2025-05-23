@@ -63,8 +63,9 @@ in sherpa-onnx.
 
 // Read a wave file of mono-channel.
 // Return its samples normalized to the range [-1, 1).
-std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
-                                bool *is_ok) {
+std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
+                                             int32_t *sampling_rate,
+                                             bool *is_ok) {
   WaveHeader header{};
   is.read(reinterpret_cast<char *>(&header.chunk_id), sizeof(header.chunk_id));
 
@@ -144,12 +145,6 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   is.read(reinterpret_cast<char *>(&header.num_channels),
           sizeof(header.num_channels));
 
-  if (header.num_channels != 1) {  // we support only single channel for now
-    SHERPA_ONNX_LOGE(
-        "Warning: %d channels are found. We only use the first channel.\n",
-        header.num_channels);
-  }
-
   is.read(reinterpret_cast<char *>(&header.sample_rate),
           sizeof(header.sample_rate));
 
@@ -219,7 +214,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
 
   *sampling_rate = header.sample_rate;
 
-  std::vector<float> ans;
+  std::vector<std::vector<float>> ans(header.num_channels);
 
   if (header.bits_per_sample == 16 && header.audio_format == 1) {
     // header.subchunk2_size contains the number of bytes in the data.
@@ -233,11 +228,16 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       return {};
     }
 
-    ans.resize(samples.size() / header.num_channels);
+    for (auto &v : ans) {
+      v.resize(samples.size());
+    }
 
     // samples are interleaved
-    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
-      ans[i] = samples[i * header.num_channels] / 32768.;
+    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+         i += header.num_channels, ++k) {
+      for (int32_t c = 0; c != header.num_channels; ++c) {
+        ans[c][k] = samples[i + c] / 32768.;
+      }
     }
   } else if (header.bits_per_sample == 8 && header.audio_format == 1) {
     // number of samples == number of bytes for 8-bit encoded samples
@@ -252,14 +252,21 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       return {};
     }
 
-    ans.resize(samples.size() / header.num_channels);
-    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
-      // Note(fangjun): We want to normalize each sample into the range [-1, 1]
-      // Since each original sample is in the range [0, 256], dividing
-      // them by 128 converts them to the range [0, 2];
-      // so after subtracting 1, we get the range [-1, 1]
-      //
-      ans[i] = samples[i * header.num_channels] / 128. - 1;
+    for (auto &v : ans) {
+      v.resize(samples.size());
+    }
+
+    // samples are interleaved
+    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+         i += header.num_channels, ++k) {
+      for (int32_t c = 0; c != header.num_channels; ++c) {
+        // Note(fangjun): We want to normalize each sample into the range [-1,
+        // 1] Since each original sample is in the range [0, 256], dividing them
+        // by 128 converts them to the range [0, 2]; so after subtracting 1, we
+        // get the range [-1, 1]
+        //
+        ans[c][k] = samples[i + c] / 128. - 1;
+      }
     }
   } else if (header.bits_per_sample == 32 && header.audio_format == 1) {
     // 32 here is for int32
@@ -275,9 +282,16 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       return {};
     }
 
-    ans.resize(samples.size() / header.num_channels);
-    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
-      ans[i] = static_cast<float>(samples[i * header.num_channels]) / (1 << 31);
+    for (auto &v : ans) {
+      v.resize(samples.size());
+    }
+
+    // samples are interleaved
+    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+         i += header.num_channels, ++k) {
+      for (int32_t c = 0; c != header.num_channels; ++c) {
+        ans[c][k] = static_cast<float>(samples[i + c]) / (1 << 31);
+      }
     }
   } else if (header.bits_per_sample == 32 && header.audio_format == 3) {
     // 32 here is for float32
@@ -293,9 +307,16 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       return {};
     }
 
-    ans.resize(samples.size() / header.num_channels);
-    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
-      ans[i] = samples[i * header.num_channels];
+    for (auto &v : ans) {
+      v.resize(samples.size());
+    }
+
+    // samples are interleaved
+    for (int32_t i = 0, k = 0; i < static_cast<int32_t>(samples.size());
+         i += header.num_channels, ++k) {
+      for (int32_t c = 0; c != header.num_channels; ++c) {
+        ans[c][k] = samples[i + c];
+      }
     }
   } else {
     SHERPA_ONNX_LOGE(
@@ -321,7 +342,27 @@ std::vector<float> ReadWave(const std::string &filename, int32_t *sampling_rate,
 std::vector<float> ReadWave(std::istream &is, int32_t *sampling_rate,
                             bool *is_ok) {
   auto samples = ReadWaveImpl(is, sampling_rate, is_ok);
+
+  if (samples.size() > 1) {
+    SHERPA_ONNX_LOGE(
+        "Warning: %d channels are found. We only use the first channel.\n",
+        static_cast<int32_t>(samples.size()));
+  }
+
+  return samples[0];
+}
+
+std::vector<std::vector<float>> ReadWaveMultiChannel(std::istream &is,
+                                                     int32_t *sampling_rate,
+                                                     bool *is_ok) {
+  auto samples = ReadWaveImpl(is, sampling_rate, is_ok);
   return samples;
+}
+
+std::vector<std::vector<float>> ReadWaveMultiChannel(
+    const std::string &filename, int32_t *sampling_rate, bool *is_ok) {
+  std::ifstream is(filename, std::ifstream::binary);
+  return ReadWaveMultiChannel(is, sampling_rate, is_ok);
 }
 
 }  // namespace sherpa_onnx

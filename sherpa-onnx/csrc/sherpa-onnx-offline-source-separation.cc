@@ -1,0 +1,87 @@
+// sherpa-onnx/csrc/sherpa-onnx-offline-source-separation.cc
+//
+// Copyright (c)  2025  Xiaomi Corporation
+#include <stdio.h>
+
+#include <chrono>  // NOLINT
+#include <string>
+
+#include "sherpa-onnx/csrc/offline-source-separation.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
+
+int main(int32_t argc, char *argv[]) {
+  const char *kUsageMessage = R"usage(
+Non-streaming source separation with sherpa-onnx.
+
+Please visit
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/source-separation-models
+to download models.
+
+Usage:
+
+(1) Use spleeter models
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+tar xvf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/audio_example.wav
+
+./bin/sherpa-onnx-offline-source-separation \
+  --spleeter-vocals=sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx \
+  --spleeter-accompaniment=sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx \
+  --input-wav=audio_example.wav \
+  --output-wav=output_example.wav
+)usage";
+
+  sherpa_onnx::ParseOptions po(kUsageMessage);
+  sherpa_onnx::OfflineSourceSeparationConfig config;
+
+  std::string input_wave;
+  std::string output_wave;
+
+  config.Register(&po);
+  po.Register("input-wav", &input_wave, "Path to input wav.");
+  po.Register("output-wav", &output_wave, "Path to output wav");
+
+  po.Read(argc, argv);
+  if (po.NumArgs() != 0) {
+    fprintf(stderr, "Please don't give positional arguments\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
+  }
+  fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  if (input_wave.empty()) {
+    fprintf(stderr, "Please provide --input-wav\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
+  }
+
+  if (output_wave.empty()) {
+    fprintf(stderr, "Please provide --output-wav\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
+  }
+
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    exit(EXIT_FAILURE);
+  }
+
+  int32_t sampling_rate = -1;
+  bool is_ok = false;
+  auto samples =
+      sherpa_onnx::ReadWaveMultiChannel(input_wave, &sampling_rate, &is_ok);
+  if (!is_ok) {
+    fprintf(stderr, "Failed to read '%s'\n", input_wave.c_str());
+    return -1;
+  }
+
+  fprintf(stderr, "Started\n");
+
+  fprintf(stderr, "Input channels: %d\n", static_cast<int32_t>(samples.size()));
+  fprintf(stderr, "Input sample rate: %d\n", sampling_rate);
+
+  return 0;
+}

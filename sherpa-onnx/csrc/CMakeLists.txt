@@ -332,6 +332,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
+  add_executable(sherpa-onnx-offline-source-separation sherpa-onnx-offline-source-separation.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
   add_executable(sherpa-onnx-vad sherpa-onnx-vad.cc)
 
@@ -352,6 +353,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
+    sherpa-onnx-offline-source-separation
     sherpa-onnx-online-punctuation
     sherpa-onnx-vad
   )
