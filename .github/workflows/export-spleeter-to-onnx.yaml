@@ -1,0 +1,117 @@
+name: export-spleeter-to-onnx
+
+on:
+  push:
+    branches:
+      - spleeter-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-spleeter-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-spleeter-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export spleeter to ONNX
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pip install tensorflow torch "numpy<2" onnx==1.17.0 onnxruntime==1.17.1 onnxmltools
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/spleeter
+          ./run.sh
+
+          echo "---"
+          ls -lh 2stems
+          echo "---"
+          ls -lh 2stems/*.onnx
+          echo "---"
+
+          mv -v 2stems/*.onnx ../..
+
+      - name: Collect models
+        shell: bash
+        run: |
+          mkdir sherpa-onnx-spleeter-2stems
+          mkdir sherpa-onnx-spleeter-2stems-int8
+          mkdir sherpa-onnx-spleeter-2stems-fp16
+
+          mv -v vocals.onnx sherpa-onnx-spleeter-2stems/
+          mv -v accompaniment.onnx sherpa-onnx-spleeter-2stems/
+
+          mv -v vocals.int8.onnx sherpa-onnx-spleeter-2stems-int8/
+          mv -v accompaniment.int8.onnx sherpa-onnx-spleeter-2stems-int8/
+
+          mv -v vocals.fp16.onnx sherpa-onnx-spleeter-2stems-fp16/
+          mv -v accompaniment.fp16.onnx sherpa-onnx-spleeter-2stems-fp16/
+
+          tar cjvf sherpa-onnx-spleeter-2stems.tar.bz2 sherpa-onnx-spleeter-2stems
+          tar cjvf sherpa-onnx-spleeter-2stems-int8.tar.bz2 sherpa-onnx-spleeter-2stems-int8
+          tar cjvf sherpa-onnx-spleeter-2stems-fp16.tar.bz2 sherpa-onnx-spleeter-2stems-fp16
+
+          ls -lh *.tar.bz2
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: source-separation-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            names=(
+              sherpa-onnx-spleeter-2stems
+              sherpa-onnx-spleeter-2stems-int8
+              sherpa-onnx-spleeter-2stems-fp16
+            )
+            for d in ${names[@]}; do
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -v $d/*onnx huggingface
+
+              cd huggingface
+              git lfs track "*.onnx"
+              git status
+              git add .
+              ls -lh
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              cd ..
+            done
