@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "sherpa-onnx/csrc/offline-source-separation-impl.h"
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -37,7 +39,7 @@ std::string OfflineSourceSeparationConfig::ToString() const {
 template <typename Manager>
 OfflineSourceSeparation::OfflineSourceSeparation(
     Manager *mgr, const OfflineSourceSeparationConfig &config)
-    : impl_(OfflineRecognizerImpl::Create(mgr, config)) {}
+    : impl_(OfflineSourceSeparationImpl::Create(mgr, config)) {}
 
 OfflineSourceSeparation::OfflineSourceSeparation(
     const OfflineSourceSeparationConfig &config)

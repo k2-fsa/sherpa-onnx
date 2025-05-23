@@ -51,8 +51,10 @@ set(sources
   offline-sense-voice-model-config.cc
   offline-sense-voice-model.cc
 
+  offline-source-separation-impl.cc
   offline-source-separation-model-config.cc
   offline-source-separation-spleeter-model-config.cc
+  offline-source-separation.cc
 
   offline-stream.cc
   offline-tdnn-ctc-model.cc
