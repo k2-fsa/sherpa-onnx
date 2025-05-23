@@ -91,14 +91,16 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
 
   fprintf(stderr, "Started\n");
 
-  fprintf(stderr, "Input channels: %d\n",
-          static_cast<int32_t>(input.samples.data.size()));
-  fprintf(stderr, "Input sample rate: %d\n", input.sample_rate);
-  fprintf(stderr, "Input sample size: %d\n", (int)input.samples.data[0].size());
-
   sherpa_onnx::OfflineSourceSeparation sp(config);
 
+  const auto begin = std::chrono::steady_clock::now();
   auto output = sp.Process(input);
+  const auto end = std::chrono::steady_clock::now();
+
+  float elapsed_seconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count() /
+      1000.;
 
   is_ok = sherpa_onnx::WriteWave(
       output_vocals_wave, output.sample_rate, output.stems[0].data[0].data(),
@@ -120,8 +122,17 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
     exit(EXIT_FAILURE);
   }
 
+  fprintf(stderr, "Done\n");
   fprintf(stderr, "Saved to write to '%s' and '%s'\n",
           output_vocals_wave.c_str(), output_accompaniment_wave.c_str());
+
+  float duration =
+      input.samples.data[0].size() / static_cast<float>(input.sample_rate);
+  fprintf(stderr, "num threads: %d\n", config.model.num_threads);
+  fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
+  float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
+          elapsed_seconds, duration, rtf);
 
   return 0;
 }

@@ -12,7 +12,7 @@
 #include "sherpa-onnx/csrc/offline-source-separation-spleeter-model.h"
 #include "sherpa-onnx/csrc/offline-source-separation.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/wave-writer.h"
+#include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
 
@@ -20,9 +20,7 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
  public:
   OfflineSourceSeparationSpleeterImpl(
       const OfflineSourceSeparationConfig &config)
-      : config_(config), model_(config_.model) {
-    SHERPA_ONNX_LOGE("created!");
-  }
+      : config_(config), model_(config_.model) {}
 
   template <typename Manager>
   OfflineSourceSeparationSpleeterImpl(
@@ -31,33 +29,56 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
 
   OfflineSourceSeparationOutput Process(
       const OfflineSourceSeparationInput &input) const override {
-    if (config_.model.debug) {
-      SHERPA_ONNX_LOGE("input sample rate: %d", input.sample_rate);
-      SHERPA_ONNX_LOGE("input ch0 samples size: %d",
-                       static_cast<int32_t>(input.samples.data[0].size()));
-    }
+    const OfflineSourceSeparationInput *p_input = &input;
+    OfflineSourceSeparationInput tmp_input;
 
-    if (input.samples.data.size() > 1) {
-      if (config_.model.debug) {
-        SHERPA_ONNX_LOGE("input ch1 samples size: %d",
-                         static_cast<int32_t>(input.samples.data[1].size()));
+    int32_t output_sample_rate = GetOutputSampleRate();
+
+    if (input.sample_rate != output_sample_rate) {
+      SHERPA_ONNX_LOGE(
+          "Creating a resampler:\n"
+          "   in_sample_rate: %d\n"
+          "   output_sample_rate: %d\n",
+          input.sample_rate, output_sample_rate);
+
+      float min_freq = std::min<int32_t>(input.sample_rate, output_sample_rate);
+      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
+
+      int32_t lowpass_filter_width = 6;
+      auto resampler = std::make_unique<LinearResample>(
+          input.sample_rate, output_sample_rate, lowpass_cutoff,
+          lowpass_filter_width);
+
+      std::vector<float> s;
+      for (const auto &samples : input.samples.data) {
+        resampler->Reset();
+        resampler->Resample(samples.data(), samples.size(), true, &s);
+        tmp_input.samples.data.push_back(std::move(s));
       }
 
-      if (input.samples.data[0].size() != input.samples.data[1].size()) {
+      tmp_input.sample_rate = output_sample_rate;
+      p_input = &tmp_input;
+    }
+
+    if (p_input->samples.data.size() > 1) {
+      if (config_.model.debug) {
+        SHERPA_ONNX_LOGE("input ch1 samples size: %d",
+                         static_cast<int32_t>(p_input->samples.data[1].size()));
+      }
+
+      if (p_input->samples.data[0].size() != p_input->samples.data[1].size()) {
         SHERPA_ONNX_LOGE("ch0 samples size %d vs ch1 samples size %d",
-                         static_cast<int32_t>(input.samples.data[0].size()),
-                         static_cast<int32_t>(input.samples.data[1].size()));
+                         static_cast<int32_t>(p_input->samples.data[0].size()),
+                         static_cast<int32_t>(p_input->samples.data[1].size()));
 
         SHERPA_ONNX_EXIT(-1);
       }
     }
 
-    auto stft_ch0 = ComputeStft(input, 0);
+    auto stft_ch0 = ComputeStft(*p_input, 0);
 
-    auto stft_ch1 = ComputeStft(input, 1);
+    auto stft_ch1 = ComputeStft(*p_input, 1);
     knf::StftResult *p_stft_ch1 = stft_ch1.real.empty() ? &stft_ch0 : &stft_ch1;
-
-    SHERPA_ONNX_LOGE("number of frames: %d", stft_ch0.num_frames);
 
     int32_t num_frames = stft_ch0.num_frames;
     int32_t fft_bins = stft_ch0.real.size() / num_frames;
@@ -130,7 +151,6 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
 
     accompaniment_spec =
         (accompaniment_spec.array().square() + 1e-10 / 2) / sum_spec.array();
-    SHERPA_ONNX_LOGE("here");
 
     auto vocals_samples_ch0 = ProcessSpec(vocals_spec, stft_ch0, 0);
     auto vocals_samples_ch1 = ProcessSpec(vocals_spec, *p_stft_ch1, 1);
