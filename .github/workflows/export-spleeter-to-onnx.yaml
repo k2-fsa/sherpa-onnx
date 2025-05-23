@@ -3,7 +3,7 @@ name: export-spleeter-to-onnx
 on:
   push:
     branches:
-      - spleeter-2
+      - spleeter-cpp-2
   workflow_dispatch:
 
 concurrency:

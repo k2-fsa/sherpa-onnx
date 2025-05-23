@@ -217,8 +217,8 @@ def main(name):
     # for the batchnormalization in torch,
     # default input shape is NCHW
 
-    # NHWC to NCHW
-    torch_y1_out = unet(torch.from_numpy(y0_out).permute(0, 3, 1, 2))
+    torch_y1_out = unet(torch.from_numpy(y0_out).permute(3, 0, 1, 2))
+    torch_y1_out = torch_y1_out.permute(1, 0, 2, 3)
 
     #  print(torch_y1_out.shape, torch.from_numpy(y1_out).permute(0, 3, 1, 2).shape)
     assert torch.allclose(
