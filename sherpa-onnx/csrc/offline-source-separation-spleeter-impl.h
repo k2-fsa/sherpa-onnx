@@ -5,12 +5,17 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_SPLEETER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_SPLEETER_IMPL_H_
 
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-source-separation.h"
+
 namespace sherpa_onnx {
 
 class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
  public:
   OfflineSourceSeparationSpleeterImpl(
-      const OfflineSourceSeparationConfig &config) {}
+      const OfflineSourceSeparationConfig &config) {
+    SHERPA_ONNX_LOGE("created!");
+  }
 
   template <typename Manager>
   OfflineSourceSeparationSpleeterImpl(
@@ -18,6 +23,7 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
 
   OfflineSourceSeparationOutput Process(
       const OfflineSourceSeparationInput &input) const override {
+    SHERPA_ONNX_LOGE("processing!");
     return {};
   }
 

@@ -69,10 +69,10 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
     exit(EXIT_FAILURE);
   }
 
-  int32_t sampling_rate = -1;
   bool is_ok = false;
-  auto samples =
-      sherpa_onnx::ReadWaveMultiChannel(input_wave, &sampling_rate, &is_ok);
+  sherpa_onnx::OfflineSourceSeparationInput input;
+  input.samples.data =
+      sherpa_onnx::ReadWaveMultiChannel(input_wave, &input.sample_rate, &is_ok);
   if (!is_ok) {
     fprintf(stderr, "Failed to read '%s'\n", input_wave.c_str());
     return -1;
@@ -80,13 +80,19 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
 
   fprintf(stderr, "Started\n");
 
-  fprintf(stderr, "Input channels: %d\n", static_cast<int32_t>(samples.size()));
-  fprintf(stderr, "Input sample rate: %d\n", sampling_rate);
-  fprintf(stderr, "Input sample size: %d\n", (int)samples[0].size());
+  fprintf(stderr, "Input channels: %d\n",
+          static_cast<int32_t>(input.samples.data.size()));
+  fprintf(stderr, "Input sample rate: %d\n", input.sample_rate);
+  fprintf(stderr, "Input sample size: %d\n", (int)input.samples.data[0].size());
+
+  sherpa_onnx::OfflineSourceSeparation sp(config);
+
+  auto output = sp.Process(input);
 
   fprintf(stderr, "Done\n");
-  is_ok = sherpa_onnx::WriteWave(output_wave, sampling_rate, samples[0].data(),
-                                 samples[1].data(), samples[0].size());
+  is_ok = sherpa_onnx::WriteWave(
+      output_wave, input.sample_rate, input.samples.data[0].data(),
+      input.samples.data[1].data(), input.samples.data[0].size());
 
   if (!is_ok) {
     fprintf(stderr, "Failed to write to '%s'\n", output_wave.c_str());
