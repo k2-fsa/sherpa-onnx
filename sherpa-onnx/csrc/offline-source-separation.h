@@ -6,8 +6,10 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-source-separation-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
