@@ -229,7 +229,7 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     }
 
     for (auto &v : ans) {
-      v.resize(samples.size());
+      v.resize(samples.size() / header.num_channels);
     }
 
     // samples are interleaved
@@ -253,7 +253,7 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     }
 
     for (auto &v : ans) {
-      v.resize(samples.size());
+      v.resize(samples.size() / header.num_channels);
     }
 
     // samples are interleaved
@@ -283,7 +283,7 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     }
 
     for (auto &v : ans) {
-      v.resize(samples.size());
+      v.resize(samples.size() / header.num_channels);
     }
 
     // samples are interleaved
@@ -308,7 +308,7 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     }
 
     for (auto &v : ans) {
-      v.resize(samples.size());
+      v.resize(samples.size() / header.num_channels);
     }
 
     // samples are interleaved

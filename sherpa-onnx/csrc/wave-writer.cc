@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/wave-writer.h"
 
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -36,12 +37,44 @@ struct WaveHeader {
 
 }  // namespace
 
-int64_t WaveFileSize(int32_t n_samples) {
-  return sizeof(WaveHeader) + n_samples * sizeof(int16_t);
+int64_t WaveFileSize(int32_t n_samples, int32_t num_channels /*= 1*/) {
+  return sizeof(WaveHeader) + n_samples * sizeof(int16_t) * num_channels;
 }
 
 void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
                int32_t n) {
+  WriteWave(buffer, sampling_rate, samples, nullptr, n);
+}
+
+bool WriteWave(const std::string &filename, int32_t sampling_rate,
+               const float *samples, int32_t n) {
+  return WriteWave(filename, sampling_rate, samples, nullptr, n);
+}
+
+bool WriteWave(const std::string &filename, int32_t sampling_rate,
+               const float *samples_ch0, const float *samples_ch1, int32_t n) {
+  std::string buffer;
+  buffer.resize(WaveFileSize(n, samples_ch1 == nullptr ? 1 : 2));
+
+  WriteWave(buffer.data(), sampling_rate, samples_ch0, samples_ch1, n);
+
+  std::ofstream os(filename, std::ios::binary);
+  if (!os) {
+    SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
+    return false;
+  }
+
+  os << buffer;
+  if (!os) {
+    SHERPA_ONNX_LOGE("Write '%s' failed", filename.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+void WriteWave(char *buffer, int32_t sampling_rate, const float *samples_ch0,
+               const float *samples_ch1, int32_t n) {
   WaveHeader header{};
   header.chunk_id = 0x46464952;      // FFIR
   header.format = 0x45564157;        // EVAW
@@ -49,8 +82,9 @@ void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
   header.subchunk1_size = 16;        // 16 for PCM
   header.audio_format = 1;           // PCM =1
 
-  int32_t num_channels = 1;
+  int32_t num_channels = samples_ch1 == nullptr ? 1 : 2;
   int32_t bits_per_sample = 16;  // int16_t
+
   header.num_channels = num_channels;
   header.sample_rate = sampling_rate;
   header.byte_rate = sampling_rate * num_channels * bits_per_sample / 8;
@@ -61,32 +95,32 @@ void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
 
   header.chunk_size = 36 + header.subchunk2_size;
 
-  std::vector<int16_t> samples_int16(n);
+  std::vector<int16_t> samples_int16_ch0(n);
   for (int32_t i = 0; i != n; ++i) {
-    samples_int16[i] = samples[i] * 32767;
+    samples_int16_ch0[i] = std::min<int32_t>(samples_ch0[i] * 32767, 32767);
+  }
+
+  std::vector<int16_t> samples_int16_ch1;
+  if (samples_ch1) {
+    samples_int16_ch1.resize(n);
+    for (int32_t i = 0; i != n; ++i) {
+      samples_int16_ch1[i] = std::min<int32_t>(samples_ch1[i] * 32767, 32767);
+    }
   }
 
   memcpy(buffer, &header, sizeof(WaveHeader));
-  memcpy(buffer + sizeof(WaveHeader), samples_int16.data(),
-         n * sizeof(int16_t));
-}
 
-bool WriteWave(const std::string &filename, int32_t sampling_rate,
-               const float *samples, int32_t n) {
-  std::string buffer;
-  buffer.resize(WaveFileSize(n));
-  WriteWave(buffer.data(), sampling_rate, samples, n);
-  std::ofstream os(filename, std::ios::binary);
-  if (!os) {
-    SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
-    return false;
+  if (samples_ch1 == nullptr) {
+    memcpy(buffer + sizeof(WaveHeader), samples_int16_ch0.data(),
+           n * sizeof(int16_t));
+  } else {
+    auto p = reinterpret_cast<int16_t *>(buffer + sizeof(WaveHeader));
+
+    for (int32_t i = 0; i != n; ++i) {
+      p[2 * i] = samples_int16_ch0[i];
+      p[2 * i + 1] = samples_int16_ch1[i];
+    }
   }
-  os << buffer;
-  if (!os) {
-    SHERPA_ONNX_LOGE("Write '%s' failed", filename.c_str());
-    return false;
-  }
-  return true;
 }
 
 }  // namespace sherpa_onnx

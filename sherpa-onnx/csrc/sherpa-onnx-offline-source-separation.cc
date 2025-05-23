@@ -82,6 +82,17 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
 
   fprintf(stderr, "Input channels: %d\n", static_cast<int32_t>(samples.size()));
   fprintf(stderr, "Input sample rate: %d\n", sampling_rate);
+  fprintf(stderr, "Input sample size: %d\n", (int)samples[0].size());
+
+  fprintf(stderr, "Done\n");
+  is_ok = sherpa_onnx::WriteWave(output_wave, sampling_rate, samples[0].data(),
+                                 samples[1].data(), samples[0].size());
+
+  if (!is_ok) {
+    fprintf(stderr, "Failed to write to '%s'\n", output_wave.c_str());
+    exit(EXIT_FAILURE);
+  }
+  fprintf(stderr, "Saved to write to '%s'\n", output_wave.c_str());
 
   return 0;
 }
