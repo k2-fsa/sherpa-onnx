@@ -10,10 +10,12 @@
 
 namespace sherpa_onnx {
 
+// See also
+// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/spleeter/separate_onnx.py
 struct OfflineSourceSeparationSpleeterModelMetaData {
   int32_t sample_rate = 44100;
-
   int32_t num_stems = 2;
+
   int32_t n_fft = 4096;
   int32_t hop_length = 1024;
   int32_t window_length = 0;

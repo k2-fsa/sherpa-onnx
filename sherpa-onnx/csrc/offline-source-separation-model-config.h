@@ -15,11 +15,19 @@ namespace sherpa_onnx {
 struct OfflineSourceSeparationModelConfig {
   OfflineSourceSeparationSpleeterModelConfig spleeter;
 
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+
   OfflineSourceSeparationModelConfig() = default;
 
-  explicit OfflineSourceSeparationModelConfig(
-      const OfflineSourceSeparationSpleeterModelConfig &spleeter)
-      : spleeter(spleeter) {}
+  OfflineSourceSeparationModelConfig(
+      const OfflineSourceSeparationSpleeterModelConfig &spleeter,
+      int32_t num_threads, bool debug, const std::string &provider)
+      : spleeter(spleeter),
+        num_threads(num_threads),
+        debug(debug),
+        provider(provider) {}
 
   void Register(ParseOptions *po);
 
