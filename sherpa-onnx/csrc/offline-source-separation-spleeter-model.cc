@@ -126,10 +126,10 @@ class OfflineSourceSeparationSpleeterModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    int32_t stems = -1;
-    SHERPA_ONNX_READ_META_DATA(stems, "stems");
-    if (stems != 2) {
-      SHERPA_ONNX_LOGE("Only 2stems is supported. Given %d stems", stems);
+    SHERPA_ONNX_READ_META_DATA(meta_.num_stems, "stems");
+    if (meta_.num_stems != 2) {
+      SHERPA_ONNX_LOGE("Only 2stems is supported. Given %d stems",
+                       meta_.num_stems);
       SHERPA_ONNX_EXIT(-1);
     }
   }

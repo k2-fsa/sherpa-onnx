@@ -18,7 +18,7 @@ struct OfflineSourceSeparationSpleeterModelMetaData {
 
   int32_t n_fft = 4096;
   int32_t hop_length = 1024;
-  int32_t window_length = 0;
+  int32_t window_length = 4096;
   bool center = false;
   std::string window_type = "hann";
 };

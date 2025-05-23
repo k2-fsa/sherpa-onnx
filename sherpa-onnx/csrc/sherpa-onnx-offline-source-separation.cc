@@ -31,18 +31,23 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
   --spleeter-vocals=sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx \
   --spleeter-accompaniment=sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx \
   --input-wav=audio_example.wav \
-  --output-wav=output_example.wav
+  --output-vocals-wav=output_vocals.wav \
+  --output-accompaniment-wav=output_accompaniment.wav
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineSourceSeparationConfig config;
 
   std::string input_wave;
-  std::string output_wave;
+  std::string output_vocals_wave;
+  std::string output_accompaniment_wave;
 
   config.Register(&po);
   po.Register("input-wav", &input_wave, "Path to input wav.");
-  po.Register("output-wav", &output_wave, "Path to output wav");
+  po.Register("output-vocals-wav", &output_vocals_wave,
+              "Path to output vocals wav");
+  po.Register("output-accompaniment-wav", &output_accompaniment_wave,
+              "Path to output accompaniment wav");
 
   po.Read(argc, argv);
   if (po.NumArgs() != 0) {
@@ -58,8 +63,14 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
     exit(EXIT_FAILURE);
   }
 
-  if (output_wave.empty()) {
-    fprintf(stderr, "Please provide --output-wav\n");
+  if (output_vocals_wave.empty()) {
+    fprintf(stderr, "Please provide --output-vocals-wav\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
+  }
+
+  if (output_accompaniment_wave.empty()) {
+    fprintf(stderr, "Please provide --output-accompaniment-wav\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -89,16 +100,28 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
 
   auto output = sp.Process(input);
 
-  fprintf(stderr, "Done\n");
   is_ok = sherpa_onnx::WriteWave(
-      output_wave, input.sample_rate, input.samples.data[0].data(),
-      input.samples.data[1].data(), input.samples.data[0].size());
+      output_vocals_wave, output.sample_rate, output.stems[0].data[0].data(),
+      output.stems[0].data[1].data(), output.stems[0].data[0].size());
 
   if (!is_ok) {
-    fprintf(stderr, "Failed to write to '%s'\n", output_wave.c_str());
+    fprintf(stderr, "Failed to write to '%s'\n", output_vocals_wave.c_str());
     exit(EXIT_FAILURE);
   }
-  fprintf(stderr, "Saved to write to '%s'\n", output_wave.c_str());
+
+  is_ok = sherpa_onnx::WriteWave(output_accompaniment_wave, output.sample_rate,
+                                 output.stems[1].data[0].data(),
+                                 output.stems[1].data[1].data(),
+                                 output.stems[1].data[0].size());
+
+  if (!is_ok) {
+    fprintf(stderr, "Failed to write to '%s'\n",
+            output_accompaniment_wave.c_str());
+    exit(EXIT_FAILURE);
+  }
+
+  fprintf(stderr, "Saved to write to '%s' and '%s'\n",
+          output_vocals_wave.c_str(), output_accompaniment_wave.c_str());
 
   return 0;
 }
