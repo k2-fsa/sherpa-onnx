@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherpa-ONNX ASR Demo</title>
+  <link rel="stylesheet" href="common.css">
+  
+  <!-- Load the common JS first -->
+  <script src="common.js"></script>
+  
+  <!-- Load WASM module first -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  
+  <!-- Load the combined module loader script -->
+  <script src="../sherpa-onnx-combined.js"></script>
+</head>
+<body>
+  <h1>Sherpa-ONNX ASR Demo</h1>
+  
+  <div class="nav-menu">
+    <a href="index.html">Home</a>
+    <a href="asr.html" class="active">ASR</a>
+    <a href="tts.html">TTS</a>
+    <a href="vad.html">VAD</a>
+    <a href="kws.html">KWS</a>
+  </div>
+  
+  <div id="status">Loading WebAssembly module...</div>
+  
+  <section id="asr-section">
+    <h2>Automatic Speech Recognition (ASR)</h2>
+    
+    <div class="model-config">
+      <h3>Model Configuration</h3>
+      <div class="form-group">
+        <label for="asr-model-type">Model Type:</label>
+        <select id="asr-model-type">
+          <option value="transducer">Transducer</option>
+          <option value="paraformer">Paraformer</option>
+          <option value="ctc">CTC</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="asr-model-dir">Model Directory:</label>
+        <input type="text" id="asr-model-dir" value="asr-models">
+        <small>(The directory where model files will be stored)</small>
+      </div>
+      <div class="form-group transducer-model">
+        <label for="asr-encoder-url">Encoder Model URL:</label>
+        <input type="text" id="asr-encoder-url" value="../assets/asr/encoder.onnx">
+      </div>
+      <div class="form-group transducer-model">
+        <label for="asr-decoder-url">Decoder Model URL:</label>
+        <input type="text" id="asr-decoder-url" value="../assets/asr/decoder.onnx">
+      </div>
+      <div class="form-group transducer-model">
+        <label for="asr-joiner-url">Joiner Model URL:</label>
+        <input type="text" id="asr-joiner-url" value="../assets/asr/joiner.onnx">
+      </div>
+      <div class="form-group">
+        <label for="asr-tokens-url">Tokens URL:</label>
+        <input type="text" id="asr-tokens-url" value="../assets/asr/tokens.txt">
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="asr-debug" checked>
+        <label for="asr-debug">Enable debug logging</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="asr-clean-start">
+        <label for="asr-clean-start">Clean start (remove existing files)</label>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="load-asr-model">Load ASR Model</button>
+      <button id="start-asr" disabled>Start</button>
+      <button id="stop-asr" disabled>Stop</button>
+      <!-- Unload button will be added dynamically -->
+    </div>
+    <div id="asr-status">Status: Not active</div>
+    <div id="asr-result" class="result-box"></div>
+  </section>
+
+  <script>
+    // ASR-specific initialization code
+    let asr = null;
+    let stream = null;
+    let asrProcessor = null;
+    
+    function initializeUI() {
+      console.log('initializeUI called. Setting up ASR functionality...');
+      document.getElementById('status').textContent = 'WebAssembly module loaded. Ready to load models.';
+      setupASR();
+      console.log('setupASR called from initializeUI.');
+    }
+    
+    // Define the callback that sherpa-onnx-combined.js will execute
+    window.onSherpaOnnxReady = function(success, errorOrMissing) {
+      console.log('onSherpaOnnxReady callback triggered. Success status:', success);
+      if (success) {
+        console.log("Sherpa-ONNX modules ready, initializing UI.");
+        // Additional check for HEAPF32 availability before enabling UI
+        if (window.Module && window.Module.HEAPF32) {
+          console.log("HEAPF32 confirmed available. UI fully enabled.");
+          document.getElementById('status').textContent = 'WebAssembly module and HEAPF32 ready. Ready to load models.';
+          initializeUI();
+          document.getElementById('load-asr-model').disabled = false;
+        } else {
+          console.error("HEAPF32 not available despite modules being ready. UI partially enabled with warning.");
+          document.getElementById('status').textContent = 'Warning: WebAssembly module ready but HEAPF32 not available. Some functions may not work.';
+          initializeUI();
+          document.getElementById('load-asr-model').disabled = false; // Enable anyway for testing
+        }
+      } else {
+        console.error("Failed to load Sherpa-ONNX modules:", errorOrMissing);
+        document.getElementById('status').textContent = 'Error: Failed to load necessary modules. Check console.';
+        // Disable controls if loading failed
+        document.getElementById('load-asr-model').disabled = true;
+        document.getElementById('start-asr').disabled = true;
+        document.getElementById('stop-asr').disabled = true;
+      }
+      // Force enable the button for testing purposes
+      console.log('Forcing enable of Load ASR Model button for debugging purposes.');
+      document.getElementById('load-asr-model').disabled = false;
+    };
+    
+    function setupASR() {
+      console.log('setupASR function entered. Setting up event listeners...');
+      const loadBtn = document.getElementById('load-asr-model');
+      const startBtn = document.getElementById('start-asr');
+      const stopBtn = document.getElementById('stop-asr');
+      const statusElem = document.getElementById('asr-status');
+      const resultElem = document.getElementById('asr-result');
+      const modelTypeSelect = document.getElementById('asr-model-type');
+      const controlsDiv = document.querySelector('.controls');
+      
+      console.log('DOM elements retrieved. Load button:', loadBtn);
+      
+      let unloadBtn = null;
+      
+      // Update UI based on selected model type
+      console.log('Setting up model type change listener...');
+      modelTypeSelect.addEventListener('change', () => {
+        console.log('Model type changed to:', modelTypeSelect.value);
+        const modelType = modelTypeSelect.value;
+        const transducerElements = document.querySelectorAll('.transducer-model');
+        
+        transducerElements.forEach(elem => {
+          if (modelType === 'transducer') {
+            elem.style.display = 'block';
+          } else {
+            elem.style.display = 'none';
+          }
+        });
+      });
+      console.log('Model type change listener setup complete.');
+      
+      console.log('Setting up click event listener for Load ASR Model button...');
+      loadBtn.addEventListener('click', async () => {
+        console.log('Load ASR Model button clicked. Starting model loading process.');
+        loadBtn.disabled = true;
+        loadBtn.textContent = 'Loading...';
+        statusElem.textContent = 'Status: Loading model...';
+        console.log('Current SherpaOnnx readiness status:', !!SherpaOnnx.isReady);
+        console.log('window.Module status:', !!window.Module);
+        if (window.Module) {
+          console.log('window.Module.HEAPF32 status:', !!window.Module.HEAPF32);
+        }
+        console.log('Attempting to load model with current configuration...');
+        try {
+          // Get options from UI
+          const modelType = modelTypeSelect.value;
+          const modelDir = document.getElementById('asr-model-dir').value || 'asr-models';
+          const debug = document.getElementById('asr-debug').checked;
+          const cleanStart = document.getElementById('asr-clean-start').checked;
+          
+          // Build the model config with all options
+          const modelConfig = {
+            modelDir: modelDir,
+            type: modelType,
+            debug: debug,
+            cleanStart: cleanStart
+          };
+          
+          // Add model-specific URLs
+          if (modelType === 'transducer') {
+            modelConfig.encoder = document.getElementById('asr-encoder-url').value;
+            modelConfig.decoder = document.getElementById('asr-decoder-url').value;
+            modelConfig.joiner = document.getElementById('asr-joiner-url').value;
+            modelConfig.tokens = document.getElementById('asr-tokens-url').value;
+          } else if (modelType === 'paraformer') {
+            modelConfig.encoder = document.getElementById('asr-encoder-url').value;
+            modelConfig.decoder = document.getElementById('asr-decoder-url').value;
+            modelConfig.tokens = document.getElementById('asr-tokens-url').value;
+          } else if (modelType === 'ctc') {
+            modelConfig.model = document.getElementById('asr-encoder-url').value;
+            modelConfig.tokens = document.getElementById('asr-tokens-url').value;
+          }
+          
+          console.log(`ASR setup: Using model configuration:`, modelConfig);
+          
+          // Load the model
+          const loadedModel = await SherpaOnnx.ASR.loadModel(modelConfig);
+          
+          // Use setTimeout to delay recognizer creation slightly
+          setTimeout(() => {
+            try {
+              // Create the ASR recognizer
+              asr = SherpaOnnx.ASR.createOnlineRecognizer(loadedModel, {
+                debug: debug
+              });
+              
+              loadBtn.textContent = 'Model Loaded';
+              statusElem.textContent = 'Status: Model loaded successfully';
+              startBtn.disabled = false;
+              
+              // Add unload button if it doesn't exist
+              if (!unloadBtn) {
+                unloadBtn = createUnloadButton(controlsDiv, 'ASR', asr, statusElem);
+                unloadBtn.id = 'unload-asr-model';
+              } else {
+                unloadBtn.disabled = false;
+              }
+            } catch (innerError) {
+              console.error('Failed to create ASR recognizer (inside setTimeout):', innerError);
+              loadBtn.textContent = 'Load Failed';
+              statusElem.textContent = `Status: Error (delayed init) - ${innerError.message}`;
+              loadBtn.disabled = false; // Re-enable load button on inner error
+            }
+          }, 0); // Delay of 0ms allows event loop tick
+
+        } catch (error) {
+          console.error('Failed to load ASR model:', error);
+          loadBtn.textContent = 'Load Failed';
+          statusElem.textContent = `Status: Error - ${error.message}`;
+          loadBtn.disabled = false;
+        }
+      });
+      
+      startBtn.addEventListener('click', async () => {
+        try {
+          // Check if WebAssembly module is fully initialized
+          if (!window.Module) {
+            statusElem.textContent = 'Status: Waiting for WebAssembly module to initialize...';
+            await new Promise((resolve, reject) => {
+              const checkInterval = setInterval(() => {
+                if (window.Module) {
+                  clearInterval(checkInterval);
+                  resolve();
+                }
+              }, 100);
+              setTimeout(() => {
+                clearInterval(checkInterval);
+                reject(new Error('WebAssembly module initialization timed out after 30 seconds'));
+              }, 30000);
+            });
+          }
+          statusElem.textContent = 'Status: WebAssembly module initialized. Starting audio processing...';
+          
+          await getMicrophoneInput();
+          
+          // Create an online stream
+          stream = asr.createStream();
+          
+          const bufferSize = 4096;
+          asrProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+          
+          asrProcessor.onaudioprocess = function(e) {
+            const samples = new Float32Array(e.inputBuffer.getChannelData(0));
+            
+            // Feed audio to the recognizer
+            stream.acceptWaveform(audioContext.sampleRate, samples);
+            
+            // Check if the stream is ready to be decoded
+            if (asr.isReady(stream)) {
+              // Decode the audio
+              asr.decode(stream);
+              
+              // Get the result
+              const result = asr.getResult(stream);
+              
+              // Display the result
+              if (result && result.text) {
+                statusElem.textContent = 'Status: Recognizing...';
+                resultElem.textContent = result.text;
+              }
+            }
+          };
+          
+          mediaStream.connect(asrProcessor);
+          asrProcessor.connect(audioContext.destination);
+          
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          statusElem.textContent = 'Status: Recognizing...';
+        } catch (error) {
+          console.error('Failed to start ASR:', error);
+          statusElem.textContent = `Status: Error - ${error.message}`;
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (asrProcessor) {
+          asrProcessor.disconnect();
+          mediaStream.disconnect();
+          asrProcessor = null;
+        }
+        
+        if (stream) {
+          // We don't free the stream here since it's tracked by the recognizer
+          // and will be freed when the recognizer is freed
+          stream = null;
+        }
+        
+        statusElem.textContent = 'Status: Not active';
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+    }
+  </script>
+</body>
+</html>
