@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - apk
-      - apk-android-simulate-streaming-asr
+      - apk-ci-replace-fst
 
   workflow_dispatch:
 
