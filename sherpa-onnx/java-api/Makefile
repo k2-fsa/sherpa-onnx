@@ -6,7 +6,9 @@ out_jar := $(out_dir)/sherpa-onnx.jar
 
 package_dir := com/k2fsa/sherpa/onnx
 
-java_files := WaveReader.java
+java_files := LibraryLoader.java
+
+java_files += WaveReader.java
 java_files += WaveWriter.java
 java_files += EndpointRule.java
 java_files += EndpointConfig.java
