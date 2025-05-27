@@ -3,13 +3,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class SpeakerEmbeddingManager {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public SpeakerEmbeddingManager(int dim) {
+        LibraryLoader.maybeLoad();
         ptr = create(dim);
     }
 

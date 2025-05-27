@@ -3,13 +3,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class AudioTagging {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public AudioTagging(AudioTaggingConfig config) {
+        LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
     }
 
