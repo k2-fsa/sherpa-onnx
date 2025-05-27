@@ -3,14 +3,11 @@
 package com.k2fsa.sherpa.onnx;
 
 public class GeneratedAudio {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private final float[] samples;
     private final int sampleRate;
 
     public GeneratedAudio(float[] samples, int sampleRate) {
+        LibraryLoader.maybeLoad();
         this.samples = samples;
         this.sampleRate = sampleRate;
     }
