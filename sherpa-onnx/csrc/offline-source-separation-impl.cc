@@ -8,6 +8,11 @@
 
 #include "sherpa-onnx/csrc/offline-source-separation-spleeter-impl.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineSourceSeparationImpl>
