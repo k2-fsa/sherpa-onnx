@@ -5,6 +5,14 @@
 #include "sherpa-onnx/csrc/offline-source-separation-impl.h"
 
 #include <memory>
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
