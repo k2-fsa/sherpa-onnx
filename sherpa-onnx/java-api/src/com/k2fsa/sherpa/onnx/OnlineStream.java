@@ -4,13 +4,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class OnlineStream {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public OnlineStream() {
+        LibraryLoader.maybeLoad();
         this.ptr = 0;
     }
 

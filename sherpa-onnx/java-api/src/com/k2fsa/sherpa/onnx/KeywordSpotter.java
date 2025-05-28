@@ -3,13 +3,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class KeywordSpotter {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public KeywordSpotter(KeywordSpotterConfig config) {
+        LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
     }
 
