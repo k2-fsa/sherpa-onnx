@@ -25,6 +25,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: Download rknn-toolkit2
         shell: bash
         run: |
@@ -109,10 +114,28 @@ jobs:
               export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON"
               python3 setup.py bdist_wheel
 
+              mv dist wheelhouse
+
       - name: Display results
         shell: bash
         run: |
-          ls -lh dist
+          ls -lh wheelhouse
+
+      - name: Fix wheel name
+        shell: bash
+        run: |
+          python3 -m pip install auditwheel
+
+          auditwheel show ./wheelhouse/*.whl
+
+          auditwheel repair --help
+
+          auditwheel --verbose repair --plat manylinux_2_27_aarch64 \
+            --exclude librknnrt.so \
+            --exclude libasound.so.2 \
+            -w ./dist ./wheelhouse/*.whl
+
+          ls -lh dist/*.whl
 
       - name: Show glibc versions
         shell: bash
