@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - apk
-      - apk-ci-replace-fst
 
   workflow_dispatch:
 
