@@ -174,7 +174,60 @@ for wave in ${waves[@]}; do
   $wave
 done
 
-rm -rf $repo
+lm_repo_url=https://huggingface.co/vsd-vector/icefall-librispeech-rnn-lm
+log "Download pre-trained RNN-LM model from ${lm_repo_url}"
+GIT_LFS_SKIP_SMUDGE=1 git clone $lm_repo_url
+lm_repo=$(basename $lm_repo_url)
+pushd $lm_repo
+git lfs pull --include "with-state-epoch-99-avg-1.onnx"
+popd
+
+bigram_repo_url=https://huggingface.co/vsd-vector/librispeech_bigram_sherpa-onnx-zipformer-large-en-2023-06-26
+log "Download bi-gram LM from ${bigram_repo_url}"
+GIT_LFS_SKIP_SMUDGE=1 git clone $bigram_repo_url
+bigramlm_repo=$(basename $bigram_repo_url)
+pushd $bigramlm_repo
+git lfs pull --include "2gram.fst"
+popd
+
+log "Start testing LODR"
+
+waves=(
+$repo/test_wavs/0.wav
+$repo/test_wavs/1.wav
+$repo/test_wavs/8k.wav
+)
+
+for wave in ${waves[@]}; do
+  time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  --decoding_method="modified_beam_search" \
+  --lm=$lm_repo/with-state-epoch-99-avg-1.onnx \
+  --lodr-fst=$bigramlm_repo/2gram.fst \
+  --lodr-scale=-0.5  \
+  $wave
+done
+
+for wave in ${waves[@]}; do
+  time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  --decoding_method="modified_beam_search" \
+  --lm=$lm_repo/with-state-epoch-99-avg-1.onnx \
+  --lodr-fst=$bigramlm_repo/2gram.fst \
+  --lodr-scale=-0.5  \
+  --lm-shallow-fusion=true \
+  $wave
+done
+
+rm -rf $repo $bigramlm_repo $lm_repo
 
 log "------------------------------------------------------------"
 log "Run streaming Zipformer transducer (Bilingual, Chinese + English)"

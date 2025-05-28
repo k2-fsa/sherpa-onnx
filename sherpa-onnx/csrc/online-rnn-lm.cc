@@ -12,6 +12,7 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/lodr-fst.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -35,11 +36,26 @@ class OnlineRnnLM::Impl {
       auto init_states = GetInitStatesSF();
       hyp->nn_lm_scores.value = std::move(init_states.first);
       hyp->nn_lm_states = Convert(std::move(init_states.second));
+      // if LODR enabled, we need to initialize the LODR state
+      if (lodr_fst_ != nullptr) {
+        hyp->lodr_state = std::make_unique<LodrStateCost>(lodr_fst_.get());
+      }
     }
 
     // get lm score for cur token given the hyp->ys[:-1] and save to lm_log_prob
     const float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorData<float>();
     hyp->lm_log_prob += nn_lm_scores[hyp->ys.back()] * scale;
+
+    // if LODR enabled, we need to update the LODR state
+    if (lodr_fst_ != nullptr) {
+      auto next_lodr_state = std::make_unique<LodrStateCost>(
+                            hyp->lodr_state->ForwardOneStep(hyp->ys.back()));
+      // calculate the score of the latest token
+      auto score = next_lodr_state->Score() - hyp->lodr_state->Score();
+      hyp->lodr_state = std::move(next_lodr_state);
+      // apply LODR to hyp score
+      hyp->lm_log_prob += score * config_.lodr_scale;
+    }
 
     // get lm scores for next tokens given the hyp->ys[:] and save to
     // nn_lm_scores
@@ -88,6 +104,12 @@ class OnlineRnnLM::Impl {
           // update NN LM score in hyp
           const float *p_nll = out.first.GetTensorData<float>();
           h.lm_log_prob = -scale * (*p_nll);
+
+          // apply LODR to hyp score
+          if (lodr_fst_ != nullptr) {
+            // We scale LODR scale with LM scale to replicate Icefall code
+            lodr_fst_->ComputeScore(config_.lodr_scale*scale, &h, context_size);
+          }
 
           // update NN LM states in hyp
           h.nn_lm_states = Convert(std::move(out.second));
@@ -154,6 +176,11 @@ class OnlineRnnLM::Impl {
     SHERPA_ONNX_READ_META_DATA(sos_id_, "sos_id");
 
     ComputeInitStates();
+
+    if (!config_.lodr_fst.empty()) {
+      lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst,
+                                                    config_.lodr_backoff_id));
+    }
   }
 
   void ComputeInitStates() {
@@ -203,6 +230,8 @@ class OnlineRnnLM::Impl {
   int32_t rnn_num_layers_ = 2;
   int32_t rnn_hidden_size_ = 512;
   int32_t sos_id_ = 1;
+
+  std::unique_ptr<LodrFst> lodr_fst_;
 };
 
 OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)
