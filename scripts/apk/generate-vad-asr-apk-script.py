@@ -45,6 +45,8 @@ class Model:
 
     rule_fsts: str = ""
 
+    use_hr: bool = False
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
@@ -98,6 +100,7 @@ def get_models():
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
             short_name="sense_voice",
+            use_hr=True,
             cmd="""
             pushd $model_name
 
