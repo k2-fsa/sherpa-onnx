@@ -127,7 +127,7 @@ cmake --build build/os64 --target install
 echo "Generate xcframework"
 
 mkdir -p "build/simulator/lib"
-for f in libkaldi-native-fbank-core.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
+for f in libkaldi-native-fbank-core.a libkissfft-float.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
          libsherpa-onnx-fstfar.a libssentencepiece_core.a \
          libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a \
          libucd.a libpiper_phonemize.a libespeak-ng.a; do
@@ -140,6 +140,7 @@ done
 # cannot accept multi archive with the same architecture.
 libtool -static -o build/simulator/sherpa-onnx.a \
   build/simulator/lib/libkaldi-native-fbank-core.a \
+  build/simulator/lib/libkissfft-float.a \
   build/simulator/lib/libsherpa-onnx-c-api.a \
   build/simulator/lib/libsherpa-onnx-core.a  \
   build/simulator/lib/libsherpa-onnx-fstfar.a   \
@@ -153,6 +154,7 @@ libtool -static -o build/simulator/sherpa-onnx.a \
 
 libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libkaldi-native-fbank-core.a \
+  build/os64/lib/libkissfft-float.a \
   build/os64/lib/libsherpa-onnx-c-api.a \
   build/os64/lib/libsherpa-onnx-core.a \
   build/os64/lib/libsherpa-onnx-fstfar.a   \
