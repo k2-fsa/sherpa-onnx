@@ -67,7 +67,7 @@ function(download_kaldi_native_fbank)
   )
 
   if(NOT BUILD_SHARED_LIBS)
-    install(TARGETS kaldi-native-fbank-core DESTINATION lib)
+    install(TARGETS kaldi-native-fbank-core kissfft DESTINATION lib)
   endif()
 endfunction()
 
