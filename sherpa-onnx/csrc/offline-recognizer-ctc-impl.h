@@ -109,6 +109,12 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         config_.feat_config.preemph_coeff = 0;
         config_.feat_config.window_type = "hann";
         config_.feat_config.feature_dim = 64;
+
+        // see
+        // https://github.com/salute-developers/GigaAM/blob/main/gigaam/preprocess.py#L68
+        //
+        // GigaAM uses n_fft 400
+        config_.feat_config.round_to_power_of_two = false;
       } else {
         config_.feat_config.low_freq = 0;
         config_.feat_config.high_freq = 0;
