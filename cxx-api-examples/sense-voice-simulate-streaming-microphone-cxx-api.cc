@@ -112,7 +112,6 @@ int32_t main() {
   sherpa_onnx::Microphone mic;
 
   PaDeviceIndex num_devices = Pa_GetDeviceCount();
-  std::cout << "Num devices: " << num_devices << "\n";
   if (num_devices == 0) {
     std::cerr << "  If you are using Linux, please try "
                  "./build/bin/sense-voice-simulate-streaming-alsa-cxx-api\n";
@@ -120,33 +119,13 @@ int32_t main() {
   }
 
   int32_t device_index = Pa_GetDefaultInputDevice();
-
   const char *pDeviceIndex = std::getenv("SHERPA_ONNX_MIC_DEVICE");
   if (pDeviceIndex) {
     fprintf(stderr, "Use specified device: %s\n", pDeviceIndex);
     device_index = atoi(pDeviceIndex);
   }
+  mic.PrintDevices(device_index);
 
-  for (int32_t i = 0; i != num_devices; ++i) {
-    const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
-    fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i,
-            info->name);
-  }
-
-  PaStreamParameters param;
-  param.device = device_index;
-
-  fprintf(stderr, "Use device: %d\n", param.device);
-
-  const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
-  fprintf(stderr, "  Name: %s\n", info->name);
-  fprintf(stderr, "  Max input channels: %d\n", info->maxInputChannels);
-
-  param.channelCount = 1;
-  param.sampleFormat = paFloat32;
-
-  param.suggestedLatency = info->defaultLowInputLatency;
-  param.hostApiSpecificStreamInfo = nullptr;
   float mic_sample_rate = 16000;
   const char *sample_rate_str = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (sample_rate_str) {
@@ -163,26 +142,10 @@ int32_t main() {
     resampler = LinearResampler::Create(mic_sample_rate, sample_rate,
                                         lowpass_cutoff, lowpass_filter_width);
   }
-
-  PaStream *stream;
-  PaError err =
-      Pa_OpenStream(&stream, &param, nullptr, /* &outputParameters, */
-                    mic_sample_rate,
-                    0,               // frames per buffer
-                    paClipOff,       // we won't output out of range samples
-                                     // so don't bother clipping them
-                    RecordCallback,  // RecordCallback is run in a separate
-                                     // thread created by portaudio
-                    nullptr);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
-  }
-
-  err = Pa_StartStream(stream);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
+  if (mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                    nullptr) == false) {
+    std::cerr << "Failed to open microphone device\n";
+    return -1;
   }
 
   int32_t window_size = 512;  // samples, please don't change
@@ -270,12 +233,6 @@ int32_t main() {
       offset = 0;
       speech_started = false;
     }
-  }
-
-  err = Pa_CloseStream(stream);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
   }
 
   return 0;
