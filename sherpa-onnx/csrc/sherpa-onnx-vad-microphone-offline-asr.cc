@@ -113,17 +113,7 @@ to download models for offline ASR.
 
   sherpa_onnx::Microphone mic;
 
-  PaDeviceIndex num_devices = Pa_GetDeviceCount();
-  fprintf(stderr, "Num devices: %d\n", num_devices);
-  if (num_devices == 0) {
-    fprintf(stderr,
-            "  If you are using Linux, please try "
-            "./build/bin/sherpa-onnx-vad-alsa-offline-asr\n");
-    exit(-1);
-  }
-
   int32_t device_index = Pa_GetDefaultInputDevice();
-
   if (device_index == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
     fprintf(stderr,
@@ -137,33 +127,20 @@ to download models for offline ASR.
     fprintf(stderr, "Use specified device: %s\n", pDeviceIndex);
     device_index = atoi(pDeviceIndex);
   }
+  mic.PrintDevices(device_index);
 
-  for (int32_t i = 0; i != num_devices; ++i) {
-    const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
-    fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i,
-            info->name);
-  }
-
-  PaStreamParameters param;
-  param.device = device_index;
-
-  fprintf(stderr, "Use device: %d\n", param.device);
-
-  const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
-  fprintf(stderr, "  Name: %s\n", info->name);
-  fprintf(stderr, "  Max input channels: %d\n", info->maxInputChannels);
-
-  param.channelCount = 1;
-  param.sampleFormat = paFloat32;
-
-  param.suggestedLatency = info->defaultLowInputLatency;
-  param.hostApiSpecificStreamInfo = nullptr;
   float mic_sample_rate = 16000;
   const char *pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (pSampleRateStr) {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);
   }
+
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback, nullptr)) {
+    fprintf(stderr, "Failed to open device %d\n", device_index);
+    exit(EXIT_FAILURE);
+  }
+
   float sample_rate = 16000;
   std::unique_ptr<sherpa_onnx::LinearResample> resampler;
   if (mic_sample_rate != sample_rate) {
@@ -173,25 +150,6 @@ to download models for offline ASR.
     int32_t lowpass_filter_width = 6;
     resampler = std::make_unique<sherpa_onnx::LinearResample>(
         mic_sample_rate, sample_rate, lowpass_cutoff, lowpass_filter_width);
-  }
-
-  PaStream *stream;
-  PaError err =
-      Pa_OpenStream(&stream, &param, nullptr, /* &outputParameters, */
-                    mic_sample_rate,
-                    0,          // frames per buffer
-                    paClipOff,  // we won't output out of range samples
-                                // so don't bother clipping them
-                    RecordCallback, nullptr);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
-  }
-
-  err = Pa_StartStream(stream);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
   }
 
   auto vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(vad_config);
@@ -234,12 +192,6 @@ to download models for offline ASR.
     }
 
     Pa_Sleep(100);  // sleep for 100ms
-  }
-
-  err = Pa_CloseStream(stream);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
   }
 
   return 0;
