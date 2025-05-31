@@ -1,0 +1,98 @@
+name: export-uvr-to-onnx
+
+on:
+  push:
+    branches:
+      - uvr
+  workflow_dispatch:
+
+concurrency:
+  group: export-uvr-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-uvr-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export UVR to ONNX
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pip install "numpy<2" onnx==1.17.0 onnxruntime==1.17.1 onnxmltools kaldi-native-fbank librosa soundfile
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/uvr_mdx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/audio_example.wav
+          ls -lh audio_example.wav
+          ./run.sh
+
+      - name: Collect mp3 files
+        shell: bash
+        run: |
+          mv -v scripts/uvr_mdx/*.mp3 ./
+          ls -lh *.mp3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-mp3
+          path: ./*.mp3
+
+      - name: Collect models
+        shell: bash
+        run: |
+          mv -v scripts/uvr_mdx/models/*.onnx ./
+          ls -lh *.onnx
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.onnx
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: source-separation-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            rm -rf huggingface
+            git clone https://huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+            cd huggingface
+            mkdir -p source-separation-models
+            cp -av ../*.onnx ./source-separation-models
+            git lfs track "*.onnx"
+            git status
+            git add .
+            ls -lh
+            git status
+            git commit -m "add source separation models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
