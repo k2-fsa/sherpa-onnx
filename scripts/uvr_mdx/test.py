@@ -1,17 +1,40 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import time
+
+import argparse
+import kaldi_native_fbank as knf
 import librosa
 import numpy as np
 import onnxruntime as ort
-import torch
-import kaldi_native_fbank as knf
 import soundfile as sf
-import time
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "--model-filename",
+        type=str,
+        required=True,
+        help="Path to onnx model",
+    )
+
+    parser.add_argument(
+        "--audio-filename",
+        type=str,
+        required=True,
+        help="Path to input audio file",
+    )
+
+    return parser.parse_args()
 
 
 class OnnxModel:
-    def __init__(self, filename="./UVR-MDX-NET-Voc_FT.onnx"):
+    def __init__(self, filename):
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 4
         session_opts.intra_op_num_threads = 4
@@ -24,7 +47,6 @@ class OnnxModel:
         )
 
         self.dim_t = self.model.get_outputs()[0].shape[3]
-        assert self.dim_t == 256, self.dim_t
 
         self.dim_f = self.model.get_outputs()[0].shape[2]
 
@@ -53,9 +75,9 @@ class OnnxModel:
     def __call__(self, x):
         """
         Args:
-          x: (batch_size, 4, self.dim_f, 256)
+          x: (batch_size, 4, self.dim_f, self.dim_t)
         Returns:
-          spec: (batch_size, 4, self.dim_f, 256)
+          spec: (batch_size, 4, self.dim_f, self.dim_t)
         """
         spec = self.model.run(
             [
@@ -70,8 +92,8 @@ class OnnxModel:
 
 
 def main():
-    filename = "./UVR_MDXNET_1_9703.onnx"
-    m = OnnxModel(filename)
+    args = get_args()
+    m = OnnxModel(args.model_filename)
 
     stft_config = knf.StftConfig(
         n_fft=m.n_fft,
@@ -85,10 +107,8 @@ def main():
 
     sample_rate = 44100
 
-    #  samples, rate = librosa.load("./audio_example.mp3", mono=False, sr=sample_rate)
-    samples, rate = librosa.load("./qi-feng-le.wav", mono=False, sr=sample_rate)
+    samples, rate = librosa.load(args.audio_filename, mono=False, sr=sample_rate)
 
-    #  samples = samples[:, : int(49.5 * sample_rate)]
     start_time = time.time()
 
     assert rate == sample_rate, (rate, sample_rate)
@@ -115,16 +135,12 @@ def main():
     for skip in range(0, samples.shape[1], chunk_size):
         start = max(0, skip - margin)
         end = min(skip + chunk_size + margin, samples.shape[1])
-        print(start, end, start / sample_rate, end / sample_rate)
         segments.append(samples[:, start:end])
         if end == samples.shape[1]:
-            print("break")
             break
-    print("len segments", len(segments))
 
     sources = []
     for kk, s in enumerate(segments):
-        print("here", s.shape, s.shape[1] / sample_rate)
         num_samples = s.shape[1]
         trim = m.n_fft // 2
         gen_size = m.chunk_size - 2 * trim
@@ -138,7 +154,6 @@ def main():
             ),
             axis=1,
         )
-        print(mix_p.shape, mix_p.shape[1] / sample_rate)
 
         chunk_list = []
         i = 0
@@ -146,9 +161,7 @@ def main():
             chunk_list.append(mix_p[:, i : i + m.chunk_size])
             i += gen_size
 
-        print("len chunk_list", len(chunk_list), [k.shape for k in chunk_list])
         mix_waves = np.array(chunk_list)
-        print("mix waves", mix_waves.shape)
 
         mix_waves_reshaped = mix_waves.reshape(-1, m.chunk_size)
         stft_results = []
@@ -175,12 +188,9 @@ def main():
         # x: (6, 2, 3072, 256) -> (batch_size, real_imag, 3072, 256)
         x = x.reshape(-1, m.dim_c, m.dim_f, m.dim_t)
         # x: (3, 4, 3072, 256)
-        print("x", x.shape)
         spec = m(x)
-        print("spec", spec.shape)
 
         freq_pad = np.repeat(m.freq_pad, spec.shape[0], axis=0)
-        print("freq_pad", freq_pad.shape, m.freq_pad.shape)
 
         x = np.concatenate([spec, freq_pad], axis=2)
         # x: (3, 4, 3073, 256)
@@ -199,7 +209,6 @@ def main():
                 num_frames=num_frames,
             )
             wav = knf_istft(istft_result)
-            print("0 wav", len(wav))
             wav_list.append(wav)
         wav = np.array(wav_list, dtype=np.float32)
         # wav: (6, 261120)
@@ -212,14 +221,12 @@ def main():
 
         wav = wav.transpose(1, 0, 2)
         # wav: (2, 3, 254976)
-        print("wav", wav.shape)
 
         wav = wav.reshape(2, -1)
         # wav: (2, 764928)
 
         wav = wav[:, :-pad]
         # wav: 2, 705600)
-        print("wav", wav.shape)
         if kk == 0:
             start = 0
         else:
@@ -230,15 +237,9 @@ def main():
         else:
             end = -margin
 
-        print("start", start, end, kk, len(segments) - 1)
-
         sources.append(wav[:, start:end])
-        print("sources -1", sources[-1].shape)
 
     sources = np.concatenate(sources, axis=-1)
-
-    print("samples", samples.shape)
-    print("sources", sources.shape)
 
     vocals = sources
     non_vocals = samples - vocals
@@ -252,8 +253,8 @@ def main():
     print(f"Audio duration in seconds: {audio_duration:.3f}")
     print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
 
-    sf.write(f"./vocals.wav", np.transpose(vocals), sample_rate)
-    sf.write(f"./non_vocals.wav", np.transpose(non_vocals), sample_rate)
+    sf.write(f"./vocals.mp3", np.transpose(vocals), sample_rate)
+    sf.write(f"./non_vocals.mp3", np.transpose(non_vocals), sample_rate)
 
 
 if __name__ == "__main__":
