@@ -34,9 +34,9 @@ int Microphone::GetDefaultInputDevice() const {
 }
 
 void Microphone::PrintDevices(int device_index) const {
-  PaDeviceIndex num_devices = Pa_GetDeviceCount();
+  int num_devices = Pa_GetDeviceCount();
   fprintf(stderr, "Num devices: %d\n", num_devices);
-  for (int32_t i = 0; i != num_devices; ++i) {
+  for (int i = 0; i != num_devices; ++i) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i,
             info->name);
