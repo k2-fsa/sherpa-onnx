@@ -14,11 +14,11 @@ class Microphone {
   Microphone();
   ~Microphone();
 
-  int GetDeviceCount();
-  int GetDefaultInputDevice();
-  void PrintDevices(int sel);
+  int GetDeviceCount() const;
+  int GetDefaultInputDevice() const;
+  void PrintDevices(int sel) const;
   
-  bool OpenDevice(int index, int samplerate, int channel, PaStreamCallback cb, void* userdata);
+  bool OpenDevice(int index, int sample_rate, int channel, PaStreamCallback cb, void* userdata);
   void CloseDevice();
 };
 
