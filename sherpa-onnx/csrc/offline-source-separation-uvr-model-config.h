@@ -17,7 +17,7 @@ struct OfflineSourceSeparationUvrModelConfig {
 
   OfflineSourceSeparationUvrModelConfig() = default;
 
-  OfflineSourceSeparationUvrModelConfig(const std::string &model)
+  explicit OfflineSourceSeparationUvrModelConfig(const std::string &model)
       : model(model) {}
 
   void Register(ParseOptions *po);

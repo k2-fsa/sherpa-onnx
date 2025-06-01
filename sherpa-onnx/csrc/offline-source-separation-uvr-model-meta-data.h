@@ -24,8 +24,13 @@ struct OfflineSourceSeparationUvrModelMetaData {
   int32_t hop_length = 1024;
 
   int32_t window_length = -1;
-  bool center = true;
+  int32_t center = 1;
   std::string window_type = "hann";
+
+  // the following fields are preconfigured. Please see
+  // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/uvr_mdx/test.py
+  int32_t margin = 0;  // changed in ./offline-source-separation-uvr-model.cc
+  const int32_t num_chunks = 15;
 };
 
 }  // namespace sherpa_onnx

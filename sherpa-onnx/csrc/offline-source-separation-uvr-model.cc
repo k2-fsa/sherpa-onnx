@@ -107,6 +107,18 @@ class OfflineSourceSeparationUvrModel::Impl {
                        meta_.num_stems);
       SHERPA_ONNX_EXIT(-1);
     }
+
+    SHERPA_ONNX_READ_META_DATA(meta_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA(meta_.n_fft, "n_fft");
+    SHERPA_ONNX_READ_META_DATA(meta_.center, "center");
+    SHERPA_ONNX_READ_META_DATA(meta_.window_length, "win_length");
+    SHERPA_ONNX_READ_META_DATA(meta_.hop_length, "hop_length");
+    SHERPA_ONNX_READ_META_DATA(meta_.dim_t, "dim_t");
+    SHERPA_ONNX_READ_META_DATA(meta_.dim_f, "dim_f");
+    SHERPA_ONNX_READ_META_DATA(meta_.dim_c, "dim_c");
+    SHERPA_ONNX_READ_META_DATA_STR(meta_.window_type, "window_type");
+
+    meta_.margin = meta_.sample_rate;
   }
 
  private:

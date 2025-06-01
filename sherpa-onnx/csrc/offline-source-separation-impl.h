@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_IMPL_H_
 
+#include <memory>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-source-separation.h"
@@ -28,6 +29,9 @@ class OfflineSourceSeparationImpl {
   virtual int32_t GetOutputSampleRate() const = 0;
 
   virtual int32_t GetNumberOfStems() const = 0;
+
+  OfflineSourceSeparationInput Resample(
+      const OfflineSourceSeparationInput &input, bool debug = false) const;
 };
 
 }  // namespace sherpa_onnx

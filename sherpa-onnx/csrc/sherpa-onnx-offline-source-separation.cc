@@ -33,6 +33,17 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
   --input-wav=audio_example.wav \
   --output-vocals-wav=output_vocals.wav \
   --output-accompaniment-wav=output_accompaniment.wav
+
+(2) Use UVR models
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR_MDXNET_1_9703.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/audio_example.wav
+
+./bin/sherpa-onnx-offline-source-separation \
+  --uvr-model=./UVR_MDXNET_1_9703.onnx \
+  --input-wav=audio_example.wav \
+  --output-vocals-wav=output_vocals.wav \
+  --output-accompaniment-wav=output_accompaniment.wav
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
