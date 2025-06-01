@@ -36,7 +36,11 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
     auto input = Resample(_input, config_.model.debug);
 
     auto chunks_ch0 = SplitIntoChunks(input.samples.data[0]);
-    auto chunks_ch1 = SplitIntoChunks(input.samples.data[1]);
+
+    std::vector<std::vector<float>> chunks_ch1;
+    if (input.samples.data.size() > 1) {
+      chunks_ch1 = SplitIntoChunks(input.samples.data[1]);
+    }
 
     std::vector<float> samples_ch0;
     std::vector<float> samples_ch1;
@@ -45,15 +49,14 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
       bool is_first_chunk = (i == 0);
       bool is_last_chunk = (i == static_cast<int32_t>(chunks_ch0.size()) - 1);
 
-      auto s = ProcessChunk(chunks_ch0[i], chunks_ch1[i], is_first_chunk,
-                            is_last_chunk);
+      auto s = ProcessChunk(
+          chunks_ch0[i],
+          chunks_ch1.empty() ? std::vector<float>{} : chunks_ch1[i],
+          is_first_chunk, is_last_chunk);
 
       samples_ch0.insert(samples_ch0.end(), s.first.begin(), s.first.end());
       samples_ch1.insert(samples_ch1.end(), s.second.begin(), s.second.end());
     }
-
-    SHERPA_ONNX_LOGE("samples0: %d, %d", (int)input.samples.data[0].size(),
-                     (int)samples_ch0.size());
 
     auto &vocals_ch0 = samples_ch0;
     auto &vocals_ch1 = samples_ch1;
@@ -68,12 +71,23 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
         Eigen::Map<Eigen::VectorXf>(vocals_ch0.data(), vocals_ch0.size())
             .array();
 
-    Eigen::Map<Eigen::VectorXf>(non_vocals_ch1.data(), non_vocals_ch1.size()) =
-        Eigen::Map<Eigen::VectorXf>(input.samples.data[1].data(),
-                                    input.samples.data[1].size())
-            .array() -
-        Eigen::Map<Eigen::VectorXf>(vocals_ch1.data(), vocals_ch1.size())
-            .array();
+    if (input.samples.data.size() > 1) {
+      Eigen::Map<Eigen::VectorXf>(non_vocals_ch1.data(),
+                                  non_vocals_ch1.size()) =
+          Eigen::Map<Eigen::VectorXf>(input.samples.data[1].data(),
+                                      input.samples.data[1].size())
+              .array() -
+          Eigen::Map<Eigen::VectorXf>(vocals_ch1.data(), vocals_ch1.size())
+              .array();
+    } else {
+      Eigen::Map<Eigen::VectorXf>(non_vocals_ch1.data(),
+                                  non_vocals_ch1.size()) =
+          Eigen::Map<Eigen::VectorXf>(input.samples.data[0].data(),
+                                      input.samples.data[0].size())
+              .array() -
+          Eigen::Map<Eigen::VectorXf>(vocals_ch1.data(), vocals_ch1.size())
+              .array();
+    }
 
     OfflineSourceSeparationOutput ans;
     ans.sample_rate = GetOutputSampleRate();
@@ -104,10 +118,17 @@ class OfflineSourceSeparationUvrImpl : public OfflineSourceSeparationImpl {
       const std::vector<float> &chunk_ch0, const std::vector<float> &chunk_ch1,
       bool is_first_chunk, bool is_last_chunk) const {
     int32_t pad0 = 0;
-    int32_t pad1 = 0;
 
     auto stft_results_ch0 = ComputeStft(chunk_ch0, &pad0);
-    auto stft_results_ch1 = ComputeStft(chunk_ch1, &pad1);
+
+    int32_t pad1 = pad0;
+    std::vector<knf::StftResult> stft_results_ch1;
+
+    if (!chunk_ch1.empty()) {
+      stft_results_ch1 = ComputeStft(chunk_ch1, &pad1);
+    } else {
+      stft_results_ch1 = stft_results_ch0;
+    }
 
     const auto &meta_ = model_.GetMetaData();
 
