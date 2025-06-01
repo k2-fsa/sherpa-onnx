@@ -8,12 +8,14 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/offline-source-separation-spleeter-model-config.h"
+#include "sherpa-onnx/csrc/offline-source-separation-uvr-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
 struct OfflineSourceSeparationModelConfig {
   OfflineSourceSeparationSpleeterModelConfig spleeter;
+  OfflineSourceSeparationUvrModelConfig uvr;
 
   int32_t num_threads = 1;
   bool debug = false;
@@ -23,8 +25,10 @@ struct OfflineSourceSeparationModelConfig {
 
   OfflineSourceSeparationModelConfig(
       const OfflineSourceSeparationSpleeterModelConfig &spleeter,
-      int32_t num_threads, bool debug, const std::string &provider)
+      const OfflineSourceSeparationUvrModelConfig &uvr, int32_t num_threads,
+      bool debug, const std::string &provider)
       : spleeter(spleeter),
+        uvr(uvr),
         num_threads(num_threads),
         debug(debug),
         provider(provider) {}

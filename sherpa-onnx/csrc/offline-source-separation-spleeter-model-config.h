@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-source-separation-spleeter_model-config.h
+// sherpa-onnx/csrc/offline-source-separation-spleeter-model-config.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
