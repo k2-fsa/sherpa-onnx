@@ -5,6 +5,10 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_SPLEETER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SOURCE_SEPARATION_SPLEETER_IMPL_H_
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "Eigen/Dense"
 #include "kaldi-native-fbank/csrc/istft.h"
 #include "kaldi-native-fbank/csrc/stft.h"
@@ -12,13 +16,12 @@
 #include "sherpa-onnx/csrc/offline-source-separation-spleeter-model.h"
 #include "sherpa-onnx/csrc/offline-source-separation.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
 
 class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
  public:
-  OfflineSourceSeparationSpleeterImpl(
+  explicit OfflineSourceSeparationSpleeterImpl(
       const OfflineSourceSeparationConfig &config)
       : config_(config), model_(config_.model) {}
 
@@ -28,56 +31,12 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
       : config_(config), model_(mgr, config_.model) {}
 
   OfflineSourceSeparationOutput Process(
-      const OfflineSourceSeparationInput &input) const override {
-    const OfflineSourceSeparationInput *p_input = &input;
-    OfflineSourceSeparationInput tmp_input;
+      const OfflineSourceSeparationInput &_input) const override {
+    auto input = Resample(_input, config_.model.debug);
 
-    int32_t output_sample_rate = GetOutputSampleRate();
+    auto stft_ch0 = ComputeStft(input, 0);
 
-    if (input.sample_rate != output_sample_rate) {
-      SHERPA_ONNX_LOGE(
-          "Creating a resampler:\n"
-          "   in_sample_rate: %d\n"
-          "   output_sample_rate: %d\n",
-          input.sample_rate, output_sample_rate);
-
-      float min_freq = std::min<int32_t>(input.sample_rate, output_sample_rate);
-      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
-
-      int32_t lowpass_filter_width = 6;
-      auto resampler = std::make_unique<LinearResample>(
-          input.sample_rate, output_sample_rate, lowpass_cutoff,
-          lowpass_filter_width);
-
-      std::vector<float> s;
-      for (const auto &samples : input.samples.data) {
-        resampler->Reset();
-        resampler->Resample(samples.data(), samples.size(), true, &s);
-        tmp_input.samples.data.push_back(std::move(s));
-      }
-
-      tmp_input.sample_rate = output_sample_rate;
-      p_input = &tmp_input;
-    }
-
-    if (p_input->samples.data.size() > 1) {
-      if (config_.model.debug) {
-        SHERPA_ONNX_LOGE("input ch1 samples size: %d",
-                         static_cast<int32_t>(p_input->samples.data[1].size()));
-      }
-
-      if (p_input->samples.data[0].size() != p_input->samples.data[1].size()) {
-        SHERPA_ONNX_LOGE("ch0 samples size %d vs ch1 samples size %d",
-                         static_cast<int32_t>(p_input->samples.data[0].size()),
-                         static_cast<int32_t>(p_input->samples.data[1].size()));
-
-        SHERPA_ONNX_EXIT(-1);
-      }
-    }
-
-    auto stft_ch0 = ComputeStft(*p_input, 0);
-
-    auto stft_ch1 = ComputeStft(*p_input, 1);
+    auto stft_ch1 = ComputeStft(input, 1);
     knf::StftResult *p_stft_ch1 = stft_ch1.real.empty() ? &stft_ch0 : &stft_ch1;
 
     int32_t num_frames = stft_ch0.num_frames;
@@ -261,7 +220,6 @@ class OfflineSourceSeparationSpleeterImpl : public OfflineSourceSeparationImpl {
     stft_config.win_length = meta.window_length;
     stft_config.window_type = meta.window_type;
     stft_config.center = meta.center;
-    stft_config.center = false;
 
     return stft_config;
   }

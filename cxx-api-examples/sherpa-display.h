@@ -1,3 +1,5 @@
+// cxx-api-examples/sherpa-display.cc
+// Copyright (c)  2025  Xiaomi Corporation
 #pragma once
 
 #include <stdlib.h>
@@ -6,6 +8,8 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace sherpa_onnx::cxx {
 

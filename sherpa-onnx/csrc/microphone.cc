@@ -25,9 +25,7 @@ Microphone::~Microphone() {
   }
 }
 
-int Microphone::GetDeviceCount() const {
-  return Pa_GetDeviceCount();
-}
+int Microphone::GetDeviceCount() const { return Pa_GetDeviceCount(); }
 
 int Microphone::GetDefaultInputDevice() const {
   return Pa_GetDefaultInputDevice();
@@ -43,7 +41,8 @@ void Microphone::PrintDevices(int device_index) const {
   }
 }
 
-bool Microphone::OpenDevice(int index, int sample_rate, int channel, PaStreamCallback cb, void* userdata) {
+bool Microphone::OpenDevice(int index, int sample_rate, int channel,
+                            PaStreamCallback cb, void *userdata) {
   if (index < 0 || index >= Pa_GetDeviceCount()) {
     fprintf(stderr, "Invalid device index: %d\n", index);
     return false;
@@ -68,7 +67,8 @@ bool Microphone::OpenDevice(int index, int sample_rate, int channel, PaStreamCal
   param.suggestedLatency = info->defaultLowInputLatency;
   param.hostApiSpecificStreamInfo = nullptr;
 
-  PaError err = Pa_OpenStream(&stream, &param, nullptr, /* &outputParameters, */
+  PaError err =
+      Pa_OpenStream(&stream, &param, nullptr, /* &outputParameters, */
                     sample_rate,
                     0,          // frames per buffer
                     paClipOff,  // we won't output out of range samples

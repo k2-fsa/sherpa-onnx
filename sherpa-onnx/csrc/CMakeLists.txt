@@ -55,6 +55,8 @@ set(sources
   offline-source-separation-model-config.cc
   offline-source-separation-spleeter-model-config.cc
   offline-source-separation-spleeter-model.cc
+  offline-source-separation-uvr-model-config.cc
+  offline-source-separation-uvr-model.cc
   offline-source-separation.cc
 
   offline-stream.cc

@@ -136,7 +136,8 @@ to download models for offline ASR.
     mic_sample_rate = atof(pSampleRateStr);
   }
 
-  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback, nullptr)) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
     fprintf(stderr, "Failed to open device %d\n", device_index);
     exit(EXIT_FAILURE);
   }

@@ -159,14 +159,15 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
   if (config->model_config.debug) {
+#if __OHOS__
     auto str_vec = sherpa_onnx::SplitString(recognizer_config.ToString(), 128);
     for (const auto &s : str_vec) {
-#if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s\n", s.c_str());
-#else
       SHERPA_ONNX_LOGE("%s\n", s.c_str());
-#endif
     }
+#else
+    SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
+#endif
   }
 
   return recognizer_config;
@@ -507,14 +508,15 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
   if (config->model_config.debug) {
+#if __OHOS__
     auto str_vec = sherpa_onnx::SplitString(recognizer_config.ToString(), 128);
     for (const auto &s : str_vec) {
-#if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s\n", s.c_str());
-#else
       SHERPA_ONNX_LOGE("%s\n", s.c_str());
-#endif
     }
+#else
+    SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
+#endif
   }
 
   return recognizer_config;

@@ -1,8 +1,8 @@
 ### Supported functions
 
-|Speech recognition| Speech synthesis |
-|------------------|------------------|
-|   ✔️              |         ✔️        |
+|Speech recognition| Speech synthesis | Source separation |
+|------------------|------------------|-------------------|
+|   ✔️              |         ✔️        |       ✔️           |
 
 |Speaker identification| Speaker diarization | Speaker verification |
 |----------------------|-------------------- |------------------------|
@@ -15,6 +15,7 @@
 | Keyword spotting | Add punctuation | Speech enhancement |
 |------------------|-----------------|--------------------|
 |     ✔️            |       ✔️         |      ✔️             |
+
 
 ### Supported platforms
 
@@ -56,7 +57,9 @@ This repository supports running the following functions **locally**
   - Spoken language identification
   - Audio tagging
   - VAD (e.g., [silero-vad][silero-vad])
+  - Speech enhancement (e.g., [gtcrn][gtcrn])
   - Keyword spotting
+  - Source separation (e.g., [spleeter][spleeter], [UVR][UVR])
 
 on the following platforms and operating systems:
 
@@ -75,6 +78,7 @@ on the following platforms and operating systems:
   - [VisionFive 2][VisionFive 2]
   - [旭日X3派][旭日X3派]
   - [爱芯派][爱芯派]
+  - [RK3588][RK3588]
   - etc
 
 with the following APIs
@@ -200,6 +204,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Punctuation                                 | [Address][punct-models]                                                               |
 | Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
 | Speech enhancement                          | [Address][speech-enhancement-models]                                                  |
+| Source separation                           | [Address][source-separation-models]                                                  |
 
 </details>
 
@@ -481,3 +486,8 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 [NVIDIA Jetson Orin NX]: https://developer.download.nvidia.com/assets/embedded/secure/jetson/orin_nx/docs/Jetson_Orin_NX_DS-10712-001_v0.5.pdf?RCPGu9Q6OVAOv7a7vgtwc9-BLScXRIWq6cSLuditMALECJ_dOj27DgnqAPGVnT2VpiNpQan9SyFy-9zRykR58CokzbXwjSA7Gj819e91AXPrWkGZR3oS1VLxiDEpJa_Y0lr7UT-N4GnXtb8NlUkP4GkCkkF_FQivGPrAucCUywL481GH_WpP_p7ziHU1Wg==&t=eyJscyI6ImdzZW8iLCJsc2QiOiJodHRwczovL3d3dy5nb29nbGUuY29tLmhrLyJ9
 [NVIDIA Jetson Nano B01]: https://www.seeedstudio.com/blog/2020/01/16/new-revision-of-jetson-nano-dev-kit-now-supports-new-jetson-nano-module/
 [speech-enhancement-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+[source-separation-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/source-separation-models
+[RK3588]: https://www.rock-chips.com/uploads/pdf/2022.8.26/192/RK3588%20Brief%20Datasheet.pdf
+[spleeter]: https://github.com/deezer/spleeter
+[UVR]: https://github.com/Anjok07/ultimatevocalremovergui
+[gtcrn]: https://github.com/Xiaobin-Rong/gtcrn

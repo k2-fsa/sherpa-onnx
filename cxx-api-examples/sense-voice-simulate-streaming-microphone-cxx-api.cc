@@ -143,7 +143,7 @@ int32_t main() {
                                         lowpass_cutoff, lowpass_filter_width);
   }
   if (mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                    nullptr) == false) {
+                     nullptr) == false) {
     std::cerr << "Failed to open microphone device\n";
     return -1;
   }
