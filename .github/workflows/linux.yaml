@@ -11,6 +11,7 @@ on:
       - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-offline-speech-denoiser.sh'
+      - '.github/scripts/test-offline-source-separation.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
@@ -33,6 +34,7 @@ on:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-offline-speech-denoiser.sh'
+      - '.github/scripts/test-offline-source-separation.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
@@ -204,6 +206,20 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
+
+      - name: Test offline source separation
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-source-separation
+
+          .github/scripts/test-offline-source-separation.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
+          path: ./source-separation-wavs/*.wav
 
       - name: Test offline CTC
         shell: bash
