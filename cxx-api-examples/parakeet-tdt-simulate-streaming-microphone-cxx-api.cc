@@ -136,8 +136,8 @@ int32_t main() {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(sample_rate_str);
   }
-  if(!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                     nullptr) == false) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr) == false) {
     std::cerr << "Failed to open microphone device\n";
     return -1;
   }

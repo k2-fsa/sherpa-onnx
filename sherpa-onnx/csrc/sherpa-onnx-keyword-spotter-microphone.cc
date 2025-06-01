@@ -101,8 +101,8 @@ for a list of pre-trained models to download.
     mic_sample_rate = atof(pSampleRateStr);
   }
 
-  if(!mic.OpenDevice(device_index, mic_sample_rate, 1,
-                RecordCallback, s.get())) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      s.get())) {
     fprintf(stderr, "portaudio error: %d\n", device_index);
     exit(EXIT_FAILURE);
   }

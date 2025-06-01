@@ -74,7 +74,6 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
 
   sherpa_onnx::Microphone mic;
 
-
   int32_t device_index = Pa_GetDefaultInputDevice();
   if (device_index == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
@@ -96,7 +95,8 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);
   }
-  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback, nullptr)) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
     fprintf(stderr, "Failed to open microphone device %d\n", device_index);
     exit(EXIT_FAILURE);
   }

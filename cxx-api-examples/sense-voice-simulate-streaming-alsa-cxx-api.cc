@@ -24,7 +24,7 @@
 #include <iostream>
 #include <mutex>  // NOLINT
 #include <queue>
-#include <thread>
+#include <thread>  // NOLINT
 #include <vector>
 
 #include "portaudio.h"       // NOLINT

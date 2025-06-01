@@ -19,7 +19,8 @@ struct OfflineSourceSeparationConfig {
 
   OfflineSourceSeparationConfig() = default;
 
-  OfflineSourceSeparationConfig(const OfflineSourceSeparationModelConfig &model)
+  explicit OfflineSourceSeparationConfig(
+      const OfflineSourceSeparationModelConfig &model)
       : model(model) {}
 
   void Register(ParseOptions *po);
@@ -54,7 +55,7 @@ class OfflineSourceSeparation {
  public:
   ~OfflineSourceSeparation();
 
-  OfflineSourceSeparation(const OfflineSourceSeparationConfig &config);
+  explicit OfflineSourceSeparation(const OfflineSourceSeparationConfig &config);
 
   template <typename Manager>
   OfflineSourceSeparation(Manager *mgr,
