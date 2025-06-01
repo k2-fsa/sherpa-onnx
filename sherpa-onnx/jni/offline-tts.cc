@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 #include "sherpa-onnx/jni/common.h"
 
@@ -207,7 +208,10 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
   }
 #endif
   auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+  for (const auto &s : str_vec) {
+    SHERPA_ONNX_LOGE("%s", s.c_str());
+  }
 
   auto tts = new sherpa_onnx::OfflineTts(
 #if __ANDROID_API__ >= 9
