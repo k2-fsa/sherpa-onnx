@@ -1,3 +1,26 @@
+## 1.12.1
+
+* Use jlong explicitly in jni. (#2229)
+* Fix building RKNN wheels (#2233)
+* Fix publishing binaries for RKNN (#2234)
+* Export spleeter model to onnx for source separation (#2237)
+* Add C++ runtime for spleeter about source separation (#2242)
+* Add include headers for __ANDROID_API__,__OHOS__ (#2251)
+* JAVA-API: Manual Library Loading Support for Restricted Environments (#2253)
+* Build APK with replace.fst (#2254)
+* repair rknn wheels (#2257)
+* Update kaldi-native-fbank. (#2259)
+* Fix building sherpa-onnx (#2262)
+* Fix building MFC examples (#2263)
+* Add UVR models for source separation. (#2266)
+* move portaudio common record code to microphone (#2264)
+* fixed mfc build error (#2267)
+* Add C++ support for UVR models (#2269)
+* Export nvidia/canary-180m-flash to sherpa-onnx (#2272)
+* Update utils.dart (#2275)
+* Fix rknn for multi-threads (#2274)
+* Fix 32-bit arm CI (#2276)
+
 ## 1.12.0
 
 * Fix building wheels for macOS (#2192)
