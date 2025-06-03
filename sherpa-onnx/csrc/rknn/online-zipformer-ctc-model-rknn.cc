@@ -86,8 +86,7 @@ class OnlineZipformerCtcModelRknn::Impl {
   }
 
   std::pair<std::vector<float>, std::vector<std::vector<uint8_t>>> Run(
-      std::vector<float> features,
-      std::vector<std::vector<uint8_t>> states) const {
+      std::vector<float> features, std::vector<std::vector<uint8_t>> states) {
     std::vector<rknn_input> inputs(input_attrs_.size());
 
     for (int32_t i = 0; i < static_cast<int32_t>(inputs.size()); ++i) {
@@ -147,13 +146,17 @@ class OnlineZipformerCtcModelRknn::Impl {
       }
     }
 
-    auto ret = rknn_inputs_set(ctx_, inputs.size(), inputs.data());
+    rknn_context ctx = 0;
+    auto ret = rknn_dup_context(&ctx_, &ctx);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the ctx");
+
+    ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
 
-    ret = rknn_run(ctx_, nullptr);
+    ret = rknn_run(ctx, nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run the model");
 
-    ret = rknn_outputs_get(ctx_, outputs.size(), outputs.data(), nullptr);
+    ret = rknn_outputs_get(ctx, outputs.size(), outputs.data(), nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get model output");
 
     for (int32_t i = 0; i < next_states.size(); ++i) {
@@ -173,6 +176,8 @@ class OnlineZipformerCtcModelRknn::Impl {
         next_states[i] = std::move(dst);
       }
     }
+
+    rknn_destroy(ctx);
 
     return {std::move(out), std::move(next_states)};
   }
