@@ -26,10 +26,10 @@ pushd $src_dir
 
 mkdir -p linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
 
-linux_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+linux_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
 
-linux_arm64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+linux_arm64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
 linux_arm64_wheel=$src_dir/$linux_arm64_wheel_filename
 
 macos_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
