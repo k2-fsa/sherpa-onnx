@@ -76,7 +76,7 @@ jobs:
           file: ./*.jar
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.1
+          # tag: v1.11.2
 
       - name: Build sherpa-onnx
         if: matrix.java-version == '23'
@@ -229,4 +229,6 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
-
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.12.0
