@@ -20,6 +20,10 @@ set(srcs
   offline-punctuation.cc
   offline-recognizer.cc
   offline-sense-voice-model-config.cc
+  offline-source-separation-model-config.cc
+  offline-source-separation-spleeter-model-config.cc
+  offline-source-separation-uvr-model-config.cc
+  offline-source-separation.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc
