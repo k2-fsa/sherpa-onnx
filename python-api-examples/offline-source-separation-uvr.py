@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c)  2023  Xiaomi Corporation
+# Copyright (c)  2025  Xiaomi Corporation
 
 """
 This file shows how to use UVR for source separation.
@@ -25,12 +25,12 @@ For instance
 Then you can use out.wav as input for this example.
 """
 
+import time
 from pathlib import Path
 
-import time
+import numpy as np
 import sherpa_onnx
 import soundfile as sf
-import numpy as np
 
 
 def create_offline_source_separation():
@@ -58,7 +58,7 @@ def create_offline_source_separation():
 
 
 def load_audio():
-    # Please read help message at the beginning of this file to download
+    # Please read the help message at the beginning of this file to download
     # the following wav_file
     wav_file = "./qi-feng-le-zh.wav"
     if not Path(wav_file).is_file():
