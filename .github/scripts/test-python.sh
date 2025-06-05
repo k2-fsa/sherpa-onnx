@@ -8,6 +8,32 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test spleeter"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+tar xvf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+rm sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+./python-api-examples/offline-source-separation-spleeter.py
+rm -rf sherpa-onnx-spleeter-2stems-fp16
+rm qi-feng-le-zh.wav
+
+log "test UVR"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR_MDXNET_9482.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+./python-api-examples/offline-source-separation-uvr.py
+rm UVR_MDXNET_9482.onnx
+rm qi-feng-le-zh.wav
+
+mkdir source-separation
+
+mv spleeter-*.wav source-separation
+mv uvr-*.wav source-separation
+
+ls -lh source-separation
+
+
 log "test offline dolphin ctc"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2

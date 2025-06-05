@@ -99,5 +99,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./source-separation
+
+      - uses: actions/upload-artifact@v4
+        with:
           name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: tts

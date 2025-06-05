@@ -9,6 +9,8 @@
 
 #include "sherpa-onnx/csrc/fast-clustering.h"
 
+#define C_CONTIGUOUS py::detail::npy_api::constants::NPY_ARRAY_C_CONTIGUOUS_
+
 namespace sherpa_onnx {
 
 static void PybindFastClusteringConfig(py::module *m) {
@@ -32,6 +34,12 @@ void PybindFastClustering(py::module *m) {
           "__call__",
           [](const PyClass &self,
              py::array_t<float> features) -> std::vector<int32_t> {
+            if (!(C_CONTIGUOUS == (features.flags() & C_CONTIGUOUS))) {
+              throw py::value_error(
+                  "input features should be contiguous. Please use "
+                  "np.ascontiguousarray(features)");
+            }
+
             int num_dim = features.ndim();
             if (num_dim != 2) {
               std::ostringstream os;

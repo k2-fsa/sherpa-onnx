@@ -47,6 +47,7 @@ void PybindOfflineSpeechDenoiser(py::module *m) {
              int32_t sample_rate) {
             return self.Run(samples.data(), samples.size(), sample_rate);
           },
+          py::arg("samples"), py::arg("sample_rate"),
           py::call_guard<py::gil_scoped_release>())
       .def(
           "run",
@@ -54,6 +55,7 @@ void PybindOfflineSpeechDenoiser(py::module *m) {
              int32_t sample_rate) {
             return self.Run(samples.data(), samples.size(), sample_rate);
           },
+          py::arg("samples"), py::arg("sample_rate"),
           py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("sample_rate", &PyClass::GetSampleRate);
 }

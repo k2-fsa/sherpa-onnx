@@ -109,19 +109,20 @@ void PybindOnlineRecognizer(py::module *m) {
           py::arg("hotwords"), py::call_guard<py::gil_scoped_release>())
       .def("is_ready", &PyClass::IsReady,
            py::call_guard<py::gil_scoped_release>())
-      .def("decode_stream", &PyClass::DecodeStream,
+      .def("decode_stream", &PyClass::DecodeStream, py::arg("s"),
            py::call_guard<py::gil_scoped_release>())
       .def(
           "decode_streams",
           [](PyClass &self, std::vector<OnlineStream *> ss) {
             self.DecodeStreams(ss.data(), ss.size());
           },
-          py::call_guard<py::gil_scoped_release>())
-      .def("get_result", &PyClass::GetResult,
+          py::arg("ss"), py::call_guard<py::gil_scoped_release>())
+      .def("get_result", &PyClass::GetResult, py::arg("s"),
            py::call_guard<py::gil_scoped_release>())
-      .def("is_endpoint", &PyClass::IsEndpoint,
+      .def("is_endpoint", &PyClass::IsEndpoint, py::arg("s"),
            py::call_guard<py::gil_scoped_release>())
-      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>());
+      .def("reset", &PyClass::Reset, py::arg("s"),
+           py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx
