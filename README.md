@@ -94,15 +94,16 @@ with the following APIs
 <summary>You can visit the following Huggingface spaces to try sherpa-onnx without
 installing anything. All you need is a browser.</summary>
 
-| Description                                           | URL                                     |
-|-------------------------------------------------------|-----------------------------------------|
-| Speaker diarization                                   | [Click me][hf-space-speaker-diarization]|
-| Speech recognition                                    | [Click me][hf-space-asr]                |
-| Speech recognition with [Whisper][Whisper]            | [Click me][hf-space-asr-whisper]        |
-| Speech synthesis                                      | [Click me][hf-space-tts]                |
-| Generate subtitles                                    | [Click me][hf-space-subtitle]           |
-| Audio tagging                                         | [Click me][hf-space-audio-tagging]      |
-| Spoken language identification with [Whisper][Whisper]| [Click me][hf-space-slid-whisper]       |
+| Description                                           | URL                                     | 中国镜像                               |
+|-------------------------------------------------------|-----------------------------------------|----------------------------------------|
+| Speaker diarization                                   | [Click me][hf-space-speaker-diarization]| [镜像][hf-space-speaker-diarization-cn]|
+| Speech recognition                                    | [Click me][hf-space-asr]                | [镜像][hf-space-asr-cn]                |
+| Speech recognition with [Whisper][Whisper]            | [Click me][hf-space-asr-whisper]        | [镜像][hf-space-asr-whisper-cn]        |
+| Speech synthesis                                      | [Click me][hf-space-tts]                | [镜像][hf-space-tts-cn]                |
+| Generate subtitles                                    | [Click me][hf-space-subtitle]           | [镜像][hf-space-subtitle-cn]           |
+| Audio tagging                                         | [Click me][hf-space-audio-tagging]      | [镜像][hf-space-audio-tagging-cn]      |
+| Source separation                                     | [Click me][hf-space-source-separation]  | [镜像][hf-space-source-separation-cn]  |
+| Spoken language identification with [Whisper][Whisper]| [Click me][hf-space-slid-whisper]       | [镜像][hf-space-slid-whisper-cn]       |
 
 We also have spaces built using WebAssembly. They are listed below:
 
@@ -368,13 +369,22 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 [旭日X3派]: https://developer.horizon.ai/api/v1/fileData/documents_pi/index.html
 [爱芯派]: https://wiki.sipeed.com/hardware/zh/maixIII/ax-pi/axpi.html
 [hf-space-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/speaker-diarization
+[hf-space-speaker-diarization-cn]: https://hf.qhduan.com/spaces/k2-fsa/speaker-diarization
 [hf-space-asr]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition
+[hf-space-asr-cn]: https://hf.qhduan.com/spaces/k2-fsa/automatic-speech-recognition
 [Whisper]: https://github.com/openai/whisper
 [hf-space-asr-whisper]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition-with-whisper
+[hf-space-asr-whisper-cn]: https://hf.qhduan.com/spaces/k2-fsa/automatic-speech-recognition-with-whisper
 [hf-space-tts]: https://huggingface.co/spaces/k2-fsa/text-to-speech
+[hf-space-tts-cn]: https://hf.qhduan.com/spaces/k2-fsa/text-to-speech
 [hf-space-subtitle]: https://huggingface.co/spaces/k2-fsa/generate-subtitles-for-videos
+[hf-space-subtitle-cn]: https://hf.qhduan.com/spaces/k2-fsa/generate-subtitles-for-videos
 [hf-space-audio-tagging]: https://huggingface.co/spaces/k2-fsa/audio-tagging
+[hf-space-audio-tagging-cn]: https://hf.qhduan.com/spaces/k2-fsa/audio-tagging
+[hf-space-source-separation]: https://huggingface.co/spaces/k2-fsa/source-separation
+[hf-space-source-separation-cn]: https://hf.qhduan.com/spaces/k2-fsa/source-separation
 [hf-space-slid-whisper]: https://huggingface.co/spaces/k2-fsa/spoken-language-identification
+[hf-space-slid-whisper-cn]: https://hf.qhduan.com/spaces/k2-fsa/spoken-language-identification
 [wasm-hf-vad]: https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx
 [wasm-ms-vad]: https://modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx
 [wasm-hf-streaming-asr-zh-en-zipformer]: https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en
