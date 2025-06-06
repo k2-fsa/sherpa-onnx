@@ -89,6 +89,8 @@ class OnlineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        lodr_fst: str = "",
+        lodr_scale: float = 0.1,
     ):
         """
         Please refer to
@@ -298,6 +300,8 @@ class OnlineRecognizer(object):
             model=lm,
             scale=lm_scale,
             shallow_fusion=lm_shallow_fusion,
+            lodr_fst=lodr_fst,
+            lodr_scale=lodr_scale,
         )
 
         recognizer_config = OnlineRecognizerConfig(

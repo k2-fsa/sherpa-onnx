@@ -83,11 +83,11 @@ class OfflineRnnLM::Impl {
 };
 
 OfflineRnnLM::OfflineRnnLM(const OfflineLMConfig &config)
-    : impl_(std::make_unique<Impl>(config)) {}
+    : impl_(std::make_unique<Impl>(config)), OfflineLM(config) {}
 
 template <typename Manager>
 OfflineRnnLM::OfflineRnnLM(Manager *mgr, const OfflineLMConfig &config)
-    : impl_(std::make_unique<Impl>(mgr, config)) {}
+    : impl_(std::make_unique<Impl>(mgr, config)), OfflineLM(config) {}
 
 OfflineRnnLM::~OfflineRnnLM() = default;
 
