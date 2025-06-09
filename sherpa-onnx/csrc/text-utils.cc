@@ -322,7 +322,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
         ans.push_back(std::move(t));
       }
 
-      if (!std::isspace(uint8_t(w[0]))) {
+      if (!std::isspace(static_cast<uint8_t>(w[0]))) {
         ans.push_back(w);
       }
       ++i;
