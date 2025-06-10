@@ -551,6 +551,7 @@ python3 ./python-api-examples/offline-decode-files.py \
   --encoder=$repo/encoder-epoch-99-avg-1.onnx \
   --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --decoding-method=modified_beam_search \
   --lm=$lm_repo/exp/no-state-epoch-99-avg-1.onnx \
   --lodr-fst=$bigramlm_repo/2gram.fst \
   --lodr-scale=-0.5 \
