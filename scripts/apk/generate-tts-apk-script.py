@@ -35,12 +35,14 @@ class TtsModel:
     vocoder: str = ""  # for matcha
     voices: str = ""  # for kokoro
     lang: str = ""  # en, zh, fr, de, etc.
+    lang2: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
     data_dir: Optional[str] = None
     dict_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
+    lang_iso_639_3_2: str = ""
     lexicon: str = ""
 
 
@@ -48,6 +50,8 @@ def convert_lang_to_iso_639_3(models: List[TtsModel]):
     for m in models:
         if m.lang_iso_639_3 == "":
             m.lang_iso_639_3 = Lang(m.lang).pt3
+        if m.lang2 != "":
+            m.lang_iso_639_3_2 = Lang(m.lang2).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -322,6 +326,7 @@ def get_vits_models() -> List[TtsModel]:
             model_dir="vits-melo-tts-zh_en",
             model_name="model.onnx",
             lang="zh",
+            lang2="en",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-C",
@@ -438,16 +443,19 @@ def get_kokoro_models() -> List[TtsModel]:
             model_dir="kokoro-multi-lang-v1_0",
             model_name="model.onnx",
             lang="en",
+            lang2="zh",
         ),
         TtsModel(
             model_dir="kokoro-multi-lang-v1_1",
             model_name="model.onnx",
             lang="en",
+            lang2="zh",
         ),
         TtsModel(
             model_dir="kokoro-int8-multi-lang-v1_1",
             model_name="model.int8.onnx",
             lang="en",
+            lang2="zh",
         ),
     ]
     for m in multi_lingual_models:

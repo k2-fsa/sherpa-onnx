@@ -60,6 +60,9 @@ class TtsService : TextToSpeechService() {
 
         // see https://github.com/Miserlou/Android-SDK-Samples/blob/master/TtsEngine/src/com/example/android/ttsengine/RobotSpeakTtsService.java#L68
         onLoadLanguage(TtsEngine.lang, "", "")
+        if (TtsEngine.lang2 != null) {
+            onLoadLanguage(TtsEngine.lang2, "", "")
+        }
     }
 
     override fun onDestroy() {
@@ -71,7 +74,7 @@ class TtsService : TextToSpeechService() {
     override fun onIsLanguageAvailable(_lang: String?, _country: String?, _variant: String?): Int {
         val lang = _lang ?: ""
 
-        if (lang == TtsEngine.lang) {
+        if (lang == TtsEngine.lang || lang == TtsEngine.lang2) {
             return TextToSpeech.LANG_AVAILABLE
         }
 
@@ -87,12 +90,12 @@ class TtsService : TextToSpeechService() {
         Log.i(TAG, "onLoadLanguage: $_lang, $_country")
         val lang = _lang ?: ""
 
-        return if (lang == TtsEngine.lang) {
+        return if (lang == TtsEngine.lang || lang == TtsEngine.lang2) {
             Log.i(TAG, "creating tts, lang :$lang")
             TtsEngine.createTts(application)
             TextToSpeech.LANG_AVAILABLE
         } else {
-            Log.i(TAG, "lang $lang not supported, tts engine lang: ${TtsEngine.lang}")
+            Log.i(TAG, "lang $lang not supported, tts engine lang: ${TtsEngine.lang}, ${TtsEngine.lang2}")
             TextToSpeech.LANG_NOT_SUPPORTED
         }
     }

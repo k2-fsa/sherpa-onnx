@@ -23,6 +23,9 @@ object TtsEngine {
     // cmn for Mandarin
     var lang: String? = null
 
+    // if a model supports two languages, set also lang2
+    var lang2: String? = null
+
 
     val speedState: MutableState<Float> = mutableFloatStateOf(1.0F)
     val speakerIdState: MutableState<Int> = mutableIntStateOf(0)
@@ -76,6 +79,7 @@ object TtsEngine {
         dataDir = null
         dictDir = null
         lang = null
+        lang2 = null
 
         // Please enable one and only one of the examples below
 
@@ -125,6 +129,7 @@ object TtsEngine {
         // lexicon = "lexicon.txt"
         // dictDir = "vits-melo-tts-zh_en/dict"
         // lang = "zho"
+        // lang2 = "eng"
 
         // Example 7
         // matcha-icefall-zh-baker
@@ -162,6 +167,7 @@ object TtsEngine {
         // dictDir = "kokoro-multi-lang-v1_0/dict"
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // lang = "eng"
+        // lang2 = "zho"
         // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
         //
         // This model supports many languages, e.g., English, Chinese, etc.
