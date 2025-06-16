@@ -18,6 +18,9 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/lazarus/generate-subtitles.html#download-a-speech-recognition-model
 for how to rename.
 
+The renamed file shoud put in current folder: ```/<repo>/wasm/vad-asr/assets```
+
+
 You can find example build scripts at the following address:
 
   https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-vad-asr.yaml
