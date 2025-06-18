@@ -67,11 +67,13 @@ def show(filename):
         print(i)
 
 
-#  NodeArg(name='tokens', type='tensor(int64)', shape=[1, 'tokens1'])
-#  NodeArg(name='style', type='tensor(float)', shape=[1, 256])
-#  NodeArg(name='speed', type='tensor(float)', shape=[1])
-#  -----
-#  NodeArg(name='audio', type='tensor(float)', shape=['audio0'])
+"""
+NodeArg(name='tokens', type='tensor(int64)', shape=[1, 'tokens1'])
+NodeArg(name='style', type='tensor(float)', shape=[1, 256])
+NodeArg(name='speed', type='tensor(float)', shape=[1])
+-----
+NodeArg(name='audio', type='tensor(float)', shape=['audio0'])
+"""
 
 
 def load_tokens(filename: str) -> Dict[str, int]:
@@ -169,10 +171,6 @@ class OnnxModel:
             },
         )[0]
         return audio
-
-
-def test(model, voice, text) -> np.ndarray:
-    pass
 
 
 def main():
