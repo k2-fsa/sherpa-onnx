@@ -160,6 +160,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
 
+    if (cluster_labels.empty()) {
+      SHERPA_ONNX_LOGE("No speakers found in the audio samples");
+      return {};
+    }
+
     int32_t max_cluster_index =
         *std::max_element(cluster_labels.begin(), cluster_labels.end());
 
