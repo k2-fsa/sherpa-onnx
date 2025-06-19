@@ -6,6 +6,7 @@ public class OfflineTtsKokoroModelConfig {
     private final String voices;
     private final String tokens;
     private final String lexicon;
+    private final String lang;
     private final String dataDir;
     private final String dictDir;
     private final float lengthScale;
@@ -15,6 +16,7 @@ public class OfflineTtsKokoroModelConfig {
         this.voices = builder.voices;
         this.tokens = builder.tokens;
         this.lexicon = builder.lexicon;
+        this.lang = builder.lang;
         this.dataDir = builder.dataDir;
         this.dictDir = builder.dictDir;
         this.lengthScale = builder.lengthScale;
@@ -50,6 +52,7 @@ public class OfflineTtsKokoroModelConfig {
         private String voices = "";
         private String tokens = "";
         private String lexicon = "";
+        private String lang = "";
         private String dataDir = "";
         private String dictDir = "";
         private float lengthScale = 1.0f;
@@ -75,6 +78,11 @@ public class OfflineTtsKokoroModelConfig {
 
         public Builder setLexicon(String lexicon) {
             this.lexicon = lexicon;
+            return this;
+        }
+
+        public Builder setLexicon(String lang) {
+            this.lang = lang;
             return this;
         }
 

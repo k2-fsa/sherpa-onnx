@@ -36,6 +36,7 @@ export class OfflineTtsKokoroModelConfig {
   public lengthScale: number = 1.0;
   public dictDir: string = '';
   public lexicon: string = '';
+  public lang: string = '';
 }
 
 export class OfflineTtsModelConfig {

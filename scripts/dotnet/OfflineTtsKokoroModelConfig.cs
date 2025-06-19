@@ -18,6 +18,7 @@ namespace SherpaOnnx
 
             DictDir = "";
             Lexicon = "";
+            Lang = "";
         }
         [MarshalAs(UnmanagedType.LPStr)]
         public string Model;
@@ -38,5 +39,8 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Lexicon;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Lang;
     }
 }

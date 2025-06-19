@@ -67,7 +67,8 @@ class KokoroMultiLangLexicon::Impl {
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
-  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
+  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text,
+                                              const std::string &voice) const {
     std::string text = ToLowerCase(_text);
     if (debug_) {
       SHERPA_ONNX_LOGE("After converting to lowercase:\n%s", text.c_str());
@@ -124,7 +125,7 @@ class KokoroMultiLangLexicon::Impl {
           SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
         }
 
-        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
+        ids_vec = ConvertNonChineseToTokenIDs(ms, voice);
       }
 
       for (const auto &ids : ids_vec) {
@@ -255,8 +256,30 @@ class KokoroMultiLangLexicon::Impl {
     return ans;
   }
 
-  std::vector<std::vector<int32_t>> ConvertEnglishToTokenIDs(
+  std::vector<std::vector<int32_t>> ConvertTextToTokenIDsWithEspeak(
       const std::string &text, const std::string &voice) const {
+    auto temp = ConvertTextToTokenIdsKokoro(
+        phoneme2id_, meta_data_.max_token_len, text, voice);
+    std::vector<std::vector<int32_t>> ans;
+    ans.reserve(temp.size());
+
+    for (const auto &i : temp) {
+      ans.emplace_back(i.tokens.begin(), i.tokens.end());
+    }
+
+    return ans;
+  }
+
+  std::vector<std::vector<int32_t>> ConvertNonChineseToTokenIDs(
+      const std::string &text, const std::string &voice) const {
+    if (!voice.empty()) {
+      return ConvertTextToTokenIDsWithEspeak(text, voice);
+    }
+
+    // If voice is empty, we split the text into words and use the lexicon
+    // to lookup the pronunciation of each word, fallback to espeak if
+    // a word is not in the lexicon.
+
     std::vector<std::string> words = SplitUtf8(text);
     if (debug_) {
       std::ostringstream os;
@@ -317,7 +340,7 @@ class KokoroMultiLangLexicon::Impl {
 
         piper::eSpeakPhonemeConfig config;
 
-        config.voice = voice;
+        config.voice = meta_data_.voice;
 
         std::vector<std::vector<piper::Phoneme>> phonemes;
 
@@ -391,9 +414,28 @@ class KokoroMultiLangLexicon::Impl {
 
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);  // defined in ./symbol-table.cc
+
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    std::u32string s;
+    for (const auto &p : token2id_) {
+      s = conv.from_bytes(p.first);
+
+      if (s.size() != 1) {
+        SHERPA_ONNX_LOGE("Error for token %s with id %d", p.first.c_str(),
+                         p.second);
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      char32_t c = s[0];
+      phoneme2id_.insert({c, p.second});
+    }
   }
 
   void InitLexicon(const std::string &lexicon) {
+    if (lexicon.empty()) {
+      return;
+    }
+
     std::vector<std::string> files;
     SplitStringToVector(lexicon, ",", false, &files);
     for (const auto &f : files) {
@@ -404,6 +446,10 @@ class KokoroMultiLangLexicon::Impl {
 
   template <typename Manager>
   void InitLexicon(Manager *mgr, const std::string &lexicon) {
+    if (lexicon.empty()) {
+      return;
+    }
+
     std::vector<std::string> files;
     SplitStringToVector(lexicon, ",", false, &files);
     for (const auto &f : files) {
@@ -445,7 +491,7 @@ class KokoroMultiLangLexicon::Impl {
 
       std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
 
-      if (ids.empty()) {
+      if (ids.empty() && word != "呣") {
         SHERPA_ONNX_LOGE(
             "Invalid pronunciation for word '%s' at line %d:%s. Ignore it",
             word.c_str(), line_num, line.c_str());
@@ -464,6 +510,8 @@ class KokoroMultiLangLexicon::Impl {
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+
+  std::unordered_map<char32_t, int32_t> phoneme2id_;
 
   std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
@@ -487,8 +535,8 @@ KokoroMultiLangLexicon::KokoroMultiLangLexicon(
                                    meta_data, debug)) {}
 
 std::vector<TokenIDs> KokoroMultiLangLexicon::ConvertTextToTokenIds(
-    const std::string &text, const std::string & /*unused_voice = ""*/) const {
-  return impl_->ConvertTextToTokenIds(text);
+    const std::string &text, const std::string &voice /*= ""*/) const {
+  return impl_->ConvertTextToTokenIds(text, voice);
 }
 
 #if __ANDROID_API__ >= 9

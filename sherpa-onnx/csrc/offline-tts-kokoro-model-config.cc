@@ -18,6 +18,13 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
                "Path to voices.bin for Kokoro models");
   po->Register("kokoro-tokens", &tokens,
                "Path to tokens.txt for Kokoro models");
+  po->Register("kokoro-lang", &lang,
+               "Used only by kokoro >= 1.0. Example values: "
+               "en (English), "
+               "es (Spanish), fr (French), hi (hindi), it (Italian), "
+               "pt-br (Brazilian Portuguese)."
+               "You can leave it empty, in which case you need to provide "
+               "--kokoro-lexicon.");
   po->Register(
       "kokoro-lexicon", &lexicon,
       "Path to lexicon.txt for Kokoro models. Used only for Kokoro >= v1.0"
@@ -127,7 +134,8 @@ std::string OfflineTtsKokoroModelConfig::ToString() const {
   os << "lexicon=\"" << lexicon << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "dict_dir=\"" << dict_dir << "\", ";
-  os << "length_scale=" << length_scale << ")";
+  os << "length_scale=" << length_scale << ", ";
+  os << "lang=\"" << lang << "\")";
 
   return os.str();
 }

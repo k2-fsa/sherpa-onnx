@@ -145,6 +145,12 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.model.kokoro.lexicon = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(kokoro_cls, "lang", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.lang = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(kokoro_cls, "dataDir", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(kokoro, fid);
   p = env->GetStringUTFChars(s, nullptr);
