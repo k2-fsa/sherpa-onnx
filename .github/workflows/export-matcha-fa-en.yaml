@@ -3,7 +3,7 @@ name: export-matcha-fa-en-to-onnx
 on:
   push:
     branches:
-      - fix-ci
+      - tts-matcha-samples
 
   workflow_dispatch:
 
@@ -33,15 +33,48 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html sherpa-onnx
 
       - name: Run
+        if: false
         shell: bash
         run: |
           cd scripts/matcha-tts/fa-en
           ./run.sh
 
+      - name: Generate samples
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          cd scripts/matcha-tts/zh
+
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+          tar xvf matcha-icefall-zh-baker.tar.bz2
+          rm matcha-icefall-zh-baker.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          mkdir -p ./hf/matcha/icefall-zh/mp3
+
+          ./generate_samples.py
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add kokoro samples for matcha tts zh'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
+          rm -rf hf
+
+          ls -lh
+
       - name: Collect results ${{ matrix.version }}
+        if: false
         shell: bash
         run: |
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
@@ -73,6 +106,7 @@ jobs:
           ls -lh $dst2.tar.bz2
 
       - name: Publish to huggingface male (musa)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -110,6 +144,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-musa main || true
 
       - name: Publish to huggingface female (khadijah)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -147,7 +182,8 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-khadijah main || true
 
       - name: Release
-        if: github.repository_owner == 'csukuangfj'
+        # if: github.repository_owner == 'csukuangfj'
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -158,7 +194,8 @@ jobs:
           tag: tts-models
 
       - name: Release
-        if: github.repository_owner == 'k2-fsa'
+        # if: github.repository_owner == 'k2-fsa'
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
