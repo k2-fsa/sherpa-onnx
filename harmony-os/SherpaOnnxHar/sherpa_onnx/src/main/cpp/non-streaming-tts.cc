@@ -70,6 +70,7 @@ static SherpaOnnxOfflineTtsKokoroModelConfig GetOfflineTtsKokoroModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
   SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lang, lang);
 
   return c;
 }
@@ -177,6 +178,7 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);
 
   SHERPA_ONNX_DELETE_C_STR(c.model.provider);
 

@@ -15,7 +15,7 @@ extern "C" {
 
 static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 7 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +

@@ -201,6 +201,7 @@ final class SherpaOnnxOfflineTtsKokoroModelConfig extends Struct {
   external double lengthScale;
   external Pointer<Utf8> dictDir;
   external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> lang;
 }
 
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {

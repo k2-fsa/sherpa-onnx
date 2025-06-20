@@ -351,7 +351,8 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
   if (is_matcha_) {
     return ConvertTextToTokenIdsMatcha(text, voice);
   } else if (is_kokoro_) {
-    return ConvertTextToTokenIdsKokoro(text, voice);
+    return ConvertTextToTokenIdsKokoro(
+        token2id_, kokoro_meta_data_.max_token_len, text, voice);
   } else {
     return ConvertTextToTokenIdsVits(text, voice);
   }
@@ -382,8 +383,10 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsMatcha(
   return ans;
 }
 
-std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsKokoro(
-    const std::string &text, const std::string &voice /*= ""*/) const {
+std::vector<TokenIDs> ConvertTextToTokenIdsKokoro(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    int32_t max_token_len, const std::string &text,
+    const std::string &voice /*= ""*/) {
   piper::eSpeakPhonemeConfig config;
 
   // ./bin/espeak-ng-bin --path  ./install/share/espeak-ng-data/ --voices
@@ -397,8 +400,7 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsKokoro(
   std::vector<TokenIDs> ans;
 
   for (const auto &p : phonemes) {
-    auto phoneme_ids =
-        PiperPhonemesToIdsKokoro(token2id_, p, kokoro_meta_data_.max_token_len);
+    auto phoneme_ids = PiperPhonemesToIdsKokoro(token2id, p, max_token_len);
 
     for (auto &ids : phoneme_ids) {
       ans.emplace_back(std::move(ids));

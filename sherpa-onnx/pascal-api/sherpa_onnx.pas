@@ -84,6 +84,7 @@ type
     LengthScale: Single;
     DictDir: AnsiString;
     Lexicon: AnsiString;
+    Lang: AnsiString;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -841,6 +842,7 @@ type
     LengthScale: cfloat;
     DictDir: PAnsiChar;
     Lexicon: PAnsiChar;
+    Lang: PAnsiChar;
   end;
 
   SherpaOnnxOfflineTtsModelConfig = record
@@ -2096,10 +2098,11 @@ begin
     'DataDir := %s, ' +
     'LengthScale := %.2f, ' +
     'DictDir := %s, ' +
-    'Lexicon := %s' +
+    'Lexicon := %s, ' +
+    'Lang := %s' +
     ')',
     [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale,
-     Self.DictDir, Self.Lexicon]);
+     Self.DictDir, Self.Lexicon, Self.Lang]);
 end;
 
 class operator TSherpaOnnxOfflineTtsKokoroModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -2180,6 +2183,7 @@ begin
   C.Model.Kokoro.LengthScale := Config.Model.Kokoro.LengthScale;
   C.Model.Kokoro.DictDir := PAnsiChar(Config.Model.Kokoro.DictDir);
   C.Model.Kokoro.Lexicon := PAnsiChar(Config.Model.Kokoro.Lexicon);
+  C.Model.Kokoro.Lang := PAnsiChar(Config.Model.Kokoro.Lang);
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);

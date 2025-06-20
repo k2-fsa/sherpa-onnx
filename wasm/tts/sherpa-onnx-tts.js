@@ -143,13 +143,14 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
   const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
+  const langLen = Module.lengthBytesUTF8(config.lang || '') + 1;
 
-  const n =
-      modelLen + voicesLen + tokensLen + dataDirLen + dictDirLen + lexiconLen;
+  const n = modelLen + voicesLen + tokensLen + dataDirLen + dictDirLen +
+      lexiconLen + langLen;
 
   const buffer = Module._malloc(n);
 
-  const len = 7 * 4;
+  const len = 8 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -171,6 +172,9 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
   offset += lexiconLen;
 
+  Module.stringToUTF8(config.lang || '', buffer + offset, langLen);
+  offset += langLen;
+
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += modelLen;
@@ -191,6 +195,9 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
 
   Module.setValue(ptr + 24, buffer + offset, 'i8*');
   offset += lexiconLen;
+
+  Module.setValue(ptr + 28, buffer + offset, 'i8*');
+  offset += langLen;
 
   return {
     buffer: buffer, ptr: ptr, len: len,
@@ -233,6 +240,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       dataDir: '',
       dictDir: '',
       lexicon: '',
+      lang: '',
     };
   }
 

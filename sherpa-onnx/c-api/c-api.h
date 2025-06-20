@@ -958,6 +958,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
   float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
   const char *dict_dir;
   const char *lexicon;
+  const char *lang;
 } SherpaOnnxOfflineTtsKokoroModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {

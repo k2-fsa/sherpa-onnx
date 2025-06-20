@@ -20,9 +20,9 @@ struct OfflineSpeechDenoiserModelConfig {
 
   OfflineSpeechDenoiserModelConfig() = default;
 
-  OfflineSpeechDenoiserModelConfig(OfflineSpeechDenoiserGtcrnModelConfig gtcrn,
-                                   int32_t num_threads, bool debug,
-                                   const std::string &provider)
+  OfflineSpeechDenoiserModelConfig(
+      const OfflineSpeechDenoiserGtcrnModelConfig &gtcrn, int32_t num_threads,
+      bool debug, const std::string &provider)
       : gtcrn(gtcrn),
         num_threads(num_threads),
         debug(debug),
