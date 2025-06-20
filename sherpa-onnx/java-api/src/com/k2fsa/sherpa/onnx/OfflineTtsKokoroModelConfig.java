@@ -81,7 +81,7 @@ public class OfflineTtsKokoroModelConfig {
             return this;
         }
 
-        public Builder setLexicon(String lang) {
+        public Builder setLang(String lang) {
             this.lang = lang;
             return this;
         }
