@@ -1,18 +1,18 @@
 ### Supported functions
 
-|Speech recognition| [Speech synthesis](https://k2-fsa.github.io/sherpa/onnx/tts/all/) | Source separation |
+|Speech recognition| [Speech synthesis][tts-url] | [Source separation][ss-url] |
 |------------------|------------------|-------------------|
 |   ✔️              |         ✔️        |       ✔️           |
 
-|Speaker identification| Speaker diarization | Speaker verification |
+|Speaker identification| [Speaker diarization][sd-url] | Speaker verification |
 |----------------------|-------------------- |------------------------|
 |   ✔️                  |         ✔️           |            ✔️           |
 
-| Spoken Language identification | Audio tagging | Voice activity detection |
+| [Spoken Language identification][slid-url] | [Audio tagging][at-url] | [Voice activity detection][vad-url] |
 |--------------------------------|---------------|--------------------------|
 |                 ✔️              |          ✔️    |                ✔️         |
 
-| Keyword spotting | Add punctuation | Speech enhancement |
+| [Keyword spotting][kws-url] | [Add punctuation][punct-url] | [Speech enhancement][se-url] |
 |------------------|-----------------|--------------------|
 |     ✔️            |       ✔️         |      ✔️             |
 
@@ -501,3 +501,12 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 [spleeter]: https://github.com/deezer/spleeter
 [UVR]: https://github.com/Anjok07/ultimatevocalremovergui
 [gtcrn]: https://github.com/Xiaobin-Rong/gtcrn
+[tts-url]: https://k2-fsa.github.io/sherpa/onnx/tts/all-in-one.html
+[ss-url]: https://k2-fsa.github.io/sherpa/onnx/source-separation/index.html
+[sd-url]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/index.html
+[slid-url]: https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/index.html
+[at-url]: https://k2-fsa.github.io/sherpa/onnx/audio-tagging/index.html
+[vad-url]: https://k2-fsa.github.io/sherpa/onnx/vad/index.html
+[kws-url]: https://k2-fsa.github.io/sherpa/onnx/kws/index.html
+[punct-url]: https://k2-fsa.github.io/sherpa/onnx/punctuation/index.html
+[se-url]: https://k2-fsa.github.io/sherpa/onnx/speech-enhancment/index.html
