@@ -1,6 +1,6 @@
 ### Supported functions
 
-|Speech recognition| Speech synthesis | Source separation |
+|Speech recognition| [Speech synthesis](https://k2-fsa.github.io/sherpa/onnx/tts/all/) | Source separation |
 |------------------|------------------|-------------------|
 |   ✔️              |         ✔️        |       ✔️           |
 
