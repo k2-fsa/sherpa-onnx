@@ -195,6 +195,13 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
   end;
 
+  TSherpaOnnxHomophoneReplacerConfig = record
+    DictDir: AnsiString;
+    Lexicon: AnsiString;
+    RuleFsts: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOnlineRecognizerConfig = record
     FeatConfig: TSherpaOnnxFeatureConfig;
     ModelConfig: TSherpaOnnxOnlineModelConfig;
@@ -212,6 +219,7 @@ type
     BlankPenalty: Single;
     HotwordsBuf: AnsiString;
     HotwordsBufSize: Integer;
+    Hr: TSherpaOnnxHomophoneReplacerConfig;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineRecognizerConfig);
   end;
@@ -352,6 +360,7 @@ type
     RuleFsts: AnsiString;
     RuleFars: AnsiString;
     BlankPenalty: Single;
+    Hr: TSherpaOnnxHomophoneReplacerConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
     function ToString: AnsiString;
   end;
@@ -601,6 +610,7 @@ const
      {$linklib sherpa-onnx-kaldifst-core}
      {$linklib sherpa-onnx-fstfar}
      {$linklib sherpa-onnx-fst}
+     {$linklib kissfft-float}
      {$linklib kaldi-native-fbank-core}
      {$linklib piper_phonemize}
      {$linklib espeak-ng}
@@ -668,6 +678,13 @@ type
     Graph: PAnsiChar;
     MaxActive: cint32;
   end;
+
+  SherpaOnnxHomophoneReplacerConfig = record
+    DictDir: PAnsiChar;
+    Lexicon: PAnsiChar;
+    RuleFsts: PAnsiChar;
+  end;
+
   SherpaOnnxOnlineRecognizerConfig = record
     FeatConfig: SherpaOnnxFeatureConfig;
     ModelConfig: SherpaOnnxOnlineModelConfig;
@@ -685,6 +702,7 @@ type
     BlankPenalty: cfloat;
     HotwordsBuf: PAnsiChar;
     HotwordsBufSize: cint32;
+    Hr: SherpaOnnxHomophoneReplacerConfig;
   end;
 
   PSherpaOnnxOnlineRecognizerConfig = ^SherpaOnnxOnlineRecognizerConfig;
@@ -763,6 +781,7 @@ type
     RuleFsts: PAnsiChar;
     RuleFars: PAnsiChar;
     BlankPenalty: cfloat;
+    Hr: SherpaOnnxHomophoneReplacerConfig;
   end;
 
   PSherpaOnnxOfflineRecognizerConfig = ^SherpaOnnxOfflineRecognizerConfig;
@@ -1238,6 +1257,12 @@ begin
   [Self.Graph, Self.MaxActive]);
 end;
 
+function TSherpaOnnxHomophoneReplacerConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxHomophoneReplacerConfig(DictDir := %s, Lexicon := %s, RuleFsts := %s)',
+  [Self.DictDir, Self.Lexicon, Self.RuleFsts]);
+end;
+
 function TSherpaOnnxOnlineRecognizerConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOnlineRecognizerConfig(FeatConfig := %s, ' +
@@ -1253,7 +1278,8 @@ begin
     'CtcFstDecoderConfig := %s, ' +
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
-    'BlankPenalty := %.1f' +
+    'BlankPenalty := %.1f, ' +
+    'Hr := %s' +
     ')'
     ,
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
@@ -1261,7 +1287,7 @@ begin
      Self.Rule1MinTrailingSilence, Self.Rule2MinTrailingSilence,
      Self.Rule3MinUtteranceLength, Self.HotwordsFile, Self.HotwordsScore,
      Self.CtcFstDecoderConfig.ToString, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty
+     Self.BlankPenalty, Self.Hr.ToString
     ]);
 end;
 
@@ -1336,6 +1362,9 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
+  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
+  C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
+  C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
   Self.Handle := SherpaOnnxCreateOnlineRecognizer(@C);
   Self._Config := Config;
@@ -1574,12 +1603,13 @@ begin
     'HotwordsScore := %.1f, ' +
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
-    'BlankPenalty := %1.f' +
+    'BlankPenalty := %1.f, ' +
+    'Hr := %s' +
     ')',
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
      Self.LMConfig.ToString, Self.DecodingMethod, Self.MaxActivePaths,
      Self.HotwordsFile, Self.HotwordsScore, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty
+     Self.BlankPenalty, Self.Hr.ToString
      ]);
 end;
 
@@ -1639,6 +1669,10 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
+
+  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
+  C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
+  C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
   Self.Handle := SherpaOnnxCreateOfflineRecognizer(@C);
   Self._Config := Config;
