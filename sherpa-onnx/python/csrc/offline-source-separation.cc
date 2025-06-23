@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-source-separation.h"
 
+#include <algorithm>
 #include <string>
 
 #include "sherpa-onnx/python/csrc/offline-source-separation-model-config.h"

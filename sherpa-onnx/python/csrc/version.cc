@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/version.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/version.h"
 
 namespace sherpa_onnx {
