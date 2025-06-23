@@ -60,6 +60,21 @@ function createOfflineSpeechDenoiser(config) {
       wasmModule, config);
 }
 
+function getVersion() {
+  const v = wasmModule._SherpaOnnxGetVersionStr();
+  return wasmModule.UTF8ToString(v);
+}
+
+function getGitSha1() {
+  const v = wasmModule._SherpaOnnxGetGitSha1();
+  return wasmModule.UTF8ToString(v);
+}
+
+function getGitDate() {
+  const v = wasmModule._SherpaOnnxGetGitDate();
+  return wasmModule.UTF8ToString(v);
+}
+
 // Note: online means streaming and offline means non-streaming here.
 // Both of them don't require internet connection.
 module.exports = {
@@ -74,4 +89,7 @@ module.exports = {
   createVad,
   createOfflineSpeakerDiarization,
   createOfflineSpeechDenoiser,
+  version: getVersion(),
+  gitSha1: getGitSha1(),
+  gitDate: getGitDate(),
 };
