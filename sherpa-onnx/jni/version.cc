@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/version.cc
+// sherpa-onnx/jni/version.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 #include "sherpa-onnx/csrc/version.h"
