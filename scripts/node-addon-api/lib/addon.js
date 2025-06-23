@@ -26,12 +26,14 @@ for (const p of possible_paths) {
 }
 
 if (!found) {
-  let addon_path = `${process.env.PWD}/node_modules/sherpa-onnx-${platform_arch}`;
+  let addon_path =
+      `${process.env.PWD}/node_modules/sherpa-onnx-${platform_arch}`;
   const pnpmIndex = __dirname.indexOf(`node_modules${path.sep}.pnpm`);
   if (pnpmIndex !== -1) {
     const parts = __dirname.slice(pnpmIndex).split(path.sep);
     parts.pop();
-    addon_path = `${process.env.PWD}/${parts.join('/')}/sherpa-onnx-${platform_arch}`;
+    addon_path =
+        `${process.env.PWD}/${parts.join('/')}/sherpa-onnx-${platform_arch}`;
   }
 
   let msg = `Could not find sherpa-onnx-node. Tried\n\n  ${

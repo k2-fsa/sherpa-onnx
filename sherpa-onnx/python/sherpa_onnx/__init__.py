@@ -49,6 +49,9 @@ from _sherpa_onnx import (
     VadModel,
     VadModelConfig,
     VoiceActivityDetector,
+    git_date,
+    git_sha1,
+    version,
     write_wave,
 )
 

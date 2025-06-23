@@ -31,6 +31,7 @@
 #include "sherpa-onnx/python/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/vad-model.h"
+#include "sherpa-onnx/python/csrc/version.h"
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/python/csrc/wave-writer.h"
 
@@ -112,6 +113,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindAlsa(&m);
   PybindOfflineSpeechDenoiser(&m);
   PybindOfflineSourceSeparation(&m);
+  PybindVersion(&m);
 }
 
 }  // namespace sherpa_onnx

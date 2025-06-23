@@ -56,6 +56,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
         with:

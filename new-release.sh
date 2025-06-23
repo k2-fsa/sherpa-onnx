@@ -2,6 +2,13 @@
 
 set -ex
 
+sed -i.bak 's/1\.12\.0/1\.12\.1/g' ./sherpa-onnx/csrc/version.cc
+sha1=$(git describe --match=NeVeRmAtCh --always --abbrev=8)
+date=$(git log -1 --format=%ad --date=local)
+
+sed -i.bak "s/  static const char \*sha1.*/  static const char \*sha1 = \"$sha1\";/g" ./sherpa-onnx/csrc/version.cc
+sed -i.bak "s/  static const char \*date.*/  static const char \*date = \"$date\";/g" ./sherpa-onnx/csrc/version.cc
+
 sed -i.bak 's/1\.12\.0/1\.12\.1/g' ./build-ios-shared.sh
 sed -i.bak 's/1\.12\.0/1\.12\.1/g' ./pom.xml
 sed -i.bak 's/1\.12\.0/1\.12\.1/g' ./jitpack.yml

@@ -24,6 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Fix version
         shell: bash
         run: |
@@ -120,6 +126,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -223,6 +235,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Fix version
         shell: bash
         run: |
@@ -306,6 +324,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -438,6 +462,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -516,6 +546,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
