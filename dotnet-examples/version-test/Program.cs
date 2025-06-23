@@ -1,7 +1,7 @@
 ﻿// Copyright (c)  2025  Xiaomi Corporation
 using SherpaOnnx;
 
-class OfflinePunctuationDemo
+class VersionTestDemo
 {
   static void Main(string[] args)
   {
