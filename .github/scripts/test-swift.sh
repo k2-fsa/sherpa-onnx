@@ -7,6 +7,8 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-test-version.sh
+
 ./run-decode-file-sense-voice-with-hr.sh
 rm -rf sherpa-onnx-sense-voice-*
 rm -rf dict lexicon.txt replace.fst test-hr.wav

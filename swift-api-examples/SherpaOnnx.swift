@@ -1448,3 +1448,15 @@ class SherpaOnnxOfflineSpeechDenoiserWrapper {
     return Int(SherpaOnnxOfflineSpeechDenoiserGetSampleRate(impl))
   }
 }
+
+func getSherpaOnnxVersion() -> String {
+  return String(cString: SherpaOnnxGetVersionStr())
+}
+
+func getSherpaOnnxGitSha1() -> String {
+  return String(cString: SherpaOnnxGetGitSha1())
+}
+
+func getSherpaOnnxGitDate() -> String {
+  return String(cString: SherpaOnnxGetGitDate())
+}

@@ -8,7 +8,6 @@ namespace SherpaOnnx
 {
     public class VersionInfo
     {
-
         public static String Version
         {
           get

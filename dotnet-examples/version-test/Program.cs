@@ -7,7 +7,7 @@ class OfflinePunctuationDemo
   {
     var version = VersionInfo.Version;
     var gitSha1 = VersionInfo.GitSha1;
-    var gitDate = VersionInfo.gitDate;
+    var gitDate = VersionInfo.GitDate;
 
     Console.WriteLine("sherpa-onnx version: {0}", version);
     Console.WriteLine("sherpa-onnx gitSha1: {0}", gitSha1);
