@@ -25,6 +25,18 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
 fi
 
 export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
+
+function testVersion() {
+  out_filename=test_version.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_version.kt \
+    VersionInfo.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
 
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
@@ -436,6 +448,7 @@ function testOfflineSenseVoiceWithHr() {
   ls -lh $out_filename
   java -Djava.library.path=../build/lib -jar $out_filename
 }
+testVersion
 
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser

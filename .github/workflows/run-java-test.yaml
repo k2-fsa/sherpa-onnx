@@ -111,6 +111,12 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java version test
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-version-test.sh
+
       - name:  Run java test (Non-streaming SenseVoice with homophone replacer)
         shell: bash
         run: |

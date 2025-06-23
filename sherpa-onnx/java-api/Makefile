@@ -8,6 +8,7 @@ package_dir := com/k2fsa/sherpa/onnx
 
 java_files := LibraryLoader.java
 
+java_files += VersionInfo.java
 java_files += WaveReader.java
 java_files += WaveWriter.java
 java_files += EndpointRule.java
