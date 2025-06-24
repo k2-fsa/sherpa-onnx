@@ -28,6 +28,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
         with:

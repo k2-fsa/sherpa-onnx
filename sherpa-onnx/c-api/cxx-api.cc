@@ -717,4 +717,10 @@ int32_t LinearResampler::GetOutputSamplingRate() const {
   return SherpaOnnxLinearResamplerResampleGetOutputSampleRate(p_);
 }
 
+std::string GetVersionStr() { return SherpaOnnxGetVersionStr(); }
+
+std::string GetGitSha1() { return SherpaOnnxGetGitSha1(); }
+
+std::string GetGitDate() { return SherpaOnnxGetGitDate(); }
+
 }  // namespace sherpa_onnx::cxx

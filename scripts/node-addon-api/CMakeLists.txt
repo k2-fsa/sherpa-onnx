@@ -28,6 +28,7 @@ set(srcs
   src/spoken-language-identification.cc
   src/streaming-asr.cc
   src/vad.cc
+  src/version.cc
   src/wave-reader.cc
   src/wave-writer.cc
 )

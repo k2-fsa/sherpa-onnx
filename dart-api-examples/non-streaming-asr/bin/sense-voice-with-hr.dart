@@ -9,6 +9,10 @@ import './init.dart';
 void main(List<String> arguments) async {
   await initSherpaOnnx();
 
+  print('sherpa-onnx version: ${sherpa_onnx.getVersion()}');
+  print('sherpa-onnx gitSha1: ${sherpa_onnx.getGitSha1()}');
+  print('sherpa-onnx gitDate: ${sherpa_onnx.getGitDate()}');
+
   final parser = ArgParser()
     ..addOption('model', help: 'Path to the SenseVoice model')
     ..addOption('tokens', help: 'Path to tokens.txt')

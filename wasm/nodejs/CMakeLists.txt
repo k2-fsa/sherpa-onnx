@@ -94,6 +94,10 @@ set(exported_functions
   SherpaOnnxDestroyOfflineSpeechDenoiser
   SherpaOnnxOfflineSpeechDenoiserGetSampleRate
   SherpaOnnxOfflineSpeechDenoiserRun
+  # version
+  SherpaOnnxGetGitDate
+  SherpaOnnxGetGitSha1
+  SherpaOnnxGetVersionStr
 )
 
 

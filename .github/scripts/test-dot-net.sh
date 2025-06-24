@@ -2,7 +2,11 @@
 
 cd dotnet-examples/
 
-cd ./speech-enhancement-gtcrn
+cd ./version-test
+./run.sh
+ls -lh
+
+cd ../speech-enhancement-gtcrn
 ./run.sh
 ls -lh
 

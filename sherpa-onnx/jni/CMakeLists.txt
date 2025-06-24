@@ -24,6 +24,7 @@ set(sources
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
   spoken-language-identification.cc
+  version.cc
   voice-activity-detector.cc
   wave-reader.cc
   wave-writer.cc

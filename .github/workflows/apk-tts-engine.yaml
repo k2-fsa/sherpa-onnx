@@ -31,6 +31,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       # https://github.com/actions/setup-java
       - uses: actions/setup-java@v4
         with:

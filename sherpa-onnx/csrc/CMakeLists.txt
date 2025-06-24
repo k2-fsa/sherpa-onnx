@@ -129,6 +129,7 @@ set(sources
   utils.cc
   vad-model-config.cc
   vad-model.cc
+  version.cc
   voice-activity-detector.cc
   wave-reader.cc
   wave-writer.cc
@@ -337,6 +338,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
   add_executable(sherpa-onnx-offline-source-separation sherpa-onnx-offline-source-separation.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
+  add_executable(sherpa-onnx-version sherpa-onnx-version.cc version.cc)
   add_executable(sherpa-onnx-vad sherpa-onnx-vad.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
@@ -396,6 +398,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   install(
     TARGETS
       ${main_exes}
+      sherpa-onnx-version
     DESTINATION
       bin
   )

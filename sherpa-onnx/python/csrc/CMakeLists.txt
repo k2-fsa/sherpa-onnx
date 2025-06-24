@@ -53,6 +53,7 @@ set(srcs
   tensorrt-config.cc
   vad-model-config.cc
   vad-model.cc
+  version.cc
   voice-activity-detector.cc
   wave-writer.cc
 )

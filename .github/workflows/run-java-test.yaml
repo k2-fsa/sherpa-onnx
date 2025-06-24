@@ -43,6 +43,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -104,6 +110,12 @@ jobs:
 
             make -j4
             ls -lh lib
+
+      - name:  Run java version test
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-version-test.sh
 
       - name:  Run java test (Non-streaming SenseVoice with homophone replacer)
         shell: bash

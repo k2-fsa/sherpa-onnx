@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Add SSH key
         run: |
           mkdir -p ~/.ssh/

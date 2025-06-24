@@ -32,6 +32,7 @@
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/version.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
@@ -43,6 +44,10 @@
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 #endif
+
+const char *SherpaOnnxGetVersionStr() { return sherpa_onnx::GetVersionStr(); }
+const char *SherpaOnnxGetGitSha1() { return sherpa_onnx::GetGitSha1(); }
+const char *SherpaOnnxGetGitDate() { return sherpa_onnx::GetGitDate(); }
 
 struct SherpaOnnxOnlineRecognizer {
   std::unique_ptr<sherpa_onnx::OnlineRecognizer> impl;
@@ -1369,9 +1374,8 @@ int64_t SherpaOnnxWaveFileSize(int32_t n_samples) {
   return sherpa_onnx::WaveFileSize(n_samples);
 }
 
-SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples,
-                                                 int32_t n, int32_t sample_rate,
-                                                 char *buffer) {
+void SherpaOnnxWriteWaveToBuffer(const float *samples, int32_t n,
+                                 int32_t sample_rate, char *buffer) {
   sherpa_onnx::WriteWave(buffer, sample_rate, samples, n);
 }
 
