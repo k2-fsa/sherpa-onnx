@@ -57,6 +57,12 @@ set(srcs
   voice-activity-detector.cc
   wave-writer.cc
 )
+
+list(APPEND srcs
+  ${CMAKE_SOURCE_DIR}/sherpa-onnx/csrc/online-websocket-server.cc
+  online-websocket-server-app.cc
+)
+
 if(SHERPA_ONNX_HAS_ALSA)
   list(APPEND srcs ${PROJECT_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
 else()
