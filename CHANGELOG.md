@@ -1,3 +1,22 @@
+## 1.12.2
+
+* Fix CI for windows (#2279)
+* Add jar for Java 24. (#2280)
+* Add Python API for source separation (#2283)
+* Add link to huggingface space for source separation. (#2284)
+* Fix isspace on windows in debug build (#2042)
+* Update wasm/vad-asr/assets/README.md for more clear (#2297)
+* Update TTS Engine APK to support multi-lang (#2294)
+* Add scripts for exporting Piper TTS models to sherpa-onnx (#2299)
+* Update sherpa-onnx-shared.pc.in (#2300)
+* Fixes #2172 (#2301)
+* Refactor kokoro export (#2302)
+* Fix building for Pascal (#2305)
+* Support extra languages in multi-lang kokoro tts (#2303)
+* Update readme to include BreezeApp from MediaTek Research. (#2313)
+* Add API to get version information (#2309)
+
+
 ## 1.12.1
 
 * Use jlong explicitly in jni. (#2229)
