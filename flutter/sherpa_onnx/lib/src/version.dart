@@ -1,4 +1,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
 import './sherpa_onnx_bindings.dart';
 
 String getVersion() {
