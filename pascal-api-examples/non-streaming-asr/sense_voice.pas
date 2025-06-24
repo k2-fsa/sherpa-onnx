@@ -62,6 +62,9 @@ begin
   Duration := Length(Wave.Samples) / Wave.SampleRate;
   RealTimeFactor := Elapsed / Duration;
 
+  WriteLn(Format('sherpa-onnx version: %s', [SherpaOnnxGetVersionStr()]));
+  WriteLn(Format('sherpa-onnx gitSha1: %s', [SherpaOnnxGetGitSha1()]));
+  WriteLn(Format('sherpa-onnx gitDate: %s', [SherpaOnnxGetGitDate()]));
   WriteLn(RecognitionResult.ToString);
   WriteLn(Format('NumThreads %d', [Config.ModelConfig.NumThreads]));
   WriteLn(Format('Elapsed %.3f s', [Elapsed]));

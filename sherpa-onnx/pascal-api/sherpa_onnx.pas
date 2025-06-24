@@ -578,6 +578,10 @@ type
   function SherpaOnnxWriteWave(Filename: AnsiString;
     Samples: array of Single; SampleRate: Integer): Boolean;
 
+  function SherpaOnnxGetVersionStr(): AnsiString;
+  function SherpaOnnxGetGitSha1(): AnsiString;
+  function SherpaOnnxGetGitDate(): AnsiString;
+
 implementation
 
 uses
@@ -950,6 +954,30 @@ function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
   FilterCutoffHz: cfloat;
   NumZeros: cint32): Pointer; cdecl;
   external SherpaOnnxLibName;
+
+function SherpaOnnxGetVersionStrWrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetVersionStr';
+
+function SherpaOnnxGetGitSha1Wrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetGitSha1';
+
+function SherpaOnnxGetGitDateWrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetGitDate';
+
+function SherpaOnnxGetVersionStr(): AnsiString;
+begin
+  Result := SherpaOnnxGetVersionStrWrapper();
+end;
+
+function SherpaOnnxGetGitSha1(): AnsiString;
+begin
+  Result := SherpaOnnxGetGitSha1Wrapper();
+end;
+
+function SherpaOnnxGetGitDate(): AnsiString;
+begin
+  Result := SherpaOnnxGetGitDateWrapper();
+end;
 
 procedure SherpaOnnxDestroyLinearResampler(P: Pointer); cdecl;
   external SherpaOnnxLibName;
