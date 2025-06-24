@@ -2027,3 +2027,15 @@ func (audio *DenoisedAudio) Save(filename string) bool {
 func (sd *OfflineSpeechDenoiser) SampleRate() int {
 	return int(C.SherpaOnnxOfflineSpeechDenoiserGetSampleRate(sd.impl))
 }
+
+func GetVersion() string {
+	return C.GoString(SherpaOnnxGetVersionStr())
+}
+
+func GetGitSha1() string {
+	return C.GoString(SherpaOnnxGetGitSha1())
+}
+
+func GetGitDate() string {
+	return C.GoString(SherpaOnnxGetGitDate())
+}

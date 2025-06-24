@@ -12,6 +12,10 @@ import (
 )
 
 func main() {
+	log.Println("sherpa-onnx version: %v", sherpa.GetVersion())
+	log.Println("sherpa-onnx gitSha1: %v", sherpa.GetGitSha1())
+	log.Println("sherpa-onnx gitDate: %v", sherpa.GetGitDate())
+
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	config := sherpa.OnlineRecognizerConfig{}
