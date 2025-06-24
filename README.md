@@ -277,6 +277,20 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [BreezeApp](https://github.com/mtkresearch/BreezeApp) from [MediaTek Research](https://github.com/mtkresearch)
+
+> BreezeAPP is a mobile AI application developed for both Android and iOS platforms.
+> Users can download it directly from the App Store and enjoy a variety of features
+> offline, including speech-to-text, text-to-speech, text-based chatbot interactions,
+> and image question-answering
+
+  - [Download APK for BreezeAPP](https://huggingface.co/MediaTek-Research/BreezeApp/resolve/main/BreezeApp.apk)
+  - [APK 中国镜像](https://hf-mirror.com/MediaTek-Research/BreezeApp/blob/main/BreezeApp.apk)
+
+| 1 | 2 | 3 |
+|---|---|---|
+|![](https://github.com/user-attachments/assets/1cdbc057-b893-4de6-9e9c-f1d7dfd1d992)|![](https://github.com/user-attachments/assets/d77cd98e-b057-442f-860d-d5befd5c769b)|![](https://github.com/user-attachments/assets/57e546bf-3d39-45b9-b392-b48ca4fb3c58)|
+
 ### [Open-LLM-VTuber](https://github.com/t41372/Open-LLM-VTuber)
 
 Talk to any LLM with hands-free voice interaction, voice interruption, and Live2D taking
@@ -358,7 +372,9 @@ It is a [YouTube video](https://www.youtube.com/watch?v=KxPKkwxGWZs),
 showing how the author tried to use AI so he can have a conversation with Paimon.
 
 It uses sherpa-onnx for speech-to-text and text-to-speech.
-![](https://private-user-images.githubusercontent.com/5284924/442579664-f6eea2d5-1807-42cb-9160-be8da2971e1f.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDcwMjI5NjIsIm5iZiI6MTc0NzAyMjY2MiwicGF0aCI6Ii81Mjg0OTI0LzQ0MjU3OTY2NC1mNmVlYTJkNS0xODA3LTQyY2ItOTE2MC1iZThkYTI5NzFlMWYucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MDUxMiUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA1MTJUMDQwNDIyWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9ODAyMDllYjNmMGU0ZjNlODI3N2RkZjdiYjU2MmY4YzQwNGJjZjM4MGZmNjk0OWRmNmYzMjJhYWIzMDRiMWNiYSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.WP-v8oKPqQ-s487-eUU2Z4quOfWbwDJQJok89NfkTf4)
+|1|
+|---|
+|![](https://github.com/user-attachments/assets/f6eea2d5-1807-42cb-9160-be8da2971e1f)|
 
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
