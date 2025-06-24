@@ -2029,13 +2029,13 @@ func (sd *OfflineSpeechDenoiser) SampleRate() int {
 }
 
 func GetVersion() string {
-	return C.GoString(SherpaOnnxGetVersionStr())
+	return C.GoString(C.SherpaOnnxGetVersionStr())
 }
 
 func GetGitSha1() string {
-	return C.GoString(SherpaOnnxGetGitSha1())
+	return C.GoString(C.SherpaOnnxGetGitSha1())
 }
 
 func GetGitDate() string {
-	return C.GoString(SherpaOnnxGetGitDate())
+	return C.GoString(C.SherpaOnnxGetGitDate())
 }
