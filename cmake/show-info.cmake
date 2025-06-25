@@ -9,7 +9,7 @@ message(STATUS "CMAKE_SYSTEM_VERSION: ${CMAKE_SYSTEM_VERSION}")
 message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 
 find_package(Git QUIET)
-if(GIT_FOUND)
+if(Git_FOUND)
   execute_process(COMMAND
     "${GIT_EXECUTABLE}" describe --always --abbrev=40
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
