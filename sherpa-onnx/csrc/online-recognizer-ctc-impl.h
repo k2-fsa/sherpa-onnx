@@ -235,7 +235,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     s->SetCtcResult({});
 
     // clear states
-    s->SetStates(model_->GetInitStates());
+    // s->SetStates(model_->GetInitStates());
 
     s->GetFasterDecoderProcessedFrames() = 0;
 
