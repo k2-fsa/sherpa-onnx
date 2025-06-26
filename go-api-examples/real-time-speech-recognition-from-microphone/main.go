@@ -69,7 +69,7 @@ func main() {
 
 	segment_idx := 0
 
-	onRecvFrames := func(pSample2, pSample []byte, framecount uint32) {
+	onRecvFrames := func(_, pSample []byte, framecount uint32) {
 		samples := samplesInt16ToFloat(pSample)
 		stream.AcceptWaveform(16000, samples)
 
