@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"github.com/gen2brain/malgo"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
