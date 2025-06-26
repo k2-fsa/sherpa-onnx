@@ -130,7 +130,7 @@ for a list of pre-trained models to download.
   }
 
   if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                      nullptr /* user_data */)) {
+                      s.get())) {
     fprintf(stderr, "portaudio error: %d\n", device_index);
     exit(EXIT_FAILURE);
   }

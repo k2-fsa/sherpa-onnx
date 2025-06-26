@@ -77,6 +77,8 @@ class OnlineCtcModel {
 
   // Return true if the model supports batch size > 1
   virtual bool SupportBatchProcessing() const { return true; }
+
+  virtual bool UseWhisperFeature() const { return false; }
 };
 
 }  // namespace sherpa_onnx
