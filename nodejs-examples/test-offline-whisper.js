@@ -1,7 +1,7 @@
 // Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
 //
 const sherpa_onnx = require('sherpa-onnx');
-console.log(`verison : ${sherpa_onnx.version}`);
+console.log(`version : ${sherpa_onnx.version}`);
 console.log(`git sha1: ${sherpa_onnx.gitSha1}`);
 console.log(`git date: ${sherpa_onnx.gitDate}`);
 
