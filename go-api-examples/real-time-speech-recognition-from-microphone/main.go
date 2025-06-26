@@ -118,14 +118,8 @@ func samplesInt16ToFloat(inSamples []byte) []float32 {
 	outSamples := make([]float32, numSamples)
 
 	for i := 0; i != numSamples; i++ {
-		s := inSamples[i*2 : (i+1)*2]
-
-		var s16 int16
-		buf := bytes.NewReader(s)
-		err := binary.Read(buf, binary.LittleEndian, &s16)
-		if err != nil {
-			log.Fatal("Failed to parse 16-bit sample")
-		}
+		// Decode two bytes into an int16 using bit manipulation
+		s16 := int16(inSamples[2*i]) | int16(inSamples[2*i+1])<<8
 		outSamples[i] = float32(s16) / 32768
 	}
 
