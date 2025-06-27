@@ -1,6 +1,6 @@
 # Introduction
 
-Please download ./sherpa_onnx-v1.12.2.har
+Please download ./sherpa_onnx-v1.12.3.har
 from <https://huggingface.co/csukuangfj/sherpa-onnx-harmony-os/tree/main/har>
 
 Hint: For users who have no access to huggingface, please use
