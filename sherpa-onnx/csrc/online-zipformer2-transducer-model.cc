@@ -120,6 +120,12 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
   SHERPA_ONNX_READ_META_DATA(T_, "T");
   SHERPA_ONNX_READ_META_DATA(decode_chunk_len_, "decode_chunk_len");
 
+  std::string feature_type;
+  SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(feature_type, "feature", "");
+  if (feature_type == "whisper") {
+    use_whisper_feature_ = true;
+  }
+
   if (config_.debug) {
     auto print = [](const std::vector<int32_t> &v, const char *name) {
       std::ostringstream os;
