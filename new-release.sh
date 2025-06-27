@@ -19,9 +19,9 @@ sed -i.bak "$replace_str" ./android/SherpaOnnxAar/README.md
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 
-find flutter -name *.yaml -type f -exec sed -i.bak "$replace_str" {} \;
-find dart-api-examples -name *.yaml -type f -exec sed -i.bak "$replace_str" {} \;
-find flutter-examples -name *.yaml -type f -exec sed -i.bak "$replace_str" {} \;
+find flutter -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
+find dart-api-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
+find flutter-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find flutter -name *.podspec -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
