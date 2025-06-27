@@ -131,10 +131,13 @@ class FeatureExtractor::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
     if (fbank_) {
       fbank_->InputFinished();
+      return;
     } else if (whisper_fbank_) {
       whisper_fbank_->InputFinished();
+      return;
     } else if (mfcc_) {
       mfcc_->InputFinished();
+      return;
     }
 
     SHERPA_ONNX_LOGE("unreachable code");
