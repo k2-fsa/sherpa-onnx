@@ -1,3 +1,10 @@
+## 1.12.3
+
+* Show CMake debug information. (#2316)
+* Remove portaudio-go in Go API examples. (#2317)
+* Support Xipformer CTC ASR with whisper features. (#2319)
+* Support Zipformer transducer ASR with whisper features. (#2321)
+
 ## 1.12.2
 
 * Fix CI for windows (#2279)
