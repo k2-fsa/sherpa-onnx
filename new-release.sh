@@ -22,7 +22,7 @@ find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_ve
 find flutter -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find dart-api-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find flutter-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
-find flutter -name *.podspec -type f -exec sed -i.bak "$replace_str" {} \;
+find flutter -name "*.podspec" -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 
