@@ -1363,8 +1363,6 @@ def get_all_models():
     ans += get_uk_models()
     ans += get_vi_models()
 
-    ans = get_en_models()
-
     for i, m in enumerate(ans):
         m.index = i
 
