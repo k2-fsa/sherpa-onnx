@@ -230,6 +230,25 @@ def get_es_models():
         PiperModel(name="sharvard", kind="medium", sr=22050, ns=2),
     ]
 
+    es_ES.extend(
+        [
+            # https://github.com/rhasspy/piper/issues/187#issuecomment-1802216304
+            # https://drive.google.com/file/d/12tNCCyd0Hf5jsyqCw8828kLSHHx5LOw9/view
+            PiperModel(
+                name="glados",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-es_ES-glados-medium/resolve/main/es_ES-glados-medium.onnx
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-es_ES-glados-medium/resolve/main/es_ES-glados-medium.onnx.json
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-es_ES-glados-medium/resolve/main/README.md
+                   """,
+                url="https://github.com/rhasspy/piper/issues/187#issuecomment-1802216304",
+            ),
+        ]
+    )
+
     es_MX = [
         PiperModel(name="ald", kind="medium", sr=22050, ns=1),
         PiperModel(name="claude", kind="high", sr=22050, ns=1),
