@@ -395,6 +395,36 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
             )
         }
 
+        17 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-int8-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        18 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        19 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-fp16-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.fp16.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
         1000 -> {
             val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
             return OnlineModelConfig(
