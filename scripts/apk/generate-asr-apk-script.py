@@ -344,10 +344,30 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-streaming-zipformer-ctc-fp16-zh-2025-06-30",
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-fp16-2025-06-30",
             idx=19,
             lang="zh",
             short_name="large_zipformer_fp16",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -fv bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-int8-2025-06-30",
+            idx=20,
+            lang="zh",
+            short_name="large_zipformer_int8",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
