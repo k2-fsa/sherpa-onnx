@@ -165,6 +165,9 @@ jobs:
         run: |
           cd ./java-api-examples
 
+          ./run-non-streaming-decode-file-zipformer-ctc.sh
+          rm -rf sherpa-onnx-zipformer-ctc-*
+
           ./run-non-streaming-decode-file-dolphin-ctc.sh
           rm -rf sherpa-onnx-dolphin-*
 
