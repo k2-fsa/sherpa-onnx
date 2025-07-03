@@ -29,6 +29,10 @@ data class OfflineDolphinModelConfig(
     var model: String = "",
 )
 
+data class OfflineZipformerCtcModelConfig(
+    var model: String = "",
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -64,6 +68,7 @@ data class OfflineModelConfig(
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
+    var zipformerCtc: OfflineZipformerCtcModelConfig = OfflineZipformerCtcModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -557,6 +562,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "nemo_transducer",
+            )
+        }
+
+        31 -> {
+            val modelDir = "sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03"
+            return OfflineModelConfig(
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }

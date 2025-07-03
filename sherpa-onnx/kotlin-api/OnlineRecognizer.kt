@@ -412,6 +412,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                     model = "$modelDir/model.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
             )
         }
 
@@ -422,6 +423,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                     model = "$modelDir/model.fp16.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
             )
         }
 
