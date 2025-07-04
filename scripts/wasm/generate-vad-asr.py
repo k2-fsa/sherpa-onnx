@@ -215,7 +215,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc",
-            ms="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc",
             short_name="vad-asr-zh-zipformer-ctc",
             cmd="""
             pushd $model_name

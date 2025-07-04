@@ -55,6 +55,10 @@ export class OfflineDolphinModelConfig {
   public model: string = '';
 }
 
+export class OfflineZipformerCtcModelConfig {
+  public model: string = '';
+}
+
 export class OfflineWhisperModelConfig {
   public encoder: string = '';
   public decoder: string = '';
@@ -97,6 +101,7 @@ export class OfflineModelConfig {
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
+  public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
 }
 
 export class OfflineLMConfig {
