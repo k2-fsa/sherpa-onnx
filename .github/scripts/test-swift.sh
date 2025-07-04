@@ -9,6 +9,9 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-zipformer-ctc-asr.sh
+rm -rf sherpa-onnx-zipformer-*
+
 ./run-decode-file-sense-voice-with-hr.sh
 rm -rf sherpa-onnx-sense-voice-*
 rm -rf dict lexicon.txt replace.fst test-hr.wav
