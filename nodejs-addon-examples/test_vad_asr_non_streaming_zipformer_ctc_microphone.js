@@ -1,4 +1,4 @@
-// Copyright (c)  2023-2024  Xiaomi Corporation (authors: Fangjun Kuang)
+// Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
 //
 const portAudio = require('naudiodon2');
 // console.log(portAudio.getDevices());

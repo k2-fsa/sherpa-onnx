@@ -1,4 +1,4 @@
-// Copyright 2024 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 
 // This file shows how to use an offline Zipformer CTC model,
 // i.e., non-streaming Zipformer CTC model,

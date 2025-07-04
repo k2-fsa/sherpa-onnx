@@ -142,6 +142,7 @@ We also have spaces built using WebAssembly. They are listed below:
 |----------------------------------------|------------------------------------|-----------------------------------|
 | Speaker diarization                    | [Address][apk-speaker-diarization] | [点此][apk-speaker-diarization-cn]|
 | Streaming speech recognition           | [Address][apk-streaming-asr]       | [点此][apk-streaming-asr-cn]      |
+| Simulated-streaming speech recognition | [Address][apk-simula-streaming-asr]| [点此][apk-simula-streaming-asr-cn]|
 | Text-to-speech                         | [Address][apk-tts]                 | [点此][apk-tts-cn]                |
 | Voice activity detection (VAD)         | [Address][apk-vad]                 | [点此][apk-vad-cn]                |
 | VAD + non-streaming speech recognition | [Address][apk-vad-asr]             | [点此][apk-vad-asr-cn]            |
@@ -455,6 +456,8 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 [apk-speaker-diarization-cn]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/apk-cn.html
 [apk-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/android/apk.html
 [apk-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html
+[apk-simula-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/android/apk-simulate-streaming-asr.html
+[apk-simula-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/android/apk-simulate-streaming-asr-cn.html
 [apk-tts]: https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html
 [apk-tts-cn]: https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine-cn.html
 [apk-vad]: https://k2-fsa.github.io/sherpa/onnx/vad/apk.html
