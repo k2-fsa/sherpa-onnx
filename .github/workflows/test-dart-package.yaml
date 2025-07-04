@@ -59,6 +59,8 @@ jobs:
           cd dart-api-examples/vad
           flutter pub get
 
+          if false; then
+
           if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-24.04-arm ]]; then
             echo "-----"
             ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev
@@ -95,6 +97,7 @@ jobs:
 
             # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
             # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
+          fi
           fi
 
 
