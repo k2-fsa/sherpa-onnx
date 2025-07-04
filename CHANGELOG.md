@@ -6,7 +6,7 @@
 * Fix VAD+ASR C++ example. (#2335)
 * Add sherpa-onnx-streaming-zipformer-zh-int8-2025-06-30 to android ASR apk (#2336)
 * Support non-streaming zipformer CTC ASR models (#2340)
-
+* Support linux aarch64 for Dart and Flutter (#2342)
 
 ## 1.12.3
 
