@@ -184,6 +184,10 @@ jobs:
           go build
           ls -lh
 
+          echo "Test Zipformer CTC"
+          ./run-zipformer-ctc.sh
+          rm -rf sherpa-onnx-zipformer-*
+
           echo "Test SenseVoice ctc"
           ./run-sense-voice-small-with-hr.sh
           ./run-sense-voice-small.sh
