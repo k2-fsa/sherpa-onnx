@@ -90,6 +90,7 @@ jobs:
               make install
 
               cp bin/sense-voice-simulate-streaming-alsa-cxx-api install/bin
+              cp bin/zipformer-ctc-simulate-streaming-alsa-cxx-api install/bin
 
               ls -lh install/lib
 

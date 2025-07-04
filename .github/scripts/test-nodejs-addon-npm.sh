@@ -10,6 +10,15 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------non-streaming ASR Zipformer CTC----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+node ./test_asr_non_streaming_zipformer_ctc.js
+rm -rf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
+
 echo "----------non-streaming ASR NeMo parakeet tdt----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 tar xvf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2

@@ -13,6 +13,7 @@ extern "C" {
 static_assert(sizeof(SherpaOnnxOfflineTransducerModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
+static_assert(sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
@@ -31,7 +32,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) +
                       sizeof(SherpaOnnxOfflineMoonshineModelConfig) +
                       sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) +
-                      sizeof(SherpaOnnxOfflineDolphinModelConfig),
+                      sizeof(SherpaOnnxOfflineDolphinModelConfig) +
+                      sizeof(SherpaOnnxOfflineZipformerCtcModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -77,6 +79,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto moonshine = &model_config->moonshine;
   auto fire_red_asr = &model_config->fire_red_asr;
   auto dolphin = &model_config->dolphin;
+  auto zipformer_ctc = &model_config->zipformer_ctc;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -116,6 +119,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline Dolphin model config----------\n");
   fprintf(stdout, "model: %s\n", dolphin->model);
+
+  fprintf(stdout, "----------offline zipformer ctc model config----------\n");
+  fprintf(stdout, "model: %s\n", zipformer_ctc->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

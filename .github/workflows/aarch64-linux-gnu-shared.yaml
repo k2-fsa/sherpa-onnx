@@ -89,6 +89,7 @@ jobs:
           make -j4 install
 
           cp -v bin/sense-voice-simulate-streaming-alsa-cxx-api install/bin
+          cp -v bin/zipformer-ctc-simulate-streaming-alsa-cxx-api install/bin
 
           rm -rf install/lib/pkgconfig
           rm -fv install/lib/cargs.h
@@ -135,6 +136,7 @@ jobs:
               make -j4 install
 
               cp -v bin/sense-voice-simulate-streaming-alsa-cxx-api install/bin
+              cp -v bin/zipformer-ctc-simulate-streaming-alsa-cxx-api install/bin
 
               rm -rf install/lib/pkgconfig
               rm -fv install/lib/cargs.h

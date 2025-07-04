@@ -269,6 +269,21 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.nemo_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // zipformer ctc
+  fid =
+      env->GetFieldID(model_config_cls, "zipformerCtc",
+                      "Lcom/k2fsa/sherpa/onnx/OfflineZipformerCtcModelConfig;");
+  jobject zipformer_ctc_config = env->GetObjectField(model_config, fid);
+  jclass zipformer_ctc_config_cls = env->GetObjectClass(zipformer_ctc_config);
+
+  fid =
+      env->GetFieldID(zipformer_ctc_config_cls, "model", "Ljava/lang/String;");
+
+  s = (jstring)env->GetObjectField(zipformer_ctc_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.zipformer_ctc.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   // dolphin
   fid = env->GetFieldID(model_config_cls, "dolphin",
                         "Lcom/k2fsa/sherpa/onnx/OfflineDolphinModelConfig;");

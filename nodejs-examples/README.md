@@ -154,6 +154,23 @@ rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 node ./test-offline-dolphin-ctc.js
 ```
 
+## ./test-offline-zipformer-ctc.js
+
+[./test-offline-zipformer-ctc.js](./test-offline-zipformer-ctc.js) demonstrates
+how to decode a file with a Zipformer CTC model. In the code we use
+[sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/icefall/zipformer.html#sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03-chinese).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+node ./test-offline-zipformer-ctc.js
+```
+
 ## ./test-offline-nemo-ctc.js
 
 [./test-offline-nemo-ctc.js](./test-offline-nemo-ctc.js) demonstrates

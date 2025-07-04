@@ -45,7 +45,23 @@ static SherpaOnnxOfflineParaformerModelConfig GetOfflineParaformerModelConfig(
   return c;
 }
 
-static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinfig(
+static SherpaOnnxOfflineZipformerCtcModelConfig
+GetOfflineZipformerCtcModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineZipformerCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("zipformerCtc") || !obj.Get("zipformerCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("zipformerCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
+static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineDolphinModelConfig c;
   memset(&c, 0, sizeof(c));
@@ -185,7 +201,8 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.sense_voice = GetOfflineSenseVoiceModelConfig(o);
   c.moonshine = GetOfflineMoonshineModelConfig(o);
   c.fire_red_asr = GetOfflineFireRedAsrModelConfig(o);
-  c.dolphin = GetOfflineDolphinfig(o);
+  c.dolphin = GetOfflineDolphinModelConfig(o);
+  c.zipformer_ctc = GetOfflineZipformerCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -312,6 +329,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.decoder);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer_ctc.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

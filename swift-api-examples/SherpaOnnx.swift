@@ -346,6 +346,14 @@ func sherpaOnnxOfflineParaformerModelConfig(
   )
 }
 
+func sherpaOnnxOfflineZipformerCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineZipformerCtcModelConfig {
+  return SherpaOnnxOfflineZipformerCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -449,7 +457,9 @@ func sherpaOnnxOfflineModelConfig(
   senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig(),
   moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig(),
   fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig(),
-  dolphin: SherpaOnnxOfflineDolphinModelConfig = sherpaOnnxOfflineDolphinModelConfig()
+  dolphin: SherpaOnnxOfflineDolphinModelConfig = sherpaOnnxOfflineDolphinModelConfig(),
+  zipformerCtc: SherpaOnnxOfflineZipformerCtcModelConfig =
+    sherpaOnnxOfflineZipformerCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -468,7 +478,8 @@ func sherpaOnnxOfflineModelConfig(
     sense_voice: senseVoice,
     moonshine: moonshine,
     fire_red_asr: fireRedAsr,
-    dolphin: dolphin
+    dolphin: dolphin,
+    zipformer_ctc: zipformerCtc
   )
 }
 

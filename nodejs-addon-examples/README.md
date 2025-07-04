@@ -123,6 +123,7 @@ The following tables list the examples in this folder.
 |[./test_asr_non_streaming_moonshine.js](./test_asr_non_streaming_moonshine.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine)|
 |[./test_vad_with_non_streaming_asr_moonshine.js](./test_vad_with_non_streaming_asr_moonshine.js)| Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_nemo_ctc.js](./test_asr_non_streaming_nemo_ctc.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) CTC model with greedy search|
+|[./test_asr_non_streaming_zipformer_ctc.js](./test_asr_non_streaming_zipformer_ctc.js)|Non-streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_parakeet_tdt_v2.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with greedy search|
 |[./test_asr_non_streaming_dolphin_ctc.js](./test_asr_non_streaming_dolphin_ctc.js)|Non-streaming speech recognition from a file using a [Dolphinhttps://github.com/DataoceanAI/Dolphin]) CTC model with greedy search|
 |[./test_asr_non_streaming_paraformer.js](./test_asr_non_streaming_paraformer.js)|Non-streaming speech recognition from a file using [Paraformer](https://github.com/alibaba-damo-academy/FunASR)|
@@ -137,6 +138,7 @@ The following tables list the examples in this folder.
 |[./test_vad_asr_non_streaming_whisper_microphone.js](./test_vad_asr_non_streaming_whisper_microphone.js)|VAD + Non-streaming speech recognition from a microphone using [Whisper](https://github.com/openai/whisper)|
 |[./test_vad_asr_non_streaming_moonshine_microphone.js](./test_vad_asr_non_streaming_moonshine_microphone.js)|VAD + Non-streaming speech recognition from a microphone using [Moonshine](https://github.com/usefulsensors/moonshine)|
 |[./test_vad_asr_non_streaming_nemo_ctc_microphone.js](./test_vad_asr_non_streaming_nemo_ctc_microphone.js)|VAD + Non-streaming speech recognition from a microphone using a [NeMo](https://github.com/NVIDIA/NeMo) CTC model with greedy search|
+|[./test_vad_asr_non_streaming_zipformer_ctc_microphone.js](./test_vad_asr_non_streaming_zipformer_ctc_microphone.js)|VAD + Non-streaming speech recognition from a microphone using a Zipformer CTC model with greedy search|
 |[./test_vad_asr_non_streaming_paraformer_microphone.js](./test_vad_asr_non_streaming_paraformer_microphone.js)|VAD + Non-streaming speech recognition from a microphone using [Paraformer](https://github.com/alibaba-damo-academy/FunASR)|
 |[./test_vad_asr_non_streaming_sense_voice_microphone.js](./test_vad_asr_non_streaming_sense_voice_microphone.js)|VAD + Non-streaming speech recognition from a microphone using [SenseVoice](https://github.com/FunAudioLLM/SenseVoice)|
 
@@ -370,6 +372,21 @@ tar xvf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 rm sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 
 node ./test_asr_non_streaming_nemo_parakeet_tdt_v2.js
+```
+
+### Non-streaming speech recognition with Zipformer CTC models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+node ./test_asr_non_streaming_zipformer_ctc.js
+
+# To run VAD + non-streaming ASR with Paraformer using a microphone
+npm install naudiodon2
+node ./test_vad_asr_non_streaming_zipformer_ctc_microphone.js
 ```
 
 ### Non-streaming speech recognition with NeMo CTC models
