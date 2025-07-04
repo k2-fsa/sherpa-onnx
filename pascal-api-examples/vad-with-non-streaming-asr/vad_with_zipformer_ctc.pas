@@ -47,7 +47,7 @@ var
 begin
   Initialize(Config);
 
-  Config.ModelConfig.ZipformerCtC.Model := './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx';
+  Config.ModelConfig.ZipformerCtc.Model := './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx';
   Config.ModelConfig.Tokens := './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 1;
