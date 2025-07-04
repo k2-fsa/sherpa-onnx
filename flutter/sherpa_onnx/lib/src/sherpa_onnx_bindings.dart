@@ -266,6 +266,10 @@ final class SherpaOnnxOfflineDolphinModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -333,6 +337,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineMoonshineModelConfig moonshine;
   external SherpaOnnxOfflineFireRedAsrModelConfig fireRedAsr;
   external SherpaOnnxOfflineDolphinModelConfig dolphin;
+  external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
