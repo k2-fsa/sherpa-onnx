@@ -252,6 +252,9 @@ OfflineRecognizer OfflineRecognizer::Create(
 
   c.model_config.dolphin.model = config.model_config.dolphin.model.c_str();
 
+  c.model_config.zipformer_ctc.model =
+      config.model_config.zipformer_ctc.model.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 

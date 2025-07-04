@@ -241,6 +241,10 @@ struct SHERPA_ONNX_API OfflineDolphinModelConfig {
   std::string model;
 };
 
+struct SHERPA_ONNX_API OfflineZipformerCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -267,6 +271,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineMoonshineModelConfig moonshine;
   OfflineFireRedAsrModelConfig fire_red_asr;
   OfflineDolphinModelConfig dolphin;
+  OfflineZipformerCtcModelConfig zipformer_ctc;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
