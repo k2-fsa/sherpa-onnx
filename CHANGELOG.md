@@ -1,3 +1,13 @@
+## 1.12.4
+
+* Refactor release scripts. (#2323)
+* Add TTS engline APKs for more models (#2327)
+* Fix static link without tts (#2328)
+* Fix VAD+ASR C++ example. (#2335)
+* Add sherpa-onnx-streaming-zipformer-zh-int8-2025-06-30 to android ASR apk (#2336)
+* Support non-streaming zipformer CTC ASR models (#2340)
+
+
 ## 1.12.3
 
 * Show CMake debug information. (#2316)
