@@ -117,6 +117,10 @@ function initOfflineRecognizer() {
     };
   } else if (fileExists('dolphin.onnx')) {
     config.modelConfig.dolphin = {model: './dolphin.onnx'};
+  } else if (fileExists('zipformer-ctc.onnx')) {
+    // you need to rename model.int8.onnx from zipformer CTC to
+    // zipformer-ctc.onnx
+    config.modelConfig.zipformerCtc = {model: './zipformer-ctc.onnx'};
   } else {
     console.log('Please specify a model.');
     alert('Please specify a model.');

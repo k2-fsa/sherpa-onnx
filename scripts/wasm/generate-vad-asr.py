@@ -212,6 +212,21 @@ def get_models():
             git diff
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc",
+            ms="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-ctc",
+            short_name="vad-asr-zh-zipformer-ctc",
+            cmd="""
+            pushd $model_name
+            mv model.int8.onnx ../zipformer-ctc.onnx
+            mv tokens.txt ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Zipformer CTC supporting Chinese 中文/g' ../index.html
+            git diff
+            """,
+        ),
     ]
     return models
 
