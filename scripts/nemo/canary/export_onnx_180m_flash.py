@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+"""
+<|en|>
+<|pnc|>
+<|noitn|>
+<|nodiarize|>
+<|notimestamp|>
+"""
+
 import os
-from typing import Tuple
+from typing import Dict, Tuple
 
 import nemo
 import onnx
@@ -76,6 +84,27 @@ def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
         ],
     )
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
+
+
+def add_meta_data(filename: str, meta_data: Dict[str, str]):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+      meta_data:
+        Key-value pairs.
+    """
+    model = onnx.load(filename)
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    onnx.save(model, filename)
 
 
 def lens_to_mask(lens, max_length):
@@ -277,6 +306,29 @@ def export_tokens(canary_model):
 @torch.no_grad()
 def main():
     canary_model = EncDecMultiTaskModel.from_pretrained("nvidia/canary-180m-flash")
+    canary_model.eval()
+
+    preprocessor = canary_model.cfg["preprocessor"]
+    sample_rate = preprocessor["sample_rate"]
+    normalize_type = preprocessor["normalize"]
+    window_size = preprocessor["window_size"]  # ms
+    window_stride = preprocessor["window_stride"]  # ms
+    window = preprocessor["window"]
+    features = preprocessor["features"]
+    n_fft = preprocessor["n_fft"]
+    vocab_size = canary_model.tokenizer.vocab_size  # 5248
+
+    subsampling_factor = canary_model.cfg["encoder"]["subsampling_factor"]
+
+    assert sample_rate == 16000, sample_rate
+    assert normalize_type == "per_feature", normalize_type
+    assert window_size == 0.025, window_size
+    assert window_stride == 0.01, window_stride
+    assert window == "hann", window
+    assert features == 128, features
+    assert n_fft == 512, n_fft
+    assert subsampling_factor == 8, subsampling_factor
+
     export_tokens(canary_model)
     export_encoder(canary_model)
     export_decoder(canary_model)
@@ -289,6 +341,21 @@ def main():
         )
 
         export_onnx_fp16(f"{m}.onnx", f"{m}.fp16.onnx")
+
+    meta_data = {
+        "vocab_size": vocab_size,
+        "normalize_type": normalize_type,
+        "subsampling_factor": subsampling_factor,
+        "model_type": "EncDecMultiTaskModel",
+        "version": "1",
+        "model_author": "NeMo",
+        "url": "https://huggingface.co/nvidia/canary-180m-flash",
+        "feat_dim": features,
+    }
+
+    add_meta_data("encoder.onnx", meta_data)
+    add_meta_data("encoder.int8.onnx", meta_data)
+    add_meta_data("encoder.fp16.onnx", meta_data)
 
     """
     To fix the following error with onnxruntime 1.17.1 and 1.16.3:
