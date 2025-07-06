@@ -433,6 +433,17 @@ class SHERPA_ONNX_API OfflineTts
                           OfflineTtsCallback callback = nullptr,
                           void *arg = nullptr) const;
 
+  // like Generate, but return a struct pointer. You need to call
+  // FreeGeneratedAudio() to free the returned pointer to avoid memory leak.
+  //
+  // see also https://github.com/k2-fsa/sherpa-onnx/issues/2347
+  const GeneratedAudio *Generate2(const std::string &text, int32_t sid = 0,
+                                  float speed = 1.0,
+                                  OfflineTtsCallback callback = nullptr,
+                                  void *arg = nullptr) const;
+
+  static void FreeGeneratedAudio(const GeneratedAudio *p);
+
  private:
   explicit OfflineTts(const SherpaOnnxOfflineTts *p);
 };

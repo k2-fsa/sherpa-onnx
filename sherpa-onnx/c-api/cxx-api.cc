@@ -419,6 +419,19 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   return ans;
 }
 
+const GeneratedAudio *OfflineTts::Generate2(
+    const std::string &text, int32_t sid /*= 0*/, float speed /*= 1.0*/,
+    OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
+  auto audio = Generate(text, sid, speed, callback, arg);
+
+  GeneratedAudio *ans = new GeneratedAudio;
+  ans->samples = std::move(audio.samples);
+  ans->sample_rate = audio.sample_rate;
+  return ans;
+}
+
+void OfflineTts::FreeGeneratedAudio(const GeneratedAudio *p) { delete p; }
+
 KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
   struct SherpaOnnxKeywordSpotterConfig c;
   memset(&c, 0, sizeof(c));
