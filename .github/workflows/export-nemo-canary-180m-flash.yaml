@@ -95,7 +95,6 @@ jobs:
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
-              rm *.onnx
               git lfs track "*.onnx"
               git lfs track "*.wav"
               git status
