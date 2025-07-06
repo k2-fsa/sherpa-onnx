@@ -79,8 +79,7 @@ class OnnxModel:
         )
 
         meta = self.encoder.get_modelmeta().custom_metadata_map
-        #  self.normalize_type = meta["normalize_type"]
-        self.normalize_type = "per_feature"
+        self.normalize_type = meta["normalize_type"]
         print(meta)
 
     def init_decoder(self, decoder):
@@ -267,7 +266,7 @@ def main():
 
     for pos, decoder_input_id in enumerate(decoder_input_ids):
         logits, decoder_mems_list = model.run_decoder(
-            np.array([[decoder_input_id,pos]], dtype=np.int32),
+            np.array([[decoder_input_id, pos]], dtype=np.int32),
             decoder_mems_list,
             enc_states,
             enc_masks,

@@ -62,22 +62,7 @@ jobs:
           d=sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
           mkdir -p $d
           cp encoder.int8.onnx $d
-          cp decoder.fp16.onnx $d
-          cp tokens.txt $d
-
-          mkdir $d/test_wavs
-          cp de.wav $d/test_wavs
-          cp en.wav $d/test_wavs
-
-          tar cjfv $d.tar.bz2 $d
-
-      - name: Collect files (fp16)
-        shell: bash
-        run: |
-          d=sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-fp16
-          mkdir -p $d
-          cp encoder.fp16.onnx $d
-          cp decoder.fp16.onnx $d
+          cp decoder.int8.onnx $d
           cp tokens.txt $d
 
           mkdir $d/test_wavs
@@ -101,7 +86,6 @@ jobs:
             models=(
               sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr
               sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
-              sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-fp16
             )
 
             for m in ${models[@]}; do
