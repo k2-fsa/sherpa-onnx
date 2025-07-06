@@ -5,6 +5,7 @@ import os
 from typing import Tuple
 
 import nemo
+import onnx
 import onnxmltools
 import torch
 from nemo.collections.common.parts import NEG_INF
@@ -281,6 +282,19 @@ def main():
         )
 
         export_onnx_fp16(f"{m}.onnx", f"{m}.fp16.onnx")
+
+    """
+    To fix the following error with onnxruntime 1.17.1 and 1.16.3:
+
+    onnxruntime.capi.onnxruntime_pybind11_state.Fail: [ONNXRuntimeError] : 1 :FAIL : Load model from ./decoder.int8.onnx failed:/Users/runner/work/1/s/onnxruntime/core/graph/model.cc:150 onnxruntime::Model::Model(onnx::ModelProto &&, const onnxruntime::PathString &, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList *, const logging::Logger &, const onnxruntime::ModelOptions &)
+    Unsupported model IR version: 10, max supported IR version: 9
+    """
+    for filename in ["./decoder.onnx", "./decoder.int8.onnx", "./decoder.fp16.onnx"]:
+        model = onnx.load(filename)
+        print("old", model.ir_version)
+        model.ir_version = 9
+        print("new", model.ir_version)
+        onnx.save(model, filename)
 
     os.system("ls -lh *.onnx")
 

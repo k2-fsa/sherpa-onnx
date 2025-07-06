@@ -27,8 +27,6 @@ pip install \
 python3 ./export_onnx_180m_flash.py
 ls -lh *.onnx
 
-exit 0
-
 
 log "-----fp32------"
 
