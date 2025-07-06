@@ -6,6 +6,7 @@
 #ifndef SHERPA_ONNX_C_API_CXX_API_H_
 #define SHERPA_ONNX_C_API_CXX_API_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -432,6 +433,13 @@ class SHERPA_ONNX_API OfflineTts
                           float speed = 1.0,
                           OfflineTtsCallback callback = nullptr,
                           void *arg = nullptr) const;
+
+  // Like Generate, but return a smart pointer.
+  //
+  // See also https://github.com/k2-fsa/sherpa-onnx/issues/2347
+  std::shared_ptr<GeneratedAudio> Generate2(
+      const std::string &text, int32_t sid = 0, float speed = 1.0,
+      OfflineTtsCallback callback = nullptr, void *arg = nullptr) const;
 
  private:
   explicit OfflineTts(const SherpaOnnxOfflineTts *p);
