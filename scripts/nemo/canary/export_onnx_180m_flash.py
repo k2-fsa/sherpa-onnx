@@ -72,6 +72,7 @@ def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
         keep_io_types=True,
         op_block_list=[
             "LayerNormalization",
+            "Cast",
         ],
     )
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
