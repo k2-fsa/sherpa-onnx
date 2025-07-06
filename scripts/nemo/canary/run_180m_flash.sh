@@ -21,10 +21,13 @@ pip install \
   onnx==1.17.0 \
   onnxmltools==1.13.0 \
   onnxruntime==1.17.1 \
+  onnxscript \
   soundfile
 
 python3 ./export_onnx_180m_flash.py
 ls -lh *.onnx
+
+exit 0
 
 
 log "-----fp32------"
