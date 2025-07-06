@@ -370,6 +370,10 @@ Enable custom wake word for XiaoAi Speakers. 让小爱音箱支持自定义唤�
 
 Video demo in Chinese: [小爱同学启动～˶╹ꇴ╹˶！](https://www.bilibili.com/video/BV1YfVUz5EMj)
 
+### [C++ WebSocket ASR Server](https://github.com/mawwalker/stt-server)
+
+It provides C++ WebSocket server for ASR using sherpa-onnx.
+
 ### [Making robot Paimon, Ep10 "The AI Part 1"](https://www.youtube.com/watch?v=KxPKkwxGWZs)
 
 It is a [YouTube video](https://www.youtube.com/watch?v=KxPKkwxGWZs),
