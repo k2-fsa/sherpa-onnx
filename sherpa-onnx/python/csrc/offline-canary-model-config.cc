@@ -17,7 +17,7 @@ void PybindOfflineCanaryModelConfig(py::module *m) {
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, const std::string &, bool>(),
            py::arg("encoder") = "", py::arg("decoder") = "",
-           py::arg("src_lang"), py::arg("tag_lang") = "",
+           py::arg("src_lang") = "", py::arg("tgt_lang") = "",
            py::arg("use_pnc") = true)
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("decoder", &PyClass::decoder)

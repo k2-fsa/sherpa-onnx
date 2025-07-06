@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-canary-model-config.h"
 
+#include <sstream>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
