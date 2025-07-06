@@ -62,7 +62,7 @@ jobs:
           d=sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
           mkdir -p $d
           cp encoder.int8.onnx $d
-          cp decoder.fp16.onnx $d
+          cp decoder.int8.onnx $d
           cp tokens.txt $d
 
           mkdir $d/test_wavs
@@ -111,6 +111,7 @@ jobs:
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
+              rm *.onnx
               git lfs track "*.onnx"
               git lfs track "*.wav"
               git status
