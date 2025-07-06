@@ -67,7 +67,13 @@ from nemo.collections.asr.models import EncDecMultiTaskModel
 
 def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
     onnx_fp32_model = onnxmltools.utils.load_model(onnx_fp32_path)
-    onnx_fp16_model = convert_float_to_float16(onnx_fp32_model, keep_io_types=True)
+    onnx_fp16_model = convert_float_to_float16(
+        onnx_fp32_model,
+        keep_io_types=True,
+        op_block_list=[
+            "LayerNormalization",
+        ],
+    )
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
 
