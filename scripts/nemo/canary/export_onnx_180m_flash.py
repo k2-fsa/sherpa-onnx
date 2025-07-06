@@ -222,7 +222,7 @@ def export_decoder(canary_model):
         ),
         "decoder.onnx",
         dynamo=True,
-        opset_version=18,
+        opset_version=14,
         external_data=False,
         input_names=[
             "decoder_input_ids",
