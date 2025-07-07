@@ -178,6 +178,8 @@ int32_t main() {
       samples_queue.pop();
     }
 
+    // Check for voice activity detection (VAD) in the buffer
+    // Offset marks the position in buffer already processed by VAD
     for (; offset + window_size < buffer.size(); offset += window_size) {
       vad.AcceptWaveform(buffer.data() + offset, window_size);
       if (!speech_started && vad.IsDetected()) {
@@ -185,21 +187,19 @@ int32_t main() {
         started_time = std::chrono::steady_clock::now();
       }
     }
-    if (!speech_started) {
-      if (buffer.size() > 10 * window_size) {
-        offset -= buffer.size() - 10 * window_size;
-        buffer = {buffer.end() - 10 * window_size, buffer.end()};
-      }
-    }
-
-    auto current_time = std::chrono::steady_clock::now();
-    const float elapsed_seconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
-                                                              started_time)
-            .count() /
-        1000.;
-
-    if (speech_started && elapsed_seconds > 0.2) {
+	
+	// Case 1: Speech detected and not yet completed
+    if (speech_started && vad.IsEmpty()) {
+      auto current_time = std::chrono::steady_clock::now();
+      const float elapsed_seconds =
+          std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
+                                                                started_time)
+              .count() /
+          1000.;
+	  // Skip if insufficient data interval
+	  if (elapsed_seconds < 0.2)
+	  	continue;
+	
       OfflineStream stream = recognizer.CreateStream();
       stream.AcceptWaveform(sample_rate, buffer.data(), buffer.size());
 
@@ -212,6 +212,13 @@ int32_t main() {
       started_time = std::chrono::steady_clock::now();
     }
 
+	// Case 2: No speech detected or speech completed - clean up buffer
+	// Remove processed data while preserving unprocessed data
+	buffer.erase(buffer.begin(), buffer.begin() + offset);
+	offset = 0;             // Reset processing offset
+	speech_started = false; // Reset speech detection flag
+
+	// Process complete speech segments with timestamps
     while (!vad.IsEmpty()) {
       auto segment = vad.Front();
 
@@ -228,10 +235,6 @@ int32_t main() {
       display.UpdateText(result.text);
       display.FinalizeCurrentSentence();
       display.Display();
-
-      buffer.clear();
-      offset = 0;
-      speech_started = false;
     }
   }
 
