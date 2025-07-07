@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/offline-canary-model-config.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
@@ -32,6 +33,7 @@ struct OfflineModelConfig {
   OfflineSenseVoiceModelConfig sense_voice;
   OfflineMoonshineModelConfig moonshine;
   OfflineDolphinModelConfig dolphin;
+  OfflineCanaryModelConfig canary;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -65,6 +67,7 @@ struct OfflineModelConfig {
                      const OfflineSenseVoiceModelConfig &sense_voice,
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
+                     const OfflineCanaryModelConfig &canary,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
@@ -81,6 +84,7 @@ struct OfflineModelConfig {
         sense_voice(sense_voice),
         moonshine(moonshine),
         dolphin(dolphin),
+        canary(canary),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),

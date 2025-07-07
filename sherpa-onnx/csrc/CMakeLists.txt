@@ -25,6 +25,8 @@ set(sources
   jieba.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
+  offline-canary-model-config.cc
+  offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
@@ -50,7 +52,6 @@ set(sources
   offline-rnn-lm.cc
   offline-sense-voice-model-config.cc
   offline-sense-voice-model.cc
-
   offline-source-separation-impl.cc
   offline-source-separation-model-config.cc
   offline-source-separation-spleeter-model-config.cc
@@ -58,7 +59,6 @@ set(sources
   offline-source-separation-uvr-model-config.cc
   offline-source-separation-uvr-model.cc
   offline-source-separation.cc
-
   offline-stream.cc
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc

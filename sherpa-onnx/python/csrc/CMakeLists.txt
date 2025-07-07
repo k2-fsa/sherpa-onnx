@@ -9,6 +9,7 @@ set(srcs
   features.cc
   homophone-replacer.cc
   keyword-spotter.cc
+  offline-canary-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-model-config.cc

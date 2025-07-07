@@ -281,9 +281,14 @@ def export_decoder(canary_model):
 
 
 def export_tokens(canary_model):
+    underline = "▁"
     with open("./tokens.txt", "w", encoding="utf-8") as f:
         for i in range(canary_model.tokenizer.vocab_size):
             s = canary_model.tokenizer.ids_to_text([i])
+
+            if s[0] == " ":
+                s = underline + s[1:]
+
             f.write(f"{s} {i}\n")
         print("Saved to tokens.txt")
 

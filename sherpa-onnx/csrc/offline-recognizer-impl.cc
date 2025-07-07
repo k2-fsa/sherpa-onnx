@@ -24,6 +24,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-recognizer-canary-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
@@ -64,6 +65,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
     return std::make_unique<OfflineRecognizerMoonshineImpl>(config);
+  }
+
+  if (!config.model_config.canary.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerCanaryImpl>(config);
   }
 
   // TODO(fangjun): Refactor it. We only need to use model type for the
@@ -250,6 +255,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
     return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
+  }
+
+  if (!config.model_config.canary.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerCanaryImpl>(mgr, config);
   }
 
   // TODO(fangjun): Refactor it. We only need to use model type for the

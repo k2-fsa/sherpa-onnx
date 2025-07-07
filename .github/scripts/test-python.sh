@@ -8,6 +8,13 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test nemo canary"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+python3 ./python-api-examples/offline-nemo-canary-decode-files.py
+rm -rf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
+
 log "test spleeter"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
