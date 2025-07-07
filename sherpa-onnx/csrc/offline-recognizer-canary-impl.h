@@ -6,11 +6,8 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 
 #include <algorithm>
-#include <fstream>
 #include <ios>
 #include <memory>
-#include <mutex>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -112,6 +109,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   void SetConfig(const OfflineRecognizerConfig &config) override {
     config_ = config;
+    PostInit();
     // we don't change the config_ in the base class
   }
 

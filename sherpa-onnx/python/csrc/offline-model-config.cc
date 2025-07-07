@@ -66,8 +66,8 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("moonshine") = OfflineMoonshineModelConfig(),
            py::arg("dolphin") = OfflineDolphinModelConfig(),
            py::arg("canary") = OfflineCanaryModelConfig(),
-           py::arg("telespeech_ctc") = "", py::arg("tokens"),
-           py::arg("num_threads"), py::arg("debug") = false,
+           py::arg("telespeech_ctc") = "", py::arg("tokens") = "",
+           py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
            py::arg("modeling_unit") = "cjkchar", py::arg("bpe_vocab") = "")
       .def_readwrite("transducer", &PyClass::transducer)
