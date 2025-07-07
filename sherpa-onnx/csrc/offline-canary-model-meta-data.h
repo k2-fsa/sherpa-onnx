@@ -11,9 +11,11 @@
 namespace sherpa_onnx {
 
 struct OfflineCanaryModelMetaData {
-  std::unordered_map<std::string, int32_t> lang2id;
-
+  int32_t vocab_size;
   int32_t subsampling_factor = 8;
+  int32_t feat_dim = 120;
+  std::string normalize_type;
+  std::unordered_map<std::string, int32_t> lang2id;
 };
 
 }  // namespace sherpa_onnx

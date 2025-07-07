@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/offline-canary-model-meta-data.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
 namespace sherpa_onnx {
@@ -65,6 +66,10 @@ class OfflineCanaryModel {
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
+
+  const OfflineCanaryModelMetaData &GetModelMetadata() const;
+
+  OfflineCanaryModelMetaData &GetModelMetadata();
 
  private:
   class Impl;

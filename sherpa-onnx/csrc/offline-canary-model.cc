@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include "sherpa-onnx/csrc/offline-canary-model-meta-data.h"
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -129,6 +131,10 @@ class OfflineCanaryModel::Impl {
 
   OrtAllocator *Allocator() { return allocator_; }
 
+  const OfflineCanaryModelMetaData &GetModelMetadata() const { return meta_; }
+
+  OfflineCanaryModelMetaData &GetModelMetadata() { return meta_; }
+
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
     encoder_sess_ = std::make_unique<Ort::Session>(
@@ -152,6 +158,24 @@ class OfflineCanaryModel::Impl {
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 #endif
     }
+
+    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+
+    std::string model_type;
+    SHERPA_ONNX_READ_META_DATA_STR(model_type, "model_type");
+
+    if (model_type != "EncDecMultiTaskModel") {
+      SHERPA_ONNX_LOGE(
+          "Expected model type 'EncDecMultiTaskModel'. Given: '%s'",
+          model_type.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    SHERPA_ONNX_READ_META_DATA(meta_.vocab_size, "vocab_size");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(meta_.normalize_type,
+                                               "normalize_type");
+    SHERPA_ONNX_READ_META_DATA(meta_.subsampling_factor, "subsampling_factor");
+    SHERPA_ONNX_READ_META_DATA(meta_.feat_dim, "feat_dim");
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
@@ -166,6 +190,7 @@ class OfflineCanaryModel::Impl {
   }
 
  private:
+  OfflineCanaryModelMetaData meta_;
   OfflineModelConfig config_;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
@@ -217,6 +242,13 @@ std::vector<Ort::Value> OfflineCanaryModel::GetInitialDecoderStates() const {
 
 OrtAllocator *OfflineCanaryModel::Allocator() const {
   return impl_->Allocator();
+}
+
+const OfflineCanaryModelMetaData &OfflineCanaryModel::GetModelMetadata() const {
+  return impl_->GetModelMetadata();
+}
+OfflineCanaryModelMetaData &OfflineCanaryModel::GetModelMetadata() {
+  return impl_->GetModelMetadata();
 }
 
 #if __ANDROID_API__ >= 9
