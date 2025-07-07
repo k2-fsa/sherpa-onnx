@@ -193,7 +193,7 @@ void OfflineStream::AcceptWaveform(int32_t sample_rate, const float *samples,
   SherpaOnnxAcceptWaveformOffline(p_, sample_rate, samples, n);
 }
 
-OfflineRecognizer OfflineRecognizer::Create(
+static SherpaOnnxOfflineRecognizerConfig Convert(
     const OfflineRecognizerConfig &config) {
   struct SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
@@ -256,6 +256,12 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.model_config.zipformer_ctc.model =
       config.model_config.zipformer_ctc.model.c_str();
 
+  c.model_config.canary.encoder = config.model_config.canary.encoder.c_str();
+  c.model_config.canary.decoder = config.model_config.canary.decoder.c_str();
+  c.model_config.canary.src_lang = config.model_config.canary.src_lang.c_str();
+  c.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang.c_str();
+  c.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 
@@ -273,8 +279,20 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
+  return c;
+}
+
+OfflineRecognizer OfflineRecognizer::Create(
+    const OfflineRecognizerConfig &config) {
+  auto c = Convert(config);
+
   auto p = SherpaOnnxCreateOfflineRecognizer(&c);
   return OfflineRecognizer(p);
+}
+
+void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) const {
+  auto c = Convert(config);
+  SherpaOnnxOfflineRecognizerSetConfig(p_, &c);
 }
 
 OfflineRecognizer::OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p)

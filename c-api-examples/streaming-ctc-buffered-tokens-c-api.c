@@ -54,7 +54,7 @@ int32_t main() {
       "DEV_T0000000000.wav";
   const char *model_filename =
       "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/"
-      "ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx";
+      "ctc-epoch-20-avg-1-chunk-16-left-128.onnx";
   const char *tokens_filename =
       "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt";
   const char *provider = "cpu";

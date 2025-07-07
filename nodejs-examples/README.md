@@ -63,7 +63,7 @@ for text-to-speech.
 You can use the following command to run it:
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
@@ -152,6 +152,22 @@ wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherp
 tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 node ./test-offline-dolphin-ctc.js
+```
+
+## ./test-offline-nemo-canary.js
+
+[./test-offline-nemo-canary.js](./test-offline-nemo-canary.js) demonstrates
+how to decode a file with a NeMo Canary model. In the code we use
+[sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+
+node ./test-offline-nemo-canary.js
 ```
 
 ## ./test-offline-zipformer-ctc.js

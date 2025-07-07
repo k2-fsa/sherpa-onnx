@@ -12,7 +12,6 @@ set(exported_functions
   SherpaOnnxCreateOnlineRecognizer
   SherpaOnnxCreateOnlineStream
   SherpaOnnxDecodeOnlineStream
-  SherpaOnnxDestroyOfflineStreamResultJson
   SherpaOnnxDestroyOnlineRecognizer
   SherpaOnnxDestroyOnlineRecognizerResult
   SherpaOnnxDestroyOnlineStream
