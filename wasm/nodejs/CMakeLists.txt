@@ -41,6 +41,7 @@ set(exported_functions
   SherpaOnnxDestroyOfflineStreamResultJson
   SherpaOnnxGetOfflineStreamResult
   SherpaOnnxGetOfflineStreamResultAsJson
+  SherpaOnnxOfflineRecognizerSetConfig
   # online kws
   SherpaOnnxCreateKeywordSpotter
   SherpaOnnxCreateKeywordStream
