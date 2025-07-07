@@ -97,6 +97,7 @@ static SherpaOnnxOfflineCanaryModelConfig GetOfflineCanaryModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineCanaryModelConfig c;
   memset(&c, 0, sizeof(c));
+  c.use_pnc = 1;  // Align default with JS default
 
   if (!obj.Has("canary") || !obj.Get("canary").IsObject()) {
     return c;
