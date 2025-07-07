@@ -26,6 +26,7 @@ set(sources
   keyword-spotter-impl.cc
   keyword-spotter.cc
   offline-canary-model-config.cc
+  offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
