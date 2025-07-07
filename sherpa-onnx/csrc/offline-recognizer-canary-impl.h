@@ -108,8 +108,10 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
   void SetConfig(const OfflineRecognizerConfig &config) override {
-    config_ = config;
-    PostInit();
+    config_.model_config.canary.src_lang = config.model_config.canary.src_lang;
+    config_.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang;
+    config_.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
+
     // we don't change the config_ in the base class
   }
 
