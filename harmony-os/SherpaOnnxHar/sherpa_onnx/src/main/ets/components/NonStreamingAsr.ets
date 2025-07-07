@@ -4,6 +4,7 @@ import {
   createOfflineStream,
   decodeOfflineStream,
   getOfflineStreamResultAsJson,
+  offlineRecognizerSetConfig,
 } from 'libsherpa_onnx.so';
 
 export interface Samples {
@@ -158,6 +159,10 @@ export class OfflineRecognizer {
   constructor(config: OfflineRecognizerConfig, mgr?: object) {
     this.handle = createOfflineRecognizer(config, mgr);
     this.config = config
+  }
+
+  setConfig(config: OfflineRecognizerConfig) {
+    offlineRecognizerSetConfig(this.handle, config);
   }
 
   createStream(): OfflineStream {

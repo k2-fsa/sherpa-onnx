@@ -22,6 +22,7 @@ export const voiceActivityDetectorFlush: (handle: object) => void;
 
 export const createOfflineRecognizer: (config: object, mgr?: object) => object;
 export const createOfflineStream: (handle: object) => object;
+export const offlineRecognizerSetConfig: (handle: object, config: object) => void;
 export const acceptWaveformOffline: (handle: object, audio: object) => void;
 export const decodeOfflineStream: (handle: object, streamHandle: object) => void;
 export const getOfflineStreamResultAsJson: (streamHandle: object) => string;

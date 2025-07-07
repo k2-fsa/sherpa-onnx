@@ -262,39 +262,7 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
   return c;
 }
 
-static Napi::External<SherpaOnnxOfflineRecognizer>
-CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
-  Napi::Env env = info.Env();
-#if __OHOS__
-  // the last argument is the NativeResourceManager
-  if (info.Length() != 2) {
-    std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
-
-    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
-
-    return {};
-  }
-#else
-  if (info.Length() != 1) {
-    std::ostringstream os;
-    os << "Expect only 1 argument. Given: " << info.Length();
-
-    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
-
-    return {};
-  }
-#endif
-
-  if (!info[0].IsObject()) {
-    Napi::TypeError::New(env, "Expect an object as the argument")
-        .ThrowAsJavaScriptException();
-
-    return {};
-  }
-
-  Napi::Object o = info[0].As<Napi::Object>();
-
+static SherpaOnnxOfflineRecognizerConfig ParseConfig(Napi::Object o) {
   SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
   c.feat_config = GetFeatureConfig(o);
@@ -310,19 +278,10 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
-#if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
+  return c;
+}
 
-  const SherpaOnnxOfflineRecognizer *recognizer =
-      SherpaOnnxCreateOfflineRecognizerOHOS(&c, mgr.get());
-#else
-  const SherpaOnnxOfflineRecognizer *recognizer =
-      SherpaOnnxCreateOfflineRecognizer(&c);
-#endif
-
+static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.joiner);
@@ -373,6 +332,57 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_DELETE_C_STR(c.hr.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
+}
+
+static Napi::External<SherpaOnnxOfflineRecognizer>
+CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+#if __OHOS__
+  // the last argument is the NativeResourceManager
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#endif
+
+  if (!info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expect an object as the argument")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  Napi::Object o = info[0].As<Napi::Object>();
+
+  SherpaOnnxOfflineRecognizerConfig c = ParseConfig(o);
+
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  const SherpaOnnxOfflineRecognizer *recognizer =
+      SherpaOnnxCreateOfflineRecognizerOHOS(&c, mgr.get());
+#else
+  const SherpaOnnxOfflineRecognizer *recognizer =
+      SherpaOnnxCreateOfflineRecognizer(&c);
+#endif
+
+  FreeConfig(c);
 
   if (!recognizer) {
     Napi::TypeError::New(env, "Please check your config!")
@@ -496,6 +506,43 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
 #endif
 }
 
+static void OfflineRecognizerSetConfigWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an offline recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsObject()) {
+    Napi::TypeError::New(env, "Expect an object as the second argument")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  Napi::Object o = info[1].As<Napi::Object>();
+  SherpaOnnxOfflineRecognizerConfig c = ParseConfig(o);
+
+  const SherpaOnnxOfflineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
+
+  SherpaOnnxOfflineRecognizerSetConfig(recognizer, &c);
+
+  FreeConfig(c);
+}
+
 static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -573,6 +620,9 @@ void InitNonStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "decodeOfflineStream"),
               Napi::Function::New(env, DecodeOfflineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "offlineRecognizerSetConfig"),
+              Napi::Function::New(env, OfflineRecognizerSetConfigWrapper));
 
   exports.Set(Napi::String::New(env, "getOfflineStreamResultAsJson"),
               Napi::Function::New(env, GetOfflineStreamResultAsJsonWrapper));

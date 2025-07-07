@@ -10,7 +10,7 @@ ls -lh
 ls -lh node_modules
 
 # asr with offline nemo canary
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
 tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
 rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
 

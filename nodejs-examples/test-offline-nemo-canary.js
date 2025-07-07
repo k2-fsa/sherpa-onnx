@@ -15,9 +15,10 @@ function createOfflineRecognizer() {
         decoder:
             './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/decoder.int8.onnx',
         srcLang: 'en',
-        dstLang: 'en',
+        tgtLang: 'en',
         usePnc: 1,
       },
+      debug: 0,
       tokens:
           './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/tokens.txt',
     }
@@ -41,7 +42,7 @@ console.log(`text in English: ${text}`);
 stream.free();
 
 // now output German text
-recognizer.config.modelConfig.canary.tgt_lang = 'de';
+recognizer.config.modelConfig.canary.tgtLang = 'de';
 recognizer.setConfig(recognizer.config);
 
 stream = recognizer.createStream();
