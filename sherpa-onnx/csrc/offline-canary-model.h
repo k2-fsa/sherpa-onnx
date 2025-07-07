@@ -28,7 +28,7 @@ class OfflineCanaryModel {
 
   /** Run the encoder.
    *
-   * @param features  A tensor of shape (N, T, C). It is changed in-place.
+   * @param features  A tensor of shape (N, T, C) of dtype float32.
    * @param features_length  A 1-D tensor of shape (N,) containing number of
    *                         valid frames in `features` before padding.
    *                         Its dtype is int64_t.

@@ -64,11 +64,53 @@ class OfflineCanaryModel::Impl {
   }
 
   std::vector<Ort::Value> ForwardEncoder(Ort::Value features,
-                                         Ort::Value features_length) {}
+                                         Ort::Value features_length) {
+    std::array<Ort::Value, 2> encoder_inputs = {std::move(features),
+                                                std::move(features_length)};
+
+    auto encoder_out = encoder_sess_->Run(
+        {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
+        encoder_inputs.size(), encoder_output_names_ptr_.data(),
+        encoder_output_names_ptr_.size());
+
+    return encoder_out;
+  }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> ForwardDecoder(
       Ort::Value tokens, std::vector<Ort::Value> decoder_states,
-      Ort::Value encoder_states, Ort::Value enc_mask) {}
+      Ort::Value encoder_states, Ort::Value enc_mask) {
+    std::vector<Ort::Value> decoder_inputs;
+    decoder_inputs.reserve(3 + decoder_states.size());
+
+    decoder_inputs.push_back(std::move(tokens));
+    for (auto &s : decoder_states) {
+      decoder_inputs.push_back(std::move(s));
+    }
+
+    decoder_inputs.push_back(std::move(encoder_states));
+    decoder_inputs.push_back(std::move(enc_mask));
+
+    auto decoder_outputs = encoder_sess_->Run(
+        {}, decoder_input_names_ptr_.data(), decoder_inputs.data(),
+        decoder_inputs.size(), decoder_output_names_ptr_.data(),
+        decoder_output_names_ptr_.size());
+
+    Ort::Value logits = std::move(decoder_outputs[0]);
+
+    std::vector<Ort::Value> output_decoder_states;
+    output_decoder_states.reserve(decoder_states.size());
+
+    int32_t i = 0;
+    for (auto &s : decoder_outputs) {
+      i += 1;
+      if (i == 1) {
+        continue;
+      }
+      output_decoder_states.push_back(std::move(s));
+    }
+
+    return {std::move(logits), std::move(output_decoder_states)};
+  }
 
   std::vector<Ort::Value> GetInitialDecoderStates() {
     std::array<int64_t, 3> shape{1, 0, 1024};
