@@ -93,6 +93,26 @@ static SherpaOnnxOfflineNemoEncDecCtcModelConfig GetOfflineNeMoCtcModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineCanaryModelConfig GetOfflineCanaryModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineCanaryModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("canary") || !obj.Get("canary").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("canary").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(src_lang, srcLang);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tgt_lang, tgtLang);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(use_pnc, usePnc);
+
+  return c;
+}
+
 static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineWhisperModelConfig c;
@@ -203,6 +223,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.fire_red_asr = GetOfflineFireRedAsrModelConfig(o);
   c.dolphin = GetOfflineDolphinModelConfig(o);
   c.zipformer_ctc = GetOfflineZipformerCtcModelConfig(o);
+  c.canary = GetOfflineCanaryModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -330,6 +351,11 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.dolphin.model);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer_ctc.model);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.src_lang);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.tgt_lang);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

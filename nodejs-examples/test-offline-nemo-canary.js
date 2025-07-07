@@ -16,6 +16,7 @@ function createOfflineRecognizer() {
             './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/decoder.int8.onnx',
         srcLang: 'en',
         dstLang: 'en',
+        usePnc: 1,
       },
       tokens:
           './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/tokens.txt',
@@ -26,7 +27,7 @@ function createOfflineRecognizer() {
 }
 
 const recognizer = createOfflineRecognizer();
-const stream = recognizer.createStream();
+let stream = recognizer.createStream();
 
 const waveFilename =
     './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/test_wavs/en.wav';

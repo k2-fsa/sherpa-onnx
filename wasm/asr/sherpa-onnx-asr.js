@@ -734,7 +734,7 @@ function initSherpaOnnxOfflineCanaryModelConfig(config, Module) {
   Module.setValue(ptr + 12, buffer + offset, 'i8*');
   offset += tgtLangLen;
 
-  Module.setValue(ptr + 16, config.use_pnc ?? 1, 'i32');
+  Module.setValue(ptr + 16, config.usePnc ?? 1, 'i32');
 
   return {
     buffer: buffer, ptr: ptr, len: len,
@@ -962,7 +962,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       decoder: '',
       srcLang: '',
       tgtLang: '',
-      use_pnc: 1,
+      usePnc: 1,
     };
   }
 

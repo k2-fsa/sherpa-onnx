@@ -67,6 +67,14 @@ export class OfflineWhisperModelConfig {
   public tailPaddings: number = -1;
 }
 
+export class OfflineCanaryModelConfig {
+  public encoder: string = '';
+  public decoder: string = '';
+  public srcLang: string = '';
+  public tgtLang: string = '';
+  public usePnc: number = 1;
+}
+
 export class OfflineTdnnModelConfig {
   public model: string = '';
 }
@@ -102,6 +110,7 @@ export class OfflineModelConfig {
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
   public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
+  public canary: OfflineCanaryModelConfig = new OfflineCanaryModelConfig();
 }
 
 export class OfflineLMConfig {
