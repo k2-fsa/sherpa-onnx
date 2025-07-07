@@ -372,7 +372,11 @@ Video demo in Chinese: [小爱同学启动～˶╹ꇴ╹˶！](https://www.bilib
 
 ### [C++ WebSocket ASR Server](https://github.com/mawwalker/stt-server)
 
-It provides C++ WebSocket server for ASR using sherpa-onnx.
+It provides a WebSocket server based on C++ for ASR using sherpa-onnx.
+
+### [Go WebSocket Server](https://github.com/bbeyondllove/asr_server)
+
+It provides a WebSocket server based on the Go programming language for sherpa-onnx.
 
 ### [Making robot Paimon, Ep10 "The AI Part 1"](https://www.youtube.com/watch?v=KxPKkwxGWZs)
 
