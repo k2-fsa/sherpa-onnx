@@ -127,6 +127,36 @@ jobs:
           rm -rf dict lexicon.txt test-hr.wav replace.fst
           rm -v $name
 
+      - name: Test NeMo Canary
+        shell: bash
+        run: |
+          name=nemo-canary-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
+
       - name: Test Dolphin CTC
         shell: bash
         run: |

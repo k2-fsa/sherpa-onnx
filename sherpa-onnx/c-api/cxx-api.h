@@ -223,6 +223,14 @@ struct SHERPA_ONNX_API OfflineWhisperModelConfig {
   int32_t tail_paddings = -1;
 };
 
+struct SHERPA_ONNX_API OfflineCanaryModelConfig {
+  std::string encoder;
+  std::string decoder;
+  std::string src_lang;
+  std::string tgt_lang;
+  bool use_pnc = true;
+};
+
 struct SHERPA_ONNX_API OfflineFireRedAsrModelConfig {
   std::string encoder;
   std::string decoder;
@@ -273,6 +281,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineFireRedAsrModelConfig fire_red_asr;
   OfflineDolphinModelConfig dolphin;
   OfflineZipformerCtcModelConfig zipformer_ctc;
+  OfflineCanaryModelConfig canary;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {

@@ -420,6 +420,14 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWhisperModelConfig {
   int32_t tail_paddings;
 } SherpaOnnxOfflineWhisperModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineCanaryModelConfig {
+  const char *encoder;
+  const char *decoder;
+  const char *src_lang;
+  const char *tgt_lang;
+  int32_t use_pnc;
+} SherpaOnnxOfflineCanaryModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFireRedAsrModelConfig {
   const char *encoder;
   const char *decoder;
@@ -479,6 +487,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineFireRedAsrModelConfig fire_red_asr;
   SherpaOnnxOfflineDolphinModelConfig dolphin;
   SherpaOnnxOfflineZipformerCtcModelConfig zipformer_ctc;
+  SherpaOnnxOfflineCanaryModelConfig canary;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
