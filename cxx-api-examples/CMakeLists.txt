@@ -27,6 +27,9 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
+target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
+
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   add_executable(sense-voice-simulate-streaming-microphone-cxx-api
     ./sense-voice-simulate-streaming-microphone-cxx-api.cc

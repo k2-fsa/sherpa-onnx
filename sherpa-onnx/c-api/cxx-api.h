@@ -344,6 +344,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
+  void SetConfig(const OfflineRecognizerConfig &config) const;
+
  private:
   explicit OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p);
 };

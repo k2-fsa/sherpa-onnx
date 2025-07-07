@@ -193,7 +193,7 @@ void OfflineStream::AcceptWaveform(int32_t sample_rate, const float *samples,
   SherpaOnnxAcceptWaveformOffline(p_, sample_rate, samples, n);
 }
 
-OfflineRecognizer OfflineRecognizer::Create(
+static SherpaOnnxOfflineRecognizerConfig Convert(
     const OfflineRecognizerConfig &config) {
   struct SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
@@ -279,8 +279,20 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
+  return c;
+}
+
+OfflineRecognizer OfflineRecognizer::Create(
+    const OfflineRecognizerConfig &config) {
+  auto c = Convert(config);
+
   auto p = SherpaOnnxCreateOfflineRecognizer(&c);
   return OfflineRecognizer(p);
+}
+
+void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) const {
+  auto c = Convert(config);
+  SherpaOnnxOfflineRecognizerSetConfig(p_, &c);
 }
 
 OfflineRecognizer::OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p)
