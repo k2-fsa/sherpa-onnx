@@ -58,19 +58,15 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   void DecodeStream(OfflineStream *s) const {
     auto meta = model_->GetModelMetadata();
-    SHERPA_ONNX_LOGE("here");
     auto enc_out = RunEncoder(s);
-    SHERPA_ONNX_LOGE("here");
     Ort::Value enc_states = std::move(enc_out[0]);
     Ort::Value enc_mask = std::move(enc_out[2]);
     // enc_out[1] is discarded
     std::vector<int32_t> decoder_input = GetInitialDecoderInput();
     auto decoder_states = model_->GetInitialDecoderStates();
     Ort::Value logits{nullptr};
-    SHERPA_ONNX_LOGE("here");
 
     for (int32_t i = 0; i < decoder_input.size(); ++i) {
-      SHERPA_ONNX_LOGE("here: %d", i);
       std::tie(logits, decoder_states) =
           RunDecoder(decoder_input[i], i, std::move(decoder_states),
                      View(&enc_states), View(&enc_mask));
@@ -84,15 +80,14 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         meta.subsampling_factor;
 
     std::vector<int32_t> tokens = {max_token_id};
-    // assume 30 tokens per second
+
+    // Assume 30 tokens per second. It is to avoid the following for loop
+    // running indefinitely.
     int32_t num_tokens =
         static_cast<int32_t>(num_feature_frames / 100.0 * 30) + 1;
 
-    SHERPA_ONNX_LOGE("here: eos %d, back %d", eos, tokens.back());
     for (int32_t i = 1; i <= num_tokens; ++i) {
       if (tokens.back() == eos) {
-        SHERPA_ONNX_LOGE("break: i: %d, eos: %d, back: %d, num_tokens: %d", i,
-                         eos, tokens.back(), num_tokens);
         break;
       }
 
@@ -100,18 +95,17 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
           RunDecoder(tokens.back(), i, std::move(decoder_states),
                      View(&enc_states), View(&enc_mask));
       tokens.push_back(GetMaxTokenId(&logits));
-      SHERPA_ONNX_LOGE("here: eos %d, back %d", eos, tokens.back());
     }
 
     // remove the last eos token
     tokens.pop_back();
 
-    SHERPA_ONNX_LOGE("num_feature_frames: %d, num_tokens: %d, tokens size: %d",
-                     num_feature_frames, num_tokens, (int32_t)tokens.size());
-    for (auto t : tokens) {
-      std::cout << symbol_table_[t] << " ";
-    }
-    std::cout << "\n";
+    auto r = Convert(tokens);
+
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
+
+    s->SetResult(r);
   }
 
   OfflineRecognizerConfig GetConfig() const override { return config_; }
@@ -122,6 +116,26 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   }
 
  private:
+  OfflineRecognitionResult Convert(const std::vector<int32_t> &tokens) const {
+    OfflineRecognitionResult r;
+    r.tokens.reserve(tokens.size());
+
+    std::string text;
+    for (auto i : tokens) {
+      if (!symbol_table_.Contains(i)) {
+        continue;
+      }
+
+      const auto &s = symbol_table_[i];
+      text += s;
+      r.tokens.push_back(s);
+    }
+
+    r.text = std::move(text);
+
+    return r;
+  }
+
   int32_t GetMaxTokenId(Ort::Value *logits) const {
     // logits is of shape (1, 1, vocab_size)
     auto meta = model_->GetModelMetadata();
@@ -158,19 +172,15 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
       int32_t token, int32_t pos, std::vector<Ort::Value> decoder_states,
       Ort::Value enc_states, Ort::Value enc_mask) const {
-    SHERPA_ONNX_LOGE("here");
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    SHERPA_ONNX_LOGE("here");
     std::array<int64_t, 2> shape = {1, 2};
     std::array<int32_t, 2> _decoder_input = {token, pos};
-    SHERPA_ONNX_LOGE("here");
 
     Ort::Value decoder_input = Ort::Value::CreateTensor(
         memory_info, _decoder_input.data(), _decoder_input.size(), shape.data(),
         shape.size());
-    SHERPA_ONNX_LOGE("here");
 
     return model_->ForwardDecoder(std::move(decoder_input),
                                   std::move(decoder_states),

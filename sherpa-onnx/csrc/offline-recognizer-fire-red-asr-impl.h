@@ -39,7 +39,7 @@ static OfflineRecognitionResult Convert(
     r.tokens.push_back(s);
   }
 
-  r.text = text;
+  r.text = std::move(text);
 
   return r;
 }

@@ -289,7 +289,13 @@ def main():
         tokens.append(t)
     print("len(tokens)", len(tokens))
     print("tokens", tokens)
+
     text = "".join([id2token[i] for i in tokens])
+
+    underline = "▁"
+    #  underline = b"\xe2\x96\x81".decode()
+
+    text = text.replace(underline, " ").strip()
     print("text:", text)
 
 

@@ -84,12 +84,6 @@ class OfflineCanaryModel::Impl {
     std::vector<Ort::Value> decoder_inputs;
     decoder_inputs.reserve(3 + decoder_states.size());
 
-    for (auto &s : decoder_states) {
-      auto shape = s.GetTensorTypeAndShapeInfo().GetShape();
-      SHERPA_ONNX_LOGE("in shape: %d, %d, %d", (int32_t)shape[0],
-                       (int32_t)shape[1], (int32_t)shape[2]);
-    }
-
     decoder_inputs.push_back(std::move(tokens));
     for (auto &s : decoder_states) {
       decoder_inputs.push_back(std::move(s));
@@ -115,13 +109,6 @@ class OfflineCanaryModel::Impl {
         continue;
       }
       output_decoder_states.push_back(std::move(s));
-    }
-    SHERPA_ONNX_LOGE("size: %d, %d", int32_t(decoder_states.size()),
-                     int32_t(output_decoder_states.size()));
-    for (auto &s : output_decoder_states) {
-      auto shape = s.GetTensorTypeAndShapeInfo().GetShape();
-      SHERPA_ONNX_LOGE("out shape: %d, %d, %d", (int32_t)shape[0],
-                       (int32_t)shape[1], (int32_t)shape[2]);
     }
 
     return {std::move(logits), std::move(output_decoder_states)};
