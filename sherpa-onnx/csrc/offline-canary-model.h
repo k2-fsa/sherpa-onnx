@@ -46,7 +46,7 @@ class OfflineCanaryModel {
 
   /** Run the decoder model.
    *
-   * @param tokens A int64 tensor of shape (N, num_tokens)
+   * @param tokens A int32 tensor of shape (N, num_tokens)
    * @param decoder_states std::vector<Ort::Value>
    * @param encoder_states Output from ForwardEncoder()
    * @param enc_mask Output from ForwardEncoder()

@@ -183,6 +183,10 @@ Ort::Value View(Ort::Value *v) {
       return Ort::Value::CreateTensor(
           memory_info, v->GetTensorMutableData<float>(),
           type_and_shape.GetElementCount(), shape.data(), shape.size());
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
+      return Ort::Value::CreateTensor(
+          memory_info, v->GetTensorMutableData<bool>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
     default:
       fprintf(stderr, "Unsupported type: %d\n",
               static_cast<int32_t>(type_and_shape.GetElementType()));

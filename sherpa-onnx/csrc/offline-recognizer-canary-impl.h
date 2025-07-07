@@ -5,9 +5,11 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 
+#include <algorithm>
 #include <fstream>
 #include <ios>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -17,6 +19,7 @@
 #include "sherpa-onnx/csrc/offline-canary-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/utils.h"
 
@@ -53,9 +56,164 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     }
   }
 
-  void DecodeStream(OfflineStream *s) const {}
+  void DecodeStream(OfflineStream *s) const {
+    auto meta = model_->GetModelMetadata();
+    SHERPA_ONNX_LOGE("here");
+    auto enc_out = RunEncoder(s);
+    SHERPA_ONNX_LOGE("here");
+    Ort::Value enc_states = std::move(enc_out[0]);
+    Ort::Value enc_mask = std::move(enc_out[2]);
+    // enc_out[1] is discarded
+    std::vector<int32_t> decoder_input = GetInitialDecoderInput();
+    auto decoder_states = model_->GetInitialDecoderStates();
+    Ort::Value logits{nullptr};
+    SHERPA_ONNX_LOGE("here");
+
+    for (int32_t i = 0; i < decoder_input.size(); ++i) {
+      SHERPA_ONNX_LOGE("here: %d", i);
+      std::tie(logits, decoder_states) =
+          RunDecoder(decoder_input[i], i, std::move(decoder_states),
+                     View(&enc_states), View(&enc_mask));
+    }
+
+    int32_t max_token_id = GetMaxTokenId(&logits);
+    int32_t eos = symbol_table_["<|endoftext|>"];
+
+    int32_t num_feature_frames =
+        enc_states.GetTensorTypeAndShapeInfo().GetShape()[1] *
+        meta.subsampling_factor;
+
+    std::vector<int32_t> tokens = {max_token_id};
+    // assume 30 tokens per second
+    int32_t num_tokens =
+        static_cast<int32_t>(num_feature_frames / 100.0 * 30) + 1;
+
+    SHERPA_ONNX_LOGE("here: eos %d, back %d", eos, tokens.back());
+    for (int32_t i = 1; i <= num_tokens; ++i) {
+      if (tokens.back() == eos) {
+        SHERPA_ONNX_LOGE("break: i: %d, eos: %d, back: %d, num_tokens: %d", i,
+                         eos, tokens.back(), num_tokens);
+        break;
+      }
+
+      std::tie(logits, decoder_states) =
+          RunDecoder(tokens.back(), i, std::move(decoder_states),
+                     View(&enc_states), View(&enc_mask));
+      tokens.push_back(GetMaxTokenId(&logits));
+      SHERPA_ONNX_LOGE("here: eos %d, back %d", eos, tokens.back());
+    }
+
+    // remove the last eos token
+    tokens.pop_back();
+
+    SHERPA_ONNX_LOGE("num_feature_frames: %d, num_tokens: %d, tokens size: %d",
+                     num_feature_frames, num_tokens, (int32_t)tokens.size());
+    for (auto t : tokens) {
+      std::cout << symbol_table_[t] << " ";
+    }
+    std::cout << "\n";
+  }
 
   OfflineRecognizerConfig GetConfig() const override { return config_; }
+
+  void SetConfig(const OfflineRecognizerConfig &config) override {
+    config_ = config;
+    // we don't change the config_ in the base class
+  }
+
+ private:
+  int32_t GetMaxTokenId(Ort::Value *logits) const {
+    // logits is of shape (1, 1, vocab_size)
+    auto meta = model_->GetModelMetadata();
+    const float *p_logits = logits->GetTensorData<float>();
+
+    int32_t max_token_id = static_cast<int32_t>(std::distance(
+        p_logits, std::max_element(p_logits, p_logits + meta.vocab_size)));
+
+    return max_token_id;
+  }
+
+  std::vector<Ort::Value> RunEncoder(OfflineStream *s) const {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    int32_t feat_dim = config_.feat_config.feature_dim;
+    std::vector<float> f = s->GetFrames();
+
+    int32_t num_frames = f.size() / feat_dim;
+
+    std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
+
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
+                                            shape.data(), shape.size());
+
+    int64_t x_length_scalar = num_frames;
+    std::array<int64_t, 1> x_length_shape = {1};
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &x_length_scalar, 1,
+                                 x_length_shape.data(), x_length_shape.size());
+    return model_->ForwardEncoder(std::move(x), std::move(x_length));
+  }
+
+  std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
+      int32_t token, int32_t pos, std::vector<Ort::Value> decoder_states,
+      Ort::Value enc_states, Ort::Value enc_mask) const {
+    SHERPA_ONNX_LOGE("here");
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    SHERPA_ONNX_LOGE("here");
+    std::array<int64_t, 2> shape = {1, 2};
+    std::array<int32_t, 2> _decoder_input = {token, pos};
+    SHERPA_ONNX_LOGE("here");
+
+    Ort::Value decoder_input = Ort::Value::CreateTensor(
+        memory_info, _decoder_input.data(), _decoder_input.size(), shape.data(),
+        shape.size());
+    SHERPA_ONNX_LOGE("here");
+
+    return model_->ForwardDecoder(std::move(decoder_input),
+                                  std::move(decoder_states),
+                                  std::move(enc_states), std::move(enc_mask));
+  }
+
+  // see
+  // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/nemo/canary/test_180m_flash.py#L242
+  std::vector<int32_t> GetInitialDecoderInput() const {
+    auto canary_config = config_.model_config.canary;
+    const auto &meta = model_->GetModelMetadata();
+
+    std::vector<int32_t> decoder_input(9);
+    decoder_input[0] = symbol_table_["<|startofcontext|>"];
+    decoder_input[1] = symbol_table_["<|startoftranscript|>"];
+    decoder_input[2] = symbol_table_["<|emo:undefined|>"];
+
+    if (canary_config.src_lang.empty() ||
+        !meta.lang2id.count(canary_config.src_lang)) {
+      decoder_input[3] = meta.lang2id.at("en");
+    } else {
+      decoder_input[3] = meta.lang2id.at(canary_config.src_lang);
+    }
+
+    if (canary_config.tgt_lang.empty() ||
+        !meta.lang2id.count(canary_config.tgt_lang)) {
+      decoder_input[4] = meta.lang2id.at("en");
+    } else {
+      decoder_input[4] = meta.lang2id.at(canary_config.tgt_lang);
+    }
+
+    if (canary_config.use_pnc) {
+      decoder_input[5] = symbol_table_["<|pnc|>"];
+    } else {
+      decoder_input[5] = symbol_table_["<|nopnc|>"];
+    }
+
+    decoder_input[6] = symbol_table_["<|noitn|>"];
+    decoder_input[7] = symbol_table_["<|notimestamp|>"];
+    decoder_input[8] = symbol_table_["<|nodiarize|>"];
+
+    return decoder_input;
+  }
 
  private:
   void PostInit() {
