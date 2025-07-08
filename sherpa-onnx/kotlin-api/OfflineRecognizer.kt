@@ -41,6 +41,14 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
+data class OfflineCanaryModelConfig(
+    var encoder: String = "",
+    var decoder: String = "",
+    var srcLang: String = "en",
+    var tgtLang: String = "en",
+    var usePnc: Boolean = true,
+)
+
 data class OfflineFireRedAsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -69,6 +77,7 @@ data class OfflineModelConfig(
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
     var zipformerCtc: OfflineZipformerCtcModelConfig = OfflineZipformerCtcModelConfig(),
+    var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -95,7 +104,7 @@ data class OfflineRecognizerConfig(
 
 class OfflineRecognizer(
     assetManager: AssetManager? = null,
-    config: OfflineRecognizerConfig,
+    val config: OfflineRecognizerConfig,
 ) {
     private var ptr: Long
 
@@ -142,9 +151,13 @@ class OfflineRecognizer(
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
 
+    fun setConfig(config: OfflineRecognizerConfig) = setConfig(ptr, config)
+
     private external fun delete(ptr: Long)
 
     private external fun createStream(ptr: Long): Long
+
+    private external fun setConfig(ptr: Long, config: OfflineRecognizerConfig)
 
     private external fun newFromAsset(
         assetManager: AssetManager,
@@ -570,6 +583,20 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             return OfflineModelConfig(
                 zipformerCtc = OfflineZipformerCtcModelConfig(
                     model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        32 -> {
+            val modelDir = "sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8"
+            return OfflineModelConfig(
+                canary = OfflineCanaryModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                    srcLang = "en",
+                    tgtLang = "en",
+                    usePnc = true,
                 ),
                 tokens = "$modelDir/tokens.txt",
             )

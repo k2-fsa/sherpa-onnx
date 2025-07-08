@@ -117,6 +117,13 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (Nemo Canary)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-nemo-canary.sh
+          rm -rf sherpa-onnx-nemo-*
+
       - name:  Run java test (Non-streaming SenseVoice with homophone replacer)
         shell: bash
         run: |
