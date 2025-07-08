@@ -24,30 +24,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: git config
+        shell: bash
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
       - name: FireRed ASR fp16
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16 hf
+
+          git lfs install
+          git clone https://www.modelscope.cn/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16.git ms
+
           d=sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16
           git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d
           mv -v hf/test_wavs $d
           mv -v hf/README.md $d
           mv -v hf/tokens.txt $d
+          mv -v ms/*.onnx $d
 
           pushd $d
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/master/decoder.fp16.onnx
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/master/encoder.fp16.onnx
-
           git lfs track "*.onnx"
           git lfs track "*.wav"
           git status
           git add .
           git commit -m "add models"
           ls -lh
-          popd
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+          popd
+
           rm -rf $d/.git
           rm -rf $d/.gitattributes
           tar cjvf $d.tar.bz2 $d
