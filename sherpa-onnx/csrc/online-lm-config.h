@@ -18,7 +18,7 @@ struct OnlineLMConfig {
   float scale = 0.5;
   int32_t lm_num_threads = 1;
   std::string lm_provider = "cpu";
-  std::string lodr_fst = "";
+  std::string lodr_fst;
   float lodr_scale = 0.01;
   int lodr_backoff_id = -1;
   // enable shallow fusion
