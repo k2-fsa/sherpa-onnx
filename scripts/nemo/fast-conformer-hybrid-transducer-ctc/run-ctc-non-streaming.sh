@@ -19,6 +19,12 @@ log "Process $name at $url"
 d=sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
 mkdir -p $d
 mv -v model.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
+mkdir -p $d
+mv -v model.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -33,6 +39,12 @@ log "Process $name at $url"
 d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500
 mkdir -p $d
 mv -v model.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+mkdir -p $d
+mv -v model.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -45,6 +57,12 @@ doc="This collection contains the Spanish FastConformer Hybrid (CTC and Transduc
 d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424
 mkdir -p $d
 mv -v model.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+mkdir -p $d
+mv -v model.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -57,6 +75,12 @@ doc="This collection contains the Multilingual FastConformer Hybrid (Transducer 
 d=sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
 mkdir -p $d
 mv -v model.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+mkdir -p $d
+mv -v model.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -69,6 +93,12 @@ doc="This collection contains the Multilingual FastConformer Hybrid (Transducer 
 d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 mkdir -p $d
 mv -v model.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+mkdir -p $d
+mv -v model.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -92,6 +122,16 @@ mkdir -p $d/test_wavs
 cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs/1.wav
 
+d=sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.int8.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+mkdir -p $d/test_wavs
+
+cp en.wav $d/test_wavs/0.wav
+cp -v $data/en-english.wav $d/test_wavs/1.wav
+
 d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500
 python3 ./test-onnx-ctc-non-streaming.py \
   --model $d/model.onnx \
@@ -101,9 +141,26 @@ mkdir -p $d/test_wavs
 cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs
 
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.int8.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+mkdir -p $d/test_wavs
+cp en.wav $d/test_wavs/0.wav
+cp -v $data/en-english.wav $d/test_wavs
+
 d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424
 python3 ./test-onnx-ctc-non-streaming.py \
   --model $d/model.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/es-spanish.wav
+mkdir -p $d/test_wavs
+cp -v $data/es-spanish.wav $d/test_wavs
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.int8.onnx \
   --tokens $d/tokens.txt \
   --wav $data/es-spanish.wav
 mkdir -p $d/test_wavs
@@ -119,11 +176,31 @@ for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
   cp -v $data/$w $d/test_wavs
 done
 
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+mkdir -p $d/test_wavs
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
+  python3 ./test-onnx-ctc-non-streaming.py \
+    --model $d/model.int8.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+  cp -v $data/$w $d/test_wavs
+done
+
 d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 mkdir -p $d/test_wavs
 for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.wav it-italian.wav po-polish.wav ru-russian.wav uk-ukrainian.wav; do
   python3 ./test-onnx-ctc-non-streaming.py \
     --model $d/model.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+  cp -v $data/$w $d/test_wavs
+done
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+mkdir -p $d/test_wavs
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.wav it-italian.wav po-polish.wav ru-russian.wav uk-ukrainian.wav; do
+  python3 ./test-onnx-ctc-non-streaming.py \
+    --model $d/model.int8.onnx \
     --tokens $d/tokens.txt \
     --wav $data/$w
   cp -v $data/$w $d/test_wavs

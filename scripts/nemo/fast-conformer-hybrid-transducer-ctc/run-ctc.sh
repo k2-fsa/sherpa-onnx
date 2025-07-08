@@ -17,11 +17,22 @@ ms=(
 for m in ${ms[@]}; do
   ./export-onnx-ctc.py --model $m
   d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms
+
+  d_int8=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms-int8
+
   if [ ! -f $d/model.onnx ]; then
-    mkdir -p $d
+    mkdir -p $d $d_int8
     mv -v model.onnx $d/
-    mv -v tokens.txt $d/
+    cp -v tokens.txt $d/
+
+    mv -v model.int8.onnx $d_int8/
+    mv -v tokens.txt $d_int8/
+
+    echo "---$d---"
     ls -lh $d
+
+    echo "---$d_int8---"
+    ls -lh $d_int8
   fi
 done
 
@@ -29,8 +40,16 @@ done
 
 for m in ${ms[@]}; do
   d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms
+  echo "---$d---"
   python3 ./test-onnx-ctc.py \
     --model $d/model.onnx \
+    --tokens $d/tokens.txt \
+    --wav ./0.wav
+
+  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms-int8
+  echo "---$d---"
+  python3 ./test-onnx-ctc.py \
+    --model $d/model.int8.onnx \
     --tokens $d/tokens.txt \
     --wav ./0.wav
 done
