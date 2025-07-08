@@ -284,6 +284,39 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.zipformer_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // canary
+  fid = env->GetFieldID(model_config_cls, "canary",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineCanaryModelConfig;");
+  jobject canary_config = env->GetObjectField(model_config, fid);
+  jclass canary_config_cls = env->GetObjectClass(canary_config);
+
+  fid = env->GetFieldID(canary_config_cls, "encoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(canary_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.canary.encoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(canary_config_cls, "decoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(canary_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.canary.decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(canary_config_cls, "srcLang", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(canary_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.canary.src_lang = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(canary_config_cls, "tgtLang", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(canary_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.canary.tgt_lang = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(canary_config_cls, "usePnc", "Z");
+  ans.model_config.canary.use_pnc = env->GetBooleanField(canary_config, fid);
+
   // dolphin
   fid = env->GetFieldID(model_config_cls, "dolphin",
                         "Lcom/k2fsa/sherpa/onnx/OfflineDolphinModelConfig;");
@@ -347,10 +380,12 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
 #endif
   auto config = sherpa_onnx::GetOfflineConfig(env, _config);
 
-  // logcat truncates long strings, so we split the string into chunks
-  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
-  for (const auto &s : str_vec) {
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  if (config.model_config.debug) {
+    // logcat truncates long strings, so we split the string into chunks
+    auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+    for (const auto &s : str_vec) {
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
   }
 
   auto model = new sherpa_onnx::OfflineRecognizer(
@@ -369,9 +404,11 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
                                                          jobject _config) {
   auto config = sherpa_onnx::GetOfflineConfig(env, _config);
 
-  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
-  for (const auto &s : str_vec) {
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  if (config.model_config.debug) {
+    auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+    for (const auto &s : str_vec) {
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
   }
 
   if (!config.Validate()) {
@@ -388,7 +425,10 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_setConfig(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jobject _config) {
   auto config = sherpa_onnx::GetOfflineConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  if (config.model_config.debug) {
+    SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  }
 
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
   recognizer->SetConfig(config);
