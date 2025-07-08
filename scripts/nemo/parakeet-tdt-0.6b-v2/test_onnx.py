@@ -233,8 +233,8 @@ def main():
     if model.normalize_type != "":
         assert model.normalize_type == "per_feature", model.normalize_type
         features = torch.from_numpy(features)
-        mean = features.mean(dim=1, keepdims=True)
-        stddev = features.std(dim=1, keepdims=True) + 1e-5
+        mean = features.mean(dim=0, keepdims=True)
+        stddev = features.std(dim=0, keepdims=True) + 1e-5
         features = (features - mean) / stddev
         features = features.numpy()
     print(audio.shape)
