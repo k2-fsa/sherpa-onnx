@@ -24,7 +24,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: FireRed ASR fp16
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16 hf
+          d=sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d
+          mv -v hf/test_wavs $d
+          mv -v hf/README.md $d
+          mv -v hf/tokens.txt $d
+
+          pushd $d
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/master/decoder.fp16.onnx
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/master/encoder.fp16.onnx
+
+          git lfs track "*.onnx"
+          git lfs track "*.wav"
+          git status
+          git add .
+          git commit -m "add models"
+          ls -lh
+          popd
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+          rm -rf $d/.git
+          rm -rf $d/.gitattributes
+          tar cjvf $d.tar.bz2 $d
+
       - name: Zipformer CTC (non-streaming)
+        if: false
         shell: bash
         run: |
           git lfs install
