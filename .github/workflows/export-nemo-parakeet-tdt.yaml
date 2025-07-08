@@ -54,7 +54,6 @@ jobs:
         run: |
           models=(
             sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8
-            sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-fp16
           )
           for m in ${models[@]}; do
             mv -v scripts/nemo/parakeet-tdt_ctc-0.6b-ja/$m .
@@ -76,7 +75,6 @@ jobs:
 
             models=(
               sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8
-              sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-fp16
             )
 
             for m in ${models[@]}; do

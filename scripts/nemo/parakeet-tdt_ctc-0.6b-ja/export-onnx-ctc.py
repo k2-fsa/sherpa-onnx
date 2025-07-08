@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
-import argparse
+import os
 from typing import Dict
 
 import nemo.collections.asr as nemo_asr
 import onnx
-import onnxmltools
 import torch
-from onnxmltools.utils.float16_converter import convert_float_to_float16_model_path
 from onnxruntime.quantization import QuantType, quantize_dynamic
-
-
-def export_onnx_fp16_large_2gb(onnx_fp32_path, onnx_fp16_path):
-    onnx_fp16_model = convert_float_to_float16_model_path(
-        onnx_fp32_path, keep_io_types=True
-    )
-    onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, str]):
@@ -41,7 +32,6 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 
 @torch.no_grad()
 def main():
-    args = get_args()
     asr_model = nemo_asr.models.ASRModel.from_pretrained(
         model_name="nvidia/parakeet-tdt_ctc-0.6b-ja"
     )
@@ -63,7 +53,7 @@ def main():
 
     filename = "model.onnx"
 
-    asr_model.export(filename)
+    asr_model.export(filename, onnx_opset_version=18)
 
     normalize_type = asr_model.cfg.preprocessor.normalize
     if normalize_type == "NA":
@@ -80,15 +70,18 @@ def main():
         "comment": "Only the CTC branch is exported",
         "doc": "See https://huggingface.co/nvidia/parakeet-tdt_ctc-0.6b-ja",
     }
-    add_meta_data(filename, meta_data)
 
-    export_onnx_fp16_large_2gb("model.onnx", "model.fp16.onnx")
+    os.system("ls -lh *.onnx")
 
     quantize_dynamic(
         model_input="./model.onnx",
         model_output="./model.int8.onnx",
         weight_type=QuantType.QUInt8,
     )
+
+    add_meta_data("model.int8.onnx", meta_data)
+
+    os.system("ls -lh *.onnx")
 
     print("preprocessor", asr_model.cfg.preprocessor)
     print(meta_data)

@@ -22,14 +22,6 @@ cp -av test_wavs $d
 ls -lh $d
 
 
-d=sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-fp16
-
-mkdir -p $d
-mv -v model.fp16.onnx $d/
-mv -v tokens.txt $d/
-cp -av test_wavs $d
-ls -lh $d
-
 d=sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8
 python3 ./test-onnx-ctc-non-streaming.py \
   --model $d/model.int8.onnx \
@@ -38,16 +30,5 @@ python3 ./test-onnx-ctc-non-streaming.py \
 
 python3 ./test-onnx-ctc-non-streaming.py \
   --model $d/model.int8.onnx \
-  --tokens $d/tokens.txt \
-  --wav $d/test_wavs/test_ja_2.wav
-
-d=sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-fp16
-python3 ./test-onnx-ctc-non-streaming.py \
-  --model $d/model.fp16.onnx \
-  --tokens $d/tokens.txt \
-  --wav $d/test_wavs/test_ja_1.wav
-
-python3 ./test-onnx-ctc-non-streaming.py \
-  --model $d/model.fp16.onnx \
   --tokens $d/tokens.txt \
   --wav $d/test_wavs/test_ja_2.wav
