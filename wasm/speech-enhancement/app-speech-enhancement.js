@@ -77,7 +77,7 @@ fileInput.addEventListener('change', function(event) {
     console.log('ArrayBuffer length:', arrayBuffer.byteLength);
 
     const uint8Array = new Uint8Array(arrayBuffer);
-    const wave = readWaveFromBinaryData(uint8Array);
+    const wave = readWaveFromBinaryData(uint8Array, Module);
     if (wave == null) {
       alert(
           `${file.name} is not a valid .wav file. Please select a *.wav file`);

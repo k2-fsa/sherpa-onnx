@@ -11,8 +11,8 @@
 # to download pre-trained models
 
 import argparse
-import sys
 from pathlib import Path
+
 import sherpa_onnx
 
 
@@ -202,8 +202,8 @@ def main():
 
     stream = recognizer.create_stream()
 
-    last_result = ""
-    segment_id = 0
+    display = sherpa_onnx.Display()
+
     while True:
         samples = alsa.read(samples_per_read)  # a blocking read
         stream.accept_waveform(sample_rate, samples)
@@ -214,13 +214,14 @@ def main():
 
         result = recognizer.get_result(stream)
 
-        if result and (last_result != result):
-            last_result = result
-            print("\r{}:{}".format(segment_id, result), end="", flush=True)
+        display.update_text(result)
+        display.display()
+
         if is_endpoint:
             if result:
-                print("\r{}:{}".format(segment_id, result), flush=True)
-                segment_id += 1
+                display.finalize_current_sentence()
+                display.display()
+
             recognizer.reset(stream)
 
 

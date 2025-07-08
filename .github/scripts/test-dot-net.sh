@@ -2,42 +2,14 @@
 
 cd dotnet-examples/
 
-cd ./speech-enhancement-gtcrn
+cd ./version-test
 ./run.sh
 ls -lh
-
-cd ../kokoro-tts
-./run-kokoro.sh
-ls -lh
-
-cd ../offline-tts
-./run-matcha-zh.sh
-ls -lh *.wav
-./run-matcha-en.sh
-ls -lh *.wav
-./run-aishell3.sh
-ls -lh *.wav
-./run-piper.sh
-ls -lh *.wav
-./run-hf-fanchen.sh
-ls -lh *.wav
-ls -lh
-
-pushd ../..
-
-mkdir tts
-
-cp -v dotnet-examples/kokoro-tts/*.wav ./tts
-cp -v dotnet-examples/offline-tts/*.wav ./tts
-popd
-
-cd ../offline-speaker-diarization
-./run.sh
-rm -rfv *.onnx
-rm -fv *.wav
-rm -rfv sherpa-onnx-pyannote-*
 
 cd ../offline-decode-files
+
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
 
 ./run-dolphin-ctc.sh
 rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
@@ -78,6 +50,41 @@ rm -rf sherpa-onnx-*
 ./run-tdnn-yesno.sh
 rm -rf sherpa-onnx-*
 
+cd ../speech-enhancement-gtcrn
+./run.sh
+ls -lh
+
+cd ../kokoro-tts
+./run-kokoro.sh
+ls -lh
+
+cd ../offline-tts
+./run-matcha-zh.sh
+ls -lh *.wav
+./run-matcha-en.sh
+ls -lh *.wav
+./run-aishell3.sh
+ls -lh *.wav
+./run-piper.sh
+ls -lh *.wav
+./run-hf-fanchen.sh
+ls -lh *.wav
+ls -lh
+
+pushd ../..
+
+mkdir tts
+
+cp -v dotnet-examples/kokoro-tts/*.wav ./tts
+cp -v dotnet-examples/offline-tts/*.wav ./tts
+popd
+
+cd ../offline-speaker-diarization
+./run.sh
+rm -rfv *.onnx
+rm -fv *.wav
+rm -rfv sherpa-onnx-pyannote-*
+
 cd ../keyword-spotting-from-files
 ./run.sh
 
@@ -111,5 +118,3 @@ rm -rf sherpa-onnx-*
 cd ../spoken-language-identification
 ./run.sh
 rm -rf sherpa-onnx-*
-
-

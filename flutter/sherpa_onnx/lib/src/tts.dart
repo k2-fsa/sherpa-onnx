@@ -117,6 +117,7 @@ class OfflineTtsKokoroModelConfig {
     this.lengthScale = 1.0,
     this.dictDir = '',
     this.lexicon = '',
+    this.lang = '',
   });
 
   factory OfflineTtsKokoroModelConfig.fromJson(Map<String, dynamic> json) {
@@ -128,12 +129,13 @@ class OfflineTtsKokoroModelConfig {
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
       dictDir: json['dictDir'] as String? ?? '',
       lexicon: json['lexicon'] as String? ?? '',
+      lang: json['lang'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon)';
+    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon, lang: $lang)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -144,6 +146,7 @@ class OfflineTtsKokoroModelConfig {
         'lengthScale': lengthScale,
         'dictDir': dictDir,
         'lexicon': lexicon,
+        'lang': lang,
       };
 
   final String model;
@@ -153,6 +156,7 @@ class OfflineTtsKokoroModelConfig {
   final double lengthScale;
   final String dictDir;
   final String lexicon;
+  final String lang;
 }
 
 class OfflineTtsModelConfig {
@@ -286,6 +290,7 @@ class OfflineTts {
     c.ref.model.kokoro.lengthScale = config.model.kokoro.lengthScale;
     c.ref.model.kokoro.dictDir = config.model.kokoro.dictDir.toNativeUtf8();
     c.ref.model.kokoro.lexicon = config.model.kokoro.lexicon.toNativeUtf8();
+    c.ref.model.kokoro.lang = config.model.kokoro.lang.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
@@ -302,6 +307,7 @@ class OfflineTts {
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
 
+    calloc.free(c.ref.model.kokoro.lang);
     calloc.free(c.ref.model.kokoro.lexicon);
     calloc.free(c.ref.model.kokoro.dictDir);
     calloc.free(c.ref.model.kokoro.dataDir);

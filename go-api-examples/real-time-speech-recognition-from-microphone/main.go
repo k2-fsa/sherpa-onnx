@@ -2,34 +2,14 @@ package main
 
 import (
 	"fmt"
-	portaudio "github.com/csukuangfj/portaudio-go"
+	"github.com/gen2brain/malgo"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 	"log"
 	"strings"
 )
 
-func main() {
-	err := portaudio.Initialize()
-	if err != nil {
-		log.Fatalf("Unable to initialize portaudio: %v\n", err)
-	}
-	defer portaudio.Terminate()
-
-	default_device, err := portaudio.DefaultInputDevice()
-	if err != nil {
-		log.Fatal("Failed to get default input device: %v\n", err)
-	}
-	fmt.Printf("Select default input device: %s\n", default_device.Name)
-	param := portaudio.StreamParameters{}
-	param.Input.Device = default_device
-	param.Input.Channels = 1
-	param.Input.Latency = default_device.DefaultLowInputLatency
-
-	param.SampleRate = 16000
-	param.FramesPerBuffer = 0
-	param.Flags = portaudio.ClipOff
-
+func initRecognizer() *sherpa.OnlineRecognizer {
 	config := sherpa.OnlineRecognizerConfig{}
 	config.FeatConfig = sherpa.FeatureConfig{SampleRate: 16000, FeatureDim: 80}
 
@@ -55,37 +35,48 @@ func main() {
 	log.Println("Initializing recognizer (may take several seconds)")
 	recognizer := sherpa.NewOnlineRecognizer(&config)
 	log.Println("Recognizer created!")
+	return recognizer
+}
+
+func main() {
+	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, func(message string) {
+		fmt.Printf("LOG <%v>", message)
+	})
+	chk(err)
+
+	defer func() {
+		_ = ctx.Uninit()
+		ctx.Free()
+	}()
+
+	deviceConfig := malgo.DefaultDeviceConfig(malgo.Duplex)
+	deviceConfig.Capture.Format = malgo.FormatS16
+	deviceConfig.Capture.Channels = 1
+	deviceConfig.Playback.Format = malgo.FormatS16
+	deviceConfig.Playback.Channels = 1
+	deviceConfig.SampleRate = 16000
+	deviceConfig.Alsa.NoMMap = 1
+
+	recognizer := initRecognizer()
 	defer sherpa.DeleteOnlineRecognizer(recognizer)
 
 	stream := sherpa.NewOnlineStream(recognizer)
 	defer sherpa.DeleteOnlineStream(stream)
 
-	// you can choose another value for 0.1 if you want
-	samplesPerCall := int32(param.SampleRate * 0.1) // 0.1 second
-
-	samples := make([]float32, samplesPerCall)
-	s, err := portaudio.OpenStream(param, samples)
-	if err != nil {
-		log.Fatalf("Failed to open the stream")
-	}
-	defer s.Close()
-	chk(s.Start())
-
 	var last_text string
 
 	segment_idx := 0
 
-	fmt.Println("Started! Please speak")
+	onRecvFrames := func(_, pSample []byte, framecount uint32) {
+		samples := samplesInt16ToFloat(pSample)
+		stream.AcceptWaveform(16000, samples)
 
-	for {
-		chk(s.Read())
-		stream.AcceptWaveform(int(param.SampleRate), samples)
-
+		// Please use a separate goroutine for decoding in your app
 		for recognizer.IsReady(stream) {
 			recognizer.Decode(stream)
 		}
-
 		text := recognizer.GetResult(stream).Text
+
 		if len(text) != 0 && last_text != text {
 			last_text = strings.ToLower(text)
 			fmt.Printf("\r%d: %s", segment_idx, last_text)
@@ -100,11 +91,35 @@ func main() {
 		}
 	}
 
-	chk(s.Stop())
+	captureCallbacks := malgo.DeviceCallbacks{
+		Data: onRecvFrames,
+	}
+
+	device, err := malgo.InitDevice(ctx.Context, deviceConfig, captureCallbacks)
+	chk(err)
+
+	err = device.Start()
+	chk(err)
+	fmt.Println("Started. Please speak. Press ctrl + C  to exit")
+	fmt.Scanln()
+	device.Uninit()
 }
 
 func chk(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func samplesInt16ToFloat(inSamples []byte) []float32 {
+	numSamples := len(inSamples) / 2
+	outSamples := make([]float32, numSamples)
+
+	for i := 0; i != numSamples; i++ {
+		// Decode two bytes into an int16 using bit manipulation
+		s16 := int16(inSamples[2*i]) | int16(inSamples[2*i+1])<<8
+		outSamples[i] = float32(s16) / 32768
+	}
+
+	return outSamples
 }

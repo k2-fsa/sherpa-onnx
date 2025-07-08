@@ -84,6 +84,7 @@ type
     LengthScale: Single;
     DictDir: AnsiString;
     Lexicon: AnsiString;
+    Lang: AnsiString;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -195,6 +196,13 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
   end;
 
+  TSherpaOnnxHomophoneReplacerConfig = record
+    DictDir: AnsiString;
+    Lexicon: AnsiString;
+    RuleFsts: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOnlineRecognizerConfig = record
     FeatConfig: TSherpaOnnxFeatureConfig;
     ModelConfig: TSherpaOnnxOnlineModelConfig;
@@ -212,6 +220,7 @@ type
     BlankPenalty: Single;
     HotwordsBuf: AnsiString;
     HotwordsBufSize: Integer;
+    Hr: TSherpaOnnxHomophoneReplacerConfig;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineRecognizerConfig);
   end;
@@ -271,6 +280,11 @@ type
   end;
 
   TSherpaOnnxOfflineDolphinModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
+  TSherpaOnnxOfflineZipformerCtcModelConfig = record
     Model: AnsiString;
     function ToString: AnsiString;
   end;
@@ -337,6 +351,7 @@ type
     Moonshine: TSherpaOnnxOfflineMoonshineModelConfig;
     FireRedAsr: TSherpaOnnxOfflineFireRedAsrModelConfig;
     Dolphin: TSherpaOnnxOfflineDolphinModelConfig;
+    ZipformerCtc: TSherpaOnnxOfflineZipformerCtcModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -352,6 +367,7 @@ type
     RuleFsts: AnsiString;
     RuleFars: AnsiString;
     BlankPenalty: Single;
+    Hr: TSherpaOnnxHomophoneReplacerConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
     function ToString: AnsiString;
   end;
@@ -568,6 +584,10 @@ type
   function SherpaOnnxWriteWave(Filename: AnsiString;
     Samples: array of Single; SampleRate: Integer): Boolean;
 
+  function SherpaOnnxGetVersionStr(): AnsiString;
+  function SherpaOnnxGetGitSha1(): AnsiString;
+  function SherpaOnnxGetGitDate(): AnsiString;
+
 implementation
 
 uses
@@ -601,6 +621,7 @@ const
      {$linklib sherpa-onnx-kaldifst-core}
      {$linklib sherpa-onnx-fstfar}
      {$linklib sherpa-onnx-fst}
+     {$linklib kissfft-float}
      {$linklib kaldi-native-fbank-core}
      {$linklib piper_phonemize}
      {$linklib espeak-ng}
@@ -668,6 +689,13 @@ type
     Graph: PAnsiChar;
     MaxActive: cint32;
   end;
+
+  SherpaOnnxHomophoneReplacerConfig = record
+    DictDir: PAnsiChar;
+    Lexicon: PAnsiChar;
+    RuleFsts: PAnsiChar;
+  end;
+
   SherpaOnnxOnlineRecognizerConfig = record
     FeatConfig: SherpaOnnxFeatureConfig;
     ModelConfig: SherpaOnnxOnlineModelConfig;
@@ -685,6 +713,7 @@ type
     BlankPenalty: cfloat;
     HotwordsBuf: PAnsiChar;
     HotwordsBufSize: cint32;
+    Hr: SherpaOnnxHomophoneReplacerConfig;
   end;
 
   PSherpaOnnxOnlineRecognizerConfig = ^SherpaOnnxOnlineRecognizerConfig;
@@ -701,6 +730,9 @@ type
     Model: PAnsiChar;
   end;
   SherpaOnnxOfflineDolphinModelConfig = record
+    Model: PAnsiChar;
+  end;
+  SherpaOnnxOfflineZipformerCtcModelConfig = record
     Model: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
@@ -750,6 +782,7 @@ type
     Moonshine: SherpaOnnxOfflineMoonshineModelConfig;
     FireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig;
     Dolphin: SherpaOnnxOfflineDolphinModelConfig;
+    ZipformerCtc: SherpaOnnxOfflineZipformerCtcModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -763,6 +796,7 @@ type
     RuleFsts: PAnsiChar;
     RuleFars: PAnsiChar;
     BlankPenalty: cfloat;
+    Hr: SherpaOnnxHomophoneReplacerConfig;
   end;
 
   PSherpaOnnxOfflineRecognizerConfig = ^SherpaOnnxOfflineRecognizerConfig;
@@ -822,6 +856,7 @@ type
     LengthScale: cfloat;
     DictDir: PAnsiChar;
     Lexicon: PAnsiChar;
+    Lang: PAnsiChar;
   end;
 
   SherpaOnnxOfflineTtsModelConfig = record
@@ -929,6 +964,30 @@ function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
   FilterCutoffHz: cfloat;
   NumZeros: cint32): Pointer; cdecl;
   external SherpaOnnxLibName;
+
+function SherpaOnnxGetVersionStrWrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetVersionStr';
+
+function SherpaOnnxGetGitSha1Wrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetGitSha1';
+
+function SherpaOnnxGetGitDateWrapper(): PAnsiChar; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxGetGitDate';
+
+function SherpaOnnxGetVersionStr(): AnsiString;
+begin
+  Result := SherpaOnnxGetVersionStrWrapper();
+end;
+
+function SherpaOnnxGetGitSha1(): AnsiString;
+begin
+  Result := SherpaOnnxGetGitSha1Wrapper();
+end;
+
+function SherpaOnnxGetGitDate(): AnsiString;
+begin
+  Result := SherpaOnnxGetGitDateWrapper();
+end;
 
 procedure SherpaOnnxDestroyLinearResampler(P: Pointer); cdecl;
   external SherpaOnnxLibName;
@@ -1238,6 +1297,12 @@ begin
   [Self.Graph, Self.MaxActive]);
 end;
 
+function TSherpaOnnxHomophoneReplacerConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxHomophoneReplacerConfig(DictDir := %s, Lexicon := %s, RuleFsts := %s)',
+  [Self.DictDir, Self.Lexicon, Self.RuleFsts]);
+end;
+
 function TSherpaOnnxOnlineRecognizerConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOnlineRecognizerConfig(FeatConfig := %s, ' +
@@ -1253,7 +1318,8 @@ begin
     'CtcFstDecoderConfig := %s, ' +
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
-    'BlankPenalty := %.1f' +
+    'BlankPenalty := %.1f, ' +
+    'Hr := %s' +
     ')'
     ,
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
@@ -1261,7 +1327,7 @@ begin
      Self.Rule1MinTrailingSilence, Self.Rule2MinTrailingSilence,
      Self.Rule3MinUtteranceLength, Self.HotwordsFile, Self.HotwordsScore,
      Self.CtcFstDecoderConfig.ToString, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty
+     Self.BlankPenalty, Self.Hr.ToString
     ]);
 end;
 
@@ -1336,6 +1402,9 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
+  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
+  C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
+  C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
   Self.Handle := SherpaOnnxCreateOnlineRecognizer(@C);
   Self._Config := Config;
@@ -1477,6 +1546,12 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineZipformerCtcModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineZipformerCtcModelConfig(Model := %s)',
+    [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineWhisperModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineWhisperModelConfig(' +
@@ -1551,14 +1626,15 @@ begin
     'SenseVoice := %s, ' +
     'Moonshine := %s, ' +
     'FireRedAsr := %s, ' +
-    'Dolphin := %s' +
+    'Dolphin := %s, ' +
+    'ZipformerCtc := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
      Self.Tokens, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
      Self.TeleSpeechCtc, Self.SenseVoice.ToString, Self.Moonshine.ToString,
-     Self.FireRedAsr.ToString, Self.Dolphin.ToString
+     Self.FireRedAsr.ToString, Self.Dolphin.ToString, Self.ZipformerCtc.ToString
      ]);
 end;
 
@@ -1574,12 +1650,13 @@ begin
     'HotwordsScore := %.1f, ' +
     'RuleFsts := %s, ' +
     'RuleFars := %s, ' +
-    'BlankPenalty := %1.f' +
+    'BlankPenalty := %1.f, ' +
+    'Hr := %s' +
     ')',
     [Self.FeatConfig.ToString, Self.ModelConfig.ToString,
      Self.LMConfig.ToString, Self.DecodingMethod, Self.MaxActivePaths,
      Self.HotwordsFile, Self.HotwordsScore, Self.RuleFsts, Self.RuleFars,
-     Self.BlankPenalty
+     Self.BlankPenalty, Self.Hr.ToString
      ]);
 end;
 
@@ -1628,6 +1705,7 @@ begin
   C.ModelConfig.FireRedAsr.Decoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Decoder);
 
   C.ModelConfig.Dolphin.Model := PAnsiChar(Config.ModelConfig.Dolphin.Model);
+  C.ModelConfig.ZipformerCtc.Model := PAnsiChar(Config.ModelConfig.ZipformerCtc.Model);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
@@ -1639,6 +1717,10 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
+
+  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
+  C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
+  C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
   Self.Handle := SherpaOnnxCreateOfflineRecognizer(@C);
   Self._Config := Config;
@@ -2062,10 +2144,11 @@ begin
     'DataDir := %s, ' +
     'LengthScale := %.2f, ' +
     'DictDir := %s, ' +
-    'Lexicon := %s' +
+    'Lexicon := %s, ' +
+    'Lang := %s' +
     ')',
     [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale,
-     Self.DictDir, Self.Lexicon]);
+     Self.DictDir, Self.Lexicon, Self.Lang]);
 end;
 
 class operator TSherpaOnnxOfflineTtsKokoroModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -2146,6 +2229,7 @@ begin
   C.Model.Kokoro.LengthScale := Config.Model.Kokoro.LengthScale;
   C.Model.Kokoro.DictDir := PAnsiChar(Config.Model.Kokoro.DictDir);
   C.Model.Kokoro.Lexicon := PAnsiChar(Config.Model.Kokoro.Lexicon);
+  C.Model.Kokoro.Lang := PAnsiChar(Config.Model.Kokoro.Lang);
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);

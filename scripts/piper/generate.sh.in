@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+#
+# Auto generated! Do NOT edit!
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+tar xf espeak-ng-data.tar.bz2
+rm espeak-ng-data.tar.bz2
+
+mkdir -p release
+
+{% for model in model_list %}
+
+name={{ model.name }}
+kind={{ model.kind }}
+lang={{ model.lang }}
+model_name={{ model.model_name }}
+text="{{ model.text }}"
+num_speakers={{ model.ns }}
+sample_rate={{ model.sr }}
+
+{{ model.cmd }}
+
+python3 ./add_meta_data.py \
+  --name $name \
+  --kind $kind \
+  --lang $lang
+
+dst=vits-piper-$lang-$name-$kind
+dst_int8=vits-piper-$lang-$name-$kind-int8
+dst_fp16=vits-piper-$lang-$name-$kind-fp16
+mkdir -p $dst
+
+mv -v tokens.txt  $dst/
+mv -v MODEL_CARD $dst/ || true
+mv -v README $dst/ || true
+mv -v *.json  $dst/
+cp -a ./espeak-ng-data $dst/
+
+cp -a $dst $dst_int8
+cp -a $dst $dst_fp16
+
+mv -v *.onnx  $dst/
+
+python3 ./dynamic_quantization.py \
+  --input $dst/$model_name \
+  --output-int8 $dst_int8/$model_name \
+  --output-fp16 $dst_fp16/$model_name >/dev/null 2>&1
+
+echo "---fp32---"
+ls -lh $dst
+
+echo "---int8---"
+ls -lh $dst_int8
+
+echo "---fp16---"
+ls -lh $dst_fp16
+
+tar cjf ${dst}.tar.bz2 $dst
+tar cjf ${dst_int8}.tar.bz2 $dst_int8
+tar cjf ${dst_fp16}.tar.bz2 $dst_fp16
+
+if [ -d hf ]; then
+  mkdir -p hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
+  for i in $(seq $num_speakers); do
+    i=$((i-1))
+    python3 ./generate_samples-$dst-$i.py
+  done
+  ls -lh hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
+fi
+
+mv $dst release
+mv $dst_int8 release
+mv $dst_fp16 release
+
+ls -lh release/*
+
+{% endfor %}

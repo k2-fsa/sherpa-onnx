@@ -41,8 +41,13 @@ package sherpa_onnx
 
 // #include <stdlib.h>
 // #include "c-api.h"
+// extern int32_t _cgoGeneratedAudioCallback(float *samples,int32_t n,void *arg);
+// extern int32_t _cgoGeneratedAudioProgressCallback(float *samples, int32_t n, float p, void *arg);
 import "C"
-import "unsafe"
+import (
+	"runtime/cgo"
+	"unsafe"
+)
 
 // Configuration for online/streaming transducer models
 //
@@ -393,6 +398,10 @@ type OfflineNemoEncDecCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineZipformerCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -434,16 +443,17 @@ type OfflineLMConfig struct {
 }
 
 type OfflineModelConfig struct {
-	Transducer OfflineTransducerModelConfig
-	Paraformer OfflineParaformerModelConfig
-	NemoCTC    OfflineNemoEncDecCtcModelConfig
-	Whisper    OfflineWhisperModelConfig
-	Tdnn       OfflineTdnnModelConfig
-	SenseVoice OfflineSenseVoiceModelConfig
-	Moonshine  OfflineMoonshineModelConfig
-	FireRedAsr OfflineFireRedAsrModelConfig
-	Dolphin    OfflineDolphinModelConfig
-	Tokens     string // Path to tokens.txt
+	Transducer   OfflineTransducerModelConfig
+	Paraformer   OfflineParaformerModelConfig
+	NemoCTC      OfflineNemoEncDecCtcModelConfig
+	Whisper      OfflineWhisperModelConfig
+	Tdnn         OfflineTdnnModelConfig
+	SenseVoice   OfflineSenseVoiceModelConfig
+	Moonshine    OfflineMoonshineModelConfig
+	FireRedAsr   OfflineFireRedAsrModelConfig
+	Dolphin      OfflineDolphinModelConfig
+	ZipformerCtc OfflineZipformerCtcModelConfig
+	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -535,6 +545,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
 
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
+	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -648,9 +659,20 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		C.free(unsafe.Pointer(c.model_config.fire_red_asr.encoder))
 		c.model_config.fire_red_asr.encoder = nil
 	}
+
 	if c.model_config.fire_red_asr.decoder != nil {
 		C.free(unsafe.Pointer(c.model_config.fire_red_asr.decoder))
 		c.model_config.fire_red_asr.decoder = nil
+	}
+
+	if c.model_config.dolphin.model != nil {
+		C.free(unsafe.Pointer(c.model_config.dolphin.model))
+		c.model_config.dolphin.model = nil
+	}
+
+	if c.model_config.zipformer_ctc.model != nil {
+		C.free(unsafe.Pointer(c.model_config.zipformer_ctc.model))
+		c.model_config.zipformer_ctc.model = nil
 	}
 
 	if c.model_config.tokens != nil {
@@ -852,6 +874,7 @@ type OfflineTtsKokoroModelConfig struct {
 	DataDir     string  // Path to espeak-ng-data directory
 	DictDir     string  // Path to dict directory
 	Lexicon     string  // Path to lexicon files
+	Lang        string  // Example: es for Spanish, fr-fr for French. Can be empty
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
@@ -888,6 +911,36 @@ type GeneratedAudio struct {
 // The offline tts class. It wraps a pointer from C.
 type OfflineTts struct {
 	impl *C.struct_SherpaOnnxOfflineTts
+}
+
+type sherpaOnnxGeneratedAudioCallbackWithArg func(samples []float32)
+
+//export _cgoGeneratedAudioCallback
+func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointer) C.int32_t {
+	h := *(*cgo.Handle)(arg)
+	val := h.Value().(sherpaOnnxGeneratedAudioCallbackWithArg)
+	all := make([]float32, n)
+	arr := unsafe.Slice(samples, n)
+	for i := 0; i < int(n); i++ {
+		all[i] = float32(arr[i])
+	}
+	val(all)
+	return 1
+}
+
+type sherpaOnnxGeneratedAudioProgressCallbackWithArg func(samples []float32, p float32)
+
+//export _cgoGeneratedAudioProgressCallback
+func _cgoGeneratedAudioProgressCallback(samples *C.float, n C.int32_t, p C.float, arg unsafe.Pointer) C.int32_t {
+	h := *(*cgo.Handle)(arg)
+	val := h.Value().(sherpaOnnxGeneratedAudioProgressCallbackWithArg)
+	all := make([]float32, n)
+	arr := unsafe.Slice(samples, n)
+	for i := 0; i < int(n); i++ {
+		all[i] = float32(arr[i])
+	}
+	val(all, float32(p))
+	return 1
 }
 
 // Free the internal pointer inside the tts to avoid memory leak.
@@ -971,6 +1024,9 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.kokoro.lexicon = C.CString(config.Model.Kokoro.Lexicon)
 	defer C.free(unsafe.Pointer(c.model.kokoro.lexicon))
 
+	c.model.kokoro.lang = C.CString(config.Model.Kokoro.Lang)
+	defer C.free(unsafe.Pointer(c.model.kokoro.lang))
+
 	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
@@ -1008,6 +1064,26 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	}
 
 	return ans
+}
+
+func (tts *OfflineTts) GenerateWithCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioCallbackWithArg) {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+
+	h := cgo.NewHandle(cb)
+	defer h.Delete()
+	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback), unsafe.Pointer(&h))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+}
+
+func (tts *OfflineTts) GenerateWithProgressCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioProgressCallbackWithArg) {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+
+	h := cgo.NewHandle(cb)
+	defer h.Delete()
+	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(C._cgoGeneratedAudioProgressCallback), unsafe.Pointer(&h))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 }
 
 func (audio *GeneratedAudio) Save(filename string) bool {
@@ -1967,4 +2043,16 @@ func (audio *DenoisedAudio) Save(filename string) bool {
 
 func (sd *OfflineSpeechDenoiser) SampleRate() int {
 	return int(C.SherpaOnnxOfflineSpeechDenoiserGetSampleRate(sd.impl))
+}
+
+func GetVersion() string {
+	return C.GoString(C.SherpaOnnxGetVersionStr())
+}
+
+func GetGitSha1() string {
+	return C.GoString(C.SherpaOnnxGetGitSha1())
+}
+
+func GetGitDate() string {
+	return C.GoString(C.SherpaOnnxGetGitDate())
 }

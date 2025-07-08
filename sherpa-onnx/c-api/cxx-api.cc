@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <utility>
 
 namespace sherpa_onnx::cxx {
 
@@ -192,7 +193,7 @@ void OfflineStream::AcceptWaveform(int32_t sample_rate, const float *samples,
   SherpaOnnxAcceptWaveformOffline(p_, sample_rate, samples, n);
 }
 
-OfflineRecognizer OfflineRecognizer::Create(
+static SherpaOnnxOfflineRecognizerConfig Convert(
     const OfflineRecognizerConfig &config) {
   struct SherpaOnnxOfflineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
@@ -252,6 +253,15 @@ OfflineRecognizer OfflineRecognizer::Create(
 
   c.model_config.dolphin.model = config.model_config.dolphin.model.c_str();
 
+  c.model_config.zipformer_ctc.model =
+      config.model_config.zipformer_ctc.model.c_str();
+
+  c.model_config.canary.encoder = config.model_config.canary.encoder.c_str();
+  c.model_config.canary.decoder = config.model_config.canary.decoder.c_str();
+  c.model_config.canary.src_lang = config.model_config.canary.src_lang.c_str();
+  c.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang.c_str();
+  c.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 
@@ -269,8 +279,20 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
+  return c;
+}
+
+OfflineRecognizer OfflineRecognizer::Create(
+    const OfflineRecognizerConfig &config) {
+  auto c = Convert(config);
+
   auto p = SherpaOnnxCreateOfflineRecognizer(&c);
   return OfflineRecognizer(p);
+}
+
+void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) const {
+  auto c = Convert(config);
+  SherpaOnnxOfflineRecognizerSetConfig(p_, &c);
 }
 
 OfflineRecognizer::OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p)
@@ -366,6 +388,7 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.kokoro.length_scale = config.model.kokoro.length_scale;
   c.model.kokoro.dict_dir = config.model.kokoro.dict_dir.c_str();
   c.model.kokoro.lexicon = config.model.kokoro.lexicon.c_str();
+  c.model.kokoro.lang = config.model.kokoro.lang.c_str();
 
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
@@ -413,6 +436,19 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   return ans;
+}
+
+std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
+    const std::string &text, int32_t sid /*= 0*/, float speed /*= 1.0*/,
+    OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
+  auto audio = Generate(text, sid, speed, callback, arg);
+
+  GeneratedAudio *ans = new GeneratedAudio;
+  ans->samples = std::move(audio.samples);
+  ans->sample_rate = audio.sample_rate;
+
+  return std::shared_ptr<GeneratedAudio>(ans,
+                                         [](GeneratedAudio *p) { delete p; });
 }
 
 KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
@@ -677,5 +713,49 @@ void VoiceActivityDetector::Reset() const {
 void VoiceActivityDetector::Flush() const {
   SherpaOnnxVoiceActivityDetectorFlush(p_);
 }
+
+LinearResampler LinearResampler::Create(int32_t samp_rate_in_hz,
+                                        int32_t samp_rate_out_hz,
+                                        float filter_cutoff_hz,
+                                        int32_t num_zeros) {
+  auto p = SherpaOnnxCreateLinearResampler(samp_rate_in_hz, samp_rate_out_hz,
+                                           filter_cutoff_hz, num_zeros);
+  return LinearResampler(p);
+}
+
+LinearResampler::LinearResampler(const SherpaOnnxLinearResampler *p)
+    : MoveOnly<LinearResampler, SherpaOnnxLinearResampler>(p) {}
+
+void LinearResampler::Destroy(const SherpaOnnxLinearResampler *p) const {
+  SherpaOnnxDestroyLinearResampler(p);
+}
+
+void LinearResampler::Reset() const { SherpaOnnxLinearResamplerReset(p_); }
+
+std::vector<float> LinearResampler::Resample(const float *input,
+                                             int32_t input_dim,
+                                             bool flush) const {
+  auto out = SherpaOnnxLinearResamplerResample(p_, input, input_dim, flush);
+
+  std::vector<float> ans{out->samples, out->samples + out->n};
+
+  SherpaOnnxLinearResamplerResampleFree(out);
+
+  return ans;
+}
+
+int32_t LinearResampler::GetInputSamplingRate() const {
+  return SherpaOnnxLinearResamplerResampleGetInputSampleRate(p_);
+}
+
+int32_t LinearResampler::GetOutputSamplingRate() const {
+  return SherpaOnnxLinearResamplerResampleGetOutputSampleRate(p_);
+}
+
+std::string GetVersionStr() { return SherpaOnnxGetVersionStr(); }
+
+std::string GetGitSha1() { return SherpaOnnxGetGitSha1(); }
+
+std::string GetGitDate() { return SherpaOnnxGetGitDate(); }
 
 }  // namespace sherpa_onnx::cxx

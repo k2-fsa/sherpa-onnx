@@ -52,6 +52,8 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
   int32_t VocabSize() const override { return vocab_size_; }
   OrtAllocator *Allocator() override { return allocator_; }
 
+  bool UseWhisperFeature() const override { return use_whisper_feature_; }
+
  private:
   void InitEncoder(void *model_data, size_t model_data_length);
   void InitDecoder(void *model_data, size_t model_data_length);
@@ -103,6 +105,10 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
   int32_t context_size_ = 0;
   int32_t vocab_size_ = 0;
   int32_t feature_dim_ = 80;
+
+  // for models from
+  // https://github.com/k2-fsa/icefall/blob/master/egs/multi_zh-hans/ASR/RESULTS.md#streaming-with-ctc-head
+  bool use_whisper_feature_ = false;
 };
 
 }  // namespace sherpa_onnx

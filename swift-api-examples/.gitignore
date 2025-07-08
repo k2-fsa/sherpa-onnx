@@ -16,3 +16,6 @@ tts-kokoro-en
 tts-kokoro-zh-en
 speech-enhancement-gtcrn
 decode-file-sense-voice-with-hr
+test-version
+zipformer-ctc-asr
+dolphin-ctc-asr

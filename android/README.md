@@ -18,3 +18,4 @@ for usage.
 |[SherpaOnnxWebSocket](./SherpaOnnxWebSocket)| |It shows how to write a websocket client for the [Python streaming websocket server](https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/streaming_server.py).|
 |[SherpaOnnxAudioTagging](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk.html)| It shows how to use audio tagging.|
 |[SherpaOnnxAudioTaggingWearOS](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)| It shows how to use audio tagging on WearOS.|
+|[SherpaOnnxSimulateStreamingAsr](./SherpaOnnxSimulateStreamingAsr)|| It shows how to use a non-streaming ASR model for streaming speech recognition.|

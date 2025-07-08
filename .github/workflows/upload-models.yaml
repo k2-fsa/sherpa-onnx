@@ -19,12 +19,74 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.8"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: git config
+        shell: bash
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+      - name: FireRed ASR fp16
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16 hf
+
+          git lfs install
+          git clone https://www.modelscope.cn/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16.git ms
+
+          d=sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d
+          mv -v hf/test_wavs $d
+          mv -v hf/README.md $d
+          mv -v hf/tokens.txt $d
+          mv -v ms/*.onnx $d
+
+          pushd $d
+          git lfs track "*.onnx"
+          git lfs track "*.wav"
+          git status
+          git add .
+          git commit -m "add models"
+          ls -lh
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+          popd
+
+          rm -rf $d/.git
+          rm -rf $d/.gitattributes
+          tar cjvf $d.tar.bz2 $d
+
+      - name: Zipformer CTC (non-streaming)
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          names=(
+            sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
+            sherpa-onnx-zipformer-ctc-zh-2025-07-03
+            sherpa-onnx-zipformer-ctc-zh-fp16-2025-07-03
+          )
+          for name in ${names[@]}; do
+            git clone https://huggingface.co/csukuangfj/$name 
+            pushd $name
+            git lfs pull
+            rm -rf .git
+            rm -rfv .gitattributes
+            ls -lh
+            popd
+
+            tar cjfv $name.tar.bz2 $name
+            rm -rf $name
+            ls -lh *.tar.bz2
+          done
+
       - name: Vietnamese (zipformer)
+        if: false
         shell: bash
         run: |
           rm -rf models
@@ -76,6 +138,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface (Vietnamese zipformer)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

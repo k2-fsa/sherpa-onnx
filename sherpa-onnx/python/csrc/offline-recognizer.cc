@@ -19,7 +19,8 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
                     const std::string &, int32_t, const std::string &, float,
                     float, const std::string &, const std::string &,
                     const HomophoneReplacerConfig &>(),
-           py::arg("feat_config"), py::arg("model_config"),
+           py::arg("feat_config") = FeatureExtractorConfig(),
+           py::arg("model_config") = OfflineModelConfig(),
            py::arg("lm_config") = OfflineLMConfig(),
            py::arg("ctc_fst_decoder_config") = OfflineCtcFstDecoderConfig(),
            py::arg("decoding_method") = "greedy_search",
@@ -59,14 +60,16 @@ void PybindOfflineRecognizer(py::module *m) {
             return self.CreateStream(hotwords);
           },
           py::arg("hotwords"), py::call_guard<py::gil_scoped_release>())
-      .def("decode_stream", &PyClass::DecodeStream,
+      .def("decode_stream", &PyClass::DecodeStream, py::arg("s"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("set_config", &PyClass::SetConfig, py::arg("config"),
            py::call_guard<py::gil_scoped_release>())
       .def(
           "decode_streams",
           [](const PyClass &self, std::vector<OfflineStream *> ss) {
             self.DecodeStreams(ss.data(), ss.size());
           },
-          py::call_guard<py::gil_scoped_release>());
+          py::arg("ss"), py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx

@@ -73,8 +73,8 @@ int32_t main(int argc, char *argv[]) {
   config.model_config.provider = use_gpu ? "cuda" : "cpu";
 
   std::cout << "Loading model\n";
-  OnlineRecognizer recongizer = OnlineRecognizer::Create(config);
-  if (!recongizer.Get()) {
+  OnlineRecognizer recognizer = OnlineRecognizer::Create(config);
+  if (!recognizer.Get()) {
     std::cerr << "Please check your config\n";
     return -1;
   }
@@ -95,16 +95,16 @@ int32_t main(int argc, char *argv[]) {
   for (int32_t i = 0; i < num_runs; ++i) {
     const auto begin = std::chrono::steady_clock::now();
 
-    OnlineStream stream = recongizer.CreateStream();
+    OnlineStream stream = recognizer.CreateStream();
     stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                           wave.samples.size());
     stream.InputFinished();
 
-    while (recongizer.IsReady(&stream)) {
-      recongizer.Decode(&stream);
+    while (recognizer.IsReady(&stream)) {
+      recognizer.Decode(&stream);
     }
 
-    result = recongizer.GetResult(&stream);
+    result = recognizer.GetResult(&stream);
 
     auto end = std::chrono::steady_clock::now();
     float elapsed_seconds =

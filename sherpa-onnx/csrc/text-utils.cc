@@ -312,7 +312,8 @@ static std::vector<std::string> MergeCharactersIntoWords(
   while (i < n) {
     const auto &w = words[i];
     if (w.size() >= 3 || (w.size() == 2 && !IsSpecial(w)) ||
-        (w.size() == 1 && (IsPunct(w[0]) || std::isspace(w[0])))) {
+        (w.size() == 1 &&
+         (IsPunct(w[0]) || std::isspace(static_cast<uint8_t>(w[0]))))) {
       if (prev != -1) {
         std::string t;
         for (; prev < i; ++prev) {
@@ -322,7 +323,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
         ans.push_back(std::move(t));
       }
 
-      if (!std::isspace(w[0])) {
+      if (!std::isspace(static_cast<uint8_t>(w[0]))) {
         ans.push_back(w);
       }
       ++i;
@@ -705,6 +706,22 @@ bool EndsWith(const std::string &haystack, const std::string &needle) {
   }
 
   return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
+}
+
+std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
+  std::vector<std::string> ans;
+  if (chunk_size < 1 || chunk_size > s.size()) {
+    ans.push_back(s);
+  } else {
+    int32_t n = static_cast<int32_t>(s.size());
+    int32_t i = 0;
+    while (i < n) {
+      int32_t end = std::min(i + chunk_size, n);
+      ans.push_back(s.substr(i, end - i));
+      i = end;
+    }
+  }
+  return ans;
 }
 
 }  // namespace sherpa_onnx

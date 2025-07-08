@@ -11,6 +11,8 @@ fi
 if [ ! -f config.json ]; then
   # see https://huggingface.co/hexgrad/Kokoro-82M/blob/main/config.json
   curl -SL -O https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh/resolve/main/config.json
+  mkdir -p Kokoro-82M
+  cp ./config.json ./Kokoro-82M
 fi
 
 voices=(

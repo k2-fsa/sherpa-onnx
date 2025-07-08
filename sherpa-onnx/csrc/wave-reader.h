@@ -26,6 +26,13 @@ std::vector<float> ReadWave(const std::string &filename, int32_t *sampling_rate,
 std::vector<float> ReadWave(std::istream &is, int32_t *sampling_rate,
                             bool *is_ok);
 
+std::vector<std::vector<float>> ReadWaveMultiChannel(std::istream &is,
+                                                     int32_t *sampling_rate,
+                                                     bool *is_ok);
+
+std::vector<std::vector<float>> ReadWaveMultiChannel(
+    const std::string &filename, int32_t *sampling_rate, bool *is_ok);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_WAVE_READER_H_

@@ -43,6 +43,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
         with:
@@ -82,6 +88,9 @@ jobs:
               make -j 4
 
               make install
+
+              cp bin/sense-voice-simulate-streaming-alsa-cxx-api install/bin
+              cp bin/zipformer-ctc-simulate-streaming-alsa-cxx-api install/bin
 
               ls -lh install/lib
 
@@ -164,7 +173,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.42
+          # tag: v1.11.5
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'

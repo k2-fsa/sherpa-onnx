@@ -49,6 +49,11 @@ static void ComputeMeanAndInvStd(const float *p, int32_t num_rows,
     (*mean)[i] = t;
 
     float stddev = std::sqrt(sum_sq[i] / num_rows - t * t);
+
+    if (stddev != stddev) {
+      stddev = 0;
+    }
+
     (*inv_stddev)[i] = 1.0f / (stddev + 1e-5f);
   }
 }

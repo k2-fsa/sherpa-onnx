@@ -6,6 +6,10 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------Zipformer CTC----------'
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------SenseVoice----------'
 ./run-sense-voice-with-hr.sh
 ./run-sense-voice.sh
@@ -113,6 +117,10 @@ echo '----------ced----------'
 popd
 
 pushd vad-with-non-streaming-asr
+
+echo '----------Zipformer CTC----------'
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
 
 echo '----------Dolphin CTC----------'
 ./run-dolphin-ctc.sh

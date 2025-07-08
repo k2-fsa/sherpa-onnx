@@ -74,11 +74,7 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
 
   sherpa_onnx::Microphone mic;
 
-  PaDeviceIndex num_devices = Pa_GetDeviceCount();
-  fprintf(stderr, "Num devices: %d\n", num_devices);
-
   int32_t device_index = Pa_GetDefaultInputDevice();
-
   if (device_index == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
     fprintf(stderr, "If you are using Linux, please switch to \n");
@@ -91,35 +87,21 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
     fprintf(stderr, "Use specified device: %s\n", pDeviceIndex);
     device_index = atoi(pDeviceIndex);
   }
+  mic.PrintDevices(device_index);
 
-  for (int32_t i = 0; i != num_devices; ++i) {
-    const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
-    fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i,
-            info->name);
-  }
-
-  PaStreamParameters param;
-  param.device = device_index;
-
-  fprintf(stderr, "Use device: %d\n", param.device);
-
-  const PaDeviceInfo *info = Pa_GetDeviceInfo(param.device);
-  fprintf(stderr, "  Name: %s\n", info->name);
-  fprintf(stderr, "  Max input channels: %d\n", info->maxInputChannels);
-
-  param.channelCount = 1;
-  param.sampleFormat = paFloat32;
-
-  param.suggestedLatency = info->defaultLowInputLatency;
-  param.hostApiSpecificStreamInfo = nullptr;
   float mic_sample_rate = 16000;
   const char *pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (pSampleRateStr) {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);
   }
-  float sample_rate = 16000;
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
+    fprintf(stderr, "Failed to open microphone device %d\n", device_index);
+    exit(EXIT_FAILURE);
+  }
 
+  float sample_rate = 16000;
   std::unique_ptr<sherpa_onnx::LinearResample> resampler;
   if (mic_sample_rate != sample_rate) {
     float min_freq = std::min(mic_sample_rate, sample_rate);
@@ -130,29 +112,7 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
         mic_sample_rate, sample_rate, lowpass_cutoff, lowpass_filter_width);
   }
 
-  PaStream *stream;
-  PaError err =
-      Pa_OpenStream(&stream, &param, nullptr, /* &outputParameters, */
-                    mic_sample_rate,
-                    0,          // frames per buffer
-                    paClipOff,  // we won't output out of range samples
-                                // so don't bother clipping them
-                    RecordCallback, nullptr);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
-  }
-
-  err = Pa_StartStream(stream);
-
   auto vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(config);
-
-  fprintf(stderr, "Started\n");
-
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
-  }
 
   int32_t window_size = config.silero_vad.window_size;
   bool printed = false;
@@ -200,12 +160,6 @@ wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/siler
       }
     }
     Pa_Sleep(100);  // sleep for 100ms
-  }
-
-  err = Pa_CloseStream(stream);
-  if (err != paNoError) {
-    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(EXIT_FAILURE);
   }
 
   return 0;

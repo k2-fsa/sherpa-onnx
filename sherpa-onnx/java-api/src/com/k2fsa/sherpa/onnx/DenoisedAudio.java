@@ -3,14 +3,11 @@
 package com.k2fsa.sherpa.onnx;
 
 public class DenoisedAudio {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private final float[] samples;
     private final int sampleRate;
 
     public DenoisedAudio(float[] samples, int sampleRate) {
+        LibraryLoader.maybeLoad();
         this.samples = samples;
         this.sampleRate = sampleRate;
     }

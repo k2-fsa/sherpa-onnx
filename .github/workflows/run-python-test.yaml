@@ -36,28 +36,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # it fails to install ffmpeg on ubuntu 20.04
-          #
-          # - os: ubuntu-20.04
-          #   python-version: "3.7"
-          # - os: ubuntu-20.04
-          #   python-version: "3.8"
-          # - os: ubuntu-20.04
-          #   python-version: "3.9"
+          - os: ubuntu-24.04
+            python-version: "3.8"
+          - os: ubuntu-24.04
+            python-version: "3.9"
 
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             python-version: "3.10"
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             python-version: "3.11"
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             python-version: "3.12"
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             python-version: "3.13"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Display OS version
         shell: bash
@@ -81,10 +83,12 @@ jobs:
           python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
           python3 -m pip install wheel twine setuptools
 
-      - name: Install ffmpeg
-        shell: bash
-        run: |
-          sudo apt-get install ffmpeg
+      - uses: afoley587/setup-ffmpeg@main
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: release
+          architecture: ''
+          github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
 
       - name: Install ninja
         shell: bash
@@ -188,6 +192,11 @@ jobs:
 
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}-whl
+          path: ./source-separation
 
       - uses: actions/upload-artifact@v4
         with:

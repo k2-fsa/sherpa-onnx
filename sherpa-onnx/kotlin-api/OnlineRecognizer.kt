@@ -395,6 +395,51 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
             )
         }
 
+        17 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-int8-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        18 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
+            )
+        }
+
+        19 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-ctc-zh-fp16-2025-06-30"
+            return OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                    model = "$modelDir/model.fp16.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
+            )
+        }
+
+        20 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-zh-int8-2025-06-30"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
+            )
+        }
+
         1000 -> {
             val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
             return OnlineModelConfig(
@@ -422,6 +467,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 provider = "rknn",
             )
         }
+
     }
     return null
 }

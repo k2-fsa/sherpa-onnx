@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/jni/common.h"
 
 namespace sherpa_onnx {
@@ -63,6 +64,9 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
   ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
+
+  fid = env->GetFieldID(feat_config_cls, "dither", "F");
+  ans.feat_config.dither = env->GetFloatField(feat_config, fid);
 
   //---------- enable endpoint ----------
   fid = env->GetFieldID(cls, "enableEndpoint", "Z");
@@ -295,7 +299,10 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
   }
 #endif
   auto config = sherpa_onnx::GetConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+  for (const auto &s : str_vec) {
+    SHERPA_ONNX_LOGE("%s", s.c_str());
+  }
 
   auto recognizer = new sherpa_onnx::OnlineRecognizer(
 #if __ANDROID_API__ >= 9
@@ -310,7 +317,11 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
   auto config = sherpa_onnx::GetConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+  for (const auto &s : str_vec) {
+    SHERPA_ONNX_LOGE("%s", s.c_str());
+  }
 
   if (!config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");

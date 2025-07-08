@@ -42,6 +42,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -168,7 +174,7 @@ jobs:
           file: sherpa-onnx-*-android.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.11.5
 
   build-android-aar:
     needs: [build-android-libs]
@@ -183,6 +189,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       # https://github.com/actions/setup-java
       - uses: actions/setup-java@v4
@@ -297,7 +309,7 @@ jobs:
           file: ./*.aar
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.11.5
 
       - name: Release android aar
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

@@ -6,7 +6,10 @@ out_jar := $(out_dir)/sherpa-onnx.jar
 
 package_dir := com/k2fsa/sherpa/onnx
 
-java_files := WaveReader.java
+java_files := LibraryLoader.java
+
+java_files += VersionInfo.java
+java_files += WaveReader.java
 java_files += WaveWriter.java
 java_files += EndpointRule.java
 java_files += EndpointConfig.java
@@ -30,6 +33,8 @@ java_files += OfflineWhisperModelConfig.java
 java_files += OfflineFireRedAsrModelConfig.java
 java_files += OfflineMoonshineModelConfig.java
 java_files += OfflineNemoEncDecCtcModelConfig.java
+java_files += OfflineZipformerCtcModelConfig.java
+java_files += OfflineCanaryModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java
 java_files += OfflineDolphinModelConfig.java
 java_files += OfflineModelConfig.java

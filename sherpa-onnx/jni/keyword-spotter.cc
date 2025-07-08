@@ -49,6 +49,9 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
   ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
 
+  fid = env->GetFieldID(feat_config_cls, "dither", "F");
+  ans.feat_config.dither = env->GetFloatField(feat_config, fid);
+
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineModelConfig;");

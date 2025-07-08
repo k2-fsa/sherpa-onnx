@@ -53,6 +53,7 @@ add_library(sherpa_onnx SHARED
   streaming-asr.cc
   utils.cc
   vad.cc
+  version.cc
   wave-reader.cc
   wave-writer.cc
 )

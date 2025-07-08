@@ -32,7 +32,7 @@ Float32List convertBytesToFloat32(Uint8List bytes, [endian = Endian.little]) {
 
   for (var i = 0; i < bytes.length; i += 2) {
     int short = data.getInt16(i, endian);
-    values[i ~/ 2] = short / 32678.0;
+    values[i ~/ 2] = short / 32768.0;
   }
 
   return values;

@@ -186,12 +186,14 @@ for a list of pre-trained models to download.
   fprintf(stderr, "Started!\n");
   int32_t window_size = vad_config.silero_vad.window_size;
   int32_t i = 0;
-  while (i + window_size < samples.size()) {
-    vad->AcceptWaveform(samples.data() + i, window_size);
-    i += window_size;
-    if (i >= samples.size()) {
+  while (i < samples.size()) {
+    if (i + window_size <= samples.size()) {
+      vad->AcceptWaveform(samples.data() + i, window_size);
+    } else {
       vad->Flush();
     }
+
+    i += window_size;
 
     while (!vad->Empty()) {
       const auto &segment = vad->Front();

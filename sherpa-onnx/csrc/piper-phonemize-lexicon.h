@@ -52,9 +52,6 @@ class PiperPhonemizeLexicon : public OfflineTtsFrontend {
   std::vector<TokenIDs> ConvertTextToTokenIdsMatcha(
       const std::string &text, const std::string &voice = "") const;
 
-  std::vector<TokenIDs> ConvertTextToTokenIdsKokoro(
-      const std::string &text, const std::string &voice = "") const;
-
  private:
   // map unicode codepoint to an integer ID
   std::unordered_map<char32_t, int32_t> token2id_;

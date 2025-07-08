@@ -25,6 +25,14 @@ Future<void> initSherpaOnnx() async {
     exit(1);
   }
 
-  final libPath = p.join(p.dirname(p.fromUri(uri)), '..', platform);
+  var libPath = p.join(p.dirname(p.fromUri(uri)), '..', platform);
+  if (platform == 'linux') {
+    final arch = Platform.version.contains('arm64') ||
+            Platform.version.contains('aarch64')
+        ? 'aarch64'
+        : 'x64';
+    libPath = p.join(p.dirname(p.fromUri(uri)), '..', platform, arch);
+  }
+
   sherpa_onnx.initBindings(libPath);
 }

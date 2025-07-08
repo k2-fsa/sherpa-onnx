@@ -1,7 +1,7 @@
 package com.k2fsa.sherpa.onnx
 
 fun main() {
-  val types = arrayOf(0, 2, 5, 6, 15, 21, 24, 25)
+  val types = arrayOf(0, 2, 5, 6, 15, 21, 24, 25, 31)
   for (type in types) {
     test(type)
   }
@@ -19,6 +19,7 @@ fun test(type: Int) {
     21 -> "./sherpa-onnx-moonshine-tiny-en-int8/test_wavs/0.wav"
     24 -> "./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs/0.wav"
     25 -> "./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/test_wavs/0.wav"
+    31 -> "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/test_wavs/0.wav"
     else -> null
   }
 

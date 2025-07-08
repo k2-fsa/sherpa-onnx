@@ -7,14 +7,11 @@ import java.util.Locale;
 import java.util.Map;
 
 public class SpokenLanguageIdentification {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private final Map<String, String> localeMap;
     private long ptr = 0;
 
     public SpokenLanguageIdentification(SpokenLanguageIdentificationConfig config) {
+        LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
 
         String[] languages = Locale.getISOLanguages();

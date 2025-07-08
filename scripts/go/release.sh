@@ -28,8 +28,8 @@ function linux() {
   dst=$(realpath sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
 
@@ -40,8 +40,8 @@ function linux() {
   dst=$(realpath sherpa-onnx-go-linux/lib/aarch64-unknown-linux-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
 

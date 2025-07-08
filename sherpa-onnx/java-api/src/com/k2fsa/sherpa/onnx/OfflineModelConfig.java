@@ -11,6 +11,8 @@ public class OfflineModelConfig {
     private final OfflineNemoEncDecCtcModelConfig nemo;
     private final OfflineSenseVoiceModelConfig senseVoice;
     private final OfflineDolphinModelConfig dolphin;
+    private final OfflineZipformerCtcModelConfig zipformerCtc;
+    private final OfflineCanaryModelConfig canary;
     private final String teleSpeech;
     private final String tokens;
     private final int numThreads;
@@ -28,6 +30,8 @@ public class OfflineModelConfig {
         this.fireRedAsr = builder.fireRedAsr;
         this.moonshine = builder.moonshine;
         this.nemo = builder.nemo;
+        this.zipformerCtc = builder.zipformerCtc;
+        this.canary = builder.canary;
         this.senseVoice = builder.senseVoice;
         this.dolphin = builder.dolphin;
         this.teleSpeech = builder.teleSpeech;
@@ -52,7 +56,7 @@ public class OfflineModelConfig {
         return transducer;
     }
 
-    public OfflineWhisperModelConfig getZipformer2Ctc() {
+    public OfflineWhisperModelConfig getWhisper() {
         return whisper;
     }
 
@@ -66,6 +70,18 @@ public class OfflineModelConfig {
 
     public OfflineDolphinModelConfig getDolphin() {
         return dolphin;
+    }
+
+    public OfflineNemoEncDecCtcModelConfig getNemo() {
+        return nemo;
+    }
+
+    public OfflineZipformerCtcModelConfig getZipformerCtc() {
+        return zipformerCtc;
+    }
+
+    public OfflineCanaryModelConfig getCanary() {
+        return canary;
     }
 
     public String getTokens() {
@@ -109,6 +125,8 @@ public class OfflineModelConfig {
         private OfflineNemoEncDecCtcModelConfig nemo = OfflineNemoEncDecCtcModelConfig.builder().build();
         private OfflineSenseVoiceModelConfig senseVoice = OfflineSenseVoiceModelConfig.builder().build();
         private OfflineDolphinModelConfig dolphin = OfflineDolphinModelConfig.builder().build();
+        private OfflineZipformerCtcModelConfig zipformerCtc = OfflineZipformerCtcModelConfig.builder().build();
+        private OfflineCanaryModelConfig canary = OfflineCanaryModelConfig.builder().build();
         private String teleSpeech = "";
         private String tokens = "";
         private int numThreads = 1;
@@ -139,6 +157,16 @@ public class OfflineModelConfig {
 
         public Builder setNemo(OfflineNemoEncDecCtcModelConfig nemo) {
             this.nemo = nemo;
+            return this;
+        }
+
+        public Builder setZipformerCtc(OfflineZipformerCtcModelConfig zipformerCtc) {
+            this.zipformerCtc = zipformerCtc;
+            return this;
+        }
+
+        public Builder setCanary(OfflineCanaryModelConfig canary) {
+            this.canary = canary;
             return this;
         }
 

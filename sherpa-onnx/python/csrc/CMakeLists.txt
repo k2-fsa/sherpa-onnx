@@ -9,6 +9,7 @@ set(srcs
   features.cc
   homophone-replacer.cc
   keyword-spotter.cc
+  offline-canary-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-model-config.cc
@@ -20,6 +21,10 @@ set(srcs
   offline-punctuation.cc
   offline-recognizer.cc
   offline-sense-voice-model-config.cc
+  offline-source-separation-model-config.cc
+  offline-source-separation-spleeter-model-config.cc
+  offline-source-separation-uvr-model-config.cc
+  offline-source-separation.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc
@@ -49,6 +54,7 @@ set(srcs
   tensorrt-config.cc
   vad-model-config.cc
   vad-model.cc
+  version.cc
   voice-activity-detector.cc
   wave-writer.cc
 )

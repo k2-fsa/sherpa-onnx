@@ -23,18 +23,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest] #, windows-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm] #, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v3
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      # see https://github.com/subosito/flutter-action/issues/345
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          version: latest
+          channel: master
+          flutter-version: 3.24.0
 
       - name: Display flutter info
         shell: bash
@@ -52,7 +59,9 @@ jobs:
           cd dart-api-examples/vad
           flutter pub get
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if false; then
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-24.04-arm ]]; then
             echo "-----"
             ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev
 
@@ -69,7 +78,7 @@ jobs:
             # sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
 
             echo "-----"
-            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux/*
           elif [[ ${{ matrix.os }} == macos-latest ]]; then
             echo "-----"
             ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev
@@ -88,6 +97,7 @@ jobs:
 
             # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
             # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
+          fi
           fi
 
 

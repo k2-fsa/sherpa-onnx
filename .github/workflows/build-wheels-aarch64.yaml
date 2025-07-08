@@ -23,11 +23,17 @@ jobs:
         # see https://github.com/pypa/cibuildwheel/issues/2257
         # we don't use qemu from now on
         os: [ubuntu-22.04-arm]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions

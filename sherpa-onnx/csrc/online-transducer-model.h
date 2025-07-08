@@ -132,6 +132,8 @@ class OnlineTransducerModel {
 
   virtual int32_t SubsamplingFactor() const { return 4; }
 
+  virtual bool UseWhisperFeature() const { return false; }
+
   virtual OrtAllocator *Allocator() = 0;
 
   Ort::Value BuildDecoderInput(

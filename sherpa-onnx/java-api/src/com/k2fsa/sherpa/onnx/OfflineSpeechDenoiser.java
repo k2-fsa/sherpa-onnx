@@ -3,13 +3,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class OfflineSpeechDenoiser {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
+        LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
     }
 

@@ -41,6 +41,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -80,6 +86,40 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test NeMo Canary
+        shell: bash
+        run: |
+          name=nemo-canary-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+
+          ls -lh sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
+          echo "---"
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm -rf sherpa-onnx-nemo-canary-*
+          rm -v ./$name
 
       - name: Test streaming zipformer with Homophone replacer
         shell: bash

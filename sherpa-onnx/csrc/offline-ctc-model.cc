@@ -113,6 +113,16 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     const OfflineModelConfig &config) {
   if (!config.dolphin.model.empty()) {
     return std::make_unique<OfflineDolphinModel>(config);
+  } else if (!config.nemo_ctc.model.empty()) {
+    return std::make_unique<OfflineNemoEncDecCtcModel>(config);
+  } else if (!config.tdnn.model.empty()) {
+    return std::make_unique<OfflineTdnnCtcModel>(config);
+  } else if (!config.zipformer_ctc.model.empty()) {
+    return std::make_unique<OfflineZipformerCtcModel>(config);
+  } else if (!config.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineWenetCtcModel>(config);
+  } else if (!config.telespeech_ctc.empty()) {
+    return std::make_unique<OfflineTeleSpeechCtcModel>(config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here
@@ -167,6 +177,16 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     Manager *mgr, const OfflineModelConfig &config) {
   if (!config.dolphin.model.empty()) {
     return std::make_unique<OfflineDolphinModel>(mgr, config);
+  } else if (!config.nemo_ctc.model.empty()) {
+    return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
+  } else if (!config.tdnn.model.empty()) {
+    return std::make_unique<OfflineTdnnCtcModel>(mgr, config);
+  } else if (!config.zipformer_ctc.model.empty()) {
+    return std::make_unique<OfflineZipformerCtcModel>(mgr, config);
+  } else if (!config.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineWenetCtcModel>(mgr, config);
+  } else if (!config.telespeech_ctc.empty()) {
+    return std::make_unique<OfflineTeleSpeechCtcModel>(mgr, config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here

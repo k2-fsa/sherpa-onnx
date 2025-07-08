@@ -143,6 +143,12 @@ class HomophoneReplacer::Impl {
   }
 
   std::string Apply(const std::string &text) const {
+    std::string ans;
+
+    if (text.empty()) {
+      return ans;
+    }
+
     bool is_hmm = true;
 
     std::vector<std::string> words;
@@ -160,27 +166,52 @@ class HomophoneReplacer::Impl {
     }
 
     // convert words to pronunciations
-    std::vector<std::string> pronunciations;
+    std::vector<std::string> current_words;
+    std::vector<std::string> current_pronunciations;
 
     for (const auto &w : words) {
+      if (w.size() < 3 ||
+          reinterpret_cast<const uint8_t *>(w.data())[0] < 128) {
+        if (!current_words.empty()) {
+          ans += ApplyImpl(current_words, current_pronunciations);
+          current_words.clear();
+          current_pronunciations.clear();
+        }
+        ans += w;
+        continue;
+      }
+
       auto p = ConvertWordToPronunciation(w);
       if (config_.debug) {
         SHERPA_ONNX_LOGE("%s %s", w.c_str(), p.c_str());
       }
-      pronunciations.push_back(std::move(p));
+
+      current_words.push_back(w);
+      current_pronunciations.push_back(std::move(p));
     }
 
-    std::string ans;
-    for (const auto &r : replacer_list_) {
-      ans = r->Normalize(words, pronunciations);
-      // TODO(fangjun): We support only 1 rule fst at present.
-      break;
+    if (!current_words.empty()) {
+      ans += ApplyImpl(current_words, current_pronunciations);
+    }
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Output text: '%s'", ans.c_str());
     }
 
     return ans;
   }
 
  private:
+  std::string ApplyImpl(const std::vector<std::string> &words,
+                        const std::vector<std::string> &pronunciations) const {
+    std::string ans;
+    for (const auto &r : replacer_list_) {
+      ans = r->Normalize(words, pronunciations);
+      // TODO(fangjun): We support only 1 rule fst at present.
+      break;
+    }
+    return ans;
+  }
   std::string ConvertWordToPronunciation(const std::string &word) const {
     if (word2pron_.count(word)) {
       return word2pron_.at(word);
@@ -230,6 +261,9 @@ class HomophoneReplacer::Impl {
       }
 
       while (iss >> p) {
+        if (p.back() > '4') {
+          p.push_back('1');
+        }
         pron.append(std::move(p));
       }
 
@@ -262,7 +296,7 @@ HomophoneReplacer::HomophoneReplacer(Manager *mgr,
 HomophoneReplacer::~HomophoneReplacer() = default;
 
 std::string HomophoneReplacer::Apply(const std::string &text) const {
-  return impl_->Apply(text);
+  return RemoveInvalidUtf8Sequences(impl_->Apply(text));
 }
 
 #if __ANDROID_API__ >= 9

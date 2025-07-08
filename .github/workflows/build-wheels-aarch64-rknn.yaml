@@ -25,20 +25,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install Python dependencies
-        shell: bash
-        run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece setuptools wheel
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-rknn-linux-aarch64-wheel
 
       - name: Download rknn-toolkit2
         shell: bash
@@ -46,39 +42,115 @@ jobs:
           git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
 
       - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux_2_28_aarch64
+            # image: quay.io/pypa/manylinux2014_aarch64 # it does not provide GLIBCXX 3.4.21+
+            options: |
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
+            shell: bash
+            run: |
+              echo "config: ${{ matrix.config }}"
+              uname -a
+              which gcc
 
-          echo "config: ${{ matrix.config }}"
-          uname -a
-          which gcc
+              gcc --version
+              g++ --version
 
-          gcc --version
-          g++ --version
+              find /opt -name "python*"
 
-          echo "pwd"
+              py=${{ matrix.python-version }}
 
-          ls -lh
+              for v in $(seq 0 99); do
+                if [ -f /opt/_internal/cpython-$py.$v/bin/python3 ]; then
+                  py=/opt/_internal/cpython-$py.$v/bin/python3
+                  break
+                fi
+              done
 
-          sudo apt-get update -y
-          sudo apt-get install -y alsa-utils libasound2-dev
+              # there is
+              # py=/opt/_internal/cpython-3.13.3-nogil/bin/python3
+              #
+              echo "py: $py"
 
-          export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
-          export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
-          export CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH
+              $py --version
 
-          export SHERPA_ONNX_ENABLE_ALSA=1
+              $py -m venv my-py
 
-          export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON"
-          python3 setup.py bdist_wheel
+              python3 --version
+              which python3
+
+              source ./my-py/bin/activate
+
+              python3 --version
+              which python3
+
+              python3 -m pip install wheel twine setuptools
+
+              echo "pwd"
+
+              cd /k2-fsa/sherpa-onnx/
+
+              ls -lh
+
+              cmake --version
+
+              echo "config: ${{ matrix.config }}"
+              uname -a
+              echo "pwd"
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              ls -lh $PWD/alsa-lib/src/.libs
+
+              strings $PWD/alsa-lib/src/.libs/libasound.so.2.0.0 | grep "^GLIBC"
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
+              export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
+              export CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH
+
+              export SHERPA_ONNX_ENABLE_ALSA=1
+
+              export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON"
+              python3 setup.py bdist_wheel
+
+              mv dist wheelhouse
 
       - name: Display results
         shell: bash
         run: |
-          ls -lh dist
+          ls -lh wheelhouse
+
+      - name: Fix wheel name
+        shell: bash
+        run: |
+          python3 -m pip install auditwheel
+
+          auditwheel show ./wheelhouse/*.whl
+
+          auditwheel repair --help
+
+          auditwheel --verbose repair --plat manylinux_2_27_aarch64 \
+            --exclude librknnrt.so \
+            --exclude libasound.so.2 \
+            -w ./dist ./wheelhouse/*.whl
+
+          ls -lh dist/*.whl
+
+      - name: Show glibc versions
+        shell: bash
+        run: |
+          mkdir t
+          cp dist/*.whl t
+          cd t
+          unzip ./*.whl
+          strings sherpa_onnx-*.data/data/bin/sherpa-onnx | grep GLIBC
 
       - name: Publish to huggingface
         env:

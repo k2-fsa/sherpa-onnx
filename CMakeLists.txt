@@ -14,7 +14,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.11.4")
+set(SHERPA_ONNX_VERSION "1.12.4")
 
 # Disable warning about
 #
@@ -347,6 +347,8 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(show-info)
+
 if(SHERPA_ONNX_ENABLE_WASM)
   # Enable it for debugging in case there is something wrong.
   # string(APPEND CMAKE_CXX_FLAGS " -g4 -s ASSERTIONS=2 -s SAFE_HEAP=1 -s STACK_OVERFLOW_CHECK=1 ")
@@ -423,7 +425,7 @@ if(SHERPA_ONNX_ENABLE_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags}")
   endif()
 
-  set(CMAKE_EXECUTBLE_LINKER_FLAGS "${CMAKE_EXECUTBLE_LINKER_FLAGS} ${flags}")
+  set(CMAKE_EXECUTABLE_LINKER_FLAGS "${CMAKE_EXECUTABLE_LINKER_FLAGS} ${flags}")
 
   add_compile_options(-fno-omit-frame-pointer)
 endif()

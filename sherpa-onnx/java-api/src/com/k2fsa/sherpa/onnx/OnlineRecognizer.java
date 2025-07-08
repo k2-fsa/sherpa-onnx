@@ -4,13 +4,10 @@
 package com.k2fsa.sherpa.onnx;
 
 public class OnlineRecognizer {
-    static {
-        System.loadLibrary("sherpa-onnx-jni");
-    }
-
     private long ptr = 0;
 
     public OnlineRecognizer(OnlineRecognizerConfig config) {
+        LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
     }
 

@@ -60,6 +60,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Display OS version
         shell: bash
         run: |
@@ -96,6 +102,11 @@ jobs:
           export OS=${{ matrix.os }}
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./source-separation
 
       - uses: actions/upload-artifact@v4
         with:

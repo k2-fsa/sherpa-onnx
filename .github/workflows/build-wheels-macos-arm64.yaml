@@ -26,6 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
@@ -90,7 +96,7 @@ jobs:
         run: |
           opts='--break-system-packages'
           v=${{ matrix.python-version }}
-          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
+          if [[ $v == cp38 || $v == cp39 ]]; then
             opts=''
           fi
 

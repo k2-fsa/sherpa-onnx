@@ -24,6 +24,10 @@ class OfflineRecognizer {
     return new OfflineStream(handle);
   }
 
+  setConfig(config) {
+    addon.offlineRecognizerSetConfig(this.handle, config);
+  }
+
   decode(stream) {
     addon.decodeOfflineStream(this.handle, stream.handle);
   }

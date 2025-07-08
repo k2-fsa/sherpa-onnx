@@ -201,6 +201,7 @@ final class SherpaOnnxOfflineTtsKokoroModelConfig extends Struct {
   external double lengthScale;
   external Pointer<Utf8> dictDir;
   external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> lang;
 }
 
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
@@ -262,6 +263,10 @@ final class SherpaOnnxOfflineNemoEncDecCtcModelConfig extends Struct {
 }
 
 final class SherpaOnnxOfflineDolphinModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
@@ -332,6 +337,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineMoonshineModelConfig moonshine;
   external SherpaOnnxOfflineFireRedAsrModelConfig fireRedAsr;
   external SherpaOnnxOfflineDolphinModelConfig dolphin;
+  external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -1249,6 +1255,15 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
+typedef SherpaOnnxGetVersionStr = Pointer<Utf8> Function();
+typedef SherpaOnnxGetVersionStrNative = SherpaOnnxGetVersionStr;
+
+typedef SherpaOnnxGetGitSha1Native = Pointer<Utf8> Function();
+typedef SherpaOnnxGetGitSha1 = SherpaOnnxGetGitSha1Native;
+
+typedef SherpaOnnxGetGitDateNative = Pointer<Utf8> Function();
+typedef SherpaOnnxGetGitDate = SherpaOnnxGetGitDateNative;
+
 class SherpaOnnxBindings {
   static SherpaOnnxCreateOfflineSpeechDenoiser?
       sherpaOnnxCreateOfflineSpeechDenoiser;
@@ -1457,6 +1472,10 @@ class SherpaOnnxBindings {
   static SherpaOnnxWriteWave? writeWave;
 
   static SherpaOnnxFreeWave? freeWave;
+
+  static SherpaOnnxGetVersionStr? getVersionStr;
+  static SherpaOnnxGetGitSha1? getGitSha1;
+  static SherpaOnnxGetGitDate? getGitDate;
 
   static void init(DynamicLibrary dynamicLibrary) {
     sherpaOnnxCreateOfflineSpeechDenoiser ??= dynamicLibrary
@@ -2048,6 +2067,21 @@ class SherpaOnnxBindings {
 
     freeWave ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxFreeWaveNative>>('SherpaOnnxFreeWave')
+        .asFunction();
+
+    getVersionStr ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxGetVersionStrNative>>(
+            'SherpaOnnxGetVersionStr')
+        .asFunction();
+
+    getGitSha1 ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxGetGitSha1Native>>(
+            'SherpaOnnxGetGitSha1')
+        .asFunction();
+
+    getGitDate ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxGetGitDateNative>>(
+            'SherpaOnnxGetGitDate')
         .asFunction();
   }
 }

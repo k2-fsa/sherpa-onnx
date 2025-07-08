@@ -45,6 +45,8 @@ class Model:
 
     rule_fsts: str = ""
 
+    use_hr: bool = False
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
@@ -98,6 +100,7 @@ def get_models():
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
             short_name="sense_voice",
+            use_hr=True,
             cmd="""
             pushd $model_name
 
@@ -532,6 +535,39 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8",
+            idx=30,
+            lang="en",
+            lang2="English",
+            short_name="parakeet_tdt_0.6b_v2",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03",
+            idx=31,
+            lang="zh",
+            lang2="Chinese",
+            short_name="zipformer_2025_07_03",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -rfv bbpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
@@ -567,6 +603,7 @@ def main():
     filename_list = [
         "./build-apk-vad-asr.sh",
         "./build-hap-vad-asr.sh",
+        "./build-apk-vad-asr-simulate-streaming.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()

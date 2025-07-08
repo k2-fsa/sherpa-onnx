@@ -44,39 +44,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-arm-${{ matrix.lib_type }}
-
-      - name: cache-qemu
-        id: cache-qemu
-        uses: actions/cache@v4
-        with:
-          path: qemu-install
-          key: qemu-arm-install-20220907
-
-      - name: install-qemu-build-deps
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install autoconf automake autotools-dev ninja-build libglib2.0-dev.
-
-      - name: checkout-qemu
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        uses: actions/checkout@v3
-        with:
-          repository: qemu/qemu
-          path: qemu
-          ref: f5643914a9e8f79c606a76e6a9d7ea82a3fc3e65
-
-      - name: qemu
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        run: |
-          cd qemu
-          ./configure --prefix=$GITHUB_WORKSPACE/qemu-install --target-list=arm-linux-user --disable-system
-          make -j2
-          make install
 
       - name: cache-toolchain
         id: cache-toolchain
@@ -103,13 +80,6 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           arm-none-linux-gnueabihf-gcc --version
 
-      - name: Display qemu-arm -h
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-none-linux-gnueabihf/libc
-          qemu-arm -h
-
       - name: build arm-linux-gnueabihf
         shell: bash
         run: |
@@ -134,19 +104,6 @@ jobs:
           ls -lh build-arm-linux-gnueabihf/lib
 
           file build-arm-linux-gnueabihf/bin/sherpa-onnx
-
-      - name: Test sherpa-onnx
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-none-linux-gnueabihf/libc
-
-          ls -lh ./build-arm-linux-gnueabihf/bin
-
-          qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
-
-          readelf -d ./build-arm-linux-gnueabihf/bin/sherpa-onnx
 
       - name: Copy files
         shell: bash
@@ -228,3 +185,6 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*linux-arm-gnueabihf*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.12.0

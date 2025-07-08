@@ -34,7 +34,7 @@ static void PybindOfflineTtsConfig(py::module *m) {
       .def(py::init<const OfflineTtsModelConfig &, const std::string &,
                     const std::string &, int32_t, float>(),
            py::arg("model"), py::arg("rule_fsts") = "",
-           py::arg("rule_fars") = "", py::arg("max_num_sentences") = 2,
+           py::arg("rule_fars") = "", py::arg("max_num_sentences") = 1,
            py::arg("silence_scale") = 0.2)
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("rule_fsts", &PyClass::rule_fsts)

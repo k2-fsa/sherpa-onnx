@@ -1,0 +1,181 @@
+name: export-piper
+
+on:
+  push:
+    branches:
+      - export-piper
+  workflow_dispatch:
+
+concurrency:
+  group: export-piper-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-piper:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+        total: ["20"]
+        index: [
+          "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+          "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+           ]
+        # total: ["1"]
+        # index: ["0"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2 iso639-lang onnx==1.17.0 onnxruntime==1.17.1 sherpa-onnx onnxmltools==1.13.0
+          python3 -m pip install "numpy<2" soundfile
+
+      - name: Generate script
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          cd scripts/piper
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+
+          python3 ./generate.py --total $total --index $index
+          chmod +x ./generate.sh
+          ls -lh
+
+      - name: Show script
+        shell: bash
+        run: |
+          cd scripts/piper
+          cat ./generate.sh
+
+      - name: Run script
+        shell: bash
+        run: |
+          cd scripts/piper
+          ./generate.sh
+
+      - name: Show generated mp3 files
+        shell: bash
+        run: |
+          cd scripts/piper
+          ls -lh hf/piper/mp3/*
+          echo "----"
+          ls -lh hf/piper/mp3/*/*
+
+      - name: Push generated mp3 files
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            cd scripts/piper/hf
+            git pull --rebase
+            git lfs track "*.mp3"
+            git status .
+            git add .
+            git commit -m 'Add mp3 files'
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+
+      - name: Show generated model files
+        shell: bash
+        run: |
+          cd scripts/piper
+          ls -lh *.tar.bz2
+
+      - name: Show generated model files(2)
+        shell: bash
+        run: |
+          cd scripts/piper
+          ls -lh release/
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            dirs=(
+              vits-piper-de_DE-glados-high
+              vits-piper-de_DE-glados-low
+              vits-piper-de_DE-glados-medium
+              vits-piper-de_DE-glados_turret-high
+              vits-piper-de_DE-glados_turret-low
+              vits-piper-de_DE-glados_turret-medium
+              vits-piper-en_US-glados-high
+            )
+            for d in ${dirs[@]}; do
+              src=scripts/piper/release/$d
+              if [ ! -d $src ]; then
+                continue;
+              fi
+
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -a $src/* ./huggingface
+              pushd huggingface
+              git lfs track "*.onnx"
+              git lfs track af_dict
+              git lfs track ar_dict
+              git lfs track cmn_dict
+              git lfs track da_dict en_dict fa_dict hu_dict ia_dict it_dict lb_dict phondata ru_dict ta_dict
+              git lfs track ur_dict yue_dict
+
+              git status
+              git add .
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              popd
+
+            done
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./scripts/piper/vits-piper-*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./scripts/piper/vits-piper-*.tar.bz2
+          overwrite: true
+          tag: tts-models

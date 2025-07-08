@@ -1,3 +1,88 @@
+## 1.12.4
+
+* Refactor release scripts. (#2323)
+* Add TTS engine APKs for more models (#2327)
+* Fix static link without tts (#2328)
+* Fix VAD+ASR C++ example. (#2335)
+* Add sherpa-onnx-streaming-zipformer-zh-int8-2025-06-30 to android ASR apk (#2336)
+* Support non-streaming zipformer CTC ASR models (#2340)
+* Support linux aarch64 for Dart and Flutter (#2342)
+
+## 1.12.3
+
+* Show CMake debug information. (#2316)
+* Remove portaudio-go in Go API examples. (#2317)
+* Support Xipformer CTC ASR with whisper features. (#2319)
+* Support Zipformer transducer ASR with whisper features. (#2321)
+
+## 1.12.2
+
+* Fix CI for windows (#2279)
+* Add jar for Java 24. (#2280)
+* Add Python API for source separation (#2283)
+* Add link to huggingface space for source separation. (#2284)
+* Fix isspace on windows in debug build (#2042)
+* Update wasm/vad-asr/assets/README.md for more clear (#2297)
+* Update TTS Engine APK to support multi-lang (#2294)
+* Add scripts for exporting Piper TTS models to sherpa-onnx (#2299)
+* Update sherpa-onnx-shared.pc.in (#2300)
+* Fixes #2172 (#2301)
+* Refactor kokoro export (#2302)
+* Fix building for Pascal (#2305)
+* Support extra languages in multi-lang kokoro tts (#2303)
+* Update readme to include BreezeApp from MediaTek Research. (#2313)
+* Add API to get version information (#2309)
+
+
+## 1.12.1
+
+* Use jlong explicitly in jni. (#2229)
+* Fix building RKNN wheels (#2233)
+* Fix publishing binaries for RKNN (#2234)
+* Export spleeter model to onnx for source separation (#2237)
+* Add C++ runtime for spleeter about source separation (#2242)
+* Add include headers for __ANDROID_API__,__OHOS__ (#2251)
+* JAVA-API: Manual Library Loading Support for Restricted Environments (#2253)
+* Build APK with replace.fst (#2254)
+* repair rknn wheels (#2257)
+* Update kaldi-native-fbank. (#2259)
+* Fix building sherpa-onnx (#2262)
+* Fix building MFC examples (#2263)
+* Add UVR models for source separation. (#2266)
+* move portaudio common record code to microphone (#2264)
+* fixed mfc build error (#2267)
+* Add C++ support for UVR models (#2269)
+* Export nvidia/canary-180m-flash to sherpa-onnx (#2272)
+* Update utils.dart (#2275)
+* Fix rknn for multi-threads (#2274)
+* Fix 32-bit arm CI (#2276)
+
+## 1.12.0
+
+* Fix building wheels for macOS (#2192)
+* Show verbose logs in homophone replacer (#2194)
+* Fix displaying streaming speech recognition results for Python. (#2196)
+* Add real-time speech recognition example for SenseVoice. (#2197)
+* docs: add Open-XiaoAI KWS project (#2198)
+* Add C++ example for streaming ASR with SenseVoice. (#2199)
+* Add C++ example for real-time ASR with nvidia/parakeet-tdt-0.6b-v2. (#2201)
+* Add a link to YouTube video including sherpa-onnx. (#2202)
+* Support sending is_eof for online websocket server. (#2204)
+* Add alsa-based streaming ASR example for sense voice. (#2207)
+* Support homophone replacer in Android asr demo. (#2210)
+* Add Go implementation of the TTS generation callback (#2213)
+* Add Android demo for real-time ASR with non-streaming ASR models. (#2214)
+* Expose dither for JNI (#2215)
+* Add nodejs example for parakeet-tdt-0.6b-v2. (#2219)
+* Add script to build APK for simulated-streaming-asr. (#2220)
+
+
+## 1.11.5
+
+* export parakeet-tdt-0.6b-v2 to sherpa-onnx (#2180)
+* Add C++ runtime for parakeet-tdt-0.6b-v2. (#2181)
+* Avoid NaN in feature normalization. (#2186)
+
 ## 1.11.4
 
 * Disable strict hotword matching mode for offline transducer (#1837)
