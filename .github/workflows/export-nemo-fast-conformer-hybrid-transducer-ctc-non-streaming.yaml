@@ -61,6 +61,11 @@ jobs:
               sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
               sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
               sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+              sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+              sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
             )
 
             for m in ${models[@]}; do
@@ -89,6 +94,11 @@ jobs:
             sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
             sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
             sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+            sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+            sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
           )
           for d in ${dirs[@]}; do
             tar cjvf ${d}.tar.bz2 ./$d
