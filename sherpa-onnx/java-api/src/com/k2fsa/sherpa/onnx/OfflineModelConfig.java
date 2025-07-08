@@ -12,6 +12,7 @@ public class OfflineModelConfig {
     private final OfflineSenseVoiceModelConfig senseVoice;
     private final OfflineDolphinModelConfig dolphin;
     private final OfflineZipformerCtcModelConfig zipformerCtc;
+    private final OfflineCanaryModelConfig canary;
     private final String teleSpeech;
     private final String tokens;
     private final int numThreads;
@@ -30,6 +31,7 @@ public class OfflineModelConfig {
         this.moonshine = builder.moonshine;
         this.nemo = builder.nemo;
         this.zipformerCtc = builder.zipformerCtc;
+        this.canary = builder.canary;
         this.senseVoice = builder.senseVoice;
         this.dolphin = builder.dolphin;
         this.teleSpeech = builder.teleSpeech;
@@ -78,6 +80,10 @@ public class OfflineModelConfig {
         return zipformerCtc;
     }
 
+    public OfflineCanaryModelConfig getCanary() {
+        return canary;
+    }
+
     public String getTokens() {
         return tokens;
     }
@@ -120,6 +126,7 @@ public class OfflineModelConfig {
         private OfflineSenseVoiceModelConfig senseVoice = OfflineSenseVoiceModelConfig.builder().build();
         private OfflineDolphinModelConfig dolphin = OfflineDolphinModelConfig.builder().build();
         private OfflineZipformerCtcModelConfig zipformerCtc = OfflineZipformerCtcModelConfig.builder().build();
+        private OfflineCanaryModelConfig canary = OfflineCanaryModelConfig.builder().build();
         private String teleSpeech = "";
         private String tokens = "";
         private int numThreads = 1;
@@ -155,6 +162,11 @@ public class OfflineModelConfig {
 
         public Builder setZipformerCtc(OfflineZipformerCtcModelConfig zipformerCtc) {
             this.zipformerCtc = zipformerCtc;
+            return this;
+        }
+
+        public Builder setCanary(OfflineCanaryModelConfig canary) {
+            this.canary = canary;
             return this;
         }
 

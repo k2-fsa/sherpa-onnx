@@ -4,10 +4,22 @@ package com.k2fsa.sherpa.onnx;
 
 public class OfflineRecognizer {
     private long ptr = 0;
+    private final OfflineRecognizerConfig config;
 
     public OfflineRecognizer(OfflineRecognizerConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+
+        this.config = config;
+    }
+
+    public void setConfig(OfflineRecognizerConfig config) {
+        setConfig(ptr, config);
+        // we don't update this.config
+    }
+
+    public OfflineRecognizerConfig getConfig() {
+        return config;
     }
 
     public void decode(OfflineStream s) {
@@ -59,6 +71,8 @@ public class OfflineRecognizer {
     private native long createStream(long ptr);
 
     private native void decode(long ptr, long streamPtr);
+
+    private native void setConfig(long ptr, OfflineRecognizerConfig config);
 
     private native void decodeStreams(long ptr, long[] streamPtrs);
 
