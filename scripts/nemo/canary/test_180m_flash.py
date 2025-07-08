@@ -228,8 +228,8 @@ def main():
     features = compute_features(audio, fbank)
     if model.normalize_type != "":
         assert model.normalize_type == "per_feature", model.normalize_type
-        mean = features.mean(axis=1, keepdims=True)
-        stddev = features.std(axis=1, keepdims=True) + 1e-5
+        mean = features.mean(axis=0, keepdims=True)
+        stddev = features.std(axis=0, keepdims=True) + 1e-5
         features = (features - mean) / stddev
 
     features = np.expand_dims(features, axis=0)
