@@ -6,6 +6,7 @@ from typing import Dict
 import nemo.collections.asr as nemo_asr
 import onnx
 import torch
+from onnxruntime.quantization import QuantType, quantize_dynamic
 
 
 def get_args():
@@ -89,6 +90,13 @@ def main():
         "doc": args.doc,
     }
     add_meta_data("encoder.onnx", meta_data)
+
+    for m in ["encoder", "decoder", "joiner"]:
+        quantize_dynamic(
+            model_input=f"{m}.onnx",
+            model_output=f"{m}.int8.onnx",
+            weight_type=QuantType.QUInt8,
+        )
 
     print(meta_data)
 

@@ -6,6 +6,7 @@ from typing import Dict
 import nemo.collections.asr as nemo_asr
 import onnx
 import torch
+from onnxruntime.quantization import QuantType, quantize_dynamic
 
 
 def get_args():
@@ -114,6 +115,11 @@ def main():
         "comment": "Only the CTC branch is exported",
     }
     add_meta_data(filename, meta_data)
+    quantize_dynamic(
+        model_input="./model.onnx",
+        model_output="./model.int8.onnx",
+        weight_type=QuantType.QUInt8,
+    )
 
     print(meta_data)
 

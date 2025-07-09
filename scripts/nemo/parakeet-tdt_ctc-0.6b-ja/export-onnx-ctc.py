@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
-# Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
-import argparse
+# Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+import os
 from typing import Dict
 
 import nemo.collections.asr as nemo_asr
 import onnx
 import torch
 from onnxruntime.quantization import QuantType, quantize_dynamic
-
-
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--doc",
-        type=str,
-        default="",
-    )
-    return parser.parse_args()
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, str]):
@@ -47,10 +32,10 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 
 @torch.no_grad()
 def main():
-    args = get_args()
-    model_name = args.model
+    asr_model = nemo_asr.models.ASRModel.from_pretrained(
+        model_name="nvidia/parakeet-tdt_ctc-0.6b-ja"
+    )
 
-    asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
     print(asr_model.cfg)
     print(asr_model)
 
@@ -68,7 +53,7 @@ def main():
 
     filename = "model.onnx"
 
-    asr_model.export(filename)
+    asr_model.export(filename, onnx_opset_version=18)
 
     normalize_type = asr_model.cfg.preprocessor.normalize
     if normalize_type == "NA":
@@ -81,17 +66,22 @@ def main():
         "model_type": "EncDecHybridRNNTCTCBPEModel",
         "version": "1",
         "model_author": "NeMo",
-        "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
+        "url": "https://huggingface.co/nvidia/parakeet-tdt_ctc-0.6b-ja",
         "comment": "Only the CTC branch is exported",
-        "doc": args.doc,
+        "doc": "See https://huggingface.co/nvidia/parakeet-tdt_ctc-0.6b-ja",
     }
-    add_meta_data(filename, meta_data)
+
+    os.system("ls -lh *.onnx")
 
     quantize_dynamic(
         model_input="./model.onnx",
         model_output="./model.int8.onnx",
         weight_type=QuantType.QUInt8,
     )
+
+    add_meta_data("model.int8.onnx", meta_data)
+
+    os.system("ls -lh *.onnx")
 
     print("preprocessor", asr_model.cfg.preprocessor)
     print(meta_data)

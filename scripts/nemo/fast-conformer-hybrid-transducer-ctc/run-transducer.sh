@@ -17,13 +17,24 @@ ms=(
 for m in ${ms[@]}; do
   ./export-onnx-transducer.py --model $m
   d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-${m}ms
+  d_int8=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-${m}ms-int8
   if [ ! -f $d/encoder.onnx ]; then
-    mkdir -p $d
+    mkdir -p $d $d_int8
     mv -v encoder.onnx $d/
     mv -v decoder.onnx $d/
     mv -v joiner.onnx $d/
-    mv -v tokens.txt $d/
+    cp -v tokens.txt $d/
+
+    mv -v encoder.int8.onnx $d_int8/
+    mv -v decoder.int8.onnx $d_int8/
+    mv -v joiner.int8.onnx $d_int8/
+    mv -v tokens.txt $d_int8/
+
+    echo "---$d---"
     ls -lh $d
+
+    echo "---$d_int8---"
+    ls -lh $d_int8
   fi
 done
 
@@ -35,6 +46,14 @@ for m in ${ms[@]}; do
     --encoder $d/encoder.onnx \
     --decoder $d/decoder.onnx \
     --joiner $d/joiner.onnx \
+    --tokens $d/tokens.txt \
+    --wav ./0.wav
+
+  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-${m}ms-int8
+  python3 ./test-onnx-transducer.py \
+    --encoder $d/encoder.int8.onnx \
+    --decoder $d/decoder.int8.onnx \
+    --joiner $d/joiner.int8.onnx \
     --tokens $d/tokens.txt \
     --wav ./0.wav
 done
