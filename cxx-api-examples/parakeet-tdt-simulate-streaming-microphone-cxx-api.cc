@@ -136,11 +136,7 @@ int32_t main() {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(sample_rate_str);
   }
-  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                      nullptr) == false) {
-    std::cerr << "Failed to open microphone device\n";
-    return -1;
-  }
+
   float sample_rate = 16000;
   LinearResampler resampler;
   if (mic_sample_rate != sample_rate) {
@@ -150,6 +146,12 @@ int32_t main() {
     int32_t lowpass_filter_width = 6;
     resampler = LinearResampler::Create(mic_sample_rate, sample_rate,
                                         lowpass_cutoff, lowpass_filter_width);
+  }
+
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
+    std::cerr << "Failed to open microphone device\n";
+    return -1;
   }
 
   int32_t window_size = 512;  // samples, please don't change
