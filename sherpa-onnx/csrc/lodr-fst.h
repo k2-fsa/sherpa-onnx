@@ -49,7 +49,7 @@ class LodrFst {
 
 
   int32_t backoff_id_ = -1;
-  std::unique_ptr<fst::StdConstFst> fst_; // owned by this class
+  std::unique_ptr<fst::StdConstFst> fst_;  // owned by this class
 };
 
 class LodrStateCost {

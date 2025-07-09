@@ -22,7 +22,7 @@ struct OfflineLMConfig {
   // LODR
   std::string lodr_fst;
   float lodr_scale = 0.01;
-  int32_t lodr_backoff_id = -1; // -1 means not set
+  int32_t lodr_backoff_id = -1;  // -1 means not set
 
   OfflineLMConfig() = default;
 
