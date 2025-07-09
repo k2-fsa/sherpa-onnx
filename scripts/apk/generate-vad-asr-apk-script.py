@@ -585,7 +585,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8",
+            model_name="sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8",
             idx=34,
             lang="ja",
             lang2="Japanese",
