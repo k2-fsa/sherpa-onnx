@@ -32,18 +32,18 @@ int32_t LodrFst::FindBackoffId() {
   return -1;  // Return -1 if no such input symbol is found
 }
 
-LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id) {
+LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id)
+    : backoff_id_(backoff_id) {
   fst_ = std::unique_ptr<fst::StdConstFst>(
     CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
 
-  backoff_id_ = backoff_id;
   if (backoff_id < 0) {
     // backoff_id_ is not provided, find it automatically
     backoff_id_ = FindBackoffId();
     if (backoff_id_ < 0) {
       std::string err_msg = "Failed to initialize LODR: No backoff arc found";
       SHERPA_ONNX_LOGE("%s", err_msg.c_str());
-      throw std::runtime_error(err_msg);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 }
