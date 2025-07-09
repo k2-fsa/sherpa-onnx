@@ -49,11 +49,29 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     portaudio_static
   )
 
+  add_executable(parakeet-tdt-ctc-simulate-streaming-microphone-cxx-api
+    ./parakeet-tdt-ctc-simulate-streaming-microphone-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
+  )
+  target_link_libraries(parakeet-tdt-ctc-simulate-streaming-microphone-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
+
   add_executable(zipformer-ctc-simulate-streaming-microphone-cxx-api
     ./zipformer-ctc-simulate-streaming-microphone-cxx-api.cc
     ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
   )
   target_link_libraries(zipformer-ctc-simulate-streaming-microphone-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
+
+  add_executable(zipformer-transducer-simulate-streaming-microphone-cxx-api
+    ./zipformer-transducer-simulate-streaming-microphone-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
+  )
+  target_link_libraries(zipformer-transducer-simulate-streaming-microphone-cxx-api
     sherpa-onnx-cxx-api
     portaudio_static
   )

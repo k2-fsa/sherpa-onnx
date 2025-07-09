@@ -142,8 +142,8 @@ int32_t main() {
     resampler = LinearResampler::Create(mic_sample_rate, sample_rate,
                                         lowpass_cutoff, lowpass_filter_width);
   }
-  if (mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                     nullptr) == false) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
     std::cerr << "Failed to open microphone device\n";
     return -1;
   }

@@ -1,17 +1,16 @@
-// cxx-api-examples/zipformer-ctc-simulate-streaming-microphone-cxx-api.cc
+// cxx-api-examples/zipformer-transducer-simulate-streaming-microphone-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
-
 //
-// This file demonstrates how to use Zipformer CTC with sherpa-onnx's C++ API
+// This file demonstrates how to use Zipformer transducer with sherpa-onnx's C++ API
 // for streaming speech recognition from a microphone.
 //
 // clang-format off
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
-// tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
-// rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
+// tar xvf sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
+// rm sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
 //
 // clang-format on
 
@@ -81,10 +80,19 @@ static sherpa_onnx::cxx::OfflineRecognizer CreateOfflineRecognizer() {
   using namespace sherpa_onnx::cxx;  // NOLINT
   OfflineRecognizerConfig config;
 
-  config.model_config.zipformer_ctc.model =
-      "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx";
+  config.model_config.transducer.encoder =
+      "./sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/"
+      "encoder-epoch-99-avg-1.int8.onnx";
+
+  config.model_config.transducer.decoder =
+      "./sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/"
+      "decoder-epoch-99-avg-1.onnx";
+
+  config.model_config.transducer.joiner =
+      "./sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/"
+      "joiner-epoch-99-avg-1.int8.onnx";
   config.model_config.tokens =
-      "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt";
+      "./sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/tokens.txt";
 
   config.model_config.num_threads = 2;
   config.model_config.debug = false;

@@ -1,17 +1,17 @@
-// cxx-api-examples/zipformer-ctc-simulate-streaming-microphone-cxx-api.cc
+// cxx-api-examples/parakeet-tdt-simulate-streaming-microphone-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 
 //
-// This file demonstrates how to use Zipformer CTC with sherpa-onnx's C++ API
+// This file demonstrates how to use parakeet-tdt with sherpa-onnx's C++ API
 // for streaming speech recognition from a microphone.
 //
 // clang-format off
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
-// tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
-// rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8.tar.bz2
+// tar xvf sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8.tar.bz2
+// rm sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8.tar.bz2
 //
 // clang-format on
 
@@ -61,14 +61,14 @@ static sherpa_onnx::cxx::VoiceActivityDetector CreateVad() {
   using namespace sherpa_onnx::cxx;  // NOLINT
   VadModelConfig config;
   config.silero_vad.model = "./silero_vad.onnx";
-  config.silero_vad.threshold = 0.5;
-  config.silero_vad.min_silence_duration = 0.1;
+  config.silero_vad.threshold = 0.25;
+  config.silero_vad.min_silence_duration = 0.25;
   config.silero_vad.min_speech_duration = 0.25;
-  config.silero_vad.max_speech_duration = 8;
+  config.silero_vad.max_speech_duration = 5;
   config.sample_rate = 16000;
   config.debug = false;
 
-  VoiceActivityDetector vad = VoiceActivityDetector::Create(config, 20);
+  VoiceActivityDetector vad = VoiceActivityDetector::Create(config, 60);
   if (!vad.Get()) {
     std::cerr << "Failed to create VAD. Please check your config\n";
     exit(-1);
@@ -81,10 +81,10 @@ static sherpa_onnx::cxx::OfflineRecognizer CreateOfflineRecognizer() {
   using namespace sherpa_onnx::cxx;  // NOLINT
   OfflineRecognizerConfig config;
 
-  config.model_config.zipformer_ctc.model =
-      "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx";
+  config.model_config.nemo_ctc.model =
+      "./sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8/model.int8.onnx";
   config.model_config.tokens =
-      "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt";
+      "./sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8/tokens.txt";
 
   config.model_config.num_threads = 2;
   config.model_config.debug = false;
@@ -111,8 +111,8 @@ int32_t main() {
 
   PaDeviceIndex num_devices = Pa_GetDeviceCount();
   if (num_devices == 0) {
-    std::cerr << "  If you are using Linux, please try "
-                 "./build/bin/zipformer-ctc-simulate-streaming-alsa-cxx-api\n";
+    std::cerr << "  If you are using Linux, please try to modify "
+                 "./build/bin/sense-voice-simulate-streaming-alsa-cxx-api\n";
     return -1;
   }
 
@@ -127,9 +127,10 @@ int32_t main() {
   float mic_sample_rate = 16000;
   const char *sample_rate_str = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (sample_rate_str) {
-    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(sample_rate_str);
+    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
   }
+
   float sample_rate = 16000;
   LinearResampler resampler;
   if (mic_sample_rate != sample_rate) {
