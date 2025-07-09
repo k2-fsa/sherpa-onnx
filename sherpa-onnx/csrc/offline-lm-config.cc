@@ -20,6 +20,8 @@ void OfflineLMConfig::Register(ParseOptions *po) {
                "Specify a provider to LM model use: cpu, cuda, coreml");
   po->Register("lodr-fst", &lodr_fst, "Path to LODR FST model.");
   po->Register("lodr-scale", &lodr_scale, "LODR scale.");
+  po->Register("lodr-backoff-id", &lodr_backoff_id,
+               "ID of the backoff in the LODR FST. -1 means autodetect");
 }
 
 bool OfflineLMConfig::Validate() const {
@@ -43,7 +45,8 @@ std::string OfflineLMConfig::ToString() const {
   os << "model=\"" << model << "\", ";
   os << "scale=" << scale << ", ";
   os << "lodr_scale=" << lodr_scale << ", ";
-  os << "lodr_fst=\"" << lodr_fst << "\")";
+  os << "lodr_fst=\"" << lodr_fst << "\", ";
+  os << "lodr_backoff_id=" << lodr_backoff_id << ")";
 
   return os.str();
 }

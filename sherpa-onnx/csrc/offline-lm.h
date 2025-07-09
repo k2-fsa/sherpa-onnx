@@ -18,8 +18,14 @@ namespace sherpa_onnx {
 class OfflineLM {
  public:
   explicit OfflineLM(const OfflineLMConfig &config) : config_(config) {
-    if (config_.lodr_fst != "") {
-      lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst));
+    if (!config_.lodr_fst.empty()) {
+      try {
+        lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst,
+                                                    config_.lodr_backoff_id));
+      } catch (const std::exception& e) {
+        throw std::runtime_error("Failed to load LODR FST from: " +
+                                  config_.lodr_fst + ". Error: " + e.what());
+      }
     }
   }
   virtual ~OfflineLM() = default;
@@ -52,7 +58,7 @@ class OfflineLM {
 
  private:
   std::unique_ptr<LodrFst> lodr_fst_;
-  float lodr_scale_ = 0.01;
+  float lodr_scale_;
   OfflineLMConfig config_;
 };
 

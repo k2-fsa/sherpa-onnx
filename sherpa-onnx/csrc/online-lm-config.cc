@@ -23,7 +23,7 @@ void OnlineLMConfig::Register(ParseOptions *po) {
   po->Register("lodr-fst", &lodr_fst, "Path to LODR FST model.");
   po->Register("lodr-scale", &lodr_scale, "LODR scale.");
   po->Register("lodr-backoff-id", &lodr_backoff_id,
-               "ID of the backoff symbol in the LODR FST.");
+               "ID of the backoff in the LODR FST. -1 means autodetect");
 }
 
 bool OnlineLMConfig::Validate() const {

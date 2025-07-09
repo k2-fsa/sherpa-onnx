@@ -19,7 +19,7 @@ void PybindOnlineLMConfig(py::module *m) {
            py::arg("model") = "", py::arg("scale") = 0.5f,
            py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu",
            py::arg("shallow_fusion") = true, py::arg("lodr_fst") = "",
-           py::arg("lodr_scale") = 0.0f, py::arg("lodr_backoff_id") = 0)
+           py::arg("lodr_scale") = 0.0f, py::arg("lodr_backoff_id") = -1)
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("scale", &PyClass::scale)
       .def_readwrite("lm_provider", &PyClass::lm_provider)

@@ -16,23 +16,23 @@
 
 namespace sherpa_onnx {
 
-  int32_t LodrFst::FindBackoffId() {
-    // assume that the backoff id is the only input label with epsilon output
+int32_t LodrFst::FindBackoffId() {
+  // assume that the backoff id is the only input label with epsilon output
 
-    for (int32_t state = 0; state < fst_->NumStates(); ++state) {
-      fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
-      for ( ; !arc_iter.Done(); arc_iter.Next()) {
-        const auto& arc = arc_iter.Value();
-        if (arc.olabel == 0) {  // Check if the output label is epsilon (0)
-          return arc.ilabel;    // Return the input label
-        }
+  for (int32_t state = 0; state < fst_->NumStates(); ++state) {
+    fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
+    for ( ; !arc_iter.Done(); arc_iter.Next()) {
+      const auto& arc = arc_iter.Value();
+      if (arc.olabel == 0) {  // Check if the output label is epsilon (0)
+        return arc.ilabel;    // Return the input label
       }
     }
-
-    return -1;  // Return -1 if no such input symbol is found
   }
 
-  LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id) {
+  return -1;  // Return -1 if no such input symbol is found
+}
+
+LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id) {
   fst_ = std::unique_ptr<fst::StdConstFst>(
     CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
 
@@ -41,9 +41,9 @@ namespace sherpa_onnx {
     // backoff_id_ is not provided, find it automatically
     backoff_id_ = FindBackoffId();
     if (backoff_id_ < 0) {
-      SHERPA_ONNX_LOGE(
-        "Failed to initialize LODR: No backoff arc found in FST.");
-      exit(-1);
+      std::string err_msg = "Failed to initialize LODR: No backoff arc found";
+      SHERPA_ONNX_LOGE("%s", err_msg.c_str());
+      throw std::runtime_error(err_msg);
     }
   }
 }
@@ -117,10 +117,7 @@ void LodrFst::ComputeScore(float scale, Hypothesis *hyp, int32_t offset) {
 
   // Walk through the FST with the input text from the hypothesis
   for (size_t i = offset; i < hyp->ys.size(); ++i) {
-    auto next_lodr_state = std::make_unique<LodrStateCost>(
-      hyp->lodr_state->ForwardOneStep(hyp->ys[i]));
-
-    hyp->lodr_state = std::move(next_lodr_state);
+    *hyp->lodr_state = hyp->lodr_state->ForwardOneStep(hyp->ys[i]);
   }
 
   float lodr_score = hyp->lodr_state->FinalScore();
