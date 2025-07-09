@@ -130,7 +130,7 @@ int32_t main() {
     mic_sample_rate = atof(sample_rate_str);
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
   }
-  }
+
   float sample_rate = 16000;
   LinearResampler resampler;
   if (mic_sample_rate != sample_rate) {
