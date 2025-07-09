@@ -601,6 +601,26 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        33 -> {
+            val modelDir = "sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        34 -> {
+            val modelDir = "sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }
