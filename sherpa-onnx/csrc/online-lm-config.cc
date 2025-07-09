@@ -20,11 +20,20 @@ void OnlineLMConfig::Register(ParseOptions *po) {
                "Specify a provider to LM model use: cpu, cuda, coreml");
   po->Register("lm-shallow-fusion", &shallow_fusion,
                "Boolean whether to use shallow fusion or rescore.");
+  po->Register("lodr-fst", &lodr_fst, "Path to LODR FST model.");
+  po->Register("lodr-scale", &lodr_scale, "LODR scale.");
+  po->Register("lodr-backoff-id", &lodr_backoff_id,
+               "ID of the backoff in the LODR FST. -1 means autodetect");
 }
 
 bool OnlineLMConfig::Validate() const {
   if (!FileExists(model)) {
     SHERPA_ONNX_LOGE("'%s' does not exist", model.c_str());
+    return false;
+  }
+
+  if (!lodr_fst.empty() && !FileExists(lodr_fst)) {
+    SHERPA_ONNX_LOGE("'%s' does not exist", lodr_fst.c_str());
     return false;
   }
 
@@ -37,6 +46,9 @@ std::string OnlineLMConfig::ToString() const {
   os << "OnlineLMConfig(";
   os << "model=\"" << model << "\", ";
   os << "scale=" << scale << ", ";
+  os << "lodr_scale=" << lodr_scale << ", ";
+  os << "lodr_fst=\"" << lodr_fst << "\", ";
+  os << "lodr_backoff_id=" << lodr_backoff_id << ", ";
   os << "shallow_fusion=" << (shallow_fusion ? "True" : "False") << ")";
 
   return os.str();

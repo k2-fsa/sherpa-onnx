@@ -25,6 +25,7 @@ set(sources
   jieba.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
+  lodr-fst.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc

@@ -69,6 +69,8 @@ class OfflineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        lodr_fst: str = "",
+        lodr_scale: float = 0.0,
     ):
         """
         Please refer to
@@ -133,6 +135,10 @@ class OfflineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
+          lodr_fst:
+            Path to the LODR FST file in binary format. If empty, LODR is disabled.
+          lodr_scale:
+            Scale factor for LODR rescoring. Only used when lodr_fst is provided.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -173,6 +179,8 @@ class OfflineRecognizer(object):
             scale=lm_scale,
             lm_num_threads=num_threads,
             lm_provider=provider,
+            lodr_fst=lodr_fst,
+            lodr_scale=lodr_scale,
         )
 
         recognizer_config = OfflineRecognizerConfig(

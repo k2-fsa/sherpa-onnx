@@ -89,6 +89,8 @@ class OnlineRecognizer(object):
         hr_dict_dir: str = "",
         hr_rule_fsts: str = "",
         hr_lexicon: str = "",
+        lodr_fst: str = "",
+        lodr_scale: float = 0.0,
     ):
         """
         Please refer to
@@ -216,6 +218,10 @@ class OnlineRecognizer(object):
             "Set path for storing timing cache." TensorRT EP
           trt_dump_subgraphs: bool = False,
             "Dump optimized subgraphs for debugging." TensorRT EP
+          lodr_fst:
+            Path to the LODR FST file in binary format. If empty, LODR is disabled.
+          lodr_scale:
+            Scale factor for LODR rescoring. Only used when lodr_fst is provided.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -298,6 +304,8 @@ class OnlineRecognizer(object):
             model=lm,
             scale=lm_scale,
             shallow_fusion=lm_shallow_fusion,
+            lodr_fst=lodr_fst,
+            lodr_scale=lodr_scale,
         )
 
         recognizer_config = OnlineRecognizerConfig(
