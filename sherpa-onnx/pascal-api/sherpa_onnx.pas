@@ -1698,7 +1698,7 @@ begin
      ]);
 end;
 
-function ConvertOfflineRecongizerConfig(Config: TSherpaOnnxOfflineRecognizerConfig): SherpaOnnxOfflineRecognizerConfig;
+function ConvertOfflineRecognizerConfig(Config: TSherpaOnnxOfflineRecognizerConfig): SherpaOnnxOfflineRecognizerConfig;
 var
   C: SherpaOnnxOfflineRecognizerConfig;
 begin
@@ -1773,7 +1773,7 @@ constructor TSherpaOnnxOfflineRecognizer.Create(Config: TSherpaOnnxOfflineRecogn
 var
   C: SherpaOnnxOfflineRecognizerConfig;
 begin
-  C := ConvertOfflineRecongizerConfig(Config);
+  C := ConvertOfflineRecognizerConfig(Config);
   Self.Handle := SherpaOnnxCreateOfflineRecognizer(@C);
   Self._Config := Config;
 end;
@@ -1782,7 +1782,7 @@ procedure TSherpaOnnxOfflineRecognizer.SetConfig(Config: TSherpaOnnxOfflineRecog
 var
   C: SherpaOnnxOfflineRecognizerConfig;
 begin
-  C := ConvertOfflineRecongizerConfig(Config);
+  C := ConvertOfflineRecognizerConfig(Config);
   SherpaOnnxOfflineRecognizerSetConfig(Self.Handle, @C);
   { We don't update Self._Config }
 end;
