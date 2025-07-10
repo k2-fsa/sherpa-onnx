@@ -76,6 +76,14 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test NeMo Canary ASR
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-canary-decode-files
+          ./run.sh
+          rm -rf sherpa-onnx-nemo-*
+
       - name: Test speech enhancement (GTCRN)
         if: matrix.os != 'windows-latest'
         shell: bash
