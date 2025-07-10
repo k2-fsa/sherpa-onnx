@@ -177,6 +177,21 @@ Ort::SessionOptions GetSessionOptionsImpl(
       }
       break;
     }
+    case Provider::KROCM: {
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "ROCMExecutionProvider") != available_providers.end()) {
+        OrtROCMProviderOptions options;
+        options.device_id =
+            provider_config != nullptr ? provider_config->device : 0;
+        sess_opts.AppendExecutionProvider_ROCM(options);
+      } else {
+        SHERPA_ONNX_LOGE(
+            "Please compile with ort enable  ROCM EP. Available "
+            "providers: %s. Fallback to cpu!",
+            os.str().c_str());
+      }
+      break;
+    }
     case Provider::kDirectML: {
 #if defined(_WIN32) && SHERPA_ONNX_ENABLE_DIRECTML == 1
       sess_opts.DisableMemPattern();
