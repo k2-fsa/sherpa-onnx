@@ -299,6 +299,16 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineWhisperModelConfig);
   end;
 
+  TSherpaOnnxOfflineCanaryModelConfig = record
+    Encoder: AnsiString;
+    Decoder: AnsiString;
+    SrcLang: AnsiString;
+    TgtLang: AnsiString;
+    UsePnc: Boolean;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCanaryModelConfig);
+  end;
+
   TSherpaOnnxOfflineMoonshineModelConfig = record
     Preprocessor: AnsiString;
     Encoder: AnsiString;
@@ -352,6 +362,7 @@ type
     FireRedAsr: TSherpaOnnxOfflineFireRedAsrModelConfig;
     Dolphin: TSherpaOnnxOfflineDolphinModelConfig;
     ZipformerCtc: TSherpaOnnxOfflineZipformerCtcModelConfig;
+    Canary: TSherpaOnnxOfflineCanaryModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -398,6 +409,7 @@ type
     destructor Destroy; override;
     function CreateStream: TSherpaOnnxOfflineStream;
     procedure Decode(Stream: TSherpaOnnxOfflineStream);
+    procedure SetConfig(Config: TSherpaOnnxOfflineRecognizerConfig);
     function GetResult(Stream: TSherpaOnnxOfflineStream): TSherpaOnnxOfflineRecognizerResult;
     property Config: TSherpaOnnxOfflineRecognizerConfig Read _Config;
     property GetHandle: Pointer Read Handle;
@@ -742,6 +754,13 @@ type
     Task: PAnsiChar;
     TailPaddings: cint32;
   end;
+  SherpaOnnxOfflineCanaryModelConfig = record
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
+    SrcLang: PAnsiChar;
+    TgtLang: PAnsiChar;
+    UsePnc: cint32;
+  end;
   SherpaOnnxOfflineFireRedAsrModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -783,6 +802,7 @@ type
     FireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig;
     Dolphin: SherpaOnnxOfflineDolphinModelConfig;
     ZipformerCtc: SherpaOnnxOfflineZipformerCtcModelConfig;
+    Canary: SherpaOnnxOfflineCanaryModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1197,6 +1217,9 @@ procedure SherpaOnnxAcceptWaveformOffline(Stream: Pointer;
 procedure SherpaOnnxDecodeOfflineStream(Recognizer: Pointer; Stream: Pointer); cdecl;
   external SherpaOnnxLibName;
 
+procedure SherpaOnnxOfflineRecognizerSetConfig(Recognizer: Pointer; Config: PSherpaOnnxOfflineRecognizerConfig); cdecl;
+  external SherpaOnnxLibName;
+
 function SherpaOnnxGetOfflineStreamResultAsJson(Stream: Pointer): PAnsiChar; cdecl;
   external SherpaOnnxLibName;
 
@@ -1564,6 +1587,19 @@ begin
     [Self.Encoder, Self.Decoder, Self.Language, Self.Task, Self.TailPaddings]);
 end;
 
+function TSherpaOnnxOfflineCanaryModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineCanaryModelConfig(' +
+    'Encoder := %s, ' +
+    'Decoder := %s, ' +
+    'SrcLang := %s, ' +
+    'TgtLang := %s, ' +
+    'UsePnc := %s' +
+    ')',
+    [Self.Encoder, Self.Decoder, Self.SrcLang,
+     Self.TgtLang, Self.UsePnc.ToString]);
+end;
+
 function TSherpaOnnxOfflineFireRedAsrModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineFireRedAsrModelConfig(' +
@@ -1627,14 +1663,16 @@ begin
     'Moonshine := %s, ' +
     'FireRedAsr := %s, ' +
     'Dolphin := %s, ' +
-    'ZipformerCtc := %s' +
+    'ZipformerCtc := %s, ' +
+    'Canary := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
      Self.Tokens, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
      Self.TeleSpeechCtc, Self.SenseVoice.ToString, Self.Moonshine.ToString,
-     Self.FireRedAsr.ToString, Self.Dolphin.ToString, Self.ZipformerCtc.ToString
+     Self.FireRedAsr.ToString, Self.Dolphin.ToString,
+     Self.ZipformerCtc.ToString, Self.Canary.ToString
      ]);
 end;
 
@@ -1660,7 +1698,7 @@ begin
      ]);
 end;
 
-constructor TSherpaOnnxOfflineRecognizer.Create(Config: TSherpaOnnxOfflineRecognizerConfig);
+function ConvertOfflineRecongizerConfig(Config: TSherpaOnnxOfflineRecognizerConfig): SherpaOnnxOfflineRecognizerConfig;
 var
   C: SherpaOnnxOfflineRecognizerConfig;
 begin
@@ -1707,6 +1745,12 @@ begin
   C.ModelConfig.Dolphin.Model := PAnsiChar(Config.ModelConfig.Dolphin.Model);
   C.ModelConfig.ZipformerCtc.Model := PAnsiChar(Config.ModelConfig.ZipformerCtc.Model);
 
+  C.ModelConfig.Canary.Encoder := PAnsiChar(Config.ModelConfig.Canary.Encoder);
+  C.ModelConfig.Canary.Decoder := PAnsiChar(Config.ModelConfig.Canary.Decoder);
+  C.ModelConfig.Canary.SrcLang := PAnsiChar(Config.ModelConfig.Canary.SrcLang);
+  C.ModelConfig.Canary.TgtLang := PAnsiChar(Config.ModelConfig.Canary.TgtLang);
+  C.ModelConfig.Canary.UsePnc := Ord(Config.ModelConfig.Canary.UsePnc);
+
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
 
@@ -1722,8 +1766,25 @@ begin
   C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
   C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
+  Result := C;
+end;
+
+constructor TSherpaOnnxOfflineRecognizer.Create(Config: TSherpaOnnxOfflineRecognizerConfig);
+var
+  C: SherpaOnnxOfflineRecognizerConfig;
+begin
+  C := ConvertOfflineRecongizerConfig(Config);
   Self.Handle := SherpaOnnxCreateOfflineRecognizer(@C);
   Self._Config := Config;
+end;
+
+procedure TSherpaOnnxOfflineRecognizer.SetConfig(Config: TSherpaOnnxOfflineRecognizerConfig);
+var
+  C: SherpaOnnxOfflineRecognizerConfig;
+begin
+  C := ConvertOfflineRecongizerConfig(Config);
+  SherpaOnnxOfflineRecognizerSetConfig(Self.Handle, @C);
+  { We don't update Self._Config }
 end;
 
 destructor TSherpaOnnxOfflineRecognizer.Destroy;
@@ -1910,6 +1971,13 @@ class operator TSherpaOnnxOfflineWhisperModelConfig.Initialize({$IFDEF FPC}var{$
 begin
   Dest.Task := 'transcribe';
   Dest.TailPaddings := -1;
+end;
+
+class operator TSherpaOnnxOfflineCanaryModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCanaryModelConfig);
+begin
+  Dest.SrcLang := 'en';
+  Dest.TgtLang := 'en';
+  Dest.UsePnc := True;
 end;
 
 class operator TSherpaOnnxOfflineLMConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineLMConfig);

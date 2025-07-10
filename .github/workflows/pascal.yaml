@@ -156,6 +156,10 @@ jobs:
 
           pushd non-streaming-asr
 
+          ./run-nemo-canary.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-zipformer-ctc.sh
           rm -rf sherpa-onnx-*
           echo "---"
