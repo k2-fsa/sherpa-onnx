@@ -1,3 +1,22 @@
+## 1.12.5
+
+* Fix typo CMAKE_EXECUTBLE_LINKER_FLAGS -> CMAKE_EXECUTABLE_LINKER_FLAGS (#2344)
+* Fix testing dart packages (#2345)
+* fix(canary): use dynamo export, single input_ids and avoid 0/1 specialization (#2348)
+* Fix TTS for Unreal Engine (#2349)
+* Update readme to include https://github.com/mawwalker/stt-server (#2350)
+* Add meta data to NeMo canary ONNX models (#2351)
+* Update README to include https://github.com/bbeyondllove/asr_server (#2353)
+* Add C++ runtime and Python API for NeMo Canary models (#2352)
+* Add C/CXX/JavaScript API for NeMo Canary models (#2357)
+* Add Java and Kotlin API for NeMo Canary models (#2359)
+* Upload fp16 onnx model files for FireRedASR (#2360)
+* Fix nemo feature normalization in test code (#2361)
+* Refactor exporting NeMo models (#2362)
+* Add LODR support to online and offline recognizers (#2026)
+* Add CXX examples for NeMo TDT ASR. (#2363)
+* Add Pascal/Go/C#/Dart API for NeMo Canary ASR models (#2367)
+
 ## 1.12.4
 
 * Refactor release scripts. (#2323)
