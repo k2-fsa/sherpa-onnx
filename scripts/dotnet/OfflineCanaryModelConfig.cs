@@ -11,8 +11,8 @@ namespace SherpaOnnx
         {
             Encoder = "";
             Decoder = "";
-            SrcLang = "";
-            TgtLang = "";
+            SrcLang = "en";
+            TgtLang = "en";
             UsePnc = 1;
         }
         [MarshalAs(UnmanagedType.LPStr)]
