@@ -414,6 +414,14 @@ type OfflineWhisperModelConfig struct {
 	TailPaddings int
 }
 
+type OfflineCanaryModelConfig struct {
+	Encoder string
+	Decoder string
+	SrcLang string
+	TgtLang string
+	UsePnc  int
+}
+
 type OfflineFireRedAsrModelConfig struct {
 	Encoder string
 	Decoder string
@@ -453,6 +461,7 @@ type OfflineModelConfig struct {
 	FireRedAsr   OfflineFireRedAsrModelConfig
 	Dolphin      OfflineDolphinModelConfig
 	ZipformerCtc OfflineZipformerCtcModelConfig
+	Canary       OfflineCanaryModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -546,6 +555,12 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
 	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
+
+	c.model_config.canary.encoder = C.CString(config.ModelConfig.Canary.Encoder)
+	c.model_config.canary.decoder = C.CString(config.ModelConfig.Canary.Decoder)
+	c.model_config.canary.src_lang = C.CString(config.ModelConfig.Canary.SrcLang)
+	c.model_config.canary.tgt_lang = C.CString(config.ModelConfig.Canary.TgtLang)
+	c.model_config.canary.use_pnc = C.int(config.ModelConfig.Canary.UsePnc)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -673,6 +688,26 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 	if c.model_config.zipformer_ctc.model != nil {
 		C.free(unsafe.Pointer(c.model_config.zipformer_ctc.model))
 		c.model_config.zipformer_ctc.model = nil
+	}
+
+	if c.model_config.canary.encoder != nil {
+		C.free(unsafe.Pointer(c.model_config.canary.encoder))
+		c.model_config.canary.encoder = nil
+	}
+
+	if c.model_config.canary.decoder != nil {
+		C.free(unsafe.Pointer(c.model_config.canary.decoder))
+		c.model_config.canary.decoder = nil
+	}
+
+	if c.model_config.canary.src_lang != nil {
+		C.free(unsafe.Pointer(c.model_config.canary.src_lang))
+		c.model_config.canary.src_lang = nil
+	}
+
+	if c.model_config.canary.tgt_lang != nil {
+		C.free(unsafe.Pointer(c.model_config.canary.tgt_lang))
+		c.model_config.canary.tgt_lang = nil
 	}
 
 	if c.model_config.tokens != nil {

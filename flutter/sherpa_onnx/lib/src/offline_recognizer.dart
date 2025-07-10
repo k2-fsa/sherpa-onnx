@@ -163,6 +163,44 @@ class OfflineWhisperModelConfig {
   final int tailPaddings;
 }
 
+class OfflineCanaryModelConfig {
+  const OfflineCanaryModelConfig(
+      {this.encoder = '',
+      this.decoder = '',
+      this.srcLang = 'en',
+      this.tgtLang = 'en',
+      this.usePnc = true});
+
+  factory OfflineCanaryModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineCanaryModelConfig(
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      srcLang: json['srcLang'] as String? ?? 'en',
+      tgtLang: json['tgtLang'] as String? ?? 'en',
+      usePnc: json['usePnc'] as bool? ?? true,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineCanaryModelConfig(encoder: $encoder, decoder: $decoder, srcLang: $srcLang, tgtLang: $tgtLang, usePnc: $usePnc)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'encoder': encoder,
+        'decoder': decoder,
+        'srcLang': srcLang,
+        'tgtLang': tgtLang,
+        'usePnc': usePnc,
+      };
+
+  final String encoder;
+  final String decoder;
+  final String srcLang;
+  final String tgtLang;
+  final bool usePnc;
+}
+
 class OfflineFireRedAsrModelConfig {
   const OfflineFireRedAsrModelConfig({this.encoder = '', this.decoder = ''});
 
@@ -310,6 +348,7 @@ class OfflineModelConfig {
     this.fireRedAsr = const OfflineFireRedAsrModelConfig(),
     this.dolphin = const OfflineDolphinModelConfig(),
     this.zipformerCtc = const OfflineZipformerCtcModelConfig(),
+    this.canary = const OfflineCanaryModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -362,6 +401,10 @@ class OfflineModelConfig {
           ? OfflineZipformerCtcModelConfig.fromJson(
               json['zipformerCtc'] as Map<String, dynamic>)
           : const OfflineZipformerCtcModelConfig(),
+      canary: json['canary'] != null
+          ? OfflineCanaryModelConfig.fromJson(
+              json['canary'] as Map<String, dynamic>)
+          : const OfflineCanaryModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -375,7 +418,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -389,6 +432,7 @@ class OfflineModelConfig {
         'fireRedAsr': fireRedAsr.toJson(),
         'dolphin': dolphin.toJson(),
         'zipformerCtc': zipformerCtc.toJson(),
+        'canary': canary.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -409,6 +453,7 @@ class OfflineModelConfig {
   final OfflineFireRedAsrModelConfig fireRedAsr;
   final OfflineDolphinModelConfig dolphin;
   final OfflineZipformerCtcModelConfig zipformerCtc;
+  final OfflineCanaryModelConfig canary;
 
   final String tokens;
   final int numThreads;
@@ -549,7 +594,28 @@ class OfflineRecognizer {
 
   /// The user is responsible to call the OfflineRecognizer.free()
   /// method of the returned instance to avoid memory leak.
+
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
+    final c = convertConfig(config);
+
+    final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+
+    freeConfig(c);
+
+    return OfflineRecognizer._(ptr: ptr, config: config);
+  }
+
+  void setConfig(OfflineRecognizerConfig config) {
+    final c = convertConfig(config);
+
+    SherpaOnnxBindings.offlineRecognizerSetConfig?.call(ptr, c);
+
+    freeConfig(c);
+    // we don't update this.config
+  }
+
+  static Pointer<SherpaOnnxOfflineRecognizerConfig> convertConfig(
+      OfflineRecognizerConfig config) {
     final c = calloc<SherpaOnnxOfflineRecognizerConfig>();
 
     c.ref.feat.sampleRate = config.feat.sampleRate;
@@ -609,6 +675,12 @@ class OfflineRecognizer {
     c.ref.model.zipformerCtc.model =
         config.model.zipformerCtc.model.toNativeUtf8();
 
+    c.ref.model.canary.encoder = config.model.canary.encoder.toNativeUtf8();
+    c.ref.model.canary.decoder = config.model.canary.decoder.toNativeUtf8();
+    c.ref.model.canary.srcLang = config.model.canary.srcLang.toNativeUtf8();
+    c.ref.model.canary.tgtLang = config.model.canary.tgtLang.toNativeUtf8();
+    c.ref.model.canary.usePnc = config.model.canary.usePnc ? 1 : 0;
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -637,8 +709,10 @@ class OfflineRecognizer {
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
-    final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+    return c;
+  }
 
+  static void freeConfig(Pointer<SherpaOnnxOfflineRecognizerConfig> c) {
     calloc.free(c.ref.hr.dictDir);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
@@ -653,6 +727,10 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.canary.tgtLang);
+    calloc.free(c.ref.model.canary.srcLang);
+    calloc.free(c.ref.model.canary.decoder);
+    calloc.free(c.ref.model.canary.encoder);
     calloc.free(c.ref.model.zipformerCtc.model);
     calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
@@ -674,8 +752,6 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.transducer.decoder);
     calloc.free(c.ref.model.transducer.joiner);
     calloc.free(c);
-
-    return OfflineRecognizer._(ptr: ptr, config: config);
   }
 
   /// The user has to invoke stream.free() on the returned instance

@@ -14,6 +14,11 @@ namespace SherpaOnnx
             _handle = new HandleRef(this, h);
         }
 
+        public void SetConfig(OfflineRecognizerConfig config)
+        {
+            SherpaOnnxOfflineRecognizerSetConfig(_handle.Handle, ref config);
+        }
+
         public OfflineStream CreateStream()
         {
             IntPtr p = SherpaOnnxCreateOfflineStream(_handle.Handle);
@@ -64,6 +69,9 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxCreateOfflineRecognizer(ref OfflineRecognizerConfig config);
+
+        [DllImport(Dll.Filename)]
+        private static extern void SherpaOnnxOfflineRecognizerSetConfig(IntPtr handle, ref OfflineRecognizerConfig config);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxDestroyOfflineRecognizer(IntPtr handle);

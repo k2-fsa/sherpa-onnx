@@ -6,6 +6,11 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+cd ../non-streaming-canary-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-nemo-*
+
 cd ../offline-decode-files
 
 ./run-zipformer-ctc.sh
