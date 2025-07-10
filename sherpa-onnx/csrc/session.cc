@@ -182,7 +182,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
                     "ROCMExecutionProvider") != available_providers.end()) {
         OrtROCMProviderOptions options;
         options.device_id =
-            provider_config != nullptr ? provider_config->device : 0;
+            provider_config ? provider_config->device : 0;
         sess_opts.AppendExecutionProvider_ROCM(options);
       } else {
         SHERPA_ONNX_LOGE(
