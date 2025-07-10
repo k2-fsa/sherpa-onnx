@@ -177,7 +177,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
       }
       break;
     }
-    case Provider::KROCM: {
+    case Provider::kROCM: {
       if (std::find(available_providers.begin(), available_providers.end(),
                     "ROCMExecutionProvider") != available_providers.end()) {
         OrtROCMProviderOptions options;

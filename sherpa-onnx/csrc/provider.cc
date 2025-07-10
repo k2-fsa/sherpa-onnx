@@ -29,7 +29,7 @@ Provider StringToProvider(std::string s) {
   } else if (s == "directml") {
     return Provider::kDirectML;
   } else if (s == "rocm") {
-    return Provider::KROCM;
+    return Provider::kROCM;
   } else {
     SHERPA_ONNX_LOGE("Unsupported string: %s. Fallback to cpu", s.c_str());
     return Provider::kCPU;
