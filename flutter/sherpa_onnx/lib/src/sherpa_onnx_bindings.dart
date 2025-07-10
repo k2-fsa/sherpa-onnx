@@ -280,6 +280,16 @@ final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external int tailPaddings;
 }
 
+final class SherpaOnnxOfflineCanaryModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> srcLang;
+  external Pointer<Utf8> tgtLang;
+
+  @Int32()
+  external int usePnc;
+}
+
 final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
   external Pointer<Utf8> preprocessor;
   external Pointer<Utf8> encoder;
@@ -338,6 +348,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineFireRedAsrModelConfig fireRedAsr;
   external SherpaOnnxOfflineDolphinModelConfig dolphin;
   external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
+  external SherpaOnnxOfflineCanaryModelConfig canary;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -876,6 +887,14 @@ typedef CreateOfflineRecognizerNative = Pointer<SherpaOnnxOfflineRecognizer>
 
 typedef CreateOfflineRecognizer = CreateOfflineRecognizerNative;
 
+typedef OfflineRecognizerSetConfigNative = Void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>,
+    Pointer<SherpaOnnxOfflineRecognizerConfig>);
+
+typedef OfflineRecognizerSetConfig = void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>,
+    Pointer<SherpaOnnxOfflineRecognizerConfig>);
+
 typedef DestroyOfflineRecognizerNative = Void Function(
     Pointer<SherpaOnnxOfflineRecognizer>);
 
@@ -1341,6 +1360,7 @@ class SherpaOnnxBindings {
 
   static CreateOfflineRecognizer? createOfflineRecognizer;
   static DestroyOfflineRecognizer? destroyOfflineRecognizer;
+  static OfflineRecognizerSetConfig? offlineRecognizerSetConfig;
   static CreateOfflineStream? createOfflineStream;
   static DestroyOfflineStream? destroyOfflineStream;
   static AcceptWaveformOffline? acceptWaveformOffline;
@@ -1739,6 +1759,11 @@ class SherpaOnnxBindings {
     destroyOfflineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOfflineRecognizerNative>>(
             'SherpaOnnxDestroyOfflineRecognizer')
+        .asFunction();
+
+    offlineRecognizerSetConfig ??= dynamicLibrary
+        .lookup<NativeFunction<OfflineRecognizerSetConfigNative>>(
+            'SherpaOnnxOfflineRecognizerSetConfig')
         .asFunction();
 
     createOfflineStream ??= dynamicLibrary
