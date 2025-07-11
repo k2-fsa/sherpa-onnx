@@ -22,9 +22,9 @@ void PybindVadModelConfig(py::module *m) {
       .def(py::init<const SileroVadModelConfig &, const TenVadModelConfig &,
                     int32_t, int32_t, const std::string &, bool>(),
            py::arg("silero_vad") = SileroVadModelConfig{},
-           py::arg("ten") = TenVadModelConfig{}, py::arg("sample_rate") = 16000,
-           py::arg("num_threads") = 1, py::arg("provider") = "cpu",
-           py::arg("debug") = false)
+           py::arg("ten_vad") = TenVadModelConfig{},
+           py::arg("sample_rate") = 16000, py::arg("num_threads") = 1,
+           py::arg("provider") = "cpu", py::arg("debug") = false)
       .def_readwrite("silero_vad", &PyClass::silero_vad)
       .def_readwrite("ten_vad", &PyClass::ten_vad)
       .def_readwrite("sample_rate", &PyClass::sample_rate)
