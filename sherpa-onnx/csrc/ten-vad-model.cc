@@ -349,7 +349,9 @@ class TenVadModel::Impl {
     LogMel(features_.data(), static_cast<int32_t>(features_.size()) - 1,
            features_.data());
 
-    // we use 0 for the pitch
+    // Note(fangjun): The ten-vad model expects a pitch feature, but we set it
+    // to 0 as a simplification. This may reduce performance as noted
+    // in the PR #2377
     features_.back() = 0;
 
     ApplyNormalization(features_.data(), features_.data());
