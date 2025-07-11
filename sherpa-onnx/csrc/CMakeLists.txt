@@ -124,6 +124,7 @@ set(sources
   stack.cc
   symbol-table.cc
   ten-vad-model-config.cc
+  ten-vad-model.cc
   text-utils.cc
   transducer-keyword-decoder.cc
   transpose.cc
