@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/silero-vad-model-config.h
+// sherpa-onnx/csrc/ten-vad-model-config.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_SILERO_VAD_MODEL_CONFIG_H_
-#define SHERPA_ONNX_CSRC_SILERO_VAD_MODEL_CONFIG_H_
+// Copyright (c)  2025  Xiaomi Corporation
+#ifndef SHERPA_ONNX_CSRC_TEN_VAD_MODEL_CONFIG_H_
+#define SHERPA_ONNX_CSRC_TEN_VAD_MODEL_CONFIG_H_
 
 #include <string>
 
@@ -10,7 +10,7 @@
 
 namespace sherpa_onnx {
 
-struct SileroVadModelConfig {
+struct TenVadModelConfig {
   std::string model;
 
   // threshold to classify a segment as speech
@@ -23,15 +23,15 @@ struct SileroVadModelConfig {
 
   float min_speech_duration = 0.25;  // in seconds
 
-  // 512, 1024, 1536 samples for 16000 Hz
-  int32_t window_size = 512;  // in samples
+  // 160 or 256
+  int32_t window_size = 256;  // in samples
 
   // If a speech segment is longer than this value, then we increase
   // the threshold to 0.9. After finishing detecting the segment,
   // the threshold value is reset to its original value.
   float max_speech_duration = 20;  // in seconds
 
-  SileroVadModelConfig() = default;
+  TenVadModelConfig() = default;
 
   void Register(ParseOptions *po);
 
@@ -42,4 +42,4 @@ struct SileroVadModelConfig {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_SILERO_VAD_MODEL_CONFIG_H_
+#endif  // SHERPA_ONNX_CSRC_TEN_VAD_MODEL_CONFIG_H_

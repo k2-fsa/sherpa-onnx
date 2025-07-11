@@ -123,6 +123,7 @@ set(sources
   spoken-language-identification.cc
   stack.cc
   symbol-table.cc
+  ten-vad-model-config.cc
   text-utils.cc
   transducer-keyword-decoder.cc
   transpose.cc

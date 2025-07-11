@@ -40,7 +40,7 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
       "to the silero VAD model. WARNING! Silero VAD models were trained using "
       "512, 1024, 1536 samples for 16000 sample rate and 256, 512, 768 samples "
       "for 8000 sample rate. Values other than these may affect model "
-      "perfomance!");
+      "performance!");
 }
 
 bool SileroVadModelConfig::Validate() const {
