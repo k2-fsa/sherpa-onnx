@@ -14,9 +14,9 @@ func main() {
 	config := sherpa.VadModelConfig{}
 
 	// Please download silero_vad.onnx from
-	// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+	// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 	// or ten-vad.onnx from
-	// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/ten-vad.onnx
+	// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
 
 	if FileExists("./silero_vad.onnx") {
 		fmt.Println("Use silero-vad")
