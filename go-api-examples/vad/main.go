@@ -44,9 +44,9 @@ func main() {
 	config.Provider = "cpu"
 	config.Debug = 1
 
-	window_size := config.SileroVad.WindowSize
+	windowSize := config.SileroVad.WindowSize
 	if config.TenVad.Model != "" {
-		window_size = config.TenVad.WindowSize
+		windowSize = config.TenVad.WindowSize
 	}
 
 	var bufferSizeInSeconds float32 = 5
@@ -81,10 +81,10 @@ func main() {
 	onRecvFrames := func(_, pSample []byte, framecount uint32) {
 		samples := samplesInt16ToFloat(pSample)
 		buffer.Push(samples)
-		for buffer.Size() >= window_size {
+		for buffer.Size() >= windowSize {
 			head := buffer.Head()
-			s := buffer.Get(head, window_size)
-			buffer.Pop(window_size)
+			s := buffer.Get(head, windowSize)
+			buffer.Pop(windowSize)
 
 			vad.AcceptWaveform(s)
 
