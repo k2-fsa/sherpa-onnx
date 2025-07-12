@@ -13,7 +13,7 @@ namespace SherpaOnnx
             Threshold = 0.5F;
             MinSilenceDuration = 0.5F;
             MinSpeechDuration = 0.25F;
-            WindowSize = 512;
+            WindowSize = 256;
             MaxSpeechDuration = 5.0F;
         }
 
