@@ -1,7 +1,7 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
+{ Copyright (c)  2025  Xiaomi Corporation }
 {
 This file shows how to use the VAD API from sherpa-onnx
-to remove silences from a wave file with silero-vad.
+to remove silences from a wave file with ten-vad.
 }
 program main;
 
@@ -40,14 +40,14 @@ begin
       Exit;
     end;
 
-  WindowSize := 512; {Please don't change it unless you know the details}
+  WindowSize := 256; {Please don't change it unless you know the details}
   Initialize(Config);
 
-  Config.SileroVad.Model := './silero_vad.onnx';
-  Config.SileroVad.MinSpeechDuration := 0.25;
-  Config.SileroVad.MinSilenceDuration := 0.5;
-  Config.SileroVad.Threshold := 0.5;
-  Config.SileroVad.WindowSize := WindowSize;
+  Config.TenVad.Model := './ten-vad.onnx';
+  Config.TenVad.MinSpeechDuration := 0.25;
+  Config.TenVad.MinSilenceDuration := 0.5;
+  Config.TenVad.Threshold := 0.25;
+  Config.TenVad.WindowSize := WindowSize;
   Config.NumThreads:= 1;
   Config.Debug:= True;
   Config.Provider:= 'cpu';
@@ -108,8 +108,8 @@ begin
         end;
     end;
 
-  SherpaOnnxWriteWave('./lei-jun-test-no-silence.wav', AllSamples, SampleRate);
-  WriteLn('Saved to ./lei-jun-test-no-silence.wav');
+  SherpaOnnxWriteWave('./lei-jun-test-no-silence-ten-vad.wav', AllSamples, SampleRate);
+  WriteLn('Saved to ./lei-jun-test-no-silence-ten-vad.wav');
 
   FreeAndNil(Vad);
 end.
