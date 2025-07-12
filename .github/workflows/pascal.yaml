@@ -136,6 +136,27 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal test (VAD test)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd vad
+          ./run-circular-buffer.sh
+          echo "---"
+
+          time ./run-remove-silence-ten-vad.sh
+          echo "---"
+
+          time ./run-remove-silence.sh
+          echo "---"
+
+          ls -lh
+
+          popd
+
       - name:  Run Speech Enhancement test (GTCRN)
         shell: bash
         run: |
@@ -292,24 +313,6 @@ jobs:
 
           time ./run-vad-with-sense-voice.sh
           rm -rf sherpa-onnx-*
-          echo "---"
-
-          ls -lh
-
-          popd
-
-      - name:  Run Pascal test (VAD test)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd vad
-          ./run-circular-buffer.sh
-          echo "---"
-
-          time ./run-remove-silence.sh
           echo "---"
 
           ls -lh
