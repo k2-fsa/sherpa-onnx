@@ -68,4 +68,47 @@ done
 
 rm -rf ./android/SherpaOnnxVad/app/src/main/assets/*.onnx
 
+
+# Now for ten-vad
+git checkout .
+pushd android/SherpaOnnxVad/app/src/main/java/com/k2fsa/sherpa/onnx
+sed -i.bak s/"type = 0/type = 1/" ./MainActivity.kt
+git diff
+popd
+
+log "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx"
+
+# Download the model
+pushd ./android/SherpaOnnxVad/app/src/main/assets/
+wget -c https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+popd
+
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+  log "------------------------------------------------------------"
+  log "build apk for $arch"
+  log "------------------------------------------------------------"
+  src_arch=$arch
+  if [ $arch == "armeabi-v7a" ]; then
+    src_arch=armv7-eabi
+  elif [ $arch == "x86_64" ]; then
+    src_arch=x86-64
+  fi
+
+  ls -lh ./build-android-$src_arch/install/lib/*.so
+
+  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/
+
+  pushd ./android/SherpaOnnxVad
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
+  ./gradlew assembleRelease
+  popd
+
+  mv android/SherpaOnnxVad/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-ten_vad.apk
+  ls -lh apks
+  rm -v ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/*.so
+done
+
+rm -rf ./android/SherpaOnnxVad/app/src/main/assets/*.onnx
+
 ls -lh apks/
