@@ -1971,7 +1971,7 @@ begin
     'NumThreads := %d, ' +
     'Provider := %s, ' +
     'Debug := %s, ' +
-    'SileroVad := %s' +
+    'TenVad := %s' +
     ')',
     [Self.SileroVad.ToString, Self.SampleRate, Self.NumThreads, Self.Provider,
      Self.Debug.ToString, Self.TenVad.ToString
