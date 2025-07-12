@@ -321,7 +321,7 @@ class TenVadModel::Impl {
   static void LogMel(const float *in, int32_t n, float *out) {
     for (int32_t i = 0; i != n; ++i) {
       // 20.79441541679836 is log(32768*32768)
-      out[i] = logf(in[i] + 1e-10) - 20.79441541679836f;
+      out[i] = logf(in[i] + 1e-10f) - 20.79441541679836f;
     }
   }
 

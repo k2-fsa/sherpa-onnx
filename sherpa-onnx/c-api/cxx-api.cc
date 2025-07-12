@@ -655,6 +655,13 @@ VoiceActivityDetector VoiceActivityDetector::Create(
   c.silero_vad.window_size = config.silero_vad.window_size;
   c.silero_vad.max_speech_duration = config.silero_vad.max_speech_duration;
 
+  c.ten_vad.model = config.ten_vad.model.c_str();
+  c.ten_vad.threshold = config.ten_vad.threshold;
+  c.ten_vad.min_silence_duration = config.ten_vad.min_silence_duration;
+  c.ten_vad.min_speech_duration = config.ten_vad.min_speech_duration;
+  c.ten_vad.window_size = config.ten_vad.window_size;
+  c.ten_vad.max_speech_duration = config.ten_vad.max_speech_duration;
+
   c.sample_rate = config.sample_rate;
   c.num_threads = config.num_threads;
   c.provider = config.provider.c_str();
@@ -757,5 +764,9 @@ std::string GetVersionStr() { return SherpaOnnxGetVersionStr(); }
 std::string GetGitSha1() { return SherpaOnnxGetGitSha1(); }
 
 std::string GetGitDate() { return SherpaOnnxGetGitDate(); }
+
+bool FileExists(const std::string &filename) {
+  return SherpaOnnxFileExists(filename.c_str());
+}
 
 }  // namespace sherpa_onnx::cxx
