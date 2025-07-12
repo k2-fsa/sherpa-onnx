@@ -113,6 +113,7 @@ The punctuation model supports both English and Chinese.
 
 ```bash
 ./run-vad-remove-slience.sh
+./run-ten-vad-remove-slience.sh
 ```
 
 ## VAD + Non-streaming Dolphin CTC for speech recognition

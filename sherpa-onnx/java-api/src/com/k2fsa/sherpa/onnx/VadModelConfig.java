@@ -4,6 +4,7 @@ package com.k2fsa.sherpa.onnx;
 
 public class VadModelConfig {
     private final SileroVadModelConfig sileroVadModelConfig;
+    private final TenVadModelConfig tenVadModelConfig;
     private final int sampleRate;
     private final int numThreads;
     private final boolean debug;
@@ -11,6 +12,7 @@ public class VadModelConfig {
 
     private VadModelConfig(Builder builder) {
         this.sileroVadModelConfig = builder.sileroVadModelConfig;
+        this.tenVadModelConfig = builder.tenVadModelConfig;
         this.sampleRate = builder.sampleRate;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
@@ -23,6 +25,10 @@ public class VadModelConfig {
 
     public SileroVadModelConfig getSileroVadModelConfig() {
         return sileroVadModelConfig;
+    }
+
+    public TenVadModelConfig getTenVadModelConfig() {
+        return tenVadModelConfig;
     }
 
     public int getSampleRate() {
@@ -43,6 +49,7 @@ public class VadModelConfig {
 
     public static class Builder {
         private SileroVadModelConfig sileroVadModelConfig = new SileroVadModelConfig.Builder().build();
+        private TenVadModelConfig tenVadModelConfig = new TenVadModelConfig.Builder().build();
         private int sampleRate = 16000;
         private int numThreads = 1;
         private boolean debug = true;
@@ -54,6 +61,11 @@ public class VadModelConfig {
 
         public Builder setSileroVadModelConfig(SileroVadModelConfig sileroVadModelConfig) {
             this.sileroVadModelConfig = sileroVadModelConfig;
+            return this;
+        }
+
+        public Builder setTenVadModelConfig(TenVadModelConfig tenVadModelConfig) {
+            this.tenVadModelConfig = tenVadModelConfig;
             return this;
         }
 

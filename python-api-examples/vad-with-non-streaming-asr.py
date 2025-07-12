@@ -70,12 +70,13 @@ to install sherpa-onnx and to download non-streaming pre-trained models
 used in this file.
 
 Please visit
-https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 to download silero_vad.onnx
 
 For instance,
 
-wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
 """
 import argparse
 import sys

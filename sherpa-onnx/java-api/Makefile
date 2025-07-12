@@ -74,6 +74,7 @@ java_files += SpeakerEmbeddingExtractorConfig.java
 java_files += SpeakerEmbeddingExtractor.java
 java_files += SpeakerEmbeddingManager.java
 
+java_files += TenVadModelConfig.java
 java_files += SileroVadModelConfig.java
 java_files += VadModelConfig.java
 java_files += SpeechSegment.java

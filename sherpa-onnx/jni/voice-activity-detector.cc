@@ -44,6 +44,33 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   ans.silero_vad.max_speech_duration =
       env->GetFloatField(silero_vad_config, fid);
 
+  // ten-vad
+  fid = env->GetFieldID(cls, "tenVadModelConfig",
+                        "Lcom/k2fsa/sherpa/onnx/TenVadModelConfig;");
+  jobject ten_vad_config = env->GetObjectField(config, fid);
+  jclass ten_vad_config_cls = env->GetObjectClass(ten_vad_config);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(ten_vad_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.ten_vad.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "threshold", "F");
+  ans.ten_vad.threshold = env->GetFloatField(ten_vad_config, fid);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "minSilenceDuration", "F");
+  ans.ten_vad.min_silence_duration = env->GetFloatField(ten_vad_config, fid);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "minSpeechDuration", "F");
+  ans.ten_vad.min_speech_duration = env->GetFloatField(ten_vad_config, fid);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "windowSize", "I");
+  ans.ten_vad.window_size = env->GetIntField(ten_vad_config, fid);
+
+  fid = env->GetFieldID(ten_vad_config_cls, "maxSpeechDuration", "F");
+  ans.ten_vad.max_speech_duration = env->GetFloatField(ten_vad_config, fid);
+
   fid = env->GetFieldID(cls, "sampleRate", "I");
   ans.sample_rate = env->GetIntField(config, fid);
 
@@ -179,8 +206,9 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_isSpeechDetected(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
   SafeJNI(env, "Vad_reset", [&] {
     if (!ValidatePointer(env, ptr, "Vad_reset",
                          "VoiceActivityDetector pointer is null.")) {
