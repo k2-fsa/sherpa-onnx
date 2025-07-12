@@ -25,7 +25,7 @@ if [ ! -f ./ten-vad.onnx ]; then
   wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
 fi
 
-if [ ! -e ./generate-subtitles ]; then
+if [ ! -e ./generate-subtitles-ten-vad ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
