@@ -34,14 +34,33 @@ export class SileroVadConfig {
   }
 }
 
+export class TenVadConfig {
+  public model: string;
+  public threshold: number;
+  public minSpeechDuration: number;
+  public minSilenceDuration: number;
+  public windowSize: number;
+
+  public constructor(model: string, threshold: number, minSpeechDuration: number, minSilenceDuration: number,
+    windowSize: number) {
+    this.model = model;
+    this.threshold = threshold;
+    this.minSpeechDuration = minSpeechDuration;
+    this.minSilenceDuration = minSilenceDuration;
+    this.windowSize = windowSize;
+  }
+}
+
 export class VadConfig {
   public sileroVad: SileroVadConfig;
+  public tenVad: TenVadConfig;
   public sampleRate: number;
   public debug: boolean;
   public numThreads: number;
 
-  public constructor(sileroVad: SileroVadConfig, sampleRate: number, debug: boolean, numThreads: number) {
+  public constructor(sileroVad: SileroVadConfig, tenVad: TenVadConfig, sampleRate: number, debug: boolean, numThreads: number) {
     this.sileroVad = sileroVad;
+    this.tenVad = tenVad;
     this.sampleRate = sampleRate;
     this.debug = debug;
     this.numThreads = numThreads;

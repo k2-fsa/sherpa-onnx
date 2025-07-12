@@ -6,6 +6,7 @@ import {
   OnlineRecognizerResult,
   readWaveFromBinary,
   SileroVadConfig,
+  TenVadConfig,
   SpeechSegment,
   Vad,
   VadConfig,
@@ -30,6 +31,13 @@ function initVad(context: Context): Vad {
       0.25,
       0.5,
       512,
+    ),
+    new TenVadConfig(
+      '', // set it to ten-vad.onnx to use ten-vad
+      0.5,
+      0.25,
+      0.5,
+      256,
     ),
     16000,
     true,
@@ -93,7 +101,12 @@ function decodeFile(filename: string): string {
   console.log(`samples length ${wave.samples.length}`);
   const resultList: string[] = [];
 
-  const windowSize: number = vad.config.sileroVad.windowSize;
+  let windowSize: number = vad.config.sileroVad.windowSize;
+
+  if (vad.config.tenVad.model != '') {
+    windowSize = vad.config.tenVad.windowSize;
+  }
+
   for (let i = 0; i < wave.samples.length; i += windowSize) {
     const thisWindow: Float32Array = wave.samples.subarray(i, i + windowSize)
     vad.acceptWaveform(thisWindow);
@@ -138,7 +151,12 @@ function decodeFile(filename: string): string {
 function decodeMic(samples: Float32Array) {
   const resultList: string[] = [];
 
-  const windowSize: number = vad.config.sileroVad.windowSize;
+  let windowSize: number = vad.config.sileroVad.windowSize;
+
+  if (vad.config.tenVad.model != '') {
+    windowSize = vad.config.tenVad.windowSize;
+  }
+
   for (let i = 0; i < samples.length; i += windowSize) {
     const thisWindow: Float32Array = samples.subarray(i, i + windowSize)
     vad.acceptWaveform(thisWindow);
