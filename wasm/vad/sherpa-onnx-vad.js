@@ -7,6 +7,10 @@ function freeConfig(config, Module) {
     freeConfig(config.sileroVad, Module)
   }
 
+  if ('tenVad' in config) {
+    freeConfig(config.tenVad, Module)
+  }
+
 
   Module._free(config.ptr);
 }
@@ -48,6 +52,42 @@ function initSherpaOnnxSileroVadModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxTenVadModelConfig(config, Module) {
+  const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const n = modelLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 6 * 4;
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, modelLen);
+
+  offset = 0;
+  Module.setValue(ptr, buffer, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.threshold || 0.5, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.minSilenceDuration || 0.5, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.minSpeechDuration || 0.25, 'float');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.windowSize || 256, 'i32');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.maxSpeechDuration || 20, 'float');
+  offset += 4;
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxVadModelConfig(config, Module) {
   if (!('sileroVad' in config)) {
     config.sileroVad = {
@@ -60,10 +100,23 @@ function initSherpaOnnxVadModelConfig(config, Module) {
     };
   }
 
+  if (!('tenVad' in config)) {
+    config.tenVad = {
+      model: '',
+      threshold: 0.50,
+      minSilenceDuration: 0.50,
+      minSpeechDuration: 0.25,
+      windowSize: 256,
+      maxSpeechDuration: 20,
+    };
+  }
+
   const sileroVad =
       initSherpaOnnxSileroVadModelConfig(config.sileroVad, Module);
 
-  const len = sileroVad.len + 4 * 4;
+  const tenVad = initSherpaOnnxTenVadModelConfig(config.tenVad, Module);
+
+  const len = sileroVad.len + 4 * 4 + tenVad.len;
   const ptr = Module._malloc(len);
 
   const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
@@ -86,8 +139,11 @@ function initSherpaOnnxVadModelConfig(config, Module) {
   Module.setValue(ptr + offset, config.debug || 0, 'i32');
   offset += 4;
 
+  Module._CopyHeap(tenVad.ptr, tenVad.len, ptr + offset);
+  offset += tenVad.len;
+
   return {
-    buffer: buffer, ptr: ptr, len: len, sileroVad: sileroVad,
+    buffer: buffer, ptr: ptr, len: len, sileroVad: sileroVad, tenVad: tenVad
   }
 }
 
@@ -101,8 +157,18 @@ function createVad(Module, myConfig) {
     windowSize: 512,
   };
 
+  const tenVad = {
+    model: '',
+    threshold: 0.50,
+    minSilenceDuration: 0.50,
+    minSpeechDuration: 0.25,
+    maxSpeechDuration: 20,
+    windowSize: 256,
+  };
+
   let config = {
     sileroVad: sileroVad,
+    tenVad: tenVad,
     sampleRate: 16000,
     numThreads: 1,
     provider: 'cpu',

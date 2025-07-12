@@ -69,8 +69,6 @@ function fileExists(filename) {
   return exists;
 }
 
-function createOfflineRecognizerSenseVoice() {}
-
 function initOfflineRecognizer() {
   let config = {
     modelConfig: {

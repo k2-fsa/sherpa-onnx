@@ -26,6 +26,15 @@ function createRecognizer() {
 function createVad() {
   // please download silero_vad.onnx from
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  //
+  // please download ten-vad.onnx from
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+  //
+  // You only need one vad
+  //
+  // To use ten-vad.onnx, please set sileroVad.model to ''
+  // and set tenVad.model to 'ten-vad.onnx'
+  //
   const config = {
     sileroVad: {
       model: './silero_vad.onnx',
@@ -35,11 +44,21 @@ function createVad() {
       maxSpeechDuration: 5,
       windowSize: 512,
     },
+    tenVad: {
+      // model: './ten-vad.onnx',
+      model: '',
+      threshold: 0.5,
+      minSpeechDuration: 0.25,
+      minSilenceDuration: 0.5,
+      maxSpeechDuration: 5,
+      windowSize: 256,
+    },
     sampleRate: 16000,
     debug: true,
     numThreads: 1,
     bufferSizeInSeconds: 60,
   };
+
 
   return sherpa_onnx.createVad(config);
 }
@@ -60,7 +79,11 @@ if (wave.sampleRate != recognizer.config.featConfig.sampleRate) {
 console.log('Started')
 let start = Date.now();
 
-const windowSize = vad.config.sileroVad.windowSize;
+let windowSize = vad.config.sileroVad.windowSize;
+if (vad.config.tenVad.model != '') {
+  windowSize = vad.config.tenVad.windowSize;
+}
+
 for (let i = 0; i < wave.samples.length; i += windowSize) {
   const thisWindow = wave.samples.subarray(i, i + windowSize);
   vad.acceptWaveform(thisWindow);
