@@ -1,6 +1,7 @@
 decode-file
 decode-file-non-streaming
 generate-subtitles
+generate-subtitles-ten-vad
 spoken-language-identification
 tts-vits
 vits-vctk
