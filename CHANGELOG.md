@@ -1,3 +1,19 @@
+## 1.12.6
+
+* Support silero-vad v4 exported by k2-fsa (#2372)
+* Add C++ and Python support for ten-vad (#2377)
+* Fix compile errors for Linux (#2378)
+* Add C API for ten-vad (#2379)
+* Add CXX API examples for ten-vad. (#2380)
+* Add JavaScript (WebAssembly) API for ten-vad (#2382)
+* Add JavaScript (node-addon) API for ten-vad (#2383)
+* Add Go API for ten-vad (#2384)
+* Add C# API for ten-vad (#2385)
+* Add Dart API for ten-vad (#2386)
+* Add Swift API for ten-vad (#2387)
+* Add Pascal API for ten-vad (#2388)
+* Add Java/Kotlin API and Android support for ten-vad (#2389)
+
 ## 1.12.5
 
 * Fix typo CMAKE_EXECUTBLE_LINKER_FLAGS -> CMAKE_EXECUTABLE_LINKER_FLAGS (#2344)
