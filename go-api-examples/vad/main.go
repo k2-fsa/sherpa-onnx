@@ -5,6 +5,7 @@ import (
 	"github.com/gen2brain/malgo"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
+	"os"
 )
 
 func main() {
@@ -14,18 +15,39 @@ func main() {
 
 	// Please download silero_vad.onnx from
 	// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+	// or ten-vad.onnx from
+	// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/ten-vad.onnx
 
-	config.SileroVad.Model = "./silero_vad.onnx"
-	config.SileroVad.Threshold = 0.5
-	config.SileroVad.MinSilenceDuration = 0.5
-	config.SileroVad.MinSpeechDuration = 0.25
-	config.SileroVad.WindowSize = 512
+	if FileExists("./silero_vad.onnx") {
+		fmt.Println("Use silero-vad")
+		config.SileroVad.Model = "./silero_vad.onnx"
+		config.SileroVad.Threshold = 0.5
+		config.SileroVad.MinSilenceDuration = 0.5
+		config.SileroVad.MinSpeechDuration = 0.25
+		config.SileroVad.MaxSpeechDuration = 10
+		config.SileroVad.WindowSize = 512
+	} else if FileExists("./ten-vad.onnx") {
+		fmt.Println("Use ten-vad")
+		config.TenVad.Model = "./ten-vad.onnx"
+		config.TenVad.Threshold = 0.5
+		config.TenVad.MinSilenceDuration = 0.5
+		config.TenVad.MinSpeechDuration = 0.25
+		config.TenVad.MaxSpeechDuration = 10
+		config.TenVad.WindowSize = 256
+	} else {
+		fmt.Println("Please download either ./silero_vad.onnx or ./ten-vad.onnx")
+		return
+	}
+
 	config.SampleRate = 16000
 	config.NumThreads = 1
 	config.Provider = "cpu"
 	config.Debug = 1
 
 	window_size := config.SileroVad.WindowSize
+	if config.TenVad.Model != "" {
+		window_size = config.TenVad.WindowSize
+	}
 
 	var bufferSizeInSeconds float32 = 5
 
@@ -132,4 +154,13 @@ func samplesInt16ToFloat(inSamples []byte) []float32 {
 	}
 
 	return outSamples
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+
+	return false
 }
