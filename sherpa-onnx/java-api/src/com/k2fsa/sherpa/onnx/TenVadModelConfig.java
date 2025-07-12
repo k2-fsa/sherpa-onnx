@@ -51,7 +51,7 @@ public class TenVadModelConfig {
         private String model = "";
         private float threshold = 0.5f;
         private float minSilenceDuration = 0.25f;
-        private float minSpeechDuration = 0.5f;
+        private float minSpeechDuration = 0.25f;
         private int windowSize = 256;
         private float maxSpeechDuration = 5.0f;
 

@@ -241,7 +241,7 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
-          ./run-ten-vad-remove-slience.sh
+          ./run-ten-vad-remove-silence.sh
           rm *.onnx
           ls -lh *.wav
           rm *.wav
@@ -250,7 +250,7 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
-          ./run-vad-remove-slience.sh
+          ./run-vad-remove-silence.sh
           rm *.onnx
           ls -lh *.wav
           rm *.wav

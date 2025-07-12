@@ -17,7 +17,7 @@ data class TenVadModelConfig(
     var threshold: Float = 0.5F,
     var minSilenceDuration: Float = 0.25F,
     var minSpeechDuration: Float = 0.25F,
-    var windowSize: Int = 512,
+    var windowSize: Int = 256,
     var maxSpeechDuration: Float = 5.0F,
 )
 

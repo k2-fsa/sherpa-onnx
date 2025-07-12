@@ -201,11 +201,11 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       int32_t num_trailing_blanks = r.num_trailing_blanks;
       // assume subsampling_factor is 4
       // assume frameshift is 0.01 second
-      float trailing_slience = num_trailing_blanks * 4 * 0.01;
+      float trailing_silence = num_trailing_blanks * 4 * 0.01;
 
       // it resets automatically after detecting 1.5 seconds of silence
       float threshold = 1.5;
-      if (trailing_slience > threshold) {
+      if (trailing_silence > threshold) {
         Reset(s);
       }
     }
