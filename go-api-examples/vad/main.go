@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	portaudio "github.com/csukuangfj/portaudio-go"
+	"github.com/gen2brain/malgo"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
+	"os"
 )
 
 func main() {
@@ -14,99 +15,152 @@ func main() {
 
 	// Please download silero_vad.onnx from
 	// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+	// or ten-vad.onnx from
+	// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
 
-	config.SileroVad.Model = "./silero_vad.onnx"
-	config.SileroVad.Threshold = 0.5
-	config.SileroVad.MinSilenceDuration = 0.5
-	config.SileroVad.MinSpeechDuration = 0.25
-	config.SileroVad.WindowSize = 512
+	if FileExists("./silero_vad.onnx") {
+		fmt.Println("Use silero-vad")
+		config.SileroVad.Model = "./silero_vad.onnx"
+		config.SileroVad.Threshold = 0.5
+		config.SileroVad.MinSilenceDuration = 0.5
+		config.SileroVad.MinSpeechDuration = 0.25
+		config.SileroVad.MaxSpeechDuration = 10
+		config.SileroVad.WindowSize = 512
+	} else if FileExists("./ten-vad.onnx") {
+		fmt.Println("Use ten-vad")
+		config.TenVad.Model = "./ten-vad.onnx"
+		config.TenVad.Threshold = 0.5
+		config.TenVad.MinSilenceDuration = 0.5
+		config.TenVad.MinSpeechDuration = 0.25
+		config.TenVad.MaxSpeechDuration = 10
+		config.TenVad.WindowSize = 256
+	} else {
+		fmt.Println("Please download either ./silero_vad.onnx or ./ten-vad.onnx")
+		return
+	}
+
 	config.SampleRate = 16000
 	config.NumThreads = 1
 	config.Provider = "cpu"
 	config.Debug = 1
+
+	windowSize := config.SileroVad.WindowSize
+	if config.TenVad.Model != "" {
+		windowSize = config.TenVad.WindowSize
+	}
 
 	var bufferSizeInSeconds float32 = 5
 
 	vad := sherpa.NewVoiceActivityDetector(&config, bufferSizeInSeconds)
 	defer sherpa.DeleteVoiceActivityDetector(vad)
 
-	err := portaudio.Initialize()
-	if err != nil {
-		log.Fatalf("Unable to initialize portaudio: %v\n", err)
-	}
-	defer portaudio.Terminate()
+	buffer := sherpa.NewCircularBuffer(10 * config.SampleRate)
+	defer sherpa.DeleteCircularBuffer(buffer)
 
-	default_device, err := portaudio.DefaultInputDevice()
-	if err != nil {
-		log.Fatal("Failed to get default input device: %v\n", err)
-	}
-	log.Printf("Selected default input device: %s\n", default_device.Name)
-	param := portaudio.StreamParameters{}
-	param.Input.Device = default_device
-	param.Input.Channels = 1
-	param.Input.Latency = default_device.DefaultLowInputLatency
+	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, func(message string) {
+		fmt.Printf("LOG <%v>", message)
+	})
+	chk(err)
 
-	param.SampleRate = float64(config.SampleRate)
-	param.FramesPerBuffer = 0
-	param.Flags = portaudio.ClipOff
+	defer func() {
+		_ = ctx.Uninit()
+		ctx.Free()
+	}()
 
-	// you can choose another value for 0.1 if you want
-	samplesPerCall := int32(param.SampleRate * 0.1) // 0.1 second
-	samples := make([]float32, samplesPerCall)
+	deviceConfig := malgo.DefaultDeviceConfig(malgo.Duplex)
+	deviceConfig.Capture.Format = malgo.FormatS16
+	deviceConfig.Capture.Channels = 1
+	deviceConfig.Playback.Format = malgo.FormatS16
+	deviceConfig.Playback.Channels = 1
+	deviceConfig.SampleRate = 16000
+	deviceConfig.Alsa.NoMMap = 1
 
-	s, err := portaudio.OpenStream(param, samples)
-	if err != nil {
-		log.Fatalf("Failed to open the stream")
-	}
-
-	defer s.Close()
-	chk(s.Start())
-
-	log.Print("Started! Please speak")
 	printed := false
-
 	k := 0
-	for {
-		chk(s.Read())
-		vad.AcceptWaveform(samples)
 
-		if vad.IsSpeech() && !printed {
-			printed = true
-			log.Print("Detected speech\n")
-		}
+	onRecvFrames := func(_, pSample []byte, framecount uint32) {
+		samples := samplesInt16ToFloat(pSample)
+		buffer.Push(samples)
+		for buffer.Size() >= windowSize {
+			head := buffer.Head()
+			s := buffer.Get(head, windowSize)
+			buffer.Pop(windowSize)
 
-		if !vad.IsSpeech() {
-			printed = false
-		}
+			vad.AcceptWaveform(s)
 
-		for !vad.IsEmpty() {
-			speechSegment := vad.Front()
-			vad.Pop()
-
-			duration := float32(len(speechSegment.Samples)) / float32(config.SampleRate)
-
-			audio := sherpa.GeneratedAudio{}
-			audio.Samples = speechSegment.Samples
-			audio.SampleRate = config.SampleRate
-
-			filename := fmt.Sprintf("seg-%d-%.2f-seconds.wav", k, duration)
-			ok := audio.Save(filename)
-			if ok {
-				log.Printf("Saved to %s", filename)
+			if vad.IsSpeech() && !printed {
+				printed = true
+				log.Print("Detected speech\n")
 			}
 
-			k += 1
+			if !vad.IsSpeech() {
+				printed = false
+			}
 
-			log.Printf("Duration: %.2f seconds\n", duration)
-			log.Print("----------\n")
+			for !vad.IsEmpty() {
+				speechSegment := vad.Front()
+				vad.Pop()
+
+				duration := float32(len(speechSegment.Samples)) / float32(config.SampleRate)
+
+				audio := sherpa.GeneratedAudio{}
+				audio.Samples = speechSegment.Samples
+				audio.SampleRate = config.SampleRate
+
+				filename := fmt.Sprintf("seg-%d-%.2f-seconds.wav", k, duration)
+				ok := audio.Save(filename)
+				if ok {
+					log.Printf("Saved to %s", filename)
+				}
+
+				k += 1
+
+				log.Printf("Duration: %.2f seconds\n", duration)
+				log.Print("----------\n")
+			}
 		}
 	}
 
-	chk(s.Stop())
+	captureCallbacks := malgo.DeviceCallbacks{
+		Data: onRecvFrames,
+	}
+
+	device, err := malgo.InitDevice(ctx.Context, deviceConfig, captureCallbacks)
+	chk(err)
+
+	err = device.Start()
+	chk(err)
+
+	fmt.Println("Started. Please speak. Press ctrl + C  to exit")
+	fmt.Scanln()
+	device.Uninit()
+
 }
 
 func chk(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func samplesInt16ToFloat(inSamples []byte) []float32 {
+	numSamples := len(inSamples) / 2
+	outSamples := make([]float32, numSamples)
+
+	for i := 0; i != numSamples; i++ {
+		// Decode two bytes into an int16 using bit manipulation
+		s16 := int16(inSamples[2*i]) | int16(inSamples[2*i+1])<<8
+		outSamples[i] = float32(s16) / 32768
+	}
+
+	return outSamples
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+
+	return false
 }
