@@ -649,10 +649,10 @@ class SHERPA_ONNX_API LinearResampler
   explicit LinearResampler(const SherpaOnnxLinearResampler *p);
 };
 
-std::string GetVersionStr();
-std::string GetGitSha1();
-std::string GetGitDate();
-bool FileExists(const std::string &filename);
+SHERPA_ONNX_API std::string GetVersionStr();
+SHERPA_ONNX_API std::string GetGitSha1();
+SHERPA_ONNX_API std::string GetGitDate();
+SHERPA_ONNX_API bool FileExists(const std::string &filename);
 
 }  // namespace sherpa_onnx::cxx
 

@@ -196,7 +196,7 @@ jobs:
 
           rm $name
 
-      - name: Test VAD
+      - name: Test silero-vad
         shell: bash
         run: |
           name=vad-cxx-api
@@ -223,17 +223,60 @@ jobs:
 
           ./$name
 
-          mkdir vad-test
-          cp -v lei-jun-test*.wav vad-test
+          mkdir vad-test-silero-vad
+          cp -v lei-jun-test*.wav vad-test-silero-vad
 
-          ls -lh vad-test
+          ls -lh vad-test-silero-vad
 
           rm $name
+          rm -fv *.onnx
+          rm -fv *.wav
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vad-test-wavs-cxx-${{ matrix.os }}
-          path: ./vad-test/*.wav
+          name: silero-vad-test-wavs-cxx-${{ matrix.os }}
+          path: ./vad-test-silero-vad/*.wav
+
+      - name: Test ten-vad
+        shell: bash
+        run: |
+          name=vad-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+
+          ./$name
+
+          mkdir vad-test-ten-vad
+          cp -v lei-jun-test*.wav vad-test-ten-vad
+
+          ls -lh vad-test-ten-vad
+
+          rm $name
+          rm -fv *.onnx
+          rm -rf *.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ten-vad-test-wavs-cxx-${{ matrix.os }}
+          path: ./vad-test-ten-vad/*.wav
 
       - name: Test Speech Enhancement (GTCRN)
         shell: bash
