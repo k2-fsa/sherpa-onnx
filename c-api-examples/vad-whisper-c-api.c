@@ -8,7 +8,12 @@
 //
 // clang-format off
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+// To use silero-vad:
+//  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+//
+// To use ten-vad:
+//  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+//
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
@@ -25,7 +30,28 @@
 
 int32_t main() {
   const char *wav_filename = "./Obama.wav";
-  const char *vad_filename = "./silero_vad.onnx";
+
+  if (!SherpaOnnxFileExists(wav_filename)) {
+    fprintf(stderr, "Please download %s\n", wav_filename);
+    return -1;
+  }
+
+  const char *vad_filename;
+  int32_t use_silero_vad = 0;
+  int32_t use_ten_vad = 0;
+
+  if (SherpaOnnxFileExists("./silero_vad.onnx")) {
+    printf("Use silero-vad\n");
+    vad_filename = "./silero_vad.onnx";
+    use_silero_vad = 1;
+  } else if (SherpaOnnxFileExists("./ten-vad.onnx")) {
+    printf("Use ten-vad\n");
+    vad_filename = "./ten-vad.onnx";
+    use_ten_vad = 1;
+  } else {
+    fprintf(stderr, "Please provide either silero_vad.onnx or ten-vad.onnx\n");
+    return -1;
+  }
 
   const char *encoder = "sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx";
   const char *decoder = "sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx";
@@ -74,12 +100,23 @@ int32_t main() {
 
   SherpaOnnxVadModelConfig vadConfig;
   memset(&vadConfig, 0, sizeof(vadConfig));
-  vadConfig.silero_vad.model = vad_filename;
-  vadConfig.silero_vad.threshold = 0.5;
-  vadConfig.silero_vad.min_silence_duration = 0.5;
-  vadConfig.silero_vad.min_speech_duration = 0.5;
-  vadConfig.silero_vad.max_speech_duration = 10;
-  vadConfig.silero_vad.window_size = 512;
+
+  if (use_silero_vad) {
+    vadConfig.silero_vad.model = vad_filename;
+    vadConfig.silero_vad.threshold = 0.25;
+    vadConfig.silero_vad.min_silence_duration = 0.5;
+    vadConfig.silero_vad.min_speech_duration = 0.5;
+    vadConfig.silero_vad.max_speech_duration = 10;
+    vadConfig.silero_vad.window_size = 512;
+  } else if (use_ten_vad) {
+    vadConfig.ten_vad.model = vad_filename;
+    vadConfig.ten_vad.threshold = 0.25;
+    vadConfig.ten_vad.min_silence_duration = 0.5;
+    vadConfig.ten_vad.min_speech_duration = 0.5;
+    vadConfig.ten_vad.max_speech_duration = 10;
+    vadConfig.ten_vad.window_size = 256;
+  }
+
   vadConfig.sample_rate = 16000;
   vadConfig.num_threads = 1;
   vadConfig.debug = 1;
@@ -94,7 +131,8 @@ int32_t main() {
     return -1;
   }
 
-  int32_t window_size = vadConfig.silero_vad.window_size;
+  int32_t window_size = use_silero_vad ? vadConfig.silero_vad.window_size
+                                       : vadConfig.ten_vad.window_size;
   int32_t i = 0;
   int is_eof = 0;
 
