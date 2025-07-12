@@ -14,12 +14,15 @@
 extern "C" {
 
 static_assert(sizeof(SherpaOnnxSileroVadModelConfig) == 6 * 4, "");
+static_assert(sizeof(SherpaOnnxTenVadModelConfig) == 6 * 4, "");
 
 static_assert(sizeof(SherpaOnnxVadModelConfig) ==
-                  sizeof(SherpaOnnxSileroVadModelConfig) + 4 * 4,
+                  sizeof(SherpaOnnxSileroVadModelConfig) + 4 * 4 +
+                      sizeof(SherpaOnnxTenVadModelConfig),
               "");
 void MyPrint(SherpaOnnxVadModelConfig *config) {
   auto silero_vad = &config->silero_vad;
+  auto ten_vad = &config->ten_vad;
 
   fprintf(stdout, "----------silero_vad config----------\n");
   fprintf(stdout, "model: %s\n", silero_vad->model);
@@ -31,6 +34,15 @@ void MyPrint(SherpaOnnxVadModelConfig *config) {
   fprintf(stdout, "window_size: %d\n", silero_vad->window_size);
   fprintf(stdout, "max_speech_duration: %.3f\n",
           silero_vad->max_speech_duration);
+
+  fprintf(stdout, "----------ten_vad config----------\n");
+  fprintf(stdout, "model: %s\n", ten_vad->model);
+  fprintf(stdout, "threshold: %.3f\n", ten_vad->threshold);
+  fprintf(stdout, "min_silence_duration: %.3f\n",
+          ten_vad->min_silence_duration);
+  fprintf(stdout, "min_speech_duration: %.3f\n", ten_vad->min_speech_duration);
+  fprintf(stdout, "window_size: %d\n", ten_vad->window_size);
+  fprintf(stdout, "max_speech_duration: %.3f\n", ten_vad->max_speech_duration);
 
   fprintf(stdout, "----------config----------\n");
 
