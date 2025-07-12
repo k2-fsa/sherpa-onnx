@@ -1,8 +1,10 @@
 ﻿// Copyright (c)  2024  Xiaomi Corporation
 //
-// This file shows how to use a silero_vad model with a non-streaming Paraformer
-// for speech recognition.
+// This file shows how to use a silero_vad model or ten-vad model
+// with a non-streaming Paraformer for speech recognition.
 using SherpaOnnx;
+using System.IO;
+
 
 class VadNonStreamingAsrParaformer
 {
@@ -17,7 +19,31 @@ class VadNonStreamingAsrParaformer
     var recognizer = new OfflineRecognizer(config);
 
     var vadModelConfig = new VadModelConfig();
-    vadModelConfig.SileroVad.Model = "./silero_vad.onnx";
+    if (File.Exists("./silero_vad.onnx"))
+    {
+      Console.WriteLine("Use silero-vad");
+      vadModelConfig.SileroVad.Model = "./silero_vad.onnx";
+      vadModelConfig.SileroVad.Threshold = 0.3F;
+      vadModelConfig.SileroVad.MinSilenceDuration = 0.5F;
+      vadModelConfig.SileroVad.MinSpeechDuration = 0.25F;
+      vadModelConfig.SileroVad.MaxSpeechDuration = 5.0F;
+      vadModelConfig.SileroVad.WindowSize = 512;
+    }
+    else if (File.Exists("./ten-vad.onnx"))
+    {
+      Console.WriteLine("Use ten-vad");
+      vadModelConfig.TenVad.Model = "./ten-vad.onnx";
+      vadModelConfig.TenVad.Threshold = 0.3F;
+      vadModelConfig.TenVad.MinSilenceDuration = 0.5F;
+      vadModelConfig.TenVad.MinSpeechDuration = 0.25F;
+      vadModelConfig.TenVad.MaxSpeechDuration = 5.0F;
+      vadModelConfig.TenVad.WindowSize = 256;
+    }
+    else
+    {
+      Console.WriteLine("Please download ./silero_vad.onnx or ./ten-vad.onnx");
+      return;
+    }
     vadModelConfig.Debug = 0;
 
     var vad = new VoiceActivityDetector(vadModelConfig, 60);
@@ -27,6 +53,12 @@ class VadNonStreamingAsrParaformer
 
     int numSamples = reader.Samples.Length;
     int windowSize = vadModelConfig.SileroVad.WindowSize;
+
+    if (vadModelConfig.TenVad.Model != "")
+    {
+      windowSize = vadModelConfig.TenVad.WindowSize;
+    }
+
     int sampleRate = vadModelConfig.SampleRate;
     int numIter = numSamples / windowSize;
 

@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
+set -ex
+
 cd dotnet-examples/
 
 cd ./version-test
 ./run.sh
 ls -lh
+
+cd ../vad-non-streaming-asr-paraformer
+./run-ten-vad.sh
+rm -fv *.onnx
+
+./run.sh
+rm -fv *.onnx
 
 cd ../non-streaming-canary-decode-files
 ./run.sh
@@ -105,9 +114,6 @@ rm -rf sherpa-onnx-*
 
 ./run-paraformer.sh
 rm -rf sherpa-onnx-*
-
-cd ../vad-non-streaming-asr-paraformer
-./run.sh
 
 cd ../offline-punctuation
 ./run.sh

@@ -102,6 +102,7 @@ jobs:
           df -h
 
       - name: Free space
+        if: false
         shell: bash
         run: |
           df -h
@@ -109,6 +110,7 @@ jobs:
           df -h
 
       - name: Free more space
+        if: false
         shell: bash
         run: |
           # https://github.com/orgs/community/discussions/25678
@@ -120,6 +122,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Free Disk Space (Ubuntu)
+        if: false
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
@@ -136,6 +139,7 @@ jobs:
           swap-storage: true
 
       - name: Check space
+        if: false
         shell: bash
         run: |
           df -h
