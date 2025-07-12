@@ -23,14 +23,16 @@ export class SileroVadConfig {
   public minSpeechDuration: number;
   public minSilenceDuration: number;
   public windowSize: number;
+  public maxSpeechDuration: number;
 
   public constructor(model: string, threshold: number, minSpeechDuration: number, minSilenceDuration: number,
-    windowSize: number) {
+    windowSize: number, maxSpeechDuration: number = 20) {
     this.model = model;
     this.threshold = threshold;
     this.minSpeechDuration = minSpeechDuration;
     this.minSilenceDuration = minSilenceDuration;
     this.windowSize = windowSize;
+    this.maxSpeechDuration = maxSpeechDuration
   }
 }
 
@@ -40,14 +42,16 @@ export class TenVadConfig {
   public minSpeechDuration: number;
   public minSilenceDuration: number;
   public windowSize: number;
+  public maxSpeechDuration: number;
 
   public constructor(model: string, threshold: number, minSpeechDuration: number, minSilenceDuration: number,
-    windowSize: number) {
+    windowSize: number, maxSpeechDuration: number = 20) {
     this.model = model;
     this.threshold = threshold;
     this.minSpeechDuration = minSpeechDuration;
     this.minSilenceDuration = minSilenceDuration;
     this.windowSize = windowSize;
+    this.maxSpeechDuration = maxSpeechDuration
   }
 }
 
