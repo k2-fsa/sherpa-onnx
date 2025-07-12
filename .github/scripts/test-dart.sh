@@ -4,6 +4,12 @@ set -ex
 
 cd dart-api-examples
 
+pushd vad
+./run-ten-vad.sh
+./run.sh
+rm *.onnx
+popd
+
 pushd non-streaming-asr
 
 echo '----------Zipformer CTC----------'
@@ -186,9 +192,3 @@ echo '----------streaming paraformer----------'
 rm -rf sherpa-onnx-*
 
 popd # streaming-asr
-
-pushd vad
-./run.sh
-rm *.onnx
-popd
-
