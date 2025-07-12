@@ -1142,8 +1142,18 @@ type SileroVadModelConfig struct {
 	MaxSpeechDuration  float32
 }
 
+type TenVadModelConfig struct {
+	Model              string
+	Threshold          float32
+	MinSilenceDuration float32
+	MinSpeechDuration  float32
+	WindowSize         int
+	MaxSpeechDuration  float32
+}
+
 type VadModelConfig struct {
 	SileroVad  SileroVadModelConfig
+	TenVad     TenVadModelConfig
 	SampleRate int
 	NumThreads int
 	Provider   string
@@ -1219,6 +1229,15 @@ func NewVoiceActivityDetector(config *VadModelConfig, bufferSizeInSeconds float3
 	c.silero_vad.min_speech_duration = C.float(config.SileroVad.MinSpeechDuration)
 	c.silero_vad.window_size = C.int(config.SileroVad.WindowSize)
 	c.silero_vad.max_speech_duration = C.float(config.SileroVad.MaxSpeechDuration)
+
+	c.ten_vad.model = C.CString(config.TenVad.Model)
+	defer C.free(unsafe.Pointer(c.ten_vad.model))
+
+	c.ten_vad.threshold = C.float(config.TenVad.Threshold)
+	c.ten_vad.min_silence_duration = C.float(config.TenVad.MinSilenceDuration)
+	c.ten_vad.min_speech_duration = C.float(config.TenVad.MinSpeechDuration)
+	c.ten_vad.window_size = C.int(config.TenVad.WindowSize)
+	c.ten_vad.max_speech_duration = C.float(config.TenVad.MaxSpeechDuration)
 
 	c.sample_rate = C.int(config.SampleRate)
 	c.num_threads = C.int(config.NumThreads)
