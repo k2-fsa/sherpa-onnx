@@ -32,6 +32,8 @@ class VadModel {
    */
   virtual bool IsSpeech(const float *samples, int32_t n) = 0;
 
+  virtual float Compute(const float *samples, int32_t n) = 0;  // 新增這一行
+
   virtual int32_t WindowSize() const = 0;
 
   virtual int32_t WindowShift() const = 0;

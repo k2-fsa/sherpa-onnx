@@ -179,8 +179,9 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_isSpeechDetected(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
   SafeJNI(env, "Vad_reset", [&] {
     if (!ValidatePointer(env, ptr, "Vad_reset",
                          "VoiceActivityDetector pointer is null.")) {
@@ -198,4 +199,28 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_flush(JNIEnv * /*env*/,
                                                             jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
   model->Flush();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jfloat JNICALL Java_com_k2fsa_sherpa_onnx_Vad_compute(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples) {
+  return SafeJNI(
+      env, "Vad_compute",
+      [&]() -> jfloat {
+        if (!ValidatePointer(env, ptr, "Vad_compute",
+                             "VoiceActivityDetector pointer is null.")) {
+          return -1.0f;  // 返回一個錯誤值
+        }
+        auto vad = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
+        jfloat *p = env->GetFloatArrayElements(samples, nullptr);
+        jsize n = env->GetArrayLength(samples);
+
+        // 呼叫我們新增的 C++ API
+        float score = vad->Compute(p, n);
+
+        env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
+
+        return static_cast<jfloat>(score);
+      },
+      -1.0f);
 }
