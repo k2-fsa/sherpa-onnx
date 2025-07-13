@@ -56,6 +56,38 @@ class TenVadModel::Impl {
     Init(buf.data(), buf.size());
   }
 
+  float Run(const float *samples, int32_t n) {
+    ComputeFeatures(samples, n);
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 3> x_shape = {1, 3, 41};
+
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, last_features_.data(),
+                                            last_features_.size(),
+                                            x_shape.data(), x_shape.size());
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(input_names_.size());
+
+    inputs.push_back(std::move(x));
+    for (auto &s : states_) {
+      inputs.push_back(std::move(s));
+    }
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    for (int32_t i = 1; i != static_cast<int32_t>(output_names_.size()); ++i) {
+      states_[i - 1] = std::move(out[i]);
+    }
+
+    float prob = out[0].GetTensorData<float>()[0];
+
+    return prob;
+  }
   void Reset() {
     triggered_ = false;
     current_sample_ = 0;
@@ -363,39 +395,6 @@ class TenVadModel::Impl {
               last_features_.begin() + 2 * features_.size());
   }
 
-  float Run(const float *samples, int32_t n) {
-    ComputeFeatures(samples, n);
-
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-    std::array<int64_t, 3> x_shape = {1, 3, 41};
-
-    Ort::Value x = Ort::Value::CreateTensor(memory_info, last_features_.data(),
-                                            last_features_.size(),
-                                            x_shape.data(), x_shape.size());
-
-    std::vector<Ort::Value> inputs;
-    inputs.reserve(input_names_.size());
-
-    inputs.push_back(std::move(x));
-    for (auto &s : states_) {
-      inputs.push_back(std::move(s));
-    }
-
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
-
-    for (int32_t i = 1; i != static_cast<int32_t>(output_names_.size()); ++i) {
-      states_[i - 1] = std::move(out[i]);
-    }
-
-    float prob = out[0].GetTensorData<float>()[0];
-
-    return prob;
-  }
-
  private:
   VadModelConfig config_;
   knf::Rfft rfft_;
@@ -467,6 +466,10 @@ void TenVadModel::SetMinSilenceDuration(float s) {
 
 void TenVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+float TenVadModel::Compute(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

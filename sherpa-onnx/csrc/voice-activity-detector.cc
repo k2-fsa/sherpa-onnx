@@ -41,6 +41,11 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
+  // 新增 Impl::Compute 函式 (在建構函式之外)
+  float Compute(const float *samples, int32_t n) {
+    return model_->Compute(samples, n);
+  }
+
   void AcceptWaveform(const float *samples, int32_t n) {
     if (buffer_.Size() > max_utterance_length_) {
       model_->SetMinSilenceDuration(new_min_silence_duration_s_);
@@ -232,6 +237,11 @@ bool VoiceActivityDetector::IsSpeechDetected() const {
 
 const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
+}
+
+// 在檔案底部新增
+float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
+  return impl_->Compute(samples, n);
 }
 
 #if __ANDROID_API__ >= 9
