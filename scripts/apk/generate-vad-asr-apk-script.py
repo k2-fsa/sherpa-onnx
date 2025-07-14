@@ -600,6 +600,70 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-stt_pt_fastconformer_hybrid_large_pc-int8",
+            idx=35,
+            lang="pt",
+            lang2="Portuguese",
+            short_name="stt_pt_fastconformer_hybrid_large_pc_transducer_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc-int8",
+            idx=36,
+            lang="pt",
+            lang2="Portuguese",
+            short_name="stt_pt_fastconformer_hybrid_large_pc_ctc-int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-stt_de_fastconformer_hybrid_large_pc-int8",
+            idx=37,
+            lang="de",
+            lang2="German",
+            short_name="stt_de_fastconformer_hybrid_large_pc_transducer_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc-int8",
+            idx=38,
+            lang="de",
+            lang2="German",
+            short_name="stt_de_fastconformer_hybrid_large_pc_ctc-int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
