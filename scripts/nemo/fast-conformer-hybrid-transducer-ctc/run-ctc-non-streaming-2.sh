@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+# Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 set -ex
 
