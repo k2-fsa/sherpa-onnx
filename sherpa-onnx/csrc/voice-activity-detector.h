@@ -31,9 +31,17 @@ class VoiceActivityDetector {
   bool Empty() const;
   void Pop();
   void Clear();
+
+  // It is an error to call Front() if Empty() returns true.
+  //
+  // The returned reference is valid until the next call to any
+  // methods of VoiceActivityDetector.
   const SpeechSegment &Front() const;
 
   bool IsSpeechDetected() const;
+
+  // It is empty if IsSpeechDetected() returns false
+  SpeechSegment CurrentSpeechSegment() const;
 
   void Reset() const;
 
