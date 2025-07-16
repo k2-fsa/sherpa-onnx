@@ -106,11 +106,7 @@ fun HomeScreen() {
                 CoroutineScope(Dispatchers.Default).launch {
                     var buffer = arrayListOf<Float>()
                     var offset = 0
-                    val windowSize = 512
-                    var isSpeechStarted = false
-                    var startTime = System.currentTimeMillis()
-                    var lastText = ""
-                    var added = false
+                    val windowSize = 512 // change it for ten-vad
 
                     while (isStarted) {
                         for (s in samplesChannel) {
@@ -127,37 +123,32 @@ fun HomeScreen() {
                                 )
 
                                 offset += windowSize
-
-                                if (!isSpeechStarted && SimulateStreamingAsr.vad.isSpeechDetected()) {
-                                    isSpeechStarted = true
-                                    startTime = System.currentTimeMillis()
-                                }
-                            }
-
-                            val elapsed = System.currentTimeMillis() - startTime
-                            if (isSpeechStarted && elapsed > 200) {
-                                // Run ASR every 0.2 seconds == 200 milliseconds
-                                // You can change it to some other value
-                                val stream = SimulateStreamingAsr.recognizer.createStream()
-                                stream.acceptWaveform(
-                                    buffer.subList(0, offset).toFloatArray(), sampleRateInHz
-                                )
-
-                                SimulateStreamingAsr.recognizer.decode(stream)
-                                val r = SimulateStreamingAsr.recognizer.getResult(stream)
-                                stream.release()
-                                lastText = r.text
-                                Log.i(TAG, "result: $lastText")
-
-                                coroutineScope.launch {
-                                    result = lastText
-                                }
-
-                                startTime = System.currentTimeMillis()
                             }
 
                             while (!SimulateStreamingAsr.vad.empty()) {
-                                isSpeechStarted = false
+                                val duration = SimulateStreamingAsr.vad.front().samples.count().toFloat() / 16000
+
+                                val s0 = System.currentTimeMillis()
+                                val stream = SimulateStreamingAsr.recognizer.createStream()
+                                stream.acceptWaveform(
+                                    SimulateStreamingAsr.vad.front().samples,
+                                    sampleRateInHz
+                                )
+                                SimulateStreamingAsr.recognizer.decode(stream)
+
+                                val s1 = System.currentTimeMillis()
+                                val diff = (s1 - s0).toFloat() / 1000
+                                val rtf = diff / duration
+                                Log.i(TAG, "rtf: ${rtf}, elapsed: ${diff}, duration: ${duration}")
+                                val r = SimulateStreamingAsr.recognizer.getResult(stream)
+                                stream.release()
+
+                                Log.i(TAG, "result: ${r.text}")
+
+                                coroutineScope.launch {
+                                    result = r.text
+                                }
+
                                 SimulateStreamingAsr.vad.pop()
                                 buffer = arrayListOf()
                                 offset = 0

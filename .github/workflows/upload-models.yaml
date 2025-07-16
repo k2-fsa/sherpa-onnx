@@ -63,7 +63,7 @@ jobs:
           tar cjvf $d.tar.bz2 $d
 
       - name: Zipformer CTC (non-streaming)
-        # if: false
+        if: false
         shell: bash
         env:
           MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
@@ -71,9 +71,9 @@ jobs:
         run: |
           git lfs install
           names=(
-            # sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
-            # sherpa-onnx-zipformer-ctc-zh-2025-07-03
-            # sherpa-onnx-zipformer-ctc-zh-fp16-2025-07-03
+            sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
+            sherpa-onnx-zipformer-ctc-zh-2025-07-03
+            sherpa-onnx-zipformer-ctc-zh-fp16-2025-07-03
             sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16
             sherpa-onnx-zipformer-ctc-small-zh-fp16-2025-07-16
             sherpa-onnx-zipformer-ctc-small-zh-2025-07-16
