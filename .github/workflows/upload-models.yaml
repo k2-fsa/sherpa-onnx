@@ -31,6 +31,7 @@ jobs:
           git config --global user.name "Fangjun Kuang"
 
       - name: FireRed ASR fp16
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -64,17 +65,37 @@ jobs:
       - name: Zipformer CTC (non-streaming)
         if: false
         shell: bash
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git lfs install
           names=(
             sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
             sherpa-onnx-zipformer-ctc-zh-2025-07-03
             sherpa-onnx-zipformer-ctc-zh-fp16-2025-07-03
+            sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16
+            sherpa-onnx-zipformer-ctc-small-zh-fp16-2025-07-16
+            sherpa-onnx-zipformer-ctc-small-zh-2025-07-16
           )
           for name in ${names[@]}; do
-            git clone https://huggingface.co/csukuangfj/$name 
+            rm -rf ms
+            git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/$name.git ms
+            git clone https://huggingface.co/csukuangfj/$name
+
+            cp -av ms/test_wavs $name
+            cp -v ms/*.onnx $name
+            cp -v ms/tokens.txt $name
+            cp -v ms/bbpe.model $name
+
             pushd $name
-            git lfs pull
+            git lfs track "*.wav" "*.onnx" "*.model"
+            git add .
+            git status
+            git commit -m 'add models' || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$name main || true
+
+            # git lfs pull
             rm -rf .git
             rm -rfv .gitattributes
             ls -lh

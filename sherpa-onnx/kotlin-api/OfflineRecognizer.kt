@@ -667,6 +667,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        39 -> {
+            val modelDir = "sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16"
+            return OfflineModelConfig(
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }

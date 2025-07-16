@@ -664,6 +664,23 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16",
+            idx=39,
+            lang="zh",
+            lang2="Chinese",
+            short_name="zipformer_ctc_small_2025_07_16",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -rfv bbpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
