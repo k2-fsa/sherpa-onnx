@@ -20,7 +20,7 @@
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
-int main(int32_t argc, char *argv[]) {
+int32_t main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Speech recognition using VAD + streaming models with sherpa-onnx-vad-with-online-asr.
 This is useful when testing long audio.
@@ -30,7 +30,7 @@ Usage:
 Note you can download silero_vad.onnx using
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-           //
+
 (1) Streaming transducer
 
   ./bin/sherpa-onnx-vad-with-online-asr \
@@ -139,10 +139,10 @@ for a list of pre-trained models to download.
   }
 
   fprintf(stderr, "Started!\n");
-  int32_t window_size = vad_config.silero_vad.window_size;
+  int32_t window_size = vad_config.ten_vad.model.empty()
+    ? vad_config.silero_vad.window_size : vad_config.ten_vad.window_size;
   int32_t offset = 0;
   int32_t segment_id = 0;
-  auto s = recognizer.CreateStream();
   bool speech_started = false;
   while (offset < samples.size()) {
     if (offset + window_size <= samples.size()) {
@@ -155,7 +155,6 @@ for a list of pre-trained models to download.
       // new voice activity
       speech_started = true;
       segment_id++;
-      recognizer.Reset(s.get());  // reset the stream at new voice activity
     } else if (!vad->IsSpeechDetected() && speech_started) {
       // end voice activity
       speech_started = false;
@@ -166,7 +165,9 @@ for a list of pre-trained models to download.
       float duration = segment.samples.size() / 16000.;
       float start_time = segment.start / 16000.;
       float end_time = start_time + duration;
+      auto s = recognizer.CreateStream();
       s->AcceptWaveform(16000, segment.samples.data(), segment.samples.size());
+      s->InputFinished();
       while (recognizer.IsReady(s.get())) {
         recognizer.DecodeStream(s.get());
       }
