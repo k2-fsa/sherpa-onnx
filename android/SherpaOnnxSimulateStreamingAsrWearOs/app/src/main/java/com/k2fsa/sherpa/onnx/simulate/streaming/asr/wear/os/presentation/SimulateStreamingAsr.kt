@@ -1,4 +1,5 @@
 package com.k2fsa.sherpa.onnx.simulate.streaming.asr.wear.os.presentation
+
 import android.app.Application
 import android.content.res.AssetManager
 import android.util.Log
@@ -41,7 +42,7 @@ object SimulateStreamingAsr {
             Log.i(TAG, "Select model type $asrModelType for ASR")
 
             val useHr = false
-            val hr =  HomophoneReplacerConfig(
+            val hr = HomophoneReplacerConfig(
                 // Used only when useHr is true
                 // Please download the following 3 files from
                 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
