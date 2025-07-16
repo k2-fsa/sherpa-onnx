@@ -126,7 +126,7 @@ for a list of pre-trained models to download.
 
   if (sampling_rate != 16000) {
     fprintf(stderr, "Resampling from %d Hz to 16000 Hz\n", sampling_rate);
-    float min_freq = std::min<int32_t>(sampling_rate, 16000);
+    float min_freq = std::min(sampling_rate, 16000)
     float lowpass_cutoff = 0.99 * 0.5 * min_freq;
 
     int32_t lowpass_filter_width = 6;
