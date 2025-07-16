@@ -715,6 +715,59 @@ def get_pl_models():
         PiperModel(name="mc_speech", kind="medium", sr=22050, ns=1),
     ]
 
+    pl_PL.extend(
+        [
+            PiperModel(
+                name="jarvis_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-jarvis_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-jarvis_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="justyna_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-justyna_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-justyna_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="meski_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-meski_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-meski_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="zenski_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-zenski_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-zenski_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+        ]
+    )
+
     for m in pl_PL:
         m.lang = "pl_PL"
 
