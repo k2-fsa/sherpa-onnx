@@ -86,7 +86,7 @@ for a list of pre-trained models to download.
 
   po.Read(argc, argv);
   if (po.NumArgs() != 1) {
-    fprintf(stderr, "Error: Please provide at only 1 wave file. Given: %d\n\n",
+    fprintf(stderr, "Error: Please provide exactly 1 wave file. Given: %d\n\n",
             po.NumArgs());
     po.PrintUsage();
     exit(EXIT_FAILURE);
@@ -125,7 +125,7 @@ for a list of pre-trained models to download.
   }
 
   if (sampling_rate != 16000) {
-    fprintf(stderr, "Resampling from %d Hz to 16000 Hz", sampling_rate);
+    fprintf(stderr, "Resampling from %d Hz to 16000 Hz\n", sampling_rate);
     float min_freq = std::min<int32_t>(sampling_rate, 16000);
     float lowpass_cutoff = 0.99 * 0.5 * min_freq;
 
@@ -155,7 +155,7 @@ for a list of pre-trained models to download.
       // new voice activity
       speech_started = true;
       segment_id++;
-      recognizer.Reset(s.get());  // reset the stream at new vocie activity
+      recognizer.Reset(s.get());  // reset the stream at new voice activity
     } else if (!vad->IsSpeechDetected() && speech_started) {
       // end voice activity
       speech_started = false;
