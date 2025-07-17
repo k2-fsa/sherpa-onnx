@@ -11,6 +11,7 @@
 #include <chrono>  // NOLINT
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
