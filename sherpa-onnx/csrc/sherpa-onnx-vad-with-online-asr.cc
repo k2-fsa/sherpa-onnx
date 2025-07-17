@@ -140,7 +140,7 @@ for a list of pre-trained models to download.
   }
   const float tail_padding_len =  1.28;  // related to model chunk-size
   std::vector<float> tail_paddings(
-      static_cast<int>(tail_padding_len * sampling_rate));
+      static_cast<int>(tail_padding_len * 16000));
 
   fprintf(stderr, "Started!\n");
   int32_t window_size = vad_config.ten_vad.model.empty()
@@ -171,8 +171,7 @@ for a list of pre-trained models to download.
       float end_time = start_time + duration;
       auto s = recognizer.CreateStream();
       s->AcceptWaveform(16000, segment.samples.data(), segment.samples.size());
-      s->AcceptWaveform(sampling_rate, tail_paddings.data(),
-          tail_paddings.size());
+      s->AcceptWaveform(16000, tail_paddings.data(), tail_paddings.size());
       s->InputFinished();
       while (recognizer.IsReady(s.get())) {
         recognizer.DecodeStream(s.get());
