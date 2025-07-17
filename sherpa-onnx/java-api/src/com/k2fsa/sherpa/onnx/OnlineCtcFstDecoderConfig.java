@@ -32,7 +32,7 @@ public class OnlineCtcFstDecoderConfig {
         }
 
         public Builder setGraph(String model) {
-            this.graph = graph;
+            this.graph = model;
             return this;
         }
 
