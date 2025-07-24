@@ -238,7 +238,11 @@ class OfflineTtsZipvoiceModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.feat_dim, "feat_dim");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.sample_rate, "sample_rate", 24000);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.n_fft, "n_fft", 1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.hop_length, "hop_length", 256);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.window_length, "window_length", 1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.num_mels, "num_mels", 100);
   }
 
  private:
