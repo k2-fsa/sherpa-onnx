@@ -16,6 +16,7 @@ namespace sherpa_onnx {
 struct OfflineTtsZipvoiceModelMetaData {
   int32_t version = 1;
   int32_t feat_dim = 0;
+  int32_t sample_rate = 0;
 };
 
 }  // namespace sherpa_onnx
