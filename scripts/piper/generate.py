@@ -351,6 +351,25 @@ def get_fr_models():
         PiperModel(name="upmc", kind="medium", sr=22050, ns=2),
     ]
 
+    fr_FR.extend(
+        [
+            PiperModel(
+                name="tjiho",
+                kind=f"model{k}",
+                sr=44100,
+                ns=1,
+                cmd=f"""
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/fr_FR-tjiho-model{k}.onnx
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/fr_FR-tjiho-model{k}.onnx.json
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/LICENSE.txt
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/MODEL_CARD
+                   """,
+                url=f"https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/tree/main",
+            )
+            for k in [1, 2, 3]
+        ]
+    )
+
     for m in fr_FR:
         m.lang = "fr_FR"
         if m.model_name == "":
