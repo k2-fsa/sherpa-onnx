@@ -42,6 +42,7 @@ mkdir -p $dst
 mv -v tokens.txt  $dst/
 mv -v MODEL_CARD $dst/ || true
 mv -v README $dst/ || true
+mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
 cp -a ./espeak-ng-data $dst/
 
