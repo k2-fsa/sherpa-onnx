@@ -143,6 +143,9 @@ jobs:
               vits-piper-fa_IR-ganji-medium
               vits-piper-fa_IR-ganji_adabi-medium
               vits-piper-fa_IR-reza_ibrahim-medium
+              vits-piper-hi_IN-pratham-medium
+              vits-piper-hi_IN-priyamvada-medium
+              vits-piper-es_AR-daniela-high
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
