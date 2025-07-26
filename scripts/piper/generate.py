@@ -392,6 +392,35 @@ def get_fr_models():
     return ans
 
 
+# hindi
+def get_hi_models():
+    hi_IN = [
+        PiperModel(name="pratham", kind="medium", sr=22050, ns=1),
+        PiperModel(name="priyamvada", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in hi_IN:
+        m.lang = "hi_IN"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = hu_HU
+
+    for m in ans:
+        m.text = "यह मत पूछो कि तुम्हारा देश तुम्हारे लिए क्या कर सकता है। यह पूछो कि तुम अपने देश के लिए क्या कर सकते हो।"
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # hungarian
 def get_hu_models():
     hu_HU = [
@@ -1411,6 +1440,7 @@ def get_all_models():
     ans += get_fa_models()
     ans += get_fi_models()
     ans += get_fr_models()
+    ans += get_hi_models()
     ans += get_hu_models()
     ans += get_is_models()
     ans += get_it_models()
@@ -1434,6 +1464,8 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
+
+    ans = get_hi_models()
 
     for i, m in enumerate(ans):
         m.index = i

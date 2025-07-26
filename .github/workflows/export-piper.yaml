@@ -20,13 +20,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.10"]
-        total: ["20"]
-        index: [
-          "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-          "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-           ]
-        # total: ["2"]
-        # index: ["0", "1"]
+        # total: ["20"]
+        # index: [
+        #   "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        #   "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+        #    ]
+        total: ["2"]
+        index: ["0", "1"]
         # total: ["1"]
         # index: ["0"]
         # total: ["5"]
@@ -143,6 +143,8 @@ jobs:
               vits-piper-fa_IR-ganji-medium
               vits-piper-fa_IR-ganji_adabi-medium
               vits-piper-fa_IR-reza_ibrahim-medium
+              vits-piper-hi_IN-pratham-medium
+              vits-piper-hi_IN-priyamvada-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
