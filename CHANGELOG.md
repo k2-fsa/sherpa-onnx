@@ -12,6 +12,8 @@
 * Implement max_symbols_per_frame for GigaAM2 accurate decoding since model uses char tokens instead of BPE. (#2423)
 * Fix GigaAM transducer encoder output length data type (#2426)
 * Add friendly log messages for Android and HarmonyOs TTS users. (#2427)
+* Fix setGraph in OnlineCtcFstDecoderConfig Java API (#2411)
+
 
 ## 1.12.6
 
