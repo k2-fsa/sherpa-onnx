@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-old_version="1\.12\.5"
-new_version="1\.12\.6"
+old_version="1\.12\.6"
+new_version="1\.12\.7"
 replace_str="s/$old_version/$new_version/g"
 
 sed -i.bak "$replace_str" ./sherpa-onnx/csrc/version.cc
@@ -18,6 +18,7 @@ sed -i.bak "$replace_str" ./jitpack.yml
 sed -i.bak "$replace_str" ./android/SherpaOnnxAar/README.md
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
+find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 
 find flutter -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
 find dart-api-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} \;
