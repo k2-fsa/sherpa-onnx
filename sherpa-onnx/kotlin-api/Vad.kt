@@ -55,6 +55,9 @@ class Vad(
 
     fun release() = finalize()
 
+    fun compute(samples: FloatArray): Float = compute(ptr, samples)
+
+
     fun acceptWaveform(samples: FloatArray) = acceptWaveform(ptr, samples)
 
     fun empty(): Boolean = empty(ptr)
@@ -85,6 +88,8 @@ class Vad(
     ): Long
 
     private external fun acceptWaveform(ptr: Long, samples: FloatArray)
+    private external fun compute(ptr: Long, samples: FloatArray): Float
+
     private external fun empty(ptr: Long): Boolean
     private external fun pop(ptr: Long)
     private external fun clear(ptr: Long)

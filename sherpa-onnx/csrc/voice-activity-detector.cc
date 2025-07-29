@@ -41,6 +41,10 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
+  float Compute(const float *samples, int32_t n) {
+    return model_->Compute(samples, n);
+  }
+
   void AcceptWaveform(const float *samples, int32_t n) {
     if (buffer_.Size() > max_utterance_length_) {
       model_->SetMinSilenceDuration(new_min_silence_duration_s_);
@@ -254,6 +258,10 @@ SpeechSegment VoiceActivityDetector::CurrentSpeechSegment() const {
 
 const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
+}
+
+float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
+  return impl_->Compute(samples, n);
 }
 
 #if __ANDROID_API__ >= 9
