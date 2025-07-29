@@ -12,6 +12,7 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   vits.Register(po);
   matcha.Register(po);
   kokoro.Register(po);
+  zipvoice.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -37,6 +38,10 @@ bool OfflineTtsModelConfig::Validate() const {
     return matcha.Validate();
   }
 
+  if (!zipvoice.flow_matching_model.empty()) {
+    return zipvoice.Validate();
+  }
+
   return kokoro.Validate();
 }
 
@@ -47,6 +52,7 @@ std::string OfflineTtsModelConfig::ToString() const {
   os << "vits=" << vits.ToString() << ", ";
   os << "matcha=" << matcha.ToString() << ", ";
   os << "kokoro=" << kokoro.ToString() << ", ";
+  os << "zipvoice=" << zipvoice.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";
