@@ -236,7 +236,7 @@ JNIEXPORT jfloat JNICALL Java_com_k2fsa_sherpa_onnx_Vad_compute(
       [&]() -> jfloat {
         if (!ValidatePointer(env, ptr, "Vad_compute",
                              "VoiceActivityDetector pointer is null.")) {
-          return -1.0f;  // 返回一個錯誤值
+          return -1.0f;
         }
         auto vad = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
         jfloat *p = env->GetFloatArrayElements(samples, nullptr);

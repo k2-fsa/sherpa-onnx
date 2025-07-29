@@ -31,7 +31,7 @@ class TenVadModel : public VadModel {
    */
   bool IsSpeech(const float *samples, int32_t n) override;
 
-  float Compute(const float *samples, int32_t n) override;  // 新增
+  float Compute(const float *samples, int32_t n) override;
 
   // 256 or 160
   int32_t WindowSize() const override;
