@@ -242,7 +242,6 @@ JNIEXPORT jfloat JNICALL Java_com_k2fsa_sherpa_onnx_Vad_compute(
         jfloat *p = env->GetFloatArrayElements(samples, nullptr);
         jsize n = env->GetArrayLength(samples);
 
-        // 呼叫我們新增的 C++ API
         float score = vad->Compute(p, n);
 
         env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
