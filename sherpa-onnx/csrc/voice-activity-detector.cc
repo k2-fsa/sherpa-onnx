@@ -41,7 +41,6 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
-  // 新增 Impl::Compute 函式 (在建構函式之外)
   float Compute(const float *samples, int32_t n) {
     return model_->Compute(samples, n);
   }
@@ -261,7 +260,6 @@ const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
 }
 
-// 在檔案底部新增
 float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
   return impl_->Compute(samples, n);
 }
