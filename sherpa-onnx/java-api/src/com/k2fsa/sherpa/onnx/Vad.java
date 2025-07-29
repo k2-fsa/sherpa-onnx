@@ -27,6 +27,10 @@ public class Vad {
         acceptWaveform(this.ptr, samples);
     }
 
+    public float compute(float[] samples) {
+        return compute(this.ptr, samples);
+    }
+
     public boolean empty() {
         return empty(this.ptr);
     }
@@ -64,6 +68,8 @@ public class Vad {
     private native long newFromFile(VadModelConfig config);
 
     private native void acceptWaveform(long ptr, float[] samples);
+
+    private native float compute(long ptr, float[] samples);
 
     private native boolean empty(long ptr);
 
