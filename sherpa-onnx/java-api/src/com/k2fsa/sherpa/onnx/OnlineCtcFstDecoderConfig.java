@@ -31,7 +31,7 @@ public class OnlineCtcFstDecoderConfig {
             return new OnlineCtcFstDecoderConfig(this);
         }
 
-        public Builder setGraph(String model) {
+        public Builder setGraph(String graph) {
             this.graph = graph;
             return this;
         }

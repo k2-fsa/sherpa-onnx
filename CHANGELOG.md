@@ -1,3 +1,20 @@
+## 1.12.7
+
+* Support Portuguese and German ASR models from NeMo (#2394)
+* Support returning the current speech segment for VAD. (#2397)
+* Add more piper tts polish models (#2403)
+* Support VAD+ASR for WearOS (#2404)
+* Support test long audio with streaming-model & vad (#2405)
+* Fix typo in sherpa-onnx-vad-with-online-asr.cc (#2407)
+* Add tail padding for sherpa-onnx-vad-with-online-asr (#2408)
+* Add more French TTS models (#2424)
+* Add more piper tts models (#2425)
+* Implement max_symbols_per_frame for GigaAM2 accurate decoding since model uses char tokens instead of BPE. (#2423)
+* Fix GigaAM transducer encoder output length data type (#2426)
+* Add friendly log messages for Android and HarmonyOs TTS users. (#2427)
+* Fix setGraph in OnlineCtcFstDecoderConfig Java API (#2411)
+
+
 ## 1.12.6
 
 * Support silero-vad v4 exported by k2-fsa (#2372)

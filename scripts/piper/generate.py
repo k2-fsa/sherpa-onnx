@@ -254,13 +254,21 @@ def get_es_models():
         PiperModel(name="claude", kind="high", sr=22050, ns=1),
     ]
 
+    # Argentina
+    es_AR = [
+        PiperModel(name="daniela", kind="high", sr=22050, ns=1),
+    ]
+
     for m in es_ES:
         m.lang = "es_ES"
 
     for m in es_MX:
         m.lang = "es_MX"
 
-    ans = es_ES + es_MX
+    for m in es_AR:
+        m.lang = "es_AR"
+
+    ans = es_ES + es_MX + es_AR
 
     for m in ans:
         if m.model_name == "":
@@ -351,6 +359,25 @@ def get_fr_models():
         PiperModel(name="upmc", kind="medium", sr=22050, ns=2),
     ]
 
+    fr_FR.extend(
+        [
+            PiperModel(
+                name="tjiho",
+                kind=f"model{k}",
+                sr=44100,
+                ns=1,
+                cmd=f"""
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/fr_FR-tjiho-model{k}.onnx
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/fr_FR-tjiho-model{k}.onnx.json
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/LICENSE.txt
+                   wget -qq https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/resolve/main/MODEL_CARD
+                   """,
+                url=f"https://huggingface.co/csukuangfj/vits-piper-fr_FR-tjiho-model{k}/tree/main",
+            )
+            for k in [1, 2, 3]
+        ]
+    )
+
     for m in fr_FR:
         m.lang = "fr_FR"
         if m.model_name == "":
@@ -360,6 +387,35 @@ def get_fr_models():
 
     for m in ans:
         m.text = "Pas de nouvelles, bonnes nouvelles."
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
+# hindi
+def get_hi_models():
+    hi_IN = [
+        PiperModel(name="pratham", kind="medium", sr=22050, ns=1),
+        PiperModel(name="priyamvada", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in hi_IN:
+        m.lang = "hi_IN"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = hi_IN
+
+    for m in ans:
+        m.text = "यह मत पूछो कि तुम्हारा देश तुम्हारे लिए क्या कर सकता है। यह पूछो कि तुम अपने देश के लिए क्या कर सकते हो।"
         code = m.lang[:2]
         if m.cmd == "":
             m.cmd = f"""
@@ -714,6 +770,59 @@ def get_pl_models():
         PiperModel(name="gosia", kind="medium", sr=22050, ns=1),
         PiperModel(name="mc_speech", kind="medium", sr=22050, ns=1),
     ]
+
+    pl_PL.extend(
+        [
+            PiperModel(
+                name="jarvis_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-jarvis_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-jarvis_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="justyna_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-justyna_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-justyna_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="meski_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-meski_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-meski_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+            PiperModel(
+                name="zenski_wg_glos",
+                kind="medium",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-zenski_wg_glos-medium.onnx
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/pl_PL-zenski_wg_glos-medium.onnx.json
+                   wget -qq https://huggingface.co/WitoldG/polish_piper_models/resolve/main/README.md
+                   """,
+                url="https://github.com/k2-fsa/sherpa-onnx/issues/2402",
+            ),
+        ]
+    )
 
     for m in pl_PL:
         m.lang = "pl_PL"
@@ -1339,6 +1448,7 @@ def get_all_models():
     ans += get_fa_models()
     ans += get_fi_models()
     ans += get_fr_models()
+    ans += get_hi_models()
     ans += get_hu_models()
     ans += get_is_models()
     ans += get_it_models()

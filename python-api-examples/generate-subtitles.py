@@ -609,6 +609,16 @@ def main():
                 vad.accept_waveform(buffer[:window_size])
                 buffer = buffer[window_size:]
 
+                if False:
+                    # If you want to process the speech segment as soon as
+                    # speech is detected, you can use
+                    current_segment = vad.current_segment
+                    if len(current_segment.samples) > 0:
+                        print(
+                            f"speech starts at {current_segment.start/16000} seconds: ",
+                            f"duration {len(current_segment.samples)/16000} seconds",
+                        )
+
         streams = []
         segments = []
         while not vad.empty():

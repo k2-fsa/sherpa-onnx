@@ -19,3 +19,4 @@ for usage.
 |[SherpaOnnxAudioTagging](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk.html)| It shows how to use audio tagging.|
 |[SherpaOnnxAudioTaggingWearOS](./SherpaOnnxAudioTagging)|[URL](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)| It shows how to use audio tagging on WearOS.|
 |[SherpaOnnxSimulateStreamingAsr](./SherpaOnnxSimulateStreamingAsr)|| It shows how to use a non-streaming ASR model for streaming speech recognition.|
+|[SherpaOnnxSimulateStreamingAsrWearOs](./SherpaOnnxSimulateStreamingAsrWearOs)|| It shows how to use a non-streaming ASR model for streaming speech recognition with WearOS.|
