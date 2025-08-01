@@ -1,0 +1,17 @@
+[win.env]
+set JAVA_HOME=D:\java\jdk1.8.0_121
+
+[win.build]
+mvn clean install -DskipTests -Dgpg.skip=true
+
+[linux.env]
+export JAVA_HOME=/usr/java/jdk1.8.0_121
+
+[linux.build]
+mvn clean install -DskipTests -Dgpg.skip=true
+
+[mac.env]
+export JAVA_HOME=~/java/jdk1.8.0_121
+
+[mac.build]
+mvn clean install -DskipTests -Dgpg.skip=true
