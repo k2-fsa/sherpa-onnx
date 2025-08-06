@@ -1340,7 +1340,7 @@ begin
     'ModelType := %s, ' +
     'ModelingUnit := %s, ' +
     'BpeVocab := %s, ' +
-    'nemoCtc := %s'),
+    'NemoCtc := %s',
   [Self.Transducer.ToString, Self.Paraformer.ToString,
    Self.Zipformer2Ctc.ToString, Self.Tokens,
    Self.NumThreads, Self.Provider, Self.Debug.ToString,
