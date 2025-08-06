@@ -16,6 +16,9 @@ public class OnlineRecognizer {
     }
 
     public void decode(OnlineStream[] ss) {
+        if (ss == null || ss.length == 0) {
+          throw new IllegalArgumentException("Stream array must be non-empty");
+        }
         long[] streamPtrs = new long[ss.length];
         for (int i = 0; i < ss.length; ++i) {
             streamPtrs[i] = ss[i].getPtr();
