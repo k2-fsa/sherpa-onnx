@@ -383,6 +383,48 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-en-kroko-2025-08-06",
+            idx=21,
+            lang="en",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06",
+            idx=22,
+            lang="es",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-fr-kroko-2025-08-06",
+            idx=23,
+            lang="fr",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models
