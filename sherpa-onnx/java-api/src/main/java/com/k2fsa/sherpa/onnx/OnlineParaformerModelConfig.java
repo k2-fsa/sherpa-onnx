@@ -8,8 +8,12 @@ public class OnlineParaformerModelConfig {
     private final String decoder;
 
     private OnlineParaformerModelConfig(Builder builder) {
-        this.encoder = builder.encoder;
-        this.decoder = builder.decoder;
+      this.encoder = java.util.Objects.requireNonNull(builder.encoder, "encoder cannot be null");
+      this.decoder = java.util.Objects.requireNonNull(builder.decoder, "decoder cannot be null");
+
+      if (this.encoder.isEmpty() || this.decoder.isEmpty()) {
+          throw new IllegalArgumentException("encoder/decoder path must not be empty");
+      }
     }
 
     public static Builder builder() {
