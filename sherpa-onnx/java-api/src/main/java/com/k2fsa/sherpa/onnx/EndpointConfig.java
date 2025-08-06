@@ -63,7 +63,7 @@ public class EndpointConfig {
             return this;
         }
 
-        public Builder setRul3(EndpointRule rule) {
+        public Builder setRule3(EndpointRule rule) {
             this.rule3 = rule;
             return this;
         }
