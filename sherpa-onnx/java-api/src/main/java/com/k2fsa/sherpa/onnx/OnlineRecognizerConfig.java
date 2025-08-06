@@ -3,6 +3,8 @@
 
 package com.k2fsa.sherpa.onnx;
 
+import java.util.Objects;
+
 public class OnlineRecognizerConfig {
     private final FeatureConfig featConfig;
     private final OnlineModelConfig modelConfig;
@@ -62,7 +64,17 @@ public class OnlineRecognizerConfig {
         private float blankPenalty = 0.0f;
 
         public OnlineRecognizerConfig build() {
-            return new OnlineRecognizerConfig(this);
+          Objects.requireNonNull(decodingMethod, "decodingMethod");
+          if (maxActivePaths <= 0) {
+              throw new IllegalArgumentException("maxActivePaths must be > 0");
+          }
+          if (hotwordsScore < 0) {
+              throw new IllegalArgumentException("hotwordsScore must be >= 0");
+          }
+          if (blankPenalty < 0) {
+              throw new IllegalArgumentException("blankPenalty must be >= 0");
+          }
+          return new OnlineRecognizerConfig(this);
         }
 
         public Builder setFeatureConfig(FeatureConfig featConfig) {
