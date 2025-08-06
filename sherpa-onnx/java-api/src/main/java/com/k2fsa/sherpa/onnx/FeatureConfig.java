@@ -36,7 +36,7 @@ public class FeatureConfig {
         private float dither = 0.0f;
 
         public FeatureConfig build() {
-            return new FeatureConfig(this);
+            return new FeatureConfig(new Builder());
         }
 
         public Builder setSampleRate(int sampleRate) {
