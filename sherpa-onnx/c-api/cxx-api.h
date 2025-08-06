@@ -32,7 +32,7 @@ struct OnlineZipformer2CtcModelConfig {
   std::string model;
 };
 
-struct OnlineNeMoCtcModelConfig {
+struct OnlineNemoCtcModelConfig {
   std::string model;
 };
 
@@ -40,7 +40,7 @@ struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
-  OnlineNeMoCtcModelConfig nemo_ctc;
+  OnlineNemoCtcModelConfig nemo_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   std::string provider = "cpu";
