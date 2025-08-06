@@ -49,12 +49,16 @@ public class OnlineRecognizer {
     }
 
     // You'd better call it manually if it is not used anymore
+    protected void close()  {
+      if (this.ptr == 0) {
+        return;
+      }
+      delete(this.ptr);
+      this.ptr = 0;
+    }
+    
     public void release() {
-        if (this.ptr == 0) {
-            return;
-        }
-        delete(this.ptr);
-        this.ptr = 0;
+      this.close();
     }
 
     public OnlineRecognizerResult getResult(OnlineStream s) {
