@@ -64,7 +64,6 @@ public class OnlineRecognizerConfig {
         private float blankPenalty = 0.0f;
 
         public OnlineRecognizerConfig build() {
-          Objects.requireNonNull(decodingMethod, "decodingMethod");
           if (maxActivePaths <= 0) {
               throw new IllegalArgumentException("maxActivePaths must be > 0");
           }
