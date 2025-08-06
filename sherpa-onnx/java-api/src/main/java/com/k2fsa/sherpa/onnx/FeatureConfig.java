@@ -36,7 +36,17 @@ public class FeatureConfig {
         private float dither = 0.0f;
 
         public FeatureConfig build() {
-            return new FeatureConfig(new Builder());
+          if (sampleRate <= 0) {
+            throw new IllegalArgumentException("sampleRate must be positive");
+          }
+          
+          if (featureDim <= 0) {
+            throw new IllegalArgumentException("featureDim must be positive");
+          }
+          if (dither < 0f) {
+            throw new IllegalArgumentException("dither must be non-negative");
+          }
+          return new FeatureConfig(this);
         }
 
         public Builder setSampleRate(int sampleRate) {
