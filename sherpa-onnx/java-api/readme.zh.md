@@ -7,7 +7,6 @@
 * Java 1.8+ 环境
 * 下载并准备好以下内容：
   * Sherpa-ONNX Java API（Maven 依赖）
-  * 对应平台的 JNI 动态链接库（如 Windows 为 `.dll`）
   * Kokoro TTS 模型文件（包含 `model.onnx` 等）
 
 ---
@@ -20,7 +19,7 @@
 <dependency>
   <groupId>com.litongjava</groupId>
   <artifactId>sherpa-onnx-java-api</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
@@ -28,42 +27,64 @@
 
 ## 3. 获取并配置本地动态链接库（JNI）
 
-### 3.1 下载对应平台的 JNI 动态库
+### 3.1 安装 ONNX Runtime
 
-以 Windows 为例，从 Hugging Face 下载预编译的 JNI 库：
-`https://huggingface.co/csukuangfj/sherpa-onnx-libs/tree/main/jni`
+#### 1. Windows 10
 
-例如：
-`sherpa-onnx-v1.12.7-win-x64-jni.tar.bz2`
+Windows 10 系统自带 ONNX Runtime，无需额外安装。
 
-解压后会得到 `sherpa-onnx-jni.dll`（Linux 是 `.so`，macOS 是 `.dylib`）。
+#### 2. Linux
 
-### 3.2 放置动态库并让 JVM 找到它
+Sherpa-ONNX 并不包含 ONNX Runtime，需要手动下载并配置：
 
-JVM 通过 `java.library.path` 查找本地 JNI 库，有几种常用做法：
+1. 从微软官方 GitHub Releases 下载 Linux 64 位二进制包：
 
-#### 方案一：把 `.dll` 放在运行时的当前目录
+   ```bash
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz
+   tar -xzf onnxruntime-linux-x64-1.17.1.tgz
+   ```
+2. 将解压后的 `libonnxruntime.so` 文件复制到系统库目录，并创建软链接：
 
-* 如果你在开发环境运行（比如 IDE 启动），当前工作目录通常是工程根目录，把 `sherpa-onnx-jni.dll` 放那儿即可。
-* 如果运行的是打包后的 JAR（生产环境），把 `.dll` 和 JAR 放在同一目录。
+   ```bash
+   sudo cp onnxruntime-linux-x64-1.17.1/lib/libonnxruntime.so* /usr/local/lib/
+   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.17.1 /usr/local/lib/libonnxruntime.so
+   ```
+3. 更新共享库缓存并验证安装：
 
-#### 方案二：显式指定 `java.library.path`
+   ```bash
+   sudo ldconfig
+   ldconfig -p | grep onnxruntime
+   ```
 
-运行时加参数示例（Windows 示例）：
+#### 3. macOS
 
-```sh
-java -Djava.library.path=. -jar your-app.jar
-```
+Sherpa-ONNX 同样不包含 ONNX Runtime，需要从官方获取并配置：
 
-或者如果从 IDE 运行，在 VM options 里填入：
+1. 下载 macOS ARM64 版本二进制包：
 
-```
--Djava.library.path=路径到包含sherpa-onnx-jni.dll的目录
-```
+   ```bash
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-arm64-1.17.1.tgz
+   tar -xzf onnxruntime-osx-arm64-1.17.1.tgz
+   ```
+2. 将 `libonnxruntime.1.17.1.dylib` 复制到 `/usr/local/lib`：
 
-#### 方案三：设置系统环境变量（不推荐因为跨平台不一致）
+   ```bash
+   sudo cp onnxruntime-osx-arm64-1.17.1/lib/libonnxruntime.1.17.1.dylib /usr/local/lib/
+   ```
+3. 将 `/usr/local/lib` 添加到 `dyld` 的搜索路径：
 
-### 3.3 常见错误与排查
+   ```bash
+   export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH
+   ```
+4. 使用 `otool` 验证：
+
+   ```bash
+   otool -L /Users/ping/lib/darwin_arm64/libsherpa-onnx-jni.dylib
+   ```
+---
+
+
+### 3.2 常见错误与排查
 
 **错误示例：**
 
@@ -96,7 +117,7 @@ https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
 ```sh
 # 下载（手工或脚本）
 # 例如从 GitHub releases:
-# kokoro-en-v0_19.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 
 # 解压
 tar -xjf kokoro-en-v0_19.tar.bz2

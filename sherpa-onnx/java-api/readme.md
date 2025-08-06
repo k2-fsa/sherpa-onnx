@@ -1,127 +1,152 @@
 # User Guide
 
-*Applicable to Windows / macOS / Linux (Windows used as example for dynamic library loading)*
+*Applicable to Windows / macOS / Linux (using Windows as an example for dynamic library loading)*
 
 ## 1. Prerequisites
 
-* Java 1.8+ runtime
+* Java 1.8+ environment
 * Download and prepare the following:
 
   * Sherpa-ONNX Java API (Maven dependency)
-  * The matching platform JNI native library (e.g., `.dll` on Windows)
   * Kokoro TTS model files (including `model.onnx`, etc.)
 
 ---
 
 ## 2. Add Maven Dependency
 
-In your `pom.xml`, add the following dependency:
+In your `pom.xml`, add:
 
 ```xml
 <dependency>
   <groupId>com.litongjava</groupId>
   <artifactId>sherpa-onnx-java-api</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
 ---
 
-## 3. Obtain and Configure the Local Native Library (JNI)
+## 3. Obtain and Configure Native Dynamic Libraries (JNI)
 
-### 3.1 Download the JNI native library for your platform
+### 3.1 Install ONNX Runtime
 
-Taking Windows as an example, download the prebuilt JNI library from Hugging Face:
-`https://huggingface.co/csukuangfj/sherpa-onnx-libs/tree/main/jni`
+#### Windows 10
 
-For example:
-`sherpa-onnx-v1.12.7-win-x64-jni.tar.bz2`
+Windows 10 includes ONNX Runtime by default—no extra installation is required.
 
-After extraction you’ll get `sherpa-onnx-jni.dll` (on Linux it’s `.so`, on macOS it’s `.dylib`).
+#### Linux
 
-### 3.2 Place the native library and make it discoverable by the JVM
+Sherpa-ONNX does **not** bundle ONNX Runtime. To install it manually:
 
-The JVM locates native libraries via `java.library.path`. Common approaches:
+1. Download the Linux x64 binary from Microsoft’s GitHub Releases:
 
-#### Option 1: Put the `.dll` in the current working directory at runtime
+   ```bash
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz
+   tar -xzf onnxruntime-linux-x64-1.17.1.tgz
+   ```
 
-* In a development environment (e.g., IDE launch), the current working directory is typically the project root—place `sherpa-onnx-jni.dll` there.
-* In a packaged JAR scenario, put the `.dll` alongside the JAR.
+2. Copy and symlink the library into a system directory:
 
-#### Option 2: Explicitly specify `java.library.path`
+   ```bash
+   sudo cp onnxruntime-linux-x64-1.17.1/lib/libonnxruntime.so* /usr/local/lib/
+   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.17.1 /usr/local/lib/libonnxruntime.so
+   ```
 
-Example runtime flag (Windows):
+3. Update the shared-library cache and verify:
 
-```sh
-java -Djava.library.path=. -jar your-app.jar
-```
+   ```bash
+   sudo ldconfig
+   ldconfig -p | grep onnxruntime
+   ```
 
-Or, if running from an IDE, set in VM options:
+#### macOS
 
-```
--Djava.library.path=path\to\directory\containing\sherpa-onnx-jni.dll
-```
+Sherpa-ONNX also requires you to install ONNX Runtime on macOS:
 
-#### Option 3: Set a system environment variable (less recommended due to cross-platform inconsistency)
+1. Download the macOS ARM64 binary:
 
-### 3.3 Common errors and troubleshooting
+   ```bash
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-arm64-1.17.1.tgz
+   tar -xzf onnxruntime-osx-arm64-1.17.1.tgz
+   ```
 
-**Example error:**
+2. Copy the dylib into `/usr/local/lib`:
+
+   ```bash
+   sudo cp onnxruntime-osx-arm64-1.17.1/lib/libonnxruntime.1.17.1.dylib /usr/local/lib/
+   ```
+
+3. Add `/usr/local/lib` to `dyld`’s search path:
+
+   ```bash
+   export DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH
+   ```
+
+4. Verify with `otool`:
+
+   ```bash
+   otool -L /Users/ping/lib/darwin_arm64/libsherpa-onnx-jni.dylib
+   ```
+
+---
+
+### 3.2 Common Errors & Troubleshooting
+
+**Error Example:**
 
 ```text
 Exception in thread "main" java.lang.UnsatisfiedLinkError: no sherpa-onnx-jni in java.library.path: ...
 ```
 
-This means the JVM could not find the native library in `java.library.path`.
+This means the JVM couldn’t locate the native library in `java.library.path`.
 
-Troubleshooting steps:
+**Troubleshooting steps:**
 
-1. Verify you downloaded the version matching your OS and architecture (e.g., win-x64 vs arm64).
+1. Ensure you downloaded the build matching your OS and architecture (e.g. win-x64 vs. arm64).
 
 2. Test with an absolute path:
 
-   ```sh
+   ```bash
    java -Djava.library.path=C:\full\path\to\jni -jar your-app.jar
    ```
 
-3. Print or inspect the contents of `java.library.path` in code (e.g., `System.getProperty("java.library.path")`).
+3. Print or inspect `java.library.path` at runtime (e.g. `System.out.println(System.getProperty("java.library.path"));`).
 
-4. **Do not** attempt to hack `java.library.path` by reflecting and modifying internal fields like `sys_paths`; instead, use the `-Djava.library.path` mechanism directly to avoid `NoSuchFieldException: sys_paths`.
+4. **Do not** hack the internal `sys_paths` via reflection (it may throw `NoSuchFieldException`). Use `-Djava.library.path` instead.
 
 ---
 
-## 4. Download and Prepare the Kokoro Model
+## 4. Download & Prepare the Kokoro Model
 
-Obtain the model package from the official release (example: English Kokoro v0.19):
+Fetch the model package from the official release (example: Kokoro v0.19 English):
 
 ```
 https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
 ```
 
-```sh
+```bash
 # Download (manually or via script)
-# e.g., from GitHub releases:
-# kokoro-en-v0_19.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 
 # Extract
 tar -xjf kokoro-en-v0_19.tar.bz2
 
-# Inspect structure
+# Inspect
 ls -lh kokoro-en-v0_19/
 ```
 
-Example directory contents after extraction (these should be present):
+You should see:
 
 ```
 LICENSE
 README.md
-espeak-ng-data/        # speech data directory
-model.onnx            # TTS model
-tokens.txt           # token mapping
-voices.bin           # voice embeddings
+espeak-ng-data/    # speech data directory
+model.onnx         # TTS model
+tokens.txt         # token mapping
+voices.bin         # voice embeddings
 ```
 
-Ensure your Java program uses correct paths to these files or directories (absolute or relative).
+Make sure your Java code points to these files (using either relative or absolute paths).
 
 ---
 
@@ -138,15 +163,15 @@ import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig;
 
 public class NonStreamingTtsKokoroEn {
   public static void main(String[] args) {
-    String model = "./kokoro-en-v0_19/model.onnx";
-    String voices = "./kokoro-en-v0_19/voices.bin";
-    String tokens = "./kokoro-en-v0_19/tokens.txt";
+    String model   = "./kokoro-en-v0_19/model.onnx";
+    String voices  = "./kokoro-en-v0_19/voices.bin";
+    String tokens  = "./kokoro-en-v0_19/tokens.txt";
     String dataDir = "./kokoro-en-v0_19/espeak-ng-data";
-    String text = "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
-        + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
-        + " businessman, an official, or a scholar.";
+    String text    = "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
+                   + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
+                   + " businessman, an official, or a scholar.";
 
-    OfflineTtsKokoroModelConfig kokoroModelConfig = OfflineTtsKokoroModelConfig.builder()
+    OfflineTtsKokoroModelConfig kokoroConfig = OfflineTtsKokoroModelConfig.builder()
         .setModel(model)
         .setVoices(voices)
         .setTokens(tokens)
@@ -154,7 +179,7 @@ public class NonStreamingTtsKokoroEn {
         .build();
 
     OfflineTtsModelConfig modelConfig = OfflineTtsModelConfig.builder()
-        .setKokoro(kokoroModelConfig)
+        .setKokoro(kokoroConfig)
         .setNumThreads(2)
         .setDebug(true)
         .build();
@@ -165,23 +190,24 @@ public class NonStreamingTtsKokoroEn {
 
     OfflineTts tts = new OfflineTts(config);
 
-    int sid = 0;
+    int sid   = 0;
     float speed = 1.0f;
     long start = System.currentTimeMillis();
     GeneratedAudio audio = tts.generate(text, sid, speed);
-    long stop = System.currentTimeMillis();
+    long stop  = System.currentTimeMillis();
 
-    float timeElapsedSeconds = (stop - start) / 1000.0f;
-    float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
-    float real_time_factor = timeElapsedSeconds / audioDuration;
+    float elapsed   = (stop - start) / 1000.0f;
+    float duration  = audio.getSamples().length / (float) audio.getSampleRate();
+    float rtf       = elapsed / duration;
 
-    String waveFilename = "tts-kokoro-en.wav";
-    audio.save(waveFilename);
-    System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
-    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
-    System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
-    System.out.printf("-- text: %s\n", text);
-    System.out.printf("-- Saved to %s\n", waveFilename);
+    String outFile = "tts-kokoro-en.wav";
+    audio.save(outFile);
+
+    System.out.printf("-- elapsed           : %.3f seconds%n", elapsed);
+    System.out.printf("-- audio duration    : %.3f seconds%n", duration);
+    System.out.printf("-- real-time factor  : %.3f%n", rtf);
+    System.out.printf("-- text              : %s%n", text);
+    System.out.printf("-- Saved to          : %s%n", outFile);
 
     tts.release();
   }
@@ -190,14 +216,14 @@ public class NonStreamingTtsKokoroEn {
 
 ### Output Explanation
 
-On successful execution you should see something like:
+After successful execution, you should see something like:
 
 ```
--- elapsed : 6.739 seconds
--- audio duration: 6.739 seconds
--- real-time factor (RTF): 0.563
--- text: ...
--- Saved to tts-kokoro-en.wav
+-- elapsed           : 6.739 seconds
+-- audio duration    : 6.739 seconds
+-- real-time factor  : 0.563
+-- text              : ...
+-- Saved to          : tts-kokoro-en.wav
 ```
 
-And a file `tts-kokoro-en.wav` will be created in the current directory; you can play it with any audio player to verify.
+A file named `tts-kokoro-en.wav` will appear in the current directory—play it with any audio player to verify.

@@ -15,3 +15,21 @@ please downlaod file and put in folder
 - windows_x64
 
 
+```
+.
+├── .gitignore
+├── libs
+│   ├── darwin_arm64
+│   │   ├── libsherpa-onnx-jni.dylib
+│   ├── darwin_x64
+│   │   ├── libsherpa-onnx-jni.dylib
+│   ├── linux_arm64
+│   │   ├── libsherpa-onnx-jni.so
+│   ├── linux_x64
+│   │   ├── libsherpa-onnx-jni.so
+│   ├── win_x64
+│   │   ├── sherpa-onnx-jni.dll
+├── readme.md
+
+```
+
