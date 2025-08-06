@@ -8,7 +8,6 @@ public class LibraryLoader {
 
     static synchronized void loadLibrary() {
         if (!isLoaded) {
-            //System.loadLibrary("sherpa-onnx-jni");
             LibraryUtils.load();
             isLoaded = true;
         }

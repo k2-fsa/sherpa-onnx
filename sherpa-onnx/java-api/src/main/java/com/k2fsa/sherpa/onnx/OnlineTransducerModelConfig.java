@@ -36,9 +36,6 @@ public class OnlineTransducerModelConfig {
         private String joiner = "";
 
         public OnlineTransducerModelConfig build() {
-          if (encoder.isEmpty() || decoder.isEmpty() || joiner.isEmpty()) {
-            throw new IllegalStateException("encoder / decoder / joiner paths must be provided before building");
-          }
           return new OnlineTransducerModelConfig(this);
         }
 
