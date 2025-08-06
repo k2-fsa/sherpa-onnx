@@ -32,17 +32,21 @@ public class OnlineStream {
     }
 
     public void release() {
-        // stream object must be release after used
-        if (this.ptr == 0) {
-            return;
-        }
-        delete(this.ptr);
-        this.ptr = 0;
+        close();
     }
-
+    
+    public void close() {
+      // stream object must be release after used
+      if (this.ptr == 0) {
+          return;
+      }
+      delete(this.ptr);
+      this.ptr = 0;
+    }
+    
     @Override
     protected void finalize() throws Throwable {
-        release();
+        close();
         super.finalize();
     }
 
