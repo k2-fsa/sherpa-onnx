@@ -475,6 +475,8 @@ KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
   c.model_config.zipformer2_ctc.model =
       config.model_config.zipformer2_ctc.model.c_str();
 
+  c.model_config.nemo_ctc.model = config.model_config.nemo_ctc.model.c_str();
+
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
   c.model_config.provider = config.model_config.provider.c_str();

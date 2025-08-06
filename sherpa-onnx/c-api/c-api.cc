@@ -760,6 +760,9 @@ static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
   spotter_config.model_config.zipformer2_ctc.model =
       SHERPA_ONNX_OR(config->model_config.zipformer2_ctc.model, "");
 
+  spotter_config.model_config.nemo_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
+
   spotter_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   if (config->model_config.tokens_buf &&

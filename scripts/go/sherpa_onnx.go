@@ -77,6 +77,10 @@ type OnlineZipformer2CtcModelConfig struct {
 	Model string // Path to the onnx model
 }
 
+type OnlineNemoCtcModelConfig struct {
+	Model string // Path to the onnx model
+}
+
 // Configuration for online/streaming models
 //
 // Please refer to
@@ -87,6 +91,7 @@ type OnlineModelConfig struct {
 	Transducer    OnlineTransducerModelConfig
 	Paraformer    OnlineParaformerModelConfig
 	Zipformer2Ctc OnlineZipformer2CtcModelConfig
+	NemoCtc       OnlineNemoCtcModelConfig
 	Tokens        string // Path to tokens.txt
 	NumThreads    int    // Number of threads to use for neural network computation
 	Provider      string // Optional. Valid values are: cpu, cuda, coreml
@@ -196,6 +201,9 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 
 	c.model_config.zipformer2_ctc.model = C.CString(config.ModelConfig.Zipformer2Ctc.Model)
 	defer C.free(unsafe.Pointer(c.model_config.zipformer2_ctc.model))
+
+	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))
@@ -1813,6 +1821,9 @@ func NewKeywordSpotter(config *KeywordSpotterConfig) *KeywordSpotter {
 
 	c.model_config.zipformer2_ctc.model = C.CString(config.ModelConfig.Zipformer2Ctc.Model)
 	defer C.free(unsafe.Pointer(c.model_config.zipformer2_ctc.model))
+
+	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))
