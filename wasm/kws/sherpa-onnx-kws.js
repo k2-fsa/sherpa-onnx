@@ -115,7 +115,7 @@ function initModelConfig(config, Module) {
   Module.stringToUTF8(config.tokensBuf || '', buffer + offset, tokensBufLen);
   offset += tokensBufLen;
 
-  offset = transducer.len + paraformer_len + ctc_len;
+  offset = transducer.len + paraformer_len + zipfomer2_ctc_len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
   offset += 4;
 
