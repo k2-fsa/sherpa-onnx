@@ -119,7 +119,7 @@ jobs:
               git lfs track da_dict en_dict fa_dict hu_dict ia_dict it_dict lb_dict phondata ru_dict ta_dict
               git lfs track ur_dict yue_dict
 
-              cp -a ../$d ./
+              cp -a ../$d/* ./
 
               git add .
 
