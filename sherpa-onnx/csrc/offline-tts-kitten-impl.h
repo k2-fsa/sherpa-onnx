@@ -261,7 +261,7 @@ class OfflineTtsKittenImpl : public OfflineTtsImpl {
     std::vector<std::vector<int64_t>> batch_x;
 
     int32_t batch_size = 1;
-    batch_x.reserve(config_.max_num_sentences);
+    batch_x.reserve(batch_size);
     int32_t num_batches = x_size / batch_size;
 
     if (config_.model.debug) {

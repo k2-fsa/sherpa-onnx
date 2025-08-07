@@ -35,6 +35,16 @@ bool OfflineTtsKittenModelConfig::Validate() const {
     return false;
   }
 
+  if (voices.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --kitten-voices");
+    return false;
+  }
+
+  if (!FileExists(voices)) {
+    SHERPA_ONNX_LOGE("--kitten-voices: '%s' does not exist", voices.c_str());
+    return false;
+  }
+
   if (tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --kitten-tokens");
     return false;
@@ -75,6 +85,14 @@ bool OfflineTtsKittenModelConfig::Validate() const {
     SHERPA_ONNX_LOGE(
         "'%s/intonations' does not exist. Please check --kitten-data-dir",
         data_dir.c_str());
+    return false;
+  }
+
+  if (length_scale <= 0) {
+    SHERPA_ONNX_LOGE(
+        "Please provide a positive length_scale for --kitten-length-scale. "
+        "Given: %.3f",
+        length_scale);
     return false;
   }
 

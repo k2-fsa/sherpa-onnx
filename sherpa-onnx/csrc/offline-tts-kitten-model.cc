@@ -63,7 +63,7 @@ class OfflineTtsKittenModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int32_t num_speakers = meta_data_.num_speakers;
@@ -223,7 +223,7 @@ class OfflineTtsKittenModel::Impl {
   OfflineTtsKittenModelMetaData meta_data_;
   std::vector<int32_t> style_dim_;
 
-  // (num_speakers, style_dim_[0], style_dim_[2])
+  // (num_speakers, style_dim_[1])
   std::vector<float> styles_;
 };
 
