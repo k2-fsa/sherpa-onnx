@@ -21,18 +21,38 @@ public class LibraryUtils {
   public static final String WIN_X64 = "win_x64";
   public static final String WIN_X86 = "win_x86";
 
+  // System property to override native library path
+  private static final String NATIVE_PATH_PROP = "sherpa_onnx.native.path";
+
   public static void load() {
+    String libFileName = System.mapLibraryName(Core.NATIVE_LIBRARY_NAME);
+
+    // 1. Try loading from external directory if provided
+    String nativePath = System.getProperty(NATIVE_PATH_PROP);
+    if (nativePath != null) {
+      File nativeDir = new File(nativePath);
+      File libInDir = new File(nativeDir, libFileName);
+      if (nativeDir.isDirectory() && libInDir.exists()) {
+        System.out.println("Loading native lib from external directory: " + libInDir.getAbsolutePath());
+        System.load(libInDir.getAbsolutePath());
+        return;
+      }
+    }
+
+    // 2. Fallback to extracting and loading from the JAR
+    File libFile = init(libFileName);
+    System.out.println("Loading native lib from: " + libFile.getAbsolutePath());
+    System.load(libFile.getAbsolutePath());
+  }
+
+  private static File init(String libFileName) {
     String osName = System.getProperty("os.name").toLowerCase();
     String osArch = System.getProperty("os.arch").toLowerCase();
     String userHome = System.getProperty("user.home");
     System.out.printf("Detected OS=%s, ARCH=%s, HOME=%s%n", osName, osArch, userHome);
 
     String archName;
-    String libFileName;
-
-    // --- determine library name + subdirectory
     if (osName.contains("win")) {
-      libFileName = Core.WIN_NATIVE_LIBRARY_NAME;
       if (osArch.contains("aarch64") || osArch.contains("arm")) {
         archName = WIN_ARM64;
       } else if (osArch.contains("64")) {
@@ -42,7 +62,6 @@ public class LibraryUtils {
       }
 
     } else if (osName.contains("mac")) {
-      libFileName = Core.MACOS_NATIVE_LIBRARY_NAME;
       if (osArch.contains("aarch64") || osArch.contains("arm")) {
         archName = DARWIN_ARM64;
       } else {
@@ -50,7 +69,6 @@ public class LibraryUtils {
       }
 
     } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix") || osName.contains("linux")) {
-      libFileName = Core.UNIX_NATIVE_LIBRARY_NAME;
       if (osArch.contains("aarch64") || osArch.contains("arm")) {
         archName = LINUX_ARM64;
       } else if (osArch.contains("64")) {
@@ -63,7 +81,7 @@ public class LibraryUtils {
       throw new UnsupportedOperationException("Unsupported OS: " + osName);
     }
 
-    // --- prepare destination directory under ~/lib/<archName>/
+    // Prepare destination directory under ~/lib/<archName>/
     String dstDir = userHome + File.separator + "lib" + File.separator + archName;
     File libFile = new File(dstDir, libFileName);
     File parentDir = libFile.getParentFile();
@@ -71,19 +89,16 @@ public class LibraryUtils {
       throw new RuntimeException("Unable to create directory: " + parentDir);
     }
 
-    // --- extract the native library
-    extractResource("/lib/" + archName + "/" + libFileName, libFile);
-
-    // --- finally load the main library
-    System.out.println("Loading native lib from: " + libFile.getAbsolutePath());
-    System.load(libFile.getAbsolutePath());
+    // Extract the native library from JAR
+    extractResource("/native/" + archName + "/" + libFileName, libFile);
+    return libFile;
   }
 
   /**
    * Copies a resource file from the jar to the specified destination.
    *
    * @param resourcePath The resource path inside the jar, e.g.:
-   *                     /lib/win_x64/onnxruntime.dll
+   *                     /native/linux_x64/libonnxruntime.so
    * @param destination  The destination file on disk
    */
   private static void extractResource(String resourcePath, File destination) {
