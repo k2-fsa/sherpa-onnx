@@ -10,18 +10,6 @@ import java.util.Locale;
 import com.k2fsa.sherpa.onnx.core.Core;
 
 public class LibraryUtils {
-  // -- supported platform identifiers
-  public static final String DARWIN_ARM64 = "darwin_arm64";
-  public static final String DARWIN_X64 = "darwin_x64";
-
-  public static final String LINUX_ARM64 = "linux_arm64";
-  public static final String LINUX_X64 = "linux_x64";
-  public static final String LINUX_X86 = "linux_x86";
-
-  public static final String WIN_ARM64 = "win_arm64";
-  public static final String WIN_X64 = "win_x64";
-  public static final String WIN_X86 = "win_x86";
-
   // System property to override native library path
   private static final String NATIVE_PATH_PROP = "sherpa_onnx.native.path";
 
