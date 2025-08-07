@@ -59,7 +59,7 @@ class OfflineTtsFrontend {
 void InitEspeak(const std::string &data_dir);
 
 // implementation in ./piper-phonemize-lexicon.cc
-std::vector<TokenIDs> ConvertTextToTokenIdsKokoro(
+std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
     const std::unordered_map<char32_t, int32_t> &token2id,
     int32_t max_token_len, const std::string &text,
     const std::string &voice = "");
