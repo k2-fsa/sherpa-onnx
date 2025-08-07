@@ -9,6 +9,49 @@ git status
 ls -lh
 ls -lh node_modules
 
+# online asr
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+node ./test-online-paraformer.js
+rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+rm -f itn*
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+
+node ./test-online-transducer-itn.js
+
+node ./test-online-transducer.js
+
+rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+node ./test-online-zipformer2-ctc.js
+rm -rf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+node ./test-online-zipformer2-ctc-hlg.js
+rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
+
+echo "----------keyword spotting----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+
+node ./test-keyword-spotter-transducer.js
+rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+
 # asr with offline nemo canary
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
 tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
@@ -145,15 +188,6 @@ rm Obama.wav
 rm silero_vad.onnx
 rm -rf sherpa-onnx-whisper-tiny.en
 
-echo "----------keyword spotting----------"
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
-tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
-rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
-
-node ./test-keyword-spotter-transducer.js
-rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
-
 # offline asr
 #
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
@@ -218,37 +252,3 @@ rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
 
 node ./test-offline-moonshine.js
 rm -rf sherpa-onnx-moonshine-*
-
-# online asr
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-node ./test-online-paraformer.js
-rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-
-rm -f itn*
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
-
-node ./test-online-transducer-itn.js
-
-node ./test-online-transducer.js
-
-rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-
-node ./test-online-zipformer2-ctc.js
-rm -rf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-node ./test-online-zipformer2-ctc-hlg.js
-rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18

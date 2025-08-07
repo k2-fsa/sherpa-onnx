@@ -73,9 +73,12 @@ function initModelConfig(config, Module) {
   const transducer =
       initSherpaOnnxOnlineTransducerModelConfig(config.transducer, Module);
   const paraformer_len = 2 * 4
-  const ctc_len = 1 * 4
+  const zipfomer2_ctc_len = 1 * 4
+  const nemo_ctc_len = 1 * 4
 
-  const len = transducer.len + paraformer_len + ctc_len + 9 * 4;
+  const len = transducer.len + paraformer_len + zipfomer2_ctc_len + 9 * 4 +
+      nemo_ctc_len;
+
   const ptr = Module._malloc(len);
   Module.HEAPU8.fill(0, ptr, ptr + len);
 
