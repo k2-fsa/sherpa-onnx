@@ -260,7 +260,7 @@ class KokoroMultiLangLexicon::Impl {
 
   std::vector<std::vector<int32_t>> ConvertTextToTokenIDsWithEspeak(
       const std::string &text, const std::string &voice) const {
-    auto temp = ConvertTextToTokenIdsKokoro(
+    auto temp = ConvertTextToTokenIdsKokoroOrKitten(
         phoneme2id_, meta_data_.max_token_len, text, voice);
     std::vector<std::vector<int32_t>> ans;
     ans.reserve(temp.size());

@@ -67,10 +67,7 @@ class OfflineTtsKittenModel::Impl {
     }
 
     int32_t num_speakers = meta_data_.num_speakers;
-    int32_t dim0 = style_dim_[0];
     int32_t dim1 = style_dim_[1];
-
-    sid = sid < dim0 ? sid : 0;
 
     /*const*/ float *p = styles_.data() + sid * dim1;
 

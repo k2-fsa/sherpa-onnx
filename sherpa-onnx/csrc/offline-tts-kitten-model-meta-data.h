@@ -18,6 +18,8 @@ struct OfflineTtsKittenModelMetaData {
   int32_t version = 1;
   int32_t has_espeak = 1;
 
+  int32_t max_token_len = 256;
+
   std::string voice;
 };
 
