@@ -16,10 +16,12 @@ extern "C" {
 static_assert(sizeof(SherpaOnnxOnlineTransducerModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineParaformerModelConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) == 1 * 4, "");
+static_assert(sizeof(SherpaOnnxOnlineNemoCtcModelConfig) == 1 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                   sizeof(SherpaOnnxOnlineTransducerModelConfig) +
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
-                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4,
+                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4 +
+                      sizeof(SherpaOnnxOnlineNemoCtcModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
@@ -36,6 +38,7 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   auto transducer_model_config = &model_config->transducer;
   auto paraformer_model_config = &model_config->paraformer;
   auto ctc_model_config = &model_config->zipformer2_ctc;
+  auto nemo_ctc = &model_config->nemo_ctc;
 
   fprintf(stdout, "----------online transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer_model_config->encoder);
@@ -46,8 +49,12 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   fprintf(stdout, "encoder: %s\n", paraformer_model_config->encoder);
   fprintf(stdout, "decoder: %s\n", paraformer_model_config->decoder);
 
-  fprintf(stdout, "----------online ctc model config----------\n");
+  fprintf(stdout, "----------online zipformer2 ctc model config----------\n");
   fprintf(stdout, "model: %s\n", ctc_model_config->model);
+
+  fprintf(stdout, "----------online nemo ctc model config----------\n");
+  fprintf(stdout, "model: %s\n", nemo_ctc->model);
+
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);
   fprintf(stdout, "provider: %s\n", model_config->provider);

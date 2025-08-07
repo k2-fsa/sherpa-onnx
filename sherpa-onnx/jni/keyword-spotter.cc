@@ -9,6 +9,9 @@
 
 namespace sherpa_onnx {
 
+OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
+                                       jobject model_config);
+
 static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
   KeywordSpotterConfig ans;
 
@@ -57,54 +60,7 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
                         "Lcom/k2fsa/sherpa/onnx/OnlineModelConfig;");
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
-
-  // transducer
-  fid = env->GetFieldID(model_config_cls, "transducer",
-                        "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
-  jobject transducer_config = env->GetObjectField(model_config, fid);
-  jclass transducer_config_cls = env->GetObjectClass(transducer_config);
-
-  fid = env->GetFieldID(transducer_config_cls, "encoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.encoder = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(transducer_config_cls, "decoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.decoder = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(transducer_config_cls, "joiner", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.joiner = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model_config.num_threads = env->GetIntField(model_config, fid);
-
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model_config.debug = env->GetBooleanField(model_config, fid);
-
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.provider_config.provider = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.model_type = p;
-  env->ReleaseStringUTFChars(s, p);
+  ans.model_config = GetOnlineModelConfig(env, model_config_cls, model_config);
 
   return ans;
 }

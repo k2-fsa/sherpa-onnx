@@ -68,6 +68,14 @@ func sherpaOnnxOnlineZipformer2CtcModelConfig(
   )
 }
 
+func sherpaOnnxOnlineNemoCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOnlineNemoCtcModelConfig {
+  return SherpaOnnxOnlineNemoCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 /// Return an instance of SherpaOnnxOnlineModelConfig.
 ///
 /// Please refer to
@@ -92,7 +100,8 @@ func sherpaOnnxOnlineModelConfig(
   modelingUnit: String = "cjkchar",
   bpeVocab: String = "",
   tokensBuf: String = "",
-  tokensBufSize: Int = 0
+  tokensBufSize: Int = 0,
+  nemoCtc: SherpaOnnxOnlineNemoCtcModelConfig = sherpaOnnxOnlineNemoCtcModelConfig()
 ) -> SherpaOnnxOnlineModelConfig {
   return SherpaOnnxOnlineModelConfig(
     transducer: transducer,
@@ -106,7 +115,8 @@ func sherpaOnnxOnlineModelConfig(
     modeling_unit: toCPointer(modelingUnit),
     bpe_vocab: toCPointer(bpeVocab),
     tokens_buf: toCPointer(tokensBuf),
-    tokens_buf_size: Int32(tokensBufSize)
+    tokens_buf_size: Int32(tokensBufSize),
+    nemo_ctc: nemoCtc
   )
 }
 

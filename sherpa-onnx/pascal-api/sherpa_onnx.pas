@@ -165,6 +165,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOnlineNemoCtcModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOnlineModelConfig = record
     Transducer: TSherpaOnnxOnlineTransducerModelConfig;
     Paraformer: TSherpaOnnxOnlineParaformerModelConfig;
@@ -178,6 +183,7 @@ type
     BpeVocab: AnsiString;
     TokensBuf: AnsiString;
     TokensBufSize: Integer;
+    NemoCtc: TSherpaOnnxOnlineNemoCtcModelConfig;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineModelConfig);
   end;
@@ -691,6 +697,10 @@ type
     Model: PAnsiChar;
   end;
 
+  SherpaOnnxOnlineNemoCtcModelConfig = record
+    Model: PAnsiChar;
+  end;
+
   SherpaOnnxOnlineModelConfig= record
     Transducer: SherpaOnnxOnlineTransducerModelConfig;
     Paraformer: SherpaOnnxOnlineParaformerModelConfig;
@@ -704,6 +714,7 @@ type
     BpeVocab: PAnsiChar;
     TokensBuf: PAnsiChar;
     TokensBufSize: cint32;
+    NemoCtc: SherpaOnnxOnlineNemoCtcModelConfig;
   end;
   SherpaOnnxFeatureConfig = record
     SampleRate: cint32;
@@ -1311,6 +1322,12 @@ begin
   [Self.Model]);
 end;
 
+function TSherpaOnnxOnlineNemoCtcModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOnlineNemoCtcModelConfig(Model := %s)',
+  [Self.Model]);
+end;
+
 function TSherpaOnnxOnlineModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOnlineModelConfig(Transducer := %s, ' +
@@ -1322,12 +1339,13 @@ begin
     'Debug := %s, ' +
     'ModelType := %s, ' +
     'ModelingUnit := %s, ' +
-    'BpeVocab := %s)'
-    ,
+    'BpeVocab := %s, ' +
+    'NemoCtc := %s',
   [Self.Transducer.ToString, Self.Paraformer.ToString,
    Self.Zipformer2Ctc.ToString, Self.Tokens,
    Self.NumThreads, Self.Provider, Self.Debug.ToString,
-   Self.ModelType, Self.ModelingUnit, Self.BpeVocab
+   Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
+   Self.NemoCtc.ToString
   ]);
 end;
 
@@ -1426,6 +1444,7 @@ begin
   C.ModelConfig.Paraformer.Decoder := PAnsiChar(Config.ModelConfig.Paraformer.Decoder);
 
   C.ModelConfig.Zipformer2Ctc.Model := PAnsiChar(Config.ModelConfig.Zipformer2Ctc.Model);
+  C.ModelConfig.NemoCtc.Model := PAnsiChar(Config.ModelConfig.NemoCtc.Model);
 
   C.ModelConfig.Tokens := PAnsiChar(Config.ModelConfig.Tokens);
   C.ModelConfig.NumThreads := Config.ModelConfig.NumThreads;

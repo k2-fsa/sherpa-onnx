@@ -121,6 +121,9 @@ class KeywordSpotter {
     c.ref.model.zipformer2Ctc.model =
         config.model.zipformer2Ctc.model.toNativeUtf8();
 
+    // nemoCtc
+    c.ref.model.nemoCtc.model = config.model.nemoCtc.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -146,6 +149,7 @@ class KeywordSpotter {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.nemoCtc.model);
     calloc.free(c.ref.model.zipformer2Ctc.model);
     calloc.free(c.ref.model.paraformer.encoder);
     calloc.free(c.ref.model.paraformer.decoder);
