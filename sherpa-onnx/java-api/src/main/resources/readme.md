@@ -18,7 +18,7 @@ please downlaod file and put in folder
 ```
 .
 ├── .gitignore
-├── libs
+├── native
 │   ├── darwin_arm64
 │   │   ├── libsherpa-onnx-jni.dylib
 │   ├── darwin_x64
