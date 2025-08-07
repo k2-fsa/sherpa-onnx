@@ -277,7 +277,6 @@ static std::vector<int64_t> CoquiPhonemesToIds(
 void InitEspeak(const std::string &data_dir) {
   static std::once_flag init_flag;
   std::call_once(init_flag, [data_dir]() {
-
 #if __ANDROID_API__ >= 9 || defined(__OHOS__)
     if (data_dir[0] != '/') {
       SHERPA_ONNX_LOGE(
