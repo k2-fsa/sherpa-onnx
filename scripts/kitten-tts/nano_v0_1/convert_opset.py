@@ -23,7 +23,7 @@ def main():
             opset.version = 4  # change from 5 to 4
 
     # Save the modified model
-    onnx.save(model, "kitten_tts_nano_v0_1_patched.onnx")
+    onnx.save(model, "model.fp16.onnx")
 
 
 if __name__ == "__main__":

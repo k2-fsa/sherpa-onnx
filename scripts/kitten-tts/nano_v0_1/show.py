@@ -38,7 +38,7 @@ def show(filename):
 
 
 def main():
-    show("./kitten_tts_nano_v0_1_patched.onnx")
+    show("./model.fp16.onnx")
 
 
 if __name__ == "__main__":
