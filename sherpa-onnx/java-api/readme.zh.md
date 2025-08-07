@@ -29,9 +29,10 @@
 
 ### 3.1 安装 ONNX Runtime
 
-#### 1. Windows 10
+#### 1. Windows 11
 
-Windows 10 系统自带 ONNX Runtime，无需额外安装。
+Starting from Windows 10 v1809 and all versions of Windows 11, the system comes with built-in ONNX Runtime as part of Windows ML (WinRT API), exposed through Windows.AI.MachineLearning.dll. You can directly use WinML to load and run ONNX models without additional downloads or installations.
+(run-onnx-models)[https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/run-onnx-models]
 
 #### 2. Linux
 

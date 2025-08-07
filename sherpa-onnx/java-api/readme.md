@@ -32,7 +32,8 @@ In your `pom.xml`, add:
 
 #### Windows 10
 
-Windows 10 includes ONNX Runtime by default—no extra installation is required.
+Starting from Windows 10 v1809 and all versions of Windows 11, the system comes with built-in ONNX Runtime as part of Windows ML (WinRT API), exposed through Windows.AI.MachineLearning.dll. You can directly use WinML to load and run ONNX models without additional downloads or installations.
+(run-onnx-models)[https://learn.microsoft.com/en-us/windows/ai/new-windows-ml/run-onnx-models]
 
 #### Linux
 
