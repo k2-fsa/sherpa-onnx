@@ -1345,7 +1345,7 @@ begin
    Self.Zipformer2Ctc.ToString, Self.Tokens,
    Self.NumThreads, Self.Provider, Self.Debug.ToString,
    Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
-   Self.NemoCtc
+   Self.NemoCtc.ToString
   ]);
 end;
 
