@@ -40,7 +40,7 @@ public class NonStreamingTtsCoquiDe {
     String waveFilename = "tts-coqui-de.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
-    System.out.printf("-- audio duration: %.3f seconds\n", timeElapsedSeconds);
+    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
     System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
     System.out.printf("-- text: %s\n", text);
     System.out.printf("-- Saved to %s\n", waveFilename);
