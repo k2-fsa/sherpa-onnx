@@ -5,6 +5,7 @@ fun main() {
   testMatcha()
   testKokoroEn()
   testKokoroZhEn()
+  testKittenEn()
 }
 
 fun testKokoroZhEn() {
@@ -94,6 +95,27 @@ fun testVits() {
   audio.save(filename="test-en.wav")
   tts.release()
   println("Saved to test-en.wav")
+}
+
+fun testKittenEn() {
+  // see https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+  var config = OfflineTtsConfig(
+    model=OfflineTtsModelConfig(
+      kitten=OfflineTtsKittenModelConfig(
+        model="./kitten-nano-en-v0_1-fp16/model.fp16.onnx",
+        voices="./kitten-nano-en-v0_1-fp16/voices.bin",
+        tokens="./kitten-nano-en-v0_1-fp16/tokens.txt",
+        dataDir="./kitten-nano-en-v0_1-fp16/espeak-ng-data",
+      ),
+      numThreads=2,
+      debug=true,
+    ),
+  )
+  val tts = OfflineTts(config=config)
+  val audio = tts.generateWithCallback(text="How are you doing today?", sid=7, callback=::callback)
+  audio.save(filename="test-kitten-en.wav")
+  tts.release()
+  println("Saved to test-kitten-en.wav")
 }
 
 /*

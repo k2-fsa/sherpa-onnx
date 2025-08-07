@@ -6,6 +6,7 @@ public class OfflineTtsModelConfig {
     private final OfflineTtsVitsModelConfig vits;
     private final OfflineTtsMatchaModelConfig matcha;
     private final OfflineTtsKokoroModelConfig kokoro;
+    private final OfflineTtsKittenModelConfig kitten;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
@@ -14,6 +15,7 @@ public class OfflineTtsModelConfig {
         this.vits = builder.vits;
         this.matcha = builder.matcha;
         this.kokoro = builder.kokoro;
+        this.kitten = builder.kitten;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -35,10 +37,15 @@ public class OfflineTtsModelConfig {
         return kokoro;
     }
 
+    public OfflineTtsKittenModelConfig getKitten() {
+        return kitten;
+    }
+
     public static class Builder {
         private OfflineTtsVitsModelConfig vits = OfflineTtsVitsModelConfig.builder().build();
         private OfflineTtsMatchaModelConfig matcha = OfflineTtsMatchaModelConfig.builder().build();
         private OfflineTtsKokoroModelConfig kokoro = OfflineTtsKokoroModelConfig.builder().build();
+        private OfflineTtsKittenModelConfig kitten = OfflineTtsKittenModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -59,6 +66,11 @@ public class OfflineTtsModelConfig {
 
         public Builder setKokoro(OfflineTtsKokoroModelConfig kokoro) {
             this.kokoro = kokoro;
+            return this;
+        }
+
+        public Builder setKitten(OfflineTtsKittenModelConfig kitten) {
+            this.kitten = kitten;
             return this;
         }
 
