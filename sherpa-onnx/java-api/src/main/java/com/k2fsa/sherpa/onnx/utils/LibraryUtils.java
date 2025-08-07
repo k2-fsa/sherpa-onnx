@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 
 import com.k2fsa.sherpa.onnx.core.Core;
 
@@ -45,41 +46,41 @@ public class LibraryUtils {
     System.load(libFile.getAbsolutePath());
   }
 
+  /* Computes and initializes OS_ARCH_STR (such as linux-x64) */
+  private static String initOsArch() {
+    String detectedOS = null;
+    String os = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+    if (os.contains("mac") || os.contains("darwin")) {
+      detectedOS = "osx";
+    } else if (os.contains("win")) {
+      detectedOS = "win";
+    } else if (os.contains("nux")) {
+      detectedOS = "linux";
+    } else {
+      throw new IllegalStateException("Unsupported os:" + os);
+    }
+    String detectedArch = null;
+    String arch = System.getProperty("os.arch", "generic").toLowerCase(Locale.ENGLISH);
+    if (arch.startsWith("amd64") || arch.startsWith("x86_64")) {
+      detectedArch = "x64";
+    } else if (arch.startsWith("x86")) {
+      // 32-bit x86 is not supported by the Java API
+      detectedArch = "x86";
+    } else if (arch.startsWith("aarch64")) {
+      detectedArch = "aarch64";
+    } else {
+      throw new IllegalStateException("Unsupported arch:" + arch);
+    }
+    return detectedOS + '-' + detectedArch;
+  }
+
   private static File init(String libFileName) {
     String osName = System.getProperty("os.name").toLowerCase();
     String osArch = System.getProperty("os.arch").toLowerCase();
     String userHome = System.getProperty("user.home");
     System.out.printf("Detected OS=%s, ARCH=%s, HOME=%s%n", osName, osArch, userHome);
 
-    String archName;
-    if (osName.contains("win")) {
-      if (osArch.contains("aarch64") || osArch.contains("arm")) {
-        archName = WIN_ARM64;
-      } else if (osArch.contains("64")) {
-        archName = WIN_X64;
-      } else {
-        archName = WIN_X86;
-      }
-
-    } else if (osName.contains("mac")) {
-      if (osArch.contains("aarch64") || osArch.contains("arm")) {
-        archName = DARWIN_ARM64;
-      } else {
-        archName = DARWIN_X64;
-      }
-
-    } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix") || osName.contains("linux")) {
-      if (osArch.contains("aarch64") || osArch.contains("arm")) {
-        archName = LINUX_ARM64;
-      } else if (osArch.contains("64")) {
-        archName = LINUX_X64;
-      } else {
-        archName = LINUX_X86;
-      }
-
-    } else {
-      throw new UnsupportedOperationException("Unsupported OS: " + osName);
-    }
+    String archName = initOsArch();
 
     // Prepare destination directory under ~/lib/<archName>/
     String dstDir = userHome + File.separator + "lib" + File.separator + archName;
