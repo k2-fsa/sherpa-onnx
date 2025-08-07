@@ -31,7 +31,8 @@ class OfflineFireRedAsrDecoder {
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineFireRedAsrDecoderResult> Decode(
-      Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v) = 0;
+      Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v,
+      int32_t num_feature_frames) = 0;
 };
 
 }  // namespace sherpa_onnx
