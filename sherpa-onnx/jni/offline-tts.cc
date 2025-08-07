@@ -166,6 +166,39 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(kokoro_cls, "lengthScale", "F");
   ans.model.kokoro.length_scale = env->GetFloatField(kokoro, fid);
 
+  // kitten
+  fid = env->GetFieldID(model_config_cls, "kitten",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsKittenModelConfig;");
+  jobject kitten = env->GetObjectField(model, fid);
+  jclass kitten_cls = env->GetObjectClass(kitten);
+
+  fid = env->GetFieldID(kitten_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kitten, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kitten.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kitten_cls, "voices", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kitten, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kitten.voices = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kitten_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kitten, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kitten.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kitten_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kitten, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kitten.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kitten_cls, "lengthScale", "F");
+  ans.model.kitten.length_scale = env->GetFloatField(kitten, fid);
+
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
   ans.model.num_threads = env->GetIntField(model, fid);
 

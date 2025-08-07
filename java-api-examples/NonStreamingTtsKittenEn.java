@@ -1,32 +1,42 @@
-// Copyright 2024 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 
-// This file shows how to use a Coqui-ai VITS German TTS model
+// This file shows how to use a KittenTTS English model
 // to convert text to speech
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingTtsCoquiDe {
+public class NonStreamingTtsKittenEn {
   public static void main(String[] args) {
     // please visit
-    // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+    // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
     // to download model files
-    String model = "./vits-coqui-de-css10/model.onnx";
-    String tokens = "./vits-coqui-de-css10/tokens.txt";
-    String text = "Alles hat ein Ende, nur die Wurst hat zwei.";
+    String model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+    String voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+    String tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+    String dataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+    String text =
+        "Today as always, men fall into two groups: slaves and free men. Whoever does not have"
+            + " two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a"
+            + " businessman, an official, or a scholar.";
 
-    OfflineTtsVitsModelConfig vitsModelConfig =
-        OfflineTtsVitsModelConfig.builder().setModel(model).setTokens(tokens).build();
+    OfflineTtsKittenModelConfig kittenModelConfig =
+        OfflineTtsKittenModelConfig.builder()
+            .setModel(model)
+            .setVoices(voices)
+            .setTokens(tokens)
+            .setDataDir(dataDir)
+            .build();
 
     OfflineTtsModelConfig modelConfig =
         OfflineTtsModelConfig.builder()
-            .setVits(vitsModelConfig)
-            .setNumThreads(1)
+            .setKitten(kittenModelConfig)
+            .setNumThreads(2)
             .setDebug(true)
             .build();
 
     OfflineTtsConfig config = OfflineTtsConfig.builder().setModel(modelConfig).build();
     OfflineTts tts = new OfflineTts(config);
 
-    int sid = 0;
+    int sid = 7;
     float speed = 1.0f;
     long start = System.currentTimeMillis();
     GeneratedAudio audio = tts.generate(text, sid, speed);
@@ -37,7 +47,7 @@ public class NonStreamingTtsCoquiDe {
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
     float real_time_factor = timeElapsedSeconds / audioDuration;
 
-    String waveFilename = "tts-coqui-de.wav";
+    String waveFilename = "tts-kitten-en.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);

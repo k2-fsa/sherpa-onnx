@@ -309,12 +309,14 @@ jobs:
         run: |
           cd ./java-api-examples
 
+          ./run-non-streaming-tts-kitten-en.sh
           ./run-non-streaming-tts-kokoro-zh-en.sh
           ./run-non-streaming-tts-kokoro-en.sh
           ./run-non-streaming-tts-matcha-zh.sh
           ./run-non-streaming-tts-matcha-en.sh
           ls -lh
 
+          rm -rf kitten-nano-en-*
           rm -rf kokoro-multi-*
           rm -rf kokoro-en-*
 

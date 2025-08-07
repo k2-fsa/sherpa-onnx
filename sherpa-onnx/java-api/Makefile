@@ -43,6 +43,7 @@ java_files += OfflineRecognizerResult.java
 java_files += OfflineStream.java
 java_files += OfflineRecognizer.java
 
+java_files += OfflineTtsKittenModelConfig.java
 java_files += OfflineTtsKokoroModelConfig.java
 java_files += OfflineTtsMatchaModelConfig.java
 java_files += OfflineTtsVitsModelConfig.java
