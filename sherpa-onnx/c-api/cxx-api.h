@@ -394,10 +394,20 @@ struct OfflineTtsKokoroModelConfig {
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
 
+struct OfflineTtsKittenModelConfig {
+  std::string model;
+  std::string voices;
+  std::string tokens;
+  std::string data_dir;
+
+  float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
+  OfflineTtsKittenModelConfig kitten;
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
