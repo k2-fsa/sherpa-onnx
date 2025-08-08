@@ -18,6 +18,8 @@ rm kokoro-multi-lang-v1_0.tar.bz2
  */
 // clang-format on
 
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"

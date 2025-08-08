@@ -18,6 +18,8 @@ rm kokoro-en-v0_19.tar.bz2
  */
 // clang-format on
 
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"

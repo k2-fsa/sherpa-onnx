@@ -20,6 +20,8 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
  */
 // clang-format on
 
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"

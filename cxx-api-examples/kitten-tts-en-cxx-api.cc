@@ -18,6 +18,8 @@ rm kitten-nano-en-v0_1-fp16.tar.bz2
  */
 // clang-format on
 
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
