@@ -1,1 +1,1 @@
-../../../../go-api-examples/non-streaming-tts/main.go
+../../../../go-api-examples/offline-tts-play/main.go
