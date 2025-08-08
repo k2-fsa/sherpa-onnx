@@ -60,8 +60,17 @@ class SpeakerEmbeddingExtractor {
     final providerPtr = config.provider.toNativeUtf8();
     c.ref.provider = providerPtr;
 
+    if (SherpaOnnxBindings.createSpeakerEmbeddingExtractor == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.createSpeakerEmbeddingExtractor?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create speaker embedding extractor. Please check your config");
+    }
 
     calloc.free(providerPtr);
     calloc.free(modelPtr);

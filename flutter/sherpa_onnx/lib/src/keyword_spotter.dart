@@ -140,7 +140,15 @@ class KeywordSpotter {
     c.ref.keywordsBuf = config.keywordsBuf.toNativeUtf8();
     c.ref.keywordsBufSize = config.keywordsBufSize;
 
+    if (SherpaOnnxBindings.createKeywordSpotter == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createKeywordSpotter?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create kws. Please check your config");
+    }
 
     calloc.free(c.ref.keywordsBuf);
     calloc.free(c.ref.keywordsFile);
