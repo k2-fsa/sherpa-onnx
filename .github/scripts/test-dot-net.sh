@@ -8,6 +8,11 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+cd ../kitten-tts
+./run-kitten.sh
+ls -lh
+rm -rf kitten-nano-en-v0_1-fp16
+
 cd ../vad-non-streaming-asr-paraformer
 ./run-ten-vad.sh
 rm -fv *.onnx

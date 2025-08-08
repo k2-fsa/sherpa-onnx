@@ -1,6 +1,6 @@
 ﻿// Copyright (c)  2025  Xiaomi Corporation
 //
-// This file shows how to use a non-streaming Kokoro TTS model
+// This file shows how to use a non-streaming Kitten TTS model
 // for text-to-speech
 // Please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
@@ -17,10 +17,10 @@ class OfflineTtsDemo
   static void Main(string[] args)
   {
     var config = new OfflineTtsConfig();
-    config.Model.Kokoro.Model = "./kokoro-en-v0_19/model.onnx";
-    config.Model.Kokoro.Voices = "./kokoro-en-v0_19/voices.bin";
-    config.Model.Kokoro.Tokens = "./kokoro-en-v0_19/tokens.txt";
-    config.Model.Kokoro.DataDir = "./kokoro-en-v0_19/espeak-ng-data";
+    config.Model.Kitten.Model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+    config.Model.Kitten.Voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+    config.Model.Kitten.Tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+    config.Model.Kitten.DataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;
@@ -168,7 +168,7 @@ class OfflineTtsDemo
     var callback = new OfflineTtsCallbackProgress(MyCallback);
 
     var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
-    var outputFilename = "./generated-kokoro-0.wav";
+    var outputFilename = "./generated-kitten-0.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
