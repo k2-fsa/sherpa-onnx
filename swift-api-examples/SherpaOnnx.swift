@@ -884,13 +884,30 @@ func sherpaOnnxOfflineTtsKokoroModelConfig(
   )
 }
 
+func sherpaOnnxOfflineTtsKittenModelConfig(
+  model: String = "",
+  voices: String = "",
+  tokens: String = "",
+  dataDir: String = "",
+  lengthScale: Float = 1.0
+) -> SherpaOnnxOfflineTtsKittenModelConfig {
+  return SherpaOnnxOfflineTtsKittenModelConfig(
+    model: toCPointer(model),
+    voices: toCPointer(voices),
+    tokens: toCPointer(tokens),
+    data_dir: toCPointer(dataDir),
+    length_scale: lengthScale
+  )
+}
+
 func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
   kokoro: SherpaOnnxOfflineTtsKokoroModelConfig = sherpaOnnxOfflineTtsKokoroModelConfig(),
   numThreads: Int = 1,
   debug: Int = 0,
-  provider: String = "cpu"
+  provider: String = "cpu",
+  kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
     vits: vits,
@@ -898,7 +915,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     debug: Int32(debug),
     provider: toCPointer(provider),
     matcha: matcha,
-    kokoro: kokoro
+    kokoro: kokoro,
+    kitten: kitten
   )
 }
 
