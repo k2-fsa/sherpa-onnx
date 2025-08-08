@@ -9,6 +9,14 @@ git status
 ls -lh
 ls -lh node_modules
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test-offline-tts-kitten-en.js
+ls -lh *.wav
+rm -rf kitten-nano-en-v0_1-fp16
+
 # online asr
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
@@ -85,9 +93,8 @@ rm gtcrn_simple.onnx
 rm inp_16k.wav
 rm enhanced-16k.wav
 
-
 # offline tts
-#
+
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
 tar xf kokoro-multi-lang-v1_0.tar.bz2
 rm kokoro-multi-lang-v1_0.tar.bz2

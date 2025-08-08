@@ -16,10 +16,12 @@ extern "C" {
 static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
-                      sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4,
+                      sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4 +
+                      sizeof(SherpaOnnxOfflineTtsKittenModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
                   sizeof(SherpaOnnxOfflineTtsModelConfig) + 4 * 4,
@@ -30,6 +32,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto vits_model_config = &tts_model_config->vits;
   auto matcha_model_config = &tts_model_config->matcha;
   auto kokoro = &tts_model_config->kokoro;
+  auto kitten = &tts_model_config->kitten;
   fprintf(stdout, "----------vits model config----------\n");
   fprintf(stdout, "model: %s\n", vits_model_config->model);
   fprintf(stdout, "lexicon: %s\n", vits_model_config->lexicon);
@@ -58,6 +61,14 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "length scale: %.3f\n", kokoro->length_scale);
   fprintf(stdout, "dict_dir: %s\n", kokoro->dict_dir);
   fprintf(stdout, "lexicon: %s\n", kokoro->lexicon);
+  fprintf(stdout, "lang: %s\n", kokoro->lang);
+
+  fprintf(stdout, "----------kitten model config----------\n");
+  fprintf(stdout, "model: %s\n", kitten->model);
+  fprintf(stdout, "voices: %s\n", kitten->voices);
+  fprintf(stdout, "tokens: %s\n", kitten->tokens);
+  fprintf(stdout, "data_dir: %s\n", kitten->data_dir);
+  fprintf(stdout, "length scale: %.3f\n", kitten->length_scale);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
