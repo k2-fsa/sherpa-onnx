@@ -89,8 +89,8 @@ void SafeJNI(JNIEnv *env, const char *functionName, Func func) {
 }
 
 // Helper function to validate JNI pointers
-inline bool ValidatePointer(JNIEnv *env, jlong ptr,
-                            const char *functionName, const char *message) {
+inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName,
+                            const char *message) {
   if (ptr == 0) {
     jclass exClass = env->FindClass("java/lang/NullPointerException");
     if (exClass != nullptr) {

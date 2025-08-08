@@ -101,6 +101,7 @@ or details.
   float duration = audio.samples.size() / static_cast<float>(audio.sample_rate);
 
   float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Number of threads: %d\n", config.model.num_threads);
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   fprintf(stderr, "Audio duration: %.3f s\n", duration);
   fprintf(stderr, "Real-time factor (RTF): %.3f/%.3f = %.3f\n", elapsed_seconds,

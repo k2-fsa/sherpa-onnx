@@ -148,7 +148,7 @@ to download pre-trained non-streaming zipformer models.
 
 dotnet run \
   --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx \
   --files ./sherpa-onnx-zipformer-en-2023-04-01/test_wavs/0.wav \
   ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
   ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \

@@ -156,3 +156,4 @@ vcpkg_installed/
 .next/
 app.zip
 secrets.txt
+src.zip

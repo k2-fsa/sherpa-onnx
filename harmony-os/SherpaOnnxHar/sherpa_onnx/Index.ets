@@ -25,6 +25,7 @@ export { Samples,
 } from './src/main/ets/components/NonStreamingAsr';
 
 export { OnlineStream,
+  OnlineNemoCtcModelConfig,
   OnlineTransducerModelConfig,
   OnlineParaformerModelConfig,
   OnlineZipformer2CtcModelConfig,

@@ -100,6 +100,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineZipformer2CtcModelConfig {
   const char *model;
 } SherpaOnnxOnlineZipformer2CtcModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineNemoCtcModelConfig {
+  const char *model;
+} SherpaOnnxOnlineNemoCtcModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   SherpaOnnxOnlineTransducerModelConfig transducer;
   SherpaOnnxOnlineParaformerModelConfig paraformer;
@@ -120,6 +124,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   const char *tokens_buf;
   /// byte size excluding the trailing '\0'
   int32_t tokens_buf_size;
+  SherpaOnnxOnlineNemoCtcModelConfig nemo_ctc;
 } SherpaOnnxOnlineModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.

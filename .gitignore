@@ -142,3 +142,6 @@ README-DEV.txt
 .idea
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 dict
+*.npz
+voices.bin
+kitten-nano-en-v0_1-fp16

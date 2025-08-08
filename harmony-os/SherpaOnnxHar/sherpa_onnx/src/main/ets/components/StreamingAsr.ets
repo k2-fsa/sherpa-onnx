@@ -46,10 +46,15 @@ export class OnlineZipformer2CtcModelConfig {
   public model: string = '';
 }
 
+export class OnlineNemoCtcModelConfig {
+  public model: string = '';
+}
+
 export class OnlineModelConfig {
   public transducer: OnlineTransducerModelConfig = new OnlineTransducerModelConfig();
   public paraformer: OnlineParaformerModelConfig = new OnlineParaformerModelConfig();
   public zipformer2_ctc: OnlineZipformer2CtcModelConfig = new OnlineZipformer2CtcModelConfig();
+  public nemo_ctc: OnlineNemoCtcModelConfig = new OnlineNemoCtcModelConfig();
   public tokens: string = '';
   public numThreads: number = 1;
   public provider: string = 'cpu';
