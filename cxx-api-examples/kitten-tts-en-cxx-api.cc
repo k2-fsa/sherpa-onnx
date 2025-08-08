@@ -1,21 +1,19 @@
-// cxx-api-examples/matcha-tts-en-cxx-api.cc
+// cxx-api-examples/kitten-tts-en-cxx-api.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
 // This file shows how to use sherpa-onnx CXX API
-// for Chinese TTS with MatchaTTS.
+// for English TTS with Kitten.
 //
 // clang-format off
 /*
 Usage
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
-tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
-rm matcha-icefall-en_US-ljspeech.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
-
-./matcha-tts-en-cxx-api
+./kitten-tts-en-cxx-api
 
  */
 // clang-format on
@@ -38,22 +36,17 @@ int32_t main(int32_t argc, char *argv[]) {
   using namespace sherpa_onnx::cxx;  // NOLINT
   OfflineTtsConfig config;
 
-  config.model.matcha.acoustic_model =
-      "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx";
+  config.model.kitten.model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+  config.model.kitten.voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+  config.model.kitten.tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+  config.model.kitten.data_dir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
 
-  config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
-
-  config.model.matcha.tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt";
-
-  config.model.matcha.data_dir =
-      "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
-
-  config.model.num_threads = 1;
+  config.model.num_threads = 2;
 
   // If you don't want to see debug messages, please set it to 0
   config.model.debug = 1;
 
-  std::string filename = "./generated-matcha-en-cxx.wav";
+  std::string filename = "./generated-kitten-en-cxx.wav";
   std::string text =
       "Today as always, men fall into two groups: slaves and free men. Whoever "
       "does not have two-thirds of his day for himself, is a slave, whatever "
