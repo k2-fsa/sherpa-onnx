@@ -53,6 +53,7 @@ object TtsEngine {
     private var dataDir: String? = null
     private var dictDir: String? = null
     private var assets: AssetManager? = null
+    private var isKitten = false
 
     init {
         // The purpose of such a design is to make the CI test easier
@@ -172,6 +173,15 @@ object TtsEngine {
         //
         // This model supports many languages, e.g., English, Chinese, etc.
         // We set lang to eng here.
+
+        // Example 11
+        // kitten-nano-en-v0_1-fp16
+        // modelDir = "kitten-nano-en-v0_1-fp16"
+        // modelName = "model.fp16.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kitten-nano-en-v0_1-fp16/espeak-ng-data"
+        // lang = "eng"
+        // isKitten = true
     }
 
     fun createTts(context: Context) {
@@ -207,7 +217,8 @@ object TtsEngine {
             dataDir = dataDir ?: "",
             dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
-            ruleFars = ruleFars ?: ""
+            ruleFars = ruleFars ?: "",
+            isKitten = isKitten,
         )
 
         speed = PreferenceHelper(context).getSpeed()

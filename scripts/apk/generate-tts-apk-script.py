@@ -44,6 +44,7 @@ class TtsModel:
     lang_iso_639_3: str = ""
     lang_iso_639_3_2: str = ""
     lexicon: str = ""
+    is_kitten: bool = False
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -494,6 +495,22 @@ def get_kokoro_models() -> List[TtsModel]:
     return english_models + multi_lingual_models
 
 
+def get_kitten_models() -> List[TtsModel]:
+    english_models = [
+        TtsModel(
+            model_dir="kitten-nano-en-v0_1-fp16",
+            model_name="model.fp16.onnx",
+            lang="en",
+        )
+    ]
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.voices = "voices.bin"
+        m.is_kitten = True
+
+    return english_models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -507,6 +524,9 @@ def main():
     all_model_list += get_coqui_models()
     all_model_list += get_matcha_models()
     all_model_list += get_kokoro_models()
+    all_model_list += get_kitten_models()
+
+    all_model_list = get_kitten_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
