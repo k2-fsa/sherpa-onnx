@@ -535,6 +535,10 @@ template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
     const OfflineTtsKokoroModelMetaData &kokoro_meta_data);
+
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
+    const OfflineTtsKittenModelMetaData &kokoro_meta_data);
 #endif
 
 #if __OHOS__
@@ -552,6 +556,11 @@ template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     NativeResourceManager *mgr, const std::string &tokens,
     const std::string &data_dir,
     const OfflineTtsKokoroModelMetaData &kokoro_meta_data);
+
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    NativeResourceManager *mgr, const std::string &tokens,
+    const std::string &data_dir,
+    const OfflineTtsKittenModelMetaData &kokoro_meta_data);
 #endif
 
 }  // namespace sherpa_onnx

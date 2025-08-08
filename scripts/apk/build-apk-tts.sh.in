@@ -101,6 +101,10 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s%"lexicon = null"%"lexicon = \"$lexicon\""% ./MainActivity.kt
 {% endif %}
 
+{% if tts_model.is_kitten %}
+  sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 
