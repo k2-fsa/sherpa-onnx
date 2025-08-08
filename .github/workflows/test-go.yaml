@@ -311,6 +311,11 @@ jobs:
           go build
           ls -lh
 
+          echo "Test kitten en"
+          ./run-kitten-en.sh
+          rm -rf kitten-*
+          ls -lh
+
           echo "Test kokoro zh+en"
           ./run-kokoro-zh-en.sh
           rm -rf kokoro-multi-*

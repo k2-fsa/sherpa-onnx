@@ -921,10 +921,19 @@ type OfflineTtsKokoroModelConfig struct {
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
+type OfflineTtsKittenModelConfig struct {
+	Model       string  // Path to the model for kitten
+	Voices      string  // Path to the voices.bin for kitten
+	Tokens      string  // Path to tokens.txt
+	DataDir     string  // Path to espeak-ng-data directory
+	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
+}
+
 type OfflineTtsModelConfig struct {
 	Vits   OfflineTtsVitsModelConfig
 	Matcha OfflineTtsMatchaModelConfig
 	Kokoro OfflineTtsKokoroModelConfig
+	Kitten OfflineTtsKittenModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -1071,6 +1080,21 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	defer C.free(unsafe.Pointer(c.model.kokoro.lang))
 
 	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
+
+	// kitten
+	c.model.kitten.model = C.CString(config.Model.Kitten.Model)
+	defer C.free(unsafe.Pointer(c.model.kitten.model))
+
+	c.model.kitten.voices = C.CString(config.Model.Kitten.Voices)
+	defer C.free(unsafe.Pointer(c.model.kitten.voices))
+
+	c.model.kitten.tokens = C.CString(config.Model.Kitten.Tokens)
+	defer C.free(unsafe.Pointer(c.model.kitten.tokens))
+
+	c.model.kitten.data_dir = C.CString(config.Model.Kitten.DataDir)
+	defer C.free(unsafe.Pointer(c.model.kitten.data_dir))
+
+	c.model.kitten.length_scale = C.float(config.Model.Kitten.LengthScale)
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
