@@ -1207,6 +1207,18 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
   tts_config.model.kokoro.lang = SHERPA_ONNX_OR(config->model.kokoro.lang, "");
 
+  // kitten
+  tts_config.model.kitten.model =
+      SHERPA_ONNX_OR(config->model.kitten.model, "");
+  tts_config.model.kitten.voices =
+      SHERPA_ONNX_OR(config->model.kitten.voices, "");
+  tts_config.model.kitten.tokens =
+      SHERPA_ONNX_OR(config->model.kitten.tokens, "");
+  tts_config.model.kitten.data_dir =
+      SHERPA_ONNX_OR(config->model.kitten.data_dir, "");
+  tts_config.model.kitten.length_scale =
+      SHERPA_ONNX_OR(config->model.kitten.length_scale, 1.0);
+
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
