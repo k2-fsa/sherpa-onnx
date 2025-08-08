@@ -147,6 +147,7 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
+|[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
 |[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
 |[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
 |[./test_tts_non_streaming_matcha_icefall_en.js](./test_tts_non_streaming_matcha_icefall_en.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)|
@@ -456,6 +457,16 @@ node ./test_asr_non_streaming_sense_voice.js
 # To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_sense_voice_microphone.js
+```
+
+### Text-to-speech with KittenTTS models (English TTS)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test_tts_non_streaming_kitten_en.js
 ```
 
 ### Text-to-speech with Kokoro TTS models (Chinese + English TTS)
