@@ -526,8 +526,6 @@ def main():
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
 
-    all_model_list = get_kitten_models()
-
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
 
