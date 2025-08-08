@@ -17,7 +17,7 @@ WaveData readWave(String filename) {
   final Pointer<Utf8> str = filename.toNativeUtf8();
 
   if (SherpaOnnxBindings.readWave == null) {
-    throw Exception("Please initialize sherap-onnx first");
+    throw Exception("Please initialize sherpa-onnx first");
   }
 
   Pointer<SherpaOnnxWave> wave =

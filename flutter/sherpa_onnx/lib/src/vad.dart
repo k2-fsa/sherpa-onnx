@@ -155,7 +155,7 @@ class CircularBuffer {
     assert(capacity > 0, 'capacity is $capacity');
 
     if (SherpaOnnxBindings.createCircularBuffer == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final p =
@@ -254,7 +254,7 @@ class VoiceActivityDetector {
     c.ref.debug = config.debug ? 1 : 0;
 
     if (SherpaOnnxBindings.createVoiceActivityDetector == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.createVoiceActivityDetector

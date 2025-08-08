@@ -151,7 +151,7 @@ class AudioTagging {
     c.ref.labels = labelsPtr;
 
     if (SherpaOnnxBindings.sherpaOnnxCreateAudioTagging == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr =

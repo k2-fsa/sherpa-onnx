@@ -212,7 +212,7 @@ class OfflineSpeakerDiarization {
     c.ref.minDurationOff = config.minDurationOff;
 
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr =

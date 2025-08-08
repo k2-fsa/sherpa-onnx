@@ -392,7 +392,7 @@ class OnlineRecognizer {
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
     if (SherpaOnnxBindings.createOnlineRecognizer == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;

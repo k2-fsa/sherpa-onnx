@@ -227,7 +227,7 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitte: $kitten, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -352,7 +352,7 @@ class OfflineTts {
     c.ref.silenceScale = config.silenceScale;
 
     if (SherpaOnnxBindings.createOfflineTts == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;

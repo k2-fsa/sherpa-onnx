@@ -141,7 +141,7 @@ class KeywordSpotter {
     c.ref.keywordsBufSize = config.keywordsBufSize;
 
     if (SherpaOnnxBindings.createKeywordSpotter == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.createKeywordSpotter?.call(c) ?? nullptr;

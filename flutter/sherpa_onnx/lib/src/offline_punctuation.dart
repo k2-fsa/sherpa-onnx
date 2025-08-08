@@ -80,7 +80,7 @@ class OfflinePunctuation {
     c.ref.model.provider = providerPtr;
 
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr =

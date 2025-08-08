@@ -18,7 +18,7 @@ bool writeWave(
   pList.setAll(0, samples);
 
   if (SherpaOnnxBindings.writeWave == null) {
-    throw Exception("Please initialize sherap-onnx first");
+    throw Exception("Please initialize sherpa-onnx first");
   }
 
   int ok =

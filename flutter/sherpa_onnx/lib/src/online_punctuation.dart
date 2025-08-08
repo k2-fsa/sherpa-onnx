@@ -90,7 +90,7 @@ class OnlinePunctuation {
     c.ref.model.provider = providerPtr;
 
     if (SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation?.call(c) ??

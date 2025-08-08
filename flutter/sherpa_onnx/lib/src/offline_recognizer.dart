@@ -599,7 +599,7 @@ class OfflineRecognizer {
     final c = convertConfig(config);
 
     if (SherpaOnnxBindings.createOfflineRecognizer == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;

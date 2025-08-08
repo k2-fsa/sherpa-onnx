@@ -119,7 +119,7 @@ class OfflineSpeechDenoiser {
     c.ref.model.provider = config.model.provider.toNativeUtf8();
 
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser == null) {
-      throw Exception("Please initialize sherap-onnx first");
+      throw Exception("Please initialize sherpa-onnx first");
     }
 
     final ptr =
