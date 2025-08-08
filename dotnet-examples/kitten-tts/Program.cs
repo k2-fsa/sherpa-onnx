@@ -10,7 +10,7 @@
 using SherpaOnnx;
 using System.Runtime.InteropServices;
 
-class OfflineTtsDemo
+class KittenTtsDemo
 {
   static void Main(string[] args)
   {

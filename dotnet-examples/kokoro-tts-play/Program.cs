@@ -12,7 +12,7 @@ using SherpaOnnx;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-class OfflineTtsDemo
+class KokoroTtsPlayDemo
 {
   static void Main(string[] args)
   {
