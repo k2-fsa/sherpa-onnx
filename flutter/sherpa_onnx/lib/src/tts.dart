@@ -301,7 +301,15 @@ class OfflineTts {
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
     c.ref.silenceScale = config.silenceScale;
 
+    if (SherpaOnnxBindings.createOfflineTts == null) {
+      throw Exception("Please initialize sherap-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline tts. Please check your config");
+    }
 
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);

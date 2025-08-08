@@ -79,9 +79,18 @@ class OfflinePunctuation {
     final providerPtr = config.model.provider.toNativeUtf8();
     c.ref.model.provider = providerPtr;
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation == null) {
+      throw Exception("Please initialize sherap-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation?.call(c) ??
             nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create offline punctuation. Please check your config");
+    }
 
     calloc.free(providerPtr);
     calloc.free(ctTransformerPtr);

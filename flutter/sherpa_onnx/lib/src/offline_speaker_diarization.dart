@@ -211,9 +211,18 @@ class OfflineSpeakerDiarization {
     c.ref.minDurationOn = config.minDurationOn;
     c.ref.minDurationOff = config.minDurationOff;
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization == null) {
+      throw Exception("Please initialize sherap-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization?.call(c) ??
             nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create offline speaker diarization. Please check your config");
+    }
 
     calloc.free(c.ref.embedding.provider);
     calloc.free(c.ref.embedding.model);

@@ -17,6 +17,10 @@ bool writeWave(
   final pList = p.asTypedList(n);
   pList.setAll(0, samples);
 
+  if (SherpaOnnxBindings.writeWave == null) {
+    throw Exception("Please initialize sherap-onnx first");
+  }
+
   int ok =
       SherpaOnnxBindings.writeWave?.call(p, n, sampleRate, filenamePtr) ?? 0;
 

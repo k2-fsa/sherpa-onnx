@@ -150,8 +150,17 @@ class AudioTagging {
     final labelsPtr = config.labels.toNativeUtf8();
     c.ref.labels = labelsPtr;
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateAudioTagging == null) {
+      throw Exception("Please initialize sherap-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateAudioTagging?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create audio tagging. Please check your config");
+    }
 
     calloc.free(labelsPtr);
     calloc.free(providerPtr);
