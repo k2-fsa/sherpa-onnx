@@ -44,6 +44,7 @@ from _sherpa_onnx import (
     OfflineTransducerModelConfig,
     OfflineTts,
     OfflineTtsConfig,
+    OfflineTtsKittenModelConfig,
     OfflineTtsKokoroModelConfig,
     OfflineTtsMatchaModelConfig,
     OfflineTtsModelConfig,

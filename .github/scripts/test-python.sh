@@ -328,6 +328,25 @@ log "Offline TTS test"
 # test waves are saved in ./tts
 mkdir ./tts
 
+log "test kitten tts"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+python3 ./python-api-examples/offline-tts.py \
+  --debug=1 \
+  --kitten-model=./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
+  --kitten-voices=./kitten-nano-en-v0_1-fp16/voices.bin \
+  --kitten-tokens=./kitten-nano-en-v0_1-fp16/tokens.txt \
+  --kitten-data-dir=./kitten-nano-en-v0_1-fp16/espeak-ng-data \
+  --num-threads=2 \
+  --sid=0 \
+  --output-filename="./tts/kitten-0.wav" \
+  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+
+rm -rf kitten-nano-en-v0_1-fp16
+
 log "kokoro-multi-lang-v1_0 test"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
