@@ -90,6 +90,17 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
   end;
 
+  TSherpaOnnxOfflineTtsKittenModelConfig = record
+    Model: AnsiString;
+    Voices: AnsiString;
+    Tokens: AnsiString;
+    DataDir: AnsiString;
+    LengthScale: Single;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKittenModelConfig);
+  end;
+
   TSherpaOnnxOfflineTtsModelConfig = record
     Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: Integer;
@@ -97,6 +108,7 @@ type
     Provider: AnsiString;
     Matcha: TSherpaOnnxOfflineTtsMatchaModelConfig;
     Kokoro: TSherpaOnnxOfflineTtsKokoroModelConfig;
+    Kitten: TSherpaOnnxOfflineTtsKittenModelConfig;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
@@ -913,6 +925,14 @@ type
     Lang: PAnsiChar;
   end;
 
+  SherpaOnnxOfflineTtsKittenModelConfig = record
+    Model: PAnsiChar;
+    Voices: PAnsiChar;
+    Tokens: PAnsiChar;
+    DataDir: PAnsiChar;
+    LengthScale: cfloat;
+  end;
+
   SherpaOnnxOfflineTtsModelConfig = record
     Vits: SherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: cint32;
@@ -920,6 +940,7 @@ type
     Provider: PAnsiChar;
     Matcha: SherpaOnnxOfflineTtsMatchaModelConfig;
     Kokoro: SherpaOnnxOfflineTtsKokoroModelConfig;
+    Kitten: SherpaOnnxOfflineTtsKittenModelConfig;
   end;
 
   SherpaOnnxOfflineTtsConfig = record
@@ -1340,7 +1361,7 @@ begin
     'ModelType := %s, ' +
     'ModelingUnit := %s, ' +
     'BpeVocab := %s, ' +
-    'NemoCtc := %s',
+    'NemoCtc := %s)',
   [Self.Transducer.ToString, Self.Paraformer.ToString,
    Self.Zipformer2Ctc.ToString, Self.Tokens,
    Self.NumThreads, Self.Provider, Self.Debug.ToString,
@@ -2298,6 +2319,23 @@ begin
   Dest.LengthScale := 1.0;
 end;
 
+function TSherpaOnnxOfflineTtsKittenModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsKittenModelConfig(' +
+    'Model := %s, ' +
+    'Voices := %s, ' +
+    'Tokens := %s, ' +
+    'DataDir := %s, ' +
+    'LengthScale := %.2f' +
+    ')',
+    [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale]);
+end;
+
+class operator TSherpaOnnxOfflineTtsKittenModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKittenModelConfig);
+begin
+  Dest.LengthScale := 1.0;
+end;
+
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
@@ -2306,10 +2344,11 @@ begin
     'Debug := %s, ' +
     'Provider := %s, ' +
     'Matcha := %s, ' +
-    'Kokoro := %s' +
+    'Kokoro := %s, ' +
+    'Kitten := %s' +
     ')',
     [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider,
-     Self.Matcha.ToString, Self.Kokoro.ToString
+     Self.Matcha.ToString, Self.Kokoro.ToString, Self.Kitten.ToString
     ]);
 end;
 
@@ -2372,6 +2411,12 @@ begin
   C.Model.Kokoro.DictDir := PAnsiChar(Config.Model.Kokoro.DictDir);
   C.Model.Kokoro.Lexicon := PAnsiChar(Config.Model.Kokoro.Lexicon);
   C.Model.Kokoro.Lang := PAnsiChar(Config.Model.Kokoro.Lang);
+
+  C.Model.Kitten.Model := PAnsiChar(Config.Model.Kitten.Model);
+  C.Model.Kitten.Voices := PAnsiChar(Config.Model.Kitten.Voices);
+  C.Model.Kitten.Tokens := PAnsiChar(Config.Model.Kitten.Tokens);
+  C.Model.Kitten.DataDir := PAnsiChar(Config.Model.Kitten.DataDir);
+  C.Model.Kitten.LengthScale := Config.Model.Kitten.LengthScale;
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
