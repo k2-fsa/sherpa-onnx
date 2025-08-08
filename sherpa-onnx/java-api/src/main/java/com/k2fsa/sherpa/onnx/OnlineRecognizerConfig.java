@@ -3,8 +3,6 @@
 
 package com.k2fsa.sherpa.onnx;
 
-import java.util.Objects;
-
 public class OnlineRecognizerConfig {
     private final FeatureConfig featConfig;
     private final OnlineModelConfig modelConfig;
