@@ -1,6 +1,6 @@
 ﻿// Copyright (c)  2025  Xiaomi Corporation
 //
-// This file shows how to use a non-streaming Kokoro TTS model
+// This file shows how to use a non-streaming Kitten TTS model
 // for text-to-speech
 // Please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
@@ -12,15 +12,15 @@ using SherpaOnnx;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-class KokoroTtsPlayDemo
+class KittenTtsPlayDemo
 {
   static void Main(string[] args)
   {
     var config = new OfflineTtsConfig();
-    config.Model.Kokoro.Model = "./kokoro-en-v0_19/model.onnx";
-    config.Model.Kokoro.Voices = "./kokoro-en-v0_19/voices.bin";
-    config.Model.Kokoro.Tokens = "./kokoro-en-v0_19/tokens.txt";
-    config.Model.Kokoro.DataDir = "./kokoro-en-v0_19/espeak-ng-data";
+    config.Model.Kitten.Model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+    config.Model.Kitten.Voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+    config.Model.Kitten.Tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+    config.Model.Kitten.DataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;
@@ -35,8 +35,9 @@ class KokoroTtsPlayDemo
       "thing in the world was to lose touch with someone.";
 
     // mapping of sid to voice name
-    // 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
-    // 6->am_michael, 7->bf_emma, 8->bf_isabella, 9->bm_george, 10->bm_lewis
+    // 0->expr-voice-2-m, 1->expr-voice-2-f, 2->expr-voice-3-m
+    // 3->expr-voice-3-f, 4->expr-voice-4-m, 5->expr-voice-4-f
+    // 6->expr-voice-5-m, 7->expr-voice-5-f
     var sid = 0;
 
 
@@ -168,7 +169,7 @@ class KokoroTtsPlayDemo
     var callback = new OfflineTtsCallbackProgress(MyCallback);
 
     var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
-    var outputFilename = "./generated-kokoro-0.wav";
+    var outputFilename = "./generated-kitten-0.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
