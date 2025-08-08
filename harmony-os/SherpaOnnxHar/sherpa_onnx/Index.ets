@@ -36,7 +36,8 @@ export { OnlineStream,
   OnlineRecognizer,
 } from './src/main/ets/components/StreamingAsr';
 
-export { OfflineTtsKokoroModelConfig,
+export { OfflineTtsKittenModelConfig,
+  OfflineTtsKokoroModelConfig,
   OfflineTtsMatchaModelConfig,
   OfflineTtsVitsModelConfig,
   OfflineTtsModelConfig,
