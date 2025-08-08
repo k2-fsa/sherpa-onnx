@@ -161,7 +161,7 @@ class CircularBuffer {
     final p =
         SherpaOnnxBindings.createCircularBuffer?.call(capacity) ?? nullptr;
 
-    if (ptr == nullptr) {
+    if (p == nullptr) {
       throw Exception(
           "Failed to create circular buffer. Please check your config");
     }
