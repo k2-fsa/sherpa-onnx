@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
-    implementation("com.github.k2-fsa:sherpa-onnx:v1.12.7")
+    implementation("com.github.k2-fsa:sherpa-onnx:v1.12.8")
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)

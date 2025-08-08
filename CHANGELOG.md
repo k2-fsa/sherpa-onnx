@@ -1,3 +1,25 @@
+## 1.12.8
+
+* Expose JNI to compute probability of chunk in VAD (#2433)
+* Add https://huggingface.co/Banafo/Kroko-ASR (#2453)
+* Add APIs for Online NeMo CTC models (#2454)
+* Export https://github.com/KittenML/KittenTTS to sherpa-onnx (#2456)
+* Fix punctuations in kokoro tts. (#2458)
+* Limit number of tokens in fire red asr decoding. (#2459)
+* Add C++ runtime for kitten-tts (#2460)
+* Add Kotlin and Java API for KittenTTS (#2461)
+* Add Android TTS Engine APK for KittenTTS (#2465)
+* Add Python API for KittenTTS. (#2466)
+* Add C API for KittenTTS (#2467)
+* Add CXX API for KittenTTS (#2469)
+* Add JavaScript API (node-addon) for KittenTTS (#2470)
+* Add JavaScript API (WebAssembly) for KittenTTS (#2471)
+* Add Pascal API for KittenTTS (#2474)
+* Add Dart API for KittenTTS (#2475)
+* Add Swift API for KittenTTS (#2476)
+* Add C# API for KittenTTS (#2477)
+* Add Go API for KittenTTS (#2478)
+
 ## 1.12.7
 
 * Support Portuguese and German ASR models from NeMo (#2394)

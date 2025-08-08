@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 set -ex
-old_version="1\.12\.6"
-new_version="1\.12\.7"
+old_version="1\.12\.7"
+new_version="1\.12\.8"
 replace_str="s/$old_version/$new_version/g"
 
 sed -i.bak "$replace_str" ./sherpa-onnx/csrc/version.cc
