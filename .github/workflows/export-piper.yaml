@@ -146,6 +146,20 @@ jobs:
               vits-piper-hi_IN-pratham-medium
               vits-piper-hi_IN-priyamvada-medium
               vits-piper-es_AR-daniela-high
+              vits-piper-en_GB-miro-high
+              vits-piper-en_GB-dii-high
+              vits-piper-pt_PT-miro-high
+              vits-piper-pt_PT-dii-high
+              vits-piper-pt_BR-miro-high
+              vits-piper-pt_BR-dii-high
+              vits-piper-es_ES-miro-high
+              vits-piper-it_IT-miro-high
+              vits-piper-it_IT-dii-high
+              vits-piper-nl_NL-miro-high
+              vits-piper-nl_NL-dii-high
+              vits-piper-de_DE-miro-high
+              vits-piper-fr_FR-miro-high
+              vits-piper-en_US-miro-high
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

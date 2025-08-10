@@ -331,7 +331,7 @@ jobs:
               git lfs track ur_dict yue_dict
 
 
-              cp -a ../$d ./
+              cp -a ../$d/* ./
 
               git add .
 
