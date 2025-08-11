@@ -101,7 +101,7 @@ java_files += OfflineSpeechDenoiser.java
 
 class_files := $(java_files:%.java=%.class)
 
-java_files := $(addprefix src/$(package_dir)/,$(java_files))
+java_files := $(addprefix src/main/java/$(package_dir)/,$(java_files))
 class_files := $(addprefix $(out_dir)/$(package_dir)/,$(class_files))
 
 $(info -- java files $(java_files))
@@ -119,6 +119,6 @@ $(out_jar): $(class_files)
 clean:
 	$(RM) -rfv $(out_dir)
 
-$(class_files): $(out_dir)/$(package_dir)/%.class: src/$(package_dir)/%.java
+$(class_files): $(out_dir)/$(package_dir)/%.class: src/main/java/$(package_dir)/%.java
 	mkdir -p build
 	javac -d $(out_dir) -cp $(out_dir) $<
