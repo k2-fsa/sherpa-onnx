@@ -349,6 +349,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
+  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(const OfflineStream *s) const;
+  
   void SetConfig(const OfflineRecognizerConfig &config) const;
 
  private:
@@ -633,6 +635,8 @@ class SHERPA_ONNX_API VoiceActivityDetector
   void Clear() const;
 
   SpeechSegment Front() const;
+
+  std::shared_ptr<SpeechSegment> FrontPtr() const;
 
   void Reset() const;
 
