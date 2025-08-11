@@ -361,6 +361,35 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
   return ans;
 }
 
+std::shared_ptr<OfflineRecognizerResult> OfflineRecognizer::GetResultPtr(const OfflineStream *s) const
+{
+  auto r = SherpaOnnxGetOfflineStreamResult(s->Get());
+
+  OfflineRecognizerResult* ans = new OfflineRecognizerResult;
+  if (r) {
+    ans->text = r->text;
+
+    if (r->timestamps) {
+      ans->timestamps.resize(r->count);
+      std::copy(r->timestamps, r->timestamps + r->count, ans->timestamps.data());
+    }
+
+    ans->tokens.resize(r->count);
+    for (int32_t i = 0; i != r->count; ++i) {
+      ans->tokens[i] = r->tokens_arr[i];
+    }
+
+    ans->json = r->json;
+    ans->lang = r->lang ? r->lang : "";
+    ans->emotion = r->emotion ? r->emotion : "";
+    ans->event = r->event ? r->event : "";
+  }
+
+  SherpaOnnxDestroyOfflineRecognizerResult(r);
+
+  return std::shared_ptr<OfflineRecognizerResult>(ans);
+}
+
 OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   struct SherpaOnnxOfflineTtsConfig c;
   memset(&c, 0, sizeof(c));
@@ -565,6 +594,7 @@ KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
   return ans;
 }
 
+
 void KeywordSpotter::Reset(const OnlineStream *s) const {
   SherpaOnnxResetKeywordStream(p_, s->Get());
 }
@@ -721,6 +751,18 @@ SpeechSegment VoiceActivityDetector::Front() const {
   SherpaOnnxDestroySpeechSegment(f);
 
   return segment;
+}
+
+std::shared_ptr<SpeechSegment> VoiceActivityDetector::FrontPtr() const
+{
+  auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
+
+  SpeechSegment* segment = new SpeechSegment;
+  segment->start = f->start;
+  segment->samples = std::vector<float>{f->samples, f->samples + f->n};
+
+  SherpaOnnxDestroySpeechSegment(f);
+  return std::shared_ptr<SpeechSegment>(segment);
 }
 
 void VoiceActivityDetector::Reset() const {
