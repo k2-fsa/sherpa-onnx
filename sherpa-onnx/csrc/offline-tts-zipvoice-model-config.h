@@ -16,6 +16,13 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string flow_matching_model;
   std::string vocoder;
 
+  // If data_dir is given, lexicon is ignored
+  // data_dir is for piper-phonemize, which uses espeak-ng
+  std::string data_dir;
+
+  // Used for converting Chinese characters to pinyin
+  std::string pinyin_dict;
+
   int num_step = 16;
   float feat_scale = 0.1;
   float speed = 1.0;
@@ -26,14 +33,11 @@ struct OfflineTtsZipvoiceModelConfig {
   OfflineTtsZipvoiceModelConfig() = default;
 
   OfflineTtsZipvoiceModelConfig(const std::string &text_model,
-                              const std::string &flow_matching_model,
-                              const std::string &vocoder,
-                              int num_step = 16,
-                              float feat_scale = 0.1,
-                              float speed = 1.0,
-                              float t_shift = 0.5,
-                              float target_rms = 0.1,
-                              float guidance_scale = 1.0)
+                                const std::string &flow_matching_model,
+                                const std::string &vocoder, int num_step = 16,
+                                float feat_scale = 0.1, float speed = 1.0,
+                                float t_shift = 0.5, float target_rms = 0.1,
+                                float guidance_scale = 1.0)
       : text_model(text_model),
         flow_matching_model(flow_matching_model),
         vocoder(vocoder),

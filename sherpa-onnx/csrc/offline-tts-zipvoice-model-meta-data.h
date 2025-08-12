@@ -21,6 +21,8 @@ struct OfflineTtsZipvoiceModelMetaData {
   int32_t hop_length = 256;
   int32_t window_length = 1024;
   int32_t num_mels = 100;
+  bool use_espeak = false;
+  bool use_pinyin = false;
 };
 
 }  // namespace sherpa_onnx

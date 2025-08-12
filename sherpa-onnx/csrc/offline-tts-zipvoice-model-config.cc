@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-tts-zipvoice-model-config.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
 
@@ -22,14 +22,17 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");
   po->Register("zipvoice-speed", &speed,
-               "Speech speed for ZipVoice (default: 1.0, larger=faster, smaller=slower)");
+               "Speech speed for ZipVoice (default: 1.0, larger=faster, "
+               "smaller=slower)");
   po->Register("zipvoice-t-shift", &t_shift,
                "Shift t to smaller ones if t_shift < 1.0 (default: 0.5)");
-  po->Register("zipvoice-target-rms", &target_rms,
-               "Target speech normalization rms value for ZipVoice (default: 0.1)");
-  po->Register("zipvoice-guidance-scale", &guidance_scale,
-               "The scale of classifier-free guidance during inference for ZipVoice "
-               "(default: 1.0)");
+  po->Register(
+      "zipvoice-target-rms", &target_rms,
+      "Target speech normalization rms value for ZipVoice (default: 0.1)");
+  po->Register(
+      "zipvoice-guidance-scale", &guidance_scale,
+      "The scale of classifier-free guidance during inference for ZipVoice "
+      "(default: 1.0)");
 }
 
 bool OfflineTtsZipvoiceModelConfig::Validate() const {
@@ -38,7 +41,8 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
   if (!FileExists(text_model)) {
-    SHERPA_ONNX_LOGE("--zipvoice-text-model: '%s' does not exist", text_model.c_str());
+    SHERPA_ONNX_LOGE("--zipvoice-text-model: '%s' does not exist",
+                     text_model.c_str());
     return false;
   }
 
@@ -47,10 +51,8 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
   if (!FileExists(flow_matching_model)) {
-    SHERPA_ONNX_LOGE(
-        "--zipvoice-flow-matching-model: '%s' does not exist",
-        flow_matching_model.c_str()
-    );
+    SHERPA_ONNX_LOGE("--zipvoice-flow-matching-model: '%s' does not exist",
+                     flow_matching_model.c_str());
     return false;
   }
 
@@ -59,17 +61,20 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
   if (!FileExists(vocoder)) {
-    SHERPA_ONNX_LOGE("--zipvoice-vocoder: '%s' does not exist", vocoder.c_str());
+    SHERPA_ONNX_LOGE("--zipvoice-vocoder: '%s' does not exist",
+                     vocoder.c_str());
     return false;
   }
 
   if (num_step <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-num-step must be positive. Given: %d", num_step);
+    SHERPA_ONNX_LOGE("--zipvoice-num-step must be positive. Given: %d",
+                     num_step);
     return false;
   }
 
   if (feat_scale <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f", feat_scale);
+    SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f",
+                     feat_scale);
     return false;
   }
 
@@ -79,19 +84,20 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
   }
 
   if (t_shift < 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-t-shift must be non-negative. Given: %f", t_shift);
+    SHERPA_ONNX_LOGE("--zipvoice-t-shift must be non-negative. Given: %f",
+                     t_shift);
     return false;
   }
 
   if (target_rms <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-target-rms must be positive. Given: %f", target_rms);
+    SHERPA_ONNX_LOGE("--zipvoice-target-rms must be positive. Given: %f",
+                     target_rms);
     return false;
   }
 
   if (guidance_scale <= 0) {
-    SHERPA_ONNX_LOGE(
-        "--zipvoice-guidance-scale must be positive. Given: %f", guidance_scale
-    );
+    SHERPA_ONNX_LOGE("--zipvoice-guidance-scale must be positive. Given: %f",
+                     guidance_scale);
     return false;
   }
 

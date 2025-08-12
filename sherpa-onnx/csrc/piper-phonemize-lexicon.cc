@@ -34,14 +34,7 @@ namespace sherpa_onnx {
 
 void CallPhonemizeEspeak(const std::string &text,
                          piper::eSpeakPhonemeConfig &config,  // NOLINT
-                         std::vector<std::vector<piper::Phoneme>> *phonemes) {
-  static std::mutex espeak_mutex;
-
-  std::lock_guard<std::mutex> lock(espeak_mutex);
-
-  // keep multi threads from calling into piper::phonemize_eSpeak
-  piper::phonemize_eSpeak(text, config, *phonemes);
-}
+                         std::vector<std::vector<piper::Phoneme>> *phonemes);
 
 static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
   std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;

@@ -197,6 +197,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
+    offline-tts-zipvoice-frontend.cc
+    offline-tts-zipvoice-model-config.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
     vocoder.cc
@@ -261,6 +263,7 @@ if(ANDROID_NDK)
 endif()
 
 target_link_libraries(sherpa-onnx-core
+  cppinyin_core
   kaldi-native-fbank-core
   kaldi-decoder-core
   ssentencepiece_core
@@ -636,6 +639,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
       cppjieba-test.cc
+      offline-tts-zipvoice-frontend-test.cc
       piper-phonemize-test.cc
     )
   endif()
