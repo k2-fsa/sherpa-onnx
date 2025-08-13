@@ -55,7 +55,7 @@ OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
                      std::move(offset)};
 
   // assume at most 6 tokens per second
-  int32_t num_possible_tokens = num_feature_frames / 100 * 6;
+  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens =
       std::min<int32_t>(num_possible_tokens, meta_data.max_len / 2);
 
