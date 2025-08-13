@@ -12,6 +12,13 @@
 namespace sherpa_onnx {
 
 void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
+  po->Register("zipvoice-tokens", &tokens,
+               "Path to tokens.txt for ZipVoice models");
+  po->Register("zipvoice-data-dir", &data_dir,
+               "Path to the directory containing dict for espeak-ng.");
+  po->Register("zipvoice-pinyin-dict", &pinyin_dict,
+               "Path to the pinyin dictionary for cppinyin (i.e converting "
+               "Chinese into phones).");
   po->Register("zipvoice-text-model", &text_model,
                "Path to zipvoice text model");
   po->Register("zipvoice-flow-matching-model", &flow_matching_model,
@@ -36,6 +43,15 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineTtsZipvoiceModelConfig::Validate() const {
+  if (tokens.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --zipvoice-tokens");
+    return false;
+  }
+  if (!FileExists(tokens)) {
+    SHERPA_ONNX_LOGE("--zipvoice-tokens: '%s' does not exist", tokens.c_str());
+    return false;
+  }
+
   if (text_model.empty()) {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-text-model");
     return false;
@@ -60,9 +76,33 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     SHERPA_ONNX_LOGE("Please provide --zipvoice-vocoder");
     return false;
   }
+
   if (!FileExists(vocoder)) {
     SHERPA_ONNX_LOGE("--zipvoice-vocoder: '%s' does not exist",
                      vocoder.c_str());
+    return false;
+  }
+
+  if (!data_dir.empty()) {
+    std::vector<std::string> required_files = {
+        "phontab",
+        "phonindex",
+        "phondata",
+        "intonations",
+    };
+    for (const auto &f : required_files) {
+      if (!FileExists(data_dir + "/" + f)) {
+        SHERPA_ONNX_LOGE(
+            "'%s/%s' does not exist. Please check zipvoice-data-dir",
+            data_dir.c_str(), f.c_str());
+        return false;
+      }
+    }
+  }
+
+  if (!pinyin_dict.empty() && !FileExists(pinyin_dict)) {
+    SHERPA_ONNX_LOGE("--zipvoice-pinyin-dict: '%s' does not exist",
+                     pinyin_dict.c_str());
     return false;
   }
 
@@ -108,9 +148,12 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineTtsZipvoiceModelConfig(";
+  os << "tokens=\"" << tokens << "\", ";
   os << "text_model=\"" << text_model << "\", ";
   os << "flow_matching_model=\"" << flow_matching_model << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
+  os << "data_dir=\"" << data_dir << "\", ";
+  os << "pinyin_dict=\"" << pinyin_dict << "\", ";
   os << "num_step=" << num_step << ", ";
   os << "feat_scale=" << feat_scale << ", ";
   os << "speed=" << speed << ", ";

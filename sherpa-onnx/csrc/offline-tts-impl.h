@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 namespace sherpa_onnx {
@@ -25,14 +26,28 @@ class OfflineTtsImpl {
 
   virtual GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
-      GeneratedAudioCallback callback = nullptr) const = 0;
+      GeneratedAudioCallback callback = nullptr) const {
+    SHERPA_ONNX_LOGE("This interface is for Non Zero-shot TTS.");
+    exit(-1);
+  }
+
+  virtual GeneratedAudio Generate(
+      const std::string &text, const std::string &prompt_text,
+      const std::vector<float> &prompt_samples, float speed = 1.0,
+      int32_t num_step = 4, GeneratedAudioCallback callback = nullptr) const {
+    SHERPA_ONNX_LOGE("This interface is for Zero-shot TTS.");
+    exit(-1);
+  }
 
   // Return the sample rate of the generated audio
   virtual int32_t SampleRate() const = 0;
 
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
-  virtual int32_t NumSpeakers() const = 0;
+  virtual int32_t NumSpeakers() const {
+    SHERPA_ONNX_LOGE("This interface is for Non Zero-shot TTS.");
+    exit(-1);
+  }
 
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;

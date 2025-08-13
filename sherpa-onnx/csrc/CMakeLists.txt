@@ -200,6 +200,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
     offline-tts-zipvoice-frontend.cc
+    offline-tts-zipvoice-model.cc
     offline-tts-zipvoice-model-config.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
