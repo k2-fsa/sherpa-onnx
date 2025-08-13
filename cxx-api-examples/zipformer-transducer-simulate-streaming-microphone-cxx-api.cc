@@ -1,8 +1,8 @@
 // cxx-api-examples/zipformer-transducer-simulate-streaming-microphone-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 //
-// This file demonstrates how to use Zipformer transducer with sherpa-onnx's C++ API
-// for streaming speech recognition from a microphone.
+// This file demonstrates how to use Zipformer transducer with sherpa-onnx's C++
+// API for streaming speech recognition from a microphone.
 //
 // clang-format off
 //

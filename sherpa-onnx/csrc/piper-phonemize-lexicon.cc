@@ -240,6 +240,22 @@ static std::vector<int64_t> CoquiPhonemesToIds(
 void InitEspeak(const std::string &data_dir) {
   static std::once_flag init_flag;
   std::call_once(init_flag, [data_dir]() {
+
+#if __ANDROID_API__ >= 9 || defined(__OHOS__)
+    if (data_dir[0] != '/') {
+      SHERPA_ONNX_LOGE(
+          "You need to follow our examples to copy the espeak-ng-data "
+          "directory from the assets folder to an external storage directory.");
+
+      SHERPA_ONNX_LOGE(
+          "Hint: Please see\n"
+          "https://github.com/k2-fsa/sherpa-onnx/blob/master/android/"
+          "SherpaOnnxTtsEngine/app/src/main/java/com/k2fsa/sherpa/onnx/tts/"
+          "engine/TtsEngine.kt#L188\n"
+          "The function copyDataDir()\n");
+    }
+#endif
+
     int32_t result =
         espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, data_dir.c_str(), 0);
     if (result != 22050) {

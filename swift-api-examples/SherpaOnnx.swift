@@ -386,6 +386,22 @@ func sherpaOnnxOfflineWhisperModelConfig(
   )
 }
 
+func sherpaOnnxOfflineCanaryModelConfig(
+  encoder: String = "",
+  decoder: String = "",
+  srcLang: String = "en",
+  tgtLang: String = "en",
+  usePnc: Bool = true
+) -> SherpaOnnxOfflineCanaryModelConfig {
+  return SherpaOnnxOfflineCanaryModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    src_lang: toCPointer(srcLang),
+    tgt_lang: toCPointer(tgtLang),
+    use_pnc: usePnc ? 1 : 0
+  )
+}
+
 func sherpaOnnxOfflineFireRedAsrModelConfig(
   encoder: String = "",
   decoder: String = ""
@@ -459,7 +475,8 @@ func sherpaOnnxOfflineModelConfig(
   fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig(),
   dolphin: SherpaOnnxOfflineDolphinModelConfig = sherpaOnnxOfflineDolphinModelConfig(),
   zipformerCtc: SherpaOnnxOfflineZipformerCtcModelConfig =
-    sherpaOnnxOfflineZipformerCtcModelConfig()
+    sherpaOnnxOfflineZipformerCtcModelConfig(),
+  canary: SherpaOnnxOfflineCanaryModelConfig = sherpaOnnxOfflineCanaryModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -479,7 +496,8 @@ func sherpaOnnxOfflineModelConfig(
     moonshine: moonshine,
     fire_red_asr: fireRedAsr,
     dolphin: dolphin,
-    zipformer_ctc: zipformerCtc
+    zipformer_ctc: zipformerCtc,
+    canary: canary
   )
 }
 
@@ -607,10 +625,14 @@ class SherpaOnnxOfflineRecognizer {
 
     return SherpaOnnxOfflineRecongitionResult(result: result)
   }
+
+  func setConfig(config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>!) {
+    SherpaOnnxOfflineRecognizerSetConfig(recognizer, config)
+  }
 }
 
 func sherpaOnnxSileroVadModelConfig(
-  model: String,
+  model: String = "",
   threshold: Float = 0.5,
   minSilenceDuration: Float = 0.25,
   minSpeechDuration: Float = 0.5,
@@ -627,19 +649,39 @@ func sherpaOnnxSileroVadModelConfig(
   )
 }
 
+func sherpaOnnxTenVadModelConfig(
+  model: String = "",
+  threshold: Float = 0.5,
+  minSilenceDuration: Float = 0.25,
+  minSpeechDuration: Float = 0.5,
+  windowSize: Int = 256,
+  maxSpeechDuration: Float = 5.0
+) -> SherpaOnnxTenVadModelConfig {
+  return SherpaOnnxTenVadModelConfig(
+    model: toCPointer(model),
+    threshold: threshold,
+    min_silence_duration: minSilenceDuration,
+    min_speech_duration: minSpeechDuration,
+    window_size: Int32(windowSize),
+    max_speech_duration: maxSpeechDuration
+  )
+}
+
 func sherpaOnnxVadModelConfig(
-  sileroVad: SherpaOnnxSileroVadModelConfig,
+  sileroVad: SherpaOnnxSileroVadModelConfig = sherpaOnnxSileroVadModelConfig(),
   sampleRate: Int32 = 16000,
   numThreads: Int = 1,
   provider: String = "cpu",
-  debug: Int = 0
+  debug: Int = 0,
+  tenVad: SherpaOnnxTenVadModelConfig = sherpaOnnxTenVadModelConfig()
 ) -> SherpaOnnxVadModelConfig {
   return SherpaOnnxVadModelConfig(
     silero_vad: sileroVad,
     sample_rate: sampleRate,
     num_threads: Int32(numThreads),
     provider: toCPointer(provider),
-    debug: Int32(debug)
+    debug: Int32(debug),
+    ten_vad: tenVad
   )
 }
 

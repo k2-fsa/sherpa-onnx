@@ -14,6 +14,7 @@ namespace SherpaOnnx
             NumThreads = 1;
             Provider = "cpu";
             Debug = 0;
+            TenVad = new TenVadModelConfig();
         }
 
         public SileroVadModelConfig SileroVad;
@@ -26,6 +27,8 @@ namespace SherpaOnnx
         public string Provider;
 
         public int Debug;
+
+        public TenVadModelConfig TenVad;
     }
 }
 

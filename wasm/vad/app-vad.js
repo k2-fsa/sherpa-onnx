@@ -5,7 +5,6 @@
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const clearBtn = document.getElementById('clearBtn');
-const hint = document.getElementById('hint');
 const soundClips = document.getElementById('sound-clips');
 
 let textArea = document.getElementById('results');
@@ -43,18 +42,97 @@ function getDisplayResult() {
 
 
 Module = {};
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.locateFile = function(path, scriptDirectory = '') {
+  console.log(`path: ${path}, scriptDirectory: ${scriptDirectory}`);
+  return scriptDirectory + path;
+};
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.setStatus = function(status) {
+  console.log(`status ${status}`);
+  const statusElement = document.getElementById('status');
+  if (status == 'Running...') {
+    status = 'Model downloaded. Initializing vad...'
+  }
+  statusElement.textContent = status;
+  if (status === '') {
+    statusElement.style.display = 'none';
+    // statusElement.parentNode.removeChild(statusElement);
+
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.remove('loading');
+    });
+  } else {
+    statusElement.style.display = 'block';
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.add('loading');
+    });
+  }
+};
+
 Module.onRuntimeInitialized = function() {
   console.log('inited!');
-  hint.innerText = 'Model loaded! Please click start';
 
   startBtn.disabled = false;
 
-  vad = createVad(Module);
+  initVad();
   console.log('vad is created!', vad);
 
   buffer = new CircularBuffer(30 * 16000, Module);
   console.log('CircularBuffer is created!', buffer);
 };
+
+function fileExists(filename) {
+  const filenameLen = Module.lengthBytesUTF8(filename) + 1;
+  const buffer = Module._malloc(filenameLen);
+  Module.stringToUTF8(filename, buffer, filenameLen);
+
+  let exists = Module._SherpaOnnxFileExists(buffer);
+
+  Module._free(buffer);
+
+  return exists;
+}
+
+function initVad() {
+  const sileroVad = {
+    model: '',
+    threshold: 0.50,
+    minSilenceDuration: 0.50,
+    minSpeechDuration: 0.25,
+    maxSpeechDuration: 20,
+    windowSize: 512,
+  };
+
+  const tenVad = {
+    model: '',
+    threshold: 0.50,
+    minSilenceDuration: 0.50,
+    minSpeechDuration: 0.25,
+    maxSpeechDuration: 20,
+    windowSize: 256,
+  };
+
+  let config = {
+    sileroVad: sileroVad,
+    tenVad: tenVad,
+    sampleRate: 16000,
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    bufferSizeInSeconds: 30,
+  };
+
+  if (fileExists('silero_vad.onnx') == 1) {
+    config.sileroVad.model = 'silero_vad.onnx'
+  } else if (fileExists('ten-vad.onnx') == 1) {
+    config.tenVad.model = 'ten-vad.onnx'
+  }
+
+  vad = createVad(Module, config);
+}
 
 let audioCtx;
 let mediaStream;

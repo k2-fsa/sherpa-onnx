@@ -552,8 +552,18 @@ struct SileroVadModelConfig {
   float max_speech_duration = 20;
 };
 
+struct TenVadModelConfig {
+  std::string model;
+  float threshold = 0.5;
+  float min_silence_duration = 0.5;
+  float min_speech_duration = 0.25;
+  int32_t window_size = 256;
+  float max_speech_duration = 20;
+};
+
 struct VadModelConfig {
   SileroVadModelConfig silero_vad;
+  TenVadModelConfig ten_vad;
 
   int32_t sample_rate = 16000;
   int32_t num_threads = 1;
@@ -639,9 +649,10 @@ class SHERPA_ONNX_API LinearResampler
   explicit LinearResampler(const SherpaOnnxLinearResampler *p);
 };
 
-std::string GetVersionStr();
-std::string GetGitSha1();
-std::string GetGitDate();
+SHERPA_ONNX_API std::string GetVersionStr();
+SHERPA_ONNX_API std::string GetGitSha1();
+SHERPA_ONNX_API std::string GetGitDate();
+SHERPA_ONNX_API bool FileExists(const std::string &filename);
 
 }  // namespace sherpa_onnx::cxx
 

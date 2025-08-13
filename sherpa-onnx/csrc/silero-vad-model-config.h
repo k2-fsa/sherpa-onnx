@@ -24,7 +24,6 @@ struct SileroVadModelConfig {
   float min_speech_duration = 0.25;  // in seconds
 
   // 512, 1024, 1536 samples for 16000 Hz
-  // 256, 512, 768 samples for 800 Hz
   int32_t window_size = 512;  // in samples
 
   // If a speech segment is longer than this value, then we increase

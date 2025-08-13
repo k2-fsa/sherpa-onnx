@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - upload-models
+      - more-models
   workflow_dispatch:
 
 concurrency:
@@ -30,7 +31,52 @@ jobs:
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
+      - name: Streaming zipformer from Banafo/Kroko-ASR
+        if: true
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git lfs install
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/Banafo/Kroko-ASR src
+
+          for lang in en es fr; do
+            repo=sherpa-onnx-streaming-zipformer-$lang-kroko-2025-08-06
+            git clone https://huggingface.co/csukuangfj/$repo
+            cp src/${lang}_encoder.onnx $repo/encoder.onnx
+            cp src/${lang}_decoder.onnx $repo/decoder.onnx
+            cp src/${lang}_joiner.onnx $repo/joiner.onnx
+            cp src/${lang}_tokens.txt $repo/tokens.txt
+
+            pushd $repo
+
+            echo "See license at https://huggingface.co/Banafo/Kroko-ASR" > README.md
+
+            mkdir -p test_wavs
+            pushd test_wavs
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
+            mv $lang.wav 0.wav
+            popd
+
+            git lfs track "*.onnx" "*.wav"
+            git status
+            ls -lh
+            git add .
+            git commit -m 'add model files' || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$repo main || true
+
+            popd
+
+
+            rm -rf $repo/.git*
+
+            tar cjfv $repo.tar.bz2 $repo
+
+            ls -lh *.tar.bz2
+          done
+
       - name: FireRed ASR fp16
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -64,17 +110,37 @@ jobs:
       - name: Zipformer CTC (non-streaming)
         if: false
         shell: bash
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git lfs install
           names=(
             sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03
             sherpa-onnx-zipformer-ctc-zh-2025-07-03
             sherpa-onnx-zipformer-ctc-zh-fp16-2025-07-03
+            sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16
+            sherpa-onnx-zipformer-ctc-small-zh-fp16-2025-07-16
+            sherpa-onnx-zipformer-ctc-small-zh-2025-07-16
           )
           for name in ${names[@]}; do
-            git clone https://huggingface.co/csukuangfj/$name 
+            rm -rf ms
+            git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/$name.git ms
+            git clone https://huggingface.co/csukuangfj/$name
+
+            cp -av ms/test_wavs $name
+            cp -v ms/*.onnx $name
+            cp -v ms/tokens.txt $name
+            cp -v ms/bbpe.model $name
+
             pushd $name
-            git lfs pull
+            git lfs track "*.wav" "*.onnx" "*.model"
+            git add .
+            git status
+            git commit -m 'add models' || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$name main || true
+
+            # git lfs pull
             rm -rf .git
             rm -rfv .gitattributes
             ls -lh

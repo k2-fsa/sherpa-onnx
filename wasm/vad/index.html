@@ -11,30 +11,67 @@
     textarea {
       width:100%;
     }
+    .loading {
+      display: none !important;
+    }
   </style>
 </head>
 
-<body>
+<body style="font-family: 'Source Sans Pro', sans-serif; background-color: #f9fafb; color: #333; display: flex; flex-direction: column; align-items: center; height: 100vh; margin: 0;">
   <h1>
     Next-gen Kaldi + WebAssembly<br/>
-    VAD Demo with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a><br/>
+    VAD Demo using <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a><br/>
     (with <a href="https://github.com/snakers4/silero-vad">silero-vad</a>)
   </h1>
 
-  <div>
-    <span id="hint">Loading model ... ...</span>
-    <br/>
-    <br/>
-    <button id="startBtn" disabled>Start</button>
-    <button id="stopBtn" disabled>Stop</button>
-    <button id="clearBtn">Clear</button>
-    <br/>
-    <br/>
-    <textarea id="results" rows="10" readonly></textarea>
+  <div style="width: 100%; max-width: 900px; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); flex: 1;">
+    <div id="status">Loading...</div>
+
+    <div id="singleAudioContent" class="tab-content loading">
+      <div style="display: flex; gap: 1.5rem;">
+        <div style="flex: 1; display: flex; flex-direction: row; align-items: center; gap: 1rem;">
+          <button id="startBtn" disabled>Start</button>
+          <button id="stopBtn" disabled>Stop</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+          <textarea id="results" rows="10" placeholder="Please click start and speak. Output will appear here..." readonly style="flex: 1; padding: 0.75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: 8px; resize: none; background-color: #f8f9fa;"></textarea>
+      </div>
+
+      <section flex="1" overflow="auto" id="sound-clips">
+      </section>
   </div>
 
-  <section flex="1" overflow="auto" id="sound-clips">
-  </section>
+  <!-- Footer Section -->
+  <div style="width: 100%; max-width: 900px; margin-top: 1.5rem; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); text-align: left; font-size: 0.9rem; color: #6c757d;">
+    <h3>Description</h3>
+    <ul>
+      <li>Everything is <strong>open-sourced.</strong> <a href="https://github.com/k2-fsa/sherpa-onnx">code</a></li>
+      <li>If you have any issues, please either <a href="https://github.com/k2-fsa/sherpa-onnx/issues">file a ticket</a> or contact us via</li>
+        <ul>
+          <li><a href="https://k2-fsa.github.io/sherpa/social-groups.html#wechat">WeChat group</a></li>
+          <li><a href="https://k2-fsa.github.io/sherpa/social-groups.html#qq">QQ group</a></li>
+          <li><a href="https://k2-fsa.github.io/sherpa/social-groups.html#bilibili-b">Bilibili</a></li>
+        </ul>
+    </ul>
+    <h3>About This Demo</h3>
+    <ul>
+      <li><strong>Private and Secure:</strong> All processing is done locally on your device (CPU) within your browser with a single thread. No server is involved, ensuring privacy and security. You can disconnect from the Internet once this page is loaded.</li>
+      <li><strong>Efficient Resource Usage:</strong> No GPU is required, leaving system resources available for webLLM analysis.</li>
+    </ul>
+    <h3>Latest Update</h3>
+    <ul>
+      <li>Update UI.</li>
+      <li>First working version.</li>
+    </ul>
+
+    <h3>Acknowledgement</h3>
+    <ul>
+      <li>We refer to <a href="https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Wasm">https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Wasm</a> for the UI part.</li>
+    </ul>
+  </div>
 
   <script src="sherpa-onnx-vad.js"></script>
   <script src="app-vad.js"></script>

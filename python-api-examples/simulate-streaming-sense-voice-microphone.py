@@ -10,7 +10,7 @@ from a microphone.
 Usage:
 
 
-wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
 ./python-api-examples/simulate-streaming-sense-voice-microphone.py  \
   --silero-vad-model=./silero_vad.onnx \

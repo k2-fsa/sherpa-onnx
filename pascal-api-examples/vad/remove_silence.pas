@@ -1,7 +1,7 @@
 { Copyright (c)  2024  Xiaomi Corporation }
 {
 This file shows how to use the VAD API from sherpa-onnx
-to remove silences from a wave file.
+to remove silences from a wave file with silero-vad.
 }
 program main;
 

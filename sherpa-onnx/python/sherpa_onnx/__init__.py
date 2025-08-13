@@ -64,6 +64,7 @@ from _sherpa_onnx import (
     SpokenLanguageIdentification,
     SpokenLanguageIdentificationConfig,
     SpokenLanguageIdentificationWhisperConfig,
+    TenVadModelConfig,
     VadModel,
     VadModelConfig,
     VoiceActivityDetector,

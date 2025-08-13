@@ -237,11 +237,20 @@ jobs:
           rm *.wav
           rm -rf sherpa-onnx-*
 
-      - name:  Run java test (VAD remove silence)
+      - name:  Run java test (ten-vad remove silence)
         shell: bash
         run: |
           cd ./java-api-examples
-          ./run-vad-remove-slience.sh
+          ./run-ten-vad-remove-silence.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
+
+      - name:  Run java test (silero-vad remove silence)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-remove-silence.sh
           rm *.onnx
           ls -lh *.wav
           rm *.wav

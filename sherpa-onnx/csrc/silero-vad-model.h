@@ -31,6 +31,8 @@ class SileroVadModel : public VadModel {
    */
   bool IsSpeech(const float *samples, int32_t n) override;
 
+  float Compute(const float *samples, int32_t n) override;
+
   // For silero vad V4, it is WindowShift().
   // For silero vad V5, it is WindowShift()+64 for 16kHz and
   //                          WindowShift()+32 for 8kHz

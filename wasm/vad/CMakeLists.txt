@@ -2,7 +2,7 @@ if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
   message(FATAL_ERROR "Please use ./build-wasm-simd-vad.sh to build for wasm VAD")
 endif()
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/silero_vad.onnx")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/silero_vad.onnx" AND NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/ten-vad.onnx" )
   message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
 endif()
 
@@ -30,6 +30,7 @@ set(exported_functions
   SherpaOnnxVoiceActivityDetectorReset
   SherpaOnnxVoiceActivityDetectorFlush
   #
+  SherpaOnnxFileExists
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

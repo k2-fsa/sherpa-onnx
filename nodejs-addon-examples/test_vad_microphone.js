@@ -8,13 +8,27 @@ const sherpa_onnx = require('sherpa-onnx-node');
 function createVad() {
   // please download silero_vad.onnx from
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  //
+  // OR
+  //
+  // please download ten-vad.onnx from
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
   const config = {
     sileroVad: {
+      // model: '',
       model: './silero_vad.onnx',
       threshold: 0.5,
       minSpeechDuration: 0.25,
       minSilenceDuration: 0.5,
       windowSize: 512,
+    },
+    tenVad: {
+      model: '',
+      // model: './ten-vad.onnx',
+      threshold: 0.5,
+      minSpeechDuration: 0.25,
+      minSilenceDuration: 0.5,
+      windowSize: 256,
     },
     sampleRate: 16000,
     debug: true,
@@ -47,7 +61,10 @@ const ai = new portAudio.AudioIO({
 let printed = false;
 let index = 0;
 ai.on('data', data => {
-  const windowSize = vad.config.sileroVad.windowSize;
+  const windowSize = vad.config.sileroVad.model != '' ?
+      vad.config.sileroVad.windowSize :
+      vad.config.tenVad.windowSize;
+
   buffer.push(new Float32Array(data.buffer));
   while (buffer.size() > windowSize) {
     const samples = buffer.get(buffer.head(), windowSize);
@@ -66,9 +83,10 @@ ai.on('data', data => {
       const segment = vad.front();
       vad.pop();
       const filename = `${index}-${
-          new Date()
-              .toLocaleTimeString('en-US', {hour12: false})
-              .split(' ')[0]}.wav`;
+                           new Date()
+                               .toLocaleTimeString('en-US', {hour12: false})
+                               .split(' ')[0]}.wav`
+                           .replace(/:/g, '-');
       sherpa_onnx.writeWave(
           filename,
           {samples: segment.samples, sampleRate: vad.config.sampleRate});

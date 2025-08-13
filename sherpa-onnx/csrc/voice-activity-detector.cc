@@ -18,6 +18,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/vad-model.h"
 
 namespace sherpa_onnx {
@@ -40,13 +41,25 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
+  float Compute(const float *samples, int32_t n) {
+    return model_->Compute(samples, n);
+  }
+
   void AcceptWaveform(const float *samples, int32_t n) {
     if (buffer_.Size() > max_utterance_length_) {
       model_->SetMinSilenceDuration(new_min_silence_duration_s_);
       model_->SetThreshold(new_threshold_);
     } else {
-      model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
-      model_->SetThreshold(config_.silero_vad.threshold);
+      if (!config_.silero_vad.model.empty()) {
+        model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
+        model_->SetThreshold(config_.silero_vad.threshold);
+      } else if (!config_.ten_vad.model.empty()) {
+        model_->SetMinSilenceDuration(config_.ten_vad.min_silence_duration);
+        model_->SetThreshold(config_.ten_vad.threshold);
+      } else {
+        SHERPA_ONNX_LOGE("Unknown vad model");
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     int32_t window_size = model_->WindowSize();
@@ -82,9 +95,16 @@ class VoiceActivityDetector::Impl {
         start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
                               model_->MinSpeechDurationSamples(),
                           buffer_.Head());
+        cur_segment_.start = start_;
       }
+      int32_t num_samples = buffer_.Tail() - start_ - 1;
+      cur_segment_.samples = buffer_.Get(start_, num_samples);
     } else {
       // non-speech
+
+      cur_segment_.start = -1;
+      cur_segment_.samples.clear();
+
       if (start_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
         int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
@@ -129,6 +149,9 @@ class VoiceActivityDetector::Impl {
     last_.clear();
 
     start_ = -1;
+
+    cur_segment_.start = -1;
+    cur_segment_.samples.clear();
   }
 
   void Flush() {
@@ -152,23 +175,36 @@ class VoiceActivityDetector::Impl {
 
     buffer_.Pop(end - buffer_.Head());
     start_ = -1;
+
+    cur_segment_.start = -1;
+    cur_segment_.samples.clear();
   }
 
   bool IsSpeechDetected() const { return start_ != -1; }
+
+  SpeechSegment CurrentSpeechSegment() const { return cur_segment_; }
 
   const VadModelConfig &GetConfig() const { return config_; }
 
  private:
   void Init() {
-    // TODO(fangjun): Currently, we support only one vad model.
-    // If a new vad model is added, we need to change the place
-    // where max_speech_duration is placed.
-    max_utterance_length_ =
-        config_.sample_rate * config_.silero_vad.max_speech_duration;
+    if (!config_.silero_vad.model.empty()) {
+      max_utterance_length_ =
+          config_.sample_rate * config_.silero_vad.max_speech_duration;
+    } else if (!config_.ten_vad.model.empty()) {
+      max_utterance_length_ =
+          config_.sample_rate * config_.ten_vad.max_speech_duration;
+    } else {
+      SHERPA_ONNX_LOGE("Unsupported VAD model");
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
  private:
   std::queue<SpeechSegment> segments_;
+
+  // it is empty if no speech is detected
+  SpeechSegment cur_segment_;
 
   std::unique_ptr<VadModel> model_;
   VadModelConfig config_;
@@ -216,8 +252,16 @@ bool VoiceActivityDetector::IsSpeechDetected() const {
   return impl_->IsSpeechDetected();
 }
 
+SpeechSegment VoiceActivityDetector::CurrentSpeechSegment() const {
+  return impl_->CurrentSpeechSegment();
+}
+
 const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
+}
+
+float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
+  return impl_->Compute(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

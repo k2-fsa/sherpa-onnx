@@ -294,6 +294,25 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
   return c;
 }
 
+static SherpaOnnxTenVadModelConfig GetTenVadConfig(const Napi::Object &obj) {
+  SherpaOnnxTenVadModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("tenVad") || !obj.Get("tenVad").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("tenVad").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(threshold, threshold);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(window_size, windowSize);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(max_speech_duration, maxSpeechDuration);
+
+  return c;
+}
+
 static Napi::External<SherpaOnnxVoiceActivityDetector>
 CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
@@ -339,6 +358,7 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxVadModelConfig c;
   memset(&c, 0, sizeof(c));
   c.silero_vad = GetSileroVadConfig(o);
+  c.ten_vad = GetTenVadConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(sample_rate, sampleRate);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -369,6 +389,7 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
 #endif
   SHERPA_ONNX_DELETE_C_STR(c.silero_vad.model);
+  SHERPA_ONNX_DELETE_C_STR(c.ten_vad.model);
   SHERPA_ONNX_DELETE_C_STR(c.provider);
 
   return Napi::External<SherpaOnnxVoiceActivityDetector>::New(

@@ -92,9 +92,11 @@ ai.on('data', data => {
       console.log(`${index}: ${text}`);
 
       const filename = `${index}-${text}-${
-          new Date()
-              .toLocaleTimeString('en-US', {hour12: false})
-              .split(' ')[0]}.wav`;
+                           new Date()
+                               .toLocaleTimeString('en-US', {hour12: false})
+                               .split(' ')[0]}.wav`
+                           .replace(/:/g, '-');
+
       sherpa_onnx.writeWave(
           filename,
           {samples: segment.samples, sampleRate: vad.config.sampleRate});
