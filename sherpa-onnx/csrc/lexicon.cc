@@ -85,6 +85,11 @@ std::vector<int32_t> ConvertTokensToIds(
   ids.reserve(tokens.size());
   for (const auto &s : tokens) {
     if (!token2id.count(s)) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Unknown token: %{public}s", s.c_str());
+#else
+      SHERPA_ONNX_LOGE("Unknown token: %s", s.c_str());
+#endif
       return {};
     }
     int32_t id = token2id.at(s);
@@ -346,8 +351,12 @@ void Lexicon::InitLanguage(const std::string &_lang) {
   } else if (!lang.empty()) {
     language_ = Language::kNotChinese;
   } else {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("Unknown language: %{public}s", _lang.c_str());
+#else
     SHERPA_ONNX_LOGE("Unknown language: %s", _lang.c_str());
-    exit(-1);
+#endif
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 
