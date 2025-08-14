@@ -1,4 +1,4 @@
-/// swfit-api-examples/SherpaOnnx.swift
+/// swift-api-examples/SherpaOnnx.swift
 /// Copyright (c)  2023  Xiaomi Corporation
 
 import Foundation  // For NSString
@@ -936,6 +936,41 @@ func sherpaOnnxOfflineTtsConfig(
   )
 }
 
+class SherpaOnnxWaveWrapper {
+  let wave: UnsafePointer<SherpaOnnxWave>!
+
+  class func readWave(filename: String) -> SherpaOnnxWaveWrapper {
+    let wave = SherpaOnnxReadWave(toCPointer(filename))
+    return SherpaOnnxWaveWrapper(wave: wave)
+  }
+
+  init(wave: UnsafePointer<SherpaOnnxWave>!) {
+    self.wave = wave
+  }
+
+  deinit {
+    if let wave {
+      SherpaOnnxFreeWave(wave)
+    }
+  }
+
+  var numSamples: Int {
+    return Int(wave.pointee.num_samples)
+  }
+
+  var sampleRate: Int {
+    return Int(wave.pointee.sample_rate)
+  }
+
+  var samples: [Float] {
+    if numSamples == 0 {
+      return []
+    } else {
+      return [Float](UnsafeBufferPointer(start: wave.pointee.samples, count: numSamples))
+    }
+  }
+}
+
 class SherpaOnnxGeneratedAudioWrapper {
   /// A pointer to the underlying counterpart in C
   let audio: UnsafePointer<SherpaOnnxGeneratedAudio>!
@@ -960,14 +995,9 @@ class SherpaOnnxGeneratedAudioWrapper {
 
   var samples: [Float] {
     if let p = audio.pointee.samples {
-      var samples: [Float] = []
-      for index in 0..<n {
-        samples.append(p[Int(index)])
-      }
-      return samples
+      return [Float](UnsafeBufferPointer(start: p, count: Int(n)))
     } else {
-      let samples: [Float] = []
-      return samples
+      return []
     }
   }
 
@@ -1429,6 +1459,72 @@ class SherpaOnnxOfflineSpeakerDiarizationWrapper {
     SherpaOnnxOfflineSpeakerDiarizationDestroyResult(result)
 
     return ans
+  }
+}
+
+class SherpaOnnxOnlineStreamWrapper {
+  /// A pointer to the underlying counterpart in C
+  let impl: OpaquePointer!
+  init(impl: OpaquePointer!) {
+    self.impl = impl
+  }
+
+  deinit {
+    if let impl {
+      SherpaOnnxDestroyOnlineStream(impl)
+    }
+  }
+
+  func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
+    SherpaOnnxOnlineStreamAcceptWaveform(impl, Int32(sampleRate), samples, Int32(samples.count))
+  }
+
+  func inputFinished() {
+    SherpaOnnxOnlineStreamInputFinished(impl)
+  }
+}
+
+class SherpaOnnxSpeakerEmbeddingExtractorWrapper {
+  /// A pointer to the underlying counterpart in C
+  let impl: OpaquePointer!
+
+  init(
+    config: UnsafePointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>!
+  ) {
+    impl = SherpaOnnxCreateSpeakerEmbeddingExtractor(config)
+  }
+
+  deinit {
+    if let impl {
+      SherpaOnnxDestroySpeakerEmbeddingExtractor(impl)
+    }
+  }
+
+  var dim: Int {
+    return Int(SherpaOnnxSpeakerEmbeddingExtractorDim(impl))
+  }
+
+  func createStream() -> SherpaOnnxOnlineStreamWrapper {
+    let newStream = SherpaOnnxSpeakerEmbeddingExtractorCreateStream(impl)
+    return SherpaOnnxOnlineStreamWrapper(impl: newStream)
+  }
+
+  func isReady(stream: SherpaOnnxOnlineStreamWrapper) -> Bool {
+    return SherpaOnnxSpeakerEmbeddingExtractorIsReady(impl, stream.impl) == 1 ? true : false
+  }
+
+  func compute(stream: SherpaOnnxOnlineStreamWrapper) -> [Float] {
+    if !isReady(stream: stream) {
+      return []
+    }
+
+    let p = SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(impl, stream.impl)
+
+    defer {
+      SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(p)
+    }
+
+    return [Float](UnsafeBufferPointer(start: p, count: dim))
   }
 }
 
