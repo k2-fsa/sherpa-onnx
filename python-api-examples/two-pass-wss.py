@@ -492,16 +492,14 @@ class StreamingServer(object):
 
         self.certificate = certificate
 
-        # 第一遍处理的线程池
         self.nn_pool_size = nn_pool_size
         self.nn_pool = ThreadPoolExecutor(
             max_workers=nn_pool_size,
             thread_name_prefix="nn",
         )
 
-        # 第二遍处理的线程池 - 专门用于离线识别
         self.second_pass_pool = ThreadPoolExecutor(
-            max_workers=second_pass_threads,  # 使用传入的参数
+            max_workers=second_pass_threads,
             thread_name_prefix="second_pass",
         )
 
@@ -571,14 +569,14 @@ class StreamingServer(object):
         samples: np.ndarray,
         sample_rate: int,
     ) -> str:
-        """异步运行第二遍识别，避免阻塞主线程
-        
+        """Run second-pass recognition asynchronously to avoid blocking.
+
         Args:
-          samples: 音频样本
-          sample_rate: 采样率
-          
+          samples: Audio samples.
+          sample_rate: Sampling rate.
+
         Returns:
-          第二遍识别的结果文本
+          Text result from the second-pass recognition.
         """
         import time
         start_time = time.time()
@@ -640,7 +638,6 @@ class StreamingServer(object):
                 logging.info(f"Started server on port {port}")
                 await asyncio.Future()  # run forever
         finally:
-            # 清理线程池
             logging.info("Shutting down thread pools...")
             self.nn_pool.shutdown(wait=True)
             self.second_pass_pool.shutdown(wait=True)
