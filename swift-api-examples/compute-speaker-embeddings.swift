@@ -1,4 +1,4 @@
-/// swfit-api-examples/compute-speaker-embeddings.swift
+/// swift-api-examples/compute-speaker-embeddings.swift
 /// Copyright (c)  2025  Xiaomi Corporation
 /*
 Please download test files used in this script from

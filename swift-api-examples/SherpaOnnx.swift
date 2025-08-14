@@ -1,4 +1,4 @@
-/// swfit-api-examples/SherpaOnnx.swift
+/// swift-api-examples/SherpaOnnx.swift
 /// Copyright (c)  2023  Xiaomi Corporation
 
 import Foundation  // For NSString
