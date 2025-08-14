@@ -1,4 +1,56 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 Minghu Wang
+"""
+
+A two-pass streaming ASR server with WebSocket support. This server implements
+a two-pass recognition strategy where the first pass uses a fast streaming model
+for real-time recognition, and the second pass uses a more accurate offline model
+to refine the results.
+
+The first pass provides immediate feedback to users, while the second pass
+improves accuracy by re-processing the complete utterance with a more powerful
+model.
+
+It supports multiple clients sending audio simultaneously and provides
+real-time transcription results.
+
+Usage:
+    ./two-pass-wss.py --help
+
+Example:
+
+(1) Without a certificate
+
+python3 ./python-api-examples/two-pass-wss.py \
+  --paraformer-encoder ./sherpa-onnx-paraformer-zh-2023-09-18/encoder.onnx \
+  --paraformer-decoder ./sherpa-onnx-paraformer-zh-2023-09-18/decoder.onnx \
+  --tokens ./sherpa-onnx-paraformer-zh-2023-09-18/tokens.txt \
+  --second-sense-voice ./sherpa-onnx-sense-voice-zh-2023-09-18/model.onnx \
+  --second-tokens ./sherpa-onnx-sense-voice-zh-2023-09-18/tokens.txt
+
+(2) With a certificate
+
+(a) Generate a certificate first:
+
+    cd python-api-examples/web
+    ./generate-certificate.py
+    cd ../..
+
+(b) Start the server
+
+python3 ./python-api-examples/two-pass-wss.py \
+  --paraformer-encoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.onnx \
+  --paraformer-decoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.onnx \
+  --tokens ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
+  --second-sense-voice ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.onnx \
+  --second-tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
+  --certificate ./python-api-examples/web/cert.pem
+
+Please refer to
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+to download pre-trained models.
+"""
 
 import argparse
 import asyncio
@@ -77,12 +129,6 @@ def add_model_args(parser: argparse.ArgumentParser):
         help="Path to the transducer decoder model.",
     )
 
-    parser.add_argument(
-        "--joiner",
-        type=str,
-        default="",
-        help="Path to the transducer joiner model.",
-    )
 
     parser.add_argument(
         "--second-tokens",
@@ -229,13 +275,6 @@ def add_blank_penalty_args(parser: argparse.ArgumentParser):
 
 def add_endpointing_args(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "--use-endpoint",
-        type=int,
-        default=1,
-        help="1 to enable endpoiting. 0 to disable it",
-    )
-
-    parser.add_argument(
         "--rule1-min-trailing-silence",
         type=float,
         default=2.4,
@@ -341,6 +380,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--second-pass-threads",
+        type=int,
+        default=2,
+        help="Number of threads for second pass processing",
+    )
+
+    parser.add_argument(
         "--certificate",
         type=str,
         help="""Path to the X.509 certificate. You need it only if you want to
@@ -375,7 +421,7 @@ def create_first_pass_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
-            enable_endpoint_detection=args.use_endpoint != 0,
+            enable_endpoint_detection=True,
             rule1_min_trailing_silence=args.rule1_min_trailing_silence,
             rule2_min_trailing_silence=args.rule2_min_trailing_silence,
             rule3_min_utterance_length=args.rule3_min_utterance_length,
@@ -412,12 +458,15 @@ class StreamingServer(object):
         max_message_size: int,
         max_queue_size: int,
         max_active_connections: int,
+        second_pass_threads: int = 2,
         certificate: Optional[str] = None,
     ):
         """
         Args:
-          recognizer:
-            An instance of online recognizer.
+          first_pass_recognizer:
+            An instance of online recognizer for first pass.
+          second_pass_recognizer:
+            An instance of offline recognizer for second pass.
           nn_pool_size:
             Number of threads for the thread pool that is responsible for
             neural network computation and decoding.
@@ -433,10 +482,6 @@ class StreamingServer(object):
           max_active_connections:
             Max number of active connections. Once number of active client
             equals to this limit, the server refuses to accept new connections.
-          beam_search_params:
-            Dictionary containing all the parameters for beam search.
-          online_endpoint_config:
-            Config for endpointing.
           certificate:
             Optional. If not None, it will use secure websocket.
             You can use ./web/generate-certificate.py to generate
@@ -446,12 +491,18 @@ class StreamingServer(object):
         self.second_pass_recognizer = second_pass_recognizer
 
         self.certificate = certificate
-        #self.http_server = HttpServer(doc_root)
 
+        # 第一遍处理的线程池
         self.nn_pool_size = nn_pool_size
         self.nn_pool = ThreadPoolExecutor(
             max_workers=nn_pool_size,
             thread_name_prefix="nn",
+        )
+
+        # 第二遍处理的线程池 - 专门用于离线识别
+        self.second_pass_pool = ThreadPoolExecutor(
+            max_workers=second_pass_threads,  # 使用传入的参数
+            thread_name_prefix="second_pass",
         )
 
         self.stream_queue = asyncio.Queue()
@@ -515,6 +566,38 @@ class StreamingServer(object):
         await self.stream_queue.put((stream, future))
         await future
 
+    async def run_second_pass_async(
+        self,
+        samples: np.ndarray,
+        sample_rate: int,
+    ) -> str:
+        """异步运行第二遍识别，避免阻塞主线程
+        
+        Args:
+          samples: 音频样本
+          sample_rate: 采样率
+          
+        Returns:
+          第二遍识别的结果文本
+        """
+        import time
+        start_time = time.time()
+        
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            self.second_pass_pool,
+            run_second_pass,
+            self.second_pass_recognizer,
+            samples,
+            sample_rate,
+        )
+        
+        end_time = time.time()
+        duration = end_time - start_time
+        logging.info(f"Second pass processing completed in {duration:.3f}s for {len(samples)/sample_rate:.2f}s audio")
+        
+        return result.lower().strip()
+
     async def process_request(
         self,
         path: str,
@@ -544,19 +627,24 @@ class StreamingServer(object):
             ssl_context = None
             logging.info("No certificate provided")
 
-        async with websockets.serve(
-            self.handle_connection,
-            host="",
-            port=port,
-            max_size=self.max_message_size,
-            max_queue=self.max_queue_size,
-            process_request=self.process_request,
-            ssl=ssl_context,
-        ):
-  
-            logging.info(f"Started server on port {port}")
-
-            await asyncio.Future()  # run forever
+        try:
+            async with websockets.serve(
+                self.handle_connection,
+                host="",
+                port=port,
+                max_size=self.max_message_size,
+                max_queue=self.max_queue_size,
+                process_request=self.process_request,
+                ssl=ssl_context,
+            ):
+                logging.info(f"Started server on port {port}")
+                await asyncio.Future()  # run forever
+        finally:
+            # 清理线程池
+            logging.info("Shutting down thread pools...")
+            self.nn_pool.shutdown(wait=True)
+            self.second_pass_pool.shutdown(wait=True)
+            logging.info("Thread pools shut down successfully")
 
         await asyncio.gather(*tasks)  # not reachable
 
@@ -621,13 +709,10 @@ class StreamingServer(object):
                         sample_buffers = [samples_for_2nd_pass[-8000:]]
                         samples_for_2nd_pass = samples_for_2nd_pass[:-8000]
                         second_pass_result = (
-                            run_second_pass(
-                                recognizer=self.second_pass_recognizer,
+                            await self.run_second_pass_async(
                                 samples=samples_for_2nd_pass,
                                 sample_rate=self.sample_rate,
                             )
-                            .lower()
-                            .strip()
                         )
 
                         if second_pass_result:
@@ -676,7 +761,6 @@ def check_args(args):
     if args.encoder:
         assert Path(args.encoder).is_file(), f"{args.encoder} does not exist"
         assert Path(args.decoder).is_file(), f"{args.decoder} does not exist"
-        assert Path(args.joiner).is_file(), f"{args.joiner} does not exist"
         assert args.paraformer_encoder is None, args.paraformer_encoder
         assert args.paraformer_decoder is None, args.paraformer_decoder
        
@@ -719,6 +803,7 @@ def main():
     max_message_size = args.max_message_size
     max_queue_size = args.max_queue_size
     max_active_connections = args.max_active_connections
+    second_pass_threads = args.second_pass_threads
     certificate = args.certificate
     # doc_root = args.doc_root
 
@@ -734,6 +819,7 @@ def main():
         max_message_size=max_message_size,
         max_queue_size=max_queue_size,
         max_active_connections=max_active_connections,
+        second_pass_threads=second_pass_threads,
         certificate=certificate,
         # doc_root=doc_root,
     )
