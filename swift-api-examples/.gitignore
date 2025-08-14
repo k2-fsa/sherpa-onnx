@@ -21,3 +21,4 @@ test-version
 zipformer-ctc-asr
 dolphin-ctc-asr
 tts-kitten-en
+compute-speaker-embeddings
