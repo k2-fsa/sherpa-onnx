@@ -43,7 +43,7 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
             config_.model_config)) {
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchNeMoDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), config_.blank_penalty, model_->IsTDT());
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
