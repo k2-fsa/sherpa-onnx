@@ -231,7 +231,7 @@ class SherpaOnnxOnlineRecongitionResult {
   /// For Chinese models, it contains Chinese words.
   var text: String { _text }
 
-  var count: Int { return Int(result.pointee.count) }
+  var count: Int { Int(result.pointee.count) }
 
   var tokens: [String] { _tokens }
 
@@ -755,10 +755,13 @@ class SherpaOnnxSpeechSegmentWrapper {
 
 class SherpaOnnxVoiceActivityDetectorWrapper {
   /// A pointer to the underlying counterpart in C
-  let vad: OpaquePointer
+  private let vad: OpaquePointer
 
   init(config: UnsafePointer<SherpaOnnxVadModelConfig>, buffer_size_in_seconds: Float) {
-    self.vad = SherpaOnnxCreateVoiceActivityDetector(config, buffer_size_in_seconds)
+    guard let vad = SherpaOnnxCreateVoiceActivityDetector(config, buffer_size_in_seconds) else {
+      fatalError("SherpaOnnxCreateVoiceActivityDetector returned nil")
+    }
+    self.vad = vad
   }
 
   deinit {
