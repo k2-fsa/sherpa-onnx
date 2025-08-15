@@ -1,4 +1,4 @@
-package com.k2fsa.sherpa.onnx.utils;
+package com.k2fsa.sherpa.onnx;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,31 +7,34 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
-import com.k2fsa.sherpa.onnx.core.Core;
-
 public class LibraryUtils {
   // System property to override native library path
   private static final String NATIVE_PATH_PROP = "sherpa_onnx.native.path";
+  private static final String LIB_NAME = "sherpa-onnx-jni";
 
   public static void load() {
-    String libFileName = System.mapLibraryName(Core.NATIVE_LIBRARY_NAME);
+    String libFileName = System.mapLibraryName(LIB_NAME);
 
-    // 1. Try loading from external directory if provided
-    String nativePath = System.getProperty(NATIVE_PATH_PROP);
-    if (nativePath != null) {
-      File nativeDir = new File(nativePath);
-      File libInDir = new File(nativeDir, libFileName);
-      if (nativeDir.isDirectory() && libInDir.exists()) {
-        System.out.println("Loading native lib from external directory: " + libInDir.getAbsolutePath());
-        System.load(libInDir.getAbsolutePath());
-        return;
+    try {
+      // 1. Try loading from external directory if provided
+      String nativePath = System.getProperty(NATIVE_PATH_PROP);
+      if (nativePath != null) {
+        File nativeDir = new File(nativePath);
+        File libInDir = new File(nativeDir, libFileName);
+        if (nativeDir.isDirectory() && libInDir.exists()) {
+          System.out.println("Loading native lib from external directory: " + libInDir.getAbsolutePath());
+          System.load(libInDir.getAbsolutePath());
+          return;
+        }
       }
-    }
 
-    // 2. Fallback to extracting and loading from the JAR
-    File libFile = init(libFileName);
-    System.out.println("Loading native lib from: " + libFile.getAbsolutePath());
-    System.load(libFile.getAbsolutePath());
+      // 2. Fallback to extracting and loading from the JAR
+      File libFile = init(libFileName);
+      System.out.println("Loading native lib from: " + libFile.getAbsolutePath());
+      System.load(libFile.getAbsolutePath());
+    } catch (RuntimeException ex) {
+      System.loadLibrary(LIB_NAME);
+    }
   }
 
   /* Computes and initializes OS_ARCH_STR (such as linux-x64) */

@@ -1,7 +1,5 @@
 package com.k2fsa.sherpa.onnx;
 
-import com.k2fsa.sherpa.onnx.utils.LibraryUtils;
-
 public class LibraryLoader {
     private static volatile boolean autoLoadEnabled = true;
     private static volatile boolean isLoaded = false;
