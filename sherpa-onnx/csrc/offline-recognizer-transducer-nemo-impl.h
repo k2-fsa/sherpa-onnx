@@ -47,7 +47,7 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     PostInit();
   }
@@ -62,11 +62,11 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
             mgr, config_.model_config)) {
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchNeMoDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), config_.blank_penalty, model_->IsTDT());
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     PostInit();
@@ -175,18 +175,18 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     // check the blank ID
     if (!symbol_table_.Contains("<blk>")) {
       SHERPA_ONNX_LOGE("tokens.txt does not include the blank token <blk>");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (symbol_table_["<blk>"] != vocab_size - 1) {
       SHERPA_ONNX_LOGE("<blk> is not the last token!");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (symbol_table_.NumSymbols() != vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",
                        symbol_table_.NumSymbols(), vocab_size);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
