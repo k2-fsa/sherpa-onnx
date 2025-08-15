@@ -740,13 +740,13 @@ class SherpaOnnxSpeechSegmentWrapper {
     SherpaOnnxDestroySpeechSegment(p)
   }
 
-  lazy var start: Int = {
+  var start: Int {
     Int(p.pointee.start)
-  }()
+  }
 
-  lazy var n: Int = {
+  var n: Int {
     Int(p.pointee.n)
-  }()
+  }
 
   lazy var samples: [Float] = {
     Array(UnsafeBufferPointer(start: p.pointee.samples, count: n))
@@ -757,7 +757,7 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
   /// A pointer to the underlying counterpart in C
   let vad: OpaquePointer
 
-  init(config: UnsafePointer<SherpaOnnxVadModelConfig>!, buffer_size_in_seconds: Float) {
+  init(config: UnsafePointer<SherpaOnnxVadModelConfig>, buffer_size_in_seconds: Float) {
     self.vad = SherpaOnnxCreateVoiceActivityDetector(config, buffer_size_in_seconds)
   }
 
@@ -769,12 +769,10 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
     SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples, Int32(samples.count))
   }
 
-  @inline(__always)
   func isEmpty() -> Bool {
     return SherpaOnnxVoiceActivityDetectorEmpty(vad) == 1
   }
 
-  @inline(__always)
   func isSpeechDetected() -> Bool {
     return SherpaOnnxVoiceActivityDetectorDetected(vad) == 1
   }
