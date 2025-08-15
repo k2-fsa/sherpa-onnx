@@ -94,6 +94,72 @@ static OfflineTransducerDecoderResult DecodeOne(
   return ans;
 }
 
+static OfflineTransducerDecoderResult DecodeOneTDT(
+    const float *p, int32_t num_rows, int32_t num_cols,
+    OfflineTransducerNeMoModel *model, float blank_penalty) {
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  OfflineTransducerDecoderResult ans;
+
+  int32_t vocab_size = model->VocabSize();
+  int32_t blank_id = vocab_size - 1;
+
+  auto decoder_input_pair = BuildDecoderInput(blank_id, model->Allocator());
+
+  std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
+      model->RunDecoder(std::move(decoder_input_pair.first),
+                        std::move(decoder_input_pair.second),
+                        model->GetDecoderInitStates(1));
+
+  std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
+
+  int32_t skip = 0;
+  for (int32_t t = 0; t < num_rows; t += skip) {
+    Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
+        memory_info, const_cast<float *>(p) + t * num_cols, num_cols,
+        encoder_shape.data(), encoder_shape.size());
+
+    Ort::Value logit = model->RunJoiner(View(&cur_encoder_out),
+                                        View(&decoder_output_pair.first));
+
+    auto shape = logit.GetTensorTypeAndShapeInfo().GetShape();
+
+    float *p_logit = logit.GetTensorMutableData<float>();
+    if (blank_penalty > 0) {
+      p_logit[blank_id] -= blank_penalty;
+    }
+
+    auto y = static_cast<int32_t>(std::distance(
+        static_cast<const float *>(p_logit),
+        std::max_element(static_cast<const float *>(p_logit),
+                         static_cast<const float *>(p_logit) + vocab_size)));
+
+    skip = static_cast<int32_t>(std::distance(
+        static_cast<const float *>(p_logit) + vocab_size,
+        std::max_element(static_cast<const float *>(p_logit) + vocab_size,
+                         static_cast<const float *>(p_logit) + shape.back())));
+
+    if (skip == 0) {
+      skip = 1;
+    }
+
+    if (y != blank_id) {
+      ans.tokens.push_back(y);
+      ans.timestamps.push_back(t);
+
+      decoder_input_pair = BuildDecoderInput(y, model->Allocator());
+
+      decoder_output_pair =
+          model->RunDecoder(std::move(decoder_input_pair.first),
+                            std::move(decoder_input_pair.second),
+                            std::move(decoder_output_pair.second));
+    }
+  }  // for (int32_t t = 0; t < num_rows; ++t) {
+
+  return ans;
+}
+
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerGreedySearchNeMoDecoder::Decode(
     Ort::Value encoder_out, Ort::Value encoder_out_length,
@@ -123,7 +189,11 @@ OfflineTransducerGreedySearchNeMoDecoder::Decode(
                            ? encoder_out_length.GetTensorData<int32_t>()[i]
                            : encoder_out_length.GetTensorData<int64_t>()[i];
 
-    ans[i] = DecodeOne(this_p, this_len, dim2, model_, blank_penalty_);
+    if (is_tdt_) {
+      ans[i] = DecodeOneTDT(this_p, this_len, dim2, model_, blank_penalty_);
+    } else {
+      ans[i] = DecodeOne(this_p, this_len, dim2, model_, blank_penalty_);
+    }
   }
 
   return ans;
