@@ -14,7 +14,6 @@ public class LibraryUtils {
 
   public static void load() {
     String libFileName = System.mapLibraryName(LIB_NAME);
-    System.out.println(libFileName);
 
     try {
       // 1. Try loading from external directory if provided
