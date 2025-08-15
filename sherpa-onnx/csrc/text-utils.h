@@ -170,6 +170,8 @@ bool ContainsCJK(const std::string &text);
 
 bool ContainsCJK(const std::u32string &text);
 
+bool StringToBool(const std::string &s);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

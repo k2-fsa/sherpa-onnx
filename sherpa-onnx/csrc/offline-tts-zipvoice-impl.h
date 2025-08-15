@@ -20,6 +20,7 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/vocoder.h"
 
 namespace sherpa_onnx {
@@ -47,7 +48,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
   GeneratedAudio Generate(
       const std::string &text, const std::string &prompt_text,
-      const std::vector<float> &prompt_samples, float speed, int num_step,
+      const std::vector<float> &prompt_samples, int32_t sample_rate,
+      float speed, int num_steps,
       GeneratedAudioCallback callback = nullptr) const override {
     std::vector<TokenIDs> text_token_ids =
         frontend_->ConvertTextToTokenIds(text);
@@ -83,7 +85,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     std::vector<int64_t> tokens = text_token_ids[0].tokens;
     std::vector<int64_t> prompt_tokens = prompt_token_ids[0].tokens;
 
-    return Process(tokens, prompt_tokens, prompt_samples, speed, num_step);
+    return Process(tokens, prompt_tokens, prompt_samples, sample_rate, speed,
+                   num_steps);
   }
 
  private:
@@ -111,6 +114,32 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     frontend_ = std::make_unique<OfflineTtsZipvoiceFrontend>(
         config_.model.zipvoice.tokens, config_.model.zipvoice.data_dir,
         config_.model.zipvoice.pinyin_dict, meta_data, config_.model.debug);
+  }
+
+  std::vector<std::vector<float>> ComputeMelSpectrogram(
+      const std::vector<float> &_samples, int32_t sample_rate) const {
+    // add this in model file
+    const auto &meta = model_->GetMetaData();
+    if (sample_rate != meta.sample_rate) {
+      SHERPA_ONNX_LOGE(
+          "Creating a resampler:\n"
+          "   in_sample_rate: %d\n"
+          "   output_sample_rate: %d\n",
+          sample_rate, static_cast<int32_t>(meta.sample_rate));
+
+      float min_freq = std::min<int32_t>(sample_rate, meta.sample_rate);
+      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
+
+      int32_t lowpass_filter_width = 6;
+      auto resampler = std::make_unique<LinearResample>(
+          sample_rate, meta.sample_rate, lowpass_cutoff, lowpass_filter_width);
+      std::vector<float> samples;
+      resampler->Resample(_samples.data(), _samples.size(), true, &samples);
+      return ComputeMelSpectrogram(samples);
+    } else {
+      // Use the original samples if the sample rate matches
+      return ComputeMelSpectrogram(_samples);
+    }
   }
 
   std::vector<std::vector<float>> ComputeMelSpectrogram(
@@ -174,8 +203,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
   GeneratedAudio Process(const std::vector<int64_t> &tokens,
                          const std::vector<int64_t> &prompt_tokens,
-                         const std::vector<float> &prompt_samples, float speed,
-                         int num_step) const {
+                         const std::vector<float> &prompt_samples,
+                         int32_t sample_rate, float speed,
+                         int num_steps) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -212,7 +242,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
 
     std::vector<std::vector<float>> prompt_features =
-        ComputeMelSpectrogram(prompt_samples_scaled);
+        ComputeMelSpectrogram(prompt_samples_scaled, sample_rate);
 
     const int num_frames = prompt_features.size();
     const int mel_dim = num_frames > 0 ? prompt_features[0].size() : 0;
@@ -243,7 +273,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     Ort::Value mel =
         model_->Run(std::move(tokens_tensor), std::move(prompt_tokens_tensor),
-                    std::move(prompt_features_tensor), speed, num_step);
+                    std::move(prompt_features_tensor), speed, num_steps);
 
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
@@ -275,7 +305,6 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         s *= scale;
       }
     }
-
     return ans;
   }
 

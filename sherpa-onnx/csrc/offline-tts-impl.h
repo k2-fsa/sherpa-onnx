@@ -33,8 +33,9 @@ class OfflineTtsImpl {
 
   virtual GeneratedAudio Generate(
       const std::string &text, const std::string &prompt_text,
-      const std::vector<float> &prompt_samples, float speed = 1.0,
-      int32_t num_step = 4, GeneratedAudioCallback callback = nullptr) const {
+      const std::vector<float> &prompt_samples, int32_t sample_rate,
+      float speed = 1.0, int32_t num_step = 4,
+      GeneratedAudioCallback callback = nullptr) const {
     SHERPA_ONNX_LOGE("This interface is for Zero-shot TTS.");
     exit(-1);
   }

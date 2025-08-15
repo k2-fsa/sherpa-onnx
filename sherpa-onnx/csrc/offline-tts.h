@@ -95,6 +95,26 @@ class OfflineTts {
                           float speed = 1.0,
                           GeneratedAudioCallback callback = nullptr) const;
 
+  // @param text The string to be generated.
+  // @param prompt_text The transcribe of prompt_sampes.
+  // @param prompt_samples The audio samples of the prompt, single channel pcm.
+  // @param sample_rate The sample rate of the prompt audio.
+  // @param speed The speed for the generated speech. E.g., 2 means 2x faster.
+  // @param num_steps The number of flow steps to generate the audio.
+  // @param callback If not NULL, it is called whenever config.max_num_sentences
+  //                 sentences have been processed. Note that the passed
+  //                 pointer `samples` for the callback might be invalidated
+  //                 after the callback is returned, so the caller should not
+  //                 keep a reference to it. The caller can copy the data if
+  //                 he/she wants to access the samples after the callback
+  //                 returns. The callback is called in the current thread.
+  GeneratedAudio Generate(const std::string &text,
+                          const std::string &prompt_text,
+                          const std::vector<float> &prompt_samples,
+                          int32_t sample_rate, float speed = 1.0,
+                          int32_t num_steps = 4,
+                          GeneratedAudioCallback callback = nullptr) const;
+
   // Return the sample rate of the generated audio
   int32_t SampleRate() const;
 

@@ -350,6 +350,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+    add_executable(sherpa-onnx-offline-zeroshot-tts sherpa-onnx-offline-zeroshot-tts.cc)
   endif()
 
   if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
@@ -372,6 +373,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
       sherpa-onnx-offline-tts
+      sherpa-onnx-offline-zeroshot-tts
     )
   endif()
 

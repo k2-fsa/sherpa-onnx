@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 #include <string>
 #include <utility>
@@ -23,6 +24,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -85,11 +87,13 @@ class OfflineTtsZipvoiceModel::Impl {
     text_inputs.push_back(std::move(prompt_tokens));
     text_inputs.push_back(std::move(prompt_feat_len_tensor));
     text_inputs.push_back(std::move(speed_tensor));
+
     // forward text-encoder
     auto text_out =
         text_sess_->Run({}, text_input_names_ptr_.data(), text_inputs.data(),
                         text_inputs.size(), text_output_names_ptr_.data(),
                         text_output_names_ptr_.size());
+
     Ort::Value &text_condition = text_out[0];
 
     std::vector<int64_t> text_cond_shape =
@@ -191,8 +195,27 @@ class OfflineTtsZipvoiceModel::Impl {
     GetInputNames(fm_sess_.get(), &fm_input_names_, &fm_input_names_ptr_);
     GetOutputNames(fm_sess_.get(), &fm_output_names_, &fm_output_names_ptr_);
 
-    // get meta data
-    Ort::ModelMetadata meta_data = fm_sess_->GetModelMetadata();
+    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+
+    Ort::ModelMetadata meta_data = text_sess_->GetModelMetadata();
+    SHERPA_ONNX_READ_META_DATA_BOOL_WITH_DEFAULT(meta_data_.use_espeak,
+                                                 "use_espeak", true);
+    SHERPA_ONNX_READ_META_DATA_BOOL_WITH_DEFAULT(meta_data_.use_pinyin,
+                                                 "use_pinyin", true);
+
+    meta_data = fm_sess_->GetModelMetadata();
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
+    SHERPA_ONNX_READ_META_DATA(meta_data_.feat_dim, "feat_dim");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.sample_rate,
+                                            "sample_rate", 24000);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.n_fft, "n_fft", 1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.hop_length, "hop_length",
+                                            256);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.window_length,
+                                            "window_length", 1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.num_mels, "num_mels",
+                                            100);
+
     if (config_.debug) {
       std::ostringstream os;
 
@@ -235,21 +258,6 @@ class OfflineTtsZipvoiceModel::Impl {
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 #endif
     }
-
-    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
-    SHERPA_ONNX_READ_META_DATA(meta_data_.feat_dim, "feat_dim");
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.sample_rate,
-                                            "sample_rate", 24000);
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.n_fft, "n_fft", 1024);
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.hop_length, "hop_length",
-                                            256);
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.window_length,
-                                            "window_length", 1024);
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.num_mels, "num_mels",
-                                            100);
-    SHERPA_ONNX_READ_META_DATA(meta_data_.use_espeak, "use_espeak");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.use_pinyin, "use_pinyin");
   }
 
  private:

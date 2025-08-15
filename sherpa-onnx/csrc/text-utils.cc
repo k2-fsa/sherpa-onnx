@@ -774,4 +774,19 @@ bool ContainsCJK(const std::u32string &text) {
   return false;
 }
 
+bool StringToBool(const std::string &s) {
+  std::string lower = s;
+  std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+  if (lower == "true" || lower == "1") return true;
+  if (lower == "false" || lower == "0") return false;
+
+  // Try istringstream for numbers
+  std::istringstream is(lower);
+  int32_t num;
+  if (is >> num) return num != 0;
+
+  return false;  // default if not matched
+}
+
 }  // namespace sherpa_onnx

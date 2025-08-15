@@ -196,6 +196,46 @@ GeneratedAudio OfflineTts::Generate(
 #endif
 }
 
+GeneratedAudio OfflineTts::Generate(
+    const std::string &text, const std::string &prompt_text,
+    const std::vector<float> &prompt_samples, int32_t sample_rate,
+    float speed /*=1.0*/, int32_t num_steps /*=4*/,
+    GeneratedAudioCallback callback /*=nullptr*/) const {
+#if !defined(_WIN32)
+  return impl_->Generate(text, prompt_text, prompt_samples, sample_rate, speed,
+                         num_steps, std::move(callback));
+#else
+  static bool printed = false;
+  auto utf8_text = text;
+  if (IsGB2312(text)) {
+    utf8_text = Gb2312ToUtf8(text);
+    if (!printed) {
+      SHERPA_ONNX_LOGE("Detected GB2312 encoded text! Converting it to UTF8.");
+      printed = true;
+    }
+  }
+  auto utf8_prompt_text = prompt_text;
+  if (IsGB2312(prompt_text)) {
+    utf8_prompt_text = Gb2312ToUtf8(prompt_text);
+    if (!printed) {
+      SHERPA_ONNX_LOGE(
+          "Detected GB2312 encoded prompt text! Converting it to UTF8.");
+      printed = true;
+    }
+  }
+  if (IsUtf8(utf8_text) && IsUtf8(utf8_prompt_text)) {
+    return impl_->Generate(text, prompt_text, prompt_samples, sample_rate,
+                           speed, num_steps, std::move(callback));
+  } else {
+    SHERPA_ONNX_LOGE(
+        "Non UTF8 encoded string is received. You would not get expected "
+        "results!");
+    return impl_->Generate(text, prompt_text, prompt_samples, sample_rate,
+                           speed, num_steps, std::move(callback));
+  }
+#endif
+}
+
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
 int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
