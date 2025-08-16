@@ -1,9 +1,10 @@
-name: export-nemo-parakeet-tdt-0.6b-v2
+name: export-nemo-parakeet-tdt-0.6b
 
 on:
   push:
     branches:
       - export-nemo-parakeet-tdt-0.6b-v2
+      - parakeet-tdt-v3
   workflow_dispatch:
 
 concurrency:
@@ -14,9 +15,9 @@ env:
   HF_HUB_ENABLE_HF_TRANSFER: "0"
 
 jobs:
-  export-nemo-parakeet-tdt-0_6b-v2:
+  export-nemo-parakeet-tdt-0_6b:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: parakeet tdt 0.6b v2
+    name: parakeet tdt 0.6b ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
