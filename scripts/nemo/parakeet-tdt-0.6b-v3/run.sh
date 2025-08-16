@@ -26,7 +26,6 @@ pip install \
   kaldi-native-fbank \
   librosa \
   onnx==1.17.0 \
-  onnxmltools==1.13.0 \
   onnxruntime==1.17.1 \
   soundfile
 
