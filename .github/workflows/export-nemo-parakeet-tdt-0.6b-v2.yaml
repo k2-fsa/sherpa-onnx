@@ -26,6 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # See https://github.com/vlayer-xyz/vlayer/pull/543/files
+      # Free up disk space as the macOS runners end up using most for Xcode
+      # versions we don't need and use iOS simulators.
+      - name: Free up disk space
+        if:  matrix.runner == 'macos-latest'
+        run: |
+          echo '*** Delete iOS simulators and their caches'
+          xcrun simctl delete all
+          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
