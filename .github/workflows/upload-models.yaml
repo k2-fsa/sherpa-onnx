@@ -43,7 +43,7 @@ jobs:
           curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_encoder.onnx
           curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_decoder.onnx
           curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_joiner.onnx
-          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/tokens.txt
+          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_tokens.txt
           popd
 
           for lang in en es fr de; do
@@ -295,11 +295,7 @@ jobs:
           for d in ${models[@]}; do
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            rm -rf huggingface
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
-            cp -av $d/* huggingface
-
-            pushd huggingface
+            pushd $d
             git lfs track "*.onnx"
             git lfs track "bpe.model"
             git lfs track "*.wav"
