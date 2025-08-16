@@ -52,9 +52,14 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 
 @torch.no_grad()
 def main():
-    asr_model = nemo_asr.models.ASRModel.from_pretrained(
-        model_name="nvidia/parakeet-tdt-0.6b-v2"
-    )
+    if Path("./parakeet-tdt-0.6b-v2.nemo").is_file():
+        asr_model = nemo_asr.models.ASRModel.restore_from(
+            restore_path="./parakeet-tdt-0.6b-v2.nemo"
+        )
+    else:
+        asr_model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name="nvidia/parakeet-tdt-0.6b-v2"
+        )
 
     asr_model.eval()
 

@@ -24,7 +24,9 @@ def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
 
 def export_onnx_fp16_large_2gb(onnx_fp32_path, onnx_fp16_path):
     onnx_fp16_model = convert_float_to_float16_model_path(
-        onnx_fp32_path, keep_io_types=True
+        onnx_fp32_path,
+        keep_io_types=True,
+        op_block_list=["Cast"],
     )
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
@@ -52,13 +54,13 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 
 @torch.no_grad()
 def main():
-    if False:
-        asr_model = nemo_asr.models.ASRModel.from_pretrained(
-            model_name="nvidia/parakeet-tdt-0.6b-v3"
-        )
-    else:
+    if Path("./parakeet-tdt-0.6b-v3.nemo").is_file():
         asr_model = nemo_asr.models.ASRModel.restore_from(
             restore_path="./parakeet-tdt-0.6b-v3.nemo"
+        )
+    else:
+        asr_model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name="nvidia/parakeet-tdt-0.6b-v3"
         )
 
     asr_model.eval()

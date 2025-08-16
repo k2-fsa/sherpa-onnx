@@ -24,8 +24,7 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
-        # version: ["v2", "v3"]
-        version: ["v3"]
+        version: ["v2", "v3"]
 
     steps:
       - uses: actions/checkout@v4

@@ -9,8 +9,9 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
-curl -SL -O https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
+curl -SL -O https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2/resolve/main/parakeet-tdt-0.6b-v2.nemo
 
+curl -SL -O https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
 
 
 pip install \
