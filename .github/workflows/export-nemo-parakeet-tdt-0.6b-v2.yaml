@@ -20,6 +20,8 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
+        # version: ["v2", "v3"]
+        version: ["v3"]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run
+      - name: Run ${{ matrix.version }}
         shell: bash
         run: |
           cd scripts/nemo/parakeet-tdt-0.6b-v2
@@ -40,10 +42,22 @@ jobs:
           mv -v tokens.txt ../../..
           mv 2086-149220-0033.wav ../../../0.wav
 
+      - name: Run ${{ matrix.version }}
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-v3
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
+
       - name: Collect files (fp32)
         shell: bash
         run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
+          version=${{ matrix.version }}
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
           mkdir -p $d
           cp encoder.int8.onnx $d
           cp decoder.onnx $d
@@ -51,14 +65,15 @@ jobs:
           cp tokens.txt $d
 
           mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
+          cp *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
 
       - name: Collect files (int8)
         shell: bash
         run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
+          version=${{ matrix.version }}
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
           mkdir -p $d
           cp encoder.int8.onnx $d
           cp decoder.int8.onnx $d
@@ -66,14 +81,15 @@ jobs:
           cp tokens.txt $d
 
           mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
+          cp *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
 
       - name: Collect files (fp16)
         shell: bash
         run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
+          version=${{ matrix.version }}
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-fp16
           mkdir -p $d
           cp encoder.fp16.onnx $d
           cp decoder.fp16.onnx $d
@@ -81,7 +97,7 @@ jobs:
           cp tokens.txt $d
 
           mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
+          cp *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
 
@@ -94,13 +110,14 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            version=${{ matrix.version }}
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
             models=(
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-fp16
             )
 
             for m in ${models[@]}; do
