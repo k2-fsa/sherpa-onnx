@@ -73,7 +73,6 @@ jobs:
 
             popd
 
-
             rm -rf $repo/.git*
 
             tar cjfv $repo.tar.bz2 $repo
@@ -248,7 +247,12 @@ jobs:
       - name: vosk-model-ru (stream zipformer)
         if: true
         shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
           cat >README.md <<EOF
           # Introduction
           Models in this directory are from
