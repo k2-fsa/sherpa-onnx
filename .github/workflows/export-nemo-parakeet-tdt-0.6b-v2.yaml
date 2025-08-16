@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - export-nemo-parakeet-tdt-0.6b-v2
-      - parakeet-tdt-v3
   workflow_dispatch:
 
 concurrency:
