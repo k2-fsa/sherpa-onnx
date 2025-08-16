@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - upload-models
-      - more-models
+      - upload-more-models
   workflow_dispatch:
 
 concurrency:
@@ -39,8 +39,14 @@ jobs:
         run: |
           git lfs install
           git clone https://csukuangfj:$HF_TOKEN@huggingface.co/Banafo/Kroko-ASR src
+          pushd src
+          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_encoder.onnx
+          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_decoder.onnx
+          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/de_joiner.onnx
+          curl -SL -O https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Python/resolve/main/tokens.txt
+          popd
 
-          for lang in en es fr; do
+          for lang in en es fr de; do
             repo=sherpa-onnx-streaming-zipformer-$lang-kroko-2025-08-06
             git clone https://huggingface.co/csukuangfj/$repo
             cp src/${lang}_encoder.onnx $repo/encoder.onnx
