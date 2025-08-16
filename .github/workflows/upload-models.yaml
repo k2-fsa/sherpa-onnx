@@ -7,9 +7,9 @@ on:
       - upload-more-models
   workflow_dispatch:
 
-concurrency:
-  group: upload-models-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: upload-models-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   upload-models:
@@ -32,7 +32,7 @@ jobs:
           git config --global user.name "Fangjun Kuang"
 
       - name: Streaming zipformer from Banafo/Kroko-ASR
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -244,6 +244,77 @@ jobs:
 
               popd
             done
+
+      - name: vosk-model-ru (stream zipformer)
+        if: true
+        shell: bash
+        run: |
+          cat >README.md <<EOF
+          # Introduction
+          Models in this directory are from
+          https://huggingface.co/alphacep/vosk-model-small-streaming-ru
+          EOF
+
+          git lfs install
+          git clone https://huggingface.co/alphacep/vosk-model-small-streaming-ru hf
+
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16 int8
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16 fp32
+
+          mkdir int8/test_wavs
+          mkdir fp32/test_wavs
+
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/russian-i-love-you.wav
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/test.wav
+
+          mv russian-i-love-you.wav 0.wav
+          mv test.wav 1.wav
+
+          cp -v *.wav int8/test_wavs
+          cp -v *.wav fp32/test_wavs
+
+          cp -v hf/am-onnx/{encoder,decoder,joiner}.onnx fp32/
+
+          cp -v hf/am-onnx/{encoder,joiner}.int8.onnx int8/
+          cp -v hf/am-onnx/decoder.int8.onnx int8/
+
+          cp -v hf/lang/tokens.txt int8/
+          cp -v hf/lang/bpe.model int8/
+
+          cp -v hf/lang/tokens.txt fp32/
+          cp -v hf/lang/bpe.model fp32/
+
+          mv int8 sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16
+          mv fp32 sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16
+
+          models=(
+            sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16
+            sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16
+          )
+
+          for d in ${models[@]}; do
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            rm -rf huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+            cp -av $d/* huggingface
+
+            pushd huggingface
+            git lfs track "*.onnx"
+            git lfs track "bpe.model"
+            git lfs track "*.wav"
+            git status
+            git add .
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+            popd
+
+            rm -rf $d/.git*
+
+            tar cjfv $d.tar.bz2 $d
+          done
+          ls -lh *.tar.bz2
 
       - name: vosk-model-ru (zipformer)
         if: false
