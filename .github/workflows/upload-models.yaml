@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - upload-models
-      - upload-more-models
+      # - upload-more-models
   workflow_dispatch:
 
-# concurrency:
-#   group: upload-models-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: upload-models-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   upload-models:
@@ -245,7 +245,7 @@ jobs:
             done
 
       - name: vosk-model-ru (stream zipformer)
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
