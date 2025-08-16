@@ -104,10 +104,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnx2Pass
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleDebug -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnx2Pass/app/build/intermediates/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-asr_2pass-$lang1-${short_name1}_${short_name2}.apk
+  mv android/SherpaOnnx2Pass/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-asr_2pass-$lang1-${short_name1}_${short_name2}.apk
   ls -lh apks
   rm -v ./android/SherpaOnnx2Pass/app/src/main/jniLibs/$arch/*.so
 done
