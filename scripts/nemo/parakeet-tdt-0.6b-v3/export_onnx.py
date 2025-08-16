@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
-import os
 from pathlib import Path
 from typing import Dict
+import os
 
 import nemo.collections.asr as nemo_asr
 import onnx
@@ -44,13 +44,13 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 
 @torch.no_grad()
 def main():
-    if Path("./parakeet-tdt-0.6b-v2.nemo").is_file():
+    if Path("./parakeet-tdt-0.6b-v3.nemo").is_file():
         asr_model = nemo_asr.models.ASRModel.restore_from(
-            restore_path="./parakeet-tdt-0.6b-v2.nemo"
+            restore_path="./parakeet-tdt-0.6b-v3.nemo"
         )
     else:
         asr_model = nemo_asr.models.ASRModel.from_pretrained(
-            model_name="nvidia/parakeet-tdt-0.6b-v2"
+            model_name="nvidia/parakeet-tdt-0.6b-v3"
         )
 
     asr_model.eval()
@@ -79,7 +79,7 @@ def main():
         "model_type": "EncDecRNNTBPEModel",
         "version": "2",
         "model_author": "NeMo",
-        "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2",
+        "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
         "comment": "Only the transducer branch is exported",
         "feat_dim": 128,
     }

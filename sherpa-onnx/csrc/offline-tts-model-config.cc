@@ -46,7 +46,7 @@ bool OfflineTtsModelConfig::Validate() const {
     return kitten.Validate();
   }
 
-  SHERPA_ONNX_LOGE("Please provide at exactly one tts model.");
+  SHERPA_ONNX_LOGE("Please provide exactly one tts model.");
 
   return false;
 }
