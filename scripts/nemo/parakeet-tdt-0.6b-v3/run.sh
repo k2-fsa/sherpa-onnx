@@ -9,6 +9,8 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+curl -SL -O https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3/resolve/main/parakeet-tdt-0.6b-v3.nemo
+
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/de.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/fr.wav
