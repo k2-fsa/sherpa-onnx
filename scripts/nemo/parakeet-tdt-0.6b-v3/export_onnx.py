@@ -57,7 +57,7 @@ def main():
             model_name="nvidia/parakeet-tdt-0.6b-v3"
         )
     else:
-        asr_model = nemo_asr.models.ASRModel.from_pretrained(
+        asr_model = nemo_asr.models.ASRModel.restore_from(
             restore_path="./parakeet-tdt-0.6b-v3.nemo"
         )
 

@@ -16,6 +16,8 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/d
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/fr.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/es.wav
 
+ls -lh
+
 
 pip install \
   nemo_toolkit['asr'] \
