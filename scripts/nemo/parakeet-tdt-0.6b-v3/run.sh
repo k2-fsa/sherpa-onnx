@@ -49,12 +49,4 @@ for w in en.wav de.wav fr.wav es.wav; do
     --joiner ./joiner.int8.onnx \
     --tokens ./tokens.txt \
     --wav $w
-
-  echo "---fp16----"
-  python3 ./test_onnx.py \
-    --encoder ./encoder.fp16.onnx \
-    --decoder ./decoder.fp16.onnx \
-    --joiner ./joiner.fp16.onnx \
-    --tokens ./tokens.txt \
-    --wav $w
 done

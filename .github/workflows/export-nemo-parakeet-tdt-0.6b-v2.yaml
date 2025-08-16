@@ -108,6 +108,7 @@ jobs:
           tar cjfv $d.tar.bz2 $d
 
       - name: Collect files (fp16)
+        if: matrix.version == 'v2'
         shell: bash
         run: |
           version=${{ matrix.version }}
@@ -139,8 +140,11 @@ jobs:
             models=(
               sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
               sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-fp16
             )
+
+            if [[ $version == v2 ]]; then
+              models+=("sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-fp16")
+            fi
 
             for m in ${models[@]}; do
               rm -rf huggingface
