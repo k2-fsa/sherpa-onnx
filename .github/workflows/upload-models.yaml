@@ -265,6 +265,9 @@ jobs:
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16 int8
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16 fp32
 
+          rm -fv int8/*.onnx
+          rm -fv fp32/*.onnx
+
           mkdir int8/test_wavs
           mkdir fp32/test_wavs
 
@@ -283,7 +286,7 @@ jobs:
           cp -v hf/am-onnx/{encoder,decoder,joiner}.onnx fp32/
 
           cp -v hf/am-onnx/{encoder,joiner}.int8.onnx int8/
-          cp -v hf/am-onnx/decoder.int8.onnx int8/
+          cp -v hf/am-onnx/decoder.onnx int8/
 
           cp -v hf/lang/tokens.txt int8/
           cp -v hf/lang/bpe.model int8/
