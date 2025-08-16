@@ -59,6 +59,8 @@ jobs:
           ./run.sh
 
           ls -lh *.onnx
+          ls -lh *.weights
+
           mv -v *.onnx ../../..
           mv -v *.weights ../../..
           mv -v tokens.txt ../../..
@@ -83,18 +85,18 @@ jobs:
           version=${{ matrix.version }}
           d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
           mkdir -p $d
-          cp encoder.onnx $d
-          cp encoder.weights $d
-          cp decoder.onnx $d
-          cp joiner.onnx $d
-          cp tokens.txt $d
+          cp -v encoder.onnx $d
+          cp -v encoder.weights $d
+          cp -v decoder.onnx $d
+          cp -v joiner.onnx $d
+          cp -v tokens.txt $d
 
           mkdir $d/test_wavs
-          cp *.wav $d/test_wavs
+          cp -v *.wav $d/test_wavs
 
-          tar cjfv $d.tar.bz2 $d
+          # tar cjfv $d.tar.bz2 $d
 
-          ls -lh *.tar.bz2
+          # ls -lh *.tar.bz2
 
       - name: Collect files (int8)
         shell: bash
@@ -102,13 +104,13 @@ jobs:
           version=${{ matrix.version }}
           d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
           mkdir -p $d
-          cp encoder.int8.onnx $d
-          cp decoder.int8.onnx $d
-          cp joiner.int8.onnx $d
-          cp tokens.txt $d
+          cp -v encoder.int8.onnx $d
+          cp -v decoder.int8.onnx $d
+          cp -v joiner.int8.onnx $d
+          cp -v tokens.txt $d
 
           mkdir $d/test_wavs
-          cp *.wav $d/test_wavs
+          cp -v *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
 
@@ -139,7 +141,6 @@ jobs:
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
-              rm *.onnx
               git lfs track "*.onnx"
               git lfs track "*.wav"
               git lfs track "*.weights"
