@@ -60,6 +60,7 @@ jobs:
 
           ls -lh *.onnx
           mv -v *.onnx ../../..
+          mv -v *.weights ../../..
           mv -v tokens.txt ../../..
           mv 2086-149220-0033.wav ../../../0.wav
 
@@ -72,6 +73,7 @@ jobs:
 
           ls -lh *.onnx
           mv -v *.onnx ../../..
+          mv -v *.weights ../../..
           mv -v tokens.txt ../../..
           mv *.wav ../../../
 
@@ -81,7 +83,8 @@ jobs:
           version=${{ matrix.version }}
           d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
           mkdir -p $d
-          cp encoder.int8.onnx $d
+          cp encoder.onnx $d
+          cp encoder.weights $d
           cp decoder.onnx $d
           cp joiner.onnx $d
           cp tokens.txt $d
@@ -90,6 +93,8 @@ jobs:
           cp *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
 
       - name: Collect files (int8)
         shell: bash
@@ -106,6 +111,8 @@ jobs:
           cp *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
 
       - name: Publish to huggingface
         env:
@@ -132,8 +139,10 @@ jobs:
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
+              rm *.onnx
               git lfs track "*.onnx"
               git lfs track "*.wav"
+              git lfs track "*.weights"
               git status
               git add .
               git status

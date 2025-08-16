@@ -29,7 +29,17 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         meta.key = key
         meta.value = str(value)
 
-    onnx.save(model, filename)
+    if filename == "encoder.onnx":
+        external_filename = "encoder"
+        onnx.save(
+            model,
+            filename,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location=external_filename + ".weights",
+        )
+    else:
+        onnx.save(model, filename)
 
 
 @torch.no_grad()
@@ -83,6 +93,7 @@ def main():
         os.system("ls -lh *.onnx")
 
     add_meta_data("encoder.int8.onnx", meta_data)
+    add_meta_data("encoder.onnx", meta_data)
     print("meta_data", meta_data)
 
 
