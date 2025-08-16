@@ -58,10 +58,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxVad
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxVad/app/build/intermediates/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-silero_vad.apk
+  mv android/SherpaOnnxVad/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-silero_vad.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/*.so
 done
@@ -101,10 +101,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxVad
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxVad/app/build/intermediates/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-ten_vad.apk
+  mv android/SherpaOnnxVad/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-ten_vad.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/*.so
 done

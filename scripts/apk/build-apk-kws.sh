@@ -77,10 +77,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxKws
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxKws/app/build/intermediates/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-zh-wenetspeech-zipformer.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-zh-wenetspeech-zipformer.apk
 
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
@@ -138,10 +138,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxKws
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxKws/app/build/intermediates/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-en-gigaspeech-zipformer.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-en-gigaspeech-zipformer.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done

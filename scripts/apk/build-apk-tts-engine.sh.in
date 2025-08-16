@@ -68,7 +68,6 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./TtsEngine.kt
 {% endif %}
 
-
 {% if tts_model.model_name %}
   sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
 {% endif %}
@@ -141,10 +140,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxTtsEngine
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease -Pandroid.injected.build.abi=$arch
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxTtsEngine/app/build/intermediates/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
+  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxTtsEngine/app/src/main/jniLibs/$arch/*.so
 done
