@@ -53,6 +53,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run ${{ matrix.version }}
+        if: matrix.version == 'v2'
         shell: bash
         run: |
           cd scripts/nemo/parakeet-tdt-0.6b-v2
@@ -64,6 +65,7 @@ jobs:
           mv 2086-149220-0033.wav ../../../0.wav
 
       - name: Run ${{ matrix.version }}
+        if: matrix.version == 'v3'
         shell: bash
         run: |
           cd scripts/nemo/parakeet-tdt-0.6b-v3
