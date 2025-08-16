@@ -1,3 +1,19 @@
+## 1.12.9
+
+* Add more piper tts models (#2480)
+* Fix ASR for UE (#2483)
+* push to maven center (#2463)
+* Specify ABIs when building APKs (#2488)
+* Add more debug info for vits tts (#2491)
+* Add Swift API for computing speaker embeddings (#2492)
+* Alex/feat add python example (#2490)
+* Support TDT transducer decoding (#2495)
+* Fix java test (#2496)
+* Refactor Swift API (#2493)
+* add TtsReader app to README.md (#2498)
+* Export https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3 to sherpa-onnx (#2500)
+* Fix building apk (#2499)
+
 ## 1.12.8
 
 * Expose JNI to compute probability of chunk in VAD (#2433)
