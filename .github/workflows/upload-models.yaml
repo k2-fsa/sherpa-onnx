@@ -268,8 +268,8 @@ jobs:
           rm -fv int8/*.onnx
           rm -fv fp32/*.onnx
 
-          mkdir int8/test_wavs
-          mkdir fp32/test_wavs
+          mkdir -p int8/test_wavs
+          mkdir -p fp32/test_wavs
 
           curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/russian-i-love-you.wav
           curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/test.wav
