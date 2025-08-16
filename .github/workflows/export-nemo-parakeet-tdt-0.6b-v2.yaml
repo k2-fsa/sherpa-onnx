@@ -10,6 +10,9 @@ concurrency:
   group: export-nemo-parakeet-tdt-0.6b-v2-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  HF_HUB_ENABLE_HF_TRANSFER: "0"
+
 jobs:
   export-nemo-parakeet-tdt-0_6b-v2:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
