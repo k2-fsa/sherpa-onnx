@@ -274,6 +274,9 @@ jobs:
           mv russian-i-love-you.wav 0.wav
           mv test.wav 1.wav
 
+          cp -v README.md int8/
+          cp -v README.md fp32/
+
           cp -v *.wav int8/test_wavs
           cp -v *.wav fp32/test_wavs
 
