@@ -50,7 +50,6 @@ def get_args():
             "large", "large-v3", "turbo", # these three have feature dim 128
             "distil-medium.en", "distil-small.en", "distil-large-v2",
             "distil-large-v3",
-            # "distil-large-v3", # distil-large-v3 is not supported!
             # for fine-tuned models from icefall
             "medium-aishell",
             ],
@@ -419,7 +418,7 @@ def main():
     audio = whisper.pad_or_trim(audio)
     assert audio.shape == (16000 * 30,), audio.shape
 
-    if args.model in ("large", "large-v3", "turbo"):
+    if args.model in ("large", "large-v3", "turbo", "distil-large-v3"):
         n_mels = 128
     else:
         n_mels = 80
