@@ -432,7 +432,7 @@ def main():
     audio = whisper.pad_or_trim(audio)
     assert audio.shape == (16000 * 30,), audio.shape
 
-    if "distil-large-v3" == args.model or "distil-large-v3.5" == args.model:
+    if args.model in ("distil-large-v3", "distil-large-v3.5"):
         n_mels = 128
     elif args.model in (
         "large",
