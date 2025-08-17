@@ -9,16 +9,16 @@ concurrency:
 
 jobs:
   release-whisper-models:
-    # if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
     name: ${{ matrix.model }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        # model: ["turbo", "distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2", "distil-large-v3"]
+        model: ["turbo", "distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2", "distil-large-v3", "distil-large-v3.5"]
         # model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
-        model: ["distil-large-v3"]
+        # model: ["distil-large-v3.5", "distil-large-v3"]
         python-version: ["3.8"]
 
     steps:
@@ -50,6 +50,9 @@ jobs:
             ls -lh
           elif [[ $model == distil-large-v3 ]]; then
             wget -q -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
+            ls -lh
+          elif [[ $model == distil-large-v3.5 ]]; then
+            wget -q -O distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
             ls -lh
           elif [[ $model == distil-small.en ]]; then
             wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
@@ -159,6 +162,7 @@ jobs:
 
           git status
           ls -lh
+          git lfs track "*.wav*"
           git lfs track "*onnx*"
           git lfs track "*weights*"
 
