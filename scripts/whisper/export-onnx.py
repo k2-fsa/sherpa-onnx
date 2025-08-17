@@ -49,6 +49,7 @@ def get_args():
             "large-v1", "large-v2",
             "large", "large-v3", "turbo", # these three have feature dim 128
             "distil-medium.en", "distil-small.en", "distil-large-v2",
+            "distil-large-v3",
             # "distil-large-v3", # distil-large-v3 is not supported!
             # for fine-tuned models from icefall
             "medium-aishell",
@@ -345,6 +346,19 @@ def main():
                 You can use the following command to do that:
 
                 wget -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            """
+            )
+        model = whisper.load_model(filename)
+    elif name == "distil-large-v3":
+        filename = "./distil-large-v3-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v3-openai
+                to download model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
             """
             )
         model = whisper.load_model(filename)
