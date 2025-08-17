@@ -7,13 +7,6 @@ on:
       - '.github/workflows/test-piper-phonemize.yaml'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-piper-phonemize.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
 
   workflow_dispatch:
 

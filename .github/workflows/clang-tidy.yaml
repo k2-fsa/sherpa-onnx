@@ -8,11 +8,6 @@ on:
     paths:
       - 'sherpa-onnx/csrc/**'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - 'sherpa-onnx/csrc/**'
 
   workflow_dispatch:
 

@@ -12,15 +12,6 @@ on:
       - 'build-android*.sh'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/android.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'build-android*.sh'
 
   workflow_dispatch:
 

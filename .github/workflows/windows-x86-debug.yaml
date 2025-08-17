@@ -16,19 +16,6 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/windows-x86-debug.yaml'
-      - '.github/scripts/test-online-transducer.sh'
-      - '.github/scripts/test-online-paraformer.sh'
-      - '.github/scripts/test-offline-transducer.sh'
-      - '.github/scripts/test-offline-ctc.sh'
-      - '.github/scripts/test-offline-tts.sh'
-      - '.github/scripts/test-online-ctc.sh'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
 
   workflow_dispatch:
 

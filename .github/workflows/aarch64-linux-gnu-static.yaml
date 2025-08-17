@@ -13,15 +13,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/aarch64-linux-gnu-static.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
 
   workflow_dispatch:
 

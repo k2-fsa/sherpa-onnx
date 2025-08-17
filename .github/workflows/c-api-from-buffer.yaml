@@ -13,16 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
       - 'ffmpeg-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/c-api-from-buffer.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'c-api-examples/**'
-      - 'ffmpeg-examples/**'
 
   workflow_dispatch:
 
