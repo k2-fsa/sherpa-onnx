@@ -8,17 +8,23 @@ https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 func cosineSimilarity(_ a: [Float], _ b: [Float]) -> Float {
   precondition(a.count == b.count, "Vectors must have the same length")
 
-  // Dot product
-  let dotProduct = zip(a, b).reduce(0) { $0 + $1.0 * $1.1 }
+  var dot: Float = 0
+  var sumA: Float = 0
+  var sumB: Float = 0
 
-  // Magnitudes
-  let magA = sqrt(a.reduce(0) { $0 + $1 * $1 })
-  let magB = sqrt(b.reduce(0) { $0 + $1 * $1 })
+  for i in 0..<a.count {
+    let x = a[i]
+    let y = b[i]
+    dot += x * y
+    sumA += x * x
+    sumB += y * y
+  }
 
-  // Avoid division by zero
+  let magA = sqrt(sumA)
+  let magB = sqrt(sumB)
+
   guard magA > 0 && magB > 0 else { return 0 }
-
-  return dotProduct / (magA * magB)
+  return dot / (magA * magB)
 }
 
 func computeEmbedding(extractor: SherpaOnnxSpeakerEmbeddingExtractorWrapper, waveFilename: String)

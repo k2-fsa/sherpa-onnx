@@ -11,16 +11,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
       - 'sherpa-onnx/java-api/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/run-java-test.yaml'
-      - 'cmake/**'
-      - 'java-api-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'sherpa-onnx/java-api/**'
+
   workflow_dispatch:
 
 concurrency:

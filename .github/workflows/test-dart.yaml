@@ -10,14 +10,6 @@ on:
       - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
       - 'flutter/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-dart.yaml'
-      - '.github/scripts/test-dart.sh'
-      - 'dart-api-examples/**'
-      - 'flutter/**'
 
   workflow_dispatch:
 

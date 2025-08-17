@@ -13,15 +13,6 @@ on:
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/arm-linux-gnueabihf.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
 
   workflow_dispatch:
 

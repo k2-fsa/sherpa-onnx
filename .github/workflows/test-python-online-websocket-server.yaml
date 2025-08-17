@@ -9,14 +9,7 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-python-online-websocket-server.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/python/**'
+
   workflow_dispatch:
 
 concurrency:

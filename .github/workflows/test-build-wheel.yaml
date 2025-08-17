@@ -10,15 +10,6 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - 'setup.py'
-      - '.github/workflows/test-build-wheel.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/python/**'
 
   workflow_dispatch:
 
@@ -144,7 +135,7 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.12.10/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.13.5/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.13.6/x64/bin:$PATH
 
           which sherpa-onnx
           sherpa-onnx --help
