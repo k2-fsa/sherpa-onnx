@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.simulate.streaming.asr.wear.os"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 20250817
+        versionName = "1.12.9"
         vectorDrawables {
             useSupportLibrary = true
         }
