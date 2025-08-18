@@ -9,8 +9,8 @@
 #include <string>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/offline-tts-zipvoice-model-meta-data.h"
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
+#include "sherpa-onnx/csrc/offline-tts-zipvoice-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -25,10 +25,9 @@ class OfflineTtsZipvoiceModel {
 
   // Return a float32 tensor containing the mel
   // of shape (batch_size, mel_dim, num_frames)
-  Ort::Value Run(Ort::Value tokens,
-                 Ort::Value prompt_tokens,
-                 Ort::Value prompt_features,
-                 float speed, int num_step) const;
+  Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
+                 Ort::Value prompt_features, float speed,
+                 int32_t num_steps) const;
 
   const OfflineTtsZipvoiceModelMetaData &GetMetaData() const;
 

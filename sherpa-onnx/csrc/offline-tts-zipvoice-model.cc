@@ -56,7 +56,7 @@ class OfflineTtsZipvoiceModel::Impl {
   }
 
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
-                 Ort::Value prompt_features, float speed, int num_step) {
+                 Ort::Value prompt_features, float speed, int32_t num_steps) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -125,9 +125,9 @@ class OfflineTtsZipvoiceModel::Impl {
     float t_shift = config_.zipvoice.t_shift;
     float guidance_scale = config_.zipvoice.guidance_scale;
 
-    std::vector<float> timesteps(num_step + 1);
-    for (int32_t i = 0; i <= num_step; ++i) {
-      float t = static_cast<float>(i) / num_step;
+    std::vector<float> timesteps(num_steps + 1);
+    for (int32_t i = 0; i <= num_steps; ++i) {
+      float t = static_cast<float>(i) / num_steps;
       timesteps[i] = t_shift * t / (1.0f + (t_shift - 1.0f) * t);
     }
 
@@ -144,7 +144,7 @@ class OfflineTtsZipvoiceModel::Impl {
     fm_inputs.push_back(std::move(speech_condition));
     fm_inputs.push_back(std::move(guidance_scale_tensor));
 
-    for (int32_t step = 0; step < num_step; ++step) {
+    for (int32_t step = 0; step < num_steps; ++step) {
       float t_val = timesteps[step];
       int64_t t_shape = 1;
       Ort::Value t_tensor =
@@ -198,10 +198,10 @@ class OfflineTtsZipvoiceModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
 
     Ort::ModelMetadata meta_data = text_sess_->GetModelMetadata();
-    SHERPA_ONNX_READ_META_DATA_BOOL_WITH_DEFAULT(meta_data_.use_espeak,
-                                                 "use_espeak", true);
-    SHERPA_ONNX_READ_META_DATA_BOOL_WITH_DEFAULT(meta_data_.use_pinyin,
-                                                 "use_pinyin", true);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_espeak, "use_espeak",
+                                            1);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_pinyin, "use_pinyin",
+                                            1);
 
     meta_data = fm_sess_->GetModelMetadata();
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
@@ -304,9 +304,9 @@ Ort::Value OfflineTtsZipvoiceModel::Run(Ort::Value tokens,
                                         Ort::Value prompt_tokens,
                                         Ort::Value prompt_features,
                                         float speed /*= 1.0*/,
-                                        int num_step /*= 16*/) const {
+                                        int32_t num_steps /*= 16*/) const {
   return impl_->Run(std::move(tokens), std::move(prompt_tokens),
-                    std::move(prompt_features), speed, num_step);
+                    std::move(prompt_features), speed, num_steps);
 }
 
 #if __ANDROID_API__ >= 9

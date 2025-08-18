@@ -24,13 +24,10 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-flow-matching-model", &flow_matching_model,
                "Path to zipvoice flow-matching model");
   po->Register("zipvoice-vocoder", &vocoder, "Path to zipvoice vocoder");
-  po->Register("zipvoice-num-step", &num_step,
+  po->Register("zipvoice-num-steps", &num_steps,
                "Number of inference steps for ZipVoice (default: 16)");
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");
-  po->Register("zipvoice-speed", &speed,
-               "Speech speed for ZipVoice (default: 1.0, larger=faster, "
-               "smaller=slower)");
   po->Register("zipvoice-t-shift", &t_shift,
                "Shift t to smaller ones if t_shift < 1.0 (default: 0.5)");
   po->Register(
@@ -106,20 +103,15 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
 
-  if (num_step <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-num-step must be positive. Given: %d",
-                     num_step);
+  if (num_steps <= 0) {
+    SHERPA_ONNX_LOGE("--zipvoice-num-steps must be positive. Given: %d",
+                     num_steps);
     return false;
   }
 
   if (feat_scale <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f",
                      feat_scale);
-    return false;
-  }
-
-  if (speed <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-speed must be positive. Given: %f", speed);
     return false;
   }
 
@@ -154,9 +146,8 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   os << "vocoder=\"" << vocoder << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "pinyin_dict=\"" << pinyin_dict << "\", ";
-  os << "num_step=" << num_step << ", ";
+  os << "num_steps=" << num_steps << ", ";
   os << "feat_scale=" << feat_scale << ", ";
-  os << "speed=" << speed << ", ";
   os << "t_shift=" << t_shift << ", ";
   os << "target_rms=" << target_rms << ", ";
   os << "guidance_scale=" << guidance_scale << ")";

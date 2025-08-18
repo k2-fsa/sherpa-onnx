@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_MODEL_CONFIG_H_
 
+#include <cstdint>
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -24,9 +25,8 @@ struct OfflineTtsZipvoiceModelConfig {
   // Used for converting Chinese characters to pinyin
   std::string pinyin_dict;
 
-  int num_step = 16;
+  int32_t num_steps = 16;
   float feat_scale = 0.1;
-  float speed = 1.0;
   float t_shift = 0.5;
   float target_rms = 0.1;
   float guidance_scale = 1.0;
@@ -37,17 +37,16 @@ struct OfflineTtsZipvoiceModelConfig {
       const std::string &tokens, const std::string &text_model,
       const std::string &flow_matching_model, const std::string &vocoder,
       const std::string &data_dir, const std::string &pinyin_dict,
-      int num_step = 16, float feat_scale = 0.1, float speed = 1.0,
-      float t_shift = 0.5, float target_rms = 0.1, float guidance_scale = 1.0)
+      int32_t num_steps = 16, float feat_scale = 0.1, float t_shift = 0.5,
+      float target_rms = 0.1, float guidance_scale = 1.0)
       : tokens(tokens),
         text_model(text_model),
         flow_matching_model(flow_matching_model),
         vocoder(vocoder),
         data_dir(data_dir),
         pinyin_dict(pinyin_dict),
-        num_step(num_step),
+        num_steps(num_steps),
         feat_scale(feat_scale),
-        speed(speed),
         t_shift(t_shift),
         target_rms(target_rms),
         guidance_scale(guidance_scale) {}

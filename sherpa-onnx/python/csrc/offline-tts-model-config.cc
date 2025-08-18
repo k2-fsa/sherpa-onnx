@@ -10,6 +10,7 @@
 #include "sherpa-onnx/python/csrc/offline-tts-kokoro-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-matcha-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tts-vits-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-tts-zipvoice-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -17,6 +18,7 @@ void PybindOfflineTtsModelConfig(py::module *m) {
   PybindOfflineTtsVitsModelConfig(m);
   PybindOfflineTtsMatchaModelConfig(m);
   PybindOfflineTtsKokoroModelConfig(m);
+  PybindOfflineTtsZipvoiceModelConfig(m);
 
   using PyClass = OfflineTtsModelConfig;
 
@@ -24,16 +26,19 @@ void PybindOfflineTtsModelConfig(py::module *m) {
       .def(py::init<>())
       .def(py::init<const OfflineTtsVitsModelConfig &,
                     const OfflineTtsMatchaModelConfig &,
-                    const OfflineTtsKokoroModelConfig &, int32_t, bool,
+                    const OfflineTtsKokoroModelConfig &,
+                    const OfflineTtsZipvoiceModelConfig &, int32_t, bool,
                     const std::string &>(),
            py::arg("vits") = OfflineTtsVitsModelConfig{},
            py::arg("matcha") = OfflineTtsMatchaModelConfig{},
            py::arg("kokoro") = OfflineTtsKokoroModelConfig{},
+           py::arg("zipvoice") = OfflineTtsZipvoiceModelConfig{},
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu")
       .def_readwrite("vits", &PyClass::vits)
       .def_readwrite("matcha", &PyClass::matcha)
       .def_readwrite("kokoro", &PyClass::kokoro)
+      .def_readwrite("zipvoice", &PyClass::zipvoice)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)

@@ -84,6 +84,41 @@ void PybindOfflineTts(py::module *m) {
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
           py::arg("callback") = py::none(),
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "generate",
+          [](const PyClass &self, const std::string &text,
+             const std::string &prompt_text,
+             const std::vector<float> &prompt_samples, int32_t sample_rate,
+             float speed, int32_t num_steps,
+             std::function<int32_t(py::array_t<float>, float)> callback)
+              -> GeneratedAudio {
+            if (!callback) {
+              return self.Generate(text, prompt_text, prompt_samples,
+                                   sample_rate, speed, num_steps);
+            }
+
+            std::function<int32_t(const float *, int32_t, float)>
+                callback_wrapper = [callback](const float *samples, int32_t n,
+                                              float progress) {
+                  // CAUTION(fangjun): we have to copy samples since it is
+                  // freed once the call back returns.
+
+                  pybind11::gil_scoped_acquire acquire;
+
+                  pybind11::array_t<float> array(n);
+                  py::buffer_info buf = array.request();
+                  auto p = static_cast<float *>(buf.ptr);
+                  std::copy(samples, samples + n, p);
+                  return callback(array, progress);
+                };
+
+            return self.Generate(text, prompt_text, prompt_samples, sample_rate,
+                                 speed, num_steps, callback_wrapper);
+          },
+          py::arg("text"), py::arg("prompt_text"), py::arg("prompt_samples"),
+          py::arg("sample_rate"), py::arg("speed") = 1.0,
+          py::arg("num_steps") = 4, py::arg("callback") = py::none(),
           py::call_guard<py::gil_scoped_release>());
 }
 

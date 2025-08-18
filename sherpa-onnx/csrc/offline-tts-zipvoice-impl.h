@@ -116,9 +116,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         config_.model.zipvoice.pinyin_dict, meta_data, config_.model.debug);
   }
 
-  std::vector<std::vector<float>> ComputeMelSpectrogram(
-      const std::vector<float> &_samples, int32_t sample_rate) const {
-    // add this in model file
+  std::vector<int32_t> ComputeMelSpectrogram(
+      const std::vector<float> &_samples, int32_t sample_rate,
+      std::vector<float> *prompt_features) const {
     const auto &meta = model_->GetMetaData();
     if (sample_rate != meta.sample_rate) {
       SHERPA_ONNX_LOGE(
@@ -135,16 +135,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
           sample_rate, meta.sample_rate, lowpass_cutoff, lowpass_filter_width);
       std::vector<float> samples;
       resampler->Resample(_samples.data(), _samples.size(), true, &samples);
-      return ComputeMelSpectrogram(samples);
+      return ComputeMelSpectrogram(samples, prompt_features);
     } else {
       // Use the original samples if the sample rate matches
-      return ComputeMelSpectrogram(_samples);
+      return ComputeMelSpectrogram(_samples, prompt_features);
     }
   }
 
-  std::vector<std::vector<float>> ComputeMelSpectrogram(
-      const std::vector<float> &samples) const {
-    // add this in model file
+  std::vector<int32_t> ComputeMelSpectrogram(
+      const std::vector<float> &samples,
+      std::vector<float> *prompt_features) const {
     const auto &meta = model_->GetMetaData();
 
     int32_t sample_rate = meta.sample_rate;
@@ -181,8 +181,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     knf::MelBanks mel_banks(mel_opts, frame_opts, 1.0f);
 
-    std::vector<std::vector<float>> mel_spec;
-    mel_spec.reserve(num_frames);
+    prompt_features->clear();
+    prompt_features->reserve(num_frames * num_mels);
 
     for (int32_t i = 0; i < num_frames; ++i) {
       std::vector<float> magnitude_spectrum(fft_bins);
@@ -196,9 +196,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       for (auto &v : mel_features) {
         v = std::log(v + 1e-10f);
       }
-      mel_spec.push_back(std::move(mel_features));
+      // Instead of push_back a vector, push elements individually
+      prompt_features->insert(prompt_features->end(), mel_features.begin(),
+                              mel_features.end());
     }
-    return mel_spec;
+    if (num_frames == 0) {
+      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
+      return {0, 0};
+    } else {
+      return {num_frames, num_mels};
+    }
   }
 
   GeneratedAudio Process(const std::vector<int64_t> &tokens,
@@ -241,34 +248,22 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
       }
     }
 
-    std::vector<std::vector<float>> prompt_features =
-        ComputeMelSpectrogram(prompt_samples_scaled, sample_rate);
+    std::vector<float> prompt_features;
+    auto res_shape = ComputeMelSpectrogram(prompt_samples_scaled, sample_rate,
+                                           &prompt_features);
 
-    const int num_frames = prompt_features.size();
-    const int mel_dim = num_frames > 0 ? prompt_features[0].size() : 0;
+    int32_t num_frames = res_shape[0];
+    int32_t mel_dim = res_shape[1];
 
     if (feat_scale != 1.0f) {
-      for (auto &row : prompt_features) {
-        for (auto &v : row) {
-          v *= feat_scale;
-        }
-      }
-    }
-
-    // Convert the 2D feature matrix into a contiguous 1D array for tensor
-    // input Shape: [1, num_frames, mel_dim]
-    std::vector<float> prompt_features_flat;
-    prompt_features_flat.reserve(num_frames * mel_dim);
-
-    for (int i = 0; i < num_frames; ++i) {
-      for (int j = 0; j < mel_dim; ++j) {
-        prompt_features_flat.push_back(prompt_features[i][j]);
+      for (auto &item : prompt_features) {
+        item *= feat_scale;
       }
     }
 
     std::array<int64_t, 3> shape = {1, num_frames, mel_dim};
     auto prompt_features_tensor = Ort::Value::CreateTensor(
-        memory_info, prompt_features_flat.data(), prompt_features_flat.size(),
+        memory_info, prompt_features.data(), prompt_features.size(),
         shape.data(), shape.size());
 
     Ort::Value mel =

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c)  2023  Xiaomi Corporation
+# Copyright (c)  2023-2025  Xiaomi Corporation
 
 """
 This file demonstrates how to use sherpa-onnx Python API to generate audio
@@ -140,6 +140,8 @@ for details.
 
 import argparse
 import time
+import wave
+import numpy as np
 
 import sherpa_onnx
 import soundfile as sf
@@ -272,6 +274,110 @@ def add_kokoro_args(parser):
     )
 
 
+def add_zipvoice_args(parser):
+    parser.add_argument(
+        "--zipvoice-tokens",
+        type=str,
+        default="",
+        help="Path to tokens.txt for Zipvoice models.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-text-model",
+        type=str,
+        default="",
+        help="Path to zipvoice text model.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-flow-matching-model",
+        type=str,
+        default="",
+        help="Path to zipvoice flow matching model.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-data-dir",
+        type=str,
+        default="",
+        help="Path to the dict directory of espeak-ng.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-pinyin-dict",
+        type=str,
+        default="",
+        help="Path to the pinyin dictionary.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-vocoder",
+        type=str,
+        default="",
+        help="Path to the vocos vocoder.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-num-steps",
+        type=int,
+        default=4,
+        help="Number of steps for Zipvoice.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-feat-scale",
+        type=float,
+        default=0.1,
+        help="Scale factor for Zipvoice features.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-t-shift",
+        type=float,
+        default=0.5,
+        help="Shift t to smaller ones if t-shift < 1.0.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-target-rms",
+        type=float,
+        default=0.1,
+        help="Target speech normalization RMS value for Zipvoice.",
+    )
+
+    parser.add_argument(
+        "--zipvoice-guidance-scale",
+        type=float,
+        default=1.0,
+        help="The scale classifier-free guidance during inference for for Zipvoice.",
+    )
+
+
+def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
+    """
+    Args:
+      wave_filename:
+        Path to a wave file. It should be single channel and each sample should
+        be 16-bit. Its sample rate does not need to be 16kHz.
+    Returns:
+      Return a tuple containing:
+       - A 1-D array of dtype np.float32 containing the samples, which are
+       normalized to the range [-1, 1].
+       - sample rate of the wave file
+    """
+
+    with wave.open(wave_filename) as f:
+        assert f.getnchannels() == 1, f.getnchannels()
+        assert f.getsampwidth() == 2, f.getsampwidth()  # it is in bytes
+        num_samples = f.getnframes()
+        samples = f.readframes(num_samples)
+        samples_int16 = np.frombuffer(samples, dtype=np.int16)
+        samples_float32 = samples_int16.astype(np.float32)
+
+        samples_float32 = samples_float32 / 32768
+        return samples_float32, f.getframerate()
+
+
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -280,6 +386,7 @@ def get_args():
     add_vits_args(parser)
     add_matcha_args(parser)
     add_kokoro_args(parser)
+    add_zipvoice_args(parser)
 
     parser.add_argument(
         "--tts-rule-fsts",
@@ -345,6 +452,18 @@ def get_args():
     )
 
     parser.add_argument(
+        "--prompt-text",
+        type=str,
+        help="The transcription of prompt audio. Used only for Zipvoice models.",
+    )
+
+    parser.add_argument(
+        "--prompt-audio",
+        type=str,
+        help="The path to prompt audio. Used only for Zipvoice models.",
+    )
+
+    parser.add_argument(
         "text",
         type=str,
         help="The input text to generate audio for",
@@ -382,6 +501,19 @@ def main():
                 dict_dir=args.kokoro_dict_dir,
                 lexicon=args.kokoro_lexicon,
             ),
+            zipvoice=sherpa_onnx.OfflineTtsZipvoiceModelConfig(
+                tokens=args.zipvoice_tokens,
+                text_model=args.zipvoice_text_model,
+                flow_matching_model=args.zipvoice_flow_matching_model,
+                data_dir=args.zipvoice_data_dir,
+                pinyin_dict=args.zipvoice_pinyin_dict,
+                vocoder=args.zipvoice_vocoder,
+                num_steps=args.zipvoice_num_steps,
+                feat_scale=args.zipvoice_feat_scale,
+                t_shift=args.zipvoice_t_shift,
+                target_rms=args.zipvoice_target_rms,
+                guidance_scale=args.zipvoice_guidance_scale,
+            ),
             provider=args.provider,
             debug=args.debug,
             num_threads=args.num_threads,
@@ -395,11 +527,24 @@ def main():
     tts = sherpa_onnx.OfflineTts(tts_config)
 
     start = time.time()
-    audio = tts.generate(args.text, sid=args.sid, speed=args.speed)
+    if args.zipvoice_flow_matching_model:
+        prompt_samples, sample_rate = read_wave(args.prompt_audio)
+        audio = tts.generate(
+            args.text,
+            args.prompt_text,
+            prompt_samples,
+            sample_rate,
+            speed=args.speed,
+            num_steps=args.zipvoice_num_steps,
+        )
+    else:
+        audio = tts.generate(args.text, sid=args.sid, speed=args.speed)
     end = time.time()
 
     if len(audio.samples) == 0:
-        print("Error in generating audios. Please read previous error messages.")
+        print(
+            "Error in generating audios. Please read previous error messages."
+        )
         return
 
     elapsed_seconds = end - start
@@ -416,7 +561,9 @@ def main():
     print(f"The text is '{args.text}'")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
-    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
+    print(
+        f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
 
 
 if __name__ == "__main__":

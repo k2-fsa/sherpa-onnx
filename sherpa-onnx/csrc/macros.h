@@ -185,15 +185,4 @@
     }                                                                      \
   } while (0)
 
-#define SHERPA_ONNX_READ_META_DATA_BOOL_WITH_DEFAULT(dst, src_key,         \
-                                                     default_value)        \
-  do {                                                                     \
-    auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
-    if (value.empty()) {                                                   \
-      dst = default_value;                                                 \
-    } else {                                                               \
-      dst = StringToBool(value);                                           \
-    }                                                                      \
-  } while (0)
-
 #endif  // SHERPA_ONNX_CSRC_MACROS_H_
