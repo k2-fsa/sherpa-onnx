@@ -135,6 +135,7 @@ us_silver.json
 kokoro-multi-lang-v1_0
 sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 cmake-build-debug
+cmake-build-release
 README-DEV.txt
 *.rknn
 *.jit
