@@ -30,7 +30,7 @@ target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
 target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
 
-add_executable(punctuation-cxx-api.cc ./punctuation-cxx-api.cc)
+add_executable(punctuation-cxx-api ./punctuation-cxx-api.cc)
 target_link_libraries(punctuation-cxx-api sherpa-onnx-cxx-api)
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
