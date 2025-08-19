@@ -840,7 +840,7 @@ OfflinePunctuation::OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p)
   : MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation>(p) {}
 
 void OfflinePunctuation::Destroy(const SherpaOnnxOfflinePunctuation *p) const {
-  SherpaOnnxDestroyOfflinePunctuation(p_);
+  SherpaOnnxDestroyOfflinePunctuation(p);
 }
 
 std::string OfflinePunctuation::AddPunctuation(const std::string &text) const {
