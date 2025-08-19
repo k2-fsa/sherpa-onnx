@@ -673,6 +673,33 @@ SHERPA_ONNX_API std::string GetGitSha1();
 SHERPA_ONNX_API std::string GetGitDate();
 SHERPA_ONNX_API bool FileExists(const std::string &filename);
 
+// ============================================================================
+// Offline Punctuation
+// ============================================================================
+
+struct OfflinePunctuationModelConfig {
+  std::string ct_transformer;
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+};
+
+struct OfflinePunctuationConfig {
+  OfflinePunctuationModelConfig model;
+};
+
+class SHERPA_ONNX_API OfflinePunctuation
+    : public MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation> {
+ public:
+  static OfflinePunctuation Create(const OfflinePunctuationConfig &config);
+
+  void Destroy(const SherpaOnnxOfflinePunctuation *p) const;
+
+  std::string AddPunctuation(const std::string &text) const;
+ private:
+  explicit OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p);
+};
+
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_
