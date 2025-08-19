@@ -821,4 +821,33 @@ bool FileExists(const std::string &filename) {
   return SherpaOnnxFileExists(filename.c_str());
 }
 
+// ============================================================
+// For Offline Punctuation
+// ============================================================
+OfflinePunctuation OfflinePunctuation::Create(const OfflinePunctuationConfig &config) {
+  struct SherpaOnnxOfflinePunctuationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.model.ct_transformer = config.model.ct_transformer.c_str();
+  c.model.num_threads = config.model.num_threads;
+  c.model.debug = config.model.debug;
+  c.model.provider = config.model.provider.c_str();
+
+  const SherpaOnnxOfflinePunctuation *punct = SherpaOnnxCreateOfflinePunctuation(&c);
+  return OfflinePunctuation(punct);
+}
+
+OfflinePunctuation::OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p)
+  : MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation>(p) {}
+
+void OfflinePunctuation::Destroy(const SherpaOnnxOfflinePunctuation *p) const {
+  SherpaOnnxDestroyOfflinePunctuation(p);
+}
+
+std::string OfflinePunctuation::AddPunctuation(const std::string &text) const {
+  const char *result = SherpaOfflinePunctuationAddPunct(p_, text.c_str());
+  std::string ans(result);
+  SherpaOfflinePunctuationFreeText(result);
+  return ans;
+}
+
 }  // namespace sherpa_onnx::cxx
