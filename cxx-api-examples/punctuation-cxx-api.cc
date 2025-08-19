@@ -1,16 +1,5 @@
-// cxx-api-examples/fire-red-asr-cxx-api.cc
+// cxx-api-examples/punctuation-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
-
-//
-// This file demonstrates how to use FireRedAsr AED with sherpa-onnx's C++ API.
-//
-// clang-format off
-//
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
-// tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
-// rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
-//
-// clang-format on
 
 #include <chrono>  // NOLINT
 #include <iostream>
