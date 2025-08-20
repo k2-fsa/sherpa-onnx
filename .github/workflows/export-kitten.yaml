@@ -117,9 +117,13 @@ jobs:
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
             for d in ${dirs[@]}; do
-              if [ ! -d ../$d ]]; then
+              echo "d $d"
+              if [[ ! -d $d ]]; then
+                echo "$d does not exist"
                 continue
               fi
+
+              echo "$d exists"
               rm -rf huggingface
 
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface

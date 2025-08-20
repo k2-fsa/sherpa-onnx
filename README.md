@@ -45,6 +45,9 @@ For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
+[Join our discord](https://discord.gg/fJdxzg2VbG)
+
+
 ## Introduction
 
 This repository supports running the following functions **locally**
