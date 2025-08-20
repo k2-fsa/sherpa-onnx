@@ -3,7 +3,7 @@ name: export-kitten-to-onnx
 on:
   push:
     branches:
-      - kitten-tts
+      - kitten-0.2
 
   workflow_dispatch:
 
@@ -20,6 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        version: ["nano_v0_1", "nano_v0_2"]
         python-version: ["3.10"]
 
     steps:
@@ -40,7 +41,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
         run: |
-          cd scripts/kitten-tts/nano_v0_1
+          cd scripts/kitten-tts/${{ matrix.version }}
           ./run.sh
 
       - name: Collect results
@@ -50,9 +51,18 @@ jobs:
           tar xf espeak-ng-data.tar.bz2
           rm espeak-ng-data.tar.bz2
 
-          src=scripts/kitten-tts/nano_v0_1
+          version=${{ matrix.version }}
 
-          d=kitten-nano-en-v0_1-fp16
+          src=scripts/kitten-tts/$version
+
+          if [[ $version == "nano_v0_1" ]]; then
+            d=kitten-nano-en-v0_1-fp16
+          elif [[ $version == "nano_v0_2" ]]; then
+            d=kitten-nano-en-v0_2-fp16
+          else
+            echo "version $version"
+            exit 1
+          fi
 
           mkdir $d
           cp -a LICENSE $d/LICENSE
@@ -100,12 +110,16 @@ jobs:
 
             dirs=(
               kitten-nano-en-v0_1-fp16
+              kitten-nano-en-v0_2-fp16
             )
 
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
             for d in ${dirs[@]}; do
+              if [ ! -d ../$d ]]; then
+                continue
+              fi
               rm -rf huggingface
 
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
