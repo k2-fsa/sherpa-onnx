@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - kitten-0.2
-      - tts-samples
 
   workflow_dispatch:
 
