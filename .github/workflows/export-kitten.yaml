@@ -3,7 +3,7 @@ name: export-kitten-to-onnx
 on:
   push:
     branches:
-      - kitten-tts
+      - kitten-0.2
 
   workflow_dispatch:
 

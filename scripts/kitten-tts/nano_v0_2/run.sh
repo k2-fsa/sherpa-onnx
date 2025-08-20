@@ -11,8 +11,8 @@ if [ ! -f voices.npz ]; then
   curl -SL -O https://huggingface.co/KittenML/kitten-tts-nano-0.2/resolve/main/voices.npz
 fi
 
-# ./generate_voices_bin.py
-# ./generate_tokens.py
+./generate_voices_bin.py
+./generate_tokens.py
 ./convert_opset.py
 ./show.py
 ./add_meta_data.py --model ./model.fp16.onnx
