@@ -64,6 +64,8 @@ class OnlineZipformer2CtcModel : public OnlineCtcModel {
   // before we process the next chunk.
   int32_t ChunkShift() const override;
 
+  bool UseWhisperFeature() const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

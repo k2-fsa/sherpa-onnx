@@ -25,8 +25,12 @@ jobs:
           "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
           "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
            ]
+        # total: ["2"]
+        # index: ["0", "1"]
         # total: ["1"]
         # index: ["0"]
+        # total: ["5"]
+        # index: ["0", "1", "2", "3", "4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +58,9 @@ jobs:
 
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
 
           git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
 
@@ -133,6 +140,26 @@ jobs:
               vits-piper-de_DE-glados_turret-low
               vits-piper-de_DE-glados_turret-medium
               vits-piper-en_US-glados-high
+              vits-piper-fa_IR-ganji-medium
+              vits-piper-fa_IR-ganji_adabi-medium
+              vits-piper-fa_IR-reza_ibrahim-medium
+              vits-piper-hi_IN-pratham-medium
+              vits-piper-hi_IN-priyamvada-medium
+              vits-piper-es_AR-daniela-high
+              vits-piper-en_GB-miro-high
+              vits-piper-en_GB-dii-high
+              vits-piper-pt_PT-miro-high
+              vits-piper-pt_PT-dii-high
+              vits-piper-pt_BR-miro-high
+              vits-piper-pt_BR-dii-high
+              vits-piper-es_ES-miro-high
+              vits-piper-it_IT-miro-high
+              vits-piper-it_IT-dii-high
+              vits-piper-nl_NL-miro-high
+              vits-piper-nl_NL-dii-high
+              vits-piper-de_DE-miro-high
+              vits-piper-fr_FR-miro-high
+              vits-piper-en_US-miro-high
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

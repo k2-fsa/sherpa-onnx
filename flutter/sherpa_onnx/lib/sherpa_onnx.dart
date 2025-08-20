@@ -17,6 +17,7 @@ export 'src/online_stream.dart';
 export 'src/speaker_identification.dart';
 export 'src/tts.dart';
 export 'src/vad.dart';
+export 'src/version.dart';
 export 'src/wave_reader.dart';
 export 'src/wave_writer.dart';
 

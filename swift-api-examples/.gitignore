@@ -1,6 +1,7 @@
 decode-file
 decode-file-non-streaming
 generate-subtitles
+generate-subtitles-ten-vad
 spoken-language-identification
 tts-vits
 vits-vctk
@@ -16,3 +17,8 @@ tts-kokoro-en
 tts-kokoro-zh-en
 speech-enhancement-gtcrn
 decode-file-sense-voice-with-hr
+test-version
+zipformer-ctc-asr
+dolphin-ctc-asr
+tts-kitten-en
+compute-speaker-embeddings

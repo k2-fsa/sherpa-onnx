@@ -207,6 +207,7 @@ def main():
         for line in f:
             t, idx = line.split()
             id2token[int(idx)] = t
+    vocab_size = len(id2token)
 
     start = time.time()
     fbank = create_fbank()
@@ -233,8 +234,8 @@ def main():
     if model.normalize_type != "":
         assert model.normalize_type == "per_feature", model.normalize_type
         features = torch.from_numpy(features)
-        mean = features.mean(dim=1, keepdims=True)
-        stddev = features.std(dim=1, keepdims=True) + 1e-5
+        mean = features.mean(dim=0, keepdims=True)
+        stddev = features.std(dim=0, keepdims=True) + 1e-5
         features = (features - mean) / stddev
         features = features.numpy()
     print(audio.shape)
@@ -242,12 +243,21 @@ def main():
 
     encoder_out = model.run_encoder(features)
     # encoder_out:[batch_size, dim, T)
-    for t in range(encoder_out.shape[2]):
+    t = 0
+    while t < encoder_out.shape[2]:
         encoder_out_t = encoder_out[:, :, t : t + 1]
         logits = model.run_joiner(encoder_out_t, decoder_out)
         logits = torch.from_numpy(logits)
         logits = logits.squeeze()
-        idx = torch.argmax(logits, dim=-1).item()
+
+        token_logits = logits[:vocab_size]
+        duration_logits = logits[vocab_size:]
+
+        idx = torch.argmax(token_logits, dim=-1).item()
+        skip = torch.argmax(duration_logits, dim=-1).item()
+        if skip == 0:
+            skip = 1
+
         if idx != blank:
             ans.append(idx)
             state0 = state0_next
@@ -255,6 +265,7 @@ def main():
             decoder_out, state0_next, state1_next = model.run_decoder(
                 ans[-1], state0, state1
             )
+        t += skip
 
     end = time.time()
 

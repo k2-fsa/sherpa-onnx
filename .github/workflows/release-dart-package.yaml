@@ -14,42 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sherpa_onnx_linux:
-    # if: false
-    permissions:
-      id-token: write # Required for authentication using OIDC
-    name: sherpa_onnx_linux
-    runs-on: ubuntu-latest
+  build_linux_libs_x64:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fix version
+      - name: Update version
         shell: bash
         run: |
-          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
-          src_dir=$PWD/flutter/sherpa_onnx_linux
-          pushd $src_dir
-          v="version: $SHERPA_ONNX_VERSION"
-          echo "v: $v"
-          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
-          rm *.bak
-          git status
-          git diff
-
-      - name: Copy extra files
-        shell: bash
-        run: |
-          dst=flutter/sherpa_onnx_linux
-
-          mkdir $dst/example
-
-          cp -v flutter/sherpa_onnx/example/* $dst/example
-          cp -v LICENSE $dst/
-          cp -v CHANGELOG.md $dst/
-
-          git status
+          ./new-release.sh
+          git diff .
 
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
@@ -86,10 +66,159 @@ jobs:
 
               ls -lh ./install/lib
 
+      - name: Create tar file
+        shell: bash
+        run: |
+          mkdir x64
+          dst=x64
+          cp -v build/install/lib/lib* $dst
+          tar cjvf $dst.tar.bz2 $dst
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64
+          path: ./*.tar.bz2
+
+  build_linux_libs_aarch64:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04-arm]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_aarch64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              mkdir build
+              cd build
+
+              cmake \
+                -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -D SHERPA_ONNX_ENABLE_TTS=ON \
+                -D CMAKE_BUILD_TYPE=Release \
+                -D BUILD_SHARED_LIBS=ON \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                -D SHERPA_ONNX_ENABLE_JNI=OFF \
+                -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+                ..
+
+              make -j2
+              make install
+
+              ls -lh ./install/lib
+
+      - name: Create tar file
+        shell: bash
+        run: |
+          mkdir aarch64
+          dst=aarch64
+          cp -v build/install/lib/lib* $dst
+          tar cjvf $dst.tar.bz2 $dst
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-aarch64
+          path: ./*.tar.bz2
+
+  sherpa_onnx_linux:
+    needs: [build_linux_libs_x64, build_linux_libs_aarch64]
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_linux
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Retrieve artifact from linux x64
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-x64
+          path: /tmp
+
+      - name: Retrieve artifact from linux aarch64
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-aarch64
+          path: /tmp
+
+      - name: Show files
+        shell: bash
+        run: |
+          cd /tmp
+          tar xvf x64.tar.bz2
+          tar xvf aarch64.tar.bz2
+
+          echo "----x64---"
+          ls -lh /tmp/x64/
+          echo "----aarch64---"
+          ls -lh /tmp/aarch64/
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_linux
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
       - name: Copy pre-built libs
         shell: bash
         run: |
-          cp -v build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
+          cp -v /tmp/x64/lib*.so* flutter/sherpa_onnx_linux/linux/x64
+          cp -v /tmp/aarch64/lib*.so* flutter/sherpa_onnx_linux/linux/aarch64
 
           mv -v flutter/sherpa_onnx_linux /tmp/to_be_published
 
@@ -98,8 +227,8 @@ jobs:
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
         with:
-          channel: stable
-          version: latest
+          channel: master
+          version: 3.24.0
 
       - uses: dart-lang/setup-dart@v1
 
@@ -120,6 +249,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -223,6 +358,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Fix version
         shell: bash
         run: |
@@ -306,6 +447,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -438,6 +585,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -516,6 +669,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3

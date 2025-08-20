@@ -35,6 +35,25 @@ file(s) with a non-streaming model.
       /path/to/0.wav \
       /path/to/1.wav
 
+    also with RNN LM rescoring and LODR (optional):
+
+    ./python-api-examples/offline-decode-files.py  \
+      --tokens=/path/to/tokens.txt \
+      --encoder=/path/to/encoder.onnx \
+      --decoder=/path/to/decoder.onnx \
+      --joiner=/path/to/joiner.onnx \
+      --num-threads=2 \
+      --decoding-method=modified_beam_search \
+      --debug=false \
+      --sample-rate=16000 \
+      --feature-dim=80 \
+      --lm=/path/to/lm.onnx \
+      --lm-scale=0.1 \
+      --lodr-fst=/path/to/lodr.fst \
+      --lodr-scale=-0.1 \
+      /path/to/0.wav \
+      /path/to/1.wav
+
 (3) For CTC models from NeMo
 
 python3 ./python-api-examples/offline-decode-files.py \
@@ -269,6 +288,39 @@ def get_args():
         default="greedy_search",
         help="Valid values are greedy_search and modified_beam_search",
     )
+
+    parser.add_argument(
+        "--lm",
+        metavar="file",
+        type=str,
+        default="",
+        help="Path to RNN LM model",
+    )
+
+    parser.add_argument(
+        "--lm-scale",
+        metavar="lm_scale",
+        type=float,
+        default=0.1,
+        help="LM model scale for rescoring",
+    )
+
+    parser.add_argument(
+        "--lodr-fst",
+        metavar="file",
+        type=str,
+        default="",
+        help="Path to LODR FST model. Used only when --lm is given.",
+    )
+
+    parser.add_argument(
+        "--lodr-scale",
+        metavar="lodr_scale",
+        type=float,
+        default=-0.1,
+        help="LODR scale for rescoring.Used only when --lodr_fst is given.",
+    )
+
     parser.add_argument(
         "--debug",
         type=bool,
@@ -364,6 +416,10 @@ def main():
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
+            lm=args.lm,
+            lm_scale=args.lm_scale,
+            lodr_fst=args.lodr_fst,
+            lodr_scale=args.lodr_scale,
             decoding_method=args.decoding_method,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,

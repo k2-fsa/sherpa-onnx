@@ -11,15 +11,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'cxx-api-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/cxx-api.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'cxx-api-examples/**'
 
   workflow_dispatch:
 
@@ -40,6 +31,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -80,6 +77,79 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test KittenTTS
+        shell: bash
+        run: |
+          name=kitten-tts-en-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ls -lh ./$name
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+          tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+          rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+          echo "---"
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm -rf kitten-nano-en-v0_1-fp16
+          rm -v ./$name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kitten-tts-wavs-${{ matrix.os }}
+          path: ./generated-kitten-en-cxx.wav
+
+      - name: Test NeMo Canary
+        shell: bash
+        run: |
+          name=nemo-canary-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+          rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+
+          ls -lh sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8
+          echo "---"
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm -rf sherpa-onnx-nemo-canary-*
+          rm -v ./$name
 
       - name: Test streaming zipformer with Homophone replacer
         shell: bash
@@ -156,7 +226,7 @@ jobs:
 
           rm $name
 
-      - name: Test VAD
+      - name: Test silero-vad
         shell: bash
         run: |
           name=vad-cxx-api
@@ -183,17 +253,60 @@ jobs:
 
           ./$name
 
-          mkdir vad-test
-          cp -v lei-jun-test*.wav vad-test
+          mkdir vad-test-silero-vad
+          cp -v lei-jun-test*.wav vad-test-silero-vad
 
-          ls -lh vad-test
+          ls -lh vad-test-silero-vad
 
           rm $name
+          rm -fv *.onnx
+          rm -fv *.wav
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vad-test-wavs-cxx-${{ matrix.os }}
-          path: ./vad-test/*.wav
+          name: silero-vad-test-wavs-cxx-${{ matrix.os }}
+          path: ./vad-test-silero-vad/*.wav
+
+      - name: Test ten-vad
+        shell: bash
+        run: |
+          name=vad-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+
+          ./$name
+
+          mkdir vad-test-ten-vad
+          cp -v lei-jun-test*.wav vad-test-ten-vad
+
+          ls -lh vad-test-ten-vad
+
+          rm $name
+          rm -fv *.onnx
+          rm -rf *.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ten-vad-test-wavs-cxx-${{ matrix.os }}
+          path: ./vad-test-ten-vad/*.wav
 
       - name: Test Speech Enhancement (GTCRN)
         shell: bash

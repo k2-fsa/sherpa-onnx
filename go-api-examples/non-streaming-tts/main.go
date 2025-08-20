@@ -41,6 +41,12 @@ func main() {
 	flag.StringVar(&config.Model.Kokoro.Lexicon, "kokoro-lexicon", "", "Path to lexicon files for Kokoro")
 	flag.Float32Var(&config.Model.Kokoro.LengthScale, "kokoro-length-scale", 1.0, "length_scale for Kokoro. small -> faster in speech speed; large -> slower")
 
+	flag.StringVar(&config.Model.Kitten.Model, "kitten-model", "", "Path to the kitten ONNX model")
+	flag.StringVar(&config.Model.Kitten.Voices, "kitten-voices", "", "Path to voices.bin for kitten")
+	flag.StringVar(&config.Model.Kitten.Tokens, "kitten-tokens", "", "Path to tokens.txt for kitten")
+	flag.StringVar(&config.Model.Kitten.DataDir, "kitten-data-dir", "", "Path to espeak-ng-data for kitten")
+	flag.Float32Var(&config.Model.Kitten.LengthScale, "kitten-length-scale", 1.0, "length_scale for kitten. small -> faster in speech speed; large -> slower")
+
 	flag.IntVar(&config.Model.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.Model.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.Model.Provider, "provider", "cpu", "Provider to use")

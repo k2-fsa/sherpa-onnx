@@ -14,18 +14,6 @@ on:
       - 'nodejs-addon-examples/package.json'
       - '.github/scripts/test-nodejs-addon-npm.sh'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/*.js'
-      - 'nodejs-addon-examples/package.json'
-      - '.github/scripts/test-nodejs-addon-npm.sh'
-
   workflow_dispatch:
 
 concurrency:
@@ -49,6 +37,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - uses: actions/setup-node@v4
         with:

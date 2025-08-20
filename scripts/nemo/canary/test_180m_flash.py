@@ -79,8 +79,7 @@ class OnnxModel:
         )
 
         meta = self.encoder.get_modelmeta().custom_metadata_map
-        #  self.normalize_type = meta["normalize_type"]
-        self.normalize_type = "per_feature"
+        self.normalize_type = meta["normalize_type"]
         print(meta)
 
     def init_decoder(self, decoder):
@@ -229,8 +228,8 @@ def main():
     features = compute_features(audio, fbank)
     if model.normalize_type != "":
         assert model.normalize_type == "per_feature", model.normalize_type
-        mean = features.mean(axis=1, keepdims=True)
-        stddev = features.std(axis=1, keepdims=True) + 1e-5
+        mean = features.mean(axis=0, keepdims=True)
+        stddev = features.std(axis=0, keepdims=True) + 1e-5
         features = (features - mean) / stddev
 
     features = np.expand_dims(features, axis=0)
@@ -263,16 +262,15 @@ def main():
     decoder_input_ids.append(token2id["<|notimestamp|>"])
     decoder_input_ids.append(token2id["<|nodiarize|>"])
 
-    decoder_input_ids.append(0)
-
     decoder_mems_list = [np.zeros((1, 0, 1024), dtype=np.float32) for _ in range(6)]
 
-    logits, decoder_mems_list = model.run_decoder(
-        np.array([decoder_input_ids], dtype=np.int32),
-        decoder_mems_list,
-        enc_states,
-        enc_masks,
-    )
+    for pos, decoder_input_id in enumerate(decoder_input_ids):
+        logits, decoder_mems_list = model.run_decoder(
+            np.array([[decoder_input_id, pos]], dtype=np.int32),
+            decoder_mems_list,
+            enc_states,
+            enc_masks,
+        )
     tokens = [logits.argmax()]
     print("decoder_input_ids", decoder_input_ids)
     eos = token2id["<|endoftext|>"]
@@ -291,7 +289,13 @@ def main():
         tokens.append(t)
     print("len(tokens)", len(tokens))
     print("tokens", tokens)
+
     text = "".join([id2token[i] for i in tokens])
+
+    underline = "▁"
+    #  underline = b"\xe2\x96\x81".decode()
+
+    text = text.replace(underline, " ").strip()
     print("text:", text)
 
 

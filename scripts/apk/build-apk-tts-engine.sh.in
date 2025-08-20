@@ -64,6 +64,10 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"lang2 = null"/"lang2 = \"$lang_iso_639_3_2\""/ ./TtsEngine.kt
 {% endif %}
 
+{% if tts_model.is_kitten %}
+  sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./TtsEngine.kt
+{% endif %}
+
 {% if tts_model.model_name %}
   sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
 {% endif %}

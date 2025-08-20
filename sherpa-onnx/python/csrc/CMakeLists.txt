@@ -9,6 +9,7 @@ set(srcs
   features.cc
   homophone-replacer.cc
   keyword-spotter.cc
+  offline-canary-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-model-config.cc
@@ -50,9 +51,11 @@ set(srcs
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
   spoken-language-identification.cc
+  ten-vad-model-config.cc
   tensorrt-config.cc
   vad-model-config.cc
   vad-model.cc
+  version.cc
   voice-activity-detector.cc
   wave-writer.cc
 )
@@ -64,6 +67,7 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND srcs
+    offline-tts-kitten-model-config.cc
     offline-tts-kokoro-model-config.cc
     offline-tts-matcha-model-config.cc
     offline-tts-model-config.cc

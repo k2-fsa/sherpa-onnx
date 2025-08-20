@@ -4,6 +4,7 @@ import {
   createOfflineStream,
   decodeOfflineStream,
   getOfflineStreamResultAsJson,
+  offlineRecognizerSetConfig,
 } from 'libsherpa_onnx.so';
 
 export interface Samples {
@@ -55,12 +56,24 @@ export class OfflineDolphinModelConfig {
   public model: string = '';
 }
 
+export class OfflineZipformerCtcModelConfig {
+  public model: string = '';
+}
+
 export class OfflineWhisperModelConfig {
   public encoder: string = '';
   public decoder: string = '';
   public language: string = '';
   public task: string = 'transcribe';
   public tailPaddings: number = -1;
+}
+
+export class OfflineCanaryModelConfig {
+  public encoder: string = '';
+  public decoder: string = '';
+  public srcLang: string = '';
+  public tgtLang: string = '';
+  public usePnc: number = 1;
 }
 
 export class OfflineTdnnModelConfig {
@@ -97,6 +110,8 @@ export class OfflineModelConfig {
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
+  public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
+  public canary: OfflineCanaryModelConfig = new OfflineCanaryModelConfig();
 }
 
 export class OfflineLMConfig {
@@ -144,6 +159,10 @@ export class OfflineRecognizer {
   constructor(config: OfflineRecognizerConfig, mgr?: object) {
     this.handle = createOfflineRecognizer(config, mgr);
     this.config = config
+  }
+
+  setConfig(config: OfflineRecognizerConfig) {
+    offlineRecognizerSetConfig(this.handle, config);
   }
 
   createStream(): OfflineStream {

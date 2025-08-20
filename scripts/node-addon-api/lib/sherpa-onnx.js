@@ -28,4 +28,7 @@ module.exports = {
   KeywordSpotter: kws.KeywordSpotter,
   OfflineSpeakerDiarization: sd.OfflineSpeakerDiarization,
   OfflineSpeechDenoiser: speech_denoiser.OfflineSpeechDenoiser,
+  version: addon.version,
+  gitSha1: addon.gitSha1,
+  gitDate: addon.gitDate,
 }

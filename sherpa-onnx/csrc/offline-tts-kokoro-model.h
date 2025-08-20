@@ -23,8 +23,8 @@ class OfflineTtsKokoroModel {
   template <typename Manager>
   OfflineTtsKokoroModel(Manager *mgr, const OfflineTtsModelConfig &config);
 
-  // Return a float32 tensor containing the mel
-  // of shape (batch_size, mel_dim, num_frames)
+  // Return a float32 tensor containing the samples
+  // of shape (batch_size, num_samples)
   Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0) const;
 
   const OfflineTtsKokoroModelMetaData &GetMetaData() const;

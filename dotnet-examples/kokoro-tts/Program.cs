@@ -3,14 +3,14 @@
 // This file shows how to use a non-streaming Kokoro TTS model
 // for text-to-speech
 // Please refer to
-// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // and
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 // to download pre-trained models
 using SherpaOnnx;
 using System.Runtime.InteropServices;
 
-class OfflineTtsDemo
+class KokoroTtsDemo
 {
   static void Main(string[] args)
   {

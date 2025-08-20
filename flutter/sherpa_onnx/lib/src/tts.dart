@@ -117,6 +117,7 @@ class OfflineTtsKokoroModelConfig {
     this.lengthScale = 1.0,
     this.dictDir = '',
     this.lexicon = '',
+    this.lang = '',
   });
 
   factory OfflineTtsKokoroModelConfig.fromJson(Map<String, dynamic> json) {
@@ -128,12 +129,13 @@ class OfflineTtsKokoroModelConfig {
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
       dictDir: json['dictDir'] as String? ?? '',
       lexicon: json['lexicon'] as String? ?? '',
+      lang: json['lang'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon)';
+    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon, lang: $lang)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -144,6 +146,7 @@ class OfflineTtsKokoroModelConfig {
         'lengthScale': lengthScale,
         'dictDir': dictDir,
         'lexicon': lexicon,
+        'lang': lang,
       };
 
   final String model;
@@ -153,6 +156,46 @@ class OfflineTtsKokoroModelConfig {
   final double lengthScale;
   final String dictDir;
   final String lexicon;
+  final String lang;
+}
+
+class OfflineTtsKittenModelConfig {
+  const OfflineTtsKittenModelConfig({
+    this.model = '',
+    this.voices = '',
+    this.tokens = '',
+    this.dataDir = '',
+    this.lengthScale = 1.0,
+  });
+
+  factory OfflineTtsKittenModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsKittenModelConfig(
+      model: json['model'] as String? ?? '',
+      voices: json['voices'] as String? ?? '',
+      tokens: json['tokens'] as String? ?? '',
+      dataDir: json['dataDir'] as String? ?? '',
+      lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineTtsKittenModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'voices': voices,
+        'tokens': tokens,
+        'dataDir': dataDir,
+        'lengthScale': lengthScale,
+      };
+
+  final String model;
+  final String voices;
+  final String tokens;
+  final String dataDir;
+  final double lengthScale;
 }
 
 class OfflineTtsModelConfig {
@@ -160,6 +203,7 @@ class OfflineTtsModelConfig {
     this.vits = const OfflineTtsVitsModelConfig(),
     this.matcha = const OfflineTtsMatchaModelConfig(),
     this.kokoro = const OfflineTtsKokoroModelConfig(),
+    this.kitten = const OfflineTtsKittenModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -173,6 +217,8 @@ class OfflineTtsModelConfig {
           json['matcha'] as Map<String, dynamic>? ?? const {}),
       kokoro: OfflineTtsKokoroModelConfig.fromJson(
           json['kokoro'] as Map<String, dynamic>? ?? const {}),
+      kitten: OfflineTtsKittenModelConfig.fromJson(
+          json['kitten'] as Map<String, dynamic>? ?? const {}),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -181,13 +227,14 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
         'vits': vits.toJson(),
         'matcha': matcha.toJson(),
         'kokoro': kokoro.toJson(),
+        'kitten': kitten.toJson(),
         'numThreads': numThreads,
         'debug': debug,
         'provider': provider,
@@ -196,6 +243,7 @@ class OfflineTtsModelConfig {
   final OfflineTtsVitsModelConfig vits;
   final OfflineTtsMatchaModelConfig matcha;
   final OfflineTtsKokoroModelConfig kokoro;
+  final OfflineTtsKittenModelConfig kitten;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -286,6 +334,13 @@ class OfflineTts {
     c.ref.model.kokoro.lengthScale = config.model.kokoro.lengthScale;
     c.ref.model.kokoro.dictDir = config.model.kokoro.dictDir.toNativeUtf8();
     c.ref.model.kokoro.lexicon = config.model.kokoro.lexicon.toNativeUtf8();
+    c.ref.model.kokoro.lang = config.model.kokoro.lang.toNativeUtf8();
+
+    c.ref.model.kitten.model = config.model.kitten.model.toNativeUtf8();
+    c.ref.model.kitten.voices = config.model.kitten.voices.toNativeUtf8();
+    c.ref.model.kitten.tokens = config.model.kitten.tokens.toNativeUtf8();
+    c.ref.model.kitten.dataDir = config.model.kitten.dataDir.toNativeUtf8();
+    c.ref.model.kitten.lengthScale = config.model.kitten.lengthScale;
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
@@ -296,12 +351,26 @@ class OfflineTts {
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
     c.ref.silenceScale = config.silenceScale;
 
+    if (SherpaOnnxBindings.createOfflineTts == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline tts. Please check your config");
+    }
 
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
 
+    calloc.free(c.ref.model.kitten.dataDir);
+    calloc.free(c.ref.model.kitten.tokens);
+    calloc.free(c.ref.model.kitten.voices);
+    calloc.free(c.ref.model.kitten.model);
+
+    calloc.free(c.ref.model.kokoro.lang);
     calloc.free(c.ref.model.kokoro.lexicon);
     calloc.free(c.ref.model.kokoro.dictDir);
     calloc.free(c.ref.model.kokoro.dataDir);

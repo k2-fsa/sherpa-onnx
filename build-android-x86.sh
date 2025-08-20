@@ -125,7 +125,7 @@ libsherpa-onnx-cxx-api.so.
 libsherpa-onnx-c-api.so and libsherpa-onnx-cxx-api.so are for users
 who don't use JNI. In that case, libsherpa-onnx-jni.so is not needed.
 
-In any case, libonnxruntime.is is always needed.
+In any case, libonnxruntime.so is always needed.
 EOF
   ls -lh install/lib/README.md
 fi

@@ -12,8 +12,18 @@ data class SileroVadModelConfig(
     var maxSpeechDuration: Float = 5.0F,
 )
 
+data class TenVadModelConfig(
+    var model: String = "",
+    var threshold: Float = 0.5F,
+    var minSilenceDuration: Float = 0.25F,
+    var minSpeechDuration: Float = 0.25F,
+    var windowSize: Int = 256,
+    var maxSpeechDuration: Float = 5.0F,
+)
+
 data class VadModelConfig(
     var sileroVadModelConfig: SileroVadModelConfig = SileroVadModelConfig(),
+    var tenVadModelConfig: TenVadModelConfig = TenVadModelConfig(),
     var sampleRate: Int = 16000,
     var numThreads: Int = 1,
     var provider: String = "cpu",
@@ -45,6 +55,9 @@ class Vad(
 
     fun release() = finalize()
 
+    fun compute(samples: FloatArray): Float = compute(ptr, samples)
+
+
     fun acceptWaveform(samples: FloatArray) = acceptWaveform(ptr, samples)
 
     fun empty(): Boolean = empty(ptr)
@@ -75,6 +88,8 @@ class Vad(
     ): Long
 
     private external fun acceptWaveform(ptr: Long, samples: FloatArray)
+    private external fun compute(ptr: Long, samples: FloatArray): Float
+
     private external fun empty(ptr: Long): Boolean
     private external fun pop(ptr: Long)
     private external fun clear(ptr: Long)
@@ -91,10 +106,14 @@ class Vad(
 }
 
 // Please visit
-// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 // to download silero_vad.onnx
 // and put it inside the assets/
 // directory
+//
+// For ten-vad, please use
+// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/ten-vad.onnx
+//
 fun getVadModelConfig(type: Int): VadModelConfig? {
     when (type) {
         0 -> {
@@ -105,6 +124,21 @@ fun getVadModelConfig(type: Int): VadModelConfig? {
                     minSilenceDuration = 0.25F,
                     minSpeechDuration = 0.25F,
                     windowSize = 512,
+                ),
+                sampleRate = 16000,
+                numThreads = 1,
+                provider = "cpu",
+            )
+        }
+
+        1 -> {
+            return VadModelConfig(
+                tenVadModelConfig = TenVadModelConfig(
+                    model = "ten-vad.onnx",
+                    threshold = 0.5F,
+                    minSilenceDuration = 0.25F,
+                    minSpeechDuration = 0.25F,
+                    windowSize = 256,
                 ),
                 sampleRate = 16000,
                 numThreads = 1,

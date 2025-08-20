@@ -49,6 +49,50 @@ class SileroVadModelConfig {
   final double maxSpeechDuration;
 }
 
+class TenVadModelConfig {
+  const TenVadModelConfig(
+      {this.model = '',
+      this.threshold = 0.5,
+      this.minSilenceDuration = 0.5,
+      this.minSpeechDuration = 0.25,
+      this.windowSize = 256,
+      this.maxSpeechDuration = 5.0});
+
+  factory TenVadModelConfig.fromJson(Map<String, dynamic> json) {
+    return TenVadModelConfig(
+      model: json['model'] as String? ?? '',
+      threshold: (json['threshold'] as num?)?.toDouble() ?? 0.5,
+      minSilenceDuration:
+          (json['minSilenceDuration'] as num?)?.toDouble() ?? 0.5,
+      minSpeechDuration:
+          (json['minSpeechDuration'] as num?)?.toDouble() ?? 0.25,
+      windowSize: json['windowSize'] as int? ?? 256,
+      maxSpeechDuration: (json['maxSpeechDuration'] as num?)?.toDouble() ?? 5.0,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'TenVadModelConfig(model: $model, threshold: $threshold, minSilenceDuration: $minSilenceDuration, minSpeechDuration: $minSpeechDuration, windowSize: $windowSize, maxSpeechDuration: $maxSpeechDuration)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'threshold': threshold,
+        'minSilenceDuration': minSilenceDuration,
+        'minSpeechDuration': minSpeechDuration,
+        'windowSize': windowSize,
+        'maxSpeechDuration': maxSpeechDuration,
+      };
+
+  final String model;
+  final double threshold;
+  final double minSilenceDuration;
+  final double minSpeechDuration;
+  final int windowSize;
+  final double maxSpeechDuration;
+}
+
 class VadModelConfig {
   VadModelConfig({
     this.sileroVad = const SileroVadModelConfig(),
@@ -56,9 +100,11 @@ class VadModelConfig {
     this.numThreads = 1,
     this.provider = 'cpu',
     this.debug = true,
+    this.tenVad = const TenVadModelConfig(),
   });
 
   final SileroVadModelConfig sileroVad;
+  final TenVadModelConfig tenVad;
   final int sampleRate;
   final int numThreads;
   final String provider;
@@ -68,6 +114,8 @@ class VadModelConfig {
     return VadModelConfig(
       sileroVad: SileroVadModelConfig.fromJson(
           json['sileroVad'] as Map<String, dynamic>? ?? const {}),
+      tenVad: TenVadModelConfig.fromJson(
+          json['tenVad'] as Map<String, dynamic>? ?? const {}),
       sampleRate: json['sampleRate'] as int? ?? 16000,
       numThreads: json['numThreads'] as int? ?? 1,
       provider: json['provider'] as String? ?? 'cpu',
@@ -77,6 +125,7 @@ class VadModelConfig {
 
   Map<String, dynamic> toJson() => {
         'sileroVad': sileroVad.toJson(),
+        'tenVad': tenVad.toJson(),
         'sampleRate': sampleRate,
         'numThreads': numThreads,
         'provider': provider,
@@ -85,7 +134,7 @@ class VadModelConfig {
 
   @override
   String toString() {
-    return 'VadModelConfig(sileroVad: $sileroVad, sampleRate: $sampleRate, numThreads: $numThreads, provider: $provider, debug: $debug)';
+    return 'VadModelConfig(sileroVad: $sileroVad, tenVad: $tenVad, sampleRate: $sampleRate, numThreads: $numThreads, provider: $provider, debug: $debug)';
   }
 }
 
@@ -104,8 +153,18 @@ class CircularBuffer {
   /// to avoid memory leak.
   factory CircularBuffer({required int capacity}) {
     assert(capacity > 0, 'capacity is $capacity');
+
+    if (SherpaOnnxBindings.createCircularBuffer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final p =
         SherpaOnnxBindings.createCircularBuffer?.call(capacity) ?? nullptr;
+
+    if (p == nullptr) {
+      throw Exception(
+          "Failed to create circular buffer. Please check your config");
+    }
 
     return CircularBuffer._(ptr: p);
   }
@@ -168,14 +227,23 @@ class VoiceActivityDetector {
       {required VadModelConfig config, required double bufferSizeInSeconds}) {
     final c = calloc<SherpaOnnxVadModelConfig>();
 
-    final modelPtr = config.sileroVad.model.toNativeUtf8();
-    c.ref.sileroVad.model = modelPtr;
+    final sileroVadModelPtr = config.sileroVad.model.toNativeUtf8();
+    c.ref.sileroVad.model = sileroVadModelPtr;
 
     c.ref.sileroVad.threshold = config.sileroVad.threshold;
     c.ref.sileroVad.minSilenceDuration = config.sileroVad.minSilenceDuration;
     c.ref.sileroVad.minSpeechDuration = config.sileroVad.minSpeechDuration;
     c.ref.sileroVad.windowSize = config.sileroVad.windowSize;
     c.ref.sileroVad.maxSpeechDuration = config.sileroVad.maxSpeechDuration;
+
+    final tenVadModelPtr = config.tenVad.model.toNativeUtf8();
+    c.ref.tenVad.model = tenVadModelPtr;
+
+    c.ref.tenVad.threshold = config.tenVad.threshold;
+    c.ref.tenVad.minSilenceDuration = config.tenVad.minSilenceDuration;
+    c.ref.tenVad.minSpeechDuration = config.tenVad.minSpeechDuration;
+    c.ref.tenVad.windowSize = config.tenVad.windowSize;
+    c.ref.tenVad.maxSpeechDuration = config.tenVad.maxSpeechDuration;
 
     c.ref.sampleRate = config.sampleRate;
     c.ref.numThreads = config.numThreads;
@@ -185,12 +253,21 @@ class VoiceActivityDetector {
 
     c.ref.debug = config.debug ? 1 : 0;
 
+    if (SherpaOnnxBindings.createVoiceActivityDetector == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createVoiceActivityDetector
             ?.call(c, bufferSizeInSeconds) ??
         nullptr;
 
+    if (ptr == nullptr) {
+      throw Exception("Failed to create vad. Please check your config");
+    }
+
     calloc.free(providerPtr);
-    calloc.free(modelPtr);
+    calloc.free(tenVadModelPtr);
+    calloc.free(sileroVadModelPtr);
     calloc.free(c);
 
     return VoiceActivityDetector._(ptr: ptr, config: config);

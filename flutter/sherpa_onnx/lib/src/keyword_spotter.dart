@@ -121,6 +121,9 @@ class KeywordSpotter {
     c.ref.model.zipformer2Ctc.model =
         config.model.zipformer2Ctc.model.toNativeUtf8();
 
+    // nemoCtc
+    c.ref.model.nemoCtc.model = config.model.nemoCtc.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -137,7 +140,15 @@ class KeywordSpotter {
     c.ref.keywordsBuf = config.keywordsBuf.toNativeUtf8();
     c.ref.keywordsBufSize = config.keywordsBufSize;
 
+    if (SherpaOnnxBindings.createKeywordSpotter == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createKeywordSpotter?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create kws. Please check your config");
+    }
 
     calloc.free(c.ref.keywordsBuf);
     calloc.free(c.ref.keywordsFile);
@@ -146,6 +157,7 @@ class KeywordSpotter {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.nemoCtc.model);
     calloc.free(c.ref.model.zipformer2Ctc.model);
     calloc.free(c.ref.model.paraformer.encoder);
     calloc.free(c.ref.model.paraformer.decoder);

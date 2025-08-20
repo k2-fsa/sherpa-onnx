@@ -94,9 +94,9 @@ class SpeechSegment: CustomStringConvertible {
 func run() {
   var recognizer: SherpaOnnxOfflineRecognizer
   var modelConfig: SherpaOnnxOfflineModelConfig
-  var modelType = "whisper"
+  let modelType = "whisper"
   // modelType = "paraformer"
-  var filePath = "/Users/fangjun/Desktop/Obama.wav"  // English
+  let filePath = "/Users/fangjun/Desktop/Obama.wav"  // English
   // filePath = "/Users/fangjun/Desktop/lei-jun.wav"  // Chinese
   // please go to https://huggingface.co/csukuangfj/vad
   // to download the above two files
@@ -156,11 +156,35 @@ func run() {
   assert(audioFormat.channelCount == 1)
   assert(audioFormat.commonFormat == AVAudioCommonFormat.pcmFormatFloat32)
 
-  let sileroVadConfig = sherpaOnnxSileroVadModelConfig(
-    model: "./silero_vad.onnx"
-  )
+  var sileroVadConfig = sherpaOnnxSileroVadModelConfig()
+  var tenVadConfig = sherpaOnnxTenVadModelConfig()
 
-  var vadModelConfig = sherpaOnnxVadModelConfig(sileroVad: sileroVadConfig)
+  var windowSize = 0
+
+  if FileManager.default.fileExists(atPath: "./silero_vad.onnx") {
+    sileroVadConfig = sherpaOnnxSileroVadModelConfig(
+      model: "./silero_vad.onnx",
+      threshold: 0.25,
+      windowSize: 512
+    )
+    windowSize = 512
+    print("Use silero-vad")
+  } else if FileManager.default.fileExists(atPath: "./ten-vad.onnx") {
+    tenVadConfig = sherpaOnnxTenVadModelConfig(
+      model: "./ten-vad.onnx",
+      threshold: 0.25,
+      windowSize: 256
+    )
+    windowSize = 256
+    print("Use ten-vad")
+  } else {
+    print("Please provide ./silero_vad.onnx or ./ten-vad.onnx")
+    return
+  }
+
+  var vadModelConfig = sherpaOnnxVadModelConfig(
+    sileroVad: sileroVadConfig, tenVad: tenVadConfig)
+
   let vad = SherpaOnnxVoiceActivityDetectorWrapper(
     config: &vadModelConfig, buffer_size_in_seconds: 120)
 
@@ -168,9 +192,7 @@ func run() {
   let audioFileBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: audioFrameCount)
 
   try! audioFile.read(into: audioFileBuffer!)
-  var array: [Float]! = audioFileBuffer?.array()
-
-  let windowSize = Int(vadModelConfig.silero_vad.window_size)
+  let array: [Float]! = audioFileBuffer?.array()
 
   var segments: [SpeechSegment] = []
 
@@ -180,7 +202,6 @@ func run() {
   }
 
   vad.flush()
-  var index: Int = 0
   while !vad.isEmpty() {
     let s = vad.front()
     vad.pop()

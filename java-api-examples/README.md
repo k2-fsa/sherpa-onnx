@@ -24,11 +24,18 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-decode-file-dolphin-ctc.sh
+./run-non-streaming-decode-file-fire-red-asr.sh
+./run-non-streaming-decode-file-moonshine.sh
+./run-non-streaming-decode-file-nemo-canary.sh
+./run-non-streaming-decode-file-nemo.sh
 ./run-non-streaming-decode-file-paraformer.sh
 ./run-non-streaming-decode-file-sense-voice.sh
+./run-non-streaming-decode-file-tele-speech-ctc.sh
+./run-non-streaming-decode-file-transducer-hotwords.sh
 ./run-non-streaming-decode-file-transducer.sh
+./run-non-streaming-decode-file-whisper-multiple.sh
 ./run-non-streaming-decode-file-whisper.sh
-./run-non-streaming-decode-file-nemo.sh
+./run-non-streaming-decode-file-zipformer-ctc.sh
 ```
 
 ## Non-Streaming Speech recognition with homophone replacer
@@ -106,6 +113,7 @@ The punctuation model supports both English and Chinese.
 
 ```bash
 ./run-vad-remove-slience.sh
+./run-ten-vad-remove-slience.sh
 ```
 
 ## VAD + Non-streaming Dolphin CTC for speech recognition

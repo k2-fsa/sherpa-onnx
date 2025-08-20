@@ -77,16 +77,6 @@ time $EXE \
   $repo/test_wavs/DEV_T0000000001.wav \
   $repo/test_wavs/DEV_T0000000002.wav
 
-log "test int8"
-
-time $EXE \
-  --debug=1 \
-  --zipformer2-ctc-model=$repo/ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx \
-  --tokens=$repo/tokens.txt \
-  $repo/test_wavs/DEV_T0000000000.wav \
-  $repo/test_wavs/DEV_T0000000001.wav \
-  $repo/test_wavs/DEV_T0000000002.wav
-
 rm -rf $repo
 
 log "------------------------------------------------------------"

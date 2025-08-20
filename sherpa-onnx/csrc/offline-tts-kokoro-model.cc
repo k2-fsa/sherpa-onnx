@@ -170,7 +170,7 @@ class OfflineTtsKokoroModel::Impl {
     }
 
     if (style_dim_[1] != 1) {
-      SHERPA_ONNX_LOGE("style_dim[0] should be 1, given: %d", style_dim_[1]);
+      SHERPA_ONNX_LOGE("style_dim[1] should be 1, given: %d", style_dim_[1]);
       SHERPA_ONNX_EXIT(-1);
     }
 

@@ -23,10 +23,10 @@ to remove silences from a file.
     /path/to/output.wav
 
 Please download silero_vad.onnx from
-https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
 For instance, use
-wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
 input.wav should be 16kHz.
 )usage";

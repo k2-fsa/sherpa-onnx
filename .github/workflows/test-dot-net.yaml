@@ -11,16 +11,6 @@ on:
       - 'dotnet-examples/**'
       - 'scripts/dotnet/**'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-dot-net.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'dotnet-examples/**'
-      - 'scripts/dotnet/**'
-
   workflow_dispatch:
 
 concurrency:
@@ -44,6 +34,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -96,6 +92,7 @@ jobs:
           df -h
 
       - name: Free space
+        if: false
         shell: bash
         run: |
           df -h
@@ -103,6 +100,7 @@ jobs:
           df -h
 
       - name: Free more space
+        if: false
         shell: bash
         run: |
           # https://github.com/orgs/community/discussions/25678
@@ -114,6 +112,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Free Disk Space (Ubuntu)
+        if: false
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
@@ -130,6 +129,7 @@ jobs:
           swap-storage: true
 
       - name: Check space
+        if: false
         shell: bash
         run: |
           df -h
@@ -137,6 +137,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

@@ -13,16 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - './build-ios.sh'
-      - '.github/workflows/build-xcframework.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 
@@ -42,6 +32,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Build iOS shared
         if: matrix.with_tts == 'ON'

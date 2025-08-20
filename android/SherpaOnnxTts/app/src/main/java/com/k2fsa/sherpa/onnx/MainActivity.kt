@@ -192,6 +192,7 @@ class MainActivity : AppCompatActivity() {
         var dataDir: String?
         var dictDir: String?
         var assets: AssetManager? = application.assets
+        var isKitten = false
 
         // The purpose of such a design is to make the CI test easier
         // Please see
@@ -291,6 +292,14 @@ class MainActivity : AppCompatActivity() {
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
 
+        // Example 11
+        // kitten-nano-en-v0_1-fp16
+        // modelDir = "kitten-nano-en-v0_1-fp16"
+        // modelName = "model.fp16.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
+        // isKitten = true
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
@@ -315,6 +324,7 @@ class MainActivity : AppCompatActivity() {
             dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
+            isKitten = isKitten,
         )!!
 
         tts = OfflineTts(assetManager = assets, config = config)

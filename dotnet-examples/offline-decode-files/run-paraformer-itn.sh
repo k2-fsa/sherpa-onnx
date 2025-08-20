@@ -18,7 +18,7 @@ fi
 
 dotnet run \
   --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx \
   --rule-fsts=./itn_zh_number.fst \
   --num-threads=2 \
   --files ./itn-zh-number.wav

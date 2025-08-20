@@ -6,6 +6,7 @@ from typing import Dict
 import nemo.collections.asr as nemo_asr
 import onnx
 import torch
+from onnxruntime.quantization import QuantType, quantize_dynamic
 
 
 def get_args():
@@ -84,11 +85,20 @@ def main():
         "model_type": "EncDecHybridRNNTCTCBPEModel",
         "version": "1",
         "model_author": "NeMo",
-        "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
+        "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}"
+        if "/" in model_name
+        else f"https://huggingface.co/{model_name}",
         "comment": "Only the transducer branch is exported",
         "doc": args.doc,
     }
     add_meta_data("encoder.onnx", meta_data)
+
+    for m in ["encoder", "decoder", "joiner"]:
+        quantize_dynamic(
+            model_input=f"{m}.onnx",
+            model_output=f"{m}.int8.onnx",
+            weight_type=QuantType.QUInt8,
+        )
 
     print(meta_data)
 

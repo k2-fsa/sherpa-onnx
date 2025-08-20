@@ -7,7 +7,7 @@ import "dart:io";
 
 // Copy the asset file from src to dst
 Future<String> copyAssetFile(String src, [String? dst]) async {
-  final Directory directory = await getApplicationDocumentsDirectory();
+  final Directory directory = await getApplicationSupportDirectory();
   if (dst == null) {
     dst = basename(src);
   }

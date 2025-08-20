@@ -2,3 +2,5 @@
 vad_with_whisper
 vad_with_sense_voice
 vad_with_moonshine
+vad_with_zipformer_ctc
+vad_with_dolphin

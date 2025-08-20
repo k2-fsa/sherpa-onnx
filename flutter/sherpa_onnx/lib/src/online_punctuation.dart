@@ -89,8 +89,17 @@ class OnlinePunctuation {
     final providerPtr = config.model.provider.toNativeUtf8();
     c.ref.model.provider = providerPtr;
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation?.call(c) ??
         nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create online punctuation. Please check your config");
+    }
 
     // Free the allocated strings and struct memory
     calloc.free(providerPtr);

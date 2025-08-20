@@ -11,16 +11,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/pascal.yaml'
-      - 'cmake/**'
-      - 'pascal-api-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/pascal-api/*'
 
   workflow_dispatch:
 
@@ -37,12 +27,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
+        os: [ubuntu-latest, macos-latest, macos-13, windows-latest, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -50,7 +46,7 @@ jobs:
           key: ${{ matrix.os }}
 
       - name: Install Free pascal compiler (ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-22.04-arm'
         shell: bash
         run: |
           sudo apt-get update
@@ -130,6 +126,27 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal test (VAD test)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd vad
+          ./run-circular-buffer.sh
+          echo "---"
+
+          time ./run-remove-silence-ten-vad.sh
+          echo "---"
+
+          time ./run-remove-silence.sh
+          echo "---"
+
+          ls -lh
+
+          popd
+
       - name:  Run Speech Enhancement test (GTCRN)
         shell: bash
         run: |
@@ -149,6 +166,14 @@ jobs:
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+
+          ./run-nemo-canary.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-zipformer-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
 
           ./run-dolphin-ctc.sh
           rm -rf sherpa-onnx-*
@@ -258,8 +283,11 @@ jobs:
 
           cd ./pascal-api-examples
 
-
           pushd vad-with-non-streaming-asr
+
+          time ./run-vad-with-zipformer-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
 
           time ./run-vad-with-dolphin-ctc.sh
           rm -rf sherpa-onnx-*
@@ -275,24 +303,6 @@ jobs:
 
           time ./run-vad-with-sense-voice.sh
           rm -rf sherpa-onnx-*
-          echo "---"
-
-          ls -lh
-
-          popd
-
-      - name:  Run Pascal test (VAD test)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd vad
-          ./run-circular-buffer.sh
-          echo "---"
-
-          time ./run-remove-silence.sh
           echo "---"
 
           ls -lh

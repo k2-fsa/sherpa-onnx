@@ -13,17 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
       - 'scripts/lazarus/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/lazarus.yaml'
-      - 'cmake/**'
-      - 'lazarus-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/pascal-api/*'
-      - 'scripts/lazarus/*'
 
   workflow_dispatch:
 
@@ -47,6 +36,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -258,6 +253,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Retrieve artifact from windows x64
         uses: actions/download-artifact@v4

@@ -303,6 +303,172 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-int8-2025-06-30",
+            idx=17,
+            lang="zh",
+            short_name="large_zipformer_int8",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -fv bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-2025-06-30",
+            idx=18,
+            lang="zh",
+            short_name="large_zipformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -fv bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-fp16-2025-06-30",
+            idx=19,
+            lang="zh",
+            short_name="large_zipformer_fp16",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -fv bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-ctc-zh-int8-2025-06-30",
+            idx=20,
+            lang="zh",
+            short_name="large_zipformer_int8",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+            rm -fv bpe.model
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-en-kroko-2025-08-06",
+            idx=21,
+            lang="en",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06",
+            idx=22,
+            lang="es",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-fr-kroko-2025-08-06",
+            idx=23,
+            lang="fr",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-de-kroko-2025-08-06",
+            idx=24,
+            lang="de",
+            short_name="zipformer_kroko_asr",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16",
+            idx=25,
+            lang="ru",
+            short_name="small_zipformer_int8",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16",
+            idx=26,
+            lang="ru",
+            short_name="small_zipformer",
+            cmd="""
+            pushd $model_name
+            rm -rf test_wavs
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models

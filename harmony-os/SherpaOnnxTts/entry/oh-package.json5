@@ -6,7 +6,7 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "sherpa_onnx": "1.12.1",
+    "sherpa_onnx": "1.12.9",
   }
 }
 

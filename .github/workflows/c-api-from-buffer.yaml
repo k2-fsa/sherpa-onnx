@@ -13,16 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
       - 'ffmpeg-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/c-api-from-buffer.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'c-api-examples/**'
-      - 'ffmpeg-examples/**'
 
   workflow_dispatch:
 
@@ -43,6 +33,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2

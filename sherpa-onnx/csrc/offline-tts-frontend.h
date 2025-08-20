@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -56,6 +57,12 @@ class OfflineTtsFrontend {
 
 // implementation is in ./piper-phonemize-lexicon.cc
 void InitEspeak(const std::string &data_dir);
+
+// implementation in ./piper-phonemize-lexicon.cc
+std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    int32_t max_token_len, const std::string &text,
+    const std::string &voice = "");
 
 }  // namespace sherpa_onnx
 

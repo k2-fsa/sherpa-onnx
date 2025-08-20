@@ -36,12 +36,22 @@ export class OfflineTtsKokoroModelConfig {
   public lengthScale: number = 1.0;
   public dictDir: string = '';
   public lexicon: string = '';
+  public lang: string = '';
+}
+
+export class OfflineTtsKittenModelConfig {
+  public model: string = '';
+  public voices: string = '';
+  public tokens: string = '';
+  public dataDir: string = '';
+  public lengthScale: number = 1.0;
 }
 
 export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
   public matcha: OfflineTtsMatchaModelConfig = new OfflineTtsMatchaModelConfig();
   public kokoro: OfflineTtsKokoroModelConfig = new OfflineTtsKokoroModelConfig();
+  public kitten: OfflineTtsKittenModelConfig = new OfflineTtsKittenModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';

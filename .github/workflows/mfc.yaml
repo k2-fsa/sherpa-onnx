@@ -12,15 +12,6 @@ on:
       - 'mfc-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/mfc.yaml'
-      - 'cmake/**'
-      - 'mfc-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 
@@ -42,6 +33,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Display MSBuild info
         shell: cmd

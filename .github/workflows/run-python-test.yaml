@@ -55,6 +55,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: Display OS version
         shell: bash
         run: |
@@ -74,7 +80,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile librosa
           python3 -m pip install wheel twine setuptools
 
       - uses: afoley587/setup-ffmpeg@main

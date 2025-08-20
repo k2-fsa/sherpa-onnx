@@ -23,5 +23,8 @@ This folder contains scripts for exporting models from
   - https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/stt_multilingual_fastconformer_hybrid_large_pc
 
   - https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/parakeet-tdt_ctc-110m
+  - https://huggingface.co/nvidia/parakeet-tdt_ctc-0.6b-ja
+  - https://huggingface.co/nvidia/stt_pt_fastconformer_hybrid_large_pc
+  - https://huggingface.co/nvidia/stt_de_fastconformer_hybrid_large_pc
 
 to `sherpa-onnx`.

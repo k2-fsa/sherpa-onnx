@@ -39,6 +39,7 @@ jobs:
         shell: bash
         run: |
           cd scripts/nemo/fast-conformer-hybrid-transducer-ctc
+          ./run-ctc-non-streaming-2.sh
           ./run-ctc-non-streaming.sh
 
           mv -v sherpa-onnx-nemo* ../../..
@@ -61,6 +62,15 @@ jobs:
               sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
               sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
               sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+              sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+              sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+              sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
+              sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc
+              sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc-int8
+              sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc
+              sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc-int8
             )
 
             for m in ${models[@]}; do
@@ -70,7 +80,7 @@ jobs:
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
-              git lfs track "*.onnx"
+              git lfs track "*.onnx" "*.wav"
               git status
               git add .
               git status
@@ -89,6 +99,15 @@ jobs:
             sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
             sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
             sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+            sherpa-onnx-nemo-fast-conformer-ctc-en-24500-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-es-1424-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288-int8
+            sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+            sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8
+            sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc
+            sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc-int8
+            sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc
+            sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc-int8
           )
           for d in ${dirs[@]}; do
             tar cjvf ${d}.tar.bz2 ./$d

@@ -59,7 +59,7 @@ rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
 cd ../
 
-sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx.js
+sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx-asr.js
 sed -i.bak s/Zipformer/Paraformer/g ./index.html
 
 cd ../..

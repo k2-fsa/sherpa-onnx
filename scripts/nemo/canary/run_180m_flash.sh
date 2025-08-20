@@ -19,8 +19,8 @@ pip install \
   kaldi-native-fbank \
   librosa \
   onnx==1.17.0 \
-  onnxmltools \
   onnxruntime==1.17.1 \
+  onnxscript \
   soundfile
 
 python3 ./export_onnx_180m_flash.py
@@ -66,7 +66,7 @@ log "-----int8------"
 
 python3 ./test_180m_flash.py \
   --encoder ./encoder.int8.onnx \
-  --decoder ./decoder.fp16.onnx \
+  --decoder ./decoder.int8.onnx \
   --source-lang en \
   --target-lang en \
   --tokens ./tokens.txt \
@@ -74,7 +74,7 @@ python3 ./test_180m_flash.py \
 
 python3 ./test_180m_flash.py \
   --encoder ./encoder.int8.onnx \
-  --decoder ./decoder.fp16.onnx \
+  --decoder ./decoder.int8.onnx \
   --source-lang en \
   --target-lang de \
   --tokens ./tokens.txt \
@@ -82,7 +82,7 @@ python3 ./test_180m_flash.py \
 
 python3 ./test_180m_flash.py \
   --encoder ./encoder.int8.onnx \
-  --decoder ./decoder.fp16.onnx \
+  --decoder ./decoder.int8.onnx \
   --source-lang de \
   --target-lang de \
   --tokens ./tokens.txt \
@@ -90,41 +90,7 @@ python3 ./test_180m_flash.py \
 
 python3 ./test_180m_flash.py \
   --encoder ./encoder.int8.onnx \
-  --decoder ./decoder.fp16.onnx \
-  --source-lang de \
-  --target-lang en \
-  --tokens ./tokens.txt \
-  --wav ./de.wav
-
-log "-----fp16------"
-
-python3 ./test_180m_flash.py \
-  --encoder ./encoder.fp16.onnx \
-  --decoder ./decoder.fp16.onnx \
-  --source-lang en \
-  --target-lang en \
-  --tokens ./tokens.txt \
-  --wav ./en.wav
-
-python3 ./test_180m_flash.py \
-  --encoder ./encoder.fp16.onnx \
-  --decoder ./decoder.fp16.onnx \
-  --source-lang en \
-  --target-lang de \
-  --tokens ./tokens.txt \
-  --wav ./en.wav
-
-python3 ./test_180m_flash.py \
-  --encoder ./encoder.fp16.onnx \
-  --decoder ./decoder.fp16.onnx \
-  --source-lang de \
-  --target-lang de \
-  --tokens ./tokens.txt \
-  --wav ./de.wav
-
-python3 ./test_180m_flash.py \
-  --encoder ./encoder.fp16.onnx \
-  --decoder ./decoder.fp16.onnx \
+  --decoder ./decoder.int8.onnx \
   --source-lang de \
   --target-lang en \
   --tokens ./tokens.txt \

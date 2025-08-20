@@ -551,6 +551,152 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03",
+            idx=31,
+            lang="zh",
+            lang2="Chinese",
+            short_name="zipformer_2025_07_03",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -rfv bbpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8",
+            idx=33,
+            lang="en",
+            lang2="English",
+            short_name="parakeet_tdt_ctc_110m",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8",
+            idx=34,
+            lang="ja",
+            lang2="Japanese",
+            short_name="parakeet-tdt_ctc_0.6b_ja",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-stt_pt_fastconformer_hybrid_large_pc-int8",
+            idx=35,
+            lang="pt",
+            lang2="Portuguese",
+            short_name="stt_pt_fastconformer_hybrid_large_pc_transducer_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc-int8",
+            idx=36,
+            lang="pt",
+            lang2="Portuguese",
+            short_name="stt_pt_fastconformer_hybrid_large_pc_ctc-int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-transducer-stt_de_fastconformer_hybrid_large_pc-int8",
+            idx=37,
+            lang="de",
+            lang2="German",
+            short_name="stt_de_fastconformer_hybrid_large_pc_transducer_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc-int8",
+            idx=38,
+            lang="de",
+            lang2="German",
+            short_name="stt_de_fastconformer_hybrid_large_pc_ctc-int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16",
+            idx=39,
+            lang="zh",
+            lang2="Chinese",
+            short_name="zipformer_ctc_small_2025_07_16",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -rfv bbpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+            idx=40,
+            lang="multi",
+            lang2="25_languages",
+            short_name="parakeet_tdt_0.6b_v3",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

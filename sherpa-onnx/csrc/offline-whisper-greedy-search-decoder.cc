@@ -102,7 +102,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   std::vector<int32_t> predicted_tokens;
 
   // assume at most 6 tokens per second
-  int32_t num_possible_tokens = num_feature_frames / 100 * 6;
+  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
   for (int32_t i = 0; i < num_possible_tokens; ++i) {

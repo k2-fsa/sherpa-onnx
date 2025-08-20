@@ -11,16 +11,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-nodejs-addon-api.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/**'
-
   workflow_dispatch:
 
 concurrency:
@@ -37,14 +27,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         node-version: ["16", "22"]
-        python-version: ["3.8"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

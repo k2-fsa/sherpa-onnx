@@ -1,4 +1,4 @@
-name: export-nemo-parakeet-tdt-0.6b-v2
+name: export-nemo-parakeet-tdt-0.6b
 
 on:
   push:
@@ -10,80 +10,110 @@ concurrency:
   group: export-nemo-parakeet-tdt-0.6b-v2-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  HF_HUB_ENABLE_HF_TRANSFER: "0"
+
 jobs:
-  export-nemo-parakeet-tdt-0_6b-v2:
+  export-nemo-parakeet-tdt-0_6b:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: parakeet tdt 0.6b v2
+    name: parakeet tdt 0.6b ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
+        version: ["v2", "v3"]
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Show disk space
+        run: |
+          df -h
+
+      # See https://github.com/vlayer-xyz/vlayer/pull/543/files
+      # Free up disk space as the macOS runners end up using most for Xcode
+      # versions we don't need and use iOS simulators.
+      - name: Free up disk space
+        run: |
+          echo '*** Delete iOS simulators and their caches'
+          xcrun simctl delete all
+          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
+
+      - name: Show disk space
+        run: |
+          df -h
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'v2'
         shell: bash
         run: |
           cd scripts/nemo/parakeet-tdt-0.6b-v2
           ./run.sh
 
           ls -lh *.onnx
+          ls -lh *.weights
+
           mv -v *.onnx ../../..
+          mv -v *.weights ../../..
           mv -v tokens.txt ../../..
           mv 2086-149220-0033.wav ../../../0.wav
+
+      - name: Run ${{ matrix.version }}
+        if: matrix.version == 'v3'
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-tdt-0.6b-v3
+          ./run.sh
+
+          ls -lh *.onnx
+          mv -v *.onnx ../../..
+          mv -v *.weights ../../..
+          mv -v tokens.txt ../../..
+          mv *.wav ../../../
 
       - name: Collect files (fp32)
         shell: bash
         run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
+          version=${{ matrix.version }}
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
           mkdir -p $d
-          cp encoder.int8.onnx $d
-          cp decoder.onnx $d
-          cp joiner.onnx $d
-          cp tokens.txt $d
+          cp -v encoder.onnx $d
+          cp -v encoder.weights $d
+          cp -v decoder.onnx $d
+          cp -v joiner.onnx $d
+          cp -v tokens.txt $d
 
           mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
+          cp -v *.wav $d/test_wavs
 
-          tar cjfv $d.tar.bz2 $d
+          # tar cjfv $d.tar.bz2 $d
+
+          # ls -lh *.tar.bz2
 
       - name: Collect files (int8)
         shell: bash
         run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
+          version=${{ matrix.version }}
+          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
           mkdir -p $d
-          cp encoder.int8.onnx $d
-          cp decoder.int8.onnx $d
-          cp joiner.int8.onnx $d
-          cp tokens.txt $d
+          cp -v encoder.int8.onnx $d
+          cp -v decoder.int8.onnx $d
+          cp -v joiner.int8.onnx $d
+          cp -v tokens.txt $d
 
           mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
+          cp -v *.wav $d/test_wavs
 
           tar cjfv $d.tar.bz2 $d
 
-      - name: Collect files (fp16)
-        shell: bash
-        run: |
-          d=sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
-          mkdir -p $d
-          cp encoder.fp16.onnx $d
-          cp decoder.fp16.onnx $d
-          cp joiner.fp16.onnx $d
-          cp tokens.txt $d
-
-          mkdir $d/test_wavs
-          cp 0.wav $d/test_wavs
-
-          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
 
       - name: Publish to huggingface
         env:
@@ -94,13 +124,13 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            version=${{ matrix.version }}
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
             models=(
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
-              sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-fp16
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version
+              sherpa-onnx-nemo-parakeet-tdt-0.6b-$version-int8
             )
 
             for m in ${models[@]}; do
@@ -112,6 +142,7 @@ jobs:
               cd huggingface
               git lfs track "*.onnx"
               git lfs track "*.wav"
+              git lfs track "*.weights"
               git status
               git add .
               git status

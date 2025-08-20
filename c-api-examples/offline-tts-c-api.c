@@ -240,7 +240,7 @@ int32_t main(int32_t argc, char *argv[]) {
   SherpaOnnxDestroyOfflineTts(tts);
 
   fprintf(stderr, "Input text is: %s\n", text);
-  fprintf(stderr, "Speaker ID is is: %d\n", sid);
+  fprintf(stderr, "Speaker ID is: %d\n", sid);
   fprintf(stderr, "Saved to: %s\n", filename);
 
   free((void *)filename);

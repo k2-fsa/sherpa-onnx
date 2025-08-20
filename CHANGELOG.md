@@ -1,3 +1,129 @@
+## 1.12.9
+
+* Add more piper tts models (#2480)
+* Fix ASR for UE (#2483)
+* push to maven center (#2463)
+* Specify ABIs when building APKs (#2488)
+* Add more debug info for vits tts (#2491)
+* Add Swift API for computing speaker embeddings (#2492)
+* Alex/feat add python example (#2490)
+* Support TDT transducer decoding (#2495)
+* Fix java test (#2496)
+* Refactor Swift API (#2493)
+* add TtsReader app to README.md (#2498)
+* Export https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3 to sherpa-onnx (#2500)
+* Fix building apk (#2499)
+
+## 1.12.8
+
+* Expose JNI to compute probability of chunk in VAD (#2433)
+* Add https://huggingface.co/Banafo/Kroko-ASR (#2453)
+* Add APIs for Online NeMo CTC models (#2454)
+* Export https://github.com/KittenML/KittenTTS to sherpa-onnx (#2456)
+* Fix punctuations in kokoro tts. (#2458)
+* Limit number of tokens in fire red asr decoding. (#2459)
+* Add C++ runtime for kitten-tts (#2460)
+* Add Kotlin and Java API for KittenTTS (#2461)
+* Add Android TTS Engine APK for KittenTTS (#2465)
+* Add Python API for KittenTTS. (#2466)
+* Add C API for KittenTTS (#2467)
+* Add CXX API for KittenTTS (#2469)
+* Add JavaScript API (node-addon) for KittenTTS (#2470)
+* Add JavaScript API (WebAssembly) for KittenTTS (#2471)
+* Add Pascal API for KittenTTS (#2474)
+* Add Dart API for KittenTTS (#2475)
+* Add Swift API for KittenTTS (#2476)
+* Add C# API for KittenTTS (#2477)
+* Add Go API for KittenTTS (#2478)
+
+## 1.12.7
+
+* Support Portuguese and German ASR models from NeMo (#2394)
+* Support returning the current speech segment for VAD. (#2397)
+* Add more piper tts polish models (#2403)
+* Support VAD+ASR for WearOS (#2404)
+* Support test long audio with streaming-model & vad (#2405)
+* Fix typo in sherpa-onnx-vad-with-online-asr.cc (#2407)
+* Add tail padding for sherpa-onnx-vad-with-online-asr (#2408)
+* Add more French TTS models (#2424)
+* Add more piper tts models (#2425)
+* Implement max_symbols_per_frame for GigaAM2 accurate decoding since model uses char tokens instead of BPE. (#2423)
+* Fix GigaAM transducer encoder output length data type (#2426)
+* Add friendly log messages for Android and HarmonyOs TTS users. (#2427)
+* Fix setGraph in OnlineCtcFstDecoderConfig Java API (#2411)
+
+
+## 1.12.6
+
+* Support silero-vad v4 exported by k2-fsa (#2372)
+* Add C++ and Python support for ten-vad (#2377)
+* Fix compile errors for Linux (#2378)
+* Add C API for ten-vad (#2379)
+* Add CXX API examples for ten-vad. (#2380)
+* Add JavaScript (WebAssembly) API for ten-vad (#2382)
+* Add JavaScript (node-addon) API for ten-vad (#2383)
+* Add Go API for ten-vad (#2384)
+* Add C# API for ten-vad (#2385)
+* Add Dart API for ten-vad (#2386)
+* Add Swift API for ten-vad (#2387)
+* Add Pascal API for ten-vad (#2388)
+* Add Java/Kotlin API and Android support for ten-vad (#2389)
+
+## 1.12.5
+
+* Fix typo CMAKE_EXECUTBLE_LINKER_FLAGS -> CMAKE_EXECUTABLE_LINKER_FLAGS (#2344)
+* Fix testing dart packages (#2345)
+* fix(canary): use dynamo export, single input_ids and avoid 0/1 specialization (#2348)
+* Fix TTS for Unreal Engine (#2349)
+* Update readme to include https://github.com/mawwalker/stt-server (#2350)
+* Add meta data to NeMo canary ONNX models (#2351)
+* Update README to include https://github.com/bbeyondllove/asr_server (#2353)
+* Add C++ runtime and Python API for NeMo Canary models (#2352)
+* Add C/CXX/JavaScript API for NeMo Canary models (#2357)
+* Add Java and Kotlin API for NeMo Canary models (#2359)
+* Upload fp16 onnx model files for FireRedASR (#2360)
+* Fix nemo feature normalization in test code (#2361)
+* Refactor exporting NeMo models (#2362)
+* Add LODR support to online and offline recognizers (#2026)
+* Add CXX examples for NeMo TDT ASR. (#2363)
+* Add Pascal/Go/C#/Dart API for NeMo Canary ASR models (#2367)
+
+## 1.12.4
+
+* Refactor release scripts. (#2323)
+* Add TTS engine APKs for more models (#2327)
+* Fix static link without tts (#2328)
+* Fix VAD+ASR C++ example. (#2335)
+* Add sherpa-onnx-streaming-zipformer-zh-int8-2025-06-30 to android ASR apk (#2336)
+* Support non-streaming zipformer CTC ASR models (#2340)
+* Support linux aarch64 for Dart and Flutter (#2342)
+
+## 1.12.3
+
+* Show CMake debug information. (#2316)
+* Remove portaudio-go in Go API examples. (#2317)
+* Support Xipformer CTC ASR with whisper features. (#2319)
+* Support Zipformer transducer ASR with whisper features. (#2321)
+
+## 1.12.2
+
+* Fix CI for windows (#2279)
+* Add jar for Java 24. (#2280)
+* Add Python API for source separation (#2283)
+* Add link to huggingface space for source separation. (#2284)
+* Fix isspace on windows in debug build (#2042)
+* Update wasm/vad-asr/assets/README.md for more clear (#2297)
+* Update TTS Engine APK to support multi-lang (#2294)
+* Add scripts for exporting Piper TTS models to sherpa-onnx (#2299)
+* Update sherpa-onnx-shared.pc.in (#2300)
+* Fixes #2172 (#2301)
+* Refactor kokoro export (#2302)
+* Fix building for Pascal (#2305)
+* Support extra languages in multi-lang kokoro tts (#2303)
+* Update readme to include BreezeApp from MediaTek Research. (#2313)
+* Add API to get version information (#2309)
+
+
 ## 1.12.1
 
 * Use jlong explicitly in jni. (#2229)

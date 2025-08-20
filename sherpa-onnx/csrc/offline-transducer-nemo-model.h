@@ -88,6 +88,10 @@ class OfflineTransducerNeMoModel {
 
   bool IsGigaAM() const;
 
+  // true if it is a Token-and-Duration Transducer model
+  // false otherwise
+  bool IsTDT() const;
+
   int32_t FeatureDim() const;
 
  private:

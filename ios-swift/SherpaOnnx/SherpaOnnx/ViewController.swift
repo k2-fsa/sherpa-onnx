@@ -85,10 +85,10 @@ class ViewController: UIViewController {
         // You can also modify Model.swift to add new pre-trained models from
         // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 
-        // let modelConfig = getBilingualStreamZhEnZipformer20230220()
+        let modelConfig = getBilingualStreamZhEnZipformer20230220()
         // let modelConfig = getZhZipformer20230615()
         // let modelConfig = getEnZipformer20230626()
-        let modelConfig = getBilingualStreamingZhEnParaformer()
+        // let modelConfig = getBilingualStreamingZhEnParaformer()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,

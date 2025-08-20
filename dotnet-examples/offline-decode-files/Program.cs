@@ -75,6 +75,9 @@ class OfflineDecodeFiles
     [Option("nemo-ctc", Required = false, HelpText = "Path to model.onnx. Used only for NeMo CTC models")]
     public string NeMoCtc { get; set; } = string.Empty;
 
+    [Option("zipformer-ctc", Required = false, HelpText = "Path to model.onnx. Used only for Zipformer CTC models")]
+    public string ZipformerCtc { get; set; } = string.Empty;
+
     [Option("dolphin-model", Required = false, Default = "", HelpText = "Path to dolphin ctc model")]
     public string DolphinModel { get; set; } = string.Empty;
 
@@ -145,7 +148,7 @@ to download pre-trained non-streaming zipformer models.
 
 dotnet run \
   --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx \
   --files ./sherpa-onnx-zipformer-en-2023-04-01/test_wavs/0.wav \
   ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
   ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
@@ -239,6 +242,10 @@ to download pre-trained Tdnn models.
     else if (!string.IsNullOrEmpty(options.DolphinModel))
     {
       config.ModelConfig.Dolphin.Model = options.DolphinModel;
+    }
+    else if (!string.IsNullOrEmpty(options.ZipformerCtc))
+    {
+      config.ModelConfig.ZipformerCtc.Model = options.ZipformerCtc;
     }
     else if (!string.IsNullOrEmpty(options.TeleSpeechCtc))
     {

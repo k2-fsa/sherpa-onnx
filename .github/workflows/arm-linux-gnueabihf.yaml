@@ -13,15 +13,6 @@ on:
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/arm-linux-gnueabihf.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
 
   workflow_dispatch:
 
@@ -43,6 +34,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2

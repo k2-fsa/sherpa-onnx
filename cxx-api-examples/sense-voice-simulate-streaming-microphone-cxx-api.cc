@@ -142,8 +142,8 @@ int32_t main() {
     resampler = LinearResampler::Create(mic_sample_rate, sample_rate,
                                         lowpass_cutoff, lowpass_filter_width);
   }
-  if (mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
-                     nullptr) == false) {
+  if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
+                      nullptr)) {
     std::cerr << "Failed to open microphone device\n";
     return -1;
   }
@@ -165,6 +165,10 @@ int32_t main() {
       std::unique_lock<std::mutex> lock(mutex);
       while (samples_queue.empty() && !stop) {
         condition_variable.wait(lock);
+      }
+
+      if (stop) {
+        break;
       }
 
       const auto &s = samples_queue.front();

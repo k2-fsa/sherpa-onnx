@@ -10,14 +10,6 @@ on:
       - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
       - 'flutter/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-dart.yaml'
-      - '.github/scripts/test-dart.sh'
-      - 'dart-api-examples/**'
-      - 'flutter/**'
 
   workflow_dispatch:
 
@@ -32,23 +24,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] #, windows-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm] #, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-dart
 
-      - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v3
+      # see https://github.com/subosito/flutter-action/issues/345
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          version: latest
+          channel: master
+          flutter-version: 3.24.0
 
       - name: Display flutter info
         shell: bash
@@ -85,22 +84,34 @@ jobs:
         shell: bash
         run: |
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
-            os=linux
+            os=linux-x64
+          elif [[ ${{ matrix.os }} == ubuntu-24.04-arm ]]; then
+            os=linux-aarch64
           elif [[ ${{ matrix.os }} == macos-latest ]]; then
             os=macos
           elif [[ ${{ matrix.os }} == windows-latest ]]; then
             os=windows
           fi
 
+          echo "os: $os"
+
           if [[ $os == windows ]]; then
             cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
+          elif [[ $os == linux-x64 ]]; then
+            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/x64
+          elif [[ $os == linux-aarch64 ]]; then
+            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_linux/linux/aarch64
           else
             cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
           fi
 
           echo "--------------------"
 
-          ls -lh ./flutter/sherpa_onnx_$os/$os
+          if [[ $os == linux-x64 || $os == linux-aarch64 ]]; then
+            ls -lh ./flutter/sherpa_onnx_linux/linux/*
+          else
+            ls -lh ./flutter/sherpa_onnx_$os/$os
+          fi
 
       - name: Run tests
         shell: bash

@@ -6,8 +6,10 @@ out_jar := $(out_dir)/sherpa-onnx.jar
 
 package_dir := com/k2fsa/sherpa/onnx
 
-java_files := LibraryLoader.java
+java_files := LibraryUtils.java
+java_files += LibraryLoader.java
 
+java_files += VersionInfo.java
 java_files += WaveReader.java
 java_files += WaveWriter.java
 java_files += EndpointRule.java
@@ -32,6 +34,8 @@ java_files += OfflineWhisperModelConfig.java
 java_files += OfflineFireRedAsrModelConfig.java
 java_files += OfflineMoonshineModelConfig.java
 java_files += OfflineNemoEncDecCtcModelConfig.java
+java_files += OfflineZipformerCtcModelConfig.java
+java_files += OfflineCanaryModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java
 java_files += OfflineDolphinModelConfig.java
 java_files += OfflineModelConfig.java
@@ -40,6 +44,7 @@ java_files += OfflineRecognizerResult.java
 java_files += OfflineStream.java
 java_files += OfflineRecognizer.java
 
+java_files += OfflineTtsKittenModelConfig.java
 java_files += OfflineTtsKokoroModelConfig.java
 java_files += OfflineTtsMatchaModelConfig.java
 java_files += OfflineTtsVitsModelConfig.java
@@ -71,6 +76,7 @@ java_files += SpeakerEmbeddingExtractorConfig.java
 java_files += SpeakerEmbeddingExtractor.java
 java_files += SpeakerEmbeddingManager.java
 
+java_files += TenVadModelConfig.java
 java_files += SileroVadModelConfig.java
 java_files += VadModelConfig.java
 java_files += SpeechSegment.java
@@ -96,7 +102,7 @@ java_files += OfflineSpeechDenoiser.java
 
 class_files := $(java_files:%.java=%.class)
 
-java_files := $(addprefix src/$(package_dir)/,$(java_files))
+java_files := $(addprefix src/main/java/$(package_dir)/,$(java_files))
 class_files := $(addprefix $(out_dir)/$(package_dir)/,$(class_files))
 
 $(info -- java files $(java_files))
@@ -114,6 +120,6 @@ $(out_jar): $(class_files)
 clean:
 	$(RM) -rfv $(out_dir)
 
-$(class_files): $(out_dir)/$(package_dir)/%.class: src/$(package_dir)/%.java
+$(class_files): $(out_dir)/$(package_dir)/%.class: src/main/java/$(package_dir)/%.java
 	mkdir -p build
 	javac -d $(out_dir) -cp $(out_dir) $<

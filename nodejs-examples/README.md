@@ -54,6 +54,22 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
+## ./test-offline-tts-kitten-en.js
+
+[./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use
+[kitten-nano-en-v0_1-fp16](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test-offline-tts-kitten-en.js
+```
+
 ## ./test-offline-tts-kokoro-en.js
 
 [./test-offline-tts-kokoro-en.js](./test-offline-tts-kokoro-en.js) shows how to use
@@ -63,7 +79,7 @@ for text-to-speech.
 You can use the following command to run it:
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
@@ -152,6 +168,39 @@ wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherp
 tar xvf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 rm sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02.tar.bz2
 node ./test-offline-dolphin-ctc.js
+```
+
+## ./test-offline-nemo-canary.js
+
+[./test-offline-nemo-canary.js](./test-offline-nemo-canary.js) demonstrates
+how to decode a file with a NeMo Canary model. In the code we use
+[sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+
+node ./test-offline-nemo-canary.js
+```
+
+## ./test-offline-zipformer-ctc.js
+
+[./test-offline-zipformer-ctc.js](./test-offline-zipformer-ctc.js) demonstrates
+how to decode a file with a Zipformer CTC model. In the code we use
+[sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/icefall/zipformer.html#sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03-chinese).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+node ./test-offline-zipformer-ctc.js
 ```
 
 ## ./test-offline-nemo-ctc.js

@@ -184,12 +184,7 @@ class OnnxModel:
         target = torch.tensor([[token]], dtype=torch.int32).numpy()
         target_len = torch.tensor([1], dtype=torch.int32).numpy()
 
-        (
-            decoder_out,
-            decoder_out_length,
-            state0_next,
-            state1_next,
-        ) = self.decoder.run(
+        (decoder_out, decoder_out_length, state0_next, state1_next,) = self.decoder.run(
             [
                 self.decoder.get_outputs()[0].name,
                 self.decoder.get_outputs()[1].name,
@@ -267,8 +262,8 @@ def main():
     if model.normalize_type != "":
         assert model.normalize_type == "per_feature", model.normalize_type
         features = torch.from_numpy(features)
-        mean = features.mean(dim=1, keepdims=True)
-        stddev = features.std(dim=1, keepdims=True) + 1e-5
+        mean = features.mean(dim=0, keepdims=True)
+        stddev = features.std(dim=0, keepdims=True) + 1e-5
         features = (features - mean) / stddev
         features = features.numpy()
     print(audio.shape)

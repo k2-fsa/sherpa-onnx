@@ -25,6 +25,18 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
 fi
 
 export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
+
+function testVersion() {
+  out_filename=test_version.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_version.kt \
+    VersionInfo.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
 
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
@@ -126,6 +138,12 @@ function testTts() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
     tar xf kokoro-en-v0_19.tar.bz2
     rm kokoro-en-v0_19.tar.bz2
+  fi
+
+  if [ ! -f ./kitten-nano-en-v0_1-fp16/model.fp16.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+    tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+    rm kitten-nano-en-v0_1-fp16.tar.bz2
   fi
 
   out_filename=test_tts.jar
@@ -239,6 +257,13 @@ function testOfflineAsr() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
     tar xvf sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
     rm sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+
+    tar xvf sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+    rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
   fi
 
   out_filename=test_offline_asr.jar
@@ -437,6 +462,30 @@ function testOfflineSenseVoiceWithHr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineNeMoCanary() {
+  if [ ! -f sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+    tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+    rm sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
+  fi
+
+  out_filename=test_offline_nemo_canary.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_nemo_canary.kt \
+    FeatureConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+testVersion
+
+testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
 testOfflineSpeakerDiarization

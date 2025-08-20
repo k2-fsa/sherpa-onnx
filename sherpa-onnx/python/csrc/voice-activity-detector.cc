@@ -22,7 +22,17 @@ void PybindSpeechSegment(py::module *m) {
 void PybindVoiceActivityDetector(py::module *m) {
   PybindSpeechSegment(m);
   using PyClass = VoiceActivityDetector;
-  py::class_<PyClass>(*m, "VoiceActivityDetector")
+  py::class_<PyClass>(*m, "VoiceActivityDetector",
+                      R"(
+1. It is an error to call the front property when the method empty() returns True
+2. The property front returns a reference, which is valid until the next call of any
+   methods of this class
+3. When speech is detected, the method is_speech_detected() return True, you can
+   use the property current_segment to get the speech samples since
+   is_speech_detected() returns true
+4. When is_speech_detected() is changed from True to False, the method
+   empty() returns False.
+      )")
       .def(py::init<const VadModelConfig &, float>(), py::arg("config"),
            py::arg("buffer_size_in_seconds") = 60,
            py::call_guard<py::gil_scoped_release>())
@@ -39,7 +49,8 @@ void PybindVoiceActivityDetector(py::module *m) {
            py::call_guard<py::gil_scoped_release>())
       .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
       .def("flush", &PyClass::Flush, py::call_guard<py::gil_scoped_release>())
-      .def_property_readonly("front", &PyClass::Front);
+      .def_property_readonly("front", &PyClass::Front)
+      .def_property_readonly("current_segment", &PyClass::CurrentSpeechSegment);
 }
 
 }  // namespace sherpa_onnx

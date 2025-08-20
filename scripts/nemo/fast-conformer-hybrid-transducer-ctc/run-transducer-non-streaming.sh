@@ -18,7 +18,17 @@ log "Process $name at $url"
 ./export-onnx-transducer-non-streaming.py --model $name --doc "$doc"
 d=sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000
 mkdir -p $d
-mv -v *.onnx $d/
+mv -v encoder.onnx $d/
+mv -v decoder.onnx $d/
+mv -v joiner.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8
+mkdir -p $d
+mv -v encoder.int8.onnx $d/
+mv -v decoder.int8.onnx $d/
+mv -v joiner.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -32,7 +42,17 @@ log "Process $name at $url"
 
 d=sherpa-onnx-nemo-fast-conformer-transducer-en-24500
 mkdir -p $d
-mv -v *.onnx $d/
+mv -v encoder.onnx $d/
+mv -v decoder.onnx $d/
+mv -v joiner.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-en-24500-int8
+mkdir -p $d
+mv -v encoder.int8.onnx $d/
+mv -v decoder.int8.onnx $d/
+mv -v joiner.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -44,7 +64,17 @@ doc="This collection contains the Spanish FastConformer Hybrid (CTC and Transduc
 
 d=sherpa-onnx-nemo-fast-conformer-transducer-es-1424
 mkdir -p $d
-mv -v *.onnx $d/
+mv -v encoder.onnx $d/
+mv -v decoder.onnx $d/
+mv -v joiner.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-es-1424-int8
+mkdir -p $d
+mv -v encoder.int8.onnx $d/
+mv -v decoder.int8.onnx $d/
+mv -v joiner.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -56,7 +86,17 @@ doc="This collection contains the Multilingual FastConformer Hybrid (Transducer 
 
 d=sherpa-onnx-nemo-fast-conformer-transducer-en-de-es-fr-14288
 mkdir -p $d
-mv -v *.onnx $d/
+mv -v encoder.onnx $d/
+mv -v decoder.onnx $d/
+mv -v joiner.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-en-de-es-fr-14288-int8
+mkdir -p $d
+mv -v encoder.int8.onnx $d/
+mv -v decoder.int8.onnx $d/
+mv -v joiner.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -68,7 +108,17 @@ doc="This collection contains the Multilingual FastConformer Hybrid (Transducer 
 
 d=sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 mkdir -p $d
-mv -v *.onnx $d/
+mv -v encoder.onnx $d/
+mv -v decoder.onnx $d/
+mv -v joiner.onnx $d/
+cp -v tokens.txt $d/
+ls -lh $d
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+mkdir -p $d
+mv -v encoder.int8.onnx $d/
+mv -v decoder.int8.onnx $d/
+mv -v joiner.int8.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
@@ -101,6 +151,25 @@ mkdir -p $d/test_wavs
 cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs
 
+d=sherpa-onnx-nemo-parakeet_tdt_transducer_110m-en-36000-int8
+python3 ./test-onnx-transducer-non-streaming.py \
+  --encoder $d/encoder.int8.onnx \
+  --decoder $d/decoder.int8.onnx \
+  --joiner $d/joiner.int8.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+
+python3 ./test-onnx-transducer-non-streaming.py \
+  --encoder $d/encoder.int8.onnx \
+  --decoder $d/decoder.int8.onnx \
+  --joiner $d/joiner.int8.onnx \
+  --tokens $d/tokens.txt \
+  --wav ./en.wav
+
+mkdir -p $d/test_wavs
+cp en.wav $d/test_wavs/0.wav
+cp -v $data/en-english.wav $d/test_wavs
+
 d=sherpa-onnx-nemo-fast-conformer-transducer-en-24500
 python3 ./test-onnx-transducer-non-streaming.py \
   --encoder $d/encoder.onnx \
@@ -112,11 +181,32 @@ mkdir -p $d/test_wavs
 cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs
 
+d=sherpa-onnx-nemo-fast-conformer-transducer-en-24500-int8
+python3 ./test-onnx-transducer-non-streaming.py \
+  --encoder $d/encoder.int8.onnx \
+  --decoder $d/decoder.int8.onnx \
+  --joiner $d/joiner.int8.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+mkdir -p $d/test_wavs
+cp en.wav $d/test_wavs/0.wav
+cp -v $data/en-english.wav $d/test_wavs
+
 d=sherpa-onnx-nemo-fast-conformer-transducer-es-1424
 python3 ./test-onnx-transducer-non-streaming.py \
   --encoder $d/encoder.onnx \
   --decoder $d/decoder.onnx \
   --joiner $d/joiner.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/es-spanish.wav
+mkdir -p $d/test_wavs
+cp -v $data/es-spanish.wav $d/test_wavs
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-es-1424-int8
+python3 ./test-onnx-transducer-non-streaming.py \
+  --encoder $d/encoder.int8.onnx \
+  --decoder $d/decoder.int8.onnx \
+  --joiner $d/joiner.int8.onnx \
   --tokens $d/tokens.txt \
   --wav $data/es-spanish.wav
 mkdir -p $d/test_wavs
@@ -134,6 +224,18 @@ for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
   cp -v $data/$w $d/test_wavs
 done
 
+d=sherpa-onnx-nemo-fast-conformer-transducer-en-de-es-fr-14288-int8
+mkdir -p $d/test_wavs
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
+  python3 ./test-onnx-transducer-non-streaming.py \
+    --encoder $d/encoder.int8.onnx \
+    --decoder $d/decoder.int8.onnx \
+    --joiner $d/joiner.int8.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+  cp -v $data/$w $d/test_wavs
+done
+
 d=sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 mkdir -p $d/test_wavs
 for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.wav it-italian.wav po-polish.wav ru-russian.wav uk-ukrainian.wav; do
@@ -141,6 +243,18 @@ for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.w
     --encoder $d/encoder.onnx \
     --decoder $d/decoder.onnx \
     --joiner $d/joiner.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+  cp -v $data/$w $d/test_wavs
+done
+
+d=sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k-int8
+mkdir -p $d/test_wavs
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.wav it-italian.wav po-polish.wav ru-russian.wav uk-ukrainian.wav; do
+  python3 ./test-onnx-transducer-non-streaming.py \
+    --encoder $d/encoder.int8.onnx \
+    --decoder $d/decoder.int8.onnx \
+    --joiner $d/joiner.int8.onnx \
     --tokens $d/tokens.txt \
     --wav $data/$w
   cp -v $data/$w $d/test_wavs

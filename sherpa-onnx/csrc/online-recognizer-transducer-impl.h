@@ -16,6 +16,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/online-lm.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -133,6 +134,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
                        config.decoding_method.c_str());
       exit(-1);
     }
+
+    if (model_->UseWhisperFeature()) {
+      config_.feat_config.is_whisper = true;
+    }
   }
 
   template <typename Manager>
@@ -181,6 +186,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
       exit(-1);
+    }
+
+    if (model_->UseWhisperFeature()) {
+      config_.feat_config.is_whisper = true;
     }
   }
 
@@ -291,6 +300,11 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =
           ss[i]->GetFrames(num_processed_frames, chunk_size);
+
+      if (config_.feat_config.is_whisper) {
+        OfflineWhisperModel::NormalizeFeatures(features.data(), chunk_size,
+                                               feature_dim);
+      }
 
       // Question: should num_processed_frames include chunk_shift?
       ss[i]->GetNumProcessedFrames() += chunk_shift;

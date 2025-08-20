@@ -10,15 +10,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'go-api-examples/**'
       - 'scripts/go/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-go.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'go-api-examples/**'
-      - 'scripts/go/**'
 
   workflow_dispatch:
 
@@ -39,6 +30,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -102,6 +99,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/audio-tagging
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
@@ -142,6 +140,19 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test non-streaming decoding files with NeMo Canary
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-canary-decode-files/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-nemo-*
+
       - name: Test streaming decoding files
         shell: bash
         run: |
@@ -177,6 +188,10 @@ jobs:
           cat go.mod
           go build
           ls -lh
+
+          echo "Test Zipformer CTC"
+          ./run-zipformer-ctc.sh
+          rm -rf sherpa-onnx-zipformer-*
 
           echo "Test SenseVoice ctc"
           ./run-sense-voice-small-with-hr.sh
@@ -285,6 +300,11 @@ jobs:
           go mod tidy
           cat go.mod
           go build
+          ls -lh
+
+          echo "Test kitten en"
+          ./run-kitten-en.sh
+          rm -rf kitten-*
           ls -lh
 
           echo "Test kokoro zh+en"

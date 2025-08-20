@@ -33,18 +33,25 @@ concurrency:
 jobs:
   pkg_config:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
+    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.tts }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         build_type: [Release, Debug]
         lib_type: [shared, static]
+        tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -61,12 +68,12 @@ jobs:
           mkdir build
           cd build
           if [[ ${{ matrix.lib_type }} == "shared" ]]; then
-            cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
+            cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.tts }} -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
           else
-            cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=OFF ..
+            cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.tts }} -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=OFF ..
           fi
 
-      - name: Build sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
+      - name: Build sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.tts }}
         shell: bash
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
@@ -98,16 +105,36 @@ jobs:
 
           cat build/install/sherpa-onnx.pc
 
+      - name: Show pkg-config
+        shell: bash
+        run: |
+          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
+          pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
+
       - name: Build C API example
         shell: bash
         run: |
           export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
           cd c-api-examples
 
+          pkg-config --cflags sherpa-onnx
+
           gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
+
           ./decode-file-c-api --help
 
+      - name: Build C API example (tts)
+        if: matrix.tts == 'ON'
+        shell: bash
+        run: |
+          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
+          cd c-api-examples
+
+          pkg-config --cflags sherpa-onnx
+
           gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
+
           ./offline-tts-c-api --help
 
       - name: Test online transducer (C API)
@@ -120,5 +147,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.lib_type }}
+          name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.lib_type }}-tts-${{ matrix.tts }}
           path: tts

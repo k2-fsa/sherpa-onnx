@@ -69,6 +69,14 @@ class SileroVadModel::Impl {
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
 
+  float Run(const float *samples, int32_t n) {
+    if (is_v5_) {
+      return RunV5(samples, n);
+    } else {
+      return RunV4(samples, n);
+    }
+  }
+
   void Reset() {
     if (is_v5_) {
       ResetV5();
@@ -180,7 +188,8 @@ class SileroVadModel::Impl {
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
 
-    if (input_names_.size() == 4 && output_names_.size() == 3) {
+    if ((input_names_.size() == 4 && output_names_.size() == 3) ||
+        IsExportedByK2Fsa()) {
       is_v5_ = false;
     } else if (input_names_.size() == 3 && output_names_.size() == 2) {
       is_v5_ = true;
@@ -248,7 +257,23 @@ class SileroVadModel::Impl {
     }
   }
 
+  bool IsExportedByK2Fsa() const {
+    if (input_names_.size() == 3 && input_names_[0] == "x" &&
+        input_names_[1] == "h" && input_names_[2] == "c" &&
+        output_names_.size() == 3 && output_names_[0] == "prob" &&
+        output_names_[1] == "new_h" && output_names_[2] == "new_c") {
+      // this version is exported and maintained by us (k2-fsa)
+      return true;
+    }
+
+    return false;
+  }
+
   void CheckV4() const {
+    if (IsExportedByK2Fsa()) {
+      return;
+    }
+
     if (input_names_.size() != 4) {
       SHERPA_ONNX_LOGE("Expect 4 inputs. Given: %d",
                        static_cast<int32_t>(input_names_.size()));
@@ -344,14 +369,6 @@ class SileroVadModel::Impl {
     }
   }
 
-  float Run(const float *samples, int32_t n) {
-    if (is_v5_) {
-      return RunV5(samples, n);
-    } else {
-      return RunV4(samples, n);
-    }
-  }
-
   float RunV5(const float *samples, int32_t n) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -393,9 +410,15 @@ class SileroVadModel::Impl {
     Ort::Value sr =
         Ort::Value::CreateTensor(memory_info, &sample_rate_, 1, &sr_shape, 1);
 
-    std::array<Ort::Value, 4> inputs = {std::move(x), std::move(sr),
-                                        std::move(states_[0]),
-                                        std::move(states_[1])};
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(input_names_.size());
+
+    inputs.push_back(std::move(x));
+    if (input_names_.size() == 4) {
+      inputs.push_back(std::move(sr));
+    }
+    inputs.push_back(std::move(states_[0]));
+    inputs.push_back(std::move(states_[1]));
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -471,6 +494,10 @@ void SileroVadModel::SetMinSilenceDuration(float s) {
 
 void SileroVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+float SileroVadModel::Compute(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 #if __ANDROID_API__ >= 9
