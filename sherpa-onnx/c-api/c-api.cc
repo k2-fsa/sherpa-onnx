@@ -689,6 +689,14 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
       r->timestamps = nullptr;
     }
 
+    if (!result.durations.empty() && result.durations.size() == r->count) {
+      r->durations = new float[r->count];
+      std::copy(result.durations.begin(), result.durations.end(),
+                r->durations);
+    } else {
+      r->durations = nullptr;
+    }
+
     r->tokens = tokens;
   } else {
     r->count = 0;
@@ -705,6 +713,7 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
   if (r) {
     delete[] r->text;
     delete[] r->timestamps;
+    delete[] r->durations;
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->json;

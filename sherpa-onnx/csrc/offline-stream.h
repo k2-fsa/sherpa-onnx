@@ -38,6 +38,9 @@ struct OfflineRecognitionResult {
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
+  /// durations[i] contains the duration (in seconds) for tokens[i] (TDT models only)
+  std::vector<float> durations;
+
   std::vector<int32_t> words;
 
   std::string AsJsonString() const;

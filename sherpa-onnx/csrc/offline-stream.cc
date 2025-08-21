@@ -397,6 +397,18 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   os << "], ";
 
   os << "\""
+     << "durations"
+     << "\""
+     << ": ";
+  os << "[";
+  sep = "";
+  for (auto d : durations) {
+    os << sep << std::fixed << std::setprecision(2) << d;
+    sep = ", ";
+  }
+  os << "], ";
+
+  os << "\""
      << "tokens"
      << "\""
      << ":";

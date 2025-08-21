@@ -19,6 +19,9 @@ struct OfflineTransducerDecoderResult {
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   /// Note: The index is after subsampling
   std::vector<int32_t> timestamps;
+
+  /// durations[i] contains the duration (in frames or seconds, as appropriate) for tokens[i] (TDT models only)
+  std::vector<float> durations;
 };
 
 class OfflineTransducerDecoder {
