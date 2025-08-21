@@ -681,6 +681,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+            idx=40,
+            lang="multi",
+            lang2="25_languages",
+            short_name="parakeet_tdt_0.6b_v3",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

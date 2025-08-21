@@ -10,15 +10,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'go-api-examples/**'
       - 'scripts/go/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-go.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'go-api-examples/**'
-      - 'scripts/go/**'
 
   workflow_dispatch:
 
@@ -309,6 +300,11 @@ jobs:
           go mod tidy
           cat go.mod
           go build
+          ls -lh
+
+          echo "Test kitten en"
+          ./run-kitten-en.sh
+          rm -rf kitten-*
           ls -lh
 
           echo "Test kokoro zh+en"

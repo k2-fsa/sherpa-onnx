@@ -10,6 +10,14 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test_tts_non_streaming_kitten_en.js
+
+rm -rf kitten-nano-en-v0_1-fp16
+
 echo "----------non-streaming ASR NeMo Canary----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2

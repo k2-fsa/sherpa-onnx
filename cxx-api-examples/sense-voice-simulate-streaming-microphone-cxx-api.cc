@@ -167,6 +167,10 @@ int32_t main() {
         condition_variable.wait(lock);
       }
 
+      if (stop) {
+        break;
+      }
+
       const auto &s = samples_queue.front();
       if (!resampler.Get()) {
         buffer.insert(buffer.end(), s.begin(), s.end());

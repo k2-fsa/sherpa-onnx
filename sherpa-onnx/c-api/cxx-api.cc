@@ -69,6 +69,8 @@ OnlineRecognizer OnlineRecognizer::Create(
   c.model_config.zipformer2_ctc.model =
       config.model_config.zipformer2_ctc.model.c_str();
 
+  c.model_config.nemo_ctc.model = config.model_config.nemo_ctc.model.c_str();
+
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
   c.model_config.provider = config.model_config.provider.c_str();
@@ -359,6 +361,35 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
   return ans;
 }
 
+std::shared_ptr<OfflineRecognizerResult> OfflineRecognizer::GetResultPtr(const OfflineStream *s) const
+{
+  auto r = SherpaOnnxGetOfflineStreamResult(s->Get());
+
+  OfflineRecognizerResult* ans = new OfflineRecognizerResult;
+  if (r) {
+    ans->text = r->text;
+
+    if (r->timestamps) {
+      ans->timestamps.resize(r->count);
+      std::copy(r->timestamps, r->timestamps + r->count, ans->timestamps.data());
+    }
+
+    ans->tokens.resize(r->count);
+    for (int32_t i = 0; i != r->count; ++i) {
+      ans->tokens[i] = r->tokens_arr[i];
+    }
+
+    ans->json = r->json;
+    ans->lang = r->lang ? r->lang : "";
+    ans->emotion = r->emotion ? r->emotion : "";
+    ans->event = r->event ? r->event : "";
+  }
+
+  SherpaOnnxDestroyOfflineRecognizerResult(r);
+
+  return std::shared_ptr<OfflineRecognizerResult>(ans);
+}
+
 OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   struct SherpaOnnxOfflineTtsConfig c;
   memset(&c, 0, sizeof(c));
@@ -389,6 +420,12 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.kokoro.dict_dir = config.model.kokoro.dict_dir.c_str();
   c.model.kokoro.lexicon = config.model.kokoro.lexicon.c_str();
   c.model.kokoro.lang = config.model.kokoro.lang.c_str();
+
+  c.model.kitten.model = config.model.kitten.model.c_str();
+  c.model.kitten.voices = config.model.kitten.voices.c_str();
+  c.model.kitten.tokens = config.model.kitten.tokens.c_str();
+  c.model.kitten.data_dir = config.model.kitten.data_dir.c_str();
+  c.model.kitten.length_scale = config.model.kitten.length_scale;
 
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
@@ -473,6 +510,8 @@ KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
   c.model_config.zipformer2_ctc.model =
       config.model_config.zipformer2_ctc.model.c_str();
 
+  c.model_config.nemo_ctc.model = config.model_config.nemo_ctc.model.c_str();
+
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
   c.model_config.provider = config.model_config.provider.c_str();
@@ -554,6 +593,7 @@ KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
 
   return ans;
 }
+
 
 void KeywordSpotter::Reset(const OnlineStream *s) const {
   SherpaOnnxResetKeywordStream(p_, s->Get());
@@ -713,6 +753,18 @@ SpeechSegment VoiceActivityDetector::Front() const {
   return segment;
 }
 
+std::shared_ptr<SpeechSegment> VoiceActivityDetector::FrontPtr() const
+{
+  auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
+
+  SpeechSegment* segment = new SpeechSegment;
+  segment->start = f->start;
+  segment->samples = std::vector<float>{f->samples, f->samples + f->n};
+
+  SherpaOnnxDestroySpeechSegment(f);
+  return std::shared_ptr<SpeechSegment>(segment);
+}
+
 void VoiceActivityDetector::Reset() const {
   SherpaOnnxVoiceActivityDetectorReset(p_);
 }
@@ -767,6 +819,35 @@ std::string GetGitDate() { return SherpaOnnxGetGitDate(); }
 
 bool FileExists(const std::string &filename) {
   return SherpaOnnxFileExists(filename.c_str());
+}
+
+// ============================================================
+// For Offline Punctuation
+// ============================================================
+OfflinePunctuation OfflinePunctuation::Create(const OfflinePunctuationConfig &config) {
+  struct SherpaOnnxOfflinePunctuationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.model.ct_transformer = config.model.ct_transformer.c_str();
+  c.model.num_threads = config.model.num_threads;
+  c.model.debug = config.model.debug;
+  c.model.provider = config.model.provider.c_str();
+
+  const SherpaOnnxOfflinePunctuation *punct = SherpaOnnxCreateOfflinePunctuation(&c);
+  return OfflinePunctuation(punct);
+}
+
+OfflinePunctuation::OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p)
+  : MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation>(p) {}
+
+void OfflinePunctuation::Destroy(const SherpaOnnxOfflinePunctuation *p) const {
+  SherpaOnnxDestroyOfflinePunctuation(p);
+}
+
+std::string OfflinePunctuation::AddPunctuation(const std::string &text) const {
+  const char *result = SherpaOfflinePunctuationAddPunct(p_, text.c_str());
+  std::string ans(result);
+  SherpaOfflinePunctuationFreeText(result);
+  return ans;
 }
 
 }  // namespace sherpa_onnx::cxx

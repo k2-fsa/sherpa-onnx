@@ -13,17 +13,6 @@ on:
       - 'scripts/node-addon-api/*.js'
       - 'nodejs-addon-examples/package.json'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-nodejs-addon-npm.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/*.js'
-      - 'nodejs-addon-examples/package.json'
-
   workflow_dispatch:
 
 concurrency:

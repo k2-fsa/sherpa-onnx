@@ -32,10 +32,15 @@ struct OnlineZipformer2CtcModelConfig {
   std::string model;
 };
 
+struct OnlineNemoCtcModelConfig {
+  std::string model;
+};
+
 struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
+  OnlineNemoCtcModelConfig nemo_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   std::string provider = "cpu";
@@ -344,6 +349,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
+  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(const OfflineStream *s) const;
+  
   void SetConfig(const OfflineRecognizerConfig &config) const;
 
  private:
@@ -389,10 +396,20 @@ struct OfflineTtsKokoroModelConfig {
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
 
+struct OfflineTtsKittenModelConfig {
+  std::string model;
+  std::string voices;
+  std::string tokens;
+  std::string data_dir;
+
+  float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
+  OfflineTtsKittenModelConfig kitten;
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
@@ -619,6 +636,8 @@ class SHERPA_ONNX_API VoiceActivityDetector
 
   SpeechSegment Front() const;
 
+  std::shared_ptr<SpeechSegment> FrontPtr() const;
+
   void Reset() const;
 
   void Flush() const;
@@ -653,6 +672,34 @@ SHERPA_ONNX_API std::string GetVersionStr();
 SHERPA_ONNX_API std::string GetGitSha1();
 SHERPA_ONNX_API std::string GetGitDate();
 SHERPA_ONNX_API bool FileExists(const std::string &filename);
+
+// ============================================================================
+// Offline Punctuation
+// ============================================================================
+struct OfflinePunctuationModelConfig {
+  std::string ct_transformer;
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+};
+
+struct OfflinePunctuationConfig {
+  OfflinePunctuationModelConfig model;
+};
+
+class SHERPA_ONNX_API OfflinePunctuation
+    : public MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation> {
+ public:
+  static OfflinePunctuation Create(const OfflinePunctuationConfig &config);
+
+  void Destroy(const SherpaOnnxOfflinePunctuation *p) const;
+
+  // Add punctuations to the input text and return it.
+  std::string AddPunctuation(const std::string &text) const;
+
+ private:
+  explicit OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p);
+};
 
 }  // namespace sherpa_onnx::cxx
 

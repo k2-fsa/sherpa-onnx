@@ -54,6 +54,22 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
+## ./test-offline-tts-kitten-en.js
+
+[./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use
+[kitten-nano-en-v0_1-fp16](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test-offline-tts-kitten-en.js
+```
+
 ## ./test-offline-tts-kokoro-en.js
 
 [./test-offline-tts-kokoro-en.js](./test-offline-tts-kokoro-en.js) shows how to use

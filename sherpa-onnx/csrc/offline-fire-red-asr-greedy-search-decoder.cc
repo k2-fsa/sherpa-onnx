@@ -16,7 +16,8 @@ namespace sherpa_onnx {
 // Note: this functions works only for batch size == 1 at present
 std::vector<OfflineFireRedAsrDecoderResult>
 OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
-                                             Ort::Value cross_v) {
+                                             Ort::Value cross_v,
+                                             int32_t num_feature_frames) {
   const auto &meta_data = model_->GetModelMetadata();
 
   auto memory_info =
@@ -53,7 +54,12 @@ OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
                      std::move(cross_v),
                      std::move(offset)};
 
-  for (int32_t i = 0; i < meta_data.max_len; ++i) {
+  // assume at most 6 tokens per second
+  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
+  num_possible_tokens =
+      std::min<int32_t>(num_possible_tokens, meta_data.max_len / 2);
+
+  for (int32_t i = 0; i < num_possible_tokens; ++i) {
     decoder_out = model_->ForwardDecoder(View(&tokens),
                                          std::move(std::get<1>(decoder_out)),
                                          std::move(std::get<2>(decoder_out)),

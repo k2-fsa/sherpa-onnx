@@ -36,6 +36,22 @@ static bool IsPunct(const std::string &s) {
   return puncts.count(s);
 }
 
+// end is inclusive
+static std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                           int32_t end) {
+  std::string ans;
+
+  if (start >= words.size() || end >= words.size()) {
+    return ans;
+  }
+
+  for (int32_t i = start; i <= end; ++i) {
+    ans += words[i];
+  }
+
+  return ans;
+}
+
 class JiebaLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
@@ -160,7 +176,46 @@ class JiebaLexicon::Impl {
     std::vector<TokenIDs> ans;
     std::vector<int64_t> this_sentence;
 
-    for (const auto &w : words) {
+    int32_t num_words = static_cast<int32_t>(words.size());
+    int32_t max_len = 10;
+
+    for (int32_t i = 0; i < num_words;) {
+      int32_t start = i;
+      int32_t end = std::min(i + max_len, num_words - 1);
+
+      std::string w;
+      while (end > start) {
+        auto this_word = GetWord(words, start, end);
+        if (debug_) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
+                           this_word.c_str());
+#else
+          SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
+#endif
+        }
+        if (word2ids_.count(this_word)) {
+          i = end + 1;
+          w = std::move(this_word);
+          if (debug_) {
+#if __OHOS__
+            SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s", start,
+                             end, w.c_str());
+#else
+            SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
+#endif
+          }
+          break;
+        }
+
+        end -= 1;
+      }
+
+      if (w.empty()) {
+        w = words[i];
+        i += 1;
+      }
+
       auto ids = ConvertWordToIds(w);
       if (ids.empty()) {
 #if __OHOS__
@@ -188,22 +243,33 @@ class JiebaLexicon::Impl {
 
  private:
   std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
-    if (word2ids_.count(w)) {
-      return word2ids_.at(w);
-    }
-
-    if (token2id_.count(w)) {
-      return {token2id_.at(w)};
-    }
-
     std::vector<int32_t> ans;
 
-    std::vector<std::string> words = SplitUtf8(w);
-    for (const auto &word : words) {
-      if (word2ids_.count(word)) {
-        auto ids = ConvertWordToIds(word);
-        ans.insert(ans.end(), ids.begin(), ids.end());
+    if (word2ids_.count(w)) {
+      ans = word2ids_.at(w);
+    } else if (token2id_.count(w)) {
+      ans = {token2id_.at(w)};
+    } else {
+      std::vector<std::string> words = SplitUtf8(w);
+      for (const auto &word : words) {
+        if (word2ids_.count(word)) {
+          auto ids = ConvertWordToIds(word);
+          ans.insert(ans.end(), ids.begin(), ids.end());
+        }
       }
+    }
+    if (debug_) {
+      std::ostringstream os;
+      os << w << ": ";
+      for (auto i : ans) {
+        os << id2token_.at(i) << " ";
+      }
+      os << "\n";
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     return ans;
@@ -233,6 +299,12 @@ class JiebaLexicon::Impl {
 
     if (!token2id_.count(";") && token2id_.count(",")) {
       token2id_[";"] = token2id_[","];
+    }
+
+    if (debug_) {
+      for (const auto &p : token2id_) {
+        id2token_[p.second] = p.first;
+      }
     }
   }
 
@@ -272,6 +344,11 @@ class JiebaLexicon::Impl {
 
       std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
       if (ids.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Empty token ids for %{public}s", line.c_str());
+#else
+        SHERPA_ONNX_LOGE("Empty token ids for %s", line.c_str());
+#endif
         continue;
       }
 
@@ -285,6 +362,8 @@ class JiebaLexicon::Impl {
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+
+  std::unordered_map<int32_t, std::string> id2token_;
 
   std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;

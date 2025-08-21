@@ -23,6 +23,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(kokoro-tts-en-c-api kokoro-tts-en-c-api.c)
   target_link_libraries(kokoro-tts-en-c-api sherpa-onnx-c-api)
 
+  add_executable(kitten-tts-en-c-api kitten-tts-en-c-api.c)
+  target_link_libraries(kitten-tts-en-c-api sherpa-onnx-c-api)
+
   add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
   target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
 endif()
@@ -55,6 +58,9 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 
 add_executable(nemo-canary-c-api nemo-canary-c-api.c)
 target_link_libraries(nemo-canary-c-api sherpa-onnx-c-api)
+
+add_executable(nemo-parakeet-c-api nemo-parakeet-c-api.c)
+target_link_libraries(nemo-parakeet-c-api sherpa-onnx-c-api)
 
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)

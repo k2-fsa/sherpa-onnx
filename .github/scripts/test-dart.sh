@@ -4,6 +4,34 @@ set -ex
 
 cd dart-api-examples
 
+pushd tts
+
+echo '----------matcha tts----------'
+./run-kitten-en.sh
+./run-kokoro-zh-en.sh
+./run-kokoro-en.sh
+./run-matcha-zh.sh
+./run-matcha-en.sh
+ls -lh *.wav
+rm -rf matcha-icefall-*
+rm *.onnx
+
+echo '----------piper tts----------'
+./run-piper.sh
+rm -rf vits-piper-*
+
+echo '----------coqui tts----------'
+./run-coqui.sh
+rm -rf vits-coqui-*
+
+echo '----------zh tts----------'
+./run-vits-zh.sh
+rm -rf sherpa-onnx-*
+
+ls -lh *.wav
+
+popd # tts
+
 pushd vad
 ./run-ten-vad.sh
 ./run.sh
@@ -71,33 +99,6 @@ echo "speech enhancement with gtcrn models"
 ./run.sh
 ls -lh
 popd
-
-pushd tts
-
-echo '----------matcha tts----------'
-./run-kokoro-zh-en.sh
-./run-kokoro-en.sh
-./run-matcha-zh.sh
-./run-matcha-en.sh
-ls -lh *.wav
-rm -rf matcha-icefall-*
-rm *.onnx
-
-echo '----------piper tts----------'
-./run-piper.sh
-rm -rf vits-piper-*
-
-echo '----------coqui tts----------'
-./run-coqui.sh
-rm -rf vits-coqui-*
-
-echo '----------zh tts----------'
-./run-vits-zh.sh
-rm -rf sherpa-onnx-*
-
-ls -lh *.wav
-
-popd # tts
 
 pushd speaker-diarization
 echo '----------speaker diarization----------'

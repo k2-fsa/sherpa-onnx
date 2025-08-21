@@ -109,7 +109,7 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
         'You are supposed to select a model by changing the code before you run the app');
   }
 
-  final Directory directory = await getApplicationDocumentsDirectory();
+  final Directory directory = await getApplicationSupportDirectory();
   modelName = p.join(directory.path, modelDir, modelName);
 
   if (ruleFsts != '') {

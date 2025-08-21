@@ -164,6 +164,9 @@ int32_t main() {
       while (samples_queue.empty() && !stop) {
         condition_variable.wait(lock);
       }
+      if (stop) {
+        break;
+      }
 
       const auto &s = samples_queue.front();
       if (!resampler.Get()) {

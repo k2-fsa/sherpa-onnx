@@ -13,16 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - './build-ios.sh'
-      - '.github/workflows/build-xcframework.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

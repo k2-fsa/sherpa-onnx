@@ -13,17 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
       - 'scripts/lazarus/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/lazarus.yaml'
-      - 'cmake/**'
-      - 'lazarus-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/pascal-api/*'
-      - 'scripts/lazarus/*'
 
   workflow_dispatch:
 

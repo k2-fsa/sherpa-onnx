@@ -249,6 +249,30 @@ def get_es_models():
         ]
     )
 
+    es_ES.extend(
+        [
+            PiperModel(
+                name="miro",
+                kind="high",
+                sr=22050,
+                ns=1,
+                cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro/resolve/main/miro_es-ES.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro/resolve/main/miro_es-ES.onnx.json
+
+                   mv miro_es-ES.onnx es_ES-miro-high.onnx
+                   mv miro_es-ES.onnx.json es_ES-miro-high.onnx.json
+                   """,
+                url="https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro",
+            ),
+        ]
+    )
+
     es_MX = [
         PiperModel(name="ald", kind="medium", sr=22050, ns=1),
         PiperModel(name="claude", kind="high", sr=22050, ns=1),
@@ -378,6 +402,28 @@ def get_fr_models():
         ]
     )
 
+    fr_FR += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro/resolve/main/miro_fr-FR.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro/resolve/main/miro_fr-FR.onnx.json
+
+                   mv miro_fr-FR.onnx fr_FR-miro-high.onnx
+                   mv miro_fr-FR.onnx.json fr_FR-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro",
+        ),
+    ]
+
     for m in fr_FR:
         m.lang = "fr_FR"
         if m.model_name == "":
@@ -495,6 +541,47 @@ def get_it_models():
     it_IT = [
         PiperModel(name="paola", kind="medium", sr=22050, ns=1),
         PiperModel(name="riccardo", kind="x_low", sr=16000, ns=1),
+    ]
+
+    it_IT += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro/resolve/main/miro_it-IT.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro/resolve/main/miro_it-IT.onnx.json
+
+                   mv miro_it-IT.onnx it_IT-miro-high.onnx
+                   mv miro_it-IT.onnx.json it_IT-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii/resolve/main/dii_it-IT.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii/resolve/main/dii_it-IT.onnx.json
+
+                   mv dii_it-IT.onnx it_IT-dii-high.onnx
+                   mv dii_it-IT.onnx.json it_IT-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii",
+        ),
     ]
 
     for m in it_IT:
@@ -706,6 +793,47 @@ def get_nl_models():
         PiperModel(name="ronnie", kind="medium", sr=22050, ns=1),
     ]
 
+    nl_NL += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro/resolve/main/miro_nl-NL.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro/resolve/main/miro_nl-NL.onnx.json
+
+                   mv miro_nl-NL.onnx nl_NL-miro-high.onnx
+                   mv miro_nl-NL.onnx.json nl_NL-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii/resolve/main/dii_nl-NL.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii/resolve/main/dii_nl-NL.onnx.json
+
+                   mv dii_nl-NL.onnx nl_NL-dii-high.onnx
+                   mv dii_nl-NL.onnx.json nl_NL-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii",
+        ),
+    ]
+
     for m in nl_BE:
         m.lang = "nl_BE"
 
@@ -858,7 +986,103 @@ def get_pt_models():
     ]
 
     pt_PT = [
-        PiperModel(name="tugão", kind="medium", sr=22050, ns=1),
+        PiperModel(
+            name="tugao",
+            kind="medium",
+            sr=22050,
+            ns=1,
+            cmd="""
+                    wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tugão/medium/pt_PT-tugão-medium.onnx
+                    wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tugão/medium/pt_PT-tugão-medium.onnx.json
+                    wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tugão/medium/MODEL_CARD
+
+                    mv pt_PT-tugão-medium.onnx pt_PT-tugao-medium.onnx
+                    mv pt_PT-tugão-medium.onnx.json pt_PT-tugao-medium.onnx.json
+                   """,
+            url="https://huggingface.co/rhasspy/piper-voices/tree/main/pt/pt_PT/tugão/medium",
+        ),
+    ]
+
+    pt_PT += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro/resolve/main/miro_pt-PT.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro/resolve/main/miro_pt-PT.onnx.json
+
+                   mv miro_pt-PT.onnx pt_PT-miro-high.onnx
+                   mv miro_pt-PT.onnx.json pt_PT-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii/resolve/main/dii_pt-PT.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii/resolve/main/dii_pt-PT.onnx.json
+
+                   mv dii_pt-PT.onnx pt_PT-dii-high.onnx
+                   mv dii_pt-PT.onnx.json pt_PT-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii",
+        ),
+    ]
+
+    pt_BR += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro/resolve/main/miro_pt-BR.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro/resolve/main/miro_pt-BR.onnx.json
+
+                   mv miro_pt-BR.onnx pt_BR-miro-high.onnx
+                   mv miro_pt-BR.onnx.json pt_BR-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii/resolve/main/dii_pt-BR.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii/resolve/main/dii_pt-BR.onnx.json
+
+                   mv dii_pt-BR.onnx pt_BR-dii-high.onnx
+                   mv dii_pt-BR.onnx.json pt_BR-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii",
+        ),
     ]
 
     for m in pt_BR:
@@ -1267,6 +1491,47 @@ def get_en_models():
         ]
     )
 
+    en_gb += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro/resolve/main/miro_en-GB.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro/resolve/main/miro_en-GB.onnx.json
+
+                   mv miro_en-GB.onnx en_GB-miro-high.onnx
+                   mv miro_en-GB.onnx.json en_GB-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii/resolve/main/dii_en-GB.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii/resolve/main/dii_en-GB.onnx.json
+
+                   mv dii_en-GB.onnx en_GB-dii-high.onnx
+                   mv dii_en-GB.onnx.json en_GB-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii",
+        ),
+    ]
+
     en_us.extend(
         [
             # https://github.com/rhasspy/piper/issues/187#issuecomment-1805709037
@@ -1287,6 +1552,28 @@ def get_en_models():
         ]
     )
 
+    en_us += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro/resolve/main/miro_en-US.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro/resolve/main/miro_en-US.onnx.json
+
+                   mv miro_en-US.onnx en_US-miro-high.onnx
+                   mv miro_en-US.onnx.json en_US-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro",
+        ),
+    ]
+
     for m in en_gb:
         m.lang = "en_GB"
         if m.model_name == "":
@@ -1298,6 +1585,7 @@ def get_en_models():
             m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
 
     ans = en_gb + en_us
+    ans = en_us
 
     for m in ans:
         m.text = "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
@@ -1411,6 +1699,29 @@ def get_de_models():
             url="https://huggingface.co/systemofapwne/piper-de-glados",
         ),
     ]
+
+    de_de += [
+        PiperModel(
+            name="miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro/resolve/main/miro_de-DE.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro/resolve/main/miro_de-DE.onnx.json
+
+                   mv miro_de-DE.onnx de_DE-miro-high.onnx
+                   mv miro_de-DE.onnx.json de_DE-miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro",
+        ),
+    ]
+
     for m in de_de:
         m.lang = "de_DE"
         if m.model_name == "":

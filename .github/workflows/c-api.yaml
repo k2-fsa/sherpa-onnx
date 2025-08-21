@@ -11,16 +11,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
       - 'ffmpeg-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/c-api.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'c-api-examples/**'
-      - 'ffmpeg-examples/**'
 
   workflow_dispatch:
 
@@ -84,6 +74,41 @@ jobs:
           if [[ ${{ matrix.os }} == macos-latest ]]; then
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
+
+      - name: Test KittenTTS
+        shell: bash
+        run: |
+          name=kitten-tts-en-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+          tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+          rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf kitten-nano-en-v0_1-fp16
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kitten-tts-wavs-${{ matrix.os }}
+          path: ./generated-kitten-en.wav
 
       - name: Test streaming zipformer with homophone replacer
         shell: bash

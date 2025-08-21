@@ -36,10 +36,19 @@ data class OfflineTtsKokoroModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+data class OfflineTtsKittenModelConfig(
+    var model: String = "",
+    var voices: String = "",
+    var tokens: String = "",
+    var dataDir: String = "",
+    var lengthScale: Float = 1.0f,
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
+    var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -189,13 +198,14 @@ fun getOfflineTtsConfig(
     modelName: String, // for VITS
     acousticModelName: String, // for Matcha
     vocoder: String, // for Matcha
-    voices: String, // for Kokoro
+    voices: String, // for Kokoro or kitten
     lexicon: String,
     dataDir: String,
     dictDir: String,
     ruleFsts: String,
     ruleFars: String,
-    numThreads: Int? = null
+    numThreads: Int? = null,
+    isKitten: Boolean = false
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -203,13 +213,16 @@ fun getOfflineTtsConfig(
     // For Kokoro TTS, please set
     // modelName, voices
 
+    // For Kitten TTS, please set
+    // modelName, voices, isKitten
+
     // For VITS, please set
     // modelName
 
     val numberOfThreads = if (numThreads != null) {
         numThreads
     } else if (voices.isNotEmpty()) {
-        // for Kokoro TTS models, we use more threads
+        // for Kokoro and Kitten TTS models, we use more threads
         4
     } else {
         2
@@ -252,7 +265,7 @@ fun getOfflineTtsConfig(
         OfflineTtsMatchaModelConfig()
     }
 
-    val kokoro = if (voices.isNotEmpty()) {
+    val kokoro = if (voices.isNotEmpty() && !isKitten) {
         OfflineTtsKokoroModelConfig(
             model = "$modelDir/$modelName",
             voices = "$modelDir/$voices",
@@ -269,11 +282,23 @@ fun getOfflineTtsConfig(
         OfflineTtsKokoroModelConfig()
     }
 
+    val kitten = if (isKitten) {
+        OfflineTtsKittenModelConfig(
+            model = "$modelDir/$modelName",
+            voices = "$modelDir/$voices",
+            tokens = "$modelDir/tokens.txt",
+            dataDir = dataDir,
+        )
+    } else {
+        OfflineTtsKittenModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
+            kitten = kitten,
             numThreads = numberOfThreads,
             debug = true,
             provider = "cpu",

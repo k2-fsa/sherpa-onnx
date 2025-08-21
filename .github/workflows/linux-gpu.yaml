@@ -18,21 +18,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/linux-gpu.yaml'
-      - '.github/scripts/test-online-transducer.sh'
-      - '.github/scripts/test-online-paraformer.sh'
-      - '.github/scripts/test-offline-transducer.sh'
-      - '.github/scripts/test-offline-ctc.sh'
-      - '.github/scripts/test-online-ctc.sh'
-      - '.github/scripts/test-online-ctc.sh'
-      - '.github/scripts/test-offline-tts.sh'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

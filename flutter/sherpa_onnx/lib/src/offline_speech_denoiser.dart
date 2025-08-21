@@ -118,9 +118,18 @@ class OfflineSpeechDenoiser {
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser?.call(c) ??
             nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create offline speech denoiser. Please check your config");
+    }
 
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.gtcrn.model);

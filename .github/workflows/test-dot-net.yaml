@@ -11,16 +11,6 @@ on:
       - 'dotnet-examples/**'
       - 'scripts/dotnet/**'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-dot-net.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'dotnet-examples/**'
-      - 'scripts/dotnet/**'
-
   workflow_dispatch:
 
 concurrency:

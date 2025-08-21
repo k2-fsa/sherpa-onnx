@@ -10,13 +10,6 @@ on:
       - '.github/workflows/windows-arm64.yaml'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/windows-arm64.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
 
   workflow_dispatch:
 

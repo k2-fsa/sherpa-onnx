@@ -97,6 +97,9 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
         config->model_config.tokens_buf, config->model_config.tokens_buf_size);
   }
 
+  recognizer_config.model_config.nemo_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
+
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   recognizer_config.model_config.provider_config.provider =
@@ -108,8 +111,7 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
 
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
-  recognizer_config.model_config.debug =
-      SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.debug = config->model_config.debug;
   recognizer_config.model_config.modeling_unit =
       SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
 
@@ -431,8 +433,7 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  recognizer_config.model_config.debug =
-      SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.debug = config->model_config.debug;
   recognizer_config.model_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   if (recognizer_config.model_config.provider.empty()) {
@@ -688,6 +689,14 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
       r->timestamps = nullptr;
     }
 
+    if (!result.durations.empty() && result.durations.size() == r->count) {
+      r->durations = new float[r->count];
+      std::copy(result.durations.begin(), result.durations.end(),
+                r->durations);
+    } else {
+      r->durations = nullptr;
+    }
+
     r->tokens = tokens;
   } else {
     r->count = 0;
@@ -704,6 +713,7 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
   if (r) {
     delete[] r->text;
     delete[] r->timestamps;
+    delete[] r->durations;
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->json;
@@ -759,6 +769,9 @@ static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
   spotter_config.model_config.zipformer2_ctc.model =
       SHERPA_ONNX_OR(config->model_config.zipformer2_ctc.model, "");
 
+  spotter_config.model_config.nemo_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
+
   spotter_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   if (config->model_config.tokens_buf &&
@@ -777,8 +790,7 @@ static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
 
   spotter_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
-  spotter_config.model_config.debug =
-      SHERPA_ONNX_OR(config->model_config.debug, 0);
+  spotter_config.model_config.debug = config->model_config.debug;
 
   spotter_config.max_active_paths = SHERPA_ONNX_OR(config->max_active_paths, 4);
 
@@ -1055,7 +1067,7 @@ sherpa_onnx::VadModelConfig GetVadModelConfig(
     vad_config.provider = "cpu";
   }
 
-  vad_config.debug = SHERPA_ONNX_OR(config->debug, false);
+  vad_config.debug = config->debug;
 
   if (vad_config.debug) {
 #if __OHOS__
@@ -1203,6 +1215,18 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.model.kokoro.lexicon =
       SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
   tts_config.model.kokoro.lang = SHERPA_ONNX_OR(config->model.kokoro.lang, "");
+
+  // kitten
+  tts_config.model.kitten.model =
+      SHERPA_ONNX_OR(config->model.kitten.model, "");
+  tts_config.model.kitten.voices =
+      SHERPA_ONNX_OR(config->model.kitten.voices, "");
+  tts_config.model.kitten.tokens =
+      SHERPA_ONNX_OR(config->model.kitten.tokens, "");
+  tts_config.model.kitten.data_dir =
+      SHERPA_ONNX_OR(config->model.kitten.data_dir, "");
+  tts_config.model.kitten.length_scale =
+      SHERPA_ONNX_OR(config->model.kitten.length_scale, 1.0);
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
@@ -1542,7 +1566,7 @@ GetSpeakerEmbeddingExtractorConfig(
   c.model = SHERPA_ONNX_OR(config->model, "");
 
   c.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
-  c.debug = SHERPA_ONNX_OR(config->debug, 0);
+  c.debug = config->debug;
   c.provider = SHERPA_ONNX_OR(config->provider, "cpu");
   if (c.provider.empty()) {
     c.provider = "cpu";

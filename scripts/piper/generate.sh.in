@@ -29,6 +29,11 @@ sample_rate={{ model.sr }}
 
 {{ model.cmd }}
 
+echo "files"
+
+ls -lh
+echo "---"
+
 python3 ./add_meta_data.py \
   --name $name \
   --kind $kind \
@@ -42,6 +47,7 @@ mkdir -p $dst
 mv -v tokens.txt  $dst/
 mv -v MODEL_CARD $dst/ || true
 mv -v README $dst/ || true
+mv -v README.md $dst/ || true
 mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
 cp -a ./espeak-ng-data $dst/

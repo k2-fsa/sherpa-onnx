@@ -13,6 +13,7 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   matcha.Register(po);
   kokoro.Register(po);
   zipvoice.Register(po);
+  kitten.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -42,7 +43,17 @@ bool OfflineTtsModelConfig::Validate() const {
     return zipvoice.Validate();
   }
 
-  return kokoro.Validate();
+  if (!kokoro.model.empty()) {
+    return kokoro.Validate();
+  }
+
+  if (!kitten.model.empty()) {
+    return kitten.Validate();
+  }
+
+  SHERPA_ONNX_LOGE("Please provide exactly one tts model.");
+
+  return false;
 }
 
 std::string OfflineTtsModelConfig::ToString() const {
@@ -53,6 +64,7 @@ std::string OfflineTtsModelConfig::ToString() const {
   os << "matcha=" << matcha.ToString() << ", ";
   os << "kokoro=" << kokoro.ToString() << ", ";
   os << "zipvoice=" << zipvoice.ToString() << ", ";
+  os << "kitten=" << kitten.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";

@@ -170,6 +170,9 @@ as the device_name.
       while (samples_queue.empty() && !stop) {
         condition_variable.wait(lock);
       }
+      if (stop) {
+        break;
+      }
 
       const auto &s = samples_queue.front();
       buffer.insert(buffer.end(), s.begin(), s.end());

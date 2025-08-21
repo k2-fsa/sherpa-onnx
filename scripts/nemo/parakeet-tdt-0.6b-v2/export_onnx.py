@@ -1,32 +1,14 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import os
 from pathlib import Path
 from typing import Dict
-import os
 
 import nemo.collections.asr as nemo_asr
 import onnx
-import onnxmltools
 import torch
-from onnxmltools.utils.float16_converter import (
-    convert_float_to_float16,
-    convert_float_to_float16_model_path,
-)
 from onnxruntime.quantization import QuantType, quantize_dynamic
-
-
-def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
-    onnx_fp32_model = onnxmltools.utils.load_model(onnx_fp32_path)
-    onnx_fp16_model = convert_float_to_float16(onnx_fp32_model, keep_io_types=True)
-    onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
-
-
-def export_onnx_fp16_large_2gb(onnx_fp32_path, onnx_fp16_path):
-    onnx_fp16_model = convert_float_to_float16_model_path(
-        onnx_fp32_path, keep_io_types=True
-    )
-    onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, str]):
@@ -47,14 +29,29 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         meta.key = key
         meta.value = str(value)
 
-    onnx.save(model, filename)
+    if filename == "encoder.onnx":
+        external_filename = "encoder"
+        onnx.save(
+            model,
+            filename,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location=external_filename + ".weights",
+        )
+    else:
+        onnx.save(model, filename)
 
 
 @torch.no_grad()
 def main():
-    asr_model = nemo_asr.models.ASRModel.from_pretrained(
-        model_name="nvidia/parakeet-tdt-0.6b-v2"
-    )
+    if Path("./parakeet-tdt-0.6b-v2.nemo").is_file():
+        asr_model = nemo_asr.models.ASRModel.restore_from(
+            restore_path="./parakeet-tdt-0.6b-v2.nemo"
+        )
+    else:
+        asr_model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name="nvidia/parakeet-tdt-0.6b-v2"
+        )
 
     asr_model.eval()
 
@@ -95,13 +92,8 @@ def main():
         )
         os.system("ls -lh *.onnx")
 
-        if m == "encoder":
-            export_onnx_fp16_large_2gb(f"{m}.onnx", f"{m}.fp16.onnx")
-        else:
-            export_onnx_fp16(f"{m}.onnx", f"{m}.fp16.onnx")
-
     add_meta_data("encoder.int8.onnx", meta_data)
-    add_meta_data("encoder.fp16.onnx", meta_data)
+    add_meta_data("encoder.onnx", meta_data)
     print("meta_data", meta_data)
 
 

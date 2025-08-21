@@ -45,6 +45,9 @@ For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
+[Join our discord](https://discord.gg/fJdxzg2VbG)
+
+
 ## Introduction
 
 This repository supports running the following functions **locally**
@@ -387,6 +390,10 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 |1|
 |---|
 |![](https://github.com/user-attachments/assets/f6eea2d5-1807-42cb-9160-be8da2971e1f)|
+
+### [TtsReader - Desktop application](https://github.com/ys-pro-duction/TtsReader)
+
+A desktop text-to-speech application built using Kotlin Multiplatform.
 
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad

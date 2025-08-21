@@ -86,11 +86,33 @@ class OnlineZipformer2CtcModelConfig {
   final String model;
 }
 
+class OnlineNemoCtcModelConfig {
+  const OnlineNemoCtcModelConfig({this.model = ''});
+
+  factory OnlineNemoCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OnlineNemoCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OnlineNemoCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OnlineModelConfig {
   const OnlineModelConfig({
     this.transducer = const OnlineTransducerModelConfig(),
     this.paraformer = const OnlineParaformerModelConfig(),
     this.zipformer2Ctc = const OnlineZipformer2CtcModelConfig(),
+    this.nemoCtc = const OnlineNemoCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.provider = 'cpu',
@@ -108,6 +130,8 @@ class OnlineModelConfig {
           json['paraformer'] as Map<String, dynamic>? ?? const {}),
       zipformer2Ctc: OnlineZipformer2CtcModelConfig.fromJson(
           json['zipformer2Ctc'] as Map<String, dynamic>? ?? const {}),
+      nemoCtc: OnlineNemoCtcModelConfig.fromJson(
+          json['nemoCtc'] as Map<String, dynamic>? ?? const {}),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       provider: json['provider'] as String? ?? 'cpu',
@@ -120,13 +144,14 @@ class OnlineModelConfig {
 
   @override
   String toString() {
-    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab)';
+    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, nemoCtc: $nemoCtc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab)';
   }
 
   Map<String, dynamic> toJson() => {
         'transducer': transducer.toJson(),
         'paraformer': paraformer.toJson(),
         'zipformer2Ctc': zipformer2Ctc.toJson(),
+        'nemoCtc': nemoCtc.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'provider': provider,
@@ -139,6 +164,7 @@ class OnlineModelConfig {
   final OnlineTransducerModelConfig transducer;
   final OnlineParaformerModelConfig paraformer;
   final OnlineZipformer2CtcModelConfig zipformer2Ctc;
+  final OnlineNemoCtcModelConfig nemoCtc;
 
   final String tokens;
 
@@ -333,6 +359,9 @@ class OnlineRecognizer {
     c.ref.model.zipformer2Ctc.model =
         config.model.zipformer2Ctc.model.toNativeUtf8();
 
+    // nemoCtc
+    c.ref.model.nemoCtc.model = config.model.nemoCtc.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -362,7 +391,16 @@ class OnlineRecognizer {
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
+    if (SherpaOnnxBindings.createOnlineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create online recognizer. Please check your config");
+    }
 
     calloc.free(c.ref.hr.dictDir);
     calloc.free(c.ref.hr.lexicon);
@@ -377,6 +415,7 @@ class OnlineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.nemoCtc.model);
     calloc.free(c.ref.model.zipformer2Ctc.model);
     calloc.free(c.ref.model.paraformer.encoder);
     calloc.free(c.ref.model.paraformer.decoder);

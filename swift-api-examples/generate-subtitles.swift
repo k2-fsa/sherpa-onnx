@@ -94,9 +94,9 @@ class SpeechSegment: CustomStringConvertible {
 func run() {
   var recognizer: SherpaOnnxOfflineRecognizer
   var modelConfig: SherpaOnnxOfflineModelConfig
-  var modelType = "whisper"
+  let modelType = "whisper"
   // modelType = "paraformer"
-  var filePath = "/Users/fangjun/Desktop/Obama.wav"  // English
+  let filePath = "/Users/fangjun/Desktop/Obama.wav"  // English
   // filePath = "/Users/fangjun/Desktop/lei-jun.wav"  // Chinese
   // please go to https://huggingface.co/csukuangfj/vad
   // to download the above two files
@@ -192,7 +192,7 @@ func run() {
   let audioFileBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: audioFrameCount)
 
   try! audioFile.read(into: audioFileBuffer!)
-  var array: [Float]! = audioFileBuffer?.array()
+  let array: [Float]! = audioFileBuffer?.array()
 
   var segments: [SpeechSegment] = []
 

@@ -12,15 +12,6 @@ on:
       - 'mfc-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/mfc.yaml'
-      - 'cmake/**'
-      - 'mfc-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

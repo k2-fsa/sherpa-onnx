@@ -16,6 +16,10 @@ function freeConfig(config, Module) {
     freeConfig(config.kokoro, Module)
   }
 
+  if ('kitten' in config) {
+    freeConfig(config.kitten, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -204,6 +208,52 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
+  const modelLen = Module.lengthBytesUTF8(config.model) + 1;
+  const voicesLen = Module.lengthBytesUTF8(config.voices) + 1;
+  const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
+  const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
+
+  const n = modelLen + voicesLen + tokensLen + dataDirLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 5 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.model || '', buffer + offset, modelLen);
+  offset += modelLen;
+
+  Module.stringToUTF8(config.voices || '', buffer + offset, voicesLen);
+  offset += voicesLen;
+
+  Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
+  offset += tokensLen;
+
+  Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
+  offset += dataDirLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += modelLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += voicesLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += tokensLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += dataDirLen;
+
+  Module.setValue(ptr + 16, config.lengthScale || 1.0, 'float');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
@@ -244,6 +294,15 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     };
   }
 
+  if (!('offlineTtsKittenModelConfig' in config)) {
+    config.offlineTtsKittenModelConfig = {
+      model: '',
+      voices: '',
+      tokens: '',
+      lengthScale: 1.0,
+    };
+  }
+
 
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
@@ -254,8 +313,11 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const kokoroModelConfig = initSherpaOnnxOfflineTtsKokoroModelConfig(
       config.offlineTtsKokoroModelConfig, Module);
 
+  const kittenModelConfig = initSherpaOnnxOfflineTtsKittenModelConfig(
+      config.offlineTtsKittenModelConfig, Module);
+
   const len = vitsModelConfig.len + matchaModelConfig.len +
-      kokoroModelConfig.len + 3 * 4;
+      kokoroModelConfig.len + kittenModelConfig.len + 3 * 4;
 
   const ptr = Module._malloc(len);
 
@@ -281,9 +343,13 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   Module._CopyHeap(kokoroModelConfig.ptr, kokoroModelConfig.len, ptr + offset);
   offset += kokoroModelConfig.len;
 
+  Module._CopyHeap(kittenModelConfig.ptr, kittenModelConfig.len, ptr + offset);
+  offset += kittenModelConfig.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
         matcha: matchaModelConfig, kokoro: kokoroModelConfig,
+        kitten: kittenModelConfig,
   }
 }
 
@@ -413,12 +479,22 @@ function createOfflineTts(Module, myConfig) {
     lengthScale: 1.0,
     dictDir: '',
     lexicon: '',
+    lang: '',
+  };
+
+  const offlineTtsKittenModelConfig = {
+    model: '',
+    voices: '',
+    tokens: '',
+    dataDir: '',
+    lengthScale: 1.0,
   };
 
   const offlineTtsModelConfig = {
     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
     offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
     offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
+    offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',

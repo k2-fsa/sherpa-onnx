@@ -598,7 +598,16 @@ class OfflineRecognizer {
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
     final c = convertConfig(config);
 
+    if (SherpaOnnxBindings.createOfflineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create offline recognizer. Please check your config");
+    }
 
     freeConfig(c);
 

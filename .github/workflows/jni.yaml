@@ -10,15 +10,6 @@ on:
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/jni.yaml'
-      - 'cmake/**'
-      - 'kotlin-api-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
 
   workflow_dispatch:
 

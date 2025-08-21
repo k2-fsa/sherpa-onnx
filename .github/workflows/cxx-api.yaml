@@ -11,15 +11,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'cxx-api-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/cxx-api.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'cxx-api-examples/**'
 
   workflow_dispatch:
 
@@ -86,6 +77,45 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test KittenTTS
+        shell: bash
+        run: |
+          name=kitten-tts-en-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ls -lh ./$name
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+          tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+          rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+          echo "---"
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm -rf kitten-nano-en-v0_1-fp16
+          rm -v ./$name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kitten-tts-wavs-${{ matrix.os }}
+          path: ./generated-kitten-en-cxx.wav
 
       - name: Test NeMo Canary
         shell: bash

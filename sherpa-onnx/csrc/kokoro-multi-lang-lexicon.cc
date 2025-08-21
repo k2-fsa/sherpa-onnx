@@ -69,7 +69,9 @@ class KokoroMultiLangLexicon::Impl {
 
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text,
                                               const std::string &voice) const {
-    std::string text = ToLowerCase(_text);
+    // we cannot convert text to lowercase here since it will affect
+    // how piper_phonemize handles punctuations inside the text
+    std::string text = _text;
     if (debug_) {
       SHERPA_ONNX_LOGE("After converting to lowercase:\n%s", text.c_str());
     }
@@ -258,7 +260,7 @@ class KokoroMultiLangLexicon::Impl {
 
   std::vector<std::vector<int32_t>> ConvertTextToTokenIDsWithEspeak(
       const std::string &text, const std::string &voice) const {
-    auto temp = ConvertTextToTokenIdsKokoro(
+    auto temp = ConvertTextToTokenIdsKokoroOrKitten(
         phoneme2id_, meta_data_.max_token_len, text, voice);
     std::vector<std::vector<int32_t>> ans;
     ans.reserve(temp.size());
@@ -300,7 +302,8 @@ class KokoroMultiLangLexicon::Impl {
 
     this_sentence.push_back(0);
 
-    for (const auto &word : words) {
+    for (const auto &_word : words) {
+      auto word = ToLowerCase(_word);
       if (IsPunctuation(word)) {
         this_sentence.push_back(token2id_.at(word));
 

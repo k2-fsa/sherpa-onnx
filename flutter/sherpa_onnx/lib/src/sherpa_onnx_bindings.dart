@@ -204,6 +204,16 @@ final class SherpaOnnxOfflineTtsKokoroModelConfig extends Struct {
   external Pointer<Utf8> lang;
 }
 
+final class SherpaOnnxOfflineTtsKittenModelConfig extends Struct {
+  external Pointer<Utf8> model;
+  external Pointer<Utf8> voices;
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> dataDir;
+
+  @Float()
+  external double lengthScale;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -215,6 +225,7 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external Pointer<Utf8> provider;
   external SherpaOnnxOfflineTtsMatchaModelConfig matcha;
   external SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
+  external SherpaOnnxOfflineTtsKittenModelConfig kitten;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {
@@ -388,6 +399,10 @@ final class SherpaOnnxOnlineZipformer2CtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOnlineNemoCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOnlineModelConfig extends Struct {
   external SherpaOnnxOnlineTransducerModelConfig transducer;
   external SherpaOnnxOnlineParaformerModelConfig paraformer;
@@ -413,6 +428,8 @@ final class SherpaOnnxOnlineModelConfig extends Struct {
 
   @Int32()
   external int tokensBufSize;
+
+  external SherpaOnnxOnlineNemoCtcModelConfig nemoCtc;
 }
 
 final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {

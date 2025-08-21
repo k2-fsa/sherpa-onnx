@@ -9,6 +9,13 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-compute-speaker-embeddings.sh
+rm -fv *.wav *.onnx
+
+./run-tts-kitten-en.sh
+ls -lh
+rm -rf kitten-*
+
 ./run-zipformer-ctc-asr.sh
 rm -rf sherpa-onnx-zipformer-*
 

@@ -25,6 +25,7 @@ export { Samples,
 } from './src/main/ets/components/NonStreamingAsr';
 
 export { OnlineStream,
+  OnlineNemoCtcModelConfig,
   OnlineTransducerModelConfig,
   OnlineParaformerModelConfig,
   OnlineZipformer2CtcModelConfig,
@@ -35,7 +36,8 @@ export { OnlineStream,
   OnlineRecognizer,
 } from './src/main/ets/components/StreamingAsr';
 
-export { OfflineTtsKokoroModelConfig,
+export { OfflineTtsKittenModelConfig,
+  OfflineTtsKokoroModelConfig,
   OfflineTtsMatchaModelConfig,
   OfflineTtsVitsModelConfig,
   OfflineTtsModelConfig,
