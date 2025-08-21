@@ -2,8 +2,6 @@
 # Prints recognized text, per-token timestamps, and durations
 
 import os
-
-import os
 import sys
 import sherpa_onnx
 import soundfile as sf
