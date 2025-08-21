@@ -22,24 +22,23 @@ Offline/Non-streaming zero-shot text-to-speech with sherpa-onnx
 
 Usage example:
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-tar xf vits-piper-en_US-amy-low.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
 
 ./bin/sherpa-onnx-offline-zeroshot-tts \
- --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
- --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
- --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
- --output-filename=./generated.wav \
- "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+  --zipvoice-flow-matching-model=sherpa-onnx-zipvoice-distill-zh-en-emilia/fm_decoder.onnx \
+  --zipvoice-text-model=sherpa-onnx-zipvoice-distill-zh-en-emilia/text_encoder.onnx \
+  --zipvoice-data-dir=sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data \
+  --zipvoice-pinyin-dict=sherpa-onnx-zipvoice-distill-zh-en-emilia/pinyin.raw \
+  --zipvoice-tokens=sherpa-onnx-zipvoice-distill-zh-en-emilia/tokens.txt \
+  --zipvoice-vocoder=sherpa-onnx-zipvoice-distill-zh-en-emilia/vocos_24khz.onnx \
+  --prompt-audio=sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav \
+  --num-steps=4 \
+  --num-threads=4 \
+  --prompt-text="周日被我射熄火了，所以今天是周一。" \
+  "我是中国人民的儿子，我爱我的祖国。我得祖国是一个伟大的国家，拥有五千年的文明史。"
 
 It will generate a file ./generated.wav as specified by --output-filename.
-
-You can find more models at
-https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-
-Please see
-https://k2-fsa.github.io/sherpa/onnx/tts/index.html
-or details.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
