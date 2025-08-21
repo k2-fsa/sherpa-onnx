@@ -635,6 +635,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
    *     "text": "The recognition result",
    *     "tokens": [x, x, x],
    *     "timestamps": [x, x, x],
+   *     "durations": [x, x, x],
    *     "segment": x,
    *     "start_time": x,
    *     "is_final": true|false

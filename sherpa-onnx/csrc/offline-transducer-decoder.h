@@ -20,7 +20,9 @@ struct OfflineTransducerDecoderResult {
   /// Note: The index is after subsampling
   std::vector<int32_t> timestamps;
 
-  /// durations[i] contains the duration (in frames or seconds, as appropriate) for tokens[i] (TDT models only)
+  /// durations[i] contains the duration for tokens[i] in output frames
+  /// (post-subsampling). It is converted to seconds by higher layers
+  /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
   std::vector<float> durations;
 };
 

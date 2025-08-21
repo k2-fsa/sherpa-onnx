@@ -101,7 +101,6 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   OfflineTransducerDecoderResult ans;
-  std::vector<float> token_durations;
 
   int32_t vocab_size = model->VocabSize();
   int32_t blank_id = vocab_size - 1;
@@ -155,7 +154,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
     if (y != blank_id) {
       ans.tokens.push_back(y);
       ans.timestamps.push_back(t);
-      ans.durations.push_back(duration); // Use the index as duration, matching Python
+      ans.durations.push_back(duration);
 
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
