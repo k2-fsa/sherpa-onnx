@@ -131,7 +131,6 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
       p_logit[blank_id] -= blank_penalty;
     }
 
-    int32_t vocab_size = model->VocabSize();
     int32_t output_size = shape.back();
     int32_t num_durations = output_size - vocab_size;
 
