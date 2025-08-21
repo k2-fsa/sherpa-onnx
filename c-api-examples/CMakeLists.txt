@@ -59,6 +59,9 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 add_executable(nemo-canary-c-api nemo-canary-c-api.c)
 target_link_libraries(nemo-canary-c-api sherpa-onnx-c-api)
 
+add_executable(nemo-parakeet-c-api nemo-parakeet-c-api.c)
+target_link_libraries(nemo-parakeet-c-api sherpa-onnx-c-api)
+
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 

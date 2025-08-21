@@ -614,6 +614,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   // It is NULL if the model does not support timestamps
   float *timestamps;
 
+    // Pointer to continuous memory which holds durations (in seconds) for each token
+    // It is NULL if the model does not support durations
+    float *durations;
+
   // number of entries in timestamps
   int32_t count;
 
@@ -631,6 +635,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
    *     "text": "The recognition result",
    *     "tokens": [x, x, x],
    *     "timestamps": [x, x, x],
+   *     "durations": [x, x, x],
    *     "segment": x,
    *     "start_time": x,
    *     "is_final": true|false

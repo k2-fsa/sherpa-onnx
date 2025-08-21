@@ -19,6 +19,11 @@ struct OfflineTransducerDecoderResult {
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   /// Note: The index is after subsampling
   std::vector<int32_t> timestamps;
+
+  /// durations[i] contains the duration for tokens[i] in output frames
+  /// (post-subsampling). It is converted to seconds by higher layers
+  /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
+  std::vector<float> durations;
 };
 
 class OfflineTransducerDecoder {
