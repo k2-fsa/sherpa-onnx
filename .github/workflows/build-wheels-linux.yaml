@@ -321,7 +321,7 @@ jobs:
             echo "PWD"
             ls -lh /project/alsa-lib/src/.libs
 
-          CIBW_ENVIRONMENT: |
+          CIBW_ENVIRONMENT: >
             SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
             CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH
             SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs

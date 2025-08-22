@@ -273,7 +273,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: |
+          CIBW_ENVIRONMENT: >
             MACOSX_DEPLOYMENT_TARGET=10.15
             SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
             SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64' -DSHERPA_ONNX_ENABLE_BINARY=OFF -DCMAKE_OSX_DEPLOYMENT_TARGET='10.15'"
