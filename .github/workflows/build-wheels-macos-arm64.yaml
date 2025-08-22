@@ -285,6 +285,7 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+          unzip -l ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:

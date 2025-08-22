@@ -339,6 +339,7 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+          unzip -l ./wheelhouse/*.whl
 
       - name: Install patchelf
         shell: bash
