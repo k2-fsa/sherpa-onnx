@@ -135,13 +135,13 @@ jobs:
           path: ./*.whl
 
   build_wheels_macos_x64:
-    if: false
+    needs: [core]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
+        os: [macos-latest]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
 
     steps:
@@ -153,26 +153,15 @@ jobs:
           ./new-release.sh
           git diff .
 
-      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
-      # for a list of versions
       - name: Build wheels
-        if: matrix.python-version == 'cp37'
-        uses: pypa/cibuildwheel@v2.11.4
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"
-          CIBW_ARCHS: "x86_64"
-          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: |
+            MACOSX_DEPLOYMENT_TARGET=10.15
+            SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"
+            SHERPA_ONNX_ENABLE_BINARY=OFF
 
-          #  Don't repair macOS wheels
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
-
-      - name: Build wheels
-        if: matrix.python-version != 'cp37'
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"
           CIBW_ARCHS: "x86_64"
           CIBW_BUILD_VERBOSITY: 3
 
@@ -186,7 +175,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.python-version }}
+          name: wheel-macos-x64-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
@@ -232,15 +221,11 @@ jobs:
         run: |
           opts='--break-system-packages'
           v=${{ matrix.python-version }}
-          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
+          if [[ $v == cp38 || $v == cp39 ]]; then
             opts=''
           fi
 
           python3 -m pip install $opts --upgrade pip
-          if [[ ${{ matrix.python-version }} == "cp37" ]]; then
-            python3 -m pip install $opts wheel twine setuptools
-          else
-            python3 -m pip install $opts wheel twine==5.0.0 setuptools
-          fi
+          python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl
