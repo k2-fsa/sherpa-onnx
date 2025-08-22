@@ -1,0 +1,28 @@
+from setuptools import setup, find_packages
+import glob
+
+bin_files = glob.glob("bin/*")
+print("bin_files", bin_files)
+
+setup(
+    name="sherpa-onnx-bin",
+    version="1.12.9",
+    description="Binary executables for sherpa-onnx",
+    author="The sherpa-onnx development team",
+    url="https://github.com/k2-fsa/sherpa-onnx",
+    author_email="dpovey@gmail.com",
+    zip_safe=False,
+    license="Apache 2.0",
+    packages=[],
+    data_files=[("bin", bin_files)],
+    install_requires=[
+        "sherpa-onnx-core==1.12.9",
+    ],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS :: MacOS X",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ],
+)

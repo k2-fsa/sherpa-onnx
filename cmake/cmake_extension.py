@@ -13,6 +13,11 @@ import setuptools
 from setuptools.command.build_ext import build_ext
 
 
+def need_split_package():
+    ans = os.environ.get("SHERPA_ONNX_SPLIT_PACKAGE", None)
+    return ans is not None
+
+
 def is_for_pypi():
     ans = os.environ.get("SHERPA_ONNX_IS_FOR_PYPI", None)
     return ans is not None

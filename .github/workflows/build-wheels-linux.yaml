@@ -14,7 +14,156 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  core:
+    name: core
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+          du -h -d1 .
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              python3 -m venv my
+
+              source ./my/bin/activate
+
+              python3 -m pip install setuptools wheel twien
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              mkdir build
+              pushd build
+
+              cmake \
+                -D SHERPA_ONNX_ENABLE_TTS=ON \
+                -D CMAKE_BUILD_TYPE=Release \
+                -D BUILD_SHARED_LIBS=ON \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                ..
+
+              make -j2
+              make install
+
+              ls -lh lib
+              ls -lh bin
+
+              echo "----"
+              ls -lh install/lib
+
+              rm -fv install/lib/libcargs.so
+
+              echo "----"
+              ls -lh install/bin
+
+              echo 'sherpa-onnx-core'
+              mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+              cp -v ./install/lib/lib*.so scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+
+              mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+              cp -v ./install/include/sherpa-onnx/c-api/*.h scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+
+              pushd scripts/wheel/sherpa-onnx-core
+              python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
+
+              ls -lh dist
+
+              popd
+
+              echo 'sherpa-onnx-bin'
+
+              mkdir -p scripts/wheel/sherpa-onnx-bin/bin
+              cp -v ./install/bin/sherpa-onnx* scripts/wheel/sherpa-onnx-bin/bin
+
+              pushd scripts/wheel/sherpa-onnx-bin
+              python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
+
+              ls -lh dist
+
+              popd
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          sudo chown -R $USER ./scripts/wheel
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl .
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core
+          path: ./*.whl
+
+      - name: Show wheels
+        shell: bash
+        run: |
+          sudo chown -R $USER ./scripts/wheel
+          ls -lh ./scripts/wheel/sherpa-onnx-core/dist
+          ls -lh ./scripts/wheel/sherpa-onnx-bin/dist
+
+          unzip -l ./scripts/wheel/sherpa-onnx-core/dist/*.whl
+          echo "---"
+          unzip -l ./scripts/wheel/sherpa-onnx-bin/dist/*.whl
+
+      - name: Install patchelf
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+          patchelf --help
+
+      - name: Patch wheels
+        if: false
+        shell: bash
+        run: |
+          mkdir ./wheels
+          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
+
+          ls -lh ./wheels/
+          rm -rf ./wheelhouse
+          mv ./wheels ./wheelhouse
+
   build_wheels_linux:
+    if: false
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:

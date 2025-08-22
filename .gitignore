@@ -146,3 +146,4 @@ dict
 *.npz
 voices.bin
 kitten-nano-en-v0_1-fp16
+*.egg-info
