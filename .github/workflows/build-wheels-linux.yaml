@@ -316,7 +316,7 @@ jobs:
             LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR
             SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
             SHERPA_ONNX_ENABLE_ALSA=1
-            SHERPA_ONNX_ENABLE_BINARY=OFF
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF"
 
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
