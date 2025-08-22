@@ -103,13 +103,13 @@ jobs:
               ls -lh install/bin
 
               echo 'sherpa-onnx-core'
-              mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
-              cp -v ./install/lib/lib*.so scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+              mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+              cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
 
-              mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
-              cp -v ./install/include/sherpa-onnx/c-api/*.h scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+              mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+              cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
 
-              pushd scripts/wheel/sherpa-onnx-core
+              pushd ../scripts/wheel/sherpa-onnx-core
               python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
 
               ls -lh dist
@@ -118,10 +118,10 @@ jobs:
 
               echo 'sherpa-onnx-bin'
 
-              mkdir -p scripts/wheel/sherpa-onnx-bin/bin
-              cp -v ./install/bin/sherpa-onnx* scripts/wheel/sherpa-onnx-bin/bin
+              mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
+              cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
 
-              pushd scripts/wheel/sherpa-onnx-bin
+              pushd ../scripts/wheel/sherpa-onnx-bin
               python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
 
               ls -lh dist
