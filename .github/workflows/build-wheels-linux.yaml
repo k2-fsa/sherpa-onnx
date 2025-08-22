@@ -174,8 +174,55 @@ jobs:
           name: wheels-core-linux-x64-patched
           path: ./wheelhouse/*.whl
 
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p $d
+
+            cp -v ../wheelhouse/*.whl $d/
+
+            git status
+            git add .
+            git commit -m "add more wheels"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+
+      - name: Publish wheels to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          twine upload ./wheelhouse/*.whl
+
   build_wheels_linux:
-    if: false
+    needs: [core]
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -184,7 +231,6 @@ jobs:
         os: [ubuntu-22.04]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
-
 
     steps:
       - uses: actions/checkout@v4
@@ -208,7 +254,13 @@ jobs:
             echo "PWD"
             ls -lh /project/alsa-lib/src/.libs
 
-          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=1
+          CIBW_ENVIRONMENT: |
+            CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH 
+            SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs 
+            LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR
+            SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" 
+            SHERPA_ONNX_ENABLE_ALSA=1
+            SHERPA_ONNX_ENABLE_BINARY=OFF
 
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
