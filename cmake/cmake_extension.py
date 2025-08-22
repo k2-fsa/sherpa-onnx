@@ -216,6 +216,7 @@ class BuildExtension(build_ext):
         if need_split_package():
             shutil.rmtree(f"{install_dir}/lib")
             shutil.rmtree(f"{install_dir}/include")
+            shutil.rmtree(f"{install_dir}/share")
             return
 
         suffix = ".exe" if is_windows() else ""

@@ -141,7 +141,7 @@ jobs:
           path: ./*.whl
 
   test:
-    name: test
+    name: test ${{ matrix.os }}
     needs: [core]
     runs-on: ${{ matrix.os }}
     strategy:
