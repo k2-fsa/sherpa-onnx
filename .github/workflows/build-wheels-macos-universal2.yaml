@@ -245,6 +245,7 @@ jobs:
           twine upload /tmp/wheels/*.whl
 
   build_wheels_macos_universal2:
+    needs: [core, test]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
