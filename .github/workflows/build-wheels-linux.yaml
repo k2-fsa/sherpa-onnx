@@ -221,6 +221,59 @@ jobs:
 
           twine upload ./wheelhouse/*.whl
 
+  test:
+    name: test
+    needs: [core]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from Linux x64
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-core-linux-x64-patched
+          path: /tmp/wheels
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh /tmp/wheels
+
+      - name: Install
+        shell: bash
+        run: |
+          python3 -m pip install /tmp/wheels/*.whl
+
+      - name: Show version
+        shell: bash
+        run: |
+          sherpa-onnx-version
+
+      - name: Show help
+        shell: bash
+        run: |
+          sherpa-onnx --help
+
+          echo "---"
+
+          sherpa-onnx-offline --help
+
+          echo "---"
+
+          sherpa-onnx-vad --help
+
   build_wheels_linux:
     needs: [core]
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
