@@ -71,9 +71,7 @@ def process(out_dir: Path, whl: Path):
 
     rpaths = ":".join(rpath_list)
 
-    for filename in glob.glob(
-        f"{tmp_dir}/sherpa_onnx-*data/data/bin/*", recursive=True
-    ):
+    for filename in glob.glob(f"{tmp_dir}/sherpa_onnx*data/data/bin/*", recursive=True):
         print(filename)
         existing_rpath = (
             subprocess.check_output(["patchelf", "--print-rpath", filename])

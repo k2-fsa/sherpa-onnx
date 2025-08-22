@@ -132,13 +132,14 @@ jobs:
         shell: bash
         run: |
           sudo chown -R $USER ./scripts/wheel
-          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl .
-          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl .
+          mkdir wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl ./wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl ./wheelhouse
 
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-core-linux-x64
-          path: ./*.whl
+          path: ./wheelhouse/*.whl
 
       - name: Show wheels
         shell: bash
@@ -159,7 +160,6 @@ jobs:
           patchelf --help
 
       - name: Patch wheels
-        if: false
         shell: bash
         run: |
           mkdir ./wheels
@@ -168,6 +168,11 @@ jobs:
           ls -lh ./wheels/
           rm -rf ./wheelhouse
           mv ./wheels ./wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-linux-x64-patched
+          path: ./wheelhouse/*.whl
 
   build_wheels_linux:
     if: false
