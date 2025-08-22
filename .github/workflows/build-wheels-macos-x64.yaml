@@ -61,6 +61,7 @@ jobs:
             -DSHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
             -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_OSX_ARCHITECTURES='x86_64' \
             -D CMAKE_INSTALL_PREFIX=./install \
@@ -223,6 +224,17 @@ jobs:
             git commit -m "add more wheels"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
 
+      - name: Publish wheels to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          twine upload /tmp/wheels/*.whl
+
   build_wheels_macos_x64:
     needs: [core]
     name: ${{ matrix.python-version }}
@@ -309,10 +321,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           opts='--break-system-packages'
-          v=${{ matrix.python-version }}
-          if [[ $v == cp38 || $v == cp39 ]]; then
-            opts=''
-          fi
 
           python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
