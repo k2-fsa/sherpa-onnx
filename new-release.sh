@@ -9,7 +9,7 @@ old_version="1\.12\.8"
 new_version="1\.12\.9"
 
 old_version="1\.12\.9"
-new_version="0\.0\.5"
+new_version="0\.0\.6"
 
 replace_str="s/$old_version/$new_version/g"
 

@@ -213,6 +213,11 @@ class BuildExtension(build_ext):
                     "\nClick:\n\thttps://github.com/k2-fsa/sherpa-onnx/issues/new\n"  # noqa
                 )
 
+        if need_split_package():
+            shutil.rmtree(f"{install_dir}/lib")
+            shutil.rmtree(f"{install_dir}/include")
+            return
+
         suffix = ".exe" if is_windows() else ""
         # Remember to also change setup.py
 
