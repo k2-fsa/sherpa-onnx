@@ -224,6 +224,12 @@ jobs:
 
           echo "---"
 
+          ls -lh $(which sherpa-onnx)
+          file $(which sherpa-onnx)
+          readlef -d $(which sherpa-onnx)
+
+          ldd $(which sherpa-onnx)
+
           sherpa-onnx-offline --help
 
           echo "---"
@@ -278,13 +284,13 @@ jobs:
           twine upload /tmp/wheels/*.whl
 
   build_wheels_linux:
-    needs: [core]
+    needs: [core, test]
     name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 

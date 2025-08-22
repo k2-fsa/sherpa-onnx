@@ -180,6 +180,11 @@ jobs:
         run: |
           sherpa-onnx --help
 
+          ls -lh $(which sherpa-onnx)
+          file $(which sherpa-onnx)
+          otools -L $(which sherpa-onnx)
+          otools -l $(which sherpa-onnx)
+
           echo "---"
 
           sherpa-onnx-offline --help
@@ -236,7 +241,7 @@ jobs:
           twine upload /tmp/wheels/*.whl
 
   build_wheels_macos_x64:
-    needs: [core]
+    needs: [core, test]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:

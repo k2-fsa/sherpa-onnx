@@ -14,14 +14,243 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  core:
+    runs-on: ${{ matrix.os }}
+    name: core
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install deps
+        shell: bash
+        run: |
+          python3 -m pip install setuptools wheel twine
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-latest-sherpa-onnx-core
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -DSHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for macos
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file ./bin/sherpa-onnx
+
+          rm -fv ./install/include/cargs.h
+          rm -fv ./install/lib/cargs.h
+          rm -fv ./install/lib/libcargs.dylib
+          rm -fv ./install/lib/libcargs.a
+          rm -rfv ./install/lib/pkgconfig
+
+      - name: Copy files
+        shell: bash
+        run: |
+          echo 'sherpa-onnx-core'
+          mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./build/install/lib/lib* ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+
+          mkdir -p ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+          cp -v ./build/install/include/sherpa-onnx/c-api/*.h ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+
+          echo 'sherpa-onnx-bin'
+
+          mkdir -p ./scripts/wheel/sherpa-onnx-bin/bin
+          cp -v ./build/install/bin/sherpa-onnx* ./scripts/wheel/sherpa-onnx-bin/bin
+
+      - name: Build sherpa-onnx-core
+        shell: bash
+        run: |
+          pushd ./scripts/wheel/sherpa-onnx-core
+          python3 setup.py bdist_wheel --plat-name=macosx_10_15_universal2
+
+          ls -lh dist
+
+          popd
+
+      - name: Build sherpa-onnx-bin
+        shell: bash
+        run: |
+          pushd ./scripts/wheel/sherpa-onnx-bin
+          python3 setup.py bdist_wheel --plat-name=macosx_10_15_universal2
+
+          ls -lh dist
+
+          popd
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl .
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl .
+
+          ls -lh *.whl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-macos-universal
+          path: ./*.whl
+
+  test:
+    name: test
+    needs: [core]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-13]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from macos universal
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-core-macos-universal
+          path: /tmp/wheels
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh /tmp/wheels
+
+      - name: Install
+        shell: bash
+        run: |
+          python3 -m pip install /tmp/wheels/*.whl
+
+      - name: Show version
+        shell: bash
+        run: |
+          sherpa-onnx-version
+
+      - name: Show help
+        shell: bash
+        run: |
+          sherpa-onnx --help
+
+          ls -lh $(which sherpa-onnx)
+          file $(which sherpa-onnx)
+
+          otools -L $(which sherpa-onnx)
+          otools -l $(which sherpa-onnx)
+
+          echo "---"
+
+          sherpa-onnx-offline --help
+
+          echo "---"
+
+          sherpa-onnx-vad --help
+
+      - name: Publish to huggingface
+        if: matrix.os == 'macos-latest'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p $d
+
+            cp -v /tmp/wheels/*.whl $d/
+
+            git status
+            git add .
+            git commit -m "add more wheels"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+
+      - name: Publish wheels to PyPI
+        if: matrix.os == 'macos-latest'
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          opts='--break-system-packages'
+
+          python3 -m pip install $opts --upgrade pip
+          python3 -m pip install $opts wheel twine==5.0.0 setuptools
+
+          twine upload /tmp/wheels/*.whl
   build_wheels_macos_universal2:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        os: [macos-latest]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,10 +262,13 @@ jobs:
           git diff .
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64'"
+          CIBW_ENVIRONMENT: |
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DSHERPA_ONNX_ENABLE_BINARY=OFF"
+
           CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
 
@@ -95,10 +327,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           opts='--break-system-packages'
-          v=${{ matrix.python-version }}
-          if [[ $v == cp38 || $v == cp39 ]]; then
-            opts=''
-          fi
 
           python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
