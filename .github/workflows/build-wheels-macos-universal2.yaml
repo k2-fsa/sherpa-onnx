@@ -5,6 +5,12 @@ on:
     branches:
       - wheel
   workflow_dispatch:
+    inputs:
+      publish_sherpa_onnx_bin:
+        description: "Publish sherpa-onnx-bin"
+        required: false
+        default: "true"
+        type: boolean
 
 env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
@@ -231,7 +237,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && github.event.inputs.publish_sherpa_onnx_bin == 'true'
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
