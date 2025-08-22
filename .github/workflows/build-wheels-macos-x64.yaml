@@ -56,15 +56,10 @@ jobs:
 
           mkdir build
           cd build
-          lib_type=${{ matrix.lib_type }}
-          if [[ $lib_type == "static" ]]; then
-            BUILD_SHARED_LIBS=OFF
-          else
-            BUILD_SHARED_LIBS=ON
-          fi
 
           cmake \
-            -D-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+            -DSHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
             -D BUILD_SHARED_LIBS=ON \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_OSX_ARCHITECTURES='x86_64' \
@@ -101,19 +96,10 @@ jobs:
           mkdir -p ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
           cp -v ./build/install/include/sherpa-onnx/c-api/*.h ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
 
-
-
           echo 'sherpa-onnx-bin'
 
           mkdir -p ./scripts/wheel/sherpa-onnx-bin/bin
           cp -v ./build/install/bin/sherpa-onnx* ./scripts/wheel/sherpa-onnx-bin/bin
-
-          pushd ./scripts/wheel/sherpa-onnx-bin
-          python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
-
-          ls -lh dist
-
-          popd
 
       - name: Build sherpa-onnx-core
         shell: bash
