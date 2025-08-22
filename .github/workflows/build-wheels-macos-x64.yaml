@@ -37,10 +37,10 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install cibuildwheel
+      - name: Install deps
         shell: bash
         run: |
-          python3 -m pip install cibuildwheel
+          python3 -m pip install setuptools wheel twine
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
