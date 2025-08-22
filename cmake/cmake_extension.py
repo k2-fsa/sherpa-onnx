@@ -14,7 +14,7 @@ from setuptools.command.build_ext import build_ext
 
 
 def need_split_package():
-    ans = os.environ.get("SHERPA_ONNX_SPLIT_PACKAGE", None)
+    ans = os.environ.get("SHERPA_ONNX_SPLIT_PYTHON_PACKAGE", None)
     return ans is not None
 
 
