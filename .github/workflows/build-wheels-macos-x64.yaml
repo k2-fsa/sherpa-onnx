@@ -14,7 +14,142 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  core:
+    runs-on: ${{ matrix.os }}
+    name: core
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install cibuildwheel
+        shell: bash
+        run: |
+          python3 -m pip install cibuildwheel
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-latest-sherpa-onnx-core
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          lib_type=${{ matrix.lib_type }}
+          if [[ $lib_type == "static" ]]; then
+            BUILD_SHARED_LIBS=OFF
+          else
+            BUILD_SHARED_LIBS=ON
+          fi
+
+          cmake \
+            -D-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_OSX_ARCHITECTURES='x86_64' \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for macos
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file ./bin/sherpa-onnx
+
+          rm -fv ./install/include/cargs.h
+          rm -fv ./install/lib/cargs.h
+          rm -fv ./install/lib/libcargs.dylib
+          rm -fv ./install/lib/libcargs.a
+          rm -rfv ./install/lib/pkgconfig
+
+      - name: Copy files
+        shell: bash
+        run: |
+          echo 'sherpa-onnx-core'
+          mkdir -p scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./build/install/lib/lib* ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+
+          mkdir -p ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+          cp -v ./build/install/include/sherpa-onnx/c-api/*.h ./scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+
+
+
+          echo 'sherpa-onnx-bin'
+
+          mkdir -p ./scripts/wheel/sherpa-onnx-bin/bin
+          cp -v ./build/install/bin/sherpa-onnx* ./scripts/wheel/sherpa-onnx-bin/bin
+
+          pushd ./scripts/wheel/sherpa-onnx-bin
+          python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
+
+          ls -lh dist
+
+          popd
+
+      - name: Build sherpa-onnx-core
+        shell: bash
+        run: |
+          pushd ./scripts/wheel/sherpa-onnx-core
+          python3 setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
+
+          ls -lh dist
+
+          popd
+
+      - name: Build sherpa-onnx-bin
+        shell: bash
+        run: |
+          pushd ./scripts/wheel/sherpa-onnx-bin
+          python3 setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
+
+          ls -lh dist
+
+          popd
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl .
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl .
+
+          ls -lh *.whl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-macos-x64
+          path: ./*.whl
+
   build_wheels_macos_x64:
+    if: false
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:

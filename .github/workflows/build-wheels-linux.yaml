@@ -137,7 +137,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-core
+          name: wheels-core-linux-x64
           path: ./*.whl
 
       - name: Show wheels
