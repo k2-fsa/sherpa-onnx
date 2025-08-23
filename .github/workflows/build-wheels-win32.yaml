@@ -204,14 +204,22 @@ jobs:
 
           sherpa-onnx-version
 
-          # Save to GITHUB_ENV so all subsequent steps get it
-          echo "PATH=$new_path:$PATH" >> $GITHUB_ENV
-
           which sherpa-onnx-version
 
       - name: Show help
         shell: bash
         run: |
+          base="/c/hostedtoolcache/windows/Python/3.10.*/*/bin"
+
+          for dir in $base; do
+            if [ -d "$dir" ]; then
+              echo "Adding $dir to PATH"
+              export PATH="$dir:$PATH"
+            fi
+          done
+          echo "Current PATH:"
+          echo "$PATH"
+
           sherpa-onnx --help
 
           echo "---"
