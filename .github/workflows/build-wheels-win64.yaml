@@ -65,11 +65,168 @@ jobs:
       - name: Show
         shell: bash
         run: |
+          echo "---bin---"
           ls -lh build/install/bin
+          echo "---lib---"
           ls -lh build/install/lib
+          echo "---include---"
           ls -lh build/install/include
+
+      - name: Copy files
+        shell: bash
+        run: |
+          cd build
+          echo 'sherpa-onnx-core'
+          mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./install/lib/onnxruntime.dll ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./install/lib/sherpa-onnx-*.dll ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          # keep the *.lib file so users can write code to link with our dll
+          cp -v ./install/lib/sherpa-onnx-*.lib ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+
+          mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+          cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+
+          pushd ../scripts/wheel/sherpa-onnx-core
+          python3 setup.py bdist_wheel --plat-name=win_amd64
+
+          ls -lh dist
+
+          popd
+
+          echo 'sherpa-onnx-bin'
+
+          mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
+          cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
+
+          pushd ../scripts/wheel/sherpa-onnx-bin
+          python3 setup.py bdist_wheel --plat-name=win_amd64
+
+          ls -lh dist
+
+          popd
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          mkdir wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl ./wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl ./wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-win-x64
+          path: ./wheelhouse/*.whl
+
+      - name: Show wheels
+        shell: bash
+        run: |
+          ls -lh ./scripts/wheel/sherpa-onnx-core/dist
+          ls -lh ./scripts/wheel/sherpa-onnx-bin/dist
+
+          unzip -l ./scripts/wheel/sherpa-onnx-core/dist/*.whl
           echo "---"
-          ls -lh build/install/include
+          unzip -l ./scripts/wheel/sherpa-onnx-bin/dist/*.whl
+
+  test:
+    name: test
+    needs: [core]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-22]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from Windows x64
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-core-win-x64-patched
+          path: /tmp/wheels
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh /tmp/wheels
+
+      - name: Install
+        shell: bash
+        run: |
+          python3 -m pip install /tmp/wheels/*.whl
+
+      - name: Show version
+        shell: bash
+        run: |
+          sherpa-onnx-version
+
+      - name: Show help
+        shell: bash
+        run: |
+          sherpa-onnx --help
+
+          echo "---"
+
+          sherpa-onnx-offline --help
+
+          echo "---"
+
+          sherpa-onnx-vad --help
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p $d
+
+            cp -v /tmp/wheels/*.whl $d/
+
+            git status
+            git add .
+            git commit -m "add more wheels"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+
+      - name: Publish wheels to PyPI
+        if: github.event.inputs.publish_sherpa_onnx_bin == 'true'
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          twine upload /tmp/wheels/*.whl
 
   build_wheels_win64:
     if: false

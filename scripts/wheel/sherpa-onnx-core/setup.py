@@ -1,5 +1,26 @@
 from setuptools import setup, find_packages
 from pathlib import Path
+import platform
+import site
+
+
+def is_windows():
+    return platform.system() == "Windows"
+
+
+def get_binaries():
+    if not is_windows():
+        return None
+    libs = [
+        "onnxruntime.dll",
+        "sherpa-onnx-c-api.dll",
+        "sherpa-onnx-cxx-api.dll",
+        "sherpa-onnx-c-api.lib",
+        "sherpa-onnx-cxx-api.lib",
+    ]
+    prefix = "./lib"
+    return [f"{prefix}/{lib}" for lib in libs]
+
 
 setup(
     name="sherpa-onnx-core",
@@ -7,6 +28,12 @@ setup(
     description="Core shared libraries for sherpa-onnx",
     packages=["sherpa_onnx"],
     include_package_data=True,
+    data_files=[
+        ("bin", get_binaries()),
+        (os.path.join(site.getsitepackages()[0]), get_binaries()),
+    ]
+    if get_binaries()
+    else None,
     author="The sherpa-onnx development team",
     url="https://github.com/k2-fsa/sherpa-onnx",
     author_email="dpovey@gmail.com",
