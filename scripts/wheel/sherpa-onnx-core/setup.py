@@ -23,7 +23,6 @@ def get_binaries():
     prefix = "./sherpa_onnx/lib"
     return [f"{prefix}/{lib}" for lib in libs]
 
-
 setup(
     name="sherpa-onnx-core",
     version="1.12.9",
@@ -32,7 +31,6 @@ setup(
     include_package_data=True,
     data_files=[
         ("bin", get_binaries()),
-        (os.path.join(site.getsitepackages()[0]), get_binaries()),
     ]
     if get_binaries()
     else None,
