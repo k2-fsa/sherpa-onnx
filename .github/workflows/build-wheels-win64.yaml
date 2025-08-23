@@ -170,7 +170,7 @@ jobs:
       - name: Retrieve artifact from Windows x64
         uses: actions/download-artifact@v4
         with:
-          name: wheels-core-win-x64-patched
+          name: wheels-core-win-x64
           path: /tmp/wheels
 
       - name: Setup Python
