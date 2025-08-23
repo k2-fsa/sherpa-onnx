@@ -1,5 +1,12 @@
-from setuptools import setup, find_packages
 import glob
+import platform
+
+from setuptools import setup
+
+
+def is_windows():
+    return platform.system() == "Windows"
+
 
 bin_files = glob.glob("bin/*")
 print("bin_files", bin_files)
@@ -14,7 +21,7 @@ setup(
     zip_safe=False,
     license="Apache 2.0",
     packages=[],
-    data_files=[("bin", bin_files)],
+    data_files=[("Scripts", bin_files) if is_windows() else ("bin", bin_files)],
     install_requires=[
         "sherpa-onnx-core==1.12.9",
     ],

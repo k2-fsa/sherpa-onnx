@@ -1,9 +1,6 @@
-import os
 import platform
-import site
-from pathlib import Path
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 
 def is_windows():
