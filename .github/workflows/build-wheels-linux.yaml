@@ -344,13 +344,18 @@ jobs:
       - name: Show wheels
         shell: bash
         run: |
+          unzip -l wheelhouse/*.whl
+
+          echo "---"
+
           mkdir t
           cp wheelhouse/*.whl ./t
           cd ./t
           unzip ./*.whl
           ls -lh
           echo "---"
-          readelf *.so
+
+          readelf -d *.so
 
       - name: Publish to huggingface
         env:
