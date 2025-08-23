@@ -1,7 +1,9 @@
-from setuptools import setup, find_packages
-from pathlib import Path
+import os
 import platform
 import site
+from pathlib import Path
+
+from setuptools import find_packages, setup
 
 
 def is_windows():
