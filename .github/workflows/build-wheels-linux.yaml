@@ -334,34 +334,23 @@ jobs:
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_x86_64
-
-      - name: Display wheels
-        shell: bash
-        run: |
-          ls -lh ./wheelhouse/
-          unzip -l ./wheelhouse/*.whl
-
-      - name: Install patchelf
-        shell: bash
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y patchelf
-          patchelf --help
-
-      - name: Patch wheels
-        shell: bash
-        run: |
-          mkdir ./wheels
-          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
-
-          ls -lh ./wheels/
-          rm -rf ./wheelhouse
-          mv ./wheels ./wheelhouse
+          CIBW_REPAIR_WHEEL_COMMAND: ""
 
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.python-version }}-${{ matrix.manylinux }}
           path: ./wheelhouse/*.whl
+
+      - name: Show wheels
+        shell: bash
+        run: |
+          mkdir t
+          cp wheelhouse/*.whl ./t
+          cd ./t
+          unzip ./*.whl
+          ls -lh
+          echo "---"
+          readelf *.so
 
       - name: Publish to huggingface
         env:
