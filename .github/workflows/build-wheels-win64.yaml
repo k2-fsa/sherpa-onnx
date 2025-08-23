@@ -305,6 +305,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Build wheels
+        if: matrix.python-version == 'cp314'
+        uses: pypa/cibuildwheel@v3.1.4
+        env:
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_SKIP: "*-win_amd64"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: >
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            SHERPA_ONNX_CMAKE_ARGS="-A x64 -DSHERPA_ONNX_ENABLE_BINARY=OFF"
+
+      - name: Build wheels
         shell: bash
         run: |
           python3 -m pip install setuptools wheel twine

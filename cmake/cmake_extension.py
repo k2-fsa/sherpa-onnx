@@ -217,6 +217,15 @@ class BuildExtension(build_ext):
             shutil.rmtree(f"{install_dir}/lib")
             shutil.rmtree(f"{install_dir}/include")
             shutil.rmtree(f"{install_dir}/share")
+
+            if is_windows():
+                shutil.rmtree(f"{install_dir}/bin", ignore_errors=True)
+                os.remove(f"{install_dir}/onnxruntime.dll", ignore_errors=True)
+                os.remove(
+                    f"{install_dir}/onnxruntime_providers_shared.dll",
+                    ignore_errors=True,
+                )
+
             return
 
         suffix = ".exe" if is_windows() else ""
