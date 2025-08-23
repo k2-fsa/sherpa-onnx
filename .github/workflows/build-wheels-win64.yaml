@@ -160,7 +160,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-22]
+        os: [windows-2022]
 
     steps:
       - uses: actions/checkout@v4
