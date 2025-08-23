@@ -111,13 +111,16 @@ jobs:
           # export PATH=$p/bin:$PATH
 
           # For windows
-          export PATH=/c/hostedtoolcache/windows/Python/3.7.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.8.10/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.12.10/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.13.6/x64/bin:$PATH
+          base="/c/hostedtoolcache/windows/Python/3.*/*/bin"
+
+          for dir in $base; do
+            if [ -d "$dir" ]; then
+              echo "Adding $dir to PATH"
+              export PATH="$dir:$PATH"
+            fi
+          done
+          echo "Current PATH:"
+          echo "$PATH"
 
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help

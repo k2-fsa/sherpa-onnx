@@ -77,7 +77,11 @@ setuptools.setup(
         "sherpa_onnx": "sherpa-onnx/python/sherpa_onnx",
     },
     packages=["sherpa_onnx"],
-    data_files=[("bin", get_binaries_to_install())]
+    data_files=[
+        ("Scripts", get_binaries_to_install())
+        if is_windows()
+        else ("bin", get_binaries_to_install())
+    ]
     if get_binaries_to_install()
     else None,
     url="https://github.com/k2-fsa/sherpa-onnx",
