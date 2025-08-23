@@ -294,13 +294,12 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.4
         env:
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "*-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ENVIRONMENT: >
             SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
-            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF"
+            SHERPA_ONNX_CMAKE_ARGS="-A Win32 -DSHERPA_ONNX_ENABLE_BINARY=OFF"
 
       - name: Display wheels
         shell: bash
