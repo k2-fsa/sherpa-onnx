@@ -39,12 +39,25 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: Install sccache
+        run: choco install sccache -y
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Mozilla\sccache
+          key: ${{ matrix.os }}-sccache-core
+          restore-keys: |
+            ${{ matrix.os }}-sccache-core-
+
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
           cd build
           cmake \
+            -D CMAKE_C_COMPILER_LAUNCHER=sccache \
+            -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
             -A x64 \
             -D SHERPA_ONNX_ENABLE_TTS=ON \
             -D CMAKE_BUILD_TYPE=Release \
@@ -61,6 +74,9 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Show sccache stats
+        run: sccache --show-stats
 
       - name: Show
         shell: bash
