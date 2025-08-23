@@ -137,6 +137,10 @@ jobs:
           cd t
           unzip ../*.whl
 
+          ls -lh sherpa_onnx/lib
+
+          file sherpa_onnx/lib/*
+
       - name: Install wheel
         shell: bash
         run: |
