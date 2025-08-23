@@ -82,10 +82,12 @@ file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 
-if(SHERPA_ONNX_ENABLE_PYTHON)
-  install(FILES ${onnxruntime_lib_files} DESTINATION ..)
-else()
-  install(FILES ${onnxruntime_lib_files} DESTINATION lib)
-endif()
+if(NOT SHERPA_ONNX_SPLIT_PYTHON_PACKAGE)
+  if(SHERPA_ONNX_ENABLE_PYTHON)
+    install(FILES ${onnxruntime_lib_files} DESTINATION ..)
+  else()
+    install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+  endif()
 
-install(FILES ${onnxruntime_lib_files} DESTINATION bin)
+  install(FILES ${onnxruntime_lib_files} DESTINATION bin)
+endif()
