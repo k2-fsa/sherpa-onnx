@@ -220,11 +220,8 @@ class BuildExtension(build_ext):
 
             if is_windows():
                 shutil.rmtree(f"{install_dir}/bin", ignore_errors=True)
-                os.remove(f"{install_dir}/onnxruntime.dll", ignore_errors=True)
-                os.remove(
-                    f"{install_dir}/onnxruntime_providers_shared.dll",
-                    ignore_errors=True,
-                )
+                os.remove(f"{install_dir}/onnxruntime.dll")
+                os.remove(f"{install_dir}/onnxruntime_providers_shared.dll")
 
             return
 
