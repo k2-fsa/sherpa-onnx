@@ -20,7 +20,7 @@ def get_binaries():
         "sherpa-onnx-c-api.lib",
         "sherpa-onnx-cxx-api.lib",
     ]
-    prefix = "./lib"
+    prefix = "./sherpa_onnx/lib"
     return [f"{prefix}/{lib}" for lib in libs]
 
 
