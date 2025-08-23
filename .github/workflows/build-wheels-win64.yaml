@@ -191,7 +191,23 @@ jobs:
       - name: Show version
         shell: bash
         run: |
+          base="/c/hostedtoolcache/windows/Python/3.10.*/*/bin"
+
+          for dir in $base; do
+            if [ -d "$dir" ]; then
+              echo "Adding $dir to PATH"
+              export PATH="$dir:$PATH"
+            fi
+          done
+          echo "Current PATH:"
+          echo "$PATH"
+
           sherpa-onnx-version
+
+          # Save to GITHUB_ENV so all subsequent steps get it
+          echo "PATH=$new_path:$PATH" >> $GITHUB_ENV
+
+          which sherpa-onnx-version
 
       - name: Show help
         shell: bash
@@ -235,7 +251,7 @@ jobs:
 
             mkdir -p $d
 
-            cp -v /tmp/wheels/*.whl $d/
+            cp -v /d/tmp/wheels/*.whl $d/
 
             git status
             git add .
@@ -252,10 +268,10 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-          twine upload /tmp/wheels/*.whl
+          twine upload /d/tmp/wheels/*.whl
 
   build_wheels_win64:
-    if: false
+    needs: [core, test]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -281,7 +297,11 @@ jobs:
       - name: Build wheels
         shell: bash
         run: |
-          pip install setuptools wheel
+          python3 -m pip install setuptools wheel twine
+
+          export SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+
+          SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF"
 
           python3 setup.py bdist_wheel
 
@@ -293,6 +313,7 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+          unzip -l ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:
