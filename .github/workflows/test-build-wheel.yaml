@@ -38,6 +38,8 @@ jobs:
             python-version: "3.12"
           - os: ubuntu-latest
             python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
 
           - os: macos-13
             python-version: "3.8"
@@ -49,8 +51,12 @@ jobs:
           - os: macos-13
             python-version: "3.11"
 
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
 
           - os: windows-2022
             python-version: "3.7"
@@ -65,6 +71,10 @@ jobs:
             python-version: "3.11"
           - os: windows-2022
             python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.14"
 
     steps:
       - uses: actions/checkout@v4
