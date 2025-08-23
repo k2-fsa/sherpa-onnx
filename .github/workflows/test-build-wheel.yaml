@@ -128,16 +128,5 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          # For windows
-          base="/c/hostedtoolcache/windows/Python/3.*/*/bin"
-
-          for dir in $base; do
-            if [ -d "$dir" ]; then
-              echo "Adding $dir to PATH"
-              export PATH="$dir:$PATH"
-            fi
-          done
-          echo "Current PATH:"
-          echo "$PATH"
           which sherpa-onnx
           sherpa-onnx --help

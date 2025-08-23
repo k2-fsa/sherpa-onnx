@@ -110,18 +110,6 @@ jobs:
           # ls -lh $p/bin
           # export PATH=$p/bin:$PATH
 
-          # For windows
-          base="/c/hostedtoolcache/windows/Python/3.*/*/bin"
-
-          for dir in $base; do
-            if [ -d "$dir" ]; then
-              echo "Adding $dir to PATH"
-              export PATH="$dir:$PATH"
-            fi
-          done
-          echo "Current PATH:"
-          echo "$PATH"
-
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help
           sherpa-onnx-offline --help
