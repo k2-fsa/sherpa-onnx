@@ -335,7 +335,9 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_x86_64
           CIBW_REPAIR_WHEEL_COMMAND: >
-            auditwheel repair -w {dest_dir} --exclude libonnxruntime.so {wheel}
+            auditwheel repair -w {dest_dir}
+            --exclude libonnxruntime.so
+            {wheel}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -345,6 +347,7 @@ jobs:
       - name: Show wheels
         shell: bash
         run: |
+          ls -lh wheelhouse/*.whl
           unzip -l wheelhouse/*.whl
 
           echo "---"
