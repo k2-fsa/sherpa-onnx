@@ -266,7 +266,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -281,17 +281,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Build wheels (cibuildwheel)
-        if: matrix.python-version == '3.14'
-        uses: pypa/cibuildwheel@v3.1.4
-        env:
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_SKIP: "*-win_amd64"
-          CIBW_BUILD_VERBOSITY: 3
-          CIBW_ENVIRONMENT: >
-            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
-            SHERPA_ONNX_CMAKE_ARGS="-A x64 -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
 
       - name: Build wheels (cmd)
         shell: bash
