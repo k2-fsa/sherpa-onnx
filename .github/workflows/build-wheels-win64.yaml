@@ -191,17 +191,6 @@ jobs:
       - name: Show version
         shell: bash
         run: |
-          base="/c/hostedtoolcache/windows/Python/3.10.*/*/bin"
-
-          for dir in $base; do
-            if [ -d "$dir" ]; then
-              echo "Adding $dir to PATH"
-              export PATH="$dir:$PATH"
-            fi
-          done
-          echo "Current PATH:"
-          echo "$PATH"
-
           sherpa-onnx-version
 
           which sherpa-onnx-version
@@ -209,17 +198,6 @@ jobs:
       - name: Show help
         shell: bash
         run: |
-          base="/c/hostedtoolcache/windows/Python/3.10.*/*/bin"
-
-          for dir in $base; do
-            if [ -d "$dir" ]; then
-              echo "Adding $dir to PATH"
-              export PATH="$dir:$PATH"
-            fi
-          done
-          echo "Current PATH:"
-          echo "$PATH"
-
           sherpa-onnx --help
 
           echo "---"
