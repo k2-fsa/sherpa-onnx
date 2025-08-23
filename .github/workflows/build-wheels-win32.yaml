@@ -303,7 +303,7 @@ jobs:
         with:
           python-version: '3.7'
 
-      - name: Build wheels
+      - name: Build wheels (cmd)
         if: matrix.python-version == 'cp37'
         shell: bash
         run: |
@@ -321,7 +321,7 @@ jobs:
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
-      - name: Build wheels
+      - name: Build wheels (cibuildwheel)
         if: matrix.python-version != 'cp37'
         uses: pypa/cibuildwheel@v3.1.4
         env:
