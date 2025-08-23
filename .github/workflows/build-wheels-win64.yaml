@@ -181,12 +181,12 @@ jobs:
       - name: Show
         shell: bash
         run: |
-          ls -lh /tmp/wheels
+          ls -lh /d/tmp/wheels
 
       - name: Install
         shell: bash
         run: |
-          python3 -m pip install /tmp/wheels/*.whl
+          python3 -m pip install /d/tmp/wheels/*.whl
 
       - name: Show version
         shell: bash
