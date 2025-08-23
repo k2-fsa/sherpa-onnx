@@ -271,13 +271,14 @@ jobs:
           twine upload /d/tmp/wheels/*.whl
 
   build_wheels_win32:
+    needs: [core, test]
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
       - uses: actions/checkout@v4
@@ -291,17 +292,22 @@ jobs:
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "*-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: >
+            SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF"
 
       - name: Display wheels
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+
+          unzip -l ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:
