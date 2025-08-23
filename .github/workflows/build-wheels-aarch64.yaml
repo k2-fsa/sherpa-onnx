@@ -341,7 +341,8 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
-          CIBW_REPAIR_WHEEL_COMMAND: ""
+          CIBW_REPAIR_WHEEL_COMMAND: >
+            auditwheel repair -w {dest_dir} --exclude libonnxruntime.so {wheel}
 
       - uses: actions/upload-artifact@v4
         with:
