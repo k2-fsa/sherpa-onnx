@@ -280,6 +280,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.7'
+          architecture: x86
 
       - name: Build wheels (cmd)
         if: matrix.python-version == 'cp37'
