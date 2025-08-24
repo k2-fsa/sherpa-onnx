@@ -247,6 +247,8 @@ class BuildExtension(build_ext):
                 )
 
         if need_split_package():
+            os.system(f"mkdir -p {self.build_lib}/sherpa_onnx/lib/")
+
             import glob
 
             ext = "pyd" if sys.platform.startswith("win") else "so"
@@ -255,7 +257,7 @@ class BuildExtension(build_ext):
 
             for f in matches:
                 print(f)
-                shutil.copy(f"{f}", f"{self.build_lib}/")
+                shutil.copy(f"{f}", f"{self.build_lib}/sherpa_onnx/lib/")
 
             return
 
