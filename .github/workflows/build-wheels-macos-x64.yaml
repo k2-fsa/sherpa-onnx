@@ -236,7 +236,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
-        if: github.event.inputs.publish_sherpa_onnx_bin == 'true'
+        if: ${{ github.event.inputs.publish_sherpa_onnx_bin == 'true' }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
