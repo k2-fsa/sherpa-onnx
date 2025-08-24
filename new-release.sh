@@ -8,9 +8,6 @@ new_version_code=20250817
 old_version="1\.12\.8"
 new_version="1\.12\.9"
 
-old_version="1\.12\.9"
-new_version="0\.0\.18"
-
 replace_str="s/$old_version/$new_version/g"
 
 sed -i.bak "$replace_str" ./sherpa-onnx/csrc/version.cc
