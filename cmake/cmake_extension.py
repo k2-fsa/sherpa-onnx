@@ -247,17 +247,21 @@ class BuildExtension(build_ext):
                 )
 
         if need_split_package():
-            os.system(f"mkdir -p {self.build_lib}/sherpa_onnx/lib/")
+            dst = os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib")
+            os.system(f"mkdir {dst}")
+            os.system(f"dir {dst}")
 
             import glob
 
             ext = "pyd" if sys.platform.startswith("win") else "so"
             pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
             matches = glob.glob(pattern, recursive=True)
+            print('matches', list(matches))
 
             for f in matches:
-                print(f)
-                shutil.copy(f"{f}", f"{self.build_lib}/sherpa_onnx/lib/")
+                print(f, os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib"))
+                shutil.copy(f"{f}", dst)
+                os.system(f"dir {dst}")
 
             return
 
