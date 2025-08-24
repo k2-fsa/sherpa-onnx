@@ -143,7 +143,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
             idx=9,
             lang="zh",
-            short_name="small_zipformer",
+            short_name="small_zipformer_14M_2023_02_23",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
@@ -167,7 +167,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             idx=10,
             lang="en",
-            short_name="small_zipformer",
+            short_name="small_zipformer_20M_2023_02_17",
             cmd="""
             pushd $model_name
             rm -fv encoder-epoch-99-avg-1.onnx
@@ -267,7 +267,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01",
             idx=15,
             lang="zh",
-            short_name="int8_small_zipformer",
+            short_name="int8_small_zipformer_2025_04_01",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
@@ -287,7 +287,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-small-ctc-zh-2025-04-01",
             idx=16,
             lang="zh",
-            short_name="small_zipformer",
+            short_name="small_zipformer_2025_04_01",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
@@ -443,7 +443,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16",
             idx=25,
             lang="ru",
-            short_name="small_zipformer_int8",
+            short_name="small_zipformer_int8_2025_08_16",
             cmd="""
             pushd $model_name
             rm -rf test_wavs
@@ -458,7 +458,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-small-ru-vosk-2025-08-16",
             idx=26,
             lang="ru",
-            short_name="small_zipformer",
+            short_name="small_zipformer_2025_08_16",
             cmd="""
             pushd $model_name
             rm -rf test_wavs
