@@ -120,6 +120,7 @@ jobs:
               python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
 
               ls -lh dist
+              unzip -l dist/*.whl
 
               popd
 
@@ -132,6 +133,7 @@ jobs:
               python3 setup.py bdist_wheel --plat-name=manylinux2014_x86_64
 
               ls -lh dist
+              unzip -l dist/*.whl
 
               popd
 

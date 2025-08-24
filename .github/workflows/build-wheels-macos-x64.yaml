@@ -115,6 +115,7 @@ jobs:
           python3 setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
 
           ls -lh dist
+          unzip -l dist/*.whl
 
           popd
 
@@ -125,6 +126,7 @@ jobs:
           python3 setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
 
           ls -lh dist
+          unzip -l dist/*.whl
 
           popd
 
