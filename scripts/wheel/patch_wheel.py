@@ -44,7 +44,7 @@ def process(out_dir: Path, whl: Path):
         py_version = "3.12"
     elif "cp313" in str(whl):
         py_version = "3.13"
-    elif "py3-none":
+    elif "py3-none" in str(whl):
         py_version = None
     else:
         assert False, f"Unknow python version in {whl}"
