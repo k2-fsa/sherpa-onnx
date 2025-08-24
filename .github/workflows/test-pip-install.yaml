@@ -31,8 +31,6 @@ jobs:
         # See https://github.com/actions/runner-images
         include:
           - os: ubuntu-22.04
-            python-version: "3.7"
-          - os: ubuntu-22.04
             python-version: "3.8"
           - os: ubuntu-22.04
             python-version: "3.9"
@@ -60,8 +58,6 @@ jobs:
           - os: macos-14
             python-version: "3.13"
 
-          - os: windows-2022
-            python-version: "3.7"
           - os: windows-2022
             python-version: "3.8"
           - os: windows-2022
@@ -95,20 +91,12 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose sherpa-onnx
-          # python3 -m pip install --verbose .
+          pip install --verbose "sherpa-onnx<1" sherpa-onnx-core sherpa-onnx-bin
 
-      - name: Test sherpa-onnx
+      - name: Test sherpa-onnx-bin
         shell: bash
         run: |
-          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
-          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
-
-          p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
-          echo $p
-          ls -lh $p
-          # ls -lh $p/bin
-          # export PATH=$p/bin:$PATH
+          sherpa-onnx-version
 
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help
@@ -122,3 +110,23 @@ jobs:
 
           sherpa-onnx-online-websocket-server --help
           sherpa-onnx-online-websocket-client --help
+
+      - name: Test sherpa-onnx-core
+        shell: bash
+        run: |
+          python3 -m sherpa_onnx --cflags
+          python3 -m sherpa_onnx --c-api-libs
+          python3 -m sherpa_onnx --c-api-libs-only-L
+          python3 -m sherpa_onnx --c-api-libs-only-l
+
+          python3 -m sherpa_onnx --cxx-api-libs
+          python3 -m sherpa_onnx --cxx-api-libs-only-L
+          python3 -m sherpa_onnx --cxx-api-libs-only-l
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.OnlineRecognizer)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.OfflineRecognizer)"
