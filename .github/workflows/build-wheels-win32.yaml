@@ -264,7 +264,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
       - uses: actions/checkout@v4
@@ -275,33 +275,9 @@ jobs:
           ./new-release.sh
           git diff .
 
-      - name: Setup Python 3.7
-        if: matrix.python-version == 'cp37'
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.7'
-          architecture: x86
-
-      - name: Build wheels (cmd)
-        if: matrix.python-version == 'cp37'
-        shell: bash
-        run: |
-          python3 -m pip install setuptools wheel twine
-
-          export SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
-
-          export SHERPA_ONNX_CMAKE_ARGS="-A Win32 -DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
-
-          python3 setup.py bdist_wheel
-
-          ls -lh ./dist/
-
-          mv dist wheelhouse
-
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels (cibuildwheel)
-        if: matrix.python-version != 'cp37'
         uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
