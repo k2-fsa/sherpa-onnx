@@ -114,6 +114,4 @@ if(SHERPA_ONNX_HAS_ALSA)
   endif()
 endif()
 
-install(TARGETS _sherpa_onnx
-  DESTINATION ../
-)
+install(TARGETS _sherpa_onnx DESTINATION lib)

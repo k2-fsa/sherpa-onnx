@@ -27,11 +27,7 @@ setup(
     description="Core shared libraries for sherpa-onnx",
     packages=["sherpa_onnx"],
     include_package_data=True,
-    data_files=[
-        ("Scripts", get_binaries()),
-    ]
-    if get_binaries()
-    else None,
+    data_files=[("Scripts", get_binaries())] if get_binaries() else None,
     author="The sherpa-onnx development team",
     url="https://github.com/k2-fsa/sherpa-onnx",
     author_email="dpovey@gmail.com",
