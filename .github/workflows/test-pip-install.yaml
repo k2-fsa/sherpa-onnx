@@ -104,7 +104,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose "sherpa-onnx<1" sherpa-onnx-core sherpa-onnx-bin
+          pip install --verbose -U "sherpa-onnx<1" sherpa-onnx-core sherpa-onnx-bin
 
       - name: Test sherpa-onnx-bin
         shell: bash
