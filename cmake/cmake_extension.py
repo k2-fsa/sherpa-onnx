@@ -256,7 +256,7 @@ class BuildExtension(build_ext):
             ext = "pyd" if sys.platform.startswith("win") else "so"
             pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
             matches = glob.glob(pattern, recursive=True)
-            print('matches', list(matches))
+            print("matches", list(matches))
 
             for f in matches:
                 print(f, os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib"))
@@ -293,6 +293,3 @@ class BuildExtension(build_ext):
 
         if is_macos():
             os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
-
-        if is_windows():
-            shutil.rmtree(f"{install_dir}/lib")

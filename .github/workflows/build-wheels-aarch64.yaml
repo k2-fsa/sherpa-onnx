@@ -372,7 +372,7 @@ jobs:
           ls -lh
           echo "---"
 
-          readelf -d *.so
+          readelf -d sherpa_onnx/lib/*.so
 
       - name: Publish to huggingface
         env:
