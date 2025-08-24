@@ -249,9 +249,14 @@ class BuildExtension(build_ext):
         if need_split_package():
             import glob
 
-            for f in glob.glob(f"{self.build_temp}/lib/_sherpa_onnx*"):
-                shutil.copy(f"{f}", f"{self.build_lib}/")
+            ext = "pyd" if sys.platform.startswith("win") else "so"
+            pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
+            matches = glob.glob(pattern, recursive=True)
+
+            for f in matches:
                 print(f)
+                shutil.copy(f"{f}", f"{self.build_lib}/")
+
             return
 
         suffix = ".exe" if is_windows() else ""
