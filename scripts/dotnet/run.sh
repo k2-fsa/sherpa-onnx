@@ -26,19 +26,19 @@ pushd $src_dir
 
 mkdir -p linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
 
-linux_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+linux_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_x86_64.whl
 linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
 
-linux_arm64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
+linux_arm64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_aarch64.whl
 linux_arm64_wheel=$src_dir/$linux_arm64_wheel_filename
 
-macos_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
+macos_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-macosx_10_15_x86_64.whl
 macos_x64_wheel=$src_dir/$macos_x64_wheel_filename
 
-macos_arm64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
+macos_arm64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-macosx_11_0_arm64.whl
 macos_arm64_wheel=$src_dir/$macos_arm64_wheel_filename
 
-windows_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+windows_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_amd64.whl
 windows_x64_wheel=$src_dir/$windows_x64_wheel_filename
 
 windows_x86_wheel_filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86.tar.bz2
