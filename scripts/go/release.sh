@@ -141,7 +141,7 @@ function windows() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_amd64.whl
   unzip ./sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_amd64.whl
 
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
+  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/Scripts/*.dll $dst
 
   cd ..
   rm -rf t
@@ -153,7 +153,7 @@ function windows() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win32.whl
   unzip ./sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win32.whl
 
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
+  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/Scripts/*.dll $dst
 
   cd ..
   rm -rf t
