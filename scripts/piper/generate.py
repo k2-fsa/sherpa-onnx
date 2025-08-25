@@ -451,6 +451,7 @@ def get_hi_models():
     hi_IN = [
         PiperModel(name="pratham", kind="medium", sr=22050, ns=1),
         PiperModel(name="priyamvada", kind="medium", sr=22050, ns=1),
+        PiperModel(name="rohan", kind="medium", sr=22050, ns=1),
     ]
 
     for m in hi_IN:
@@ -1421,6 +1422,36 @@ def get_vi_models():
     return ans
 
 
+# Indonesian
+def get_id_models():
+    id_ID = [
+        PiperModel(name="new_tts", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in id_ID:
+        m.lang = "id_ID"
+
+    ans = id_ID
+
+    for m in ans:
+        m.text = "Jangan tanyakan apa yang negara bisa berikan kepadamu, tapi tanyakan apa yang bisa kamu berikan untuk negaramu."
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 def get_en_models():
     en_gb = [
         PiperModel(name="alan", kind="low", sr=16000, ns=1),
@@ -1760,6 +1791,7 @@ def get_all_models():
     ans += get_fi_models()
     ans += get_fr_models()
     ans += get_hi_models()
+    ans += get_id_models()
     ans += get_hu_models()
     ans += get_is_models()
     ans += get_it_models()
@@ -1783,6 +1815,9 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
+
+    ans = get_id_models()
+    ans += get_hi_models()
 
     for i, m in enumerate(ans):
         m.index = i
