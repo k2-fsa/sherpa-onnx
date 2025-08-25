@@ -164,6 +164,8 @@ jobs:
               vits-piper-pl_PL-justyna_wg_glos-medium
               vits-piper-pl_PL-meski_wg_glos-medium
               vits-piper-pl_PL-zenski_wg_glos-medium
+              vits-piper-id_ID-news_tts-medium
+              vits-piper-hi_IN-rohan-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
