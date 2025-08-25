@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     KeywordSpotterConfig,
     OnlineModelConfig,
@@ -12,7 +12,7 @@ from _sherpa_onnx import (
     ProviderConfig,
 )
 
-from _sherpa_onnx import KeywordSpotter as _KeywordSpotter
+from sherpa_onnx.lib._sherpa_onnx import KeywordSpotter as _KeywordSpotter
 
 
 def _assert_file_exists(f: str):

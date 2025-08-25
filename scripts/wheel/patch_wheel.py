@@ -40,23 +40,38 @@ def process(out_dir: Path, whl: Path):
         py_version = "3.10"
     elif "cp311" in str(whl):
         py_version = "3.11"
-    else:
+    elif "cp312" in str(whl):
         py_version = "3.12"
+    elif "cp313" in str(whl):
+        py_version = "3.13"
+    elif "py3-none" in str(whl):
+        py_version = None
+    else:
+        assert False, f"Unknow python version in {whl}"
 
-    rpath_list = [
-        f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx/lib",
-        f"$ORIGIN/../lib/python{py_version}/dist-packages/sherpa_onnx/lib",
-        #
-        f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx/lib64",
-        f"$ORIGIN/../lib/python{py_version}/dist-packages/sherpa_onnx/lib64",
-        #
-        f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx.libs",
-    ]
+    if py_version:
+        rpath_list = [
+            f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx/lib",
+            f"$ORIGIN/../lib/python{py_version}/dist-packages/sherpa_onnx/lib",
+            #
+            f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx/lib64",
+            f"$ORIGIN/../lib/python{py_version}/dist-packages/sherpa_onnx/lib64",
+            #
+            f"$ORIGIN/../lib/python{py_version}/site-packages/sherpa_onnx.libs",
+        ]
+    else:
+        rpath_list = []
+        for p in ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]:
+            rpath_list.extend(
+                [
+                    f"$ORIGIN/../lib/python{p}/site-packages/sherpa_onnx/lib",
+                    f"$ORIGIN/../lib/python{p}/dist-packages/sherpa_onnx/lib",
+                ]
+            )
+
     rpaths = ":".join(rpath_list)
 
-    for filename in glob.glob(
-        f"{tmp_dir}/sherpa_onnx-*data/data/bin/*", recursive=True
-    ):
+    for filename in glob.glob(f"{tmp_dir}/sherpa_onnx*data/data/bin/*", recursive=True):
         print(filename)
         existing_rpath = (
             subprocess.check_output(["patchelf", "--print-rpath", filename])

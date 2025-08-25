@@ -80,7 +80,7 @@ void PybindOfflineSourceSeparation(py::module *m) {
           "process",
           [](const PyClass &self, int32_t sample_rate,
              const py::array_t<float> &samples) {
-            if (!(C_CONTIGUOUS == (samples.flags() & C_CONTIGUOUS))) {
+            if (!(samples.flags() & py::array::c_style)) {
               throw py::value_error(
                   "input samples should be contiguous. Please use "
                   "np.ascontiguousarray(samples)");

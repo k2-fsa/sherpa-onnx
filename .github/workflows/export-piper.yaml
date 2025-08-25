@@ -160,6 +160,10 @@ jobs:
               vits-piper-de_DE-miro-high
               vits-piper-fr_FR-miro-high
               vits-piper-en_US-miro-high
+              vits-piper-pl_PL-jarvis_wg_glos-medium
+              vits-piper-pl_PL-justyna_wg_glos-medium
+              vits-piper-pl_PL-meski_wg_glos-medium
+              vits-piper-pl_PL-zenski_wg_glos-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import (
     CudaConfig,
     EndpointConfig,
     FeatureExtractorConfig,
@@ -13,8 +13,8 @@ from _sherpa_onnx import (
     OnlineNeMoCtcModelConfig,
     OnlineParaformerModelConfig,
 )
-from _sherpa_onnx import OnlineRecognizer as _Recognizer
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import OnlineRecognizer as _Recognizer
+from sherpa_onnx.lib._sherpa_onnx import (
     OnlineRecognizerConfig,
     OnlineRecognizerResult,
     OnlineStream,

@@ -7,6 +7,7 @@ new_version_code=20250817
 
 old_version="1\.12\.8"
 new_version="1\.12\.9"
+
 replace_str="s/$old_version/$new_version/g"
 
 sed -i.bak "$replace_str" ./sherpa-onnx/csrc/version.cc
@@ -21,6 +22,10 @@ find android -name "build.gradle.kts" -type f -exec sed -i.bak "s/versionCode = 
 
 sed -i.bak "s/  static const char \*sha1.*/  static const char \*sha1 = \"$sha1\";/g" ./sherpa-onnx/csrc/version.cc
 sed -i.bak "s/  static const char \*date.*/  static const char \*date = \"$date\";/g" ./sherpa-onnx/csrc/version.cc
+
+
+find scripts/wheel -name "setup.py" -type f -exec sed -i.bak "$replace_str" {} \;
+sed -i.bak "$replace_str" ./setup.py
 
 sed -i.bak "$replace_str" ./build-ios-shared.sh
 sed -i.bak "$replace_str" ./pom.xml

@@ -13,6 +13,11 @@ import setuptools
 from setuptools.command.build_ext import build_ext
 
 
+def need_split_package():
+    ans = os.environ.get("SHERPA_ONNX_SPLIT_PYTHON_PACKAGE", None)
+    return ans is not None
+
+
 def is_for_pypi():
     ans = os.environ.get("SHERPA_ONNX_IS_FOR_PYPI", None)
     return ans is not None
@@ -138,19 +143,24 @@ class BuildExtension(build_ext):
         if cmake_args == "":
             cmake_args = "-DCMAKE_BUILD_TYPE=Release"
 
-        extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
+        extra_cmake_args = ""
+        if not need_split_package():
+            extra_cmake_args += f" -DCMAKE_INSTALL_PREFIX={install_dir} "
         extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=ON "
+
+        if not need_split_package():
+            extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=ON "
 
         extra_cmake_args += " -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=ON "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON "
+        if not need_split_package():
+            extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")
@@ -161,10 +171,17 @@ class BuildExtension(build_ext):
         cmake_args = extra_cmake_args + cmake_args
 
         if is_windows():
-            build_cmd = f"""
-         cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}
-         cmake --build {self.build_temp} --target install --config Release -- -m:2
-            """
+            if not need_split_package():
+                build_cmd = f"""
+             cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}
+             cmake --build {self.build_temp} --target install --config Release -- -m:2
+                """
+            else:
+                build_cmd = f"""
+             cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}
+             cmake --build {self.build_temp} --target _sherpa_onnx --config Release -- -m:2
+                """
+
             print(f"build command is:\n{build_cmd}")
             ret = os.system(
                 f"cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}"
@@ -172,9 +189,14 @@ class BuildExtension(build_ext):
             if ret != 0:
                 raise Exception("Failed to configure sherpa")
 
-            ret = os.system(
-                f"cmake --build {self.build_temp} --target install --config Release -- -m:2"  # noqa
-            )
+            if not need_split_package():
+                ret = os.system(
+                    f"cmake --build {self.build_temp} --target install --config Release -- -m:2"  # noqa
+                )
+            else:
+                ret = os.system(
+                    f"cmake --build {self.build_temp} --target _sherpa_onnx --config Release -- -m:2"  # noqa
+                )
             if ret != 0:
                 raise Exception("Failed to build and install sherpa")
         else:
@@ -185,19 +207,35 @@ class BuildExtension(build_ext):
                 make_args = "-j4"
 
             if "-G Ninja" in cmake_args:
-                build_cmd = f"""
-                    cd {self.build_temp}
-                    cmake {cmake_args} {sherpa_onnx_dir}
-                    ninja {make_args} install
-                """
+                if not need_split_package():
+                    build_cmd = f"""
+                        cd {self.build_temp}
+                        cmake {cmake_args} {sherpa_onnx_dir}
+                        ninja {make_args} install
+                    """
+                else:
+                    build_cmd = f"""
+                        cd {self.build_temp}
+                        cmake {cmake_args} {sherpa_onnx_dir}
+                        ninja {make_args} _sherpa_onnx
+                    """
             else:
-                build_cmd = f"""
-                    cd {self.build_temp}
+                if not need_split_package():
+                    build_cmd = f"""
+                        cd {self.build_temp}
 
-                    cmake {cmake_args} {sherpa_onnx_dir}
+                        cmake {cmake_args} {sherpa_onnx_dir}
 
-                    make {make_args} install/strip
-                """
+                        make {make_args} install/strip
+                    """
+                else:
+                    build_cmd = f"""
+                        cd {self.build_temp}
+
+                        cmake {cmake_args} {sherpa_onnx_dir}
+
+                        make {make_args} _sherpa_onnx
+                    """
             print(f"build command is:\n{build_cmd}")
 
             ret = os.system(build_cmd)
@@ -207,6 +245,25 @@ class BuildExtension(build_ext):
                     "You can ask for help by creating an issue on GitHub.\n"
                     "\nClick:\n\thttps://github.com/k2-fsa/sherpa-onnx/issues/new\n"  # noqa
                 )
+
+        if need_split_package():
+            dst = os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib")
+            os.system(f"mkdir {dst}")
+            os.system(f"dir {dst}")
+
+            import glob
+
+            ext = "pyd" if sys.platform.startswith("win") else "so"
+            pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
+            matches = glob.glob(pattern, recursive=True)
+            print("matches", list(matches))
+
+            for f in matches:
+                print(f, os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib"))
+                shutil.copy(f"{f}", dst)
+                os.system(f"dir {dst}")
+
+            return
 
         suffix = ".exe" if is_windows() else ""
         # Remember to also change setup.py
@@ -236,6 +293,3 @@ class BuildExtension(build_ext):
 
         if is_macos():
             os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
-
-        if is_windows():
-            shutil.rmtree(f"{install_dir}/lib")
