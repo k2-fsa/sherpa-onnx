@@ -32,7 +32,7 @@ jobs:
           pip install "numpy<=1.26.4" sherpa-onnx soundfile
 
       - name: kitten
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -67,4 +67,38 @@ jobs:
           git commit -m 'add kitten tts samples'
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
           popd
+          rm -rf hf
+
+      - name: matcha en (ljspeech)
+        if: true
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          cd scripts/matcha-tts/en/
+          pwd=$PWD
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+
+          mkdir -p ./hf/matcha/icefall-en-ljspeech/mp3
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+          tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+          rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+
+          python3 ./generate_samples.py
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add matcha tts en (ljspeech) samples'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
+
           rm -rf hf
