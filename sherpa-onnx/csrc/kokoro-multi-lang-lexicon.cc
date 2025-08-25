@@ -274,6 +274,10 @@ class KokoroMultiLangLexicon::Impl {
 
   std::vector<std::vector<int32_t>> ConvertNonChineseToTokenIDs(
       const std::string &text, const std::string &voice) const {
+    if (IsPunctuation(text)) {
+      return {std::vector<int32_t>{0, token2id_.at(text), 0}};
+    }
+
     if (!voice.empty()) {
       return ConvertTextToTokenIDsWithEspeak(text, voice);
     }

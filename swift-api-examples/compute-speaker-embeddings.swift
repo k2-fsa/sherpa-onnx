@@ -5,6 +5,8 @@ Please download test files used in this script from
 
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 */
+import Foundation
+
 func cosineSimilarity(_ a: [Float], _ b: [Float]) -> Float {
   precondition(a.count == b.count, "Vectors must have the same length")
 
