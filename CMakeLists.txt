@@ -143,6 +143,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL OHOS)
   set(CMAKE_C_FLAGS "-Wno-unused-command-line-argument ${CMAKE_C_FLAGS}")
 endif()
 
+if(ANDROID)
+  # see https://github.com/microsoft/onnxruntime/pull/22076
+  # https://github.com/k2-fsa/sherpa-onnx/issues/2413
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+endif()
+
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
