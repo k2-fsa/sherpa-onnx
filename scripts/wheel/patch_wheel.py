@@ -47,7 +47,7 @@ def process(out_dir: Path, whl: Path):
     elif "py3-none" in str(whl):
         py_version = None
     else:
-        assert False, f"Unknow python version in {whl}"
+        assert False, f"Unknown python version in {whl}"
 
     if py_version:
         rpath_list = [
