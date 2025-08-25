@@ -1,3 +1,20 @@
+## 1.12.10
+
+* Add VOSK streaming Russian ASR models and Kroko streaming German ASR models (#2502)
+* Refactor CI tests (#2504)
+* Update APK versions (#2505)
+* Export whisper distil-large-v3 and distil-large-v3.5 to sherpa-onnx (#2506)
+* Support specifying pronunciations of phrases in Chinese TTS. (#2507)
+* fix(flutter): fix unicode problem in windows path (#2508)
+* feat: add punctuation C++ API (#2510)
+* Fix ctrl+c may lead to coredump (#2511)
+* Add kitten tts nano v0.2 (#2512)
+* Scripts to generate tts samples (#2513)
+* Add tdt duration to APIs (#2514)
+* Support 16KB page size for Android (#2520)
+* Split sherpa-onnx Python package (#2521)
+* Fix kokoro tts for punctuations (#2522)
+
 ## 1.12.9
 
 * Add more piper tts models (#2480)
