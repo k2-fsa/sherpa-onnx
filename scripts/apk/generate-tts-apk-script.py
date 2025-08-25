@@ -155,7 +155,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-en_US-bryce-medium"),
         TtsModel(model_dir="vits-piper-en_US-danny-low"),
         TtsModel(model_dir="vits-piper-en_US-glados"),
-        TtsModel(model_dir="vits-piper-en_US-glados-+high"),
+        TtsModel(model_dir="vits-piper-en_US-glados-high"),
         TtsModel(model_dir="vits-piper-en_US-hfc_female-medium"),
         TtsModel(model_dir="vits-piper-en_US-hfc_male-medium"),
         TtsModel(model_dir="vits-piper-en_US-joe-medium"),

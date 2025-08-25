@@ -1425,7 +1425,7 @@ def get_vi_models():
 # Indonesian
 def get_id_models():
     id_ID = [
-        PiperModel(name="new_tts", kind="medium", sr=22050, ns=1),
+        PiperModel(name="news_tts", kind="medium", sr=22050, ns=1),
     ]
 
     for m in id_ID:
@@ -1815,9 +1815,6 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
-
-    ans = get_id_models()
-    ans += get_hi_models()
 
     for i, m in enumerate(ans):
         m.index = i
