@@ -20,6 +20,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-matcha-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
+#include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
 namespace sherpa_onnx {
 
@@ -41,6 +42,9 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsVitsImpl>(config);
   } else if (!config.model.matcha.acoustic_model.empty()) {
     return std::make_unique<OfflineTtsMatchaImpl>(config);
+  } else if (!config.model.zipvoice.text_model.empty() &&
+             !config.model.zipvoice.flow_matching_model.empty()) {
+    return std::make_unique<OfflineTtsZipvoiceImpl>(config);
   } else if (!config.model.kokoro.model.empty()) {
     return std::make_unique<OfflineTtsKokoroImpl>(config);
   } else if (!config.model.kitten.model.empty()) {
@@ -59,6 +63,9 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
   } else if (!config.model.matcha.acoustic_model.empty()) {
     return std::make_unique<OfflineTtsMatchaImpl>(mgr, config);
+  } else if (!config.model.zipvoice.text_model.empty() &&
+             !config.model.zipvoice.flow_matching_model.empty()) {
+    return std::make_unique<OfflineTtsZipvoiceImpl>(mgr, config);
   } else if (!config.model.kokoro.model.empty()) {
     return std::make_unique<OfflineTtsKokoroImpl>(mgr, config);
   } else if (!config.model.kitten.model.empty()) {

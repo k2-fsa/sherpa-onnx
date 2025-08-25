@@ -72,6 +72,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-matcha-model-config.cc
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
+    offline-tts-zipvoice-model-config.cc
     offline-tts.cc
   )
 endif()

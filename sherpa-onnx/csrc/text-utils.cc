@@ -724,4 +724,69 @@ std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
   return ans;
 }
 
+std::u32string Utf8ToUtf32(const std::string &str) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+  return conv.from_bytes(str);
+}
+
+std::string Utf32ToUtf8(const std::u32string &str) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+  return conv.to_bytes(str);
+}
+
+// Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
+// unchanged)
+std::string ToUpperAscii(const std::string &str) {
+  std::string text(str.size(), 0);
+  std::transform(str.begin(), str.end(), text.begin(),
+                 [](auto c) { return std::toupper(c); });
+  return text;
+}
+
+// Helper: Convert ASCII chars in a std::string to lowercase (leaves non-ASCII
+// unchanged)
+std::string ToLowerAscii(const std::string &str) {
+  std::string text(str.size(), 0);
+  std::transform(str.begin(), str.end(), text.begin(),
+                 [](auto c) { return std::tolower(c); });
+  return text;
+}
+
+// Detect if a codepoint is a CJK character
+bool IsCJK(char32_t cp) {
+  return (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) ||
+         (cp >= 0xA840 && cp <= 0xD7AF) || (cp >= 0xF900 && cp <= 0xFAFF) ||
+         (cp >= 0xFE30 && cp <= 0xFE4F) || (cp >= 0xFF65 && cp <= 0xFFDC) ||
+         (cp >= 0x20000 && cp <= 0x2FFFF);
+}
+
+bool ContainsCJK(const std::string &text) {
+  std::u32string utf32_text = Utf8ToUtf32(text);
+  return ContainsCJK(utf32_text);
+}
+
+bool ContainsCJK(const std::u32string &text) {
+  for (char32_t cp : text) {
+    if (IsCJK(cp)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool StringToBool(const std::string &s) {
+  std::string lower = s;
+  std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+  if (lower == "true" || lower == "1") return true;
+  if (lower == "false" || lower == "0") return false;
+
+  // Try istringstream for numbers
+  std::istringstream is(lower);
+  int32_t num;
+  if (is >> num) return num != 0;
+
+  return false;  // default if not matched
+}
+
 }  // namespace sherpa_onnx

@@ -149,6 +149,29 @@ bool EndsWith(const std::string &haystack, const std::string &needle);
 
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size);
 
+// Converts a UTF-8 std::string to a UTF-32 std::u32string
+std::u32string Utf8ToUtf32(const std::string &str);
+
+// Converts a UTF-32 std::u32string to a UTF-8 std::string
+std::string Utf32ToUtf8(const std::u32string &str);
+
+// Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
+// unchanged)
+std::string ToUpperAscii(const std::string &str);
+
+// Helper: Convert ASCII chars in a std::string to lowercase (leaves non-ASCII
+// unchanged)
+std::string ToLowerAscii(const std::string &str);
+
+// Detect if a codepoint is a CJK character
+bool IsCJK(char32_t cp);
+
+bool ContainsCJK(const std::string &text);
+
+bool ContainsCJK(const std::u32string &text);
+
+bool StringToBool(const std::string &s);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

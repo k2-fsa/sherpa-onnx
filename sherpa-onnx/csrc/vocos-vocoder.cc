@@ -42,8 +42,16 @@ class VocosVocoder::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
-    auto buf = ReadFile(config.matcha.vocoder);
-    Init(buf.data(), buf.size());
+    std::vector<char> buffer;
+    if (!config.matcha.vocoder.empty()) {
+      buffer = ReadFile(config.matcha.vocoder);
+    } else if (!config.zipvoice.vocoder.empty()) {
+      buffer = ReadFile(config.zipvoice.vocoder);
+    } else {
+      SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
+      exit(-1);
+    }
+    Init(buffer.data(), buffer.size());
   }
 
   template <typename Manager>
@@ -52,8 +60,16 @@ class VocosVocoder::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
-    auto buf = ReadFile(mgr, config.matcha.vocoder);
-    Init(buf.data(), buf.size());
+    std::vector<char> buffer;
+    if (!config.matcha.vocoder.empty()) {
+      buffer = ReadFile(mgr, config.matcha.vocoder);
+    } else if (!config.zipvoice.vocoder.empty()) {
+      buffer = ReadFile(mgr, config.zipvoice.vocoder);
+    } else {
+      SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
+      exit(-1);
+    }
+    Init(buffer.data(), buffer.size());
   }
 
   std::vector<float> Run(Ort::Value mel) const {
