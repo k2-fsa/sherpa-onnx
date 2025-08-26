@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - refactor-jar
+      # - refactor-jar
     # paths:
     #   - 'java-api-examples/**'
     #   - 'sherpa-onnx/java-api/**'
