@@ -3,11 +3,9 @@ name: test-java-jar
 on:
   push:
     branches:
-      - master
-      # - refactor-jar
-    # paths:
-    #   - 'java-api-examples/**'
-    #   - 'sherpa-onnx/java-api/**'
+      - refactor-jar
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -29,8 +27,8 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: "arm64"
 
-          # - os: ubuntu-latest
-          #   arch: "x64"
+          - os: ubuntu-latest
+            arch: "x64"
 
           - os: macos-latest
             arch: "arm64"
@@ -66,6 +64,24 @@ jobs:
 
           src=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-jni
           dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/linux-aarch64
+
+          mkdir -p $dst
+          cp -v $src/lib/libsherpa-onnx-jni.so $dst/
+          cp -v $src/lib/libonnxruntime.so $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.arch == 'x64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-jni
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/linux-x64
 
           mkdir -p $dst
           cp -v $src/lib/libsherpa-onnx-jni.so $dst/
@@ -141,6 +157,8 @@ jobs:
       - name: Create java jar (native lib)
         shell: bash
         run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
           cd sherpa-onnx/java-api
 
           ls -lh resources/sherpa-onnx/native
@@ -152,6 +170,23 @@ jobs:
           jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
 
           ls -lh *.jar
+
+          os=${{ matrix.os }}
+          arch=${{ matrix.arch }}
+
+          if [[ $os == "ubuntu-24.04-arm" && $arch == "arm64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-linux-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "ubuntu-latest" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          else
+            echo "Unknown os $os with arch $arch"
+          fi
 
       - name: Show java jar (source code)
         shell: bash
@@ -165,11 +200,52 @@ jobs:
         run: |
           cd sherpa-onnx/java-api
 
-          unzip -l sherpa-onnx-native.jar
+          unzip -l sherpa-onnx*.jar
+
+      - name: Release jar
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
+
+      - name: Release jar
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.10
 
       - name: Test KittenTTS
         shell: bash
         run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          os=${{ matrix.os }}
+          arch=${{ matrix.arch }}
+
+          if [[ $os == "ubuntu-24.04-arm" && $arch == "arm64" ]]; then
+            native_jar=sherpa-onnx-native-lib-linux-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "ubuntu-latest" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
+            native_jar=sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          else
+            echo "Unknown os $os with arch $arch"
+          fi
+
+          echo "native_jar: $native_jar"
+          ls -lh sherpa-onnx/java-api/$native_jar
+
           if [[ ${{ matrix.os }} == "windows-latest" ]]; then
             SEP=";"
           else
@@ -182,5 +258,5 @@ jobs:
           rm kitten-nano-en-v0_1-fp16.tar.bz2
 
           java \
-            -cp "../sherpa-onnx/java-api/build/sherpa-onnx.jar${SEP}../sherpa-onnx/java-api/sherpa-onnx-native.jar" \
+            -cp "../sherpa-onnx/java-api/build/sherpa-onnx.jar${SEP}../sherpa-onnx/java-api/$native_jar" \
             NonStreamingTtsKittenEn.java
