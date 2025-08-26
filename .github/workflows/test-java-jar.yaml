@@ -46,6 +46,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
       - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
         if: ${{ matrix.os == 'ubuntu-24.04-arm' && matrix.arch == 'arm64' }}
         shell: bash
