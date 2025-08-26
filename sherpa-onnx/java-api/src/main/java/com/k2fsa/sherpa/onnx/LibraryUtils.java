@@ -106,54 +106,61 @@ public class LibraryUtils {
     }
 
     private static boolean loadFromResourceInJar() throws IOException {
-        Path tempDirectory = Files.createTempDirectory("sherpa-onnx-java");
 
         String libFileName = System.mapLibraryName(LIB_NAME);
         String sherpaOnnxJniPath = "sherpa-onnx/native/" + getOsArch() + '/' + libFileName;
 
-        if (!resourceExists(sherpaOnnxJniPath)) {
-            if (debug) {
-                System.out.printf("%s does not exist\n", sherpaOnnxJniPath);
-            }
+        Path tempDirectory = null;
+        try {
 
-            return false;
-        }
-
-        if (Objects.equals(detectedOS, "osx")) {
-            // for macos, we need to first load libonnxruntime.1.17.1.dylib
-            String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + "libonnxruntime.1.17.1.dylib";
-            if (!resourceExists(onnxruntimePath)) {
+            if (!resourceExists(sherpaOnnxJniPath)) {
                 if (debug) {
-                    System.out.printf("%s does not exist\n", onnxruntimePath);
+                    System.out.printf("%s does not exist\n", sherpaOnnxJniPath);
                 }
 
                 return false;
             }
 
-            File tempFile = tempDirectory.resolve("libonnxruntime.1.17.1.dylib").toFile();
-            extractResource(onnxruntimePath, tempFile);
-            System.load(tempFile.getAbsolutePath());
-        } else {
-            String onnxLibFileName = System.mapLibraryName("onnxruntime");
-            String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + onnxLibFileName;
-            if (!resourceExists(onnxruntimePath)) {
-                if (debug) {
-                    System.out.printf("%s does not exist\n", onnxruntimePath);
+            tempDirectory = Files.createTempDirectory("sherpa-onnx-java");
+
+            if (Objects.equals(detectedOS, "osx")) {
+                // for macos, we need to first load libonnxruntime.1.17.1.dylib
+                String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + "libonnxruntime.1.17.1.dylib";
+                if (!resourceExists(onnxruntimePath)) {
+                    if (debug) {
+                        System.out.printf("%s does not exist\n", onnxruntimePath);
+                    }
+
+                    return false;
                 }
 
-                return false;
+                File tempFile = tempDirectory.resolve("libonnxruntime.1.17.1.dylib").toFile();
+                extractResource(onnxruntimePath, tempFile);
+                System.load(tempFile.getAbsolutePath());
+            } else {
+                String onnxLibFileName = System.mapLibraryName("onnxruntime");
+                String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + onnxLibFileName;
+                if (!resourceExists(onnxruntimePath)) {
+                    if (debug) {
+                        System.out.printf("%s does not exist\n", onnxruntimePath);
+                    }
+
+                    return false;
+                }
+
+                File tempFile = tempDirectory.resolve(onnxLibFileName).toFile();
+                extractResource(onnxruntimePath, tempFile);
+                System.load(tempFile.getAbsolutePath());
             }
 
-            File tempFile = tempDirectory.resolve(onnxLibFileName).toFile();
-            extractResource(onnxruntimePath, tempFile);
+            File tempFile = tempDirectory.resolve(libFileName).toFile();
+            extractResource(sherpaOnnxJniPath, tempFile);
             System.load(tempFile.getAbsolutePath());
+        } finally {
+            if (tempDirectory != null) {
+                cleanUpTempDir(tempDirectory.toFile());
+            }
         }
-
-        File tempFile = tempDirectory.resolve(libFileName).toFile();
-        extractResource(sherpaOnnxJniPath, tempFile);
-        System.load(tempFile.getAbsolutePath());
-
-        cleanUpTempDir(tempDirectory.toFile());
 
         return true;
     }
@@ -190,9 +197,7 @@ public class LibraryUtils {
 
     private static void extractResource(String resourcePath, File destination) {
         if (debug) {
-            System.out.printf("Copying from resource path %s to %s\n",
-                    resourcePath,
-                    destination.toPath());
+            System.out.printf("Copying from resource path %s to %s\n", resourcePath, destination.toPath());
         }
 
         try (InputStream in = LibraryUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
@@ -201,8 +206,7 @@ public class LibraryUtils {
             }
             Files.copy(in, destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to extract resource " + resourcePath + " to "
-                    + destination.getAbsolutePath(), e);
+            throw new RuntimeException("Failed to extract resource " + resourcePath + " to " + destination.getAbsolutePath(), e);
         }
     }
 
