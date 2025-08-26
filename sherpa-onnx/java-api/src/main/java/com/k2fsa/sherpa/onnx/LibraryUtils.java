@@ -206,8 +206,16 @@ public class LibraryUtils {
         }
     }
 
+    // From ChatGPT:
+    // Class.getResourceAsStream(String path) behaves differently than ClassLoader
+    //  - No leading slash → relative to the package of LibraryUtils
+    //  - Leading slash → absolute path relative to classpath root
+    //
+    // ClassLoader.getResourceAsStream always uses absolute paths relative to classpath root,
+    // no leading slash needed
+
     private static boolean resourceExists(String path) {
-        return  LibraryUtils.class.getClassLoader().getResource(path) != null;
+        return LibraryUtils.class.getClassLoader().getResource(path) != null;
     }
 
     private static void cleanUpTempDir(File dir) {
