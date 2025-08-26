@@ -1,4 +1,4 @@
-name: test-java-jar
+name: jar
 
 on:
   push:
@@ -10,14 +10,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: test-java-jar-${{ github.ref }}
+  group: jar-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  run_java_test:
+  jar:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} ${{ matrix.arch }}
     strategy:
@@ -211,7 +211,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
 
       - name: Release jar
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
