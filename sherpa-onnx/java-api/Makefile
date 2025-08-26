@@ -109,17 +109,28 @@ $(info -- java files $(java_files))
 $(info --)
 $(info -- class files $(class_files))
 
-.phony: all clean
+.phony: all clean native
 
 all: $(out_jar)
 
+# macos x86_x64 -> osx-x64
+# macos arm64 -> osx-aarch64
+# linux x86_x64 -> linux-x64
+# linux arm64 -> linux-aarch64
+# windows x86_x64 -> win-x64
+# windows arm64 -> win-aarch64
+# windows x86 -> win-x86
+# native:
+#   jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
+
 $(out_jar): $(class_files)
 	# jar --create --verbose --file $(out_jar) -C $(out_dir) ./
-	jar cvf $(out_jar) -C $(out_dir) ./
+	# jar cvf $(out_jar) -C $(out_dir) ./
+	jar cfvm $@ MANIFEST.MF -C $(out_dir) .
 
 clean:
 	$(RM) -rfv $(out_dir)
 
 $(class_files): $(out_dir)/$(package_dir)/%.class: src/main/java/$(package_dir)/%.java
 	mkdir -p build
-	javac -d $(out_dir) -cp $(out_dir) $<
+	javac --release 8 -d $(out_dir) -cp $(out_dir) $<

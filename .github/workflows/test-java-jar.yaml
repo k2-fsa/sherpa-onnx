@@ -147,9 +147,25 @@ jobs:
         shell: bash
         run: |
           cd sherpa-onnx/java-api
+
           unzip -l build/sherpa-onnx.jar
 
       - name: Show java jar (native lib)
         shell: bash
         run: |
+          cd sherpa-onnx/java-api
+
           unzip -l sherpa-onnx-native.jar
+
+      - name: Test KittenTTS
+        shell: bash
+        run: |
+          cd java-api-examples
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+          tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+          rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+          java \
+            -cp ../sherpa-onnx/java-api/build/sherpa-onnx.jar:../sherpa-onnx/java-api/sherpa-onnx-native.jar \
+            NonStreamingTtsKittenEn.java

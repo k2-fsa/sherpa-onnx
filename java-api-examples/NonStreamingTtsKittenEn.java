@@ -6,6 +6,7 @@ import com.k2fsa.sherpa.onnx.*;
 
 public class NonStreamingTtsKittenEn {
   public static void main(String[] args) {
+    LibraryUtils.enableDebug();
     // please visit
     // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
     // to download model files
