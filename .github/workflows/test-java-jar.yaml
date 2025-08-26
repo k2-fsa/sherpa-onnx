@@ -51,6 +51,11 @@ jobs:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '21'
 
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+
       - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
         if: ${{ matrix.os == 'ubuntu-24.04-arm' && matrix.arch == 'arm64' }}
         shell: bash
