@@ -261,7 +261,7 @@ def get_es_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_es-ES_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -423,7 +423,7 @@ def get_fr_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_fr-FR_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -576,7 +576,7 @@ def get_it_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_it-IT_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -606,7 +606,7 @@ def get_it_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_it-IT_dii" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -848,7 +848,7 @@ def get_nl_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -878,7 +878,7 @@ def get_nl_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_nl-NL_dii" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1080,7 +1080,7 @@ def get_pt_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1110,7 +1110,7 @@ def get_pt_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-PT_dii" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1143,7 +1143,7 @@ def get_pt_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1173,7 +1173,7 @@ def get_pt_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_pt-BR_dii" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1642,7 +1642,7 @@ def get_en_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-GB_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1672,7 +1672,7 @@ def get_en_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-GB_dii" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1725,7 +1725,7 @@ def get_en_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_en-US_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1883,7 +1883,7 @@ def get_de_models():
 
                    echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro" >> README.md
                    echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
-                   echo "\n\n#License\n\n" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
 
                    echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
                    echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
@@ -1902,6 +1902,36 @@ def get_de_models():
                    mv miro_de-DE.onnx.json de_DE-miro-high.onnx.json
                    """,
             url="https://huggingface.co/OpenVoiceOS/pipertts_de-DE_miro",
+        ),
+        PiperModel(
+            name="dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
+
+                   echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
+                   echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
+
+                   echo "- ✅ Always free for regular (non-commercial) users  \n" >> README.md
+                   echo "- ❌ Commercial use is not allowed at this time  \n" >> README.md
+                   echo "- 🔄 The author may relax the restrictions in the future (e.g., allow commercial use), but will not make them stricter  \n\n" >> README.md
+                   echo "**Important:** You must include this license when redistributing the model or any derivatives.\n" >> README.md
+
+
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii/resolve/main/dii_de-DE.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii/resolve/main/dii_de-DE.onnx.json
+
+                   mv dii_de-DE.onnx de_DE-dii-high.onnx
+                   mv dii_de-DE.onnx.json de_DE-dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii",
         ),
     ]
 
