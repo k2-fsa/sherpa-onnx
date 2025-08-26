@@ -180,13 +180,14 @@ public class LibraryUtils {
         }
 
         String detectedArch;
-        String arch = System.getProperty("os.arch", "generic").toLowerCase(Locale.ENGLISH);
+        String arch = System.getProperty("os.arch", "generic")
+                            .toLowerCase(Locale.ENGLISH);
         if (arch.startsWith("amd64") || arch.startsWith("x86_64")) {
             detectedArch = "x64";
         } else if (arch.startsWith("x86")) {
             // 32-bit x86 is not supported by the Java API
             detectedArch = "x86";
-        } else if (arch.startsWith("aarch64")) {
+        } else if (arch.startsWith("aarch64") || arch.startsWith("arm64")) {
             detectedArch = "aarch64";
         } else {
             throw new IllegalStateException("Unsupported arch:" + arch);

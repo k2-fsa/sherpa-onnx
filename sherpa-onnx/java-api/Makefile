@@ -109,7 +109,7 @@ $(info -- java files $(java_files))
 $(info --)
 $(info -- class files $(class_files))
 
-.phony: all clean native
+.PHONY: all clean native
 
 all: $(out_jar)
 
