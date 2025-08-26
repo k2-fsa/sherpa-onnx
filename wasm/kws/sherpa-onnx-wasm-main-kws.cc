@@ -19,7 +19,8 @@ static_assert(sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) == 1 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                   sizeof(SherpaOnnxOnlineTransducerModelConfig) +
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
-                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4,
+                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4 +
+                      sizeof(SherpaOnnxOnlineNemoCtcModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxKeywordSpotterConfig) ==
