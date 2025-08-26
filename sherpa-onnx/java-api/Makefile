@@ -133,4 +133,4 @@ clean:
 
 $(class_files): $(out_dir)/$(package_dir)/%.class: src/main/java/$(package_dir)/%.java
 	mkdir -p build
-	javac --release 8 -d $(out_dir) -cp $(out_dir) $<
+	javac --release 8 -Xlint:-options -d $(out_dir) -cp $(out_dir) $<

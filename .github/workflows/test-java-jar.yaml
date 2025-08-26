@@ -170,6 +170,11 @@ jobs:
       - name: Test KittenTTS
         shell: bash
         run: |
+          if [[ ${{ matrix.os }} == "windows-latest" ]]; then
+            SEP=";"
+          else
+            SEP=":"
+          fi
           cd java-api-examples
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
@@ -177,5 +182,5 @@ jobs:
           rm kitten-nano-en-v0_1-fp16.tar.bz2
 
           java \
-            -cp ../sherpa-onnx/java-api/build/sherpa-onnx.jar:../sherpa-onnx/java-api/sherpa-onnx-native.jar \
+            -cp "../sherpa-onnx/java-api/build/sherpa-onnx.jar${SEP}../sherpa-onnx/java-api/sherpa-onnx-native.jar" \
             NonStreamingTtsKittenEn.java
