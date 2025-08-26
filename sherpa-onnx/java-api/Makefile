@@ -120,8 +120,8 @@ all: $(out_jar)
 # windows x86_x64 -> win-x64
 # windows arm64 -> win-aarch64
 # windows x86 -> win-x86
-# native:
-#   jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
+native:
+	jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
 
 $(out_jar): $(class_files)
 	# jar --create --verbose --file $(out_jar) -C $(out_dir) ./

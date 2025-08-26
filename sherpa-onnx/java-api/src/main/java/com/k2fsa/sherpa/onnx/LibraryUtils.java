@@ -195,7 +195,7 @@ public class LibraryUtils {
                     destination.toPath());
         }
 
-        try (InputStream in = LibraryUtils.class.getResourceAsStream(resourcePath)) {
+        try (InputStream in = LibraryUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (in == null) {
                 throw new RuntimeException("Resource not found: " + resourcePath);
             }
@@ -207,7 +207,7 @@ public class LibraryUtils {
     }
 
     private static boolean resourceExists(String path) {
-        return LibraryUtils.class.getClassLoader().getResource(path) != null;
+        return  LibraryUtils.class.getClassLoader().getResource(path) != null;
     }
 
     private static void cleanUpTempDir(File dir) {
