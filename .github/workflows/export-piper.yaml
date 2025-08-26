@@ -158,6 +158,7 @@ jobs:
               vits-piper-nl_NL-miro-high
               vits-piper-nl_NL-dii-high
               vits-piper-de_DE-miro-high
+              vits-piper-de_DE-dii-high
               vits-piper-fr_FR-miro-high
               vits-piper-en_US-miro-high
               vits-piper-pl_PL-jarvis_wg_glos-medium
