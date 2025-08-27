@@ -49,7 +49,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   GeneratedAudio Generate(
       const std::string &text, const std::string &prompt_text,
       const std::vector<float> &prompt_samples, int32_t sample_rate,
-      float speed, int num_steps,
+      float speed, int32_t num_steps,
       GeneratedAudioCallback callback = nullptr) const override {
     std::vector<TokenIDs> text_token_ids =
         frontend_->ConvertTextToTokenIds(text);

@@ -93,7 +93,7 @@ It will generate a file ./generated.wav as specified by --output-filename.
   }
 
   if (prompt_text.empty() || prompt_audio.empty()) {
-    fprintf(stderr, "Please provide either --prompt-text and --prompt-audio\n");
+    fprintf(stderr, "Please provide both --prompt-text and --prompt-audio\n");
     exit(EXIT_FAILURE);
   }
 

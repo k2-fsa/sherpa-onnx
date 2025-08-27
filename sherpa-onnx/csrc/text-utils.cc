@@ -737,19 +737,27 @@ std::string Utf32ToUtf8(const std::u32string &str) {
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
 // unchanged)
 std::string ToUpperAscii(const std::string &str) {
-  std::string text(str.size(), 0);
-  std::transform(str.begin(), str.end(), text.begin(),
-                 [](auto c) { return std::toupper(c); });
-  return text;
+  std::string out = str;
+  for (char &c : out) {
+    unsigned char uc = static_cast<unsigned char>(c);
+    if (uc >= 'a' && uc <= 'z') {
+      c = static_cast<char>(uc - 'a' + 'A');
+    }
+  }
+  return out;
 }
 
 // Helper: Convert ASCII chars in a std::string to lowercase (leaves non-ASCII
 // unchanged)
 std::string ToLowerAscii(const std::string &str) {
-  std::string text(str.size(), 0);
-  std::transform(str.begin(), str.end(), text.begin(),
-                 [](auto c) { return std::tolower(c); });
-  return text;
+  std::string out = str;
+  for (char &c : out) {
+    unsigned char uc = static_cast<unsigned char>(c);
+    if (uc >= 'A' && uc <= 'Z') {
+      c = static_cast<char>(uc - 'A' + 'a');
+    }
+  }
+  return out;
 }
 
 // Detect if a codepoint is a CJK character
@@ -772,21 +780,6 @@ bool ContainsCJK(const std::u32string &text) {
     }
   }
   return false;
-}
-
-bool StringToBool(const std::string &s) {
-  std::string lower = s;
-  std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-
-  if (lower == "true" || lower == "1") return true;
-  if (lower == "false" || lower == "0") return false;
-
-  // Try istringstream for numbers
-  std::istringstream is(lower);
-  int32_t num;
-  if (is >> num) return num != 0;
-
-  return false;  // default if not matched
 }
 
 }  // namespace sherpa_onnx

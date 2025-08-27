@@ -296,7 +296,7 @@ std::vector<TokenIDs> OfflineTtsZipvoiceFrontend::ConvertTextToTokenIds(
       oss << parts[i];
       t_lang = types[i];
     } else {
-      if (t_lang == "other" && (types[i] != "tag" || types[i] != "pinyin")) {
+      if (t_lang == "other" && (types[i] != "tag" && types[i] != "pinyin")) {
         // combine into current type if the previous part is "other"
         // do not combine with "tag" or "pinyin"
         oss << parts[i];
@@ -351,7 +351,7 @@ std::vector<TokenIDs> OfflineTtsZipvoiceFrontend::ConvertTextToTokenIds(
   }
   if (debug_) {
     debug_oss << "Tokens and IDs: \n";
-    for (int32_t i; i < tokens.size(); i++) {
+    for (int32_t i = 0; i < tokens.size(); i++) {
       debug_oss << "(" << tokens[i] << ", " << token_ids[i] << "),";
     }
     debug_oss << "\n";

@@ -224,14 +224,14 @@ GeneratedAudio OfflineTts::Generate(
     }
   }
   if (IsUtf8(utf8_text) && IsUtf8(utf8_prompt_text)) {
-    return impl_->Generate(text, prompt_text, prompt_samples, sample_rate,
-                           speed, num_steps, std::move(callback));
+    return impl_->Generate(utf8_text, utf8_prompt_text, prompt_samples,
+                           sample_rate, speed, num_steps, std::move(callback));
   } else {
     SHERPA_ONNX_LOGE(
         "Non UTF8 encoded string is received. You would not get expected "
         "results!");
-    return impl_->Generate(text, prompt_text, prompt_samples, sample_rate,
-                           speed, num_steps, std::move(callback));
+    return impl_->Generate(utf8_text, utf8_prompt_text, prompt_samples,
+                           sample_rate, speed, num_steps, std::move(callback));
   }
 #endif
 }

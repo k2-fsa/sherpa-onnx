@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_FRONTEND_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_FRONTEND_H_
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>

@@ -24,8 +24,6 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-flow-matching-model", &flow_matching_model,
                "Path to zipvoice flow-matching model");
   po->Register("zipvoice-vocoder", &vocoder, "Path to zipvoice vocoder");
-  po->Register("zipvoice-num-steps", &num_steps,
-               "Number of inference steps for ZipVoice (default: 16)");
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");
   po->Register("zipvoice-t-shift", &t_shift,
@@ -103,12 +101,6 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
 
-  if (num_steps <= 0) {
-    SHERPA_ONNX_LOGE("--zipvoice-num-steps must be positive. Given: %d",
-                     num_steps);
-    return false;
-  }
-
   if (feat_scale <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f",
                      feat_scale);
@@ -146,7 +138,6 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   os << "vocoder=\"" << vocoder << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "pinyin_dict=\"" << pinyin_dict << "\", ";
-  os << "num_steps=" << num_steps << ", ";
   os << "feat_scale=" << feat_scale << ", ";
   os << "t_shift=" << t_shift << ", ";
   os << "target_rms=" << target_rms << ", ";

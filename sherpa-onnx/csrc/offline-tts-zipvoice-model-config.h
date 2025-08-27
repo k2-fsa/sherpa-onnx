@@ -25,7 +25,6 @@ struct OfflineTtsZipvoiceModelConfig {
   // Used for converting Chinese characters to pinyin
   std::string pinyin_dict;
 
-  int32_t num_steps = 16;
   float feat_scale = 0.1;
   float t_shift = 0.5;
   float target_rms = 0.1;
@@ -37,15 +36,14 @@ struct OfflineTtsZipvoiceModelConfig {
       const std::string &tokens, const std::string &text_model,
       const std::string &flow_matching_model, const std::string &vocoder,
       const std::string &data_dir, const std::string &pinyin_dict,
-      int32_t num_steps = 16, float feat_scale = 0.1, float t_shift = 0.5,
-      float target_rms = 0.1, float guidance_scale = 1.0)
+      float feat_scale = 0.1, float t_shift = 0.5, float target_rms = 0.1,
+      float guidance_scale = 1.0)
       : tokens(tokens),
         text_model(text_model),
         flow_matching_model(flow_matching_model),
         vocoder(vocoder),
         data_dir(data_dir),
         pinyin_dict(pinyin_dict),
-        num_steps(num_steps),
         feat_scale(feat_scale),
         t_shift(t_shift),
         target_rms(target_rms),

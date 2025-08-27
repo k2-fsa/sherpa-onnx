@@ -115,7 +115,7 @@ std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
     buffer = ReadFile(mgr, config.zipvoice.vocoder);
   } else {
     SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
-    exit(-1);
+    return nullptr;
   }
 
   auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);

@@ -95,10 +95,10 @@ class OfflineTts {
                           float speed = 1.0,
                           GeneratedAudioCallback callback = nullptr) const;
 
-  // @param text The string to be generated.
-  // @param prompt_text The transcribe of prompt_sampes.
-  // @param prompt_samples The audio samples of the prompt, single channel pcm.
-  // @param sample_rate The sample rate of the prompt audio.
+  // @param text The string to be synthesized.
+  // @param prompt_text The transcribe of `prompt_sampes`.
+  // @param prompt_samples The prompt audio samples (mono PCM floats in [-1,1]).
+  // @param sample_rate The sample rate of `prompt_audio` in Hz.
   // @param speed The speed for the generated speech. E.g., 2 means 2x faster.
   // @param num_steps The number of flow steps to generate the audio.
   // @param callback If not NULL, it is called whenever config.max_num_sentences

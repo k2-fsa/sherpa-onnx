@@ -113,7 +113,7 @@ def add_zipvoice_args(parser):
         "--zipvoice-guidance-scale",
         type=float,
         default=1.0,
-        help="The scale classifier-free guidance during inference for for Zipvoice.",
+        help="The scale of classifier-free guidance during inference for for Zipvoice.",
     )
 
 
@@ -205,13 +205,15 @@ def get_args():
     parser.add_argument(
         "--prompt-text",
         type=str,
-        help="The transcription of prompt audio. Used only for Zipvoice models.",
+        required=True,
+        help="The transcription of prompt audio (Zipvoice)",
     )
 
     parser.add_argument(
         "--prompt-audio",
         type=str,
-        help="The path to prompt audio. Used only for Zipvoice models.",
+        required=True,
+        help="The path to prompt audio (Zipvoice).",
     )
 
     parser.add_argument(
@@ -236,7 +238,6 @@ def main():
                 data_dir=args.zipvoice_data_dir,
                 pinyin_dict=args.zipvoice_pinyin_dict,
                 vocoder=args.zipvoice_vocoder,
-                num_steps=args.zipvoice_num_steps,
                 feat_scale=args.zipvoice_feat_scale,
                 t_shift=args.zipvoice_t_shift,
                 target_rms=args.zipvoice_target_rms,

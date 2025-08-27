@@ -205,7 +205,8 @@ class OfflineTtsZipvoiceModel::Impl {
 
     meta_data = fm_sess_->GetModelMetadata();
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
-    SHERPA_ONNX_READ_META_DATA(meta_data_.feat_dim, "feat_dim");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.feat_dim, "feat_dim",
+                                            100);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.sample_rate,
                                             "sample_rate", 24000);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.n_fft, "n_fft", 1024);
