@@ -130,7 +130,7 @@ jobs:
             dst=win32/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*.tar.bz2 ./win32
+            cp -v ../sherpa-onnx-*.tar.bz2 $dst
 
             git status
             git lfs track "*.bz2"
