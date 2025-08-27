@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#include <regex>
+#include <sstream>
+
 #include "gtest/gtest.h"
 
 namespace sherpa_onnx {
@@ -55,7 +58,6 @@ TEST(RemoveInvalidUtf8Sequences, Case1) {
   EXPECT_EQ(s.size() + 4, v.size());
 }
 
-
 // Tests for sanitizeUtf8
 TEST(RemoveInvalidUtf8Sequences, ValidUtf8StringPassesUnchanged) {
   std::string input = "Valid UTF-8 🌍";
@@ -82,7 +84,7 @@ TEST(RemoveInvalidUtf8Sequences, MultipleInvalidBytes) {
 
 TEST(RemoveInvalidUtf8Sequences, BreakingCase_SpaceFollowedByInvalidByte) {
   std::string input = "\x20\xC4";  // Space followed by an invalid byte
-  std::string expected = " ";  // 0xC4 removed
+  std::string expected = " ";      // 0xC4 removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
@@ -99,19 +101,19 @@ TEST(RemoveInvalidUtf8Sequences, MixedValidAndInvalidBytes) {
 
 TEST(RemoveInvalidUtf8Sequences, SpaceFollowedByInvalidByte) {
   std::string input = "\x20\xC4";  // Space (0x20) followed by invalid (0xC4)
-  std::string expected = " ";  // Space remains, 0xC4 is removed
+  std::string expected = " ";      // Space remains, 0xC4 is removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, RemoveTruncatedC4) {
   std::string input = "Hello \xc4 world";  // Invalid `0xC4`
-  std::string expected = "Hello  world";  // `0xC4` should be removed
+  std::string expected = "Hello  world";   // `0xC4` should be removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, SpaceFollowedByInvalidByte_Breaking) {
   std::string input = "\x20\xc4";  // Space followed by invalid `0xc4`
-  std::string expected = " ";  // `0xc4` should be removed, space remains
+  std::string expected = " ";      // `0xc4` should be removed, space remains
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 

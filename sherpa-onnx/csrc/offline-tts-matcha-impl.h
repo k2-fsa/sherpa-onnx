@@ -140,8 +140,8 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           tn_list_.push_back(
               std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
         }  // for (; !reader->Done(); reader->Next())
-      }    // for (const auto &f : files)
-    }      // if (!config.rule_fars.empty())
+      }  // for (const auto &f : files)
+    }  // if (!config.rule_fars.empty())
   }
 
   int32_t SampleRate() const override {
