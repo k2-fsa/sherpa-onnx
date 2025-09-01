@@ -52,7 +52,7 @@ function process_windows_x64() {
   cd t
   curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$windows_x64_wheel_filename
   unzip $windows_x64_wheel_filename
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../windows
+  cp -v sherpa_onnx/lib/*.dll ../windows
   cd ..
   rm -rf t
 }
