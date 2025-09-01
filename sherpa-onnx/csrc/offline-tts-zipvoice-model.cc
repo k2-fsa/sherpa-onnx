@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <random>
 #include <string>
