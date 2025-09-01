@@ -40,7 +40,15 @@ function(download_cppinyin)
   if(NOT cppinyin_POPULATED)
     message(STATUS "Downloading cppinyin ${cppinyin_URL}")
     FetchContent_Populate(cppinyin)
+
+    file(REMOVE ${cppinyin_SOURCE_DIR}/CMakeLists.txt)
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/cmake/cppinyin.patch
+        ${cppinyin_SOURCE_DIR}/CMakeLists.txt
+        COPYONLY
+    )
   endif()
+
   message(STATUS "cppinyin is downloaded to ${cppinyin_SOURCE_DIR}")
 
   if(BUILD_SHARED_LIBS)

@@ -319,6 +319,9 @@ struct SHERPA_ONNX_API OfflineRecognizerResult {
   std::string lang;
   std::string emotion;
   std::string event;
+
+  // non-empty only for TDT models
+  std::vector<float> durations;
 };
 
 class SHERPA_ONNX_API OfflineStream
@@ -349,8 +352,9 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
-  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(const OfflineStream *s) const;
-  
+  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(
+      const OfflineStream *s) const;
+
   void SetConfig(const OfflineRecognizerConfig &config) const;
 
  private:

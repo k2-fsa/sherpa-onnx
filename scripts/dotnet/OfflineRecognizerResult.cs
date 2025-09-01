@@ -77,6 +77,21 @@ namespace SherpaOnnx
               }
             }
 
+            unsafe
+            {
+              if (impl.Durations != IntPtr.Zero)
+              {
+                float *d = (float*)impl.Durations;
+                _durations = new float[impl.Count];
+                fixed (float* f = _durations)
+                {
+                  for (int k = 0; k < impl.Count; k++)
+                  {
+                    f[k] = d[k];
+                  }
+                }
+              }
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -86,6 +101,7 @@ namespace SherpaOnnx
             public IntPtr Timestamps;
             public int Count;
             public IntPtr Tokens;
+            public IntPtr Durations;
         }
 
         private String _text;
@@ -96,5 +112,8 @@ namespace SherpaOnnx
 
         private float[] _timestamps;
         public float[] Timestamps => _timestamps;
+
+        private float[] _durations;
+        public float[] Durations => _durations;
     }
 }

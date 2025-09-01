@@ -356,22 +356,28 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
     ans.event = r->event ? r->event : "";
   }
 
+  if (r->durations) {
+    ans.durations.resize(r->count);
+    std::copy(r->durations, r->durations + r->count, ans.durations.data());
+  }
+
   SherpaOnnxDestroyOfflineRecognizerResult(r);
 
   return ans;
 }
 
-std::shared_ptr<OfflineRecognizerResult> OfflineRecognizer::GetResultPtr(const OfflineStream *s) const
-{
+std::shared_ptr<OfflineRecognizerResult> OfflineRecognizer::GetResultPtr(
+    const OfflineStream *s) const {
   auto r = SherpaOnnxGetOfflineStreamResult(s->Get());
 
-  OfflineRecognizerResult* ans = new OfflineRecognizerResult;
+  OfflineRecognizerResult *ans = new OfflineRecognizerResult;
   if (r) {
     ans->text = r->text;
 
     if (r->timestamps) {
       ans->timestamps.resize(r->count);
-      std::copy(r->timestamps, r->timestamps + r->count, ans->timestamps.data());
+      std::copy(r->timestamps, r->timestamps + r->count,
+                ans->timestamps.data());
     }
 
     ans->tokens.resize(r->count);
@@ -484,8 +490,7 @@ std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
   ans->samples = std::move(audio.samples);
   ans->sample_rate = audio.sample_rate;
 
-  return std::shared_ptr<GeneratedAudio>(ans,
-                                         [](GeneratedAudio *p) { delete p; });
+  return std::shared_ptr<GeneratedAudio>(ans);
 }
 
 KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
@@ -593,7 +598,6 @@ KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
 
   return ans;
 }
-
 
 void KeywordSpotter::Reset(const OnlineStream *s) const {
   SherpaOnnxResetKeywordStream(p_, s->Get());
@@ -753,11 +757,10 @@ SpeechSegment VoiceActivityDetector::Front() const {
   return segment;
 }
 
-std::shared_ptr<SpeechSegment> VoiceActivityDetector::FrontPtr() const
-{
+std::shared_ptr<SpeechSegment> VoiceActivityDetector::FrontPtr() const {
   auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
 
-  SpeechSegment* segment = new SpeechSegment;
+  SpeechSegment *segment = new SpeechSegment;
   segment->start = f->start;
   segment->samples = std::vector<float>{f->samples, f->samples + f->n};
 
@@ -824,7 +827,8 @@ bool FileExists(const std::string &filename) {
 // ============================================================
 // For Offline Punctuation
 // ============================================================
-OfflinePunctuation OfflinePunctuation::Create(const OfflinePunctuationConfig &config) {
+OfflinePunctuation OfflinePunctuation::Create(
+    const OfflinePunctuationConfig &config) {
   struct SherpaOnnxOfflinePunctuationConfig c;
   memset(&c, 0, sizeof(c));
   c.model.ct_transformer = config.model.ct_transformer.c_str();
@@ -832,12 +836,13 @@ OfflinePunctuation OfflinePunctuation::Create(const OfflinePunctuationConfig &co
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();
 
-  const SherpaOnnxOfflinePunctuation *punct = SherpaOnnxCreateOfflinePunctuation(&c);
+  const SherpaOnnxOfflinePunctuation *punct =
+      SherpaOnnxCreateOfflinePunctuation(&c);
   return OfflinePunctuation(punct);
 }
 
 OfflinePunctuation::OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p)
-  : MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation>(p) {}
+    : MoveOnly<OfflinePunctuation, SherpaOnnxOfflinePunctuation>(p) {}
 
 void OfflinePunctuation::Destroy(const SherpaOnnxOfflinePunctuation *p) const {
   SherpaOnnxDestroyOfflinePunctuation(p);
