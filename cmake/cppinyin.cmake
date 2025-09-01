@@ -41,6 +41,7 @@ function(download_cppinyin)
     message(STATUS "Downloading cppinyin ${cppinyin_URL}")
     FetchContent_Populate(cppinyin)
 
+    file(REMOVE ${cppinyin_SOURCE_DIR}/CMakeLists.txt)
     configure_file(
         ${CMAKE_SOURCE_DIR}/cmake/cppinyin.patch
         ${cppinyin_SOURCE_DIR}/CMakeLists.txt
