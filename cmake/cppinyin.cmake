@@ -40,8 +40,39 @@ function(download_cppinyin)
   if(NOT cppinyin_POPULATED)
     message(STATUS "Downloading cppinyin ${cppinyin_URL}")
     FetchContent_Populate(cppinyin)
+
+    if(WIN32)
+      set(PATCH_FILE "${CMAKE_SOURCE_DIR}/cmake/cppinyin.patch")
+      message(STATUS "cppinyin patch file ${PATCH_FILE}")
+
+      if(NOT EXISTS ${PATCH_FILE})
+        message(FATAL_ERROR "${PATCH_FILE} does not exist")
+      endif()
+
+      find_program(GIT_EXECUTABLE git)
+      if(NOT GIT_EXECUTABLE)
+        message(FATAL_ERROR "Cannot find the command: git")
+      endif()
+
+      execute_process(
+          COMMAND ${GIT_EXECUTABLE} apply --verbose "${PATCH_FILE}"
+          WORKING_DIRECTORY ${cppinyin_SOURCE_DIR}
+          RESULT_VARIABLE PATCH_RESULT
+          ERROR_VARIABLE PATCH_ERROR
+          OUTPUT_VARIABLE PATCH_OUTPUT
+      )
+      if(PATCH_RESULT EQUAL 0)
+        message(STATUS "Applied ${PATCH_FILE}")
+        message(STATUS "Output from git apply：${PATCH_OUTPUT}")
+      else()
+          message(FATAL_ERROR "Patch failed：${PATCH_ERROR}")
+      endif()
+    endif()
   endif()
+
   message(STATUS "cppinyin is downloaded to ${cppinyin_SOURCE_DIR}")
+
+
 
   if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
