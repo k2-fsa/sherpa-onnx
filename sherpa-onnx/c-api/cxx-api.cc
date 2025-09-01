@@ -354,11 +354,11 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
     ans.lang = r->lang ? r->lang : "";
     ans.emotion = r->emotion ? r->emotion : "";
     ans.event = r->event ? r->event : "";
-  }
 
-  if (r->durations) {
-    ans.durations.resize(r->count);
-    std::copy(r->durations, r->durations + r->count, ans.durations.data());
+    if (r->durations) {
+      ans.durations.resize(r->count);
+      std::copy(r->durations, r->durations + r->count, ans.durations.data());
+    }
   }
 
   SherpaOnnxDestroyOfflineRecognizerResult(r);
