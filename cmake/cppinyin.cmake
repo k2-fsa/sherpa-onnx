@@ -43,7 +43,7 @@ function(download_cppinyin)
 
     file(REMOVE ${cppinyin_SOURCE_DIR}/CMakeLists.txt)
     configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/cppinyin.patch
+        ${CMAKE_CURRENT_LIST_DIR}/cppinyin.patch
         ${cppinyin_SOURCE_DIR}/CMakeLists.txt
         COPYONLY
     )
