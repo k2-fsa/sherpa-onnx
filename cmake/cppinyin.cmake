@@ -42,7 +42,10 @@ function(download_cppinyin)
     FetchContent_Populate(cppinyin)
 
     file(COPY ${CMAKE_SOURCE_DIR}/cmake/cppinyin.patch
-      DESTINATION ${cppinyin_SOURCE_DIR}/CMakeLists.txt)
+      DESTINATION ${cppinyin_SOURCE_DIR}
+      FILE_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
+      RENAME CMakeLists.txt
+    )
   endif()
 
   message(STATUS "cppinyin is downloaded to ${cppinyin_SOURCE_DIR}")
