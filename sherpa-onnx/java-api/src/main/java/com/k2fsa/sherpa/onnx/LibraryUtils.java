@@ -189,7 +189,9 @@ public class LibraryUtils {
             detectedArch = "x86";
         } else if (arch.startsWith("aarch64") || arch.startsWith("arm64")) {
             detectedArch = "aarch64";
-        } else {
+        } else if (arch.startsWith("arm")) {
+            detectedArch = "arm"; //armv8l架构
+		} else {
             throw new IllegalStateException("Unsupported arch:" + arch);
         }
 
