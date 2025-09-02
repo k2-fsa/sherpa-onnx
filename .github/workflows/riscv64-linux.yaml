@@ -127,66 +127,6 @@ jobs:
 
           readelf -d build-riscv64-linux-gnu/bin/sherpa-onnx
 
-      - name: Test sherpa-onnx
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
-
-          ls -lh ./build-riscv64-linux-gnu/bin
-
-          echo "----------sherpa-onnx----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx --help
-          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx
-
-          echo "----------sherpa-onnx-offline----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline --help
-          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline
-
-          echo "----------sherpa-onnx-offline-tts----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts --help
-          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts
-
-      - name: Test streaming speech recognition
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
-
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
-
-          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx \
-            --tokens=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/tokens.txt \
-            --encoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/encoder-epoch-99-avg-1.onnx \
-            --decoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/decoder-epoch-99-avg-1.onnx \
-            --joiner=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/joiner-epoch-99-avg-1.onnx \
-            ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/test_wavs/0.wav
-
-      - name: Test offline tts
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
-
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
-          tar xf vits-piper-en_US-lessac-medium.tar.bz2
-          rm vits-piper-en_US-lessac-medium.tar.bz2
-
-          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts \
-            --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \
-            --vits-data-dir=./vits-piper-en_US-lessac-medium/espeak-ng-data \
-            --vits-tokens=./vits-piper-en_US-lessac-medium/tokens.txt \
-            --output-filename=./liliana-piper-en_US-lessac-medium.wav \
-            'liliana, the most beautiful and lovely assistant of our team!'
-
       - name: Copy files
         shell: bash
         run: |
@@ -260,21 +200,92 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - uses: actions/upload-artifact@v4
-        if: matrix.lib_type == 'shared'
-        with:
-          name: wave
-          path: ./*.wav
-
-      - uses: actions/upload-artifact@v4
         if: matrix.lib_type == 'static'
         with:
           name: sherpa-onnx-linux-riscv64-static
           path: sherpa-onnx-*linux-riscv64-static.tar.bz2
 
       - name: Release pre-compiled binaries and libs for riscv64 linux ${{ matrix.lib_type }}
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*linux-riscv64*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.11
+
+      - name: Release pre-compiled binaries and libs for riscv64 linux ${{ matrix.lib_type }}
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-riscv64*.tar.bz2
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+
+          ls -lh ./build-riscv64-linux-gnu/bin
+
+          echo "----------sherpa-onnx----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx
+
+          echo "----------sherpa-onnx-offline----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline
+
+          echo "----------sherpa-onnx-offline-tts----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts
+
+      - name: Test streaming speech recognition
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
+
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx \
+            --tokens=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/tokens.txt \
+            --encoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/encoder-epoch-99-avg-1.onnx \
+            --decoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/decoder-epoch-99-avg-1.onnx \
+            --joiner=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/joiner-epoch-99-avg-1.onnx \
+            ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/test_wavs/0.wav
+
+      - name: Test offline tts
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
+          tar xf vits-piper-en_US-lessac-medium.tar.bz2
+          rm vits-piper-en_US-lessac-medium.tar.bz2
+
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts \
+            --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \
+            --vits-data-dir=./vits-piper-en_US-lessac-medium/espeak-ng-data \
+            --vits-tokens=./vits-piper-en_US-lessac-medium/tokens.txt \
+            --output-filename=./liliana-piper-en_US-lessac-medium.wav \
+            'liliana, the most beautiful and lovely assistant of our team!'
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.lib_type == 'shared'
+        with:
+          name: wave
+          path: ./*.wav

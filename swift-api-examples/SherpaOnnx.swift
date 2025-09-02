@@ -539,6 +539,11 @@ class SherpaOnnxOfflineRecongitionResult {
     return (0..<result.pointee.count).map { p[Int($0)] }
   }()
 
+  private lazy var _durations: [Float] = {
+    guard let p = result.pointee.durations else { return [] }
+    return (0..<result.pointee.count).map { p[Int($0)] }
+  }()
+
   private lazy var _lang: String = {
     guard let cstr = result.pointee.lang else { return "" }
     return String(cString: cstr)
@@ -560,6 +565,9 @@ class SherpaOnnxOfflineRecongitionResult {
   var text: String { _text }
   var count: Int { Int(result.pointee.count) }
   var timestamps: [Float] { _timestamps }
+
+  // Non-empty for TDT models. Empty for all other non-TDT models
+  var durations: [Float] { _durations }
 
   // For SenseVoice models, it can be zh, en, ja, yue, ko
   // where zh is for Chinese

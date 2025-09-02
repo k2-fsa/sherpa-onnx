@@ -1,3 +1,18 @@
+## 1.12.11
+
+* Add two more Piper tts models (#2525)
+* Generate tts samples for MatchaTTS (English). (#2527)
+* Fix releasing go packages (#2529)
+* Add license info about tts models from OpenVoiceOS (#2530)
+* Support BPE models with byte fallback. (#2531)
+* Simplify the usage of our non-Android Java API (#2533)
+* Fix wasm for kws (#2535)
+* Add one more German tts model from OpenVoiceOS. (#2536)
+* Fix uploading win32 libs to huggingface (#2537)
+* Add Zipvoice (#2487)
+* Fix c api (#2545)
+* Fix linking (#2546)
+
 ## 1.12.10
 
 * Add VOSK streaming Russian ASR models and Kroko streaming German ASR models (#2502)

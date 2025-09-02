@@ -199,7 +199,7 @@ static void TokenizePinyin(
 OfflineTtsZipvoiceFrontend::OfflineTtsZipvoiceFrontend(
     const std::string &tokens, const std::string &data_dir,
     const std::string &pinyin_dict,
-    const OfflineTtsZipvoiceModelMetaData &meta_data, bool debug)
+    const OfflineTtsZipvoiceModelMetaData &meta_data, bool debug /*= false*/)
     : debug_(debug), meta_data_(meta_data) {
   std::ifstream is(tokens);
   token2id_ = ReadTokens(is);
@@ -367,7 +367,7 @@ std::vector<TokenIDs> OfflineTtsZipvoiceFrontend::ConvertTextToTokenIds(
 template OfflineTtsZipvoiceFrontend::OfflineTtsZipvoiceFrontend(
     AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
     const std::string &pinyin_dict,
-    const OfflineTtsZipvoiceModelMetaData &meta_data);
+    const OfflineTtsZipvoiceModelMetaData &meta_data, bool debug = false);
 
 #endif
 
@@ -375,7 +375,7 @@ template OfflineTtsZipvoiceFrontend::OfflineTtsZipvoiceFrontend(
 template OfflineTtsZipvoiceFrontend::OfflineTtsZipvoiceFrontend(
     NativeResourceManager *mgr, const std::string &tokens,
     const std::string &data_dir, const std::string &pinyin_dict,
-    const OfflineTtsZipvoiceModelMetaData &meta_data);
+    const OfflineTtsZipvoiceModelMetaData &meta_data, bool debug = false);
 
 #endif
 

@@ -134,7 +134,7 @@ if [ ! -f $src_dir/windows-x64/sherpa-onnx-c-api.dll ]; then
     curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$windows_x64_wheel_filename
   fi
   unzip $windows_x64_wheel_filename
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
+  cp -v sherpa_onnx/lib/*.dll ../
   cd ..
 
   rm -rf wheel

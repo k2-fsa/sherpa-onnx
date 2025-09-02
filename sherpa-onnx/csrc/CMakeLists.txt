@@ -268,7 +268,6 @@ if(ANDROID_NDK)
 endif()
 
 target_link_libraries(sherpa-onnx-core
-  cppinyin_core
   kaldi-native-fbank-core
   kaldi-decoder-core
   ssentencepiece_core
@@ -311,7 +310,9 @@ endif()
 target_link_libraries(sherpa-onnx-core fstfar fst)
 
 if(SHERPA_ONNX_ENABLE_TTS)
-  target_link_libraries(sherpa-onnx-core piper_phonemize)
+  target_link_libraries(sherpa-onnx-core
+    cppinyin_core
+    piper_phonemize)
 endif()
 target_link_libraries(sherpa-onnx-core cppjieba)
 
