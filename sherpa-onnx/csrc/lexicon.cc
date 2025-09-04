@@ -190,11 +190,6 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
   std::vector<TokenIDs> ans;
   std::vector<int64_t> this_sentence;
 
-  int32_t blank = -1;
-  if (token2id_.count(" ")) {
-    blank = token2id_.at(" ");
-  }
-
   int32_t sil = -1;
   int32_t eos = -1;
   if (token2id_.count("sil")) {
@@ -249,9 +244,6 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
     const auto &token_ids = word2ids_.at(w);
     this_sentence.insert(this_sentence.end(), token_ids.begin(),
                          token_ids.end());
-    if (blank != -1) {
-      this_sentence.push_back(blank);
-    }
   }
 
   if (sil != -1) {
