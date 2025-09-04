@@ -367,7 +367,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE(
             "Not a model using characters as modeling unit. Please provide "
             "--vits-lexicon if you leave --vits-data-dir empty");
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       frontend_ = std::make_unique<Lexicon>(
@@ -382,13 +382,13 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.jieba && config_.model.vits.dict_dir.empty()) {
       SHERPA_ONNX_LOGE(
           "Please provide --vits-dict-dir for Chinese TTS models using jieba");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (!meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
       SHERPA_ONNX_LOGE(
           "Current model is not using jieba but you provided --vits-dict-dir");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (meta_data.frontend == "characters") {
@@ -419,7 +419,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE(
             "Not a model using characters as modeling unit. Please provide "
             "--vits-lexicon if you leave --vits-data-dir empty");
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
       frontend_ = std::make_unique<Lexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
