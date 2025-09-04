@@ -14,7 +14,11 @@
 namespace sherpa_onnx {
 
 struct CudaConfig {
+#if ORT_API_VERSION >= 10
   int32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
+#else
+  int32_t cudnn_conv_algo_search = 1;
+#endif
 
   CudaConfig() = default;
   explicit CudaConfig(int32_t cudnn_conv_algo_search)
