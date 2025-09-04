@@ -282,7 +282,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
     os << "Input text (lowercase) in string: " << text << "\n";
     os << "Input text in bytes:";
     for (uint8_t c : text) {
-      os << " 0x" << std::setfill('0') << std::setw(3) << std::right << std::hex
+      os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
          << static_cast<int32_t>(c);
     }
     os << "\n";
