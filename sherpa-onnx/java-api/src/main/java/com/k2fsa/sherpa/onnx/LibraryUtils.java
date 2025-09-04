@@ -64,12 +64,14 @@ public class LibraryUtils {
         }
 
         // 2. Load from resources contains in some jar file
-        try {
-            if (loadFromResourceInJar()) {
-                return;
+        if (!isAndroid()) {
+            try {
+                if (loadFromResourceInJar()) {
+                    return;
+                }
+            } catch (IOException e) {
+                // pass
             }
-        } catch (IOException e) {
-            // pass
         }
 
         // 3. fallback to -Djava.library.path
@@ -106,13 +108,11 @@ public class LibraryUtils {
     }
 
     private static boolean loadFromResourceInJar() throws IOException {
-
         String libFileName = System.mapLibraryName(LIB_NAME);
         String sherpaOnnxJniPath = "sherpa-onnx/native/" + getOsArch() + '/' + libFileName;
 
         Path tempDirectory = null;
         try {
-
             if (!resourceExists(sherpaOnnxJniPath)) {
                 if (debug) {
                     System.out.printf("%s does not exist\n", sherpaOnnxJniPath);
@@ -181,7 +181,7 @@ public class LibraryUtils {
 
         String detectedArch;
         String arch = System.getProperty("os.arch", "generic")
-                            .toLowerCase(Locale.ENGLISH);
+                .toLowerCase(Locale.ENGLISH);
         if (arch.startsWith("amd64") || arch.startsWith("x86_64")) {
             detectedArch = "x64";
         } else if (arch.startsWith("x86")) {
@@ -191,7 +191,7 @@ public class LibraryUtils {
             detectedArch = "aarch64";
         } else if (arch.startsWith("arm")) {
             detectedArch = "arm"; //armv8l架构
-		} else {
+        } else {
             throw new IllegalStateException("Unsupported arch:" + arch);
         }
 
@@ -235,5 +235,11 @@ public class LibraryUtils {
             }
         }
         dir.deleteOnExit(); // schedule the directory itself
+    }
+
+        String vmName = System.getProperty("java.vm.name", "").toLowerCase(Locale.ROOT);
+        String specVendor = System.getProperty("java.specification.vendor", "");
+        return vmName.contains("dalvik") || vmName.contains("art") ||
+               specVendor.equals("The Android Project");
     }
 }
