@@ -237,7 +237,9 @@ public class LibraryUtils {
         dir.deleteOnExit(); // schedule the directory itself
     }
 
-    static boolean isAndroid() {
-        return System.getProperty("java.vendor", "generic").equals("The Android Project");
+        String vmName = System.getProperty("java.vm.name", "").toLowerCase(Locale.ROOT);
+        String specVendor = System.getProperty("java.specification.vendor", "");
+        return vmName.contains("dalvik") || vmName.contains("art") ||
+               specVendor.equals("The Android Project");
     }
 }
