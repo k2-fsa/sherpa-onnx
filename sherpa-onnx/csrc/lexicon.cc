@@ -150,7 +150,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIds(
       return ConvertTextToTokenIdsNotChinese(text);
     default:
       SHERPA_ONNX_LOGE("Unknown language: %d", static_cast<int32_t>(language_));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
   }
 
   return {};
@@ -171,7 +171,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
     os << "Input text in bytes:";
     for (uint8_t c : text) {
       os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
-         << c;
+         << static_cast<int32_t>(c);
     }
     os << "\n";
     os << "After splitting to words:";
@@ -261,7 +261,10 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
   if (eos != -1) {
     this_sentence.push_back(eos);
   }
-  ans.emplace_back(std::move(this_sentence));
+
+  if (!this_sentence.empty()) {
+    ans.emplace_back(std::move(this_sentence));
+  }
 
   return ans;
 }
@@ -280,7 +283,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
     os << "Input text in bytes:";
     for (uint8_t c : text) {
       os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
-         << c;
+         << static_cast<int32_t>(c);
     }
     os << "\n";
     os << "After splitting to words:";
