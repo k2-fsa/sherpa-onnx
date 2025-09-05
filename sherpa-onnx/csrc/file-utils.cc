@@ -34,8 +34,8 @@ std::vector<char> ReadFile(const std::string &filename) {
 std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
   if (!filename.empty() && filename[0] == '/') {
     SHERPA_ONNX_LOGE(
-        "You are using an absolute path '%s', but you do NOT set assetManager "
-        "to null.",
+        "You are using an absolute path '%s', but assetManager is NOT set to "
+        "null.",
         filename.c_str());
 
     SHERPA_ONNX_LOGE(
