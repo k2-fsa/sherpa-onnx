@@ -399,7 +399,7 @@ A desktop text-to-speech application built using Kotlin Multiplatform.
 
 > Smart glasses OS, with dozens of built-in apps. Users get AI assistant, notifications,
 > translation, screen mirror, captions, and more. Devs get to write 1 app that runs on
-> any pair of smart glases.
+> any pair of smart glasses.
 
 It uses sherpa-onnx for real-time speech recognition on iOS and Android devices.
 See also <https://github.com/Mentra-Community/MentraOS/pull/861>
