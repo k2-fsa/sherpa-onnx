@@ -395,6 +395,17 @@ It uses sherpa-onnx for speech-to-text and text-to-speech.
 
 A desktop text-to-speech application built using Kotlin Multiplatform.
 
+### [MentraOS](https://github.com/Mentra-Community/MentraOS)
+
+> Smart glasses OS, with dozens of built-in apps. Users get AI assistant, notifications,
+> translation, screen mirror, captions, and more. Devs get to write 1 app that runs on
+> any pair of smart glasses.
+
+It uses sherpa-onnx for real-time speech recognition on iOS and Android devices.
+See also <https://github.com/Mentra-Community/MentraOS/pull/861>
+
+It uses Swift for iOS and Java for Android.
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
