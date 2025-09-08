@@ -6,7 +6,6 @@ from typing import Tuple
 
 import kaldi_native_fbank as knf
 import numpy as np
-import onnxruntime
 import onnxruntime as ort
 import soundfile as sf
 
@@ -182,9 +181,8 @@ def main():
         if t == prev:
             continue
 
-        if t != prev:
-            prev = t
-            unique_ids.append(prev)
+        prev = t
+        unique_ids.append(prev)
     text = "".join([id2token[i] for i in unique_ids])
     print(text)
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
-import argparse
 
 import onnx
 
