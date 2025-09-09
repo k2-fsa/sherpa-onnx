@@ -403,6 +403,10 @@ final class SherpaOnnxOnlineNemoCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOnlineToneCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOnlineModelConfig extends Struct {
   external SherpaOnnxOnlineTransducerModelConfig transducer;
   external SherpaOnnxOnlineParaformerModelConfig paraformer;
@@ -430,6 +434,8 @@ final class SherpaOnnxOnlineModelConfig extends Struct {
   external int tokensBufSize;
 
   external SherpaOnnxOnlineNemoCtcModelConfig nemoCtc;
+
+  external SherpaOnnxOnlineToneCtcModelConfig toneCtc;
 }
 
 final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {
