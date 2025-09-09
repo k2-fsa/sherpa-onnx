@@ -185,6 +185,14 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
+    if (!config_.model_config.t_one_ctc.model.empty()) {
+      // each input frame is of 300ms long, which produces 10 output frames.
+      // so frame_shift_ms is 300/10 = 30ms
+      //
+      frame_shift_ms = 30;
+      subsampling_factor = 1;
+    }
+
     auto r =
         ConvertCtc(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                    s->GetCurrentSegment(), s->GetNumFramesSinceStart());

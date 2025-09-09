@@ -112,14 +112,15 @@ class OnlineToneCtcModel::Impl {
     std::vector<Ort::Value> ans;
     ans.reserve(1);
 
-    std::vector<const Ort::Value *> buf(batch_size);
+    std::vector<const Ort::Value *> buf;
+    buf.reserve(batch_size);
 
     for (int32_t b = 0; b != batch_size; ++b) {
       buf.push_back(&states[b][0]);
     }
 
     Ort::Value c{nullptr};
-    c = Cat(allocator_, buf, 0);
+    c = CatFloat16(allocator_, buf, 0);
 
     ans.push_back(std::move(c));
 
@@ -142,7 +143,7 @@ class OnlineToneCtcModel::Impl {
     }
 
     std::vector<Ort::Value> v;
-    v = Unbind(allocator, &states[0], 0);
+    v = UnbindFloat16(allocator, &states[0], 0);
 
     for (int32_t b = 0; b != batch_size; ++b) {
       ans[b].push_back(std::move(v[b]));
