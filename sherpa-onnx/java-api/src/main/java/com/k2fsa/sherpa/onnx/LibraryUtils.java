@@ -237,6 +237,7 @@ public class LibraryUtils {
         dir.deleteOnExit(); // schedule the directory itself
     }
 
+    static boolean isAndroid() {
         String vmName = System.getProperty("java.vm.name", "").toLowerCase(Locale.ROOT);
         String specVendor = System.getProperty("java.specification.vendor", "");
         return vmName.contains("dalvik") || vmName.contains("art") ||

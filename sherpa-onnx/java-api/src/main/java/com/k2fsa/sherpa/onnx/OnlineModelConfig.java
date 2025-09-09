@@ -8,6 +8,7 @@ public class OnlineModelConfig {
     private final OnlineParaformerModelConfig paraformer;
     private final OnlineZipformer2CtcModelConfig zipformer2Ctc;
     private final OnlineNeMoCtcModelConfig neMoCtc;
+    private final OnlineToneCtcModelConfig toneCtc;
     private final String tokens;
     private final int numThreads;
     private final boolean debug;
@@ -21,6 +22,7 @@ public class OnlineModelConfig {
         this.paraformer = builder.paraformer;
         this.zipformer2Ctc = builder.zipformer2Ctc;
         this.neMoCtc = builder.neMoCtc;
+        this.toneCtc = builder.toneCtc;
         this.tokens = builder.tokens;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
@@ -48,6 +50,10 @@ public class OnlineModelConfig {
 
     public OnlineNeMoCtcModelConfig getNeMoCtc() {
         return neMoCtc;
+    }
+
+    public OnlineToneCtcModelConfig getToneCtc() {
+        return toneCtc;
     }
 
     public String getTokens() {
@@ -83,6 +89,7 @@ public class OnlineModelConfig {
         private OnlineTransducerModelConfig transducer = OnlineTransducerModelConfig.builder().build();
         private OnlineZipformer2CtcModelConfig zipformer2Ctc = OnlineZipformer2CtcModelConfig.builder().build();
         private OnlineNeMoCtcModelConfig neMoCtc = OnlineNeMoCtcModelConfig.builder().build();
+        private OnlineToneCtcModelConfig toneCtc = OnlineToneCtcModelConfig.builder().build();
         private String tokens = "";
         private int numThreads = 1;
         private boolean debug = true;
@@ -112,6 +119,11 @@ public class OnlineModelConfig {
 
         public Builder setNeMoCtc(OnlineNeMoCtcModelConfig neMoCtc) {
             this.neMoCtc = neMoCtc;
+            return this;
+        }
+
+        public Builder setToneCtc(OnlineToneCtcModelConfig toneCtc) {
+            this.toneCtc = toneCtc;
             return this;
         }
 
