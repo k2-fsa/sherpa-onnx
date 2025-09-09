@@ -14,10 +14,10 @@ from generate_voices_bin import speaker2id
 config = sherpa_onnx.OfflineTtsConfig(
     model=sherpa_onnx.OfflineTtsModelConfig(
         kitten=sherpa_onnx.OfflineTtsKittenModelConfig(
-            model="kitten-nano-en-v0_1-fp16/model.fp16.onnx",
-            voices="kitten-nano-en-v0_1-fp16/voices.bin",
-            tokens="kitten-nano-en-v0_1-fp16/tokens.txt",
-            data_dir="kitten-nano-en-v0_1-fp16/espeak-ng-data",
+            model="kitten-mini-en-v0_1-fp16/model.fp16.onnx",
+            voices="kitten-mini-en-v0_1-fp16/voices.bin",
+            tokens="kitten-mini-en-v0_1-fp16/tokens.txt",
+            data_dir="kitten-mini-en-v0_1-fp16/espeak-ng-data",
         ),
         num_threads=2,
     ),
@@ -35,7 +35,7 @@ for s, i in speaker2id.items():
     audio = tts.generate(text, sid=i, speed=1.0)
 
     sf.write(
-        f"./hf/kitten/v0.1-nano/mp3/{i}-{s}.mp3",
+        f"./hf/kitten/v0.1-mini/mp3/{i}-{s}.mp3",
         audio.samples,
         samplerate=audio.sample_rate,
     )

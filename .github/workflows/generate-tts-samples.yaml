@@ -32,7 +32,7 @@ jobs:
           pip install "numpy<=1.26.4" sherpa-onnx soundfile
 
       - name: kitten
-        if: false
+        if: true
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -46,8 +46,9 @@ jobs:
           export GIT_LFS_SKIP_SMUDGE=1
           export GIT_CLONE_PROTECTION_ACTIVE=false
           git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
-          mkdir -p ./hf/kitten/v0.1/mp3
-          mkdir -p ./hf/kitten/v0.2/mp3
+          mkdir -p ./hf/kitten/v0.1-nano/mp3
+          mkdir -p ./hf/kitten/v0.2-nano/mp3
+          mkdir -p ./hf/kitten/v0.1-mini/mp3
 
           for v in 1 2; do
             pushd nano_v0_$v
@@ -61,6 +62,18 @@ jobs:
             popd
           done
 
+          for v in 1; do
+            pushd mini_v0_$v
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-mini-en-v0_$v-fp16.tar.bz2
+            tar xf kitten-mini-en-v0_$v-fp16.tar.bz2
+            rm kitten-mini-en-v0_$v-fp16.tar.bz2
+
+            ln -s ../hf .
+            python3 ./generate_samples.py
+            rm -rf kitten-mini-en-v0_$v-fp16
+            popd
+          done
+
           pushd hf
           git pull
           git add .
@@ -70,7 +83,7 @@ jobs:
           rm -rf hf
 
       - name: matcha en (ljspeech)
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
