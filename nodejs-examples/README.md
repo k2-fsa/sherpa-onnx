@@ -393,6 +393,18 @@ rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 node ./test-online-paraformer-microphone-mic.js
 ```
 
+## ./test-online-t-one-ctc.js
+[./test-online-t-one-ctc.js](./test-online-t-one-ctc.js) demonstrates
+how to decode a file using a streaming T-one model.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+tar xvf sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+node ./test-online-t-one-ctc.js
+```
 
 ## ./test-online-paraformer.js
 [./test-online-paraformer.js](./test-online-paraformer.js) demonstrates
