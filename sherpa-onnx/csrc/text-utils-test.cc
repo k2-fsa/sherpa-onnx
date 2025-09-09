@@ -4,7 +4,7 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
-#include <regex>
+#include <regex>  // NOLINT
 #include <sstream>
 
 #include "gtest/gtest.h"

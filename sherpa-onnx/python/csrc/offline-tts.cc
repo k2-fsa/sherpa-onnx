@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/python/csrc/offline-tts-model-config.h"
