@@ -44,6 +44,9 @@ target_link_libraries(speaker-identification-c-api sherpa-onnx-c-api)
 add_executable(streaming-hlg-decode-file-c-api streaming-hlg-decode-file-c-api.c)
 target_link_libraries(streaming-hlg-decode-file-c-api sherpa-onnx-c-api)
 
+add_executable(streaming-t-one-ctc-c-api streaming-t-one-ctc-c-api.c)
+target_link_libraries(streaming-t-one-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(audio-tagging-c-api audio-tagging-c-api.c)
 target_link_libraries(audio-tagging-c-api sherpa-onnx-c-api)
 
