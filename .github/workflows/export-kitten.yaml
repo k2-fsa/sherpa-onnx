@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        version: ["nano_v0_1", "nano_v0_2"]
+        version: ["nano_v0_1", "nano_v0_2", "mini_v0_1"]
         python-version: ["3.10"]
 
     steps:
@@ -59,6 +59,8 @@ jobs:
             d=kitten-nano-en-v0_1-fp16
           elif [[ $version == "nano_v0_2" ]]; then
             d=kitten-nano-en-v0_2-fp16
+          elif [[ $version == "mini_v0_1" ]]; then
+            d=kitten-mini-en-v0_1-fp16
           else
             echo "version $version"
             exit 1
@@ -111,6 +113,7 @@ jobs:
             dirs=(
               kitten-nano-en-v0_1-fp16
               kitten-nano-en-v0_2-fp16
+              kitten-mini-en-v0_1-fp16
             )
 
             export GIT_LFS_SKIP_SMUDGE=1
