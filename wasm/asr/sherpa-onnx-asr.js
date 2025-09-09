@@ -31,6 +31,10 @@ function freeConfig(config, Module) {
     freeConfig(config.nemoCtc, Module)
   }
 
+  if ('toneCtc' in config) {
+    freeConfig(config.toneCtc, Module)
+  }
+
   if ('whisper' in config) {
     freeConfig(config.whisper, Module)
   }
@@ -173,6 +177,22 @@ function initSherpaOnnxOnlineNemoCtcModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOnlineToneCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOnlineModelConfig(config, Module) {
   if (!('transducer' in config)) {
     config.transducer = {
@@ -201,6 +221,12 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
     };
   }
 
+  if (!('toneCtc' in config)) {
+    config.toneCtc = {
+      model: '',
+    };
+  }
+
   if (!('tokensBuf' in config)) {
     config.tokensBuf = '';
   }
@@ -221,8 +247,11 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   const nemoCtc =
       initSherpaOnnxOnlineNemoCtcModelConfig(config.nemoCtc, Module);
 
-  const len =
-      transducer.len + paraformer.len + zipformer2Ctc.len + 9 * 4 + nemoCtc.len;
+  const toneCtc =
+      initSherpaOnnxOnlineToneCtcModelConfig(config.toneCtc, Module);
+
+  const len = transducer.len + paraformer.len + zipformer2Ctc.len + 9 * 4 +
+      nemoCtc.len + toneCtc.len;
 
   const ptr = Module._malloc(len);
 
@@ -308,9 +337,13 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   Module._CopyHeap(nemoCtc.ptr, nemoCtc.len, ptr + offset);
   offset += nemoCtc.len;
 
+  Module._CopyHeap(toneCtc.ptr, toneCtc.len, ptr + offset);
+  offset += toneCtc.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
-        paraformer: paraformer, zipformer2Ctc: zipformer2Ctc, nemoCtc: nemoCtc
+        paraformer: paraformer, zipformer2Ctc: zipformer2Ctc, nemoCtc: nemoCtc,
+        toneCtc: toneCtc,
   }
 }
 
@@ -519,6 +552,10 @@ function createOnlineRecognizer(Module, myConfig) {
     model: '',
   };
 
+  const onlineToneCtcModelConfig = {
+    model: '',
+  };
+
   let type = 0;
 
   switch (type) {
@@ -541,6 +578,10 @@ function createOnlineRecognizer(Module, myConfig) {
       // nemoCtc
       onlineNemoCtcModelConfig.model = './nemo-ctc.onnx';
       break;
+    case 4:
+      // toneCtc
+      onlineToneCtcModelConfig.model = './tone-ctc.onnx';
+      break;
   }
 
 
@@ -549,6 +590,7 @@ function createOnlineRecognizer(Module, myConfig) {
     paraformer: onlineParaformerModelConfig,
     zipformer2Ctc: onlineZipformer2CtcModelConfig,
     nemoCtc: onlineNemoCtcModelConfig,
+    toneCtc: onlineToneCtcModelConfig,
     tokens: './tokens.txt',
     numThreads: 1,
     provider: 'cpu',
@@ -559,8 +601,8 @@ function createOnlineRecognizer(Module, myConfig) {
   };
 
   const featureConfig = {
-    sampleRate: 16000,
-    featureDim: 80,
+    sampleRate: 16000,  // it is ignored when toneCtc is used
+    featureDim: 80,     // it is ignored when toneCtc is used
   };
 
   let recognizerConfig = {

@@ -107,12 +107,34 @@ class OnlineNemoCtcModelConfig {
   final String model;
 }
 
+class OnlineToneCtcModelConfig {
+  const OnlineToneCtcModelConfig({this.model = ''});
+
+  factory OnlineToneCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OnlineToneCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OnlineToneCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OnlineModelConfig {
   const OnlineModelConfig({
     this.transducer = const OnlineTransducerModelConfig(),
     this.paraformer = const OnlineParaformerModelConfig(),
     this.zipformer2Ctc = const OnlineZipformer2CtcModelConfig(),
     this.nemoCtc = const OnlineNemoCtcModelConfig(),
+    this.toneCtc = const OnlineToneCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.provider = 'cpu',
@@ -132,6 +154,8 @@ class OnlineModelConfig {
           json['zipformer2Ctc'] as Map<String, dynamic>? ?? const {}),
       nemoCtc: OnlineNemoCtcModelConfig.fromJson(
           json['nemoCtc'] as Map<String, dynamic>? ?? const {}),
+      toneCtc: OnlineToneCtcModelConfig.fromJson(
+          json['toneCtc'] as Map<String, dynamic>? ?? const {}),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       provider: json['provider'] as String? ?? 'cpu',
@@ -144,7 +168,7 @@ class OnlineModelConfig {
 
   @override
   String toString() {
-    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, nemoCtc: $nemoCtc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab)';
+    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, nemoCtc: $nemoCtc, toneCtc: $toneCtc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -152,6 +176,7 @@ class OnlineModelConfig {
         'paraformer': paraformer.toJson(),
         'zipformer2Ctc': zipformer2Ctc.toJson(),
         'nemoCtc': nemoCtc.toJson(),
+        'toneCtc': toneCtc.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'provider': provider,
@@ -165,6 +190,7 @@ class OnlineModelConfig {
   final OnlineParaformerModelConfig paraformer;
   final OnlineZipformer2CtcModelConfig zipformer2Ctc;
   final OnlineNemoCtcModelConfig nemoCtc;
+  final OnlineToneCtcModelConfig toneCtc;
 
   final String tokens;
 
@@ -362,6 +388,9 @@ class OnlineRecognizer {
     // nemoCtc
     c.ref.model.nemoCtc.model = config.model.nemoCtc.model.toNativeUtf8();
 
+    // toneCtc
+    c.ref.model.toneCtc.model = config.model.toneCtc.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -415,6 +444,7 @@ class OnlineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.toneCtc.model);
     calloc.free(c.ref.model.nemoCtc.model);
     calloc.free(c.ref.model.zipformer2Ctc.model);
     calloc.free(c.ref.model.paraformer.encoder);

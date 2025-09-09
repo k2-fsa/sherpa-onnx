@@ -5,6 +5,7 @@ fun main() {
   testOnlineAsr("zipformer2-ctc")
   testOnlineAsr("ctc-hlg")
   testOnlineAsr("nemo-ctc")
+  testOnlineAsr("tone-ctc")
 }
 
 fun testOnlineAsr(type: String) {
@@ -54,6 +55,17 @@ fun testOnlineAsr(type: String) {
             debug = false,
         )
       }
+      "tone-ctc" -> {
+        waveFilename = "./sherpa-onnx-streaming-t-one-russian-2025-09-08/0.wav"
+        OnlineModelConfig(
+            toneCtc = OnlineToneCtcModelConfig(
+                model = "./sherpa-onnx-streaming-t-one-russian-2025-09-08/model.onnx",
+            ),
+            tokens = "./sherpa-onnx-streaming-t-one-russian-2025-09-08/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
       "ctc-hlg" -> {
         waveFilename = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/1.wav"
         ctcFstDecoderConfig.graph = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst"
@@ -95,12 +107,16 @@ fun testOnlineAsr(type: String) {
     val sampleRate: Int = objArray[1] as Int
 
     val stream = recognizer.createStream()
+
+    val leftPaddings = FloatArray((sampleRate * 0.3).toInt()) // 0.3 seconds
+    stream.acceptWaveform(leftPaddings, sampleRate = sampleRate)
+
     stream.acceptWaveform(samples, sampleRate = sampleRate)
     while (recognizer.isReady(stream)) {
         recognizer.decode(stream)
     }
 
-    val tailPaddings = FloatArray((sampleRate * 0.5).toInt()) // 0.5 seconds
+    val tailPaddings = FloatArray((sampleRate * 0.6).toInt()) // 0.6 seconds
     stream.acceptWaveform(tailPaddings, sampleRate = sampleRate)
     stream.inputFinished()
     while (recognizer.isReady(stream)) {

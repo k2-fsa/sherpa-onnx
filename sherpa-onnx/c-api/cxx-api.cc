@@ -70,6 +70,7 @@ OnlineRecognizer OnlineRecognizer::Create(
       config.model_config.zipformer2_ctc.model.c_str();
 
   c.model_config.nemo_ctc.model = config.model_config.nemo_ctc.model.c_str();
+  c.model_config.t_one_ctc.model = config.model_config.t_one_ctc.model.c_str();
 
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;

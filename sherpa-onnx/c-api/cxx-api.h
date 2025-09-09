@@ -36,11 +36,16 @@ struct OnlineNemoCtcModelConfig {
   std::string model;
 };
 
+struct OnlineToneCtcModelConfig {
+  std::string model;
+};
+
 struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
   OnlineNemoCtcModelConfig nemo_ctc;
+  OnlineToneCtcModelConfig t_one_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   std::string provider = "cpu";

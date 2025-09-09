@@ -19,6 +19,7 @@ java_files += HomophoneReplacerConfig.java
 java_files += OnlineLMConfig.java
 java_files += OnlineParaformerModelConfig.java
 java_files += OnlineZipformer2CtcModelConfig.java
+java_files += OnlineToneCtcModelConfig.java
 java_files += OnlineNeMoCtcModelConfig.java
 java_files += OnlineTransducerModelConfig.java
 java_files += OnlineModelConfig.java

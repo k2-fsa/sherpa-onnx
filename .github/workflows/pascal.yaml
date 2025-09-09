@@ -126,6 +126,43 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal test (Streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd streaming-asr
+
+          ./run-t-one-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          if [[ ${{ matrix.os }} != 'windows-latest' ]]; then
+            ./run-paraformer.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+
+            ./run-zipformer-ctc.sh
+            echo "---"
+
+            ./run-zipformer-ctc-hlg.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+          fi
+
+          ls -lh
+          popd
+
       - name:  Run Pascal test (VAD test)
         shell: bash
         run: |
@@ -319,38 +356,5 @@ jobs:
           pushd read-wav
           ./run.sh
           echo "---"
-          ls -lh
-          popd
-
-      - name:  Run Pascal test (Streaming ASR)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd streaming-asr
-
-          ./run-zipformer-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-nemo-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          if [[ ${{ matrix.os }} != 'windows-latest' ]]; then
-            ./run-paraformer.sh
-            rm -rf sherpa-onnx-*
-            echo "---"
-
-            ./run-zipformer-ctc.sh
-            echo "---"
-
-            ./run-zipformer-ctc-hlg.sh
-            rm -rf sherpa-onnx-*
-            echo "---"
-          fi
-
           ls -lh
           popd

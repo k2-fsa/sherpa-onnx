@@ -1,10 +1,9 @@
-// Copyright 2024 Xiaomi Corporation
 package com.k2fsa.sherpa.onnx;
 
-public class OnlineNeMoCtcModelConfig {
+public class OnlineToneCtcModelConfig {
     private final String model;
 
-    private OnlineNeMoCtcModelConfig(Builder builder) {
+    private OnlineToneCtcModelConfig(Builder builder) {
         this.model = builder.model;
     }
 
@@ -19,8 +18,8 @@ public class OnlineNeMoCtcModelConfig {
     public static class Builder {
         private String model = "";
 
-        public OnlineNeMoCtcModelConfig build() {
-            return new OnlineNeMoCtcModelConfig(this);
+        public OnlineToneCtcModelConfig build() {
+            return new OnlineToneCtcModelConfig(this);
         }
 
         public Builder setModel(String model) {

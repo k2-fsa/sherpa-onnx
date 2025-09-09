@@ -97,6 +97,7 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
+|[./test_asr_streaming_t_one_ctc.js](./test_asr_streaming_t_one_ctc.js)| Streaming speech recognition from a file using a T-one CTC model|
 |[./test_asr_streaming_transducer.js](./test_asr_streaming_transducer.js)| Streaming speech recognition from a file using a Zipformer transducer model|
 |[./test_asr_streaming_transducer_with_hr.js](./test_asr_streaming_transducer_with_hr.js)| Streaming speech recognition from a file using a Zipformer transducer model with homophone replacer|
 |[./test_asr_streaming_ctc.js](./test_asr_streaming_ctc.js)| Streaming speech recognition from a file using a Zipformer CTC model with greedy search|
@@ -228,6 +229,16 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/tes
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
 
 node ./test_asr_streaming_transducer_with_hr.js
+```
+
+### Streaming speech recognition with T-one CTC
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+tar xvf sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+
+node ./test_asr_streaming_t_one_ctc.js
 ```
 
 ### Streaming speech recognition with Zipformer transducer

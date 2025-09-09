@@ -150,3 +150,4 @@ kitten-nano-en-v0_1-fp16
 *.jar
 vocab.json
 *.so
+sherpa-onnx-streaming-t-one-russian-2025-09-08

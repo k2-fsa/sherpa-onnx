@@ -81,6 +81,10 @@ type OnlineNemoCtcModelConfig struct {
 	Model string // Path to the onnx model
 }
 
+type OnlineToneCtcModelConfig struct {
+	Model string // Path to the onnx model
+}
+
 // Configuration for online/streaming models
 //
 // Please refer to
@@ -92,6 +96,7 @@ type OnlineModelConfig struct {
 	Paraformer    OnlineParaformerModelConfig
 	Zipformer2Ctc OnlineZipformer2CtcModelConfig
 	NemoCtc       OnlineNemoCtcModelConfig
+	ToneCtc       OnlineToneCtcModelConfig
 	Tokens        string // Path to tokens.txt
 	NumThreads    int    // Number of threads to use for neural network computation
 	Provider      string // Optional. Valid values are: cpu, cuda, coreml
@@ -204,6 +209,9 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 
 	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCtc.Model)
 	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
+
+	c.model_config.t_one_ctc.model = C.CString(config.ModelConfig.ToneCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.t_one_ctc.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

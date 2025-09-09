@@ -108,6 +108,13 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (Streaming T-one)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-streaming-decode-file-tone-ctc.sh
+          rm -rf sherpa-onnx-streaming-t-one-*
+
       - name:  Run java test (Nemo Canary)
         shell: bash
         run: |
