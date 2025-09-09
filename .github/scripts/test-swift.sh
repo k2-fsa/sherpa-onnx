@@ -9,6 +9,9 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-decode-file-t-one-streaming.sh
+rm -rf sherpa-onnx-streaming-*
+
 ./run-compute-speaker-embeddings.sh
 rm -fv *.wav *.onnx
 

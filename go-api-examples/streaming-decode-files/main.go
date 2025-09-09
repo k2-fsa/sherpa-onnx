@@ -27,6 +27,7 @@ func main() {
 	flag.StringVar(&config.ModelConfig.Paraformer.Encoder, "paraformer-encoder", "", "Path to the paraformer encoder model")
 	flag.StringVar(&config.ModelConfig.Paraformer.Decoder, "paraformer-decoder", "", "Path to the paraformer decoder model")
 	flag.StringVar(&config.ModelConfig.Zipformer2Ctc.Model, "zipformer2-ctc", "", "Path to the zipformer2 CTC model")
+	flag.StringVar(&config.ModelConfig.ToneCtc.Model, "t-one-ctc", "", "Path to the T-one CTC model")
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
@@ -59,9 +60,12 @@ func main() {
 	stream := sherpa.NewOnlineStream(recognizer)
 	defer sherpa.DeleteOnlineStream(stream)
 
+	leftPadding := make([]float32, int(float32(sampleRate)*0.3))
+	stream.AcceptWaveform(sampleRate, leftPadding)
+
 	stream.AcceptWaveform(sampleRate, samples)
 
-	tailPadding := make([]float32, int(float32(sampleRate)*0.3))
+	tailPadding := make([]float32, int(float32(sampleRate)*0.6))
 	stream.AcceptWaveform(sampleRate, tailPadding)
 
 	for recognizer.IsReady(stream) {

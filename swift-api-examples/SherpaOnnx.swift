@@ -76,6 +76,14 @@ func sherpaOnnxOnlineNemoCtcModelConfig(
   )
 }
 
+func sherpaOnnxOnlineToneCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOnlineToneCtcModelConfig {
+  return SherpaOnnxOnlineToneCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 /// Return an instance of SherpaOnnxOnlineModelConfig.
 ///
 /// Please refer to
@@ -101,7 +109,8 @@ func sherpaOnnxOnlineModelConfig(
   bpeVocab: String = "",
   tokensBuf: String = "",
   tokensBufSize: Int = 0,
-  nemoCtc: SherpaOnnxOnlineNemoCtcModelConfig = sherpaOnnxOnlineNemoCtcModelConfig()
+  nemoCtc: SherpaOnnxOnlineNemoCtcModelConfig = sherpaOnnxOnlineNemoCtcModelConfig(),
+  toneCtc: SherpaOnnxOnlineToneCtcModelConfig = sherpaOnnxOnlineToneCtcModelConfig()
 ) -> SherpaOnnxOnlineModelConfig {
   return SherpaOnnxOnlineModelConfig(
     transducer: transducer,
@@ -116,7 +125,8 @@ func sherpaOnnxOnlineModelConfig(
     bpe_vocab: toCPointer(bpeVocab),
     tokens_buf: toCPointer(tokensBuf),
     tokens_buf_size: Int32(tokensBufSize),
-    nemo_ctc: nemoCtc
+    nemo_ctc: nemoCtc,
+    t_one_ctc: toneCtc
   )
 }
 
