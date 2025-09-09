@@ -695,6 +695,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 modelType = "nemo_transducer",
             )
         }
+
+        41 -> {
+            val modelDir = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09"
+            return OfflineModelConfig(
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }

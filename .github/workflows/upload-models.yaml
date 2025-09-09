@@ -156,6 +156,27 @@ jobs:
             ls -lh *.tar.bz2
           done
 
+      - name: sense-voice
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          d=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2025-09-09
+          f=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09
+          git clone https://huggingface.co/csukuangfj/$d
+          git clone https://huggingface.co/csukuangfj/$f
+
+          rm -rf $d/.git
+          rm -rf $f/.gi*
+
+          rm -rf $d/.gitattributes
+          rm -rf $f/.gitattributes
+
+          tar cjfv $d.tar.bz2 $d
+          tar cjfv $f.tar.bz2 $f
+
+          ls -lh *.tar.bz2
+
       - name: Vietnamese (zipformer)
         if: false
         shell: bash
