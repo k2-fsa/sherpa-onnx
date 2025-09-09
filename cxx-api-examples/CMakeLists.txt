@@ -15,6 +15,9 @@ target_link_libraries(kws-cxx-api sherpa-onnx-cxx-api)
 add_executable(streaming-zipformer-rtf-cxx-api ./streaming-zipformer-rtf-cxx-api.cc)
 target_link_libraries(streaming-zipformer-rtf-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(streaming-t-one-ctc-cxx-api   streaming-t-one-ctc-cxx-api.cc)
+target_link_libraries(streaming-t-one-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(whisper-cxx-api ./whisper-cxx-api.cc)
 target_link_libraries(whisper-cxx-api sherpa-onnx-cxx-api)
 
