@@ -11,6 +11,7 @@
 #include <locale>
 #endif
 
+#include <algorithm>
 #include <cassert>
 #include <ostream>
 #include <string>

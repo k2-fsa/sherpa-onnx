@@ -99,6 +99,10 @@ template Ort::Value Cat<float>(OrtAllocator *allocator,
                                const std::vector<const Ort::Value *> &values,
                                int32_t dim);
 
+template Ort::Value Cat<uint16_t>(OrtAllocator *allocator,
+                                  const std::vector<const Ort::Value *> &values,
+                                  int32_t dim);
+
 template Ort::Value Cat<int64_t>(OrtAllocator *allocator,
                                  const std::vector<const Ort::Value *> &values,
                                  int32_t dim);

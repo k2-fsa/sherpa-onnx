@@ -42,6 +42,7 @@ set(srcs
   online-punctuation.cc
   online-recognizer.cc
   online-stream.cc
+  online-t-one-ctc-model-config.cc
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
   online-zipformer2-ctc-model-config.cc
