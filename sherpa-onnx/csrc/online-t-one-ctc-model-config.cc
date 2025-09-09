@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/online-t-one-ctc-model-config.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-t-one-ctc-model-config.h"
 

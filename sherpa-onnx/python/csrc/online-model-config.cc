@@ -45,7 +45,7 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("zipformer2_ctc") = OnlineZipformer2CtcModelConfig(),
            py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(),
-           py::arg("t_one") = OnlineToneCtcModelConfig(),
+           py::arg("t_one_ctc") = OnlineToneCtcModelConfig(),
            py::arg("provider_config") = ProviderConfig(), py::arg("tokens"),
            py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("model_type") = "",

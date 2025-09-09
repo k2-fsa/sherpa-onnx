@@ -154,7 +154,6 @@ def main():
         sample_rate=sample_rate,
         frame_length_ms=model.frame_length_ms,
     )
-    s = np.sum(features, axis=-1)
 
     id2token = load_tokens(args.tokens)
 
