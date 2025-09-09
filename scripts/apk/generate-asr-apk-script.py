@@ -469,6 +469,21 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-t-one-russian-2025-09-08",
+            idx=27,
+            lang="ru",
+            short_name="t_one_ctc_2025_09_08",
+            cmd="""
+            pushd $model_name
+
+            rm -v *.wav
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models

@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
-          run-streaming-decode-file-tone-ctc.sh
+          ./run-streaming-decode-file-tone-ctc.sh
           rm -rf sherpa-onnx-streaming-t-one-*
 
       - name:  Run java test (Nemo Canary)
