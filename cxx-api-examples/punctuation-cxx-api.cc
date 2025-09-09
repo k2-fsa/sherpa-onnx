@@ -2,7 +2,8 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 // To use punctuation model:
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+// wget
+// https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 // tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 // rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
@@ -15,14 +16,17 @@ int32_t main() {
   using namespace sherpa_onnx::cxx;  // NOLINT
 
   OfflinePunctuationConfig punctuation_config;
-  punctuation_config.model.ct_transformer = "./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx";
+  punctuation_config.model.ct_transformer =
+      "./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/"
+      "model.onnx";
   punctuation_config.model.num_threads = 1;
   punctuation_config.model.debug = false;
   punctuation_config.model.provider = "cpu";
 
   OfflinePunctuation punct = OfflinePunctuation::Create(punctuation_config);
   if (!punct.Get()) {
-    std::cerr << "Failed to create punctuation model. Please check your config\n";
+    std::cerr
+        << "Failed to create punctuation model. Please check your config\n";
     return -1;
   }
 

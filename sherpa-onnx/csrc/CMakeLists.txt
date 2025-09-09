@@ -95,6 +95,8 @@ set(sources
   online-recognizer.cc
   online-rnn-lm.cc
   online-stream.cc
+  online-t-one-ctc-model-config.cc
+  online-t-one-ctc-model.cc
   online-transducer-decoder.cc
   online-transducer-greedy-search-decoder.cc
   online-transducer-greedy-search-nemo-decoder.cc

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/jieba-lexicon.h"
 
+#include <algorithm>
 #include <fstream>
 #include <regex>  // NOLINT
 #include <strstream>

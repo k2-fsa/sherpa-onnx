@@ -62,6 +62,8 @@ class FeatureExtractor::Impl {
       InitMfcc();
     } else if (config_.is_whisper) {
       InitWhisper();
+    } else if (config_.is_t_one) {
+      InitRawAudioSamples();
     } else {
       InitFbank();
     }
@@ -135,6 +137,9 @@ class FeatureExtractor::Impl {
     } else if (whisper_fbank_) {
       whisper_fbank_->InputFinished();
       return;
+    } else if (raw_audio_) {
+      raw_audio_->InputFinished();
+      return;
     } else if (mfcc_) {
       mfcc_->InputFinished();
       return;
@@ -149,6 +154,8 @@ class FeatureExtractor::Impl {
       return fbank_->NumFramesReady();
     } else if (whisper_fbank_) {
       return whisper_fbank_->NumFramesReady();
+    } else if (raw_audio_) {
+      return raw_audio_->NumFramesReady();
     } else if (mfcc_) {
       return mfcc_->NumFramesReady();
     }
@@ -163,6 +170,8 @@ class FeatureExtractor::Impl {
       return fbank_->IsLastFrame(frame);
     } else if (whisper_fbank_) {
       return whisper_fbank_->IsLastFrame(frame);
+    } else if (raw_audio_) {
+      return raw_audio_->IsLastFrame(frame);
     } else if (mfcc_) {
       return mfcc_->IsLastFrame(frame);
     }
@@ -209,6 +218,8 @@ class FeatureExtractor::Impl {
       return opts_.mel_opts.num_bins;
     } else if (mfcc_) {
       return mfcc_opts_.num_ceps;
+    } else if (raw_audio_) {
+      return raw_audio_->Dim();
     }
 
     SHERPA_ONNX_LOGE("unreachable code");
@@ -225,6 +236,9 @@ class FeatureExtractor::Impl {
     } else if (whisper_fbank_) {
       whisper_fbank_->AcceptWaveform(sampling_rate, waveform, n);
       return;
+    } else if (raw_audio_) {
+      raw_audio_->AcceptWaveform(sampling_rate, waveform, n);
+      return;
     } else if (mfcc_) {
       mfcc_->AcceptWaveform(sampling_rate, waveform, n);
       return;
@@ -239,6 +253,8 @@ class FeatureExtractor::Impl {
       return fbank_->GetFrame(frame_index);
     } else if (whisper_fbank_) {
       return whisper_fbank_->GetFrame(frame_index);
+    } else if (raw_audio_) {
+      return raw_audio_->GetFrame(frame_index);
     } else if (mfcc_) {
       return mfcc_->GetFrame(frame_index);
     }
@@ -254,6 +270,9 @@ class FeatureExtractor::Impl {
       return;
     } else if (whisper_fbank_) {
       whisper_fbank_->Pop(discard_num);
+      return;
+    } else if (raw_audio_) {
+      raw_audio_->Pop(discard_num);
       return;
     } else if (mfcc_) {
       mfcc_->Pop(discard_num);
@@ -322,11 +341,21 @@ class FeatureExtractor::Impl {
     config_.sampling_rate = opts_.frame_opts.samp_freq;
   }
 
+  void InitRawAudioSamples() {
+    opts_raw_audio_.frame_opts.samp_freq = config_.sampling_rate;
+    opts_raw_audio_.frame_opts.frame_length_ms = config_.frame_length_ms;
+    opts_raw_audio_.frame_opts.frame_shift_ms = config_.frame_shift_ms;
+
+    raw_audio_ = std::make_unique<knf::OnlineRawAudioSamples>(opts_raw_audio_);
+  }
+
  private:
   std::unique_ptr<knf::OnlineFbank> fbank_;
   std::unique_ptr<knf::OnlineMfcc> mfcc_;
   std::unique_ptr<knf::OnlineWhisperFbank> whisper_fbank_;
+  std::unique_ptr<knf::OnlineRawAudioSamples> raw_audio_;
   knf::FbankOptions opts_;
+  knf::RawAudioSamplesOptions opts_raw_audio_;
   knf::MfccOptions mfcc_opts_;
   FeatureExtractorConfig config_;
   mutable std::mutex mutex_;

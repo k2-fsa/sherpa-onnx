@@ -155,10 +155,30 @@ Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v) {
       std::copy(start, end, dst);
       return ans;
     }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16: {
+      Ort::Value ans =
+          Ort::Value::CreateTensor(allocator, shape.data(), shape.size(),
+                                   ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+      const auto *start = v->GetTensorData<uint16_t>();
+      const auto *end = start + type_and_shape.GetElementCount();
+      auto *dst = ans.GetTensorMutableData<uint16_t>();
+      std::copy(start, end, dst);
+      return ans;
+    }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16: {
+      Ort::Value ans = Ort::Value::CreateTensor<uint16_t>(
+          allocator, shape.data(), shape.size());
+      const auto *start = v->GetTensorData<uint16_t>();
+      const auto *end = start + type_and_shape.GetElementCount();
+      auto *dst = ans.GetTensorMutableData<uint16_t>();
+      std::copy(start, end, dst);
+      return ans;
+    }
+
     default:
-      fprintf(stderr, "Unsupported type: %d\n",
-              static_cast<int32_t>(type_and_shape.GetElementType()));
-      exit(-1);
+      SHERPA_ONNX_LOGE("Unsupported type: %d\n",
+                       static_cast<int32_t>(type_and_shape.GetElementType()));
+      SHERPA_ONNX_EXIT(-1);
       // unreachable code
       return Ort::Value{nullptr};
   }
@@ -183,14 +203,23 @@ Ort::Value View(Ort::Value *v) {
       return Ort::Value::CreateTensor(
           memory_info, v->GetTensorMutableData<float>(),
           type_and_shape.GetElementCount(), shape.data(), shape.size());
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
+      return Ort::Value::CreateTensor(
+          memory_info, v->GetTensorMutableData<uint16_t>(),
+          type_and_shape.GetElementCount() * sizeof(uint16_t), shape.data(),
+          shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
+      return Ort::Value::CreateTensor(
+          memory_info, v->GetTensorMutableData<uint16_t>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
       return Ort::Value::CreateTensor(
           memory_info, v->GetTensorMutableData<bool>(),
           type_and_shape.GetElementCount(), shape.data(), shape.size());
     default:
-      fprintf(stderr, "Unsupported type: %d\n",
-              static_cast<int32_t>(type_and_shape.GetElementType()));
-      exit(-1);
+      SHERPA_ONNX_LOGE("Unsupported type: %d\n",
+                       static_cast<int32_t>(type_and_shape.GetElementType()));
+      SHERPA_ONNX_EXIT(-1);
       // unreachable code
       return Ort::Value{nullptr};
   }

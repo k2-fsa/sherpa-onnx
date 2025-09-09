@@ -83,12 +83,13 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   if (!config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.zipformer2_ctc.model.empty() ||
-      !config.model_config.nemo_ctc.model.empty()) {
+      !config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.t_one_ctc.model.empty()) {
     return std::make_unique<OnlineRecognizerCtcImpl>(config);
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
 }
 
 template <typename Manager>
@@ -142,12 +143,13 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   if (!config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.zipformer2_ctc.model.empty() ||
-      !config.model_config.nemo_ctc.model.empty()) {
+      !config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.t_one_ctc.model.empty()) {
     return std::make_unique<OnlineRecognizerCtcImpl>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
 }
 
 OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)

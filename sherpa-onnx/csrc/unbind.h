@@ -23,6 +23,9 @@ template <typename T = float>
 std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
                                int32_t dim);
 
+std::vector<Ort::Value> UnbindFloat16(OrtAllocator *allocator,
+                                      const Ort::Value *value, int32_t dim);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_UNBIND_H_

@@ -147,14 +147,13 @@ def main():
         sample_rate = model.sample_rate
 
     # Pad 0.5 seconds
-    samples = np.pad(samples, (0, 4000))
+    samples = np.pad(samples, (2400, 2400))
 
     features = compute_feat(
         samples=samples,
         sample_rate=sample_rate,
         frame_length_ms=model.frame_length_ms,
     )
-    print(features.shape)
 
     id2token = load_tokens(args.tokens)
 

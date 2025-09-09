@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_ZIPVOICE_IMPL_H_
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
