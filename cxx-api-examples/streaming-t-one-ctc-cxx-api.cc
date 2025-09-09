@@ -1,4 +1,4 @@
-// cxx-api-examples/streaming-t-one-ctc-cxx-api.ccc
+// cxx-api-examples/streaming-t-one-ctc-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 
 //
