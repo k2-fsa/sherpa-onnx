@@ -147,4 +147,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(kokoro-tts-zh-en-cxx-api ./kokoro-tts-zh-en-cxx-api.cc)
   target_link_libraries(kokoro-tts-zh-en-cxx-api sherpa-onnx-cxx-api)
+
+  add_executable(piper-tts-cxx-api ./piper-tts-cxx-api.cc)
+  target_link_libraries(piper-tts-cxx-api sherpa-onnx-cxx-api)
 endif()

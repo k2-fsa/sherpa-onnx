@@ -424,6 +424,7 @@ struct OfflineTtsModelConfig {
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
+  OfflineTtsPiperModelConfig piper;
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";

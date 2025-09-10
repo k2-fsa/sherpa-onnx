@@ -201,6 +201,13 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-matcha-model-config.cc
     offline-tts-matcha-model.cc
     offline-tts-model-config.cc
+    offline-tts-piper-impl.cc
+    offline-tts-piper-model-config.cc
+    offline-tts-piper-model.cc
+    offline-tts-piper-model-meta-data.cc
+    piper-phoneme-ids.cc
+    piper-phonemize.cc
+    piper-voice.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
     offline-tts-zipvoice-frontend.cc

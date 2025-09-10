@@ -17,6 +17,8 @@ static int32_t AudioCallback(const float * /*samples*/, int32_t n,
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
+--piper-model=D:/Sound/PiperModel/alan/en_GB-alan-medium.onnx  --piper-model-config-file=D:/Sound/PiperModel/alan/en_GB-alan-medium.onnx.json  --piper-data-dir=D:/Sound/sherpa-onnx/vits-piper-en_US-amy-low --debug=1 --output-filename="D:\Sound\sherpa-onnx\generated.wav" "How are you?" 
+--vits-model=D:/Sound/sherpa-onnx/vits-piper-en_US-amy-low/en_US-amy-low.onnx  --vits-tokens=D:/Sound/sherpa-onnx/vits-piper-en_US-amy-low/tokens.txt --vits-data-dir=D:/Sound/sherpa-onnx/vits-piper-en_US-amy-low/espeak-ng-data  --output-filename=./generated.wav --debug=1 "How are you?"
 Offline/Non-streaming text-to-speech with sherpa-onnx
 
 Usage example:
