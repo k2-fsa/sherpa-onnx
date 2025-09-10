@@ -256,7 +256,7 @@ to download pre-trained Tdnn models.
     }
     else if (!string.IsNullOrEmpty(options.WenetCtc))
     {
-      config.ModelConfig.WenetCtc = options.WenetCtc;
+      config.ModelConfig.WenetCtc.Model = options.WenetCtc;
     }
     else if (!string.IsNullOrEmpty(options.WhisperEncoder))
     {
