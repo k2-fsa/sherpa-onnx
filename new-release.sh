@@ -2,11 +2,11 @@
 
 set -ex
 
-old_version_code=20250825
-new_version_code=20250901
+old_version_code=20250901
+new_version_code=20250910
 
-old_version="1\.12\.10"
-new_version="1\.12\.11"
+old_version="1\.12\.11"
+new_version="1\.12\.12"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -44,6 +44,7 @@ find nodejs-examples -name package.json -type f -exec sed -i.bak "$replace_str" 
 
 find harmony-os -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find harmony-os -name oh-package.json5 -type f -exec sed -i.bak "$replace_str" {} \;
+find harmony-os -name BuildProfile.ets -type f -exec sed -i.bak "$replace_str" {} \;
 
 find mfc-examples -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
 

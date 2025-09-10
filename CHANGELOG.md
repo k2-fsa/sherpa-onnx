@@ -1,3 +1,23 @@
+## 1.12.12
+
+* Fix building for risc-v (#2549)
+* Fix using sherpa-onnx as a cmake sub-project. (#2550)
+* Update kaldifst and kaldi-decoder (#2551)
+* Support armv8l in Java API (#2556)
+* Disable loading libs from jar on Android. (#2557)
+* Fix cantonese vits tts (#2558)
+* Avoid appending blanks for Cantonese vits tts. (#2559)
+* Add hint for loading model files from SD card on Android. (#2564)
+* Update README to include https://github.com/Mentra-Community/MentraOS (#2565)
+* Export models from https://github.com/voicekit-team/T-one to sherpa-onnx (#2571)
+* Add C++ and Python support for T-one streaming Russian ASR models (#2575)
+* Add various language bindings for streaming T-one Russian ASR models (#2576)
+* Fix the missing online punctuation in android aar (#2577)
+* Export KittenTTS mini v0.1 to sherpa-onnx (#2578)
+* Upload new sense-voice models (#2580)
+* Export ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue to sherpa-onnx (#2582)
+* Add various languge bindings for Wenet non-streaming CTC models (#2584)
+
 ## 1.12.11
 
 * Add two more Piper tts models (#2525)
