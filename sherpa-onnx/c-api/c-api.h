@@ -476,6 +476,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineZipformerCtcModelConfig {
   const char *model;
 } SherpaOnnxOfflineZipformerCtcModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWenetCtcModelConfig {
+  const char *model;
+} SherpaOnnxOfflineWenetCtcModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineTransducerModelConfig transducer;
   SherpaOnnxOfflineParaformerModelConfig paraformer;
@@ -501,6 +505,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineDolphinModelConfig dolphin;
   SherpaOnnxOfflineZipformerCtcModelConfig zipformer_ctc;
   SherpaOnnxOfflineCanaryModelConfig canary;
+  SherpaOnnxOfflineWenetCtcModelConfig wenet_ctc;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

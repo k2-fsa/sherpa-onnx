@@ -29,6 +29,7 @@ namespace SherpaOnnx
             Dolphin = new OfflineDolphinModelConfig();
             ZipformerCtc = new OfflineZipformerCtcModelConfig();
             Canary = new OfflineCanaryModelConfig();
+            WenetCtc = new OfflineWenetCtcModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -64,5 +65,6 @@ namespace SherpaOnnx
         public OfflineDolphinModelConfig Dolphin;
         public OfflineZipformerCtcModelConfig ZipformerCtc;
         public OfflineCanaryModelConfig Canary;
+        public OfflineWenetCtcModelConfig WenetCtc;
     }
 }

@@ -27,6 +27,9 @@ rm -rf sherpa-onnx-nemo-*
 
 cd ../offline-decode-files
 
+./run-wenet-ctc.sh
+rm -rf sherpa-onnx-*
+
 ./run-zipformer-ctc.sh
 rm -rf sherpa-onnx-*
 
@@ -108,6 +111,9 @@ cd ../keyword-spotting-from-files
 ./run.sh
 
 cd ../online-decode-files
+./run-t-one-ctc.sh
+rm -rf sherpa-onnx-*
+
 ./run-transducer-itn.sh
 rm -rf sherpa-onnx-*
 

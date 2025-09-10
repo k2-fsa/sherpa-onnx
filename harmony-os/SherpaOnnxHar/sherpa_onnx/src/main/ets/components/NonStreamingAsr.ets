@@ -60,6 +60,10 @@ export class OfflineZipformerCtcModelConfig {
   public model: string = '';
 }
 
+export class OfflineWenetCtcModelConfig {
+  public model: string = '';
+}
+
 export class OfflineWhisperModelConfig {
   public encoder: string = '';
   public decoder: string = '';
@@ -112,6 +116,7 @@ export class OfflineModelConfig {
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
   public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
   public canary: OfflineCanaryModelConfig = new OfflineCanaryModelConfig();
+  public wenetCtc: OfflineWenetCtcModelConfig = new OfflineWenetCtcModelConfig();
 }
 
 export class OfflineLMConfig {

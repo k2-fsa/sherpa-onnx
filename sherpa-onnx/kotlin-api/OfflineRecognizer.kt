@@ -36,6 +36,10 @@ data class OfflineZipformerCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineWenetCtcModelConfig(
+    var model: String = "",
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -80,6 +84,7 @@ data class OfflineModelConfig(
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
     var zipformerCtc: OfflineZipformerCtcModelConfig = OfflineZipformerCtcModelConfig(),
+    var wenetCtc: OfflineWenetCtcModelConfig = OfflineWenetCtcModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
@@ -700,6 +705,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             val modelDir = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09"
             return OfflineModelConfig(
                 senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        42 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
                     model = "$modelDir/model.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",

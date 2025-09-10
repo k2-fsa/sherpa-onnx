@@ -506,6 +506,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.canary.use_pnc =
       config->model_config.canary.use_pnc;
 
+  recognizer_config.model_config.wenet_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.wenet_ctc.model, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =

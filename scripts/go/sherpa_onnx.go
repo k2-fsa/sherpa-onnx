@@ -418,6 +418,10 @@ type OfflineZipformerCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineWenetCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -478,6 +482,7 @@ type OfflineModelConfig struct {
 	Dolphin      OfflineDolphinModelConfig
 	ZipformerCtc OfflineZipformerCtcModelConfig
 	Canary       OfflineCanaryModelConfig
+	WenetCtc     OfflineWenetCtcModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -578,6 +583,8 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.canary.src_lang = C.CString(config.ModelConfig.Canary.SrcLang)
 	c.model_config.canary.tgt_lang = C.CString(config.ModelConfig.Canary.TgtLang)
 	c.model_config.canary.use_pnc = C.int(config.ModelConfig.Canary.UsePnc)
+
+	c.model_config.wenet_ctc.model = C.CString(config.ModelConfig.WenetCtc.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -725,6 +732,11 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 	if c.model_config.canary.tgt_lang != nil {
 		C.free(unsafe.Pointer(c.model_config.canary.tgt_lang))
 		c.model_config.canary.tgt_lang = nil
+	}
+
+	if c.model_config.wenet_ctc.model != nil {
+		C.free(unsafe.Pointer(c.model_config.wenet_ctc.model))
+		c.model_config.wenet_ctc.model = nil
 	}
 
 	if c.model_config.tokens != nil {

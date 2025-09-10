@@ -19,6 +19,9 @@ rm -fv *.wav *.onnx
 ls -lh
 rm -rf kitten-*
 
+./run-wenet-ctc-asr.sh
+rm -rf sherpa-onnx-*
+
 ./run-zipformer-ctc-asr.sh
 rm -rf sherpa-onnx-zipformer-*
 

@@ -714,6 +714,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
+            idx=42,
+            lang="zh_en_yue",
+            lang2="中英粤",
+            short_name="wenetspeech_yue_u2pconformer_ctc_2025_09_10_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

@@ -70,6 +70,10 @@ popd
 
 pushd non-streaming-asr
 
+echo '----------Wenet CTC----------'
+./run-wenet-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Zipformer CTC----------'
 ./run-zipformer-ctc.sh
 rm -rf sherpa-onnx-*

@@ -14,6 +14,7 @@ static_assert(sizeof(SherpaOnnxOfflineTransducerModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineWenetCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
@@ -35,7 +36,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) +
                       sizeof(SherpaOnnxOfflineDolphinModelConfig) +
                       sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) +
-                      sizeof(SherpaOnnxOfflineCanaryModelConfig),
+                      sizeof(SherpaOnnxOfflineCanaryModelConfig) +
+                      sizeof(SherpaOnnxOfflineWenetCtcModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -83,6 +85,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto dolphin = &model_config->dolphin;
   auto zipformer_ctc = &model_config->zipformer_ctc;
   auto canary = &model_config->canary;
+  auto wenet_ctc = &model_config->wenet_ctc;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -132,6 +135,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "src_lang: %s\n", canary->src_lang);
   fprintf(stdout, "tgt_lang: %s\n", canary->tgt_lang);
   fprintf(stdout, "use_pnc: %d\n", canary->use_pnc);
+
+  fprintf(stdout, "----------offline wenet ctc model config----------\n");
+  fprintf(stdout, "model: %s\n", wenet_ctc->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

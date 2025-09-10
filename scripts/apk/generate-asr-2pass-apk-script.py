@@ -184,8 +184,22 @@ def get_2nd_models():
             pushd $model_name
 
             rm -rfv test_wavs
-            rm -fv model.onnx
             rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
+            idx=42,
+            lang="zh_en_yue",
+            short_name="wenetspeech_yue_u2pconformer_ctc_2025_09_10_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
 
             ls -lh
 
@@ -399,6 +413,7 @@ def get_models():
         "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
         "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
         "sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
+        "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
     ]
     for first_m in first_zh:
         for second_m in second_zh:
@@ -424,6 +439,10 @@ def get_models():
         (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
         ),
     ]
     models = []
