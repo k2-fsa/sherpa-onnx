@@ -30,6 +30,9 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(wenet-ctc-cxx-api ./wenet-ctc-cxx-api.cc)
+target_link_libraries(wenet-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
 target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
 
@@ -42,6 +45,15 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
   )
   target_link_libraries(sense-voice-simulate-streaming-microphone-cxx-api
+    sherpa-onnx-cxx-api
+    portaudio_static
+  )
+
+  add_executable(wenet-ctc-simulate-streaming-microphone-cxx-api
+    ./wenet-ctc-simulate-streaming-microphone-cxx-api.cc
+    ${CMAKE_CURRENT_LIST_DIR}/../sherpa-onnx/csrc/microphone.cc
+  )
+  target_link_libraries(wenet-ctc-simulate-streaming-microphone-cxx-api
     sherpa-onnx-cxx-api
     portaudio_static
   )

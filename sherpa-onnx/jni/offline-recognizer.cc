@@ -285,9 +285,8 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   env->ReleaseStringUTFChars(s, p);
 
   // wenet ctc
-  fid =
-      env->GetFieldID(model_config_cls, "wenetCtc",
-                      "Lcom/k2fsa/sherpa/onnx/OfflineZipformerCtcModelConfig;");
+  fid = env->GetFieldID(model_config_cls, "wenetCtc",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineWenetCtcModelConfig;");
   jobject wenet_ctc_config = env->GetObjectField(model_config, fid);
   jclass wenet_ctc_config_cls = env->GetObjectClass(wenet_ctc_config);
 

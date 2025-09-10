@@ -80,6 +80,9 @@ target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
+add_executable(wenet-ctc-c-api wenet-ctc-c-api.c)
+target_link_libraries(wenet-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
 

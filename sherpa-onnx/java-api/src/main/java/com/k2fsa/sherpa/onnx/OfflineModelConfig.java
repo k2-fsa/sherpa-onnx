@@ -33,6 +33,7 @@ public class OfflineModelConfig {
         this.nemo = builder.nemo;
         this.zipformerCtc = builder.zipformerCtc;
         this.canary = builder.canary;
+        this.wenetCtc = builder.wenetCtc;
         this.senseVoice = builder.senseVoice;
         this.dolphin = builder.dolphin;
         this.teleSpeech = builder.teleSpeech;
