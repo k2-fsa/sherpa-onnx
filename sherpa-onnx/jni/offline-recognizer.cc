@@ -290,8 +290,7 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   jobject wenet_ctc_config = env->GetObjectField(model_config, fid);
   jclass wenet_ctc_config_cls = env->GetObjectClass(wenet_ctc_config);
 
-  fid =
-      env->GetFieldID(zipformer_ctc_config_cls, "model", "Ljava/lang/String;");
+  fid = env->GetFieldID(wenet_ctc_config_cls, "model", "Ljava/lang/String;");
 
   s = (jstring)env->GetObjectField(wenet_ctc_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
