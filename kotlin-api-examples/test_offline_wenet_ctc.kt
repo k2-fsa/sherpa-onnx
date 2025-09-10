@@ -15,24 +15,7 @@ fun main() {
   recognizer.decode(stream)
 
   var result = recognizer.getResult(stream)
-  println("English: $result")
-
-  stream.release()
-
-  // now output text in German
-  val config = recognizer.config.copy(modelConfig=recognizer.config.modelConfig.copy(
-    canary=recognizer.config.modelConfig.canary.copy(
-      tgtLang="de"
-    )
-  ))
-  recognizer.setConfig(config)
-
-  stream = recognizer.createStream()
-  stream.acceptWaveform(samples, sampleRate=sampleRate)
-  recognizer.decode(stream)
-
-  result = recognizer.getResult(stream)
-  println("German: $result")
+  println(result)
 
   stream.release()
   recognizer.release()
