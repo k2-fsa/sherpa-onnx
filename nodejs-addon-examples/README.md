@@ -435,10 +435,6 @@ tar xvf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025
 rm sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
 
 node ./test_asr_non_streaming_wenet_ctc.js
-
-# To run VAD + non-streaming ASR with Paraformer using a microphone
-npm install naudiodon2
-node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
 ```
 
 ### Non-streaming speech recognition with Paraformer

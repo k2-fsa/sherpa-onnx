@@ -196,7 +196,7 @@ jobs:
 
           echo "Test Wenet CTC"
           ./run-wenet-ctc.sh
-          rm -rf sherpa-onnx-*
+          rm -rf sherpa-onnx-wenet*
 
           echo "Test Zipformer CTC"
           ./run-zipformer-ctc.sh
