@@ -117,7 +117,7 @@ def get_2nd_models():
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
             idx=15,
             lang="zh_en_ko_ja_yue",
-            short_name="sense_voice",
+            short_name="sense_voice_2024_07_17_int8",
             cmd="""
             pushd $model_name
 
@@ -169,6 +169,23 @@ def get_2nd_models():
             pushd $model_name
 
             rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
+            idx=41,
+            lang="zh_en_ko_ja_yue",
+            short_name="sense_voice_2025_09_09_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv model.onnx
+            rm -fv *.py
 
             ls -lh
 
@@ -380,6 +397,7 @@ def get_models():
         "sherpa-onnx-paraformer-zh-2023-09-14",
         "icefall-asr-zipformer-wenetspeech-20230615",
         "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+        "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
         "sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
     ]
     for first_m in first_zh:
@@ -402,6 +420,10 @@ def get_models():
         (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
         ),
     ]
     models = []
