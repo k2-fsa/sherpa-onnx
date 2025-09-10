@@ -194,6 +194,10 @@ jobs:
           go build
           ls -lh
 
+          echo "Test Wenet CTC"
+          ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-*
+
           echo "Test Zipformer CTC"
           ./run-zipformer-ctc.sh
           rm -rf sherpa-onnx-zipformer-*
