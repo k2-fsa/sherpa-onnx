@@ -36,6 +36,7 @@ java_files += OfflineFireRedAsrModelConfig.java
 java_files += OfflineMoonshineModelConfig.java
 java_files += OfflineNemoEncDecCtcModelConfig.java
 java_files += OfflineZipformerCtcModelConfig.java
+java_files += OfflineWenetCtcModelConfig.java
 java_files += OfflineCanaryModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java
 java_files += OfflineDolphinModelConfig.java

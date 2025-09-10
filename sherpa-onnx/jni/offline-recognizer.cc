@@ -284,6 +284,21 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.zipformer_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // wenet ctc
+  fid =
+      env->GetFieldID(model_config_cls, "wenetCtc",
+                      "Lcom/k2fsa/sherpa/onnx/OfflineZipformerCtcModelConfig;");
+  jobject wenet_ctc_config = env->GetObjectField(model_config, fid);
+  jclass wenet_ctc_config_cls = env->GetObjectClass(wenet_ctc_config);
+
+  fid =
+      env->GetFieldID(zipformer_ctc_config_cls, "model", "Ljava/lang/String;");
+
+  s = (jstring)env->GetObjectField(wenet_ctc_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.wenet_ctc.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",
                         "Lcom/k2fsa/sherpa/onnx/OfflineCanaryModelConfig;");
