@@ -29,6 +29,7 @@ func main() {
 	flag.StringVar(&config.ModelConfig.NemoCTC.Model, "nemo-ctc", "", "Path to the NeMo CTC model")
 
 	flag.StringVar(&config.ModelConfig.ZipformerCtc.Model, "zipformer-ctc", "", "Path to the Zipformer CTC model")
+	flag.StringVar(&config.ModelConfig.WenetCtc.Model, "wenet-ctc", "", "Path to the Wenet CTC model")
 
 	flag.StringVar(&config.ModelConfig.Dolphin.Model, "dolphin-model", "", "Path to the Dolphin CTC model")
 
