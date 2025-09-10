@@ -177,6 +177,29 @@ jobs:
 
           ls -lh *.tar.bz2
 
+      - name: u2ppconformer
+        if: true
+        shell: bash
+        run: |
+          git lfs install
+
+          d=sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-2025-09-10
+          f=sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10
+
+          git clone https://huggingface.co/csukuangfj/$d
+          git clone https://huggingface.co/csukuangfj/$f
+
+          rm -rf $d/.git
+          rm -rf $f/.gi*
+
+          rm -rf $d/.gitattributes
+          rm -rf $f/.gitattributes
+
+          tar cjfv $d.tar.bz2 $d
+          tar cjfv $f.tar.bz2 $f
+
+          ls -lh *.tar.bz2
+
       - name: Vietnamese (zipformer)
         if: false
         shell: bash
