@@ -281,6 +281,10 @@ final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineWenetCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -360,6 +364,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineDolphinModelConfig dolphin;
   external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
   external SherpaOnnxOfflineCanaryModelConfig canary;
+  external SherpaOnnxOfflineWenetCtcModelConfig wenetCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
