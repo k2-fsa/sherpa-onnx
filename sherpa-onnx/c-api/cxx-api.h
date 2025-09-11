@@ -424,10 +424,17 @@ struct OfflineTtsModelConfig {
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
-  OfflineTtsPiperModelConfig piper;
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
+};
+
+struct OfflineTtsConfig {
+  OfflineTtsModelConfig model;
+  std::string rule_fsts;
+  std::string rule_fars;
+  int32_t max_num_sentences = 1;
+  float silence_scale = 0.2;
 };
 
 struct GeneratedAudio {
