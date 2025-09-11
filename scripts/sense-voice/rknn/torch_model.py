@@ -584,18 +584,20 @@ class SenseVoiceSmall(nn.Module):
             7 + len(self.lid_dict) + len(self.textnorm_dict), self.input_size
         )
 
-    def forward(self, x, language, text_norm):
-        # TODO(fangjun): Optimize it and call self.embed() only once
-        language_query = self.embed(language).repeat(x.size(0), 1, 1)
+    def forward(self, x, prompt):
+        if False:
+            language_query = self.embed(language).repeat(x.size(0), 1, 1)
 
-        textnorm_query = self.embed(text_norm).repeat(x.size(0), 1, 1)
+            textnorm_query = self.embed(text_norm).repeat(x.size(0), 1, 1)
 
-        x = torch.cat((textnorm_query, x), dim=1)
+            x = torch.cat((textnorm_query, x), dim=1)
 
-        event_emo_query = self.embed(torch.LongTensor([[1, 2]]).to(x.device)).repeat(
-            x.size(0), 1, 1
-        )
-        input_query = torch.cat((language_query, event_emo_query), dim=1)
+            event_emo_query = self.embed(
+                torch.LongTensor([[1, 2]]).to(x.device)
+            ).repeat(x.size(0), 1, 1)
+            input_query = torch.cat((language_query, event_emo_query), dim=1)
+        else:
+            input_query = self.embed(prompt).unsqueeze(0)
 
         x = torch.cat((input_query, x), dim=1)
 

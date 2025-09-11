@@ -83,17 +83,19 @@ def main():
     del state_dict
 
     x = torch.randn(1, 100, 560, dtype=torch.float32)
-    language = torch.tensor([3], dtype=torch.int32)
-    text_norm = torch.tensor([15], dtype=torch.int32)
+
+    language = 3
+    text_norm = 15
+    prompt = torch.tensor([language, 1, 2, text_norm], dtype=torch.int32)
 
     opset_version = 13
     filename = "model.onnx"
     torch.onnx.export(
         model,
-        (x, language, text_norm),
+        (x, prompt),
         filename,
         opset_version=opset_version,
-        input_names=["x", "language", "text_norm"],
+        input_names=["x", "prompt"],
         output_names=["logits"],
         dynamic_axes={},
     )
