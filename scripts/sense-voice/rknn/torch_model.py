@@ -450,10 +450,8 @@ class SenseVoiceEncoderSmall(nn.Module):
     def forward(
         self,
         xs_pad: torch.Tensor,
-        ilens: torch.Tensor,
     ):
-        maxlen = xs_pad.shape[1]
-        masks = sequence_mask(ilens, maxlen=maxlen, device=ilens.device)[:, None, :]
+        masks = None
 
         xs_pad *= self.output_size**0.5
 
@@ -469,21 +467,13 @@ class SenseVoiceEncoderSmall(nn.Module):
             xs_pad, masks = encoder_outs[0], encoder_outs[1]
 
         xs_pad = self.after_norm(xs_pad)
-        print(
-            "torch after_norm",
-            self.after_norm.weight.shape,
-            self.after_norm.weight.sum(),
-        )
-
-        # forward encoder2
-        olens = masks.squeeze(1).sum(1).int()
 
         for layer_idx, encoder_layer in enumerate(self.tp_encoders):
             encoder_outs = encoder_layer(xs_pad, masks)
             xs_pad, masks = encoder_outs[0], encoder_outs[1]
 
         xs_pad = self.tp_norm(xs_pad)
-        return xs_pad, olens
+        return xs_pad
 
 
 class CTC(nn.Module):
@@ -594,15 +584,13 @@ class SenseVoiceSmall(nn.Module):
             7 + len(self.lid_dict) + len(self.textnorm_dict), self.input_size
         )
 
-    def forward(self, x, x_len, language, text_norm):
+    def forward(self, x, language, text_norm):
+        # TODO(fangjun): Optimize it and call self.embed() only once
         language_query = self.embed(language).repeat(x.size(0), 1, 1)
-        print(language_query.shape)
 
         textnorm_query = self.embed(text_norm).repeat(x.size(0), 1, 1)
-        print(textnorm_query.shape)
 
         x = torch.cat((textnorm_query, x), dim=1)
-        x_len += 1
 
         event_emo_query = self.embed(torch.LongTensor([[1, 2]]).to(x.device)).repeat(
             x.size(0), 1, 1
@@ -610,9 +598,8 @@ class SenseVoiceSmall(nn.Module):
         input_query = torch.cat((language_query, event_emo_query), dim=1)
 
         x = torch.cat((input_query, x), dim=1)
-        x_len += 3
 
-        encoder_out, encoder_out_lens = self.encoder(x, x_len)
+        encoder_out = self.encoder(x)
         logits = self.ctc.ctc_lo(encoder_out)
 
-        return logits, encoder_out_lens
+        return logits

@@ -101,16 +101,15 @@ class OnnxModel:
 
         self.max_len = self.model.get_inputs()[0].shape[1]
 
-    def __call__(self, x, x_length, language, text_norm):
+    def __call__(self, x, language, text_norm):
         logits = self.model.run(
             [
                 self.model.get_outputs()[0].name,
             ],
             {
                 self.model.get_inputs()[0].name: x.numpy(),
-                self.model.get_inputs()[1].name: x_length.numpy(),
-                self.model.get_inputs()[2].name: language.numpy(),
-                self.model.get_inputs()[3].name: text_norm.numpy(),
+                self.model.get_inputs()[1].name: language.numpy(),
+                self.model.get_inputs()[2].name: text_norm.numpy(),
             },
         )[0]
 
@@ -212,7 +211,6 @@ def main():
     )
 
     features = torch.from_numpy(features).unsqueeze(0)
-    features_length = torch.tensor([features.size(1)], dtype=torch.int32)
 
     language = model.lang_id["auto"]
     if args.language in model.lang_id:
@@ -231,7 +229,6 @@ def main():
 
     logits = model(
         x=features,
-        x_length=features_length,
         language=language,
         text_norm=text_norm,
     )

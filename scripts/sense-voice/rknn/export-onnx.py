@@ -40,43 +40,6 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
     onnx.save(model, filename)
 
 
-def modified_forward(
-    self,
-    x: torch.Tensor,
-    x_length: torch.Tensor,
-    language: torch.Tensor,
-    text_norm: torch.Tensor,
-):
-    """
-    Args:
-      x:
-        A 3-D tensor of shape (N, T, C) with dtype torch.float32
-      x_length:
-        A 1-D tensor of shape (N,) with dtype torch.int32
-      language:
-        A 1-D tensor of shape (N,) with dtype torch.int32
-        See also https://github.com/FunAudioLLM/SenseVoice/blob/a80e676461b24419cf1130a33d4dd2f04053e5cc/model.py#L640
-      text_norm:
-        A 1-D tensor of shape (N,) with dtype torch.int32
-        See also https://github.com/FunAudioLLM/SenseVoice/blob/a80e676461b24419cf1130a33d4dd2f04053e5cc/model.py#L642
-    """
-    language_query = self.embed(language).unsqueeze(1)
-    text_norm_query = self.embed(text_norm).unsqueeze(1)
-
-    event_emo_query = self.embed(torch.LongTensor([[1, 2]])).repeat(x.size(0), 1, 1)
-
-    x = torch.cat((language_query, event_emo_query, text_norm_query, x), dim=1)
-    x_length += 4
-
-    encoder_out, encoder_out_lens = self.encoder(x, x_length)
-    if isinstance(encoder_out, tuple):
-        encoder_out = encoder_out[0]
-
-    ctc_logits = self.ctc.ctc_lo(encoder_out)
-
-    return ctc_logits
-
-
 def load_cmvn(filename) -> Tuple[str, str]:
     neg_mean = None
     inv_stddev = None
@@ -119,10 +82,7 @@ def main():
     model.load_state_dict(state_dict)
     del state_dict
 
-    model.__class__.forward = modified_forward
-
     x = torch.randn(1, 100, 560, dtype=torch.float32)
-    x_length = torch.tensor([100], dtype=torch.int32)
     language = torch.tensor([3], dtype=torch.int32)
     text_norm = torch.tensor([15], dtype=torch.int32)
 
@@ -130,10 +90,10 @@ def main():
     filename = "model.onnx"
     torch.onnx.export(
         model,
-        (x, x_length, language, text_norm),
+        (x, language, text_norm),
         filename,
         opset_version=opset_version,
-        input_names=["x", "x_length", "language", "text_norm"],
+        input_names=["x", "language", "text_norm"],
         output_names=["logits"],
         dynamic_axes={},
     )
