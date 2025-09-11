@@ -430,14 +430,6 @@ struct OfflineTtsModelConfig {
   std::string provider = "cpu";
 };
 
-struct OfflineTtsConfig {
-  OfflineTtsModelConfig model;
-  std::string rule_fsts;
-  std::string rule_fars;
-  int32_t max_num_sentences = 1;
-  float silence_scale = 0.2;
-};
-
 struct GeneratedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
   int32_t sample_rate;

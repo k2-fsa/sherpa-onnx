@@ -26,7 +26,7 @@ struct OfflineTtsModelConfig {
   OfflineTtsPiperModelConfig piper;
 
   int32_t num_threads = 1;
-  bool debug = true;
+  bool debug = false;
   std::string provider = "cpu";
 
   OfflineTtsModelConfig() = default;
