@@ -90,15 +90,6 @@ class OnnxModel:
         self.with_itn = int(meta["with_itn"])
         self.without_itn = int(meta["without_itn"])
 
-        neg_mean = meta["neg_mean"].split(",")
-        neg_mean = list(map(lambda x: float(x), neg_mean))
-
-        inv_stddev = meta["inv_stddev"].split(",")
-        inv_stddev = list(map(lambda x: float(x), inv_stddev))
-
-        self.neg_mean = np.array(neg_mean, dtype=np.float32)
-        self.inv_stddev = np.array(inv_stddev, dtype=np.float32)
-
         self.max_len = self.model.get_inputs()[0].shape[1]
 
     def __call__(self, x, prompt):
@@ -139,8 +130,6 @@ def load_tokens(filename):
 def compute_feat(
     samples,
     sample_rate,
-    neg_mean: np.ndarray,
-    inv_stddev: np.ndarray,
     max_len: int,
     window_size: int = 7,  # lfr_m
     window_shift: int = 6,  # lfr_n
@@ -169,7 +158,6 @@ def compute_feat(
         strides=((window_shift * features.shape[1]) * 4, 4),
     )
 
-    features = (features + neg_mean) * inv_stddev
     print("features.shape", features.shape)
 
     if features.shape[0] > max_len:
@@ -202,8 +190,6 @@ def main():
     features = compute_feat(
         samples=samples,
         sample_rate=sample_rate,
-        neg_mean=model.neg_mean,
-        inv_stddev=model.inv_stddev,
         max_len=model.max_len,
         window_size=model.window_size,
         window_shift=model.window_shift,

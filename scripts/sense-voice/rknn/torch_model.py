@@ -537,7 +537,7 @@ class CTC(nn.Module):
 
 
 class SenseVoiceSmall(nn.Module):
-    def __init__(self):
+    def __init__(self, neg_mean: torch.Tensor, inv_stddev: torch.Tensor):
         super().__init__()
         self.sos = 1
         self.eos = 2
@@ -546,6 +546,9 @@ class SenseVoiceSmall(nn.Module):
         self.blank_id = 0
         self.input_size = 80 * 7
         self.vocab_size = 25055
+
+        self.neg_mean = neg_mean.unsqueeze(0).unsqueeze(0)
+        self.inv_stddev = inv_stddev.unsqueeze(0).unsqueeze(0)
 
         self.lid_dict = {
             "auto": 0,
@@ -599,6 +602,8 @@ class SenseVoiceSmall(nn.Module):
         else:
             input_query = self.embed(prompt).unsqueeze(0)
 
+        # for export, we always assume x and self.neg_mean are on CPU
+        x = (x + self.neg_mean) * self.inv_stddev
         x = torch.cat((input_query, x), dim=1)
 
         encoder_out = self.encoder(x)

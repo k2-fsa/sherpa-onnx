@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -21,7 +22,7 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult ConvertSenseVoiceResult(
+OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor) {
   OfflineRecognitionResult r;
@@ -72,7 +73,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();
@@ -93,7 +94,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();

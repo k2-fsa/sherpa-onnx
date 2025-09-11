@@ -55,8 +55,6 @@ class OnlineZipformerCtcModelRknn::Impl {
     SetCoreMask(ctx_, config_.num_threads);
   }
 
-  // TODO(fangjun): Support Android
-
   std::vector<std::vector<uint8_t>> GetInitStates() const {
     // input_attrs_[0] is for the feature
     // input_attrs_[1:] is for states

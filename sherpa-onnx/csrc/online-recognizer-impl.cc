@@ -37,7 +37,6 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
   if (config.model_config.provider_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
-    // Currently, only zipformer v1 is suported for rknn
     if (config.model_config.transducer.encoder.empty() &&
         config.model_config.zipformer2_ctc.model.empty()) {
       SHERPA_ONNX_LOGE(
