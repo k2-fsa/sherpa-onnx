@@ -13,8 +13,9 @@ import os
 from typing import Any, Dict, Tuple
 
 import onnx
+import sentencepiece as spm
 import torch
-from model import SenseVoiceSmall
+from torch_model import SenseVoiceSmall
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
 
@@ -94,45 +95,36 @@ def load_cmvn(filename) -> Tuple[str, str]:
     return neg_mean, inv_stddev
 
 
-def generate_tokens(params):
-    sp = params["tokenizer"].sp
+def generate_tokens(sp):
     with open("tokens.txt", "w", encoding="utf-8") as f:
         for i in range(sp.vocab_size()):
             f.write(f"{sp.id_to_piece(i)} {i}\n")
-
-    os.system("head tokens.txt; tail -n200 tokens.txt")
-
-
-def display_params(params):
-    print("----------params----------")
-    print(params)
-
-    print("----------frontend_conf----------")
-    print(params["frontend_conf"])
-
-    os.system(f"cat {params['frontend_conf']['cmvn_file']}")
-
-    print("----------config----------")
-    print(params["config"])
-
-    os.system(f"cat {params['config']}")
+    print("saved to tokens.txt")
 
 
 @torch.no_grad()
 def main():
-    model, params = SenseVoiceSmall.from_pretrained(model="iic/SenseVoiceSmall", device="cpu")
-    model.eval()
+    sp = spm.SentencePieceProcessor()
+    sp.load("./chn_jpn_yue_eng_ko_spectok.bpe.model")
+    vocab_size = sp.vocab_size()
+    generate_tokens(sp)
 
-    display_params(params)
+    print("loading model")
 
-    generate_tokens(params)
+    state_dict = torch.load("./model.pt")
+    if "state_dict" in state_dict:
+        state_dict = state_dict["state_dict"]
+
+    model = SenseVoiceSmall()
+    model.load_state_dict(state_dict)
+    del state_dict
 
     model.__class__.forward = modified_forward
 
-    x = torch.randn(2, 100, 560, dtype=torch.float32)
-    x_length = torch.tensor([80, 100], dtype=torch.int32)
-    language = torch.tensor([0, 3], dtype=torch.int32)
-    text_norm = torch.tensor([14, 15], dtype=torch.int32)
+    x = torch.randn(1, 100, 560, dtype=torch.float32)
+    x_length = torch.tensor([100], dtype=torch.int32)
+    language = torch.tensor([3], dtype=torch.int32)
+    text_norm = torch.tensor([15], dtype=torch.int32)
 
     opset_version = 13
     filename = "model.onnx"
@@ -143,20 +135,13 @@ def main():
         opset_version=opset_version,
         input_names=["x", "x_length", "language", "text_norm"],
         output_names=["logits"],
-        dynamic_axes={
-            "x": {0: "N", 1: "T"},
-            "x_length": {0: "N"},
-            "language": {0: "N"},
-            "text_norm": {0: "N"},
-            "logits": {0: "N", 1: "T"},
-        },
+        dynamic_axes={},
     )
 
-    lfr_window_size = params["frontend_conf"]["lfr_m"]
-    lfr_window_shift = params["frontend_conf"]["lfr_n"]
+    lfr_window_size = 7
+    lfr_window_shift = 6
 
-    neg_mean, inv_stddev = load_cmvn(params["frontend_conf"]["cmvn_file"])
-    vocab_size = params["tokenizer"].sp.vocab_size()
+    neg_mean, inv_stddev = load_cmvn("./am.mvn")
 
     meta_data = {
         "lfr_window_size": lfr_window_size,
@@ -198,5 +183,5 @@ def main():
 
 
 if __name__ == "__main__":
-    torch.manual_seed(20240717)
+    torch.manual_seed(20250717)
     main()
