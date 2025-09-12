@@ -173,6 +173,8 @@ list(APPEND sources
 )
 if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
+    ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
+    ./rknn/offline-sense-voice-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc

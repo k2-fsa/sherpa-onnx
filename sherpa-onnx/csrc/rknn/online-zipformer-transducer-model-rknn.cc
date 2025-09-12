@@ -89,8 +89,6 @@ class OnlineZipformerTransducerModelRknn::Impl {
     SetCoreMask(joiner_ctx_, config_.num_threads);
   }
 
-  // TODO(fangjun): Support Android
-
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
     // encoder_input_attrs_[0] is for the feature
     // encoder_input_attrs_[1:] is for states
