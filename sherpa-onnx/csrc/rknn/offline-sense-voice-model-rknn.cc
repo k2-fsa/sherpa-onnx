@@ -38,8 +38,6 @@ class OfflineSenseVoiceModelRknn::Impl {
       auto buf = ReadFile(config_.sense_voice.model);
       Init(buf.data(), buf.size());
     }
-
-    SetCoreMask(ctx_, config_.num_threads);
   }
 
   template <typename Manager>
@@ -48,8 +46,6 @@ class OfflineSenseVoiceModelRknn::Impl {
       auto buf = ReadFile(mgr, config_.sense_voice.model);
       Init(buf.data(), buf.size());
     }
-
-    SetCoreMask(ctx_, config_.num_threads);
   }
 
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const {
@@ -88,6 +84,8 @@ class OfflineSenseVoiceModelRknn::Impl {
     rknn_context ctx = 0;
     auto ret = rknn_dup_context(&ctx_, &ctx);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the ctx");
+
+    SetCoreMask(ctx, config_.num_threads);
 
     ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
