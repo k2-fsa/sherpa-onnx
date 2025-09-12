@@ -1,4 +1,6 @@
-# Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+# This file is modified from
+# https://github.com/modelscope/FunASR/blob/main/funasr/models/sense_voice/model.py
+
 import torch
 import torch.nn
 import torch.nn as nn
