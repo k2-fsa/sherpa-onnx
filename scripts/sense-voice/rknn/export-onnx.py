@@ -86,7 +86,7 @@ def main():
 
     print("loading model")
 
-    state_dict = torch.load("./model.pt")
+    state_dict = torch.load("./model.pt", map_location="cpu")
     if "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
 
