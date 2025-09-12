@@ -79,6 +79,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(config),
         config_(config),
         model_(OnlineCtcModel::Create(config.model_config)),
+        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     PostInit();
   }
@@ -242,10 +243,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
  private:
   void PostInit() {
     if (!config_.model_config.tokens_buf.empty()) {
-      sym_ = SymbolTable(config_.model_config.tokens_buf, false);
-    } else {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
-      sym_ = SymbolTable(config_.model_config.tokens, true);
+      sym_ = SymbolTable(config_.model_config.tokens_buf, false);
     }
 
     if (!config_.model_config.wenet_ctc.model.empty()) {
