@@ -13,13 +13,16 @@ concurrency:
 jobs:
   export-sense-voice-to-rknn:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export sense-voice to rknn
+    name: ${{ matrix.platform }} ${{ matrix.input_in_seconds }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.10"]
+        platform: ["rk3562", "rk3566", "rk3568", "rk3576", "rk3588"]
+        input_in_seconds: ["10", "15", "20", "25", "30"]
+
 
     steps:
       - uses: actions/checkout@v4
@@ -70,63 +73,45 @@ jobs:
           input_in_seconds=(10 15 20 25 30)
 
           echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+          p=${{ matrix.platform }}
 
-          for t in ${input_in_seconds[@]}; do
-            echo "----$t---"
-            python3 ./export-onnx.py --input-len-in-seconds $t
-          done
+          echo "----$t---"
+          python3 ./export-onnx.py --input-len-in-seconds $t
 
           ls -lh *.onnx
 
           echo "test exported onnx models"
 
-          for t in ${input_in_seconds[@]}; do
-            echo "----------$t----------"
-            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
-            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ja.wav
-            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ko.wav
-            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
-            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
-          done
-
-          platforms=(
-            rk3562
-            rk3566
-            rk3568
-            rk3576
-            rk3588
-          )
+          echo "----------$t----------"
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ja.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ko.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
 
           echo "export to rknn"
-          for t in ${input_in_seconds[@]}; do
-            echo "----------$t----------"
-            for p in ${platforms[@]}; do
-              echo "----------$p----------"
-              python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
-            done
-          done
+          echo "----------$t----------"
+          echo "----------$p----------"
+          python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
 
           ls -lh *.rknn
 
           echo "collect results"
-          for t in ${input_in_seconds[@]}; do
-            for p in ${platforms[@]}; do
-              d=sherpa-onnx-$p-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          d=sherpa-onnx-$p-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17
 
-              mkdir -p $d
-              mkdir -p $d/test_wavs
+          mkdir -p $d
+          mkdir -p $d/test_wavs
 
-              cp -v README.md $d
-              cp -v LICENSE $d
-              cp -v model-$p-$t-seconds.rknn $d/model.rknn
-              cp -v tokens.txt $d
-              cp -v *.wav $d/test_wavs
-              ls -lh $d
-              tar cjfv $d.tar.bz2 $d
-              ls -lh *.tar.bz2
-              rm -rf d
-            done
-          done
+          cp -v README.md $d
+          cp -v LICENSE $d
+          cp -v model-$p-$t-seconds.rknn $d/model.rknn
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf d
 
           echo "----show---"
           ls -lh *.tar.bz2
