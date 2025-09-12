@@ -78,6 +78,7 @@ class OnnxModel:
         lang_en = int(meta["lang_en"])
         lang_ja = int(meta["lang_ja"])
         lang_ko = int(meta["lang_ko"])
+        lang_yue = int(meta["lang_yue"])
         lang_auto = int(meta["lang_auto"])
 
         self.lang_id = {
@@ -85,6 +86,7 @@ class OnnxModel:
             "en": lang_en,
             "ja": lang_ja,
             "ko": lang_ko,
+            "yue": lang_yue,
             "auto": lang_auto,
         }
         self.with_itn = int(meta["with_itn"])

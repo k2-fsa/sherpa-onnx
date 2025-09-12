@@ -91,7 +91,7 @@ def get_meta_data(model: str):
 def export_rknn(rknn, filename):
     ret = rknn.export_rknn(filename)
     if ret != 0:
-        exit("Export rknn model to {filename} failed!")
+        exit(f"Export rknn model to {filename} failed!")
 
 
 def init_model(filename: str, target_platform: str, custom_string=None):
@@ -111,7 +111,7 @@ def init_model(filename: str, target_platform: str, custom_string=None):
 
     ret = rknn.build(do_quantization=False)
     if ret != 0:
-        exit("Build model {filename} failed!")
+        exit(f"Build model {filename} failed!")
 
     return rknn
 

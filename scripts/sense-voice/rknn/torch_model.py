@@ -8,7 +8,7 @@ import torch.nn.functional as F
 class SinusoidalPositionEncoder(nn.Module):
     """ """
 
-    def __int__(self, d_model=80, dropout_rate=0.1):
+    def __init__(self, d_model=80, dropout_rate=0.1):
         pass
 
     def encode(
@@ -56,11 +56,13 @@ class PositionwiseFeedForward(nn.Module):
 
     """
 
-    def __init__(self, idim, hidden_units, dropout_rate, activation=torch.nn.ReLU()):
+    def __init__(self, idim, hidden_units, dropout_rate, activation=None):
         super().__init__()
         self.w_1 = torch.nn.Linear(idim, hidden_units)
         self.w_2 = torch.nn.Linear(hidden_units, idim)
         self.dropout = torch.nn.Dropout(dropout_rate)
+        if activation is None:
+            activation = torch.nn.ReLU()
         self.activation = activation
 
     def forward(self, x):
@@ -588,19 +590,7 @@ class SenseVoiceSmall(nn.Module):
         )
 
     def forward(self, x, prompt):
-        if False:
-            language_query = self.embed(language).repeat(x.size(0), 1, 1)
-
-            textnorm_query = self.embed(text_norm).repeat(x.size(0), 1, 1)
-
-            x = torch.cat((textnorm_query, x), dim=1)
-
-            event_emo_query = self.embed(
-                torch.LongTensor([[1, 2]]).to(x.device)
-            ).repeat(x.size(0), 1, 1)
-            input_query = torch.cat((language_query, event_emo_query), dim=1)
-        else:
-            input_query = self.embed(prompt).unsqueeze(0)
+        input_query = self.embed(prompt).unsqueeze(0)
 
         # for export, we always assume x and self.neg_mean are on CPU
         x = (x + self.neg_mean) * self.inv_stddev

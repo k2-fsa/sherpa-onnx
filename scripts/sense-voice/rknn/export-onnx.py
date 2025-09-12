@@ -97,6 +97,7 @@ def main():
 
     model = SenseVoiceSmall(neg_mean=neg_mean, inv_stddev=inv_stddev)
     model.load_state_dict(state_dict)
+    model.eval()
     del state_dict
 
     lfr_window_size = 7

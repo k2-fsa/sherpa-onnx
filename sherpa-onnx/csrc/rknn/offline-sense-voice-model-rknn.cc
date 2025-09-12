@@ -205,8 +205,6 @@ class OfflineSenseVoiceModelRknn::Impl {
   std::vector<rknn_tensor_attr> input_attrs_;
   std::vector<rknn_tensor_attr> output_attrs_;
 
-  int32_t num_input_frames = 0;
-
   OfflineSenseVoiceModelMetaData meta_data_;
   int32_t num_input_frames_ = -1;
 };
