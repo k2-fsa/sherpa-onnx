@@ -2,13 +2,15 @@
 
 set -ex
 
-old_version_code=20250901
-new_version_code=20250910
+old_version_code=20250910
+new_version_code=20250912
 
-old_version="1\.12\.11"
-new_version="1\.12\.12"
+old_version="1\.12\.12"
+new_version="1\.12\.13"
 
 replace_str="s/$old_version/$new_version/g"
+
+sed -i.bak "$replace_str" ./CMakeLists.txt
 
 sed -i.bak "$replace_str" ./sherpa-onnx/csrc/version.cc
 sha1=$(git describe --match=NeVeRmAtCh --always --abbrev=8)
