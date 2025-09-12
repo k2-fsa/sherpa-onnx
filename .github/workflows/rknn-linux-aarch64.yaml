@@ -250,7 +250,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.0
+          tag: v1.12.13
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'
