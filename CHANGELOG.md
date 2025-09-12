@@ -1,3 +1,9 @@
+## 1.12.13
+
+* Fix initializing symbol table for OnlineRecognizer. (#2590)
+* Support RK NPU for SenseVoice non-streaming ASR models (#2589)
+* Upload RKNN models for sense-voice (#2592)
+
 ## 1.12.12
 
 * Fix building for risc-v (#2549)
