@@ -8,10 +8,8 @@ import torch.nn.functional as F
 
 
 class SinusoidalPositionEncoder(nn.Module):
-    """ """
-
     def __init__(self, d_model=80, dropout_rate=0.1):
-        pass
+        super().__init__()
 
     def encode(
         self,

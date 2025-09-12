@@ -1,0 +1,213 @@
+name: export-sense-voice-to-rknn
+
+on:
+  push:
+    branches:
+      - export-sense-voice-rknn-ci-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-sense-voice-to-rknn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-sense-voice-to-rknn:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.framework }} ${{ matrix.platform }} ${{ matrix.input_in_seconds }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+        platform: ["rk3562", "rk3566", "rk3568", "rk3576", "rk3588"]
+        input_in_seconds: ["10", "15", "20", "25", "30"]
+        framework: ["FunASR", "WSYue-ASR"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade \
+            pip \
+            "numpy<2" \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            librosa \
+            soundfile \
+            onnxsim \
+            sentencepiece \
+            kaldi_native_fbank
+
+          curl -SL -O https://huggingface.co/csukuangfj/rknn-toolkit2/resolve/main/rknn_toolkit2-2.1.0%2B708089d1-cp310-cp310-linux_x86_64.whl
+          pip install ./*.whl "numpy<=1.26.4"
+
+      - name: Run SenseVoice from FunAsr
+        if: matrix.framework == 'FunASR'
+        shell: bash
+        run: |
+          cd scripts/sense-voice/rknn
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ko.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/README.md
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/LICENSE
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+          p=${{ matrix.platform }}
+
+          echo "----$t---"
+          python3 ./export-onnx.py --input-len-in-seconds $t
+
+          ls -lh *.onnx
+
+          echo "test exported onnx models"
+
+          echo "----------$t----------"
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ja.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ko.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
+
+          echo "export to rknn"
+          echo "----------$t----------"
+          echo "----------$p----------"
+          python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
+
+          ls -lh *.rknn
+
+          echo "collect results"
+          d=sherpa-onnx-$p-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v LICENSE $d
+          cp -v model-$p-$t-seconds.rknn $d/model.rknn
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Run SenseVoice from WSYue-ASR
+        if: matrix.framework == 'WSYue-ASR'
+        shell: bash
+        run: |
+          cd scripts/sense-voice/rknn
+
+          curl -SL -O https://huggingface.co/ASLP-lab/WSYue-ASR/resolve/main/sensevoice_small_yue/model.pt
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          for i in $(seq 0 17); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/test_wavs/yue-$i.wav
+          done
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/README.md
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+          p=${{ matrix.platform }}
+
+          echo "----$t---"
+
+          export model_author="ASLP-lab"
+          export comment="ASLP-lab/WSYue-ASR"
+          export url="https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/sensevoice_small_yue"
+
+          python3 ./export-onnx.py --input-len-in-seconds $t
+
+          ls -lh *.onnx
+
+          echo "test exported onnx models"
+
+          echo "----------$t----------"
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
+          for i in $(seq 0 17); do
+            echo "yue-$i.wav"
+            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue-$i.wav
+          done
+
+          echo "export to rknn"
+          echo "----------$t----------"
+          echo "----------$p----------"
+          python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
+
+          ls -lh *.rknn
+
+          echo "collect results"
+          d=sherpa-onnx-$p-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v model-$p-$t-seconds.rknn $d/model.rknn
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: asr-models
