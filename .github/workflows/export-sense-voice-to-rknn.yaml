@@ -41,7 +41,8 @@ jobs:
             librosa \
             soundfile \
             onnxsim \
-            sentencepiece
+            sentencepiece \
+            kaldi_native_fbank
 
           curl -SL -O https://huggingface.co/csukuangfj/rknn-toolkit2/resolve/main/rknn_toolkit2-2.1.0%2B708089d1-cp310-cp310-linux_x86_64.whl
           pip install ./*.whl "numpy<=1.26.4"
@@ -71,6 +72,7 @@ jobs:
           echo "export to onnx"
 
           for t in ${input_in_seconds[@]}; do
+            echo "----$t---"
             python3 ./export-onnx.py --input-len-in-seconds $t
           done
 
@@ -100,7 +102,7 @@ jobs:
             echo "----------$t----------"
             for p in ${platforms[@]}; do
               echo "----------$p----------"
-              python3 --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn
+              python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
             done
           done
 
@@ -121,7 +123,7 @@ jobs:
               cp -v *.wav $d/test_wavs
               ls -lh $d
               tar cjfv $d.tar.bz2 $d
-              rm -lh *.tar.bz2
+              ls -lh *.tar.bz2
               rm -rf d
             done
           done
