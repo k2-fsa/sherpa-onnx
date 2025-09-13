@@ -15,6 +15,7 @@ export 'src/online_punctuation.dart';
 export 'src/online_recognizer.dart';
 export 'src/online_stream.dart';
 export 'src/speaker_identification.dart';
+export 'src/spoken_language_identification.dart';
 export 'src/tts.dart';
 export 'src/vad.dart';
 export 'src/version.dart';
