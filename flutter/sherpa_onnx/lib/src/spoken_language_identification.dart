@@ -121,6 +121,7 @@ class SpokenLanguageIdentification {
 
     if (SherpaOnnxBindings.sherpaOnnxCreateSpokenLanguageIdentification ==
         null) {
+      freeConfig(c);
       throw Exception("Please initialize sherpa-onnx first");
     }
 
@@ -129,6 +130,7 @@ class SpokenLanguageIdentification {
         nullptr;
 
     if (ptr == nullptr) {
+      freeConfig(c);
       throw Exception(
           "Failed to create spoken language identification. Please check your config");
     }
@@ -155,10 +157,10 @@ class SpokenLanguageIdentification {
 
   static void freeConfig(
       Pointer<SherpaOnnxSpokenLanguageIdentificationConfig> c) {
-    calloc.free(c.ref.whisper.encoder);
-    calloc.free(c.ref.whisper.decoder);
-    calloc.free(c.ref.provider);
-    calloc.free(c);
+    malloc.free(c.ref.whisper.encoder);
+    malloc.free(c.ref.whisper.decoder);
+    malloc.free(c.ref.provider);
+    malloc.free(c);
   }
 
   /// The user has to invoke stream.free() on the returned instance
