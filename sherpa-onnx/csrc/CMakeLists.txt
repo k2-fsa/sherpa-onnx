@@ -181,6 +181,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/online-zipformer-ctc-model-rknn.cc
     ./rknn/online-zipformer-transducer-model-rknn.cc
     ./rknn/silero-vad-model-rknn.cc
+    ./rknn/transducer-keyword-decoder-rknn.cc
     ./rknn/utils.cc
   )
 
