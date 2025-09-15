@@ -76,10 +76,6 @@ jobs:
           ls -lh ./bin/Release/sherpa-onnx.exe
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
-            cp -v ../onnxruntime-win-x64-gpu-1.22.0/lib/*.dll ./bin/Release/
-            cp -v ../onnxruntime-win-x64-gpu-1.22.0/lib/*.dll ./install/bin/
-          fi
 
       - name: Copy files
         shell: bash
