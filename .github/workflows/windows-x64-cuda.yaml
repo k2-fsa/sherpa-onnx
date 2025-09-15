@@ -25,12 +25,13 @@ concurrency:
 
 jobs:
   windows_x64_cuda:
-    name: Windows x64 CUDA
+    name: Windows x64 CUDA ${{ matrix.onnxruntime_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
+        onnxruntime_version: ["1.17.1", "1.22.0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +47,15 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
+            onnxruntime_version=${{ matrix.onnxruntime_version }}
+            if [[ $onnxruntime_version == "1.22.0" ]]; then
+              curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
+              unzip onnxruntime-win-x64-gpu-1.22.0.zip
+
+              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/lib
+              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/include
+            fi
+
           mkdir build
           cd build
           cmake \
@@ -64,6 +74,48 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+          cp -v ../onnxruntime-win-x64-gpu-1.22/lib/*.dll ./bin/Release/
+          cp -v ../onnxruntime-win-x64-gpu-1.22/lib/*.dll ./install/bin/
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-cuda
+
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          if [[ $onnxruntime_version == "1.22.0" ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-win-x64-cuda
+          fi
+
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*cuda.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.13
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*cuda.tar.bz2
 
       - name: Test spoken language identification
         shell: bash
@@ -137,24 +189,4 @@ jobs:
 
           .github/scripts/test-online-transducer.sh
 
-      - name: Copy files
-        shell: bash
-        run: |
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-cuda
-          mkdir $dst
-
-          cp -a build/install/bin $dst/
-          cp -a build/install/lib $dst/
-          cp -a build/install/include $dst/
-
-          tar cjvf ${dst}.tar.bz2 $dst
-
-      - name: Release pre-compiled binaries and libs for Windows x64 CUDA
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*-win-x64-cuda.tar.bz2
