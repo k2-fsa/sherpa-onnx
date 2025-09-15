@@ -52,8 +52,8 @@ jobs:
             curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
             unzip onnxruntime-win-x64-gpu-1.22.0.zip
 
-            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/lib
-            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/include
+            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/lib
+            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/include
           fi
 
           mkdir build
@@ -75,8 +75,11 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
-          cp -v ../onnxruntime-win-x64-gpu-1.22/lib/*.dll ./bin/Release/
-          cp -v ../onnxruntime-win-x64-gpu-1.22/lib/*.dll ./install/bin/
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          if [[ $onnxruntime_version == "1.22.0" ]]; then
+            cp -v ../onnxruntime-win-x64-gpu-1.22.0/lib/*.dll ./bin/Release/
+            cp -v ../onnxruntime-win-x64-gpu-1.22.0/lib/*.dll ./install/bin/
+          fi
 
       - name: Copy files
         shell: bash
