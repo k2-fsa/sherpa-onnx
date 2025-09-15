@@ -9,6 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import glob
 import setuptools
 from setuptools.command.build_ext import build_ext
 
@@ -250,8 +251,6 @@ class BuildExtension(build_ext):
             dst = os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib")
             os.system(f"mkdir {dst}")
             os.system(f"dir {dst}")
-
-            import glob
 
             ext = "pyd" if sys.platform.startswith("win") else "so"
             pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")

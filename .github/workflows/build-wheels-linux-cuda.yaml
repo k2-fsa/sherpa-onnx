@@ -15,13 +15,14 @@ concurrency:
 
 jobs:
   build_wheels_linux_cuda:
-    name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
+    name: ${{ matrix.manylinux }} ${{ matrix.python-version }} ${{ matrix.onnxruntime_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        onnxruntime_version: ["1.17.1", "1.22.0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +70,16 @@ jobs:
           export SHERPA_ONNX_ENABLE_ALSA=1
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON"
 
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          if [[ $onnxruntime_version == "1.22.0" ]]; then
+            curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+            unzip  onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+
+            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/lib
+            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/include
+            export SHERPA_ONNX_CUDA_VERSION="12.cudnn9"
+          fi
+
           python3 setup.py bdist_wheel
 
           ls -lh dist
@@ -79,6 +90,8 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+
+          unzip -l ./wheelhouse/*.whl
 
       - name: Install patchelf
         shell: bash
@@ -97,9 +110,10 @@ jobs:
           rm -rf ./wheelhouse
           mv ./wheels ./wheelhouse
 
+
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-cuda-${{ matrix.python-version }}
+          name: wheel-cuda-${{ matrix.python-version }}-${{ matrix.onnxruntime_version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface

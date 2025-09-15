@@ -100,11 +100,6 @@ jobs:
               ls -lh lib
               ls -lh bin
 
-              if [[ $onnxruntime_version == "1.22.0" ]]; then
-                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* ./lib/
-                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* install/lib/
-              fi
-
               echo "----"
               ls -lh install/lib
 
