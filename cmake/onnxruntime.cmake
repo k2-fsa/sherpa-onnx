@@ -201,7 +201,6 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
     else()
       set_target_properties(onnxruntime PROPERTIES
         IMPORTED_LOCATION ${location_onnxruntime_lib}
-        IMPORTED_IMPLIB ${location_onnxruntime_lib}
         INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
       )
     endif()
