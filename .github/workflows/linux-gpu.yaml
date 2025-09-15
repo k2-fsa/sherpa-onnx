@@ -67,13 +67,13 @@ jobs:
 
               onnxruntime_version=${{ matrix.onnxruntime_version }}
               if [[ $onnxruntime_version == "1.22.0" ]]; then
-                wget https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0.tgz
-                tar xvf onnxruntime-linux-x64-gpu-1.22.0.tgz
+                curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+                unzip  onnxruntime-linux-x64-gpu-1.22.0-patched.zip
 
-                export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0/lib
-                export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0/include
+                export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/lib
+                export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/include
 
-                ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-1.22.0/lib/libonnxruntime.so
+                ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-1.22.0-patched/lib/libonnxruntime.so
               fi
 
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
@@ -109,7 +109,6 @@ jobs:
 
               echo "----"
               ls -lh install/bin
-
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
