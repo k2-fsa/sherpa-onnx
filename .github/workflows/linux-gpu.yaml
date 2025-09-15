@@ -28,13 +28,14 @@ concurrency:
 jobs:
   linux_gpu:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }}
+    name: ${{ matrix.build_type }} ${{ matrix.onnxruntime_version }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         # build_type: [Release, Debug]
         build_type: [Release]
+        onnxruntime_version: ["1.17.1", "1.22.0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +65,17 @@ jobs:
 
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
+              onnxruntime_version=${{ matrix.onnxruntime_version }}
+              if [[ $onnxruntime_version == "1.22.0" ]]; then
+                curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+                unzip  onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+
+                export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/lib
+                export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/include
+
+                ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-1.22.0-patched/lib/libonnxruntime.so
+              fi
+
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
               ./gitcompile
@@ -88,6 +100,11 @@ jobs:
               ls -lh lib
               ls -lh bin
 
+              if [[ $onnxruntime_version == "1.22.0" ]]; then
+                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* ./lib/
+                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* install/lib/
+              fi
+
               echo "----"
               ls -lh install/lib
 
@@ -100,7 +117,7 @@ jobs:
           du -h -d1 .
           sudo chown -R $USER ./build
           ls -lh build/bin
-          ls -lh build/_deps/onnxruntime-src/lib/
+          ls -lh build/_deps/onnxruntime-src/lib/ || true
 
           echo "strip"
           strip build/bin/*
@@ -120,12 +137,17 @@ jobs:
           strings build/install/lib/*.so | grep "^GLIBC_"
 
       - name: Copy files
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
+
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          if [[ $onnxruntime_version == "1.22.0" ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-linux-x64-gpu
+          fi
+
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -137,15 +159,23 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*linux-x64-gpu.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          file: sherpa-onnx-*gpu.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.13
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*gpu.tar.bz2
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
