@@ -283,18 +283,6 @@ if(DEFINED OHOS AND x${OHOS} STREQUAL xOHOS)
   )
 endif()
 
-# if(SHERPA_ONNX_ENABLE_GPU)
-#   if(DEFINED location_onnxruntime_cuda_lib)
-#     target_link_libraries(sherpa-onnx-core
-#       ${location_onnxruntime_cuda_lib}
-#     )
-#   else()
-#     target_link_libraries(sherpa-onnx-core
-#       onnxruntime_providers_shared
-#     )
-#   endif()
-# endif()
-
 if(SHERPA_ONNX_ENABLE_RKNN)
   if(DEFINED ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR})
     target_link_libraries(sherpa-onnx-core -L$ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR} -lrknnrt)
