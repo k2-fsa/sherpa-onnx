@@ -161,6 +161,8 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
       set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.so)
     endif()
     if(NOT EXISTS ${location_onnxruntime_lib})
+      message(STATUS "${location_onnxruntime_lib} does not exist. Try static lib")
+
       set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
       if(NOT EXISTS ${location_onnxruntime_lib})
         message(FATAL_ERROR "${location_onnxruntime_lib} cannot be found")
