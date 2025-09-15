@@ -82,52 +82,6 @@ file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll
     ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
 )
 
-# for onnxruntime_providers_cuda.dll
-
-find_library(location_onnxruntime_providers_cuda_lib onnxruntime_providers_cuda
-  PATHS
-  "${onnxruntime_SOURCE_DIR}/lib"
-  NO_CMAKE_SYSTEM_PATH
-)
-message(STATUS "location_onnxruntime_providers_cuda_lib: ${location_onnxruntime_providers_cuda_lib}")
-
-add_library(onnxruntime_providers_cuda SHARED IMPORTED)
-set_target_properties(onnxruntime_providers_cuda PROPERTIES
-  IMPORTED_LOCATION ${location_onnxruntime_providers_cuda_lib}
-  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-)
-
-set_property(TARGET onnxruntime_providers_cuda
-  PROPERTY
-    IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.lib"
-)
-
-# for onnxruntime_providers_shared.dll
-
-find_library(location_onnxruntime_providers_shared_lib onnxruntime_providers_shared
-  PATHS
-  "${onnxruntime_SOURCE_DIR}/lib"
-  NO_CMAKE_SYSTEM_PATH
-)
-message(STATUS "location_onnxruntime_providers_shared_lib: ${location_onnxruntime_providers_shared_lib}")
-add_library(onnxruntime_providers_shared SHARED IMPORTED)
-set_target_properties(onnxruntime_providers_shared PROPERTIES
-  IMPORTED_LOCATION ${location_onnxruntime_providers_shared_lib}
-  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-)
-set_property(TARGET onnxruntime_providers_shared
-  PROPERTY
-    IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_shared.lib"
-)
-
-file(
-  COPY
-    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.dll
-    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_shared.dll
-  DESTINATION
-    ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
-)
-
 file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")

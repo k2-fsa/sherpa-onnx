@@ -155,6 +155,7 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
     elseif(WIN32)
       if(SHERPA_ONNX_ENABLE_GPU)
         set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/onnxruntime.dll)
+        set(location_onnxruntime_lib2 $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/onnxruntime.lib)
       else()
         set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/onnxruntime.lib)
         if(SHERPA_ONNX_ENABLE_DIRECTML)
@@ -175,18 +176,6 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
       set(onnxruntime_lib_files $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
       message("Use static lib: ${onnxruntime_lib_files}")
     endif()
-
-    if(SHERPA_ONNX_ENABLE_GPU)
-      if(WIN32)
-        set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/onnxruntime_providers_cuda.dll)
-      else()
-        set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.so)
-      endif()
-
-      if(NOT EXISTS ${location_onnxruntime_cuda_lib})
-        set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.a)
-      endif()
-    endif()
   else()
     find_library(location_onnxruntime_lib onnxruntime
       PATHS
@@ -194,15 +183,6 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
         /usr/lib
         /usr/local/lib
     )
-
-    if(SHERPA_ONNX_ENABLE_GPU)
-      find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
-        PATHS
-          /lib
-          /usr/lib
-          /usr/local/lib
-      )
-    endif()
   endif()
 
   message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
@@ -214,16 +194,28 @@ endif()
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
   if(NOT DEFINED onnxruntime_lib_files)
     add_library(onnxruntime SHARED IMPORTED)
-    set_target_properties(onnxruntime PROPERTIES
-      IMPORTED_LOCATION ${location_onnxruntime_lib}
-      IMPORTED_IMPLIB ${location_onnxruntime_lib}
-      INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
-    )
-    if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
-      add_library(onnxruntime_providers_cuda SHARED IMPORTED)
-      set_target_properties(onnxruntime_providers_cuda PROPERTIES
-        IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+
+    if(WIN32)
+      set_target_properties(onnxruntime PROPERTIES
+        IMPORTED_LOCATION ${location_onnxruntime_lib}
+        IMPORTED_IMPLIB ${location_onnxruntime_lib2}
+        INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
       )
+    else()
+      set_target_properties(onnxruntime PROPERTIES
+        IMPORTED_LOCATION ${location_onnxruntime_lib}
+        INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
+      )
+    endif()
+
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+
+    message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
+
+    install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+
+    if(WIN32)
+      install(FILES ${onnxruntime_lib_files} DESTINATION bin)
     endif()
   endif()
 else()
