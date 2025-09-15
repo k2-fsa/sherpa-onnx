@@ -186,9 +186,6 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
   endif()
 
   message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
-  if(SHERPA_ONNX_ENABLE_GPU)
-    message(STATUS "location_onnxruntime_cuda_lib: ${location_onnxruntime_cuda_lib}")
-  endif()
 endif()
 
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
@@ -208,7 +205,11 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
       )
     endif()
 
-    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+    if(WIN32)
+      file(GLOB onnxruntime_lib_files "$ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/*.dll")
+    else()
+      file(GLOB onnxruntime_lib_files "$ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime*")
+    endif()
 
     message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 
