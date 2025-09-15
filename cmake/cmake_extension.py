@@ -9,6 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import glob
 import setuptools
 from setuptools.command.build_ext import build_ext
 
@@ -251,8 +252,6 @@ class BuildExtension(build_ext):
             os.system(f"mkdir {dst}")
             os.system(f"dir {dst}")
 
-            import glob
-
             ext = "pyd" if sys.platform.startswith("win") else "so"
             pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
             matches = glob.glob(pattern, recursive=True)
@@ -264,6 +263,27 @@ class BuildExtension(build_ext):
                 os.system(f"dir {dst}")
 
             return
+
+        cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
+        if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
+            onnxruntime_lib_dir = os.environ.get("SHERPA_ONNXRUNTIME_LIB_DIR", "")
+            if onnxruntime_lib_dir:
+                ext = "dll" if sys.platform.startswith("win") else "so"
+                pattern = os.path.join(onnxruntime_lib_dir, "**", f"*.{ext}")
+                matches = glob.glob(pattern, recursive=True)
+                print("matched onnxruntime cuda libs", list(matches))
+
+                dst = os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib")
+
+                os.system(f"mkdir {dst}")
+                os.system(f"dir {dst}")
+
+                for f in matches:
+                    print(f, os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib"))
+                    shutil.copy(f"{f}", dst)
+                    os.system(f"dir {dst}")
+            else:
+                print(f"Skip copy onnxruntime libs for GPU")
 
         suffix = ".exe" if is_windows() else ""
         # Remember to also change setup.py

@@ -34,6 +34,10 @@ def get_package_version():
     if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
         extra_version = "+cuda"
 
+    cuda_version = os.environ.get("SHERPA_ONNX_CUDA_VERSION", "")
+    if cuda_version:
+        extra_version += cuda_version
+
     latest_version += extra_version
 
     return latest_version
