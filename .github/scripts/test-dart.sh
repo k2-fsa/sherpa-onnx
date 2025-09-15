@@ -4,6 +4,10 @@ set -ex
 
 cd dart-api-examples
 
+pushd spoken-language-identification
+./run-whisper.sh
+popd
+
 pushd streaming-asr
 
 echo '----------streaming T-one ctc----------'
