@@ -101,7 +101,8 @@ jobs:
               ls -lh bin
 
               if [[ $onnxruntime_version == "1.22.0" ]]; then
-                mv -v $SHERPA_ONNXRUNTIME_LIB_DIR/lib/libonnxruntime* install/lib/
+                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* ./lib/
+                cp -v $SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime* install/lib/
               fi
 
               echo "----"
@@ -158,7 +159,7 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for linux x64
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
