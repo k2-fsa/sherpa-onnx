@@ -47,14 +47,14 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
-            onnxruntime_version=${{ matrix.onnxruntime_version }}
-            if [[ $onnxruntime_version == "1.22.0" ]]; then
-              curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
-              unzip onnxruntime-win-x64-gpu-1.22.0.zip
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          if [[ $onnxruntime_version == "1.22.0" ]]; then
+            curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
+            unzip onnxruntime-win-x64-gpu-1.22.0.zip
 
-              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/lib
-              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/include
-            fi
+            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/lib
+            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22/include
+          fi
 
           mkdir build
           cd build
