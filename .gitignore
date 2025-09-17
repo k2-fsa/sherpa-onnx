@@ -68,7 +68,7 @@ sherpa-onnx-whisper-*
 swift-api-examples/k2fsa-*
 run-*.sh
 two-pass-*.sh
-build-*
+build-*/
 
 ## User settings
 xcuserdata/
