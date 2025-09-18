@@ -1,3 +1,13 @@
+## 1.12.14
+
+* Fix setting rknn core mask (#2594)
+* Add Dart API for spoken language identification (#2596)
+* Add CI tests for dart spoken language identifcation example (#2598)
+* Provide pre-compiled shepra-onnx libs/binaries for CUDA 12.x + onnxruntime 1.22.0 (#2599)
+* Provide pre-compiled whls for cuda 12.x on Linux x64 and Windows x64 (#2601)
+* Fix TDT decoding for NeMo TDT transducers (#2606)
+* Add a C++ example for simulated streaming ASR (#2607)
+
 ## 1.12.13
 
 * Fix initializing symbol table for OnlineRecognizer. (#2590)
