@@ -14,7 +14,7 @@ function createPunctuation() {
       provider: 'cpu',
     },
   };
-  return new sherpa_onnx.Punctuation(config);
+  return new sherpa_onnx.OfflinePunctuation(config);
 }
 
 const punct = createPunctuation();
