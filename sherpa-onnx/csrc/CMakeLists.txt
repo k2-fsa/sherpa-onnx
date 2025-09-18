@@ -518,6 +518,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-microphone-simulated-streaming-asr
+    sherpa-onnx-vad-microphone-simulated-streaming-asr.cc
+    microphone.cc
+  )
+
   add_executable(sherpa-onnx-vad-with-offline-asr
     sherpa-onnx-vad-with-offline-asr.cc
   )
@@ -548,6 +553,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-microphone-offline-audio-tagging
     sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-vad-microphone
+    sherpa-onnx-vad-microphone-simulated-streaming-asr
     sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-with-offline-asr
     sherpa-onnx-vad-with-online-asr

@@ -100,7 +100,9 @@ jobs:
               strings $PWD/alsa-lib/src/.libs/libasound.so.2.0.0 | grep "^GLIBC"
 
               export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
               export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+              p=$PWD
 
               export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
               export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
@@ -114,6 +116,8 @@ jobs:
               BUILD_SHARED_LIBS=${{ matrix.shared }}
 
               cmake \
+                -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
+                -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
                 -DBUILD_SHARED_LIBS=ON \
                 -DCMAKE_INSTALL_PREFIX=./install \
                 -DSHERPA_ONNX_ENABLE_RKNN=ON \

@@ -73,9 +73,11 @@ def get_binaries():
         "sherpa-onnx-vad",
         "sherpa-onnx-vad-microphone",
         "sherpa-onnx-vad-microphone-offline-asr",
+        "sherpa-onnx-vad-microphone-simulated-streaming-asr",
         "sherpa-onnx-vad-with-offline-asr",
         "sherpa-onnx-vad-with-online-asr",
         "sherpa-onnx-version",
+        "sherpa-onnx-pa-devs",
     ]
 
     if enable_alsa():
