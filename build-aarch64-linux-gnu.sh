@@ -72,6 +72,7 @@ if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
 fi
 
 export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
 export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
 if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
