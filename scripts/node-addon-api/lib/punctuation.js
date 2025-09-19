@@ -1,6 +1,6 @@
 const addon = require('./addon.js');
 
-class Punctuation {
+class OfflinePunctuation {
   constructor(config) {
     this.handle = addon.createOfflinePunctuation(config);
     this.config = config;
@@ -10,6 +10,17 @@ class Punctuation {
   }
 }
 
+class OnlinePunctuation {
+  constructor(config) {
+    this.handle = addon.createOnlinePunctuation(config);
+    this.config = config;
+  }
+  addPunct(text) {
+    return addon.onlinePunctuationAddPunct(this.handle, text);
+  }
+}
+
 module.exports = {
-  Punctuation,
+  OfflinePunctuation,
+  OnlinePunctuation,
 }

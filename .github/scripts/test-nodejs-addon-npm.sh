@@ -264,8 +264,16 @@ if [[ $arch != "ia32" && $platform != "win32" && $node_version != 21 ]]; then
   tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
   rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
-  node ./test_punctuation.js
+  node ./test_offline_punctuation.js
   rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+  tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+  rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+  node ./test_online_punctuation.js
+  rm -rf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 fi
 
 echo "----------audio tagging----------"
