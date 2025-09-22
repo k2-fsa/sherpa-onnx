@@ -22,7 +22,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04-arm]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
-        manylinux: [manylinux2014] #, manylinux_2_28]
+        # manylinux: [manylinux2014] #, manylinux_2_28]
+        manylinux: [manylinux_2_28] #, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +61,8 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
           CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
+          #  Don't repair Linux wheels
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
 
