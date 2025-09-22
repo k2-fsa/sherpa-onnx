@@ -72,6 +72,8 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
 fi
 
 cmake \
+  -DALSA_INCLUDE_DIR=$PWD/alsa-lib/include \
+  -DALSA_LIBRARY=$PWD/alsa-lib/src/.libs/libasound.so \
   -DBUILD_PIPER_PHONMIZE_EXE=OFF \
   -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
   -DBUILD_ESPEAK_NG_EXE=OFF \

@@ -102,7 +102,6 @@ if(SHERPA_ONNX_HAS_ALSA)
   )
   target_link_libraries(sense-voice-simulate-streaming-alsa-cxx-api
     sherpa-onnx-cxx-api
-    portaudio_static
   )
 
   add_executable(zipformer-ctc-simulate-streaming-alsa-cxx-api
@@ -111,7 +110,6 @@ if(SHERPA_ONNX_HAS_ALSA)
   )
   target_link_libraries(zipformer-ctc-simulate-streaming-alsa-cxx-api
     sherpa-onnx-cxx-api
-    portaudio_static
   )
 
   if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})

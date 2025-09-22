@@ -118,6 +118,8 @@ jobs:
 
               export SHERPA_ONNX_ENABLE_ALSA=1
 
+              p=$PWD
+
               export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON -DALSA_INCLUDE_DIR=$p/alsa-lib/include -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so"
               python3 setup.py bdist_wheel
 

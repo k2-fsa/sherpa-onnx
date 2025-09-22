@@ -71,7 +71,7 @@ jobs:
 
           export SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
           export SHERPA_ONNX_ENABLE_ALSA=1
-          export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON -DALSA_INCLUDE_DIR=$p/alsa-lib/include -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so"
+          export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON"
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
           if [[ $onnxruntime_version == "1.22.0" ]]; then
