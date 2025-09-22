@@ -167,6 +167,9 @@ jobs:
               vits-piper-pl_PL-zenski_wg_glos-medium
               vits-piper-id_ID-news_tts-medium
               vits-piper-hi_IN-rohan-medium
+              vits-piper-ar_JO-SA_miro-high-int8
+              vits-piper-ar_JO-SA_miro-high-fp16
+              vits-piper-ar_JO-SA_miro-high
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
