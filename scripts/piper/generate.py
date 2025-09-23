@@ -51,6 +51,36 @@ def get_ar_models():
         PiperModel(name="kareem", kind="low", sr=16000, ns=1),
         PiperModel(name="kareem", kind="medium", sr=22050, ns=1),
     ]
+    ar_jo += [
+        PiperModel(
+            name="SA_miro",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak/blob/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
+
+                   echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
+                   echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
+
+                   echo "- ✅ Always free for regular (non-commercial) users  \n" >> README.md
+                   echo "- ❌ Commercial use is not allowed at this time  \n" >> README.md
+                   echo "- 🔄 The author may relax the restrictions in the future (e.g., allow commercial use), but will not make them stricter  \n\n" >> README.md
+                   echo "**Important:** You must include this license when redistributing the model or any derivatives.\n" >> README.md
+
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak/resolve/main/miro_ar-SA.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak/resolve/main/miro_ar-SA.onnx.json
+                   mv miro_ar-SA.onnx ar_JO-SA_miro-high.onnx
+                   mv miro_ar-SA.onnx.json ar_JO-SA_miro-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak",
+        ),
+    ]
 
     for m in ar_jo:
         m.lang = "ar_JO"
