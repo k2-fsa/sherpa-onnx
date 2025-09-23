@@ -100,6 +100,9 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.model_config.nemo_ctc.model =
       SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
 
+  recognizer_config.model_config.t_one_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.t_one_ctc.model, "");
+
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   recognizer_config.model_config.provider_config.provider =
@@ -503,6 +506,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.canary.use_pnc =
       config->model_config.canary.use_pnc;
 
+  recognizer_config.model_config.wenet_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.wenet_ctc.model, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =
@@ -691,8 +697,7 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
 
     if (!result.durations.empty() && result.durations.size() == r->count) {
       r->durations = new float[r->count];
-      std::copy(result.durations.begin(), result.durations.end(),
-                r->durations);
+      std::copy(result.durations.begin(), result.durations.end(), r->durations);
     } else {
       r->durations = nullptr;
     }

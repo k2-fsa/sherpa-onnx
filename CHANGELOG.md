@@ -1,3 +1,71 @@
+## 1.12.14
+
+* Fix setting rknn core mask (#2594)
+* Add Dart API for spoken language identification (#2596)
+* Add CI tests for dart spoken language identifcation example (#2598)
+* Provide pre-compiled shepra-onnx libs/binaries for CUDA 12.x + onnxruntime 1.22.0 (#2599)
+* Provide pre-compiled whls for cuda 12.x on Linux x64 and Windows x64 (#2601)
+* Fix TDT decoding for NeMo TDT transducers (#2606)
+* Add a C++ example for simulated streaming ASR (#2607)
+
+## 1.12.13
+
+* Fix initializing symbol table for OnlineRecognizer. (#2590)
+* Support RK NPU for SenseVoice non-streaming ASR models (#2589)
+* Upload RKNN models for sense-voice (#2592)
+
+## 1.12.12
+
+* Fix building for risc-v (#2549)
+* Fix using sherpa-onnx as a cmake sub-project. (#2550)
+* Update kaldifst and kaldi-decoder (#2551)
+* Support armv8l in Java API (#2556)
+* Disable loading libs from jar on Android. (#2557)
+* Fix cantonese vits tts (#2558)
+* Avoid appending blanks for Cantonese vits tts. (#2559)
+* Add hint for loading model files from SD card on Android. (#2564)
+* Update README to include https://github.com/Mentra-Community/MentraOS (#2565)
+* Export models from https://github.com/voicekit-team/T-one to sherpa-onnx (#2571)
+* Add C++ and Python support for T-one streaming Russian ASR models (#2575)
+* Add various language bindings for streaming T-one Russian ASR models (#2576)
+* Fix the missing online punctuation in android aar (#2577)
+* Export KittenTTS mini v0.1 to sherpa-onnx (#2578)
+* Upload new sense-voice models (#2580)
+* Export ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue to sherpa-onnx (#2582)
+* Add various languge bindings for Wenet non-streaming CTC models (#2584)
+
+## 1.12.11
+
+* Add two more Piper tts models (#2525)
+* Generate tts samples for MatchaTTS (English). (#2527)
+* Fix releasing go packages (#2529)
+* Add license info about tts models from OpenVoiceOS (#2530)
+* Support BPE models with byte fallback. (#2531)
+* Simplify the usage of our non-Android Java API (#2533)
+* Fix wasm for kws (#2535)
+* Add one more German tts model from OpenVoiceOS. (#2536)
+* Fix uploading win32 libs to huggingface (#2537)
+* Add Zipvoice (#2487)
+* Fix c api (#2545)
+* Fix linking (#2546)
+
+## 1.12.10
+
+* Add VOSK streaming Russian ASR models and Kroko streaming German ASR models (#2502)
+* Refactor CI tests (#2504)
+* Update APK versions (#2505)
+* Export whisper distil-large-v3 and distil-large-v3.5 to sherpa-onnx (#2506)
+* Support specifying pronunciations of phrases in Chinese TTS. (#2507)
+* fix(flutter): fix unicode problem in windows path (#2508)
+* feat: add punctuation C++ API (#2510)
+* Fix ctrl+c may lead to coredump (#2511)
+* Add kitten tts nano v0.2 (#2512)
+* Scripts to generate tts samples (#2513)
+* Add tdt duration to APIs (#2514)
+* Support 16KB page size for Android (#2520)
+* Split sherpa-onnx Python package (#2521)
+* Fix kokoro tts for punctuations (#2522)
+
 ## 1.12.9
 
 * Add more piper tts models (#2480)

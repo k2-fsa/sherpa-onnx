@@ -89,6 +89,22 @@ static SherpaOnnxOnlineNemoCtcModelConfig GetOnlineNemoCtcModelConfig(
   return c;
 }
 
+static SherpaOnnxOnlineToneCtcModelConfig GetOnlineToneCtcModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOnlineToneCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("toneCtc") || !obj.Get("toneCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("toneCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
     Napi::Object obj) {
   SherpaOnnxOnlineParaformerModelConfig c;
@@ -120,6 +136,7 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   c.paraformer = GetOnlineParaformerModelConfig(o);
   c.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
   c.nemo_ctc = GetOnlineNemoCtcModelConfig(o);
+  c.t_one_ctc = GetOnlineToneCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -265,6 +282,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.decoder);
 
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.t_one_ctc.model);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.nemo_ctc.model);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer2_ctc.model);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);

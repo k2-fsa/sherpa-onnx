@@ -125,6 +125,27 @@ class OfflineZipformerCtcModelConfig {
   final String model;
 }
 
+class OfflineWenetCtcModelConfig {
+  const OfflineWenetCtcModelConfig({this.model = ''});
+
+  factory OfflineWenetCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineWenetCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineWenetCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig(
       {this.encoder = '',
@@ -349,6 +370,7 @@ class OfflineModelConfig {
     this.dolphin = const OfflineDolphinModelConfig(),
     this.zipformerCtc = const OfflineZipformerCtcModelConfig(),
     this.canary = const OfflineCanaryModelConfig(),
+    this.wenetCtc = const OfflineWenetCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -405,6 +427,10 @@ class OfflineModelConfig {
           ? OfflineCanaryModelConfig.fromJson(
               json['canary'] as Map<String, dynamic>)
           : const OfflineCanaryModelConfig(),
+      wenetCtc: json['wenetCtc'] != null
+          ? OfflineWenetCtcModelConfig.fromJson(
+              json['wenetCtc'] as Map<String, dynamic>)
+          : const OfflineWenetCtcModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -418,7 +444,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -433,6 +459,7 @@ class OfflineModelConfig {
         'dolphin': dolphin.toJson(),
         'zipformerCtc': zipformerCtc.toJson(),
         'canary': canary.toJson(),
+        'wenetCtc': wenetCtc.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -454,6 +481,7 @@ class OfflineModelConfig {
   final OfflineDolphinModelConfig dolphin;
   final OfflineZipformerCtcModelConfig zipformerCtc;
   final OfflineCanaryModelConfig canary;
+  final OfflineWenetCtcModelConfig wenetCtc;
 
   final String tokens;
   final int numThreads;
@@ -697,6 +725,8 @@ class OfflineRecognizer {
     c.ref.model.canary.tgtLang = config.model.canary.tgtLang.toNativeUtf8();
     c.ref.model.canary.usePnc = config.model.canary.usePnc ? 1 : 0;
 
+    c.ref.model.wenetCtc.model = config.model.wenetCtc.model.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -743,6 +773,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.wenetCtc.model);
     calloc.free(c.ref.model.canary.tgtLang);
     calloc.free(c.ref.model.canary.srcLang);
     calloc.free(c.ref.model.canary.decoder);

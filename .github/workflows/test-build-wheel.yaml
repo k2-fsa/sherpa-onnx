@@ -39,6 +39,19 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.13"
 
+          - os: ubuntu-24.04-arm
+            python-version: "3.8"
+          - os: ubuntu-24.04-arm
+            python-version: "3.9"
+          - os: ubuntu-24.04-arm
+            python-version: "3.10"
+          - os: ubuntu-24.04-arm
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            python-version: "3.13"
+
           - os: macos-13
             python-version: "3.8"
 
@@ -49,8 +62,10 @@ jobs:
           - os: macos-13
             python-version: "3.11"
 
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
 
           - os: windows-2022
             python-version: "3.7"
@@ -65,6 +80,8 @@ jobs:
             python-version: "3.11"
           - os: windows-2022
             python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.13"
 
     steps:
       - uses: actions/checkout@v4
@@ -120,6 +137,10 @@ jobs:
           cd t
           unzip ../*.whl
 
+          ls -lh sherpa_onnx/lib
+
+          file sherpa_onnx/lib/*
+
       - name: Install wheel
         shell: bash
         run: |
@@ -128,14 +149,5 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          # For windows
-          export PATH=/c/hostedtoolcache/windows/Python/3.7.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.8.10/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.12.10/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.13.6/x64/bin:$PATH
-
           which sherpa-onnx
           sherpa-onnx --help

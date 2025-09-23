@@ -61,6 +61,22 @@ GetOfflineZipformerCtcModelConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineWenetCtcModelConfig GetOfflineWenetCtcModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineWenetCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("wenetCtc") || !obj.Get("wenetCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("wenetCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineDolphinModelConfig c;
@@ -225,6 +241,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.dolphin = GetOfflineDolphinModelConfig(o);
   c.zipformer_ctc = GetOfflineZipformerCtcModelConfig(o);
   c.canary = GetOfflineCanaryModelConfig(o);
+  c.wenet_ctc = GetOfflineWenetCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -316,6 +333,8 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.src_lang);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.tgt_lang);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.wenet_ctc.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

@@ -24,13 +24,13 @@ git status
 git diff
 
 HF_MIRROR=hf.co
-linux_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+linux_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_x86_64.whl
 linux_wheel=$src_dir/$linux_wheel_filename
 
-macos_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_universal2.whl
+macos_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-macosx_10_15_universal2.whl
 macos_wheel=$src_dir/$macos_wheel_filename
 
-windows_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+windows_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-win_amd64.whl
 windows_x64_wheel=$src_dir/$windows_x64_wheel_filename
 
 function process_linux() {
@@ -52,7 +52,7 @@ function process_windows_x64() {
   cd t
   curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$windows_x64_wheel_filename
   unzip $windows_x64_wheel_filename
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../windows
+  cp -v sherpa_onnx/lib/*.dll ../windows
   cd ..
   rm -rf t
 }

@@ -281,6 +281,10 @@ final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineWenetCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -360,6 +364,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineDolphinModelConfig dolphin;
   external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
   external SherpaOnnxOfflineCanaryModelConfig canary;
+  external SherpaOnnxOfflineWenetCtcModelConfig wenetCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -403,6 +408,10 @@ final class SherpaOnnxOnlineNemoCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOnlineToneCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOnlineModelConfig extends Struct {
   external SherpaOnnxOnlineTransducerModelConfig transducer;
   external SherpaOnnxOnlineParaformerModelConfig paraformer;
@@ -430,6 +439,8 @@ final class SherpaOnnxOnlineModelConfig extends Struct {
   external int tokensBufSize;
 
   external SherpaOnnxOnlineNemoCtcModelConfig nemoCtc;
+
+  external SherpaOnnxOnlineToneCtcModelConfig toneCtc;
 }
 
 final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {
@@ -615,6 +626,32 @@ final class SherpaOnnxOfflineSpeakerDiarization extends Opaque {}
 
 final class SherpaOnnxOfflineSpeakerDiarizationResult extends Opaque {}
 
+final class SherpaOnnxSpokenLanguageIdentificationWhisperConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+
+  @Int32()
+  external int tailPaddings;
+}
+
+final class SherpaOnnxSpokenLanguageIdentificationConfig extends Struct {
+  external SherpaOnnxSpokenLanguageIdentificationWhisperConfig whisper;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxSpokenLanguageIdentificationResult extends Struct {
+  external Pointer<Utf8> lang;
+}
+
+final class SherpaOnnxSpokenLanguageIdentification extends Opaque {}
+
 final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
 
 typedef SherpaOnnxCreateOfflineSpeechDenoiserNative
@@ -649,6 +686,40 @@ typedef SherpaOnnxDestroyDenoisedAudioNative = Void Function(
 
 typedef SherpaOnnxDestroyDenoisedAudio = void Function(
     Pointer<SherpaOnnxDenoisedAudio>);
+
+typedef SherpaOnnxCreateSpokenLanguageIdentificationNative
+    = Pointer<SherpaOnnxSpokenLanguageIdentification> Function(
+        Pointer<SherpaOnnxSpokenLanguageIdentificationConfig>);
+
+typedef SherpaOnnxCreateSpokenLanguageIdentification
+    = SherpaOnnxCreateSpokenLanguageIdentificationNative;
+
+typedef SherpaOnnxDestroySpokenLanguageIdentificationNative = Void Function(
+    Pointer<SherpaOnnxSpokenLanguageIdentification>);
+
+typedef SherpaOnnxDestroySpokenLanguageIdentification = void Function(
+    Pointer<SherpaOnnxSpokenLanguageIdentification>);
+
+typedef SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamNative
+    = Pointer<SherpaOnnxOfflineStream> Function(
+        Pointer<SherpaOnnxSpokenLanguageIdentification>);
+
+typedef SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream
+    = SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamNative;
+
+typedef SherpaOnnxSpokenLanguageIdentificationComputeNative
+    = Pointer<SherpaOnnxSpokenLanguageIdentificationResult> Function(
+        Pointer<SherpaOnnxSpokenLanguageIdentification>,
+        Pointer<SherpaOnnxOfflineStream>);
+
+typedef SherpaOnnxSpokenLanguageIdentificationCompute
+    = SherpaOnnxSpokenLanguageIdentificationComputeNative;
+
+typedef SherpaOnnxDestroySpokenLanguageIdentificationResultNative = Void
+    Function(Pointer<SherpaOnnxSpokenLanguageIdentificationResult>);
+
+typedef SherpaOnnxDestroySpokenLanguageIdentificationResult = void Function(
+    Pointer<SherpaOnnxSpokenLanguageIdentificationResult>);
 
 typedef SherpaOnnxCreateOfflineSpeakerDiarizationNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarization> Function(
@@ -1333,6 +1404,17 @@ class SherpaOnnxBindings {
   static SherpaOnnxOfflineSpeechDenoiserRun? sherpaOnnxOfflineSpeechDenoiserRun;
   static SherpaOnnxDestroyDenoisedAudio? sherpaOnnxDestroyDenoisedAudio;
 
+  static SherpaOnnxCreateSpokenLanguageIdentification?
+      sherpaOnnxCreateSpokenLanguageIdentification;
+  static SherpaOnnxDestroySpokenLanguageIdentification?
+      sherpaOnnxDestroySpokenLanguageIdentification;
+  static SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream?
+      sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream;
+  static SherpaOnnxSpokenLanguageIdentificationCompute?
+      sherpaOnnxSpokenLanguageIdentificationCompute;
+  static SherpaOnnxDestroySpokenLanguageIdentificationResult?
+      sherpaOnnxDestroySpokenLanguageIdentificationResult;
+
   static SherpaOnnxCreateOfflineSpeakerDiarization?
       sherpaOnnxCreateOfflineSpeakerDiarization;
   static SherpaOnnxDestroyOfflineSpeakerDiarization?
@@ -1561,6 +1643,41 @@ class SherpaOnnxBindings {
     sherpaOnnxDestroyDenoisedAudio ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyDenoisedAudioNative>>(
             'SherpaOnnxDestroyDenoisedAudio')
+        .asFunction();
+
+    sherpaOnnxCreateSpokenLanguageIdentification ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxCreateSpokenLanguageIdentificationNative>>(
+            'SherpaOnnxCreateSpokenLanguageIdentification')
+        .asFunction();
+
+    sherpaOnnxDestroySpokenLanguageIdentification ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxDestroySpokenLanguageIdentificationNative>>(
+            'SherpaOnnxDestroySpokenLanguageIdentification')
+        .asFunction();
+
+    sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamNative>>(
+            'SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream')
+        .asFunction();
+
+    sherpaOnnxSpokenLanguageIdentificationCompute ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpokenLanguageIdentificationComputeNative>>(
+            'SherpaOnnxSpokenLanguageIdentificationCompute')
+        .asFunction();
+
+    sherpaOnnxDestroySpokenLanguageIdentificationResult ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxDestroySpokenLanguageIdentificationResultNative>>(
+            'SherpaOnnxDestroySpokenLanguageIdentificationResult')
         .asFunction();
 
     sherpaOnnxCreateOfflineSpeakerDiarization ??= dynamicLibrary

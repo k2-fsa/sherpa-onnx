@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
@@ -16,8 +16,8 @@ from _sherpa_onnx import (
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
 )
-from _sherpa_onnx import OfflineRecognizer as _Recognizer
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import OfflineRecognizer as _Recognizer
+from sherpa_onnx.lib._sherpa_onnx import (
     OfflineRecognizerConfig,
     OfflineSenseVoiceModelConfig,
     OfflineStream,

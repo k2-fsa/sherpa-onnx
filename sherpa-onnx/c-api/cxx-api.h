@@ -36,11 +36,16 @@ struct OnlineNemoCtcModelConfig {
   std::string model;
 };
 
+struct OnlineToneCtcModelConfig {
+  std::string model;
+};
+
 struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
   OnlineNemoCtcModelConfig nemo_ctc;
+  OnlineToneCtcModelConfig t_one_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   std::string provider = "cpu";
@@ -259,6 +264,10 @@ struct SHERPA_ONNX_API OfflineZipformerCtcModelConfig {
   std::string model;
 };
 
+struct SHERPA_ONNX_API OfflineWenetCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -287,6 +296,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineDolphinModelConfig dolphin;
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineCanaryModelConfig canary;
+  OfflineWenetCtcModelConfig wenet_ctc;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
@@ -319,6 +329,9 @@ struct SHERPA_ONNX_API OfflineRecognizerResult {
   std::string lang;
   std::string emotion;
   std::string event;
+
+  // non-empty only for TDT models
+  std::vector<float> durations;
 };
 
 class SHERPA_ONNX_API OfflineStream
@@ -349,8 +362,9 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
-  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(const OfflineStream *s) const;
-  
+  std::shared_ptr<OfflineRecognizerResult> GetResultPtr(
+      const OfflineStream *s) const;
+
   void SetConfig(const OfflineRecognizerConfig &config) const;
 
  private:

@@ -12,6 +12,7 @@ from cmake.cmake_extension import (
     cmake_extension,
     get_binaries,
     is_windows,
+    need_split_package,
 )
 
 
@@ -33,6 +34,10 @@ def get_package_version():
     if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
         extra_version = "+cuda"
 
+    cuda_version = os.environ.get("SHERPA_ONNX_CUDA_VERSION", "")
+    if cuda_version:
+        extra_version += cuda_version
+
     latest_version += extra_version
 
     return latest_version
@@ -45,8 +50,11 @@ with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
 
 
 def get_binaries_to_install():
+    if need_split_package():
+        return None
+
     cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
-    if '-DSHERPA_ONNX_ENABLE_BINARY=OFF' in cmake_args:
+    if "-DSHERPA_ONNX_ENABLE_BINARY=OFF" in cmake_args:
         return None
 
     bin_dir = Path("build") / "sherpa_onnx" / "bin"
@@ -65,7 +73,7 @@ def get_binaries_to_install():
 
 setuptools.setup(
     name=package_name,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     version=get_package_version(),
     author="The sherpa-onnx development team",
     author_email="dpovey@gmail.com",
@@ -73,7 +81,13 @@ setuptools.setup(
         "sherpa_onnx": "sherpa-onnx/python/sherpa_onnx",
     },
     packages=["sherpa_onnx"],
-    data_files=[("bin", get_binaries_to_install())] if get_binaries_to_install() else None,
+    data_files=[
+        ("Scripts", get_binaries_to_install())
+        if is_windows()
+        else ("bin", get_binaries_to_install())
+    ]
+    if get_binaries_to_install()
+    else None,
     url="https://github.com/k2-fsa/sherpa-onnx",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
@@ -91,6 +105,7 @@ setuptools.setup(
         ],
     },
     license="Apache licensed, as found in the LICENSE file",
+    install_requires=["sherpa-onnx-core==1.12.14"] if need_split_package() else None,
 )
 
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "r") as f:

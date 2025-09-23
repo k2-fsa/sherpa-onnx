@@ -35,7 +35,7 @@ for s, i in speaker2id.items():
     audio = tts.generate(text, sid=i, speed=1.0)
 
     sf.write(
-        f"./hf/kitten/v0.2/mp3/{i}-{s}.mp3",
+        f"./hf/kitten/v0.2-nano/mp3/{i}-{s}.mp3",
         audio.samples,
         samplerate=audio.sample_rate,
     )

@@ -59,6 +59,9 @@ jobs:
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-arm64-v8a.sh
+
+          readelf -l ./build-android-arm64-v8a/install/lib/*.so
+
           mkdir -p jniLibs/arm64-v8a/
           cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
           cp -v ./build-android-arm64-v8a/install/lib/README.md ./jniLibs/arm64-v8a/
@@ -74,6 +77,9 @@ jobs:
           export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-armv7-eabi.sh
           mkdir -p ./jniLibs/armeabi-v7a/
+
+          readelf -l ./build-android-armv7-eabi/install/lib/*.so
+
           cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
           cp -v ./build-android-armv7-eabi/install/lib/README.md ./jniLibs/armeabi-v7a/
           rm -rf ./build-android-armv7-eabi
@@ -87,6 +93,9 @@ jobs:
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-x86-64.sh
+
+          readelf -l ./build-android-x86-64/install/lib/*.so
+
           mkdir -p ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/README.md ./jniLibs/x86_64
@@ -101,6 +110,9 @@ jobs:
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-x86.sh
+
+          readelf -l ./build-android-x86/install/lib/*.so
+
           mkdir -p ./jniLibs/x86
           cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
           cp -v ./build-android-x86/install/lib/README.md ./jniLibs/x86
@@ -165,7 +177,7 @@ jobs:
           file: sherpa-onnx-*-android.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.5
+          # tag: v1.12.11
 
   build-android-aar:
     needs: [build-android-libs]
@@ -298,9 +310,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./*.aar
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.5
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.11
 
       - name: Release android aar
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

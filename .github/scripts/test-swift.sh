@@ -9,12 +9,18 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-decode-file-t-one-streaming.sh
+rm -rf sherpa-onnx-streaming-*
+
 ./run-compute-speaker-embeddings.sh
 rm -fv *.wav *.onnx
 
 ./run-tts-kitten-en.sh
 ls -lh
 rm -rf kitten-*
+
+./run-wenet-ctc-asr.sh
+rm -rf sherpa-onnx-*
 
 ./run-zipformer-ctc-asr.sh
 rm -rf sherpa-onnx-zipformer-*

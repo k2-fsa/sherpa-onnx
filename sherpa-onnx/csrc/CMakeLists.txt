@@ -95,6 +95,8 @@ set(sources
   online-recognizer.cc
   online-rnn-lm.cc
   online-stream.cc
+  online-t-one-ctc-model-config.cc
+  online-t-one-ctc-model.cc
   online-transducer-decoder.cc
   online-transducer-greedy-search-decoder.cc
   online-transducer-greedy-search-nemo-decoder.cc
@@ -171,6 +173,8 @@ list(APPEND sources
 )
 if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
+    ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
+    ./rknn/offline-sense-voice-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc
@@ -201,6 +205,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
+    offline-tts-zipvoice-frontend.cc
+    offline-tts-zipvoice-model.cc
+    offline-tts-zipvoice-model-config.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
     vocoder.cc
@@ -276,12 +283,6 @@ if(DEFINED OHOS AND x${OHOS} STREQUAL xOHOS)
   )
 endif()
 
-if(SHERPA_ONNX_ENABLE_GPU)
-  target_link_libraries(sherpa-onnx-core
-    onnxruntime_providers_shared
-  )
-endif()
-
 if(SHERPA_ONNX_ENABLE_RKNN)
   if(DEFINED ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR})
     target_link_libraries(sherpa-onnx-core -L$ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR} -lrknnrt)
@@ -290,7 +291,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   endif()
 endif()
 
-if((BUILD_SHARED_LIBS OR SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE) AND NOT DEFINED onnxruntime_lib_files)
+if(TARGET onnxruntime)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
@@ -307,7 +308,9 @@ endif()
 target_link_libraries(sherpa-onnx-core fstfar fst)
 
 if(SHERPA_ONNX_ENABLE_TTS)
-  target_link_libraries(sherpa-onnx-core piper_phonemize)
+  target_link_libraries(sherpa-onnx-core
+    cppinyin_core
+    piper_phonemize)
 endif()
 target_link_libraries(sherpa-onnx-core cppjieba)
 
@@ -348,6 +351,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+    add_executable(sherpa-onnx-offline-zeroshot-tts sherpa-onnx-offline-zeroshot-tts.cc)
   endif()
 
   if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
@@ -370,6 +374,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
       sherpa-onnx-offline-tts
+      sherpa-onnx-offline-zeroshot-tts
     )
   endif()
 
@@ -390,6 +395,10 @@ if(SHERPA_ONNX_ENABLE_BINARY)
 
       if(SHERPA_ONNX_ENABLE_PYTHON)
         target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      elseif(SHERPA_ONNX_SPLIT_PYTHON_PACKAGE)
+        foreach(ver in ITEMS 3.8 3.9 3.10 3.11 3.12 3.13 3.14)
+          target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+        endforeach()
       endif()
     endforeach()
   endif()
@@ -464,6 +473,12 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
       foreach(exe IN LISTS exes)
         target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       endforeach()
+    elseif(SHERPA_ONNX_SPLIT_PYTHON_PACKAGE)
+      foreach(exe IN LISTS exes)
+        foreach(ver in ITEMS 3.8 3.9 3.10 3.11 3.12 3.13 3.14)
+          target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+        endforeach()
+      endforeach()
     endif()
   endif()
 
@@ -503,6 +518,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-microphone-simulated-streaming-asr
+    sherpa-onnx-vad-microphone-simulated-streaming-asr.cc
+    microphone.cc
+  )
+
   add_executable(sherpa-onnx-vad-with-offline-asr
     sherpa-onnx-vad-with-offline-asr.cc
   )
@@ -533,6 +553,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-microphone-offline-audio-tagging
     sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-vad-microphone
+    sherpa-onnx-vad-microphone-simulated-streaming-asr
     sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-with-offline-asr
     sherpa-onnx-vad-with-online-asr
@@ -556,6 +577,12 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     if(SHERPA_ONNX_ENABLE_PYTHON)
       foreach(exe IN LISTS exes)
         target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      endforeach()
+    elseif(SHERPA_ONNX_SPLIT_PYTHON_PACKAGE)
+      foreach(exe IN LISTS exes)
+        foreach(ver in ITEMS 3.8 3.9 3.10 3.11 3.12 3.13 3.14)
+          target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+        endforeach()
       endforeach()
     endif()
   endif()
@@ -613,6 +640,12 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
       target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    elseif(SHERPA_ONNX_SPLIT_PYTHON_PACKAGE)
+        foreach(ver in ITEMS 3.8 3.9 3.10 3.11 3.12 3.13 3.14)
+          target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+          target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+          target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${ver}/site-packages/sherpa_onnx/lib")
+        endforeach()
     endif()
   endif()
 
@@ -645,6 +678,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
       cppjieba-test.cc
+      offline-tts-zipvoice-frontend-test.cc
       piper-phonemize-test.cc
     )
   endif()

@@ -35,10 +35,32 @@
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-rknn-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
+  if (config.model_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    if (config.model_config.sense_voice.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice models are currently supported "
+          "by rknn for non-streaming ASR. Fallback to CPU");
+    } else if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model_config.sense_voice.model.empty()) {
     return std::make_unique<OfflineRecognizerSenseVoiceImpl>(config);
   }
@@ -229,6 +251,24 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 template <typename Manager>
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     Manager *mgr, const OfflineRecognizerConfig &config) {
+  if (config.model_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    if (config.model_config.sense_voice.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice models are currently supported "
+          "by rknn for non-streaming ASR. Fallback to CPU");
+    } else if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(mgr, config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model_config.sense_voice.model.empty()) {
     return std::make_unique<OfflineRecognizerSenseVoiceImpl>(mgr, config);
   }

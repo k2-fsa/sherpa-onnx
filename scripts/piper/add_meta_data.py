@@ -69,7 +69,12 @@ def generate_tokens(config):
     id_map = config["phoneme_id_map"]
     with open("tokens.txt", "w", encoding="utf-8") as f:
         for s, i in id_map.items():
-            f.write(f"{s} {i[0]}\n")
+            if s == "\n":
+                continue
+            if isinstance(i, list):
+                i = i[0]
+            print(f"{s} {i}")
+            f.write(f"{s} {i}\n")
     print("Generated tokens.txt")
 
 
@@ -100,12 +105,17 @@ def main():
         print("Change sample rate from 22500 to 22050")
         sample_rate = 22050
 
+    if "lang_code" in config:
+        voice = config["lang_code"]
+    else:
+        voice = config["espeak"]["voice"]
+
     print("add model metadata")
     meta_data = {
         "model_type": "vits",
         "comment": "piper",  # must be piper for models from piper
         "language": lang_iso.name,
-        "voice": config["espeak"]["voice"],  # e.g., en-us
+        "voice": voice,  # e.g., en-us
         "has_espeak": 1,
         "n_speakers": config["num_speakers"],
         "sample_rate": sample_rate,

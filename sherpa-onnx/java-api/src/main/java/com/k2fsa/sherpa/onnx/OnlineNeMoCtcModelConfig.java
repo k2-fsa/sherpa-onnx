@@ -28,5 +28,4 @@ public class OnlineNeMoCtcModelConfig {
             return this;
         }
     }
-
 }

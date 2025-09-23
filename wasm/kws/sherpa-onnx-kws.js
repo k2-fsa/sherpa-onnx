@@ -75,9 +75,10 @@ function initModelConfig(config, Module) {
   const paraformer_len = 2 * 4
   const zipfomer2_ctc_len = 1 * 4
   const nemo_ctc_len = 1 * 4
+  const t_one_ctc_len = 1 * 4
 
   const len = transducer.len + paraformer_len + zipfomer2_ctc_len + 9 * 4 +
-      nemo_ctc_len;
+      nemo_ctc_len + t_one_ctc_len;
 
   const ptr = Module._malloc(len);
   Module.HEAPU8.fill(0, ptr, ptr + len);
@@ -152,6 +153,7 @@ function initModelConfig(config, Module) {
 
   Module.setValue(ptr + offset, config.tokensBufSize || 0, 'i32');
   offset += 4;
+  // skip nemo_ctc and t_one_ctc
 
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer

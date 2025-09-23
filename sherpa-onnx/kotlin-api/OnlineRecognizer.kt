@@ -33,11 +33,16 @@ data class OnlineNeMoCtcModelConfig(
     var model: String = "",
 )
 
+data class OnlineToneCtcModelConfig(
+    var model: String = "",
+)
+
 data class OnlineModelConfig(
     var transducer: OnlineTransducerModelConfig = OnlineTransducerModelConfig(),
     var paraformer: OnlineParaformerModelConfig = OnlineParaformerModelConfig(),
     var zipformer2Ctc: OnlineZipformer2CtcModelConfig = OnlineZipformer2CtcModelConfig(),
     var neMoCtc: OnlineNeMoCtcModelConfig = OnlineNeMoCtcModelConfig(),
+    var toneCtc: OnlineToneCtcModelConfig = OnlineToneCtcModelConfig(),
     var tokens: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -515,6 +520,16 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer2",
+            )
+        }
+
+        27 -> {
+            val modelDir = "sherpa-onnx-streaming-t-one-russian-2025-09-08"
+            return OnlineModelConfig(
+                toneCtc = OnlineToneCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
 

@@ -140,19 +140,6 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
-      - name: Test non-streaming decoding files with NeMo Canary
-        shell: bash
-        run: |
-          cd scripts/go/_internal/non-streaming-canary-decode-files/
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          ./run.sh
-          rm -rf sherpa-onnx-nemo-*
-
       - name: Test streaming decoding files
         shell: bash
         run: |
@@ -162,6 +149,9 @@ jobs:
           cat go.mod
           go build
           ls -lh
+
+          echo "Test T-one CTC"
+          ./run-t-one-ctc.sh
 
           echo "Test zipformer2 CTC"
           ./run-zipformer2-ctc-with-hr.sh
@@ -179,6 +169,21 @@ jobs:
           ./run-paraformer.sh
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
+      - name: Test non-streaming decoding files with NeMo Canary
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-canary-decode-files/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-nemo-*
+
+
+
       - name: Test non-streaming decoding files
         shell: bash
         run: |
@@ -188,6 +193,10 @@ jobs:
           cat go.mod
           go build
           ls -lh
+
+          echo "Test Wenet CTC"
+          ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-wenet*
 
           echo "Test Zipformer CTC"
           ./run-zipformer-ctc.sh

@@ -114,6 +114,9 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
 
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
+  int32_t max_tokens_per_frame = 5;
+  int32_t tokens_this_frame = 0;
+
   int32_t skip = 0;
   for (int32_t t = 0; t < num_rows; t += skip) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
@@ -134,27 +137,22 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
     int32_t num_durations = output_size - vocab_size;
 
     // Split logits into token and duration logits
-    const float* token_logits = p_logit;
-    const float* duration_logits = p_logit + vocab_size;
+    const float *token_logits = p_logit;
+    const float *duration_logits = p_logit + vocab_size;
 
     auto y = static_cast<int32_t>(std::distance(
         token_logits,
         std::max_element(token_logits, token_logits + vocab_size)));
 
-    skip = 1;
-    int32_t duration = 1;
-    if (num_durations > 0) {
-      duration = static_cast<int32_t>(std::distance(
-          duration_logits,
-          std::max_element(duration_logits, duration_logits + num_durations)));
-      skip = duration;
-      if (skip == 0) skip = 1;
-    }
+    // note that skip can be 0
+    skip = static_cast<int32_t>(std::distance(
+        duration_logits,
+        std::max_element(duration_logits, duration_logits + num_durations)));
 
     if (y != blank_id) {
       ans.tokens.push_back(y);
       ans.timestamps.push_back(t);
-      ans.durations.push_back(duration);
+      ans.durations.push_back(skip);
 
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
@@ -162,6 +160,22 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
           model->RunDecoder(std::move(decoder_input_pair.first),
                             std::move(decoder_input_pair.second),
                             std::move(decoder_output_pair.second));
+
+      tokens_this_frame += 1;
+    }
+
+    if (skip > 0) {
+      tokens_this_frame = 0;
+    }
+
+    if (tokens_this_frame >= max_tokens_per_frame) {
+      tokens_this_frame = 0;
+      skip = 1;
+    }
+
+    if (y == blank_id && skip == 0) {
+      tokens_this_frame = 0;
+      skip = 1;
     }
   }  // for (int32_t t = 0; t < num_rows; t += skip)
 

@@ -139,7 +139,7 @@ jobs:
           file: sherpa-onnx-*-android-rknn.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.12.13
 
   build-android-aar-rknn:
     needs: [build-android-rknn-libs]
@@ -275,7 +275,7 @@ jobs:
           file: ./*.aar
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.3
+          # tag: v1.12.13
 
       - name: Release android aar
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

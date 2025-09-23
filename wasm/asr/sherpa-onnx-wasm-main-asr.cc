@@ -21,7 +21,8 @@ static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                   sizeof(SherpaOnnxOnlineTransducerModelConfig) +
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
                       sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4 +
-                      sizeof(SherpaOnnxOnlineNemoCtcModelConfig),
+                      sizeof(SherpaOnnxOnlineNemoCtcModelConfig) +
+                      sizeof(SherpaOnnxOnlineToneCtcModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
@@ -39,6 +40,7 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   auto paraformer_model_config = &model_config->paraformer;
   auto ctc_model_config = &model_config->zipformer2_ctc;
   auto nemo_ctc = &model_config->nemo_ctc;
+  auto t_one_ctc = &model_config->t_one_ctc;
 
   fprintf(stdout, "----------online transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer_model_config->encoder);
@@ -54,6 +56,9 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
 
   fprintf(stdout, "----------online nemo ctc model config----------\n");
   fprintf(stdout, "model: %s\n", nemo_ctc->model);
+
+  fprintf(stdout, "----------online t-one ctc model config----------\n");
+  fprintf(stdout, "model: %s\n", t_one_ctc->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

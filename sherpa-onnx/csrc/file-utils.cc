@@ -32,6 +32,20 @@ std::vector<char> ReadFile(const std::string &filename) {
 
 #if __ANDROID_API__ >= 9
 std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
+  if (!filename.empty() && filename[0] == '/') {
+    SHERPA_ONNX_LOGE(
+        "You are using an absolute path '%s', but assetManager is NOT set to "
+        "null.",
+        filename.c_str());
+
+    SHERPA_ONNX_LOGE(
+        "Please set assetManager to null when you load model files from the SD "
+        "card");
+
+    SHERPA_ONNX_LOGE(
+        "See also https://github.com/k2-fsa/sherpa-onnx/issues/2562");
+  }
+
   AAsset *asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER);
   if (!asset) {
     __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",

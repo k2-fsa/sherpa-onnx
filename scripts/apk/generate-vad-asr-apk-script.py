@@ -99,7 +99,7 @@ def get_models():
             idx=15,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="sense_voice",
+            short_name="sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -687,6 +687,39 @@ def get_models():
             lang="multi",
             lang2="25_languages",
             short_name="parakeet_tdt_0.6b_v3",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
+            idx=41,
+            lang="zh_en_ko_ja_yue",
+            lang2="中英粤日韩",
+            short_name="sense_voice_2025_09_09_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
+            idx=42,
+            lang="zh_en_yue",
+            lang2="中英粤",
+            short_name="wenetspeech_yue_u2pconformer_ctc_2025_09_10_int8",
             cmd="""
             pushd $model_name
 

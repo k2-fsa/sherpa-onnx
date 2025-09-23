@@ -4,6 +4,40 @@ set -ex
 
 cd dart-api-examples
 
+pushd spoken-language-identification
+./run-whisper.sh
+popd
+
+pushd streaming-asr
+
+echo '----------streaming T-one ctc----------'
+./run-t-one-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming zipformer ctc HLG----------'
+./run-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming zipformer ctc----------'
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming zipformer transducer----------'
+./run-zipformer-transducer-itn.sh
+./run-zipformer-transducer.sh
+rm -f itn*
+rm -rf sherpa-onnx-*
+
+echo '----------streaming NeMo transducer----------'
+./run-nemo-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming paraformer----------'
+./run-paraformer.sh
+rm -rf sherpa-onnx-*
+
+popd # streaming-asr
+
 pushd tts
 
 echo '----------matcha tts----------'
@@ -39,6 +73,10 @@ rm *.onnx
 popd
 
 pushd non-streaming-asr
+
+echo '----------Wenet CTC----------'
+./run-wenet-ctc.sh
+rm -rf sherpa-onnx-*
 
 echo '----------Zipformer CTC----------'
 ./run-zipformer-ctc.sh
@@ -167,29 +205,3 @@ popd
 pushd keyword-spotter
 ./run-zh.sh
 popd
-
-pushd streaming-asr
-
-echo '----------streaming zipformer ctc HLG----------'
-./run-zipformer-ctc-hlg.sh
-rm -rf sherpa-onnx-*
-
-echo '----------streaming zipformer ctc----------'
-./run-zipformer-ctc.sh
-rm -rf sherpa-onnx-*
-
-echo '----------streaming zipformer transducer----------'
-./run-zipformer-transducer-itn.sh
-./run-zipformer-transducer.sh
-rm -f itn*
-rm -rf sherpa-onnx-*
-
-echo '----------streaming NeMo transducer----------'
-./run-nemo-transducer.sh
-rm -rf sherpa-onnx-*
-
-echo '----------streaming paraformer----------'
-./run-paraformer.sh
-rm -rf sherpa-onnx-*
-
-popd # streaming-asr

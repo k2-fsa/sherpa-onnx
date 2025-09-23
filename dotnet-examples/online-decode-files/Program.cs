@@ -38,6 +38,9 @@ class OnlineDecodeFiles
     [Option("zipformer2-ctc", Required = false, HelpText = "Path to zipformer2 CTC onnx model")]
     public string Zipformer2Ctc { get; set; } = string.Empty;
 
+    [Option("t-one-ctc", Required = false, HelpText = "Path to T-one CTC onnx model")]
+    public string ToneCtc { get; set; } = string.Empty;
+
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; } = 1;
 
@@ -173,6 +176,7 @@ to download pre-trained streaming models.
     config.ModelConfig.Paraformer.Decoder = options.ParaformerDecoder;
 
     config.ModelConfig.Zipformer2Ctc.Model = options.Zipformer2Ctc;
+    config.ModelConfig.ToneCtc.Model = options.ToneCtc;
 
     config.ModelConfig.Tokens = options.Tokens;
     config.ModelConfig.Provider = options.Provider;
@@ -203,10 +207,15 @@ to download pre-trained streaming models.
       var s = recognizer.CreateStream();
 
       var waveReader = new WaveReader(files[i]);
+
+      var leftPadding = new float[(int)(waveReader.SampleRate * 0.3)];
+      s.AcceptWaveform(waveReader.SampleRate, leftPadding);
+
       s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
 
-      var tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
+      var tailPadding = new float[(int)(waveReader.SampleRate * 0.6)];
       s.AcceptWaveform(waveReader.SampleRate, tailPadding);
+
       s.InputFinished();
 
       streams.Add(s);

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c)  2023  Xiaomi Corporation
+# Copyright (c)  2023-2025  Xiaomi Corporation
 
 """
 This file demonstrates how to use sherpa-onnx Python API to generate audio
@@ -453,7 +453,9 @@ def main():
     end = time.time()
 
     if len(audio.samples) == 0:
-        print("Error in generating audios. Please read previous error messages.")
+        print(
+            "Error in generating audios. Please read previous error messages."
+        )
         return
 
     elapsed_seconds = end - start
@@ -470,7 +472,9 @@ def main():
     print(f"The text is '{args.text}'")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
-    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
+    print(
+        f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
 
 
 if __name__ == "__main__":

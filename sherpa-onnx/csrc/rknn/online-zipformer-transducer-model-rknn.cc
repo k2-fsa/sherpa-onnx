@@ -61,10 +61,6 @@ class OnlineZipformerTransducerModelRknn::Impl {
       auto buf = ReadFile(config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
-
-    SetCoreMask(encoder_ctx_, config_.num_threads);
-    SetCoreMask(decoder_ctx_, config_.num_threads);
-    SetCoreMask(joiner_ctx_, config_.num_threads);
   }
 
   template <typename Manager>
@@ -83,13 +79,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
       auto buf = ReadFile(mgr, config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
-
-    SetCoreMask(encoder_ctx_, config_.num_threads);
-    SetCoreMask(decoder_ctx_, config_.num_threads);
-    SetCoreMask(joiner_ctx_, config_.num_threads);
   }
-
-  // TODO(fangjun): Support Android
 
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
     // encoder_input_attrs_[0] is for the feature
@@ -187,6 +177,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
     auto ret = rknn_dup_context(&encoder_ctx_, &encoder_ctx);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the encoder ctx");
 
+    SetCoreMask(encoder_ctx, config_.num_threads);
+
     ret = rknn_inputs_set(encoder_ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set encoder inputs");
 
@@ -242,6 +234,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
     auto ret = rknn_dup_context(&decoder_ctx_, &decoder_ctx);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the decoder ctx");
 
+    SetCoreMask(decoder_ctx, config_.num_threads);
+
     ret = rknn_inputs_set(decoder_ctx, 1, &input);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set decoder inputs");
 
@@ -282,6 +276,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
     rknn_context joiner_ctx = 0;
     auto ret = rknn_dup_context(&joiner_ctx_, &joiner_ctx);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the joiner ctx");
+
+    SetCoreMask(joiner_ctx, config_.num_threads);
 
     ret = rknn_inputs_set(joiner_ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set joiner inputs");

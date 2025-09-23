@@ -158,8 +158,18 @@ jobs:
               vits-piper-nl_NL-miro-high
               vits-piper-nl_NL-dii-high
               vits-piper-de_DE-miro-high
+              vits-piper-de_DE-dii-high
               vits-piper-fr_FR-miro-high
               vits-piper-en_US-miro-high
+              vits-piper-pl_PL-jarvis_wg_glos-medium
+              vits-piper-pl_PL-justyna_wg_glos-medium
+              vits-piper-pl_PL-meski_wg_glos-medium
+              vits-piper-pl_PL-zenski_wg_glos-medium
+              vits-piper-id_ID-news_tts-medium
+              vits-piper-hi_IN-rohan-medium
+              vits-piper-ar_JO-SA_miro-high-int8
+              vits-piper-ar_JO-SA_miro-high-fp16
+              vits-piper-ar_JO-SA_miro-high
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

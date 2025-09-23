@@ -1,0 +1,261 @@
+name: jar
+
+on:
+  push:
+    branches:
+      - refactor-jar
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: jar-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+jobs:
+  jar:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+
+          - os: ubuntu-latest
+            arch: "x64"
+
+          - os: macos-latest
+            arch: "arm64"
+
+          - os: macos-13
+            arch: "x64"
+
+          - os: windows-latest
+            arch: "x64"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'ubuntu-24.04-arm' && matrix.arch == 'arm64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-jni
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/linux-aarch64
+
+          mkdir -p $dst
+          cp -v $src/lib/libsherpa-onnx-jni.so $dst/
+          cp -v $src/lib/libonnxruntime.so $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.arch == 'x64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-jni
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/linux-x64
+
+          mkdir -p $dst
+          cp -v $src/lib/libsherpa-onnx-jni.so $dst/
+          cp -v $src/lib/libonnxruntime.so $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'macos-latest' && matrix.arch == 'arm64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-jni
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/osx-aarch64
+
+          mkdir -p $dst
+          cp -v $src/lib/libonnxruntime.1.17.1.dylib $dst/
+          cp -v $src/lib/libsherpa-onnx-jni.dylib $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'macos-13' && matrix.arch == 'x64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x86_64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x86_64-jni
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/osx-x64
+
+          mkdir -p $dst
+          cp -v $src/lib/libonnxruntime.1.17.1.dylib $dst/
+          cp -v $src/lib/libsherpa-onnx-jni.dylib $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
+        if: ${{ matrix.os == 'windows-latest' && matrix.arch == 'x64' }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-jni.tar.bz2
+          tar xvf ./*.tar.bz2
+
+          src=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-jni
+          ls -lh $src
+          ls -lh $src/lib
+          dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/win-x64
+
+          mkdir -p $dst
+          cp -v $src/lib/onnxruntime.dll $dst/
+          cp -v $src/lib/sherpa-onnx-jni.dll $dst/
+
+          ls -lh $dst
+          rm -rf $src*
+
+      - name: Create java jar (source code)
+        shell: bash
+        run: |
+          cd sherpa-onnx/java-api
+          make
+
+          ls -lh build
+
+      - name: Create java jar (native lib)
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          cd sherpa-onnx/java-api
+
+          ls -lh resources/sherpa-onnx/native
+
+          echo "--"
+
+          ls -lh resources/sherpa-onnx/native/*/
+
+          jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
+
+          ls -lh *.jar
+
+          os=${{ matrix.os }}
+          arch=${{ matrix.arch }}
+
+          if [[ $os == "ubuntu-24.04-arm" && $arch == "arm64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-linux-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "ubuntu-latest" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+            mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          else
+            echo "Unknown os $os with arch $arch"
+          fi
+
+      - name: Show java jar (source code)
+        shell: bash
+        run: |
+          cd sherpa-onnx/java-api
+
+          unzip -l build/sherpa-onnx.jar
+
+      - name: Show java jar (native lib)
+        shell: bash
+        run: |
+          cd sherpa-onnx/java-api
+
+          unzip -l sherpa-onnx*.jar
+
+      - name: Release jar
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
+
+      - name: Release jar
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.10
+
+      - name: Test KittenTTS
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          os=${{ matrix.os }}
+          arch=${{ matrix.arch }}
+
+          if [[ $os == "ubuntu-24.04-arm" && $arch == "arm64" ]]; then
+            native_jar=sherpa-onnx-native-lib-linux-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "ubuntu-latest" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
+            native_jar=sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
+          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+            native_jar=sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
+          else
+            echo "Unknown os $os with arch $arch"
+          fi
+
+          echo "native_jar: $native_jar"
+          ls -lh sherpa-onnx/java-api/$native_jar
+
+          if [[ ${{ matrix.os }} == "windows-latest" ]]; then
+            SEP=";"
+          else
+            SEP=":"
+          fi
+          cd java-api-examples
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+          tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+          rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+          java \
+            -cp "../sherpa-onnx/java-api/build/sherpa-onnx.jar${SEP}../sherpa-onnx/java-api/$native_jar" \
+            NonStreamingTtsKittenEn.java

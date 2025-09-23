@@ -1,18 +1,18 @@
 function(download_kaldifst)
   include(FetchContent)
 
-  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.13.tar.gz")
-  set(kaldifst_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/kaldifst-1.7.13.tar.gz")
-  set(kaldifst_HASH "SHA256=f8dc15fdaf314d7c9c3551ad8c11ed15da0f34de36446798bbd1b90fa7946eb2")
+  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.17.tar.gz")
+  set(kaldifst_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/kaldifst-1.7.17.tar.gz")
+  set(kaldifst_HASH "SHA256=c4b701a23a400bda8032586b02c7e0d5e813a765832df60c23e6df9e62b010f4")
 
   # If you don't have access to the Internet,
   # please pre-download kaldifst
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldifst-1.7.13.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldifst-1.7.13.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldifst-1.7.13.tar.gz
-    /tmp/kaldifst-1.7.13.tar.gz
-    /star-fj/fangjun/download/github/kaldifst-1.7.13.tar.gz
+    $ENV{HOME}/Downloads/kaldifst-1.7.17.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldifst-1.7.17.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldifst-1.7.17.tar.gz
+    /tmp/kaldifst-1.7.17.tar.gz
+    /star-fj/fangjun/download/github/kaldifst-1.7.17.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

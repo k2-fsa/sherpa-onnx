@@ -146,3 +146,13 @@ dict
 *.npz
 voices.bin
 kitten-nano-en-v0_1-fp16
+*.egg-info
+*.jar
+vocab.json
+*.so
+sherpa-onnx-streaming-t-one-russian-2025-09-08
+sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10
+am.mvn
+*bpe.model
+config.yaml
+configuration.json

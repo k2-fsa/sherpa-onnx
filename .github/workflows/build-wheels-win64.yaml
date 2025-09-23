@@ -5,6 +5,12 @@ on:
     branches:
       - wheel
   workflow_dispatch:
+    inputs:
+      publish_sherpa_onnx_bin:
+        description: "Publish sherpa-onnx-bin"
+        required: false
+        default: "true"
+        type: boolean
 
 env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
@@ -14,13 +20,252 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_wheels_win64:
-    name: ${{ matrix.python-version }}
+  core:
+    name: core
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+      - name: Install sccache
+        run: choco install sccache -y
+
+      - name: Cache sccache
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Mozilla\sccache
+          key: ${{ matrix.os }}-sccache-core
+          restore-keys: |
+            ${{ matrix.os }}-sccache-core-
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D CMAKE_C_COMPILER_LAUNCHER=sccache \
+            -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
+            -A x64 \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release  -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+          ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Show sccache stats
+        run: sccache --show-stats
+
+      - name: Show
+        shell: bash
+        run: |
+          echo "---bin---"
+          ls -lh build/install/bin
+          echo "---lib---"
+          ls -lh build/install/lib
+          echo "---include---"
+          ls -lh build/install/include
+
+      - name: Copy files
+        shell: bash
+        run: |
+          cd build
+          echo 'sherpa-onnx-core'
+          mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./install/lib/onnxruntime.dll ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          cp -v ./install/lib/sherpa-onnx-*.dll ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+          # keep the *.lib file so users can write code to link with our dll
+          cp -v ./install/lib/sherpa-onnx-*.lib ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
+
+          mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+          cp -v ./install/include/sherpa-onnx/c-api/*.h ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/include/sherpa-onnx/c-api
+
+          pushd ../scripts/wheel/sherpa-onnx-core
+          python3 setup.py bdist_wheel --plat-name=win_amd64
+
+          ls -lh dist
+
+          popd
+
+          echo 'sherpa-onnx-bin'
+
+          mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
+          cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
+
+          pushd ../scripts/wheel/sherpa-onnx-bin
+          python3 setup.py bdist_wheel --plat-name=win_amd64
+
+          ls -lh dist
+
+          popd
+
+      - name: Collect wheels
+        shell: bash
+        run: |
+          mkdir wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-core/dist/*.whl ./wheelhouse
+          cp -v ./scripts/wheel/sherpa-onnx-bin/dist/*.whl ./wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-core-win-x64
+          path: ./wheelhouse/*.whl
+
+      - name: Show wheels
+        shell: bash
+        run: |
+          ls -lh ./scripts/wheel/sherpa-onnx-core/dist
+          ls -lh ./scripts/wheel/sherpa-onnx-bin/dist
+
+          unzip -l ./scripts/wheel/sherpa-onnx-core/dist/*.whl
+          echo "---"
+          unzip -l ./scripts/wheel/sherpa-onnx-bin/dist/*.whl
+
+  test:
+    name: test
+    needs: [core]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from Windows x64
+        uses: actions/download-artifact@v4
+        with:
+          name: wheels-core-win-x64
+          path: /tmp/wheels
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh /d/tmp/wheels
+
+      - name: Install
+        shell: bash
+        run: |
+          python3 -m pip install /d/tmp/wheels/*.whl
+
+      - name: Show version
+        shell: bash
+        run: |
+          sherpa-onnx-version
+
+          which sherpa-onnx-version
+
+      - name: Show help
+        shell: bash
+        run: |
+          sherpa-onnx --help
+
+          echo "---"
+
+          sherpa-onnx-offline --help
+
+          echo "---"
+
+          sherpa-onnx-vad --help
+
+          which sherpa-onnx-vad
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p $d
+
+            cp -v /d/tmp/wheels/*.whl $d/
+
+            git status
+            git add .
+            git commit -m "add more wheels"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+
+      - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
+        if: ${{ (github.event.inputs.publish_sherpa_onnx_bin || 'true') == 'true' }}
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine==5.0.0 setuptools
+
+          twine upload /d/tmp/wheels/*.whl
+
+  build_wheels_win64:
+    needs: [core, test]
+    name: ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
@@ -37,10 +282,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Build wheels
+      - name: Build wheels (cmd)
         shell: bash
         run: |
-          pip install setuptools wheel
+          python3 -m pip install setuptools wheel twine
+
+          export SHERPA_ONNX_SPLIT_PYTHON_PACKAGE=ON
+
+          export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_BINARY=OFF -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_C_API=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF"
 
           python3 setup.py bdist_wheel
 
@@ -52,6 +301,7 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
+          unzip -l ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:

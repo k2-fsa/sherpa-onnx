@@ -82,6 +82,18 @@ OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
   ans.nemo_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // streaming T-one CTC
+  fid = env->GetFieldID(model_config_cls, "toneCtc",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineToneCtcModelConfig;");
+  jobject t_one_ctc_config = env->GetObjectField(model_config, fid);
+  jclass t_one_ctc_config_cls = env->GetObjectClass(t_one_ctc_config);
+
+  fid = env->GetFieldID(t_one_ctc_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(t_one_ctc_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.t_one_ctc.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);

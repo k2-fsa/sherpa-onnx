@@ -66,12 +66,17 @@ jobs:
           ./gitcompile
           popd
 
+          p=$PWD
+
           export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+          export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
           export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
           mkdir build
           cd build
           cmake \
+            -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
+            -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             -DSHERPA_ONNX_ENABLE_GPU=ON \
@@ -113,13 +118,18 @@ jobs:
               ./gitcompile
               popd
 
+              p=$PWD
+
               export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
               export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
               mkdir build
               cd build
 
               cmake \
+                -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
+                -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
                 -DBUILD_SHARED_LIBS=ON \
                 -DCMAKE_INSTALL_PREFIX=./install \
                 ..
@@ -245,7 +255,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.5
+          # tag: v1.12.13
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'

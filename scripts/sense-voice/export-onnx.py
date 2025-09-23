@@ -118,8 +118,11 @@ def display_params(params):
     os.system(f"cat {params['config']}")
 
 
+@torch.no_grad()
 def main():
     model, params = SenseVoiceSmall.from_pretrained(model="iic/SenseVoiceSmall", device="cpu")
+    model.eval()
+
     display_params(params)
 
     generate_tokens(params)

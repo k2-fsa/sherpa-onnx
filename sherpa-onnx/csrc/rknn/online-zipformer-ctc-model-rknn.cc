@@ -41,8 +41,6 @@ class OnlineZipformerCtcModelRknn::Impl {
       auto buf = ReadFile(config.zipformer2_ctc.model);
       Init(buf.data(), buf.size());
     }
-
-    SetCoreMask(ctx_, config_.num_threads);
   }
 
   template <typename Manager>
@@ -51,11 +49,7 @@ class OnlineZipformerCtcModelRknn::Impl {
       auto buf = ReadFile(mgr, config.zipformer2_ctc.model);
       Init(buf.data(), buf.size());
     }
-
-    SetCoreMask(ctx_, config_.num_threads);
   }
-
-  // TODO(fangjun): Support Android
 
   std::vector<std::vector<uint8_t>> GetInitStates() const {
     // input_attrs_[0] is for the feature
@@ -149,6 +143,8 @@ class OnlineZipformerCtcModelRknn::Impl {
     rknn_context ctx = 0;
     auto ret = rknn_dup_context(&ctx_, &ctx);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the ctx");
+
+    SetCoreMask(ctx, config_.num_threads);
 
     ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
