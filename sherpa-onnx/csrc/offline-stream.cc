@@ -431,6 +431,19 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
+  // Serialize token_probs
+  os << "\""
+     << "token_probs"
+     << "\""
+     << ": ";
+  os << "[";
+  sep = "";
+  for (auto prob : token_probs) {
+    os << sep << std::fixed << std::setprecision(4) << prob;
+    sep = ", ";
+  }
+  os << "], ";
+
   sep = "";
 
   os << "\""
@@ -442,9 +455,24 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << sep << w;
     sep = ", ";
   }
+  os << "], ";
 
-  os << "]";
+  // Serialize word_probs
+  os << "\""
+     << "word_probs"
+     << "\""
+     << ": ";
+  os << "[";
+  sep = "";
+  for (auto prob : word_probs) {
+    os << sep << std::fixed << std::setprecision(4) << prob;
+    sep = ", ";
+  }
+  os << "]";  // No comma for the last field
+
   os << "}";
+
+  std::fprintf(stderr, "DEBUG: JSON serializing %zu probs\n", token_probs.size());
 
   return os.str();
 }

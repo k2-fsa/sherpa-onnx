@@ -26,6 +26,10 @@ struct OfflineCtcDecoderResult {
   ///
   /// tokens.size() == timestamps.size()
   std::vector<int32_t> timestamps;
+  
+  /// Token-level log probabilities (confidence scores)
+  /// token_log_probs.size() == tokens.size()
+  std::vector<float> token_log_probs;
 };
 
 class OfflineCtcDecoder {
