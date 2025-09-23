@@ -14,6 +14,8 @@ namespace sherpa_onnx {
 struct OfflineMoonshineDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
+  /// Token-level log probabilities (confidence scores)
+  std::vector<float> token_log_probs;
 };
 
 class OfflineMoonshineDecoder {

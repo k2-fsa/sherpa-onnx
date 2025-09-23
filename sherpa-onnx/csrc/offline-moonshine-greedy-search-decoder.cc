@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-moonshine-greedy-search-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -37,6 +38,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   int32_t seq_len = 1;
 
   std::vector<int32_t> tokens;
+  std::vector<float> token_log_probs;
 
   std::array<int64_t, 2> token_shape = {1, 1};
   int64_t seq_len_shape = 1;
@@ -58,12 +60,31 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   for (int32_t i = 0; i != max_len; ++i) {
     const float *p = logits.GetTensorData<float>();
 
-    int32_t max_token_id = static_cast<int32_t>(
-        std::distance(p, std::max_element(p, p + vocab_size)));
+    // Compute log-softmax and find max token with confidence
+    float max_logit = *std::max_element(p, p + vocab_size);
+    
+    float sum_exp = 0.0f;
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      sum_exp += std::exp(p[j] - max_logit);
+    }
+    float log_sum = max_logit + std::log(sum_exp);
+    
+    int32_t max_token_id = 0;
+    float max_log_prob = p[0] - log_sum;
+    
+    for (int32_t j = 1; j < vocab_size; ++j) {
+      float log_prob = p[j] - log_sum;
+      if (log_prob > max_log_prob) {
+        max_log_prob = log_prob;
+        max_token_id = j;
+      }
+    }
+
     if (max_token_id == eos) {
       break;
     }
     tokens.push_back(max_token_id);
+    token_log_probs.push_back(max_log_prob);
 
     seq_len += 1;
 
@@ -86,6 +107,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
 
   OfflineMoonshineDecoderResult ans;
   ans.tokens = std::move(tokens);
+  ans.token_log_probs = std::move(token_log_probs);
 
   return {ans};
 }
