@@ -16,6 +16,8 @@ namespace sherpa_onnx {
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
+  /// The log probabilities for each token
+  std::vector<float> token_log_probs;
   std::string lang;
 };
 

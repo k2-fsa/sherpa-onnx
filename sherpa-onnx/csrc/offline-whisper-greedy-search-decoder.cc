@@ -94,12 +94,16 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
 
-  int32_t max_token_id = static_cast<int32_t>(
-      std::distance(p_start, std::max_element(p_start, p_start + vocab_size)));
+  auto max_iter = std::max_element(p_start, p_start + vocab_size);
+  int32_t max_token_id = static_cast<int32_t>(std::distance(p_start, max_iter));
+  float max_log_prob = *max_iter;
+  
+  std::fprintf(stderr, "WHISPER DEBUG: Initial token %d, logit value = %f\n", max_token_id, max_log_prob);
 
   int32_t n_text_ctx = model_->TextCtx();
 
   std::vector<int32_t> predicted_tokens;
+  std::vector<float> predicted_log_probs;
 
   // assume at most 6 tokens per second
   int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
@@ -111,6 +115,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
 
     predicted_tokens.push_back(max_token_id);
+    predicted_log_probs.push_back(max_log_prob);
 
     std::array<int64_t, 2> token_shape{1, 1};
     Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
@@ -137,8 +142,11 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     const auto &logits = std::get<0>(decoder_out);
     const float *p_logits = logits.GetTensorData<float>();
 
-    max_token_id = static_cast<int64_t>(std::distance(
-        p_logits, std::max_element(p_logits, p_logits + vocab_size)));
+    max_iter = std::max_element(p_logits, p_logits + vocab_size);
+    max_token_id = static_cast<int64_t>(std::distance(p_logits, max_iter));
+    max_log_prob = *max_iter;
+    
+    std::fprintf(stderr, "WHISPER DEBUG: Loop token %d, logit value = %f\n", max_token_id, max_log_prob);
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);
@@ -151,6 +159,10 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   }
 
   ans[0].tokens = std::move(predicted_tokens);
+  ans[0].token_log_probs = std::move(predicted_log_probs);
+  
+  std::fprintf(stderr, "WHISPER DEBUG END: Returning %zu tokens with %zu probs\n", 
+             ans[0].tokens.size(), ans[0].token_log_probs.size());
 
   return ans;
 }
