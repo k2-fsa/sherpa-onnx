@@ -4,7 +4,7 @@ set -ex
 
 # to download more models
 if [ ! -f ./sherpa-onnx-zipvoice-distill-zh-en-emilia/fm_decoder.onnx ]; then
-  curl -SL -O wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
   tar xvf sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
   rm sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
 fi

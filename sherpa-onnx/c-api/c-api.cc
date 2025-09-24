@@ -1387,17 +1387,14 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
     prompt_vec.assign(prompt_samples, prompt_samples + static_cast<size_t>(n_prompt));
   }
 
-  // 调用 C++ 层的 ZipVoice 生成接口（带 vector 的重载）
   auto out = tts->impl->Generate(text_s, ptext_s, prompt_vec,
                                  prompt_sr, speed, num_steps);
 
-  // 把结果包装成 C 结构体（与其他 TTS C API 保持一致的分配/释放策略）
   auto *ans = new SherpaOnnxGeneratedAudio;
   ans->sample_rate = static_cast<int32_t>(out.sample_rate);
   ans->n = static_cast<int32_t>(out.samples.size());
-  // 拷贝到一块新的堆内存，供 C 调用方持有
   float *buf = new float[out.samples.size()];
-  std::memcpy(buf, out.samples.data(), out.samples.size() * sizeof(float));
+  std::copy(buf, out.samples.data(), out.samples.size() * sizeof(float));
   ans->samples = buf;
   return ans;
 }

@@ -1,110 +1,12 @@
 package main
 
 import (
-	"encoding/binary"
-	"errors"
 	"log"
 	"math"
-	"os"
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 )
-
-func must(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// 仅支持单声道 16-bit PCM WAV，返回 [-1,1] 归一化 samples 和采样率
-func readMonoInt16Wav(path string) ([]float32, int32, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer f.Close()
-
-	// 简单解析 WAV 头（RIFF/WAVE/fmt /data）
-	var (
-		riff = make([]byte, 12)
-	)
-	if _, err := f.Read(riff); err != nil {
-		return nil, 0, err
-	}
-	if string(riff[0:4]) != "RIFF" || string(riff[8:12]) != "WAVE" {
-		return nil, 0, errors.New("not a RIFF/WAVE file")
-	}
-
-	var (
-		audioFormat   uint16
-		numChannels   uint16
-		sampleRate    uint32
-		bitsPerSample uint16
-		dataSize      uint32
-	)
-
-	// 遍历 chunk
-	for {
-		var hdr [8]byte
-		if _, err := f.Read(hdr[:]); err != nil {
-			return nil, 0, errors.New("fmt/data chunk not found")
-		}
-		chunkID := string(hdr[0:4])
-		chunkSize := binary.LittleEndian.Uint32(hdr[4:8])
-
-		switch chunkID {
-		case "fmt ":
-			buf := make([]byte, chunkSize)
-			if _, err := f.Read(buf); err != nil {
-				return nil, 0, err
-			}
-			audioFormat = binary.LittleEndian.Uint16(buf[0:2])
-			numChannels = binary.LittleEndian.Uint16(buf[2:4])
-			sampleRate = binary.LittleEndian.Uint32(buf[4:8])
-			bitsPerSample = binary.LittleEndian.Uint16(buf[14:16])
-			if audioFormat != 1 {
-				return nil, 0, errors.New("only PCM is supported")
-			}
-		case "data":
-			dataSize = chunkSize
-			break
-		default:
-			// 跳过其它 chunk
-			if _, err := f.Seek(int64(chunkSize), 1); err != nil {
-				return nil, 0, err
-			}
-		}
-
-		if dataSize != 0 && sampleRate != 0 {
-			break
-		}
-	}
-
-	if numChannels != 1 {
-		return nil, 0, errors.New("expect mono wav (1 channel)")
-	}
-	if bitsPerSample != 16 {
-		return nil, 0, errors.New("expect 16-bit PCM")
-	}
-
-	raw := make([]byte, dataSize)
-	if _, err := f.Read(raw); err != nil {
-		return nil, 0, err
-	}
-	n := int(dataSize / 2)
-	out := make([]float32, n)
-	for i := 0; i < n; i++ {
-		v := int16(binary.LittleEndian.Uint16(raw[i*2 : i*2+2]))
-		out[i] = float32(float64(v) / 32768.0)
-		if out[i] > 1 {
-			out[i] = 1
-		} else if out[i] < -1 {
-			out[i] = -1
-		}
-	}
-	return out, int32(sampleRate), nil
-}
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
@@ -200,13 +102,12 @@ func main() {
 		if promptText == "" {
 			log.Fatal("For ZipVoice zero-shot TTS, --prompt-text is required when --prompt-audio is provided")
 		}
-		samples, sr, err := readMonoInt16Wav(promptAudio)
-		must(err)
+		wave := sherpa.ReadWave(promptAudio)
 		audio = tts.GenerateWithZipvoice(
 			text,
 			promptText,
-			samples,
-			int(sr),
+			wave.Samples,
+			wave.SampleRate,
 			speed,
 			zipvoiceNumSteps,
 		)
