@@ -63,7 +63,6 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   explicit OfflineRecognizerSenseVoiceImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
-        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineSenseVoiceModel>(config.model_config)) {
     const auto &meta_data = model_->GetModelMetadata();
@@ -83,7 +82,6 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   OfflineRecognizerSenseVoiceImpl(Manager *mgr,
                                   const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
-        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineSenseVoiceModel>(mgr,
                                                         config.model_config)) {
@@ -356,7 +354,6 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineSenseVoiceModel> model_;
   std::unique_ptr<OfflineCtcDecoder> decoder_;
