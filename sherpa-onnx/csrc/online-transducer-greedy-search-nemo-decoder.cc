@@ -30,7 +30,8 @@ static Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
 
 static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols, OnlineTransducerNeMoModel *model,
-                      float blank_penalty, OnlineStream *s) {
+                      float blank_penalty, float temperature_scale,
+                      OnlineStream *s) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -85,6 +86,13 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       r.timestamps.push_back(t + r.frame_offset);
       r.num_trailing_blanks = 0;
 
+      // Export the per-token log scores
+      for (int32_t n = 0; n < vocab_size; ++n) {
+        p_logit[n] /= temperature_scale;
+      }
+      LogSoftmax(p_logit, vocab_size);
+      r.ys_probs.push_back(p_logit[y]);
+
       decoder_input = BuildDecoderInput(y, model->Allocator());
 
       // last decoder state becomes the current state for the first chunk
@@ -122,7 +130,8 @@ void OnlineTransducerGreedySearchNeMoDecoder::Decode(Ort::Value encoder_out,
   for (int32_t i = 0; i != batch_size; ++i) {
     const float *this_p = p + dim1 * dim2 * i;
 
-    DecodeOne(this_p, dim1, dim2, model_, blank_penalty_, ss[i]);
+    DecodeOne(this_p, dim1, dim2, model_, blank_penalty_, temperature_scale_,
+              ss[i]);
   }
 }
 
