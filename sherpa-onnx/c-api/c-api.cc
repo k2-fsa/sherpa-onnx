@@ -1234,16 +1234,26 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.kitten.length_scale, 1.0);
 
   // zipvoice
-  tts_config.model.zipvoice.tokens = SHERPA_ONNX_OR(config->model.zipvoice.tokens, "");
-  tts_config.model.zipvoice.text_model = SHERPA_ONNX_OR(config->model.zipvoice.text_model, "");
-  tts_config.model.zipvoice.flow_matching_model = SHERPA_ONNX_OR(config->model.zipvoice.flow_matching_model, "");
-  tts_config.model.zipvoice.vocoder = SHERPA_ONNX_OR(config->model.zipvoice.vocoder, "");
-  tts_config.model.zipvoice.data_dir = SHERPA_ONNX_OR(config->model.zipvoice.data_dir, "");
-  tts_config.model.zipvoice.pinyin_dict = SHERPA_ONNX_OR(config->model.zipvoice.pinyin_dict, "");
-  tts_config.model.zipvoice.feat_scale = SHERPA_ONNX_OR(config->model.zipvoice.feat_scale, 0.1f);
-  tts_config.model.zipvoice.t_shift = SHERPA_ONNX_OR(config->model.zipvoice.t_shift, 0.5f);
-  tts_config.model.zipvoice.target_rms = SHERPA_ONNX_OR(config->model.zipvoice.target_rms, 0.1f);
-  tts_config.model.zipvoice.guidance_scale = SHERPA_ONNX_OR(config->model.zipvoice.guidance_scale, 1.0f);
+  tts_config.model.zipvoice.tokens =
+      SHERPA_ONNX_OR(config->model.zipvoice.tokens, "");
+  tts_config.model.zipvoice.text_model =
+      SHERPA_ONNX_OR(config->model.zipvoice.text_model, "");
+  tts_config.model.zipvoice.flow_matching_model =
+      SHERPA_ONNX_OR(config->model.zipvoice.flow_matching_model, "");
+  tts_config.model.zipvoice.vocoder =
+      SHERPA_ONNX_OR(config->model.zipvoice.vocoder, "");
+  tts_config.model.zipvoice.data_dir =
+      SHERPA_ONNX_OR(config->model.zipvoice.data_dir, "");
+  tts_config.model.zipvoice.pinyin_dict =
+      SHERPA_ONNX_OR(config->model.zipvoice.pinyin_dict, "");
+  tts_config.model.zipvoice.feat_scale =
+      SHERPA_ONNX_OR(config->model.zipvoice.feat_scale, 0.1f);
+  tts_config.model.zipvoice.t_shift =
+      SHERPA_ONNX_OR(config->model.zipvoice.t_shift, 0.5f);
+  tts_config.model.zipvoice.target_rms =
+      SHERPA_ONNX_OR(config->model.zipvoice.target_rms, 0.1f);
+  tts_config.model.zipvoice.guidance_scale =
+      SHERPA_ONNX_OR(config->model.zipvoice.guidance_scale, 1.0f);
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
@@ -1367,18 +1377,15 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
 }
 
-const SherpaOnnxGeneratedAudio* SherpaOnnxOfflineTtsGenerateWithZipvoice(
-    const SherpaOnnxOfflineTts* tts,
-    const char* text,
-    const char* prompt_text,
-    const float* prompt_samples,
-    int32_t n_prompt,
-    int32_t prompt_sr,
-    float speed,
-    int32_t num_steps) {
-  if (!tts) return nullptr;
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
+    const SherpaOnnxOfflineTts *tts, const char *text, const char *prompt_text,
+    const float *prompt_samples, int32_t n_prompt, int32_t prompt_sr,
+    float speed, int32_t num_steps) {
+  if (!tts) {
+    return nullptr;
+  }
 
-  std::string text_s  = text ? text : "";
+  std::string text_s = text ? text : "";
   std::string ptext_s = prompt_text ? prompt_text : "";
 
   std::vector<float> prompt_vec;
@@ -1387,16 +1394,16 @@ const SherpaOnnxGeneratedAudio* SherpaOnnxOfflineTtsGenerateWithZipvoice(
                       prompt_samples + static_cast<size_t>(n_prompt));
   }
 
-  auto out = tts->impl->Generate(text_s, ptext_s, prompt_vec,
-                                 prompt_sr, speed, num_steps,
+  auto out = tts->impl->Generate(text_s, ptext_s, prompt_vec, prompt_sr, speed,
+                                 num_steps,
                                  /*callback=*/nullptr);
 
-  auto* ans = new SherpaOnnxGeneratedAudio;
+  auto *ans = new SherpaOnnxGeneratedAudio;
   ans->sample_rate = static_cast<int32_t>(out.sample_rate);
   ans->n = static_cast<int32_t>(out.samples.size());
 
   if (!out.samples.empty()) {
-    float* buf = new float[out.samples.size()];
+    float *buf = new float[out.samples.size()];
     std::copy(out.samples.begin(), out.samples.end(), buf);
     ans->samples = buf;
   } else {
