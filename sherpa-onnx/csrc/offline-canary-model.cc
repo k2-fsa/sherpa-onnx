@@ -106,7 +106,7 @@ class OfflineCanaryModel::Impl {
     for (auto &s : decoder_outputs) {
       i += 1;
       if (i == 1) {
-        continue;  // Skip logits, already moved
+        continue;
       }
       output_decoder_states.push_back(std::move(s));
     }
@@ -172,12 +172,9 @@ class OfflineCanaryModel::Impl {
     }
 
     SHERPA_ONNX_READ_META_DATA(meta_.vocab_size, "vocab_size");
-
     SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(meta_.normalize_type,
                                                "normalize_type");
-
     SHERPA_ONNX_READ_META_DATA(meta_.subsampling_factor, "subsampling_factor");
-
     SHERPA_ONNX_READ_META_DATA(meta_.feat_dim, "feat_dim");
   }
 

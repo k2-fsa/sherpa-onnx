@@ -55,7 +55,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   void DecodeStream(OfflineStream *s) const {
     auto meta = model_->GetModelMetadata();
-
     auto enc_out = RunEncoder(s);
 
     if (enc_out.empty()) {
@@ -66,14 +65,11 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
     Ort::Value enc_states = std::move(enc_out[0]);
     Ort::Value enc_mask = std::move(enc_out[2]);
-
+    // enc_out[1] is discarded
     std::vector<int32_t> decoder_input = GetInitialDecoderInput();
-
     auto decoder_states = model_->GetInitialDecoderStates();
-
     Ort::Value logits{nullptr};
 
-    // Process initial decoder input tokens
     for (int32_t i = 0; i < decoder_input.size(); ++i) {
       std::tie(logits, decoder_states) =
           RunDecoder(decoder_input[i], i, std::move(decoder_states),
@@ -206,7 +202,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
     int32_t feat_dim = config_.feat_config.feature_dim;
-
     std::vector<float> f = s->GetFrames();
 
     if (f.empty()) {
@@ -258,7 +253,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     const auto &meta = model_->GetModelMetadata();
 
     std::vector<int32_t> decoder_input(9);
-
     decoder_input[0] = symbol_table_["<|startofcontext|>"];
     decoder_input[1] = symbol_table_["<|startoftranscript|>"];
     decoder_input[2] = symbol_table_["<|emo:undefined|>"];
@@ -294,6 +288,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   void PostInit() {
     auto &meta = model_->GetModelMetadata();
     config_.feat_config.feature_dim = meta.feat_dim;
+    
     config_.feat_config.nemo_normalize_type = meta.normalize_type;
 
     config_.feat_config.dither = 0;

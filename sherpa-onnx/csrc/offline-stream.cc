@@ -468,8 +468,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << sep << std::fixed << std::setprecision(4) << prob;
     sep = ", ";
   }
-  os << "]";  // No comma for the last field
-
+  os << "]";
   os << "}";
 
   return os.str();
