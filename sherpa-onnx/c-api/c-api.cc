@@ -1367,7 +1367,7 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
 }
 
-const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
+const SherpaOnnxGeneratedAudio* SherpaOnnxOfflineTtsGenerateWithZipvoice(
     const SherpaOnnxOfflineTts* tts,
     const char* text,
     const char* prompt_text,
@@ -1376,26 +1376,33 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
     int32_t prompt_sr,
     float speed,
     int32_t num_steps) {
-
   if (!tts) return nullptr;
 
-  std::string text_s   = text ? text : "";
-  std::string ptext_s  = prompt_text ? prompt_text : "";
+  std::string text_s  = text ? text : "";
+  std::string ptext_s = prompt_text ? prompt_text : "";
 
   std::vector<float> prompt_vec;
   if (prompt_samples && n_prompt > 0) {
-    prompt_vec.assign(prompt_samples, prompt_samples + static_cast<size_t>(n_prompt));
+    prompt_vec.assign(prompt_samples,
+                      prompt_samples + static_cast<size_t>(n_prompt));
   }
 
   auto out = tts->impl->Generate(text_s, ptext_s, prompt_vec,
-                                 prompt_sr, speed, num_steps);
+                                 prompt_sr, speed, num_steps,
+                                 /*callback=*/nullptr);
 
-  auto *ans = new SherpaOnnxGeneratedAudio;
+  auto* ans = new SherpaOnnxGeneratedAudio;
   ans->sample_rate = static_cast<int32_t>(out.sample_rate);
   ans->n = static_cast<int32_t>(out.samples.size());
-  float *buf = new float[out.samples.size()];
-  std::copy(buf, out.samples.data(), out.samples.size() * sizeof(float));
-  ans->samples = buf;
+
+  if (!out.samples.empty()) {
+    float* buf = new float[out.samples.size()];
+    std::copy(out.samples.begin(), out.samples.end(), buf);
+    ans->samples = buf;
+  } else {
+    ans->samples = nullptr;
+  }
+
   return ans;
 }
 
