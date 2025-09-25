@@ -140,6 +140,70 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test non-streaming TTS
+        shell: bash
+        run: |
+          mkdir tts-waves
+
+          cd scripts/go/_internal/non-streaming-tts/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo "Test zipvoice"
+          ./run-zipvoice.sh
+          ls -lh
+
+          echo "Test kitten en"
+          ./run-kitten-en.sh
+          rm -rf kitten-*
+          ls -lh
+          rm -rf sherpa-onnx-zipvoice-distill-zh-en-emilia
+
+          echo "Test kokoro zh+en"
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
+          ls -lh
+
+          echo "Test kokoro en"
+          ./run-kokoro-en.sh
+          rm -rf kokoro-en-*
+          ls -lh
+
+          echo "Test matcha zh"
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+
+          echo "Test matcha en"
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          ls -lh *.wav
+
+          echo "Test vits-ljs"
+          ./run-vits-ljs.sh
+          rm -rf vits-ljs
+
+          echo "Test vits-vctk"
+          ./run-vits-vctk.sh
+          rm -rf vits-vctk
+
+          echo "Test vits-zh-aishell3"
+          ./run-vits-zh-aishell3.sh
+          rm -rf vits-icefall-zh-aishell3
+
+          echo "Test vits-piper-en_US-lessac-medium"
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
+          cp *.wav ../../../../tts-waves/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          path: tts-waves
+
       - name: Test streaming decoding files
         shell: bash
         run: |
@@ -181,8 +245,6 @@ jobs:
 
           ./run.sh
           rm -rf sherpa-onnx-nemo-*
-
-
 
       - name: Test non-streaming decoding files
         shell: bash
@@ -298,62 +360,3 @@ jobs:
         run: |
           cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
-
-      - name: Test non-streaming TTS
-        shell: bash
-        run: |
-          mkdir tts-waves
-
-          cd scripts/go/_internal/non-streaming-tts/
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test kitten en"
-          ./run-kitten-en.sh
-          rm -rf kitten-*
-          ls -lh
-
-          echo "Test kokoro zh+en"
-          ./run-kokoro-zh-en.sh
-          rm -rf kokoro-multi-*
-          ls -lh
-
-          echo "Test kokoro en"
-          ./run-kokoro-en.sh
-          rm -rf kokoro-en-*
-          ls -lh
-
-          echo "Test matcha zh"
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-
-          echo "Test matcha en"
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          ls -lh *.wav
-
-          echo "Test vits-ljs"
-          ./run-vits-ljs.sh
-          rm -rf vits-ljs
-
-          echo "Test vits-vctk"
-          ./run-vits-vctk.sh
-          rm -rf vits-vctk
-
-          echo "Test vits-zh-aishell3"
-          ./run-vits-zh-aishell3.sh
-          rm -rf vits-icefall-zh-aishell3
-
-          echo "Test vits-piper-en_US-lessac-medium"
-          ./run-vits-piper-en_US-lessac-medium.sh
-          rm -rf vits-piper-en_US-lessac-medium
-
-          cp *.wav ../../../../tts-waves/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tts-waves-${{ matrix.os }}
-          path: tts-waves
