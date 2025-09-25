@@ -12,6 +12,35 @@
 
 namespace sherpa_onnx {
 
+// This function calculates the log probability of a given token ID
+// from the full logits vector using the log-sum-exp trick for
+// numerical stability.
+static float CalculateLogProb(const float *logits, int32_t vocab_size,
+                              int32_t token_id) {
+  if (vocab_size <= 0) {
+    return -std::numeric_limits<float>::infinity();
+  }
+
+  // Log-sum-exp trick for numerical stability
+  float max_logit = -std::numeric_limits<float>::infinity();
+  for (int32_t i = 0; i < vocab_size; ++i) {
+    if (logits[i] > max_logit) {
+      max_logit = logits[i];
+    }
+  }
+
+  double sum_exp = 0.0;
+  for (int32_t i = 0; i < vocab_size; ++i) {
+    sum_exp += std::exp(logits[i] - max_logit);
+  }
+
+  // The log probability is: log(exp(logit) / sum(exp(all_logits)))
+  // Which simplifies to: logit - log(sum(exp(all_logits)))
+  // With log-sum-exp trick: logit - (max_logit + log(sum(exp(logit -
+  // max_logit))))
+  return logits[token_id] - (max_logit + std::log(sum_exp));
+}
+
 void OfflineWhisperGreedySearchDecoder::SetConfig(
     const OfflineWhisperModelConfig &config) {
   config_ = config;
@@ -96,11 +125,13 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   auto max_iter = std::max_element(p_start, p_start + vocab_size);
   int32_t max_token_id = static_cast<int32_t>(std::distance(p_start, max_iter));
-  float max_log_prob = *max_iter;
+  // This is a raw logit, not a log probability
+  float max_logit = *max_iter;
 
   int32_t n_text_ctx = model_->TextCtx();
 
   std::vector<int32_t> predicted_tokens;
+  // Log probabilities.
   std::vector<float> predicted_log_probs;
 
   // assume at most 6 tokens per second
@@ -113,7 +144,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
 
     predicted_tokens.push_back(max_token_id);
-    predicted_log_probs.push_back(max_log_prob);
+    float log_prob = CalculateLogProb(p_start, vocab_size, max_token_id);
+    predicted_log_probs.push_back(log_prob);
 
     std::array<int64_t, 2> token_shape{1, 1};
     Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
@@ -138,11 +170,16 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
 
     const auto &logits = std::get<0>(decoder_out);
-    const float *p_logits = logits.GetTensorData<float>();
+    const float *p_logits_next = logits.GetTensorData<float>();
 
-    max_iter = std::max_element(p_logits, p_logits + vocab_size);
-    max_token_id = static_cast<int64_t>(std::distance(p_logits, max_iter));
-    max_log_prob = *max_iter;
+    max_iter = std::max_element(p_logits_next, p_logits_next + vocab_size);
+    max_token_id = static_cast<int64_t>(std::distance(p_logits_next, max_iter));
+    max_logit = *max_iter;
+
+    // After we find the next token, we need to calculate its log_prob
+    // using the full logits vector from this step.
+    // Update p_start for the next loop iteration
+    p_start = p_logits_next;
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);

@@ -433,12 +433,12 @@ std::string OfflineRecognitionResult::AsJsonString() const {
 
   // Serialize token_probs
   os << "\""
-     << "token_probs"
+     << "token_log_probs"
      << "\""
      << ": ";
   os << "[";
   sep = "";
-  for (auto prob : token_probs) {
+  for (auto prob : token_log_probs) {
     os << sep << std::fixed << std::setprecision(4) << prob;
     sep = ", ";
   }
@@ -453,19 +453,6 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   os << "[";
   for (int32_t w : words) {
     os << sep << w;
-    sep = ", ";
-  }
-  os << "], ";
-
-  // Serialize word_probs
-  os << "\""
-     << "word_probs"
-     << "\""
-     << ": ";
-  os << "[";
-  sep = "";
-  for (auto prob : word_probs) {
-    os << sep << std::fixed << std::setprecision(4) << prob;
     sep = ", ";
   }
   os << "]";

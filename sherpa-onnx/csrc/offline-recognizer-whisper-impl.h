@@ -151,7 +151,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
                                    const SymbolTable &sym_table) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(src.tokens.size());
-    r.token_probs.reserve(src.token_log_probs.size());
+    r.token_log_probs.reserve(src.token_log_probs.size());
 
     std::string text;
     for (size_t idx = 0; idx < src.tokens.size(); ++idx) {
@@ -166,9 +166,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
       text += s;
       r.tokens.push_back(s);
-      
       if (idx < src.token_log_probs.size()) {
-        r.token_probs.push_back(src.token_log_probs[idx]);
+        r.token_log_probs.push_back(src.token_log_probs[idx]);
       }
     }
 
