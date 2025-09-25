@@ -146,7 +146,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       const std::vector<float> &token_log_probs) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(tokens.size());
-    r.token_probs = token_log_probs;
+    r.token_log_probs = token_log_probs;
 
     std::string text;
     for (size_t idx = 0; idx < tokens.size(); ++idx) {

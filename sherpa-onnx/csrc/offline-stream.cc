@@ -431,7 +431,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  // Serialize token_probs
+  // Serialize token_log_probs
   os << "\""
      << "token_log_probs"
      << "\""
