@@ -956,11 +956,26 @@ type OfflineTtsKittenModelConfig struct {
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
+type OfflineTtsZipvoiceModelConfig struct {
+	Tokens            string // Path to tokens.txt for ZipVoice
+	TextModel         string // Path to text encoder (e.g. text_encoder.onnx)
+	FlowMatchingModel string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
+	DataDir           string // Path to espeak-ng-data
+	PinyinDict        string // Path to pinyin.raw (needed for zh)
+	Vocoder           string // Path to vocoder (e.g. vocos_24khz.onnx)
+
+	FeatScale     float32 // Feature scale
+	TShift        float32 // t-shift (<1 shifts to smaller t)
+	TargetRms     float32 // Target RMS for speech normalization
+	GuidanceScale float32 // CFG scale
+}
+
 type OfflineTtsModelConfig struct {
-	Vits   OfflineTtsVitsModelConfig
-	Matcha OfflineTtsMatchaModelConfig
-	Kokoro OfflineTtsKokoroModelConfig
-	Kitten OfflineTtsKittenModelConfig
+	Vits     OfflineTtsVitsModelConfig
+	Matcha   OfflineTtsMatchaModelConfig
+	Kokoro   OfflineTtsKokoroModelConfig
+	Kitten   OfflineTtsKittenModelConfig
+	Zipvoice OfflineTtsZipvoiceModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -1123,6 +1138,30 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.kitten.length_scale = C.float(config.Model.Kitten.LengthScale)
 
+	// zipvoice
+	c.model.zipvoice.tokens = C.CString(config.Model.Zipvoice.Tokens)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.tokens))
+
+	c.model.zipvoice.text_model = C.CString(config.Model.Zipvoice.TextModel)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.text_model))
+
+	c.model.zipvoice.flow_matching_model = C.CString(config.Model.Zipvoice.FlowMatchingModel)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.flow_matching_model))
+
+	c.model.zipvoice.vocoder = C.CString(config.Model.Zipvoice.Vocoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.vocoder))
+
+	c.model.zipvoice.data_dir = C.CString(config.Model.Zipvoice.DataDir)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.data_dir))
+
+	c.model.zipvoice.pinyin_dict = C.CString(config.Model.Zipvoice.PinyinDict)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.pinyin_dict))
+
+	c.model.zipvoice.feat_scale = C.float(config.Model.Zipvoice.FeatScale)
+	c.model.zipvoice.t_shift = C.float(config.Model.Zipvoice.TShift)
+	c.model.zipvoice.target_rms = C.float(config.Model.Zipvoice.TargetRms)
+	c.model.zipvoice.guidance_scale = C.float(config.Model.Zipvoice.GuidanceScale)
+
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
 
@@ -1157,6 +1196,52 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 		ans.Samples[i] = float32(samples[i])
 	}
 
+	return ans
+}
+
+func (tts *OfflineTts) GenerateWithZipvoice(
+	text, promptText string,
+	promptSamples []float32,
+	promptSampleRate int,
+	speed float32,
+	numSteps int,
+) *GeneratedAudio {
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
+
+	cPromptText := C.CString(promptText)
+	defer C.free(unsafe.Pointer(cPromptText))
+
+	var p *C.float
+	var n C.int
+	if len(promptSamples) > 0 {
+		p = (*C.float)(&promptSamples[0])
+		n = C.int(len(promptSamples))
+	}
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithZipvoice(
+		tts.impl,
+		cText,
+		cPromptText,
+		p,
+		n,
+		C.int(promptSampleRate),
+		C.float(speed),
+		C.int(numSteps),
+	)
+	if audio == nil {
+		return nil
+	}
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	ans := &GeneratedAudio{
+		SampleRate: int(audio.sample_rate),
+		Samples:    make([]float32, int(audio.n)),
+	}
+	samples := unsafe.Slice(audio.samples, int(audio.n))
+	for i := 0; i < int(audio.n); i++ {
+		ans.Samples[i] = float32(samples[i])
+	}
 	return ans
 }
 
