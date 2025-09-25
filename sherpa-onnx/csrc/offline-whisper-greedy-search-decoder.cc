@@ -97,8 +97,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   auto max_iter = std::max_element(p_start, p_start + vocab_size);
   int32_t max_token_id = static_cast<int32_t>(std::distance(p_start, max_iter));
   float max_log_prob = *max_iter;
-  
-  std::fprintf(stderr, "WHISPER DEBUG: Initial token %d, logit value = %f\n", max_token_id, max_log_prob);
 
   int32_t n_text_ctx = model_->TextCtx();
 
@@ -145,8 +143,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     max_iter = std::max_element(p_logits, p_logits + vocab_size);
     max_token_id = static_cast<int64_t>(std::distance(p_logits, max_iter));
     max_log_prob = *max_iter;
-    
-    std::fprintf(stderr, "WHISPER DEBUG: Loop token %d, logit value = %f\n", max_token_id, max_log_prob);
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);
@@ -160,9 +156,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   ans[0].tokens = std::move(predicted_tokens);
   ans[0].token_log_probs = std::move(predicted_log_probs);
-  
-  std::fprintf(stderr, "WHISPER DEBUG END: Returning %zu tokens with %zu probs\n", 
-             ans[0].tokens.size(), ans[0].token_log_probs.size());
 
   return ans;
 }

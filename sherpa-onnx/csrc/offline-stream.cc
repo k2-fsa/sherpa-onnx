@@ -472,8 +472,6 @@ std::string OfflineRecognitionResult::AsJsonString() const {
 
   os << "}";
 
-  std::fprintf(stderr, "DEBUG: JSON serializing %zu probs\n", token_probs.size());
-
   return os.str();
 }
 }  // namespace sherpa_onnx

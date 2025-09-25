@@ -175,9 +175,6 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.text = text;
     r.lang = src.lang;
 
-    std::fprintf(stderr, "DEBUG: Convert copied %zu probs from %zu src probs\n", 
-             r.token_probs.size(), src.token_log_probs.size());
-
     return r;
   }
 
