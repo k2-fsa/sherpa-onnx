@@ -145,7 +145,7 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     }
 
     config_.feat_config.nemo_normalize_type =
-        model_->FeatureNormalizationMethod();    
+        model_->FeatureNormalizationMethod();
 
     if (model_->IsGigaAM()) {
       config_.feat_config.low_freq = 0;
