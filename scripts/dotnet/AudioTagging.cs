@@ -20,8 +20,8 @@ namespace SherpaOnnx
             return new OfflineStream(p);
         }
 
-        // if topK <= 0, then conig.TopK is used
-        // if topK > 0, then confing.TopK is ignored
+        // if topK <= 0, then config.TopK is used
+        // if topK > 0, then config.TopK is ignored
         public AudioEvent[] Compute(OfflineStream stream, int topK = -1)
         {
             IntPtr p = SherpaOnnxAudioTaggingCompute(_handle.Handle, stream.Handle, topK);
@@ -85,9 +85,6 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxAudioTaggingCreateOfflineStream(IntPtr handle);
-
-        [DllImport(Dll.Filename)]
-        private static extern IntPtr SherpaOfflinePunctuationAddPunct(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text);
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxAudioTaggingCompute(IntPtr handle, IntPtr stream, int topK);
