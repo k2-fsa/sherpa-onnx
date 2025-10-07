@@ -42,7 +42,7 @@ void OnlineTransducerModifiedBeamSearchDecoderRknn::StripLeadingBlanks(
   r->num_trailing_blanks = hyp.num_trailing_blanks;
 }
 
-static std::vector<std::vector<float>> GetDecoderOut(
+std::vector<std::vector<float>> GetDecoderOut(
     OnlineZipformerTransducerModelRknn *model, const Hypotheses &hyp_vec) {
   std::vector<std::vector<float>> ans;
   ans.reserve(hyp_vec.Size());
@@ -61,7 +61,7 @@ static std::vector<std::vector<float>> GetDecoderOut(
   return ans;
 }
 
-static std::vector<std::vector<float>> GetJoinerOutLogSoftmax(
+std::vector<std::vector<float>> GetJoinerOutLogSoftmax(
     OnlineZipformerTransducerModelRknn *model, const float *p_encoder_out,
     const std::vector<std::vector<float>> &decoder_out) {
   std::vector<std::vector<float>> ans;
