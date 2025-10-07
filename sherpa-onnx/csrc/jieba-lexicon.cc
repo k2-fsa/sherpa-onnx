@@ -344,12 +344,14 @@ class JiebaLexicon::Impl {
       }
 
       std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
-      if (ids.empty() && debug_) {
+      if (ids.empty()) {
+        if (debug_) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("Empty token ids for '%{public}s'", line.c_str());
+          SHERPA_ONNX_LOGE("Empty token ids for '%{public}s'", line.c_str());
 #else
-        SHERPA_ONNX_LOGE("Empty token ids for '%s'", line.c_str());
+          SHERPA_ONNX_LOGE("Empty token ids for '%s'", line.c_str());
 #endif
+        }
         continue;
       }
 
