@@ -730,6 +730,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-paraformer-zh-int8-2025-10-07",
+            idx=43,
+            lang="zh",
+            lang2="四川话",
+            short_name="paraformer_四川话",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
