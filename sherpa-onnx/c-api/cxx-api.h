@@ -362,6 +362,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineRecognizerResult GetResult(const OfflineStream *s) const;
 
+  // For unreal engine, please use this function
+  // See also https://github.com/k2-fsa/sherpa-onnx/discussions/1960
   std::shared_ptr<OfflineRecognizerResult> GetResultPtr(
       const OfflineStream *s) const;
 
@@ -650,6 +652,8 @@ class SHERPA_ONNX_API VoiceActivityDetector
 
   SpeechSegment Front() const;
 
+  // For unreal engine, please use this function
+  // See also https://github.com/k2-fsa/sherpa-onnx/discussions/1960
   std::shared_ptr<SpeechSegment> FrontPtr() const;
 
   void Reset() const;
@@ -713,6 +717,54 @@ class SHERPA_ONNX_API OfflinePunctuation
 
  private:
   explicit OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p);
+};
+
+// ============================================================================
+// Audio tagging
+// ============================================================================
+struct OfflineZipformerAudioTaggingModelConfig {
+  std::string model;
+};
+
+struct AudioTaggingModelConfig {
+  OfflineZipformerAudioTaggingModelConfig zipformer;
+  std::string ced;
+  int32_t num_threads;
+  bool debug;  // true to print debug information of the model
+  std::string provider = "cpu";
+};
+
+struct AudioTaggingConfig {
+  AudioTaggingModelConfig model;
+  std::string labels;
+  int32_t top_k;
+};
+
+struct AudioEvent {
+  std::string name;
+  int32_t index;
+  float prob;
+};
+
+class SHERPA_ONNX_API AudioTagging
+    : public MoveOnly<AudioTagging, SherpaOnnxAudioTagging> {
+ public:
+  static AudioTagging Create(const AudioTaggingConfig &config);
+
+  void Destroy(const SherpaOnnxAudioTagging *p) const;
+
+  OfflineStream CreateStream() const;
+  // when top_k is -1, it uses the top_k from config.top_k
+  // when top_k is > 0, config.top_k is ignored
+  std::vector<AudioEvent> Compute(const OfflineStream *s, int32_t top_k = -1);
+
+  // For unreal engine, please use this function
+  // See also https://github.com/k2-fsa/sherpa-onnx/discussions/1960
+  std::shared_ptr<std::vector<AudioEvent>> ComputePtr(const OfflineStream *s,
+                                                      int32_t top_k = -1);
+
+ private:
+  explicit AudioTagging(const SherpaOnnxAudioTagging *p);
 };
 
 }  // namespace sherpa_onnx::cxx
