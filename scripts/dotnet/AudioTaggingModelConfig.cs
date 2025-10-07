@@ -9,7 +9,7 @@ namespace SherpaOnnx
     {
         public AudioTaggingModelConfig()
         {
-            Zipformer = new OfflinePunctuationModelConfig();
+            Zipformer = new OfflineZipformerAudioTaggingModelConfig();
 
             CED = "";
             NumThreads = 1;

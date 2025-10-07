@@ -8,6 +8,11 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+cd ../offline-audio-tagging
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-*
+
 cd ../kitten-tts
 ./run-kitten.sh
 ls -lh

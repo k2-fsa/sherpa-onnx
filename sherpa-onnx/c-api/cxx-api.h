@@ -729,15 +729,15 @@ struct OfflineZipformerAudioTaggingModelConfig {
 struct AudioTaggingModelConfig {
   OfflineZipformerAudioTaggingModelConfig zipformer;
   std::string ced;
-  int32_t num_threads;
-  bool debug;  // true to print debug information of the model
+  int32_t num_threads = 1;
+  bool debug = false;  // true to print debug information of the model
   std::string provider = "cpu";
 };
 
 struct AudioTaggingConfig {
   AudioTaggingModelConfig model;
   std::string labels;
-  int32_t top_k;
+  int32_t top_k = 5;
 };
 
 struct AudioEvent {

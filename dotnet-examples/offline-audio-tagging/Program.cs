@@ -16,21 +16,18 @@ class AudioTaggingDemo
   static void Main(string[] args)
   {
     TestZipformer();
-    // TestCED();
+    TestCED();
   }
 
   static void TestZipformer()
   {
     var config = new AudioTaggingConfig();
 
-    config.Model.Zipformer.Model =
-      "./sherpa-onnx-zipformer-small-audio-tagging-2024-04-15/model.onnx";
+    config.Model.Zipformer.Model = "./sherpa-onnx-zipformer-small-audio-tagging-2024-04-15/model.onnx";
 
     config.Model.NumThreads = 1;
     config.Model.Debug = 1;
-    config.Labels =
-        "./sherpa-onnx-zipformer-small-audio-tagging-2024-04-15/"
-        "class_labels_indices.csv";
+    config.Labels = "./sherpa-onnx-zipformer-small-audio-tagging-2024-04-15/class_labels_indices.csv";
 
     config.TopK = 5;
 
@@ -42,10 +39,37 @@ class AudioTaggingDemo
     WaveReader waveReader = new WaveReader(waveFilename);
     s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
 
-    var events = tagging.Compute(s);
+    var events = tagger.Compute(s);
     foreach (var e in events)
     {
-      Console.WriteLine($"Name {e.name}, index: {e.index}, prob: {e.prob}");
+      Console.WriteLine($"Name {e.Name}, index: {e.Index}, prob: {e.Prob}");
+    }
+  }
+
+  static void TestCED()
+  {
+    var config = new AudioTaggingConfig();
+
+    config.Model.CED ="./sherpa-onnx-ced-mini-audio-tagging-2024-04-19/model.int8.onnx";
+
+    config.Model.NumThreads = 1;
+    config.Model.Debug = 1;
+    config.Labels = "./sherpa-onnx-ced-mini-audio-tagging-2024-04-19/class_labels_indices.csv";
+
+    config.TopK = 5;
+
+    var tagger = new AudioTagging(config);
+
+    var s = tagger.CreateStream();
+
+    var waveFilename = "./sherpa-onnx-ced-mini-audio-tagging-2024-04-19/test_wavs/1.wav";
+    WaveReader waveReader = new WaveReader(waveFilename);
+    s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
+
+    var events = tagger.Compute(s);
+    foreach (var e in events)
+    {
+      Console.WriteLine($"Name {e.Name}, index: {e.Index}, prob: {e.Prob}");
     }
   }
 }

@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
-
+using System.Collections.Generic;
 
 namespace SherpaOnnx
 {
@@ -37,13 +37,15 @@ namespace SherpaOnnx
             while (true)
             {
               IntPtr e = Marshal.ReadIntPtr(p, index * IntPtr.Size);
-              if (e = IntPtr.Zero)
+              if (e == IntPtr.Zero)
               {
                 break;
               }
 
               AudioEvent ae = new AudioEvent(e);
               result.Add(ae);
+
+              ++index;
             }
 
             SherpaOnnxAudioTaggingFreeResults(p);
@@ -80,6 +82,9 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxDestroyAudioTagging(IntPtr handle);
+
+        [DllImport(Dll.Filename)]
+        private static extern IntPtr SherpaOnnxAudioTaggingCreateOfflineStream(IntPtr handle);
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOfflinePunctuationAddPunct(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text);
