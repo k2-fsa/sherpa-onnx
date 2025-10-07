@@ -177,8 +177,29 @@ jobs:
 
           ls -lh *.tar.bz2
 
-      - name: u2ppconformer
+      - name: wenetspeech chuan paraformer
         if: true
+        shell: bash
+        run: |
+          git lfs install
+          d=sherpa-onnx-paraformer-zh-int8-2025-10-07
+          f=sherpa-onnx-paraformer-zh-2025-10-07
+          git clone https://huggingface.co/csukuangfj/$d
+          git clone https://huggingface.co/csukuangfj/$f
+
+          rm -rf $d/.git
+          rm -rf $f/.gi*
+
+          rm -rf $d/.gitattributes
+          rm -rf $f/.gitattributes
+
+          tar cjfv $d.tar.bz2 $d
+          tar cjfv $f.tar.bz2 $f
+
+          ls -lh *.tar.bz2
+
+      - name: u2ppconformer
+        if: false
         shell: bash
         run: |
           git lfs install
