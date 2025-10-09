@@ -22,7 +22,6 @@ set(sources
   fst-utils.cc
   homophone-replacer.cc
   hypothesis.cc
-  jieba.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
   lodr-fst.cc
@@ -189,8 +188,8 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    character-lexicon.cc
     hifigan-vocoder.cc
-    jieba-lexicon.cc
     kokoro-multi-lang-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
