@@ -25,38 +25,20 @@ static AudioTaggingConfig GetAudioTaggingConfig(JNIEnv *env, jobject config) {
   jobject zipformer = env->GetObjectField(model, fid);
   jclass zipformer_cls = env->GetObjectClass(zipformer);
 
-  fid = env->GetFieldID(zipformer_cls, "model", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(zipformer, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.model.zipformer.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipformer.model, model, zipformer_cls,
+                              zipformer);
 
-  fid = env->GetFieldID(model_cls, "ced", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.ced = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.ced, ced, model_cls, model);
 
-  fid = env->GetFieldID(model_cls, "numThreads", "I");
-  ans.model.num_threads = env->GetIntField(model, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_cls, model);
 
-  fid = env->GetFieldID(model_cls, "debug", "Z");
-  ans.model.debug = env->GetBooleanField(model, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model.debug, debug, model_cls, model);
 
-  fid = env->GetFieldID(model_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.provider, provider, model_cls, model);
 
-  fid = env->GetFieldID(cls, "labels", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.labels = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.labels, labels, cls, config);
 
-  fid = env->GetFieldID(cls, "topK", "I");
-  ans.top_k = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.top_k, topK, cls, config);
 
   return ans;
 }

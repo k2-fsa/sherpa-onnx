@@ -40,6 +40,33 @@
 
 #define SHERPA_ONNX_EXTERN_C extern "C" SHERPA_ONNX_API
 
+#define SHERPA_ONNX_JNI_READ_STRING(cpp_field, kotlin_field, cls, config)     \
+  do {                                                                        \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "Ljava/lang/String;"); \
+    jstring s = (jstring)env->GetObjectField(config, fid);                    \
+    const char *p = env->GetStringUTFChars(s, nullptr);                       \
+    cpp_field = p;                                                            \
+    env->ReleaseStringUTFChars(s, p);                                         \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_FLOAT(cpp_field, kotlin_field, cls, config) \
+  do {                                                                   \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "F");             \
+    cpp_field = env->GetFloatField(config, fid);                         \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_INT(cpp_field, kotlin_field, cls, config) \
+  do {                                                                 \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "I");           \
+    cpp_field = env->GetIntField(config, fid);                         \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_BOOL(cpp_field, kotlin_field, cls, config) \
+  do {                                                                  \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "Z");            \
+    cpp_field = env->GetBooleanField(config, fid);                      \
+  } while (0)
+
 // defined in jni.cc
 jobject NewInteger(JNIEnv *env, int32_t value);
 jobject NewFloat(JNIEnv *env, float value);
