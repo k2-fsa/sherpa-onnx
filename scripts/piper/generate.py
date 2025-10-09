@@ -80,6 +80,62 @@ def get_ar_models():
                    """,
             url="https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak",
         ),
+        PiperModel(
+            name="SA_dii",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_dii_espeak/resolve/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_dii_espeak" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
+
+                   echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
+                   echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
+
+                   echo "- ✅ Always free for regular (non-commercial) users  \n" >> README.md
+                   echo "- ❌ Commercial use is not allowed at this time  \n" >> README.md
+                   echo "- 🔄 The author may relax the restrictions in the future (e.g., allow commercial use), but will not make them stricter  \n\n" >> README.md
+                   echo "**Important:** You must include this license when redistributing the model or any derivatives.\n" >> README.md
+
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_dii_espeak/resolve/main/dii_ar-SA.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_dii_espeak/resolve/main/dii_ar-SA.onnx.json
+                   mv dii_ar-SA.onnx ar_JO-SA_dii-high.onnx
+                   mv dii_ar-SA.onnx.json ar_JO-SA_dii-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_dii_espeak",
+        ),
+        PiperModel(
+            name="SA_miro_V2",
+            kind="high",
+            sr=22050,
+            ns=1,
+            cmd="""
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak_V2/blob/main/README.md
+
+                   echo "\n\nSee https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak_V2" >> README.md
+                   echo "and https://github.com/OHF-Voice/piper1-gpl/discussions/27" >> README.md
+                   echo "\n\n# License\n\n" >> README.md
+
+                   echo "See also https://github.com/k2-fsa/sherpa-onnx/pull/2480\n\n" >> README.md
+                   echo "This model is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).\n" >> README.md
+
+                   echo "- ✅ Always free for regular (non-commercial) users  \n" >> README.md
+                   echo "- ❌ Commercial use is not allowed at this time  \n" >> README.md
+                   echo "- 🔄 The author may relax the restrictions in the future (e.g., allow commercial use), but will not make them stricter  \n\n" >> README.md
+                   echo "**Important:** You must include this license when redistributing the model or any derivatives.\n" >> README.md
+
+
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak_V2/resolve/main/miro_ar-SA.onnx.onnx
+                   wget -qq https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak_V2/resolve/main/miro_ar-SA.onnx.json
+                   mv miro_ar-SA.onnx.onnx ar_JO-SA_miro_V2-high.onnx
+                   mv miro_ar-SA.onnx.json ar_JO-SA_miro_V2-high.onnx.json
+                   """,
+            url="https://huggingface.co/OpenVoiceOS/phoonnx_ar-SA_miro_espeak_V2",
+        ),
     ]
 
     for m in ar_jo:
@@ -2027,6 +2083,7 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
+
 
     for i, m in enumerate(ans):
         m.index = i

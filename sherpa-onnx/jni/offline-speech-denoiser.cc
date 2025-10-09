@@ -9,7 +9,7 @@
 
 namespace sherpa_onnx {
 static OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
-    JNIEnv *env, jobject config) {
+    JNIEnv *env, jobject config, bool *ok) {
   OfflineSpeechDenoiserConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -26,24 +26,17 @@ static OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   jobject gtcrn = env->GetObjectField(model, fid);
   jclass gtcrn_cls = env->GetObjectClass(gtcrn);
 
-  fid = env->GetFieldID(gtcrn_cls, "model", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(gtcrn, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.model.gtcrn.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.gtcrn.model, model, gtcrn_cls, gtcrn);
 
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model.num_threads = env->GetIntField(model, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
+                           model);
 
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model.debug = env->GetBooleanField(model, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model.debug, debug, model_config_cls, model);
 
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.provider, provider, model_config_cls,
+                              model);
 
+  *ok = true;
   return ans;
 }
 
@@ -60,7 +53,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_newFromAsset(
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetOfflineSpeechDenoiserConfig(env, _config);
+
+  bool ok = false;
+  auto config = sherpa_onnx::GetOfflineSpeechDenoiserConfig(env, _config, &ok);
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto speech_denoiser = new sherpa_onnx::OfflineSpeechDenoiser(
@@ -80,11 +80,20 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_newFromFile(JNIEnv *env,
   return SafeJNI(
       env, "OfflineSpeechDenoiser_newFromFile",
       [&]() -> jlong {
-        auto config = sherpa_onnx::GetOfflineSpeechDenoiserConfig(env, _config);
+        bool ok = false;
+        auto config =
+            sherpa_onnx::GetOfflineSpeechDenoiserConfig(env, _config, &ok);
+
+        if (!ok) {
+          SHERPA_ONNX_LOGE("Please read the error message carefully");
+          return 0;
+        }
+
         SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
         if (!config.Validate()) {
           SHERPA_ONNX_LOGE("Errors found in config!");
+          return 0;
         }
 
         auto speech_denoiser = new sherpa_onnx::OfflineSpeechDenoiser(config);

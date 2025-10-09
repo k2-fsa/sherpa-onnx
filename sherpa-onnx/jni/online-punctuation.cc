@@ -10,7 +10,8 @@
 namespace sherpa_onnx {
 
 static OnlinePunctuationConfig GetOnlinePunctuationConfig(JNIEnv *env,
-                                                          jobject config) {
+                                                          jobject config,
+                                                          bool *ok) {
   OnlinePunctuationConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -21,30 +22,22 @@ static OnlinePunctuationConfig GetOnlinePunctuationConfig(JNIEnv *env,
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
 
-  fid = env->GetFieldID(model_config_cls, "cnnBilstm", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(model_config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.model.cnn_bilstm = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.cnn_bilstm, cnnBilstm, model_config_cls,
+                              model_config);
 
-  fid = env->GetFieldID(model_config_cls, "bpeVocab", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.bpe_vocab = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.bpe_vocab, bpeVocab, model_config_cls,
+                              model_config);
 
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model.num_threads = env->GetIntField(model_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
+                           model_config);
 
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model.debug = env->GetBooleanField(model_config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model.debug, debug, model_config_cls,
+                            model_config);
 
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.provider, provider, model_config_cls,
+                              model_config);
 
+  *ok = true;
   return ans;
 }
 
@@ -63,7 +56,14 @@ Java_com_k2fsa_sherpa_onnx_OnlinePunctuation_newFromAsset(JNIEnv *env,
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetOnlinePunctuationConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetOnlinePunctuationConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto model = new sherpa_onnx::OnlinePunctuation(
@@ -80,7 +80,14 @@ JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_OnlinePunctuation_newFromFile(JNIEnv *env,
                                                          jobject /*obj*/,
                                                          jobject _config) {
-  auto config = sherpa_onnx::GetOnlinePunctuationConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetOnlinePunctuationConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {

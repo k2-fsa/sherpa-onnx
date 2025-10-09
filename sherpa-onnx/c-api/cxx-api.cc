@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <memory>
 #include <utility>
 
 namespace sherpa_onnx::cxx {
@@ -304,7 +305,7 @@ OfflineRecognizer::OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p)
     : MoveOnly<OfflineRecognizer, SherpaOnnxOfflineRecognizer>(p) {}
 
 void OfflineRecognizer::Destroy(const SherpaOnnxOfflineRecognizer *p) const {
-  SherpaOnnxDestroyOfflineRecognizer(p_);
+  SherpaOnnxDestroyOfflineRecognizer(p);
 }
 
 OfflineStream OfflineRecognizer::CreateStream() const {
@@ -371,32 +372,8 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
 
 std::shared_ptr<OfflineRecognizerResult> OfflineRecognizer::GetResultPtr(
     const OfflineStream *s) const {
-  auto r = SherpaOnnxGetOfflineStreamResult(s->Get());
-
-  OfflineRecognizerResult *ans = new OfflineRecognizerResult;
-  if (r) {
-    ans->text = r->text;
-
-    if (r->timestamps) {
-      ans->timestamps.resize(r->count);
-      std::copy(r->timestamps, r->timestamps + r->count,
-                ans->timestamps.data());
-    }
-
-    ans->tokens.resize(r->count);
-    for (int32_t i = 0; i != r->count; ++i) {
-      ans->tokens[i] = r->tokens_arr[i];
-    }
-
-    ans->json = r->json;
-    ans->lang = r->lang ? r->lang : "";
-    ans->emotion = r->emotion ? r->emotion : "";
-    ans->event = r->event ? r->event : "";
-  }
-
-  SherpaOnnxDestroyOfflineRecognizerResult(r);
-
-  return std::shared_ptr<OfflineRecognizerResult>(ans);
+  auto r = GetResult(s);
+  return std::make_shared<OfflineRecognizerResult>(r);
 }
 
 OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
@@ -761,14 +738,8 @@ SpeechSegment VoiceActivityDetector::Front() const {
 }
 
 std::shared_ptr<SpeechSegment> VoiceActivityDetector::FrontPtr() const {
-  auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
-
-  SpeechSegment *segment = new SpeechSegment;
-  segment->start = f->start;
-  segment->samples = std::vector<float>{f->samples, f->samples + f->n};
-
-  SherpaOnnxDestroySpeechSegment(f);
-  return std::shared_ptr<SpeechSegment>(segment);
+  auto segment = Front();
+  return std::make_shared<SpeechSegment>(segment);
 }
 
 void VoiceActivityDetector::Reset() const {
@@ -856,6 +827,63 @@ std::string OfflinePunctuation::AddPunctuation(const std::string &text) const {
   std::string ans(result);
   SherpaOfflinePunctuationFreeText(result);
   return ans;
+}
+
+// ============================================================
+// For Audio tagging
+// ============================================================
+AudioTagging AudioTagging::Create(const AudioTaggingConfig &config) {
+  struct SherpaOnnxAudioTaggingConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.model.zipformer.model = config.model.zipformer.model.c_str();
+  c.model.ced = config.model.ced.c_str();
+  c.model.num_threads = config.model.num_threads;
+  c.model.debug = config.model.debug;
+  c.model.provider = config.model.provider.c_str();
+  c.labels = config.labels.c_str();
+  c.top_k = config.top_k;
+
+  const SherpaOnnxAudioTagging *tagger = SherpaOnnxCreateAudioTagging(&c);
+  return AudioTagging(tagger);
+}
+
+AudioTagging::AudioTagging(const SherpaOnnxAudioTagging *p)
+    : MoveOnly<AudioTagging, SherpaOnnxAudioTagging>(p) {}
+
+void AudioTagging::Destroy(const SherpaOnnxAudioTagging *p) const {
+  SherpaOnnxDestroyAudioTagging(p);
+}
+
+OfflineStream AudioTagging::CreateStream() const {
+  auto s = SherpaOnnxAudioTaggingCreateOfflineStream(p_);
+  return OfflineStream{s};
+}
+
+std::vector<AudioEvent> AudioTagging::Compute(const OfflineStream *s,
+                                              int32_t top_k /*= -1*/) {
+  auto events = SherpaOnnxAudioTaggingCompute(p_, s->Get(), top_k);
+  std::vector<AudioEvent> ans;
+
+  auto pe = events;
+  while (pe && *pe) {
+    AudioEvent e;
+    e.name = (*pe)->name;
+    e.index = (*pe)->index;
+    e.prob = (*pe)->prob;
+    ans.push_back(std::move(e));
+    ++pe;
+  }
+
+  SherpaOnnxAudioTaggingFreeResults(events);
+
+  return ans;
+}
+
+std::shared_ptr<std::vector<AudioEvent>> AudioTagging::ComputePtr(
+    const OfflineStream *s, int32_t top_k /*= -1*/) {
+  auto events = Compute(s, top_k);
+  return std::make_shared<std::vector<AudioEvent>>(events);
 }
 
 }  // namespace sherpa_onnx::cxx

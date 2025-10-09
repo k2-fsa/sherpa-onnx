@@ -10,7 +10,7 @@
 namespace sherpa_onnx {
 
 static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
-    JNIEnv *env, jobject config) {
+    JNIEnv *env, jobject config, bool *ok) {
   OfflineSpeakerDiarizationConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -29,24 +29,17 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   jobject pyannote_config = env->GetObjectField(segmentation_config, fid);
   jclass pyannote_config_cls = env->GetObjectClass(pyannote_config);
 
-  fid = env->GetFieldID(pyannote_config_cls, "model", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(pyannote_config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.segmentation.pyannote.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.segmentation.pyannote.model, model,
+                              pyannote_config_cls, pyannote_config);
 
-  fid = env->GetFieldID(segmentation_config_cls, "numThreads", "I");
-  ans.segmentation.num_threads = env->GetIntField(segmentation_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.segmentation.num_threads, numThreads,
+                           segmentation_config_cls, segmentation_config);
 
-  fid = env->GetFieldID(segmentation_config_cls, "debug", "Z");
-  ans.segmentation.debug = env->GetBooleanField(segmentation_config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.segmentation.debug, debug,
+                            segmentation_config_cls, segmentation_config);
 
-  fid = env->GetFieldID(segmentation_config_cls, "provider",
-                        "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(segmentation_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.segmentation.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.segmentation.provider, provider,
+                              segmentation_config_cls, segmentation_config);
 
   //---------- embedding ----------
   fid = env->GetFieldID(
@@ -55,43 +48,34 @@ static OfflineSpeakerDiarizationConfig GetOfflineSpeakerDiarizationConfig(
   jobject embedding_config = env->GetObjectField(config, fid);
   jclass embedding_config_cls = env->GetObjectClass(embedding_config);
 
-  fid = env->GetFieldID(embedding_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(embedding_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.embedding.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.embedding.model, model, embedding_config_cls,
+                              embedding_config);
 
-  fid = env->GetFieldID(embedding_config_cls, "numThreads", "I");
-  ans.embedding.num_threads = env->GetIntField(embedding_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.embedding.num_threads, numThreads,
+                           embedding_config_cls, embedding_config);
 
-  fid = env->GetFieldID(embedding_config_cls, "debug", "Z");
-  ans.embedding.debug = env->GetBooleanField(embedding_config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.embedding.debug, debug, embedding_config_cls,
+                            embedding_config);
 
-  fid = env->GetFieldID(embedding_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(embedding_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.embedding.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.embedding.provider, provider,
+                              embedding_config_cls, embedding_config);
 
-  //---------- clustering ----------
   fid = env->GetFieldID(cls, "clustering",
                         "Lcom/k2fsa/sherpa/onnx/FastClusteringConfig;");
   jobject clustering_config = env->GetObjectField(config, fid);
   jclass clustering_config_cls = env->GetObjectClass(clustering_config);
 
-  fid = env->GetFieldID(clustering_config_cls, "numClusters", "I");
-  ans.clustering.num_clusters = env->GetIntField(clustering_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.clustering.num_clusters, numClusters,
+                           clustering_config_cls, clustering_config);
 
-  fid = env->GetFieldID(clustering_config_cls, "threshold", "F");
-  ans.clustering.threshold = env->GetFloatField(clustering_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.clustering.threshold, threshold,
+                             clustering_config_cls, clustering_config);
 
-  // its own fields
-  fid = env->GetFieldID(cls, "minDurationOn", "F");
-  ans.min_duration_on = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.min_duration_on, minDurationOn, cls, config);
 
-  fid = env->GetFieldID(cls, "minDurationOff", "F");
-  ans.min_duration_off = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.min_duration_off, minDurationOff, cls, config);
 
+  *ok = true;
   return ans;
 }
 
@@ -109,7 +93,15 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_newFromAsset(
   }
 #endif
 
-  auto config = sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config);
+  bool ok = false;
+  auto config =
+      sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto sd = new sherpa_onnx::OfflineSpeakerDiarization(
@@ -125,7 +117,15 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config);
+  bool ok = false;
+  auto config =
+      sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {
@@ -142,7 +142,15 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_setConfig(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jobject _config) {
-  auto config = sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config);
+  bool ok = false;
+  auto config =
+      sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto sd = reinterpret_cast<sherpa_onnx::OfflineSpeakerDiarization *>(ptr);
