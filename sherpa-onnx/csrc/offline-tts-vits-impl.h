@@ -342,8 +342,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           mgr, config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
-               meta_data.is_melo_tts) {
+    } else if (meta_data.jieba && meta_data.is_melo_tts) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
           config_.model.vits.dict_dir, model_->GetMetaData(),
@@ -394,8 +393,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
-               meta_data.is_melo_tts) {
+    } else if (meta_data.jieba && meta_data.is_melo_tts) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
           config_.model.vits.dict_dir, model_->GetMetaData(),

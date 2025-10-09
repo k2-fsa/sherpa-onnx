@@ -13,6 +13,7 @@
 #include <strstream>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -37,22 +38,6 @@ static bool IsPunct(const std::string &s) {
       "。", "！", "？", "“", "”", "‘",  "’",
   };
   return puncts.count(s);
-}
-
-// end is inclusive
-std::string GetWord(const std::vector<std::string> &words, int32_t start,
-                    int32_t end) {
-  std::string ans;
-
-  if (start >= words.size() || end >= words.size()) {
-    return ans;
-  }
-
-  for (int32_t i = start; i <= end; ++i) {
-    ans += words[i];
-  }
-
-  return ans;
 }
 
 class JiebaLexicon::Impl {

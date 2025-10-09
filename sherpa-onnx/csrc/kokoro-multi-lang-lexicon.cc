@@ -11,6 +11,7 @@
 #include <strstream>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -32,10 +33,6 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-// implemented in ./jieba-lexicon.cc
-std::string GetWord(const std::vector<std::string> &words, int32_t start,
-                    int32_t end);
 
 void CallPhonemizeEspeak(const std::string &text,
                          piper::eSpeakPhonemeConfig &config,  // NOLINT

@@ -313,7 +313,6 @@ if(SHERPA_ONNX_ENABLE_TTS)
     cppinyin_core
     piper_phonemize)
 endif()
-target_link_libraries(sherpa-onnx-core cppjieba)
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -678,7 +677,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
-      cppjieba-test.cc
       offline-tts-zipvoice-frontend-test.cc
       piper-phonemize-test.cc
     )

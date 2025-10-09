@@ -7,9 +7,11 @@
 #include <fstream>
 #include <regex>  // NOLINT
 #include <sstream>
+#include <string>
 #include <strstream>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -20,7 +22,6 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -34,7 +35,12 @@ class MeloTtsLexicon::Impl {
        const std::string &dict_dir,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
 
     {
       std::ifstream is(tokens);
@@ -66,7 +72,12 @@ class MeloTtsLexicon::Impl {
        const std::string &dict_dir,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
 
     {
       auto buf = ReadFile(mgr, tokens);
@@ -118,57 +129,101 @@ class MeloTtsLexicon::Impl {
     std::regex punct_re4("！");
     s = std::regex_replace(s, punct_re4, "!");
 
-    std::vector<std::string> words;
-    if (jieba_) {
-      bool is_hmm = true;
-      jieba_->Cut(text, words, is_hmm);
+    std::vector<std::string> words = SplitUtf8(text);
 
-      if (debug_) {
-        std::ostringstream os;
-        std::string sep = "";
-        for (const auto &w : words) {
-          os << sep << w;
-          sep = "_";
-        }
+    if (debug_) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("input text: %{public}s", text.c_str());
-        SHERPA_ONNX_LOGE("after replacing punctuations: %{public}s", s.c_str());
-
-        SHERPA_ONNX_LOGE("after jieba processing: %{public}s",
-                         os.str().c_str());
+      SHERPA_ONNX_LOGE("input text:\n%{public}s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s", s.c_str());
 #else
-        SHERPA_ONNX_LOGE("input text: %s", text.c_str());
-        SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
-
-        SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+      SHERPA_ONNX_LOGE("input text:\n%s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", s.c_str());
 #endif
-      }
-    } else {
-      words = SplitUtf8(text);
 
-      if (debug_) {
-        fprintf(stderr, "Input text in string (lowercase): %s\n", text.c_str());
-        fprintf(stderr, "Input text in bytes (lowercase):");
-        for (int8_t c : text) {
-          fprintf(stderr, " %02x", c);
-        }
-        fprintf(stderr, "\n");
-        fprintf(stderr, "After splitting to words:");
-        for (const auto &w : words) {
-          fprintf(stderr, " %s", w.c_str());
-        }
-        fprintf(stderr, "\n");
+      std::ostringstream os;
+      std::string sep = "";
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
       }
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
+                       os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
+#endif
     }
 
     std::vector<TokenIDs> ans;
     TokenIDs this_sentence;
 
-    for (const auto &w : words) {
+    int32_t num_words = static_cast<int32_t>(words.size());
+    int32_t max_search_len = 10;
+
+    for (int32_t i = 0; i < num_words;) {
+      int32_t start = i;
+      int32_t end = std::min(i + max_search_len, num_words - 1);
+
+      std::string w;
+      while (end > start) {
+        auto this_word = GetWord(words, start, end);
+        if (debug_) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
+                           this_word.c_str());
+#else
+          SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
+#endif
+        }
+        if (word2ids_.count(this_word)) {
+          i = end + 1;
+          w = std::move(this_word);
+          if (debug_) {
+#if __OHOS__
+            SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s", start,
+                             end, w.c_str());
+#else
+            SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
+#endif
+          }
+          break;
+        }
+
+        end -= 1;
+      }
+
+      if (w.empty()) {
+        w = words[i];
+        i += 1;
+      }
+
       auto ids = ConvertWordToIds(w);
       if (ids.tokens.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+#else
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+#endif
         continue;
+      }
+
+      if (debug_) {
+        std::ostringstream os;
+        os << w << ": ";
+        for (auto i : ids.tokens) {
+          os << id2token_.at(i) << " ";
+        }
+
+        for (auto i : ids.tones) {
+          os << i << " ";
+        }
+        os << "\n";
+#if __OHOS__
+        SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
       }
 
       this_sentence.tokens.insert(this_sentence.tokens.end(),
@@ -181,7 +236,7 @@ class MeloTtsLexicon::Impl {
         ans.push_back(std::move(this_sentence));
         this_sentence = {};
       }
-    }  // for (const auto &w : words)
+    }  // for (int32_t i = 0; i < num_words;)
 
     if (!this_sentence.tokens.empty()) {
       ans.push_back(std::move(this_sentence));
@@ -233,6 +288,13 @@ class MeloTtsLexicon::Impl {
 
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);
+
+    if (debug_) {
+      for (const auto &p : token2id_) {
+        id2token_[p.second] = p.first;
+      }
+    }
+
     token2id_[" "] = token2id_["_"];
 
     std::vector<std::pair<std::string, std::string>> puncts = {
@@ -331,10 +393,10 @@ class MeloTtsLexicon::Impl {
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+  std::unordered_map<int32_t, std::string> id2token_;
 
   OfflineTtsVitsModelMetaData meta_data_;
 
-  std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
 

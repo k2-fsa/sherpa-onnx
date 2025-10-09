@@ -108,7 +108,7 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
   if (!dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
         "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-        "dictDir for this model. Ignore this value.")
+        "dictDir for this model. Ignore this value.");
   }
 
   return true;
