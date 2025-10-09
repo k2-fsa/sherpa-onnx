@@ -7,6 +7,7 @@
 #include <fstream>
 #include <regex>  // NOLINT
 #include <sstream>
+#include <string>
 #include <strstream>
 #include <unordered_map>
 #include <utility>
@@ -26,12 +27,15 @@
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+// implemented in ./jieba-lexicon.cc
+std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                    int32_t end);
 
 void CallPhonemizeEspeak(const std::string &text,
                          piper::eSpeakPhonemeConfig &config,  // NOLINT
@@ -43,11 +47,15 @@ class KokoroMultiLangLexicon::Impl {
        const std::string &dict_dir, const std::string &data_dir,
        const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
     InitTokens(tokens);
 
     InitLexicon(lexicon);
-
-    jieba_ = InitJieba(dict_dir);
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
@@ -57,12 +65,18 @@ class KokoroMultiLangLexicon::Impl {
        const std::string &dict_dir, const std::string &data_dir,
        const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
+
     InitTokens(mgr, tokens);
 
     InitLexicon(mgr, lexicon);
 
-    // we assume you have copied dict_dir and data_dir from assets to some path
-    jieba_ = InitJieba(dict_dir);
+    // we assume you have copied and data_dir from assets to some path
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
@@ -183,19 +197,32 @@ class KokoroMultiLangLexicon::Impl {
     std::vector<int32_t> ans;
     if (word2ids_.count(w)) {
       ans = word2ids_.at(w);
-      return ans;
-    }
-
-    std::vector<std::string> words = SplitUtf8(w);
-    for (const auto &word : words) {
-      if (word2ids_.count(word)) {
-        auto ids = ConvertWordToIds(word);
-        ans.insert(ans.end(), ids.begin(), ids.end());
-      } else {
-        if (debug_) {
-          SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+    } else {
+      std::vector<std::string> words = SplitUtf8(w);
+      for (const auto &word : words) {
+        if (word2ids_.count(word)) {
+          auto ids = ConvertWordToIds(word);
+          ans.insert(ans.end(), ids.begin(), ids.end());
+        } else {
+          if (debug_) {
+            SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+          }
         }
       }
+    }
+
+    if (debug_ && !ans.empty()) {
+      std::ostringstream os;
+      os << w << ": ";
+      for (auto i : ans) {
+        os << id2token_.at(i) << " ";
+      }
+      os << "\n";
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     return ans;
@@ -203,20 +230,22 @@ class KokoroMultiLangLexicon::Impl {
 
   std::vector<std::vector<int32_t>> ConvertChineseToTokenIDs(
       const std::string &text) const {
-    bool is_hmm = true;
+    std::vector<std::string> words = SplitUtf8(text);
 
-    std::vector<std::string> words;
-    jieba_->Cut(text, words, is_hmm);
     if (debug_) {
       std::ostringstream os;
-      os << "After jieba processing:\n";
-
-      std::string sep;
+      std::string sep = "";
       for (const auto &w : words) {
         os << sep << w;
         sep = "_";
       }
-      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
+                       os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
+#endif
     }
 
     std::vector<std::vector<int32_t>> ans;
@@ -224,8 +253,57 @@ class KokoroMultiLangLexicon::Impl {
     int32_t max_len = meta_data_.max_token_len;
 
     this_sentence.push_back(0);
-    for (const auto &w : words) {
+
+    int32_t num_words = static_cast<int32_t>(words.size());
+    int32_t max_search_len = 10;
+
+    for (int32_t i = 0; i < num_words;) {
+      int32_t start = i;
+      int32_t end = std::min(i + max_search_len, num_words - 1);
+
+      std::string w;
+      while (end > start) {
+        auto this_word = GetWord(words, start, end);
+        if (debug_) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
+                           this_word.c_str());
+#else
+          SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
+#endif
+        }
+        if (word2ids_.count(this_word)) {
+          i = end + 1;
+          w = std::move(this_word);
+          if (debug_) {
+#if __OHOS__
+            SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s", start,
+                             end, w.c_str());
+#else
+            SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
+#endif
+          }
+          break;
+        }
+
+        end -= 1;
+      }
+
+      if (w.empty()) {
+        w = words[i];
+        i += 1;
+      }
+
       auto ids = ConvertWordToIds(w);
+      if (ids.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+#else
+        SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+#endif
+        continue;
+      }
+
       if (this_sentence.size() + ids.size() > max_len - 2) {
         this_sentence.push_back(0);
         ans.push_back(std::move(this_sentence));
@@ -234,7 +312,8 @@ class KokoroMultiLangLexicon::Impl {
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-    }
+
+    }  // for (int32_t i = 0; i < num_words;)
 
     if (this_sentence.size() > 1) {
       this_sentence.push_back(0);
@@ -422,6 +501,12 @@ class KokoroMultiLangLexicon::Impl {
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);  // defined in ./symbol-table.cc
 
+    if (debug_) {
+      for (const auto &p : token2id_) {
+        id2token_[p.second] = p.first;
+      }
+    }
+
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     std::u32string s;
     for (const auto &p : token2id_) {
@@ -517,10 +602,10 @@ class KokoroMultiLangLexicon::Impl {
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+  std::unordered_map<int32_t, std::string> id2token_;
 
   std::unordered_map<char32_t, int32_t> phoneme2id_;
 
-  std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
 
