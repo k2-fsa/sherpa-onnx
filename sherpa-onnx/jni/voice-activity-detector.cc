@@ -8,7 +8,7 @@
 
 namespace sherpa_onnx {
 
-static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
+static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config, bool *ok) {
   VadModelConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -20,72 +20,60 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   jobject silero_vad_config = env->GetObjectField(config, fid);
   jclass silero_vad_config_cls = env->GetObjectClass(silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "model", "Ljava/lang/String;");
-  auto s = (jstring)env->GetObjectField(silero_vad_config, fid);
-  auto p = env->GetStringUTFChars(s, nullptr);
-  ans.silero_vad.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.silero_vad.model, model,
+                              silero_vad_config_cls, silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "threshold", "F");
-  ans.silero_vad.threshold = env->GetFloatField(silero_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silero_vad.threshold, threshold,
+                             silero_vad_config_cls, silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "minSilenceDuration", "F");
-  ans.silero_vad.min_silence_duration =
-      env->GetFloatField(silero_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silero_vad.min_silence_duration,
+                             minSilenceDuration, silero_vad_config_cls,
+                             silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "minSpeechDuration", "F");
-  ans.silero_vad.min_speech_duration =
-      env->GetFloatField(silero_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silero_vad.min_speech_duration,
+                             minSpeechDuration, silero_vad_config_cls,
+                             silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "windowSize", "I");
-  ans.silero_vad.window_size = env->GetIntField(silero_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.silero_vad.window_size, windowSize,
+                           silero_vad_config_cls, silero_vad_config);
 
-  fid = env->GetFieldID(silero_vad_config_cls, "maxSpeechDuration", "F");
-  ans.silero_vad.max_speech_duration =
-      env->GetFloatField(silero_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silero_vad.max_speech_duration,
+                             maxSpeechDuration, silero_vad_config_cls,
+                             silero_vad_config);
 
-  // ten-vad
   fid = env->GetFieldID(cls, "tenVadModelConfig",
                         "Lcom/k2fsa/sherpa/onnx/TenVadModelConfig;");
   jobject ten_vad_config = env->GetObjectField(config, fid);
   jclass ten_vad_config_cls = env->GetObjectClass(ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(ten_vad_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.ten_vad.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.ten_vad.model, model, ten_vad_config_cls,
+                              ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "threshold", "F");
-  ans.ten_vad.threshold = env->GetFloatField(ten_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.ten_vad.threshold, threshold,
+                             ten_vad_config_cls, ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "minSilenceDuration", "F");
-  ans.ten_vad.min_silence_duration = env->GetFloatField(ten_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.ten_vad.min_silence_duration,
+                             minSilenceDuration, ten_vad_config_cls,
+                             ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "minSpeechDuration", "F");
-  ans.ten_vad.min_speech_duration = env->GetFloatField(ten_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.ten_vad.min_speech_duration, minSpeechDuration,
+                             ten_vad_config_cls, ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "windowSize", "I");
-  ans.ten_vad.window_size = env->GetIntField(ten_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.ten_vad.window_size, windowSize,
+                           ten_vad_config_cls, ten_vad_config);
 
-  fid = env->GetFieldID(ten_vad_config_cls, "maxSpeechDuration", "F");
-  ans.ten_vad.max_speech_duration = env->GetFloatField(ten_vad_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.ten_vad.max_speech_duration, maxSpeechDuration,
+                             ten_vad_config_cls, ten_vad_config);
 
-  fid = env->GetFieldID(cls, "sampleRate", "I");
-  ans.sample_rate = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.sample_rate, sampleRate, cls, config);
 
-  fid = env->GetFieldID(cls, "numThreads", "I");
-  ans.num_threads = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.num_threads, numThreads, cls, config);
 
-  fid = env->GetFieldID(cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.provider, provider, cls, config);
 
-  fid = env->GetFieldID(cls, "debug", "Z");
-  ans.debug = env->GetBooleanField(config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.debug, debug, cls, config);
 
+  *ok = true;
   return ans;
 }
 
@@ -101,7 +89,15 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromAsset(
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetVadModelConfig(env, _config);
+
+  bool ok = false;
+  auto config = sherpa_onnx::GetVadModelConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto model = new sherpa_onnx::VoiceActivityDetector(
@@ -116,7 +112,14 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromAsset(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetVadModelConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetVadModelConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {

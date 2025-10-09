@@ -11,7 +11,8 @@
 
 namespace sherpa_onnx {
 
-static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
+static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
+                                            bool *ok) {
   OfflineTtsConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -22,50 +23,29 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   jobject model = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model);
 
-  // vits
   fid = env->GetFieldID(model_config_cls, "vits",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
   jobject vits = env->GetObjectField(model, fid);
   jclass vits_cls = env->GetObjectClass(vits);
 
-  fid = env->GetFieldID(vits_cls, "model", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(vits, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.model.vits.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.model, model, vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "lexicon", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(vits, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.vits.lexicon = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.lexicon, lexicon, vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(vits, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.vits.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.tokens, tokens, vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "dataDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(vits, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.vits.data_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.data_dir, dataDir, vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "dictDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(vits, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.vits.dict_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.dict_dir, dictDir, vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "noiseScale", "F");
-  ans.model.vits.noise_scale = env->GetFloatField(vits, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.vits.noise_scale, noiseScale, vits_cls,
+                             vits);
 
-  fid = env->GetFieldID(vits_cls, "noiseScaleW", "F");
-  ans.model.vits.noise_scale_w = env->GetFloatField(vits, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.vits.noise_scale_w, noiseScaleW,
+                             vits_cls, vits);
 
-  fid = env->GetFieldID(vits_cls, "lengthScale", "F");
-  ans.model.vits.length_scale = env->GetFloatField(vits, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.vits.length_scale, lengthScale, vits_cls,
+                             vits);
 
   // matcha
   fid = env->GetFieldID(model_config_cls, "matcha",
@@ -73,98 +53,57 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   jobject matcha = env->GetObjectField(model, fid);
   jclass matcha_cls = env->GetObjectClass(matcha);
 
-  fid = env->GetFieldID(matcha_cls, "acousticModel", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.acoustic_model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.acoustic_model, acousticModel,
+                              matcha_cls, matcha);
 
-  fid = env->GetFieldID(matcha_cls, "vocoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.vocoder = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.vocoder, vocoder, matcha_cls,
+                              matcha);
 
-  fid = env->GetFieldID(matcha_cls, "lexicon", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.lexicon = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.lexicon, lexicon, matcha_cls,
+                              matcha);
 
-  fid = env->GetFieldID(matcha_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.tokens, tokens, matcha_cls,
+                              matcha);
 
-  fid = env->GetFieldID(matcha_cls, "dataDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.data_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.data_dir, dataDir, matcha_cls,
+                              matcha);
 
-  fid = env->GetFieldID(matcha_cls, "dictDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(matcha, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.matcha.dict_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.dict_dir, dictDir, matcha_cls,
+                              matcha);
 
-  fid = env->GetFieldID(matcha_cls, "noiseScale", "F");
-  ans.model.matcha.noise_scale = env->GetFloatField(matcha, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.matcha.noise_scale, noiseScale,
+                             matcha_cls, matcha);
 
-  fid = env->GetFieldID(matcha_cls, "lengthScale", "F");
-  ans.model.matcha.length_scale = env->GetFloatField(matcha, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.matcha.length_scale, lengthScale,
+                             matcha_cls, matcha);
 
-  // kokoro
   fid = env->GetFieldID(model_config_cls, "kokoro",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTtsKokoroModelConfig;");
   jobject kokoro = env->GetObjectField(model, fid);
   jclass kokoro_cls = env->GetObjectClass(kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.model, model, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "voices", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.voices = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.voices, voices, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.tokens, tokens, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "lexicon", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.lexicon = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.lexicon, lexicon, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "lang", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.lang = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.lang, lang, kokoro_cls, kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "dataDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.data_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.data_dir, dataDir, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "dictDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kokoro, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kokoro.dict_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.dict_dir, dictDir, kokoro_cls,
+                              kokoro);
 
-  fid = env->GetFieldID(kokoro_cls, "lengthScale", "F");
-  ans.model.kokoro.length_scale = env->GetFloatField(kokoro, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kokoro.length_scale, lengthScale,
+                             kokoro_cls, kokoro);
 
   // kitten
   fid = env->GetFieldID(model_config_cls, "kitten",
@@ -172,65 +111,38 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   jobject kitten = env->GetObjectField(model, fid);
   jclass kitten_cls = env->GetObjectClass(kitten);
 
-  fid = env->GetFieldID(kitten_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kitten, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kitten.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kitten.model, model, kitten_cls,
+                              kitten);
 
-  fid = env->GetFieldID(kitten_cls, "voices", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kitten, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kitten.voices = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kitten.voices, voices, kitten_cls,
+                              kitten);
 
-  fid = env->GetFieldID(kitten_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kitten, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kitten.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kitten.tokens, tokens, kitten_cls,
+                              kitten);
 
-  fid = env->GetFieldID(kitten_cls, "dataDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(kitten, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.kitten.data_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.kitten.data_dir, dataDir, kitten_cls,
+                              kitten);
 
-  fid = env->GetFieldID(kitten_cls, "lengthScale", "F");
-  ans.model.kitten.length_scale = env->GetFloatField(kitten, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kitten.length_scale, lengthScale,
+                             kitten_cls, kitten);
 
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model.num_threads = env->GetIntField(model, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
+                           model);
 
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model.debug = env->GetBooleanField(model, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model.debug, debug, model_config_cls, model);
 
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.provider, provider, model_config_cls,
+                              model);
 
-  // for ruleFsts
-  fid = env->GetFieldID(cls, "ruleFsts", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.rule_fsts = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.rule_fsts, ruleFsts, cls, config);
 
-  // for ruleFars
-  fid = env->GetFieldID(cls, "ruleFars", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.rule_fars = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.rule_fars, ruleFars, cls, config);
 
-  fid = env->GetFieldID(cls, "maxNumSentences", "I");
-  ans.max_num_sentences = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.max_num_sentences, maxNumSentences, cls, config);
 
-  fid = env->GetFieldID(cls, "silenceScale", "F");
-  ans.silence_scale = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silence_scale, silenceScale, cls, config);
 
+  *ok = true;
   return ans;
 }
 
@@ -246,7 +158,15 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+
+  bool ok = false;
+  auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
   for (const auto &s : str_vec) {
     SHERPA_ONNX_LOGE("%s", s.c_str());
@@ -267,7 +187,14 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
   return SafeJNI(
       env, "OfflineTts_newFromFile",
       [&]() -> jlong {
-        auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+        bool ok = false;
+        auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config, &ok);
+
+        if (!ok) {
+          SHERPA_ONNX_LOGE("Please read the error message carefully");
+          return 0;
+        }
+
         SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
         if (!config.Validate()) {
