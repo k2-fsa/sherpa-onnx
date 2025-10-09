@@ -8,29 +8,20 @@
 namespace sherpa_onnx {
 
 static SpeakerEmbeddingExtractorConfig GetSpeakerEmbeddingExtractorConfig(
-    JNIEnv *env, jobject config) {
+    JNIEnv *env, jobject config, bool *ok) {
   SpeakerEmbeddingExtractorConfig ans;
 
   jclass cls = env->GetObjectClass(config);
 
-  jfieldID fid = env->GetFieldID(cls, "model", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model, model, cls, config);
 
-  ans.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_INT(ans.num_threads, numThreads, cls, config);
 
-  fid = env->GetFieldID(cls, "numThreads", "I");
-  ans.num_threads = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.debug, debug, cls, config);
 
-  fid = env->GetFieldID(cls, "debug", "Z");
-  ans.debug = env->GetBooleanField(config, fid);
+  SHERPA_ONNX_JNI_READ_STRING(ans.provider, provider, cls, config);
 
-  fid = env->GetFieldID(cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  *ok = true;
 
   return ans;
 }
@@ -48,7 +39,15 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromAsset(
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
+  bool ok = false;
+  auto config =
+      sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("new config:\n%s", config.ToString().c_str());
 
   auto extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(
@@ -64,7 +63,15 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
+  bool ok = false;
+  auto config =
+      sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("newFromFile config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {

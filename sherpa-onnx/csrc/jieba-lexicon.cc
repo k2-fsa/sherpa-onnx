@@ -6,7 +6,10 @@
 
 #include <algorithm>
 #include <fstream>
+#include <memory>
 #include <regex>  // NOLINT
+#include <sstream>
+#include <string>
 #include <strstream>
 #include <unordered_set>
 #include <utility>
@@ -21,7 +24,6 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -38,8 +40,8 @@ static bool IsPunct(const std::string &s) {
 }
 
 // end is inclusive
-static std::string GetWord(const std::vector<std::string> &words, int32_t start,
-                           int32_t end) {
+std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                    int32_t end) {
   std::string ans;
 
   if (start >= words.size() || end >= words.size()) {
@@ -58,7 +60,16 @@ class JiebaLexicon::Impl {
   Impl(const std::string &lexicon, const std::string &tokens,
        const std::string &dict_dir, bool debug)
       : debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
+    if (lexicon.empty()) {
+      SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     {
       std::ifstream is(tokens);
@@ -75,7 +86,17 @@ class JiebaLexicon::Impl {
   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
        const std::string &dict_dir, bool debug)
       : debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
+    if (!dict_dir.empty()) {
+      SHERPA_ONNX_LOGE(
+          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
+          "dictDir for this model");
+      SHERPA_ONNX_LOGE("It is ignored if you provide it");
+    }
+
+    if (lexicon.empty()) {
+      SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     {
       auto buf = ReadFile(mgr, tokens);
@@ -106,9 +127,7 @@ class JiebaLexicon::Impl {
     std::regex punct_re4("[!]");
     s = std::regex_replace(s, punct_re4, "！");
 
-    std::vector<std::string> words;
-    bool is_hmm = true;
-    jieba_->Cut(text, words, is_hmm);
+    std::vector<std::string> words = SplitUtf8(text);
 
     if (debug_) {
 #if __OHOS__
@@ -127,9 +146,10 @@ class JiebaLexicon::Impl {
       }
 
 #if __OHOS__
-      SHERPA_ONNX_LOGE("after jieba processing:\n%{public}s", os.str().c_str());
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
+                       os.str().c_str());
 #else
-      SHERPA_ONNX_LOGE("after jieba processing:\n%s", os.str().c_str());
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
 #endif
     }
 
@@ -178,11 +198,11 @@ class JiebaLexicon::Impl {
     std::vector<int64_t> this_sentence;
 
     int32_t num_words = static_cast<int32_t>(words.size());
-    int32_t max_len = 10;
+    int32_t max_search_len = 10;
 
     for (int32_t i = 0; i < num_words;) {
       int32_t start = i;
-      int32_t end = std::min(i + max_len, num_words - 1);
+      int32_t end = std::min(i + max_search_len, num_words - 1);
 
       std::string w;
       while (end > start) {
@@ -233,7 +253,7 @@ class JiebaLexicon::Impl {
         ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
-    }  // for (const auto &w : words)
+    }  // for (int32_t i = 0; i < num_words;)
 
     if (!this_sentence.empty()) {
       ans.emplace_back(std::move(this_sentence));
@@ -345,11 +365,13 @@ class JiebaLexicon::Impl {
 
       std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
       if (ids.empty()) {
+        if (debug_) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("Empty token ids for %{public}s", line.c_str());
+          SHERPA_ONNX_LOGE("Empty token ids for '%{public}s'", line.c_str());
 #else
-        SHERPA_ONNX_LOGE("Empty token ids for %s", line.c_str());
+          SHERPA_ONNX_LOGE("Empty token ids for '%s'", line.c_str());
 #endif
+        }
         continue;
       }
 
@@ -366,7 +388,6 @@ class JiebaLexicon::Impl {
 
   std::unordered_map<int32_t, std::string> id2token_;
 
-  std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
 

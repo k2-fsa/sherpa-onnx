@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 
+#include <chrono>  // NOLINT
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -67,10 +68,9 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::KeywordSpotter keyword_spotter(config);
 
-  std::vector<Stream> ss;
+  if (po.NumArgs() == 1) {
+    const std::string wav_filename = po.GetArg(1);
 
-  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
-    const std::string wav_filename = po.GetArg(i);
     int32_t sampling_rate = -1;
 
     bool is_ok = false;
@@ -82,6 +82,8 @@ for a list of pre-trained models to download.
       return -1;
     }
 
+    auto begin = std::chrono::steady_clock::now();
+
     auto s = keyword_spotter.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
@@ -90,32 +92,85 @@ for a list of pre-trained models to download.
     s->AcceptWaveform(sampling_rate, tail_paddings.data(),
                       tail_paddings.size());
 
-    // Call InputFinished() to indicate that no audio samples are available
     s->InputFinished();
-    ss.push_back({std::move(s), wav_filename});
-  }
 
-  std::vector<sherpa_onnx::OnlineStream *> ready_streams;
-  for (;;) {
-    ready_streams.clear();
-    for (auto &s : ss) {
-      const auto p_ss = s.online_stream.get();
-      if (keyword_spotter.IsReady(p_ss)) {
-        ready_streams.push_back(p_ss);
-      }
-      std::ostringstream os;
-      const auto r = keyword_spotter.GetResult(p_ss);
+    while (keyword_spotter.IsReady(s.get())) {
+      keyword_spotter.DecodeStream(s.get());
+
+      auto r = keyword_spotter.GetResult(s.get());
       if (!r.keyword.empty()) {
-        os << s.filename << "\n";
-        os << r.AsJsonString() << "\n\n";
-        fprintf(stderr, "%s", os.str().c_str());
+        keyword_spotter.Reset(s.get());
+
+        fprintf(stderr, "%s\n%s\n\n", wav_filename.c_str(),
+                r.AsJsonString().c_str());
       }
     }
 
-    if (ready_streams.empty()) {
-      break;
+    auto end = std::chrono::steady_clock::now();
+
+    float duration = samples.size() / static_cast<float>(sampling_rate);
+
+    float elapsed_seconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+            .count() /
+        1000.;
+    float rtf = elapsed_seconds / duration;
+    fprintf(stderr, "Number of threads: %d\n", config.model_config.num_threads);
+    fprintf(stderr, "Audio duration: %.3f s\n", duration);
+    fprintf(stderr, "Elapsed seconds: %.3f\n", elapsed_seconds);
+    fprintf(stderr, "RTF = %.3f/%.3f = %.3f\n", elapsed_seconds, duration, rtf);
+
+  } else {
+    std::vector<Stream> ss;
+
+    for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+      const std::string wav_filename = po.GetArg(i);
+      int32_t sampling_rate = -1;
+
+      bool is_ok = false;
+      const std::vector<float> samples =
+          sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+
+      if (!is_ok) {
+        fprintf(stderr, "Failed to read '%s'\n", wav_filename.c_str());
+        return -1;
+      }
+
+      auto s = keyword_spotter.CreateStream();
+      s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
+
+      std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));
+      // Note: We can call AcceptWaveform() multiple times.
+      s->AcceptWaveform(sampling_rate, tail_paddings.data(),
+                        tail_paddings.size());
+
+      // Call InputFinished() to indicate that no audio samples are available
+      s->InputFinished();
+      ss.push_back({std::move(s), wav_filename});
     }
-    keyword_spotter.DecodeStreams(ready_streams.data(), ready_streams.size());
+
+    std::vector<sherpa_onnx::OnlineStream *> ready_streams;
+    for (;;) {
+      ready_streams.clear();
+      for (auto &s : ss) {
+        const auto p_ss = s.online_stream.get();
+        if (keyword_spotter.IsReady(p_ss)) {
+          ready_streams.push_back(p_ss);
+        }
+        std::ostringstream os;
+        const auto r = keyword_spotter.GetResult(p_ss);
+        if (!r.keyword.empty()) {
+          os << s.filename << "\n";
+          os << r.AsJsonString() << "\n\n";
+          fprintf(stderr, "%s", os.str().c_str());
+        }
+      }
+
+      if (ready_streams.empty()) {
+        break;
+      }
+      keyword_spotter.DecodeStreams(ready_streams.data(), ready_streams.size());
+    }
   }
   return 0;
 }
