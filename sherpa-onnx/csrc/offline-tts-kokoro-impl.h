@@ -340,8 +340,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE("Current model version: '%d'", meta_data.version);
         SHERPA_ONNX_LOGE(
             "You are using a multi-lingual Kokoro model (e.g., Kokoro >= "
-            "v1.0). Please pass --kokoro-lexicon or "
-            "provide --kokoro-lang");
+            "v1.0). Please pass --kokoro-lexicon or provide --kokoro-lang");
         SHERPA_ONNX_EXIT(-1);
       }
 
@@ -367,7 +366,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE("Current model version: '%d'", meta_data.version);
         SHERPA_ONNX_LOGE(
             "You are using a multi-lingual Kokoro model (e.g., Kokoro >= "
-            "v1.0). please pass --kokoro-lexicon");
+            "v1.0). please pass --kokoro-lexicon or --kokoro-lang");
         SHERPA_ONNX_EXIT(-1);
       }
 

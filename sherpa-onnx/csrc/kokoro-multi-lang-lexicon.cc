@@ -76,7 +76,7 @@ class KokoroMultiLangLexicon::Impl {
 
     InitLexicon(mgr, lexicon);
 
-    // we assume you have copied and data_dir from assets to some path
+    // we assume you have copied data_dir from assets to some path
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
