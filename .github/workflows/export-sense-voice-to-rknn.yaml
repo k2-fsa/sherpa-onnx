@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-latest]
         python-version: ["3.10"]
         platform: ["rk3562", "rk3566", "rk3568", "rk3576", "rk3588"]
-        input_in_seconds: ["10", "15", "20", "25", "30"]
+        input_in_seconds: ["5", "10", "15", "20", "25", "30"]
         framework: ["FunASR", "WSYue-ASR"]
 
     steps:
