@@ -32,28 +32,6 @@ namespace sherpa_onnx {
 class MeloTtsLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
-
-    {
-      std::ifstream is(tokens);
-      InitTokens(is);
-    }
-
-    {
-      std::ifstream is(lexicon);
-      InitLexicon(is);
-    }
-  }
-
-  Impl(const std::string &lexicon, const std::string &tokens,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
     {
@@ -63,33 +41,6 @@ class MeloTtsLexicon::Impl {
 
     {
       std::ifstream is(lexicon);
-      InitLexicon(is);
-    }
-  }
-
-  template <typename Manager>
-  Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
-
-    {
-      auto buf = ReadFile(mgr, tokens);
-
-      std::istrstream is(buf.data(), buf.size());
-      InitTokens(is);
-    }
-
-    {
-      auto buf = ReadFile(mgr, lexicon);
-
-      std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
   }
@@ -404,26 +355,9 @@ MeloTtsLexicon::~MeloTtsLexicon() = default;
 
 MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
                                const std::string &tokens,
-                               const std::string &dict_dir,
-                               const OfflineTtsVitsModelMetaData &meta_data,
-                               bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
-
-MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
-                               const std::string &tokens,
                                const OfflineTtsVitsModelMetaData &meta_data,
                                bool debug)
     : impl_(std::make_unique<Impl>(lexicon, tokens, meta_data, debug)) {}
-
-template <typename Manager>
-MeloTtsLexicon::MeloTtsLexicon(Manager *mgr, const std::string &lexicon,
-                               const std::string &tokens,
-                               const std::string &dict_dir,
-                               const OfflineTtsVitsModelMetaData &meta_data,
-                               bool debug)
-    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
 
 template <typename Manager>
 MeloTtsLexicon::MeloTtsLexicon(Manager *mgr, const std::string &lexicon,
@@ -440,20 +374,10 @@ std::vector<TokenIDs> MeloTtsLexicon::ConvertTextToTokenIds(
 #if __ANDROID_API__ >= 9
 template MeloTtsLexicon::MeloTtsLexicon(
     AAssetManager *mgr, const std::string &lexicon, const std::string &tokens,
-    const std::string &dict_dir, const OfflineTtsVitsModelMetaData &meta_data,
-    bool debug);
-
-template MeloTtsLexicon::MeloTtsLexicon(
-    AAssetManager *mgr, const std::string &lexicon, const std::string &tokens,
     const OfflineTtsVitsModelMetaData &meta_data, bool debug);
 #endif
 
 #if __OHOS__
-template MeloTtsLexicon::MeloTtsLexicon(
-    NativeResourceManager *mgr, const std::string &lexicon,
-    const std::string &tokens, const std::string &dict_dir,
-    const OfflineTtsVitsModelMetaData &meta_data, bool debug);
-
 template MeloTtsLexicon::MeloTtsLexicon(
     NativeResourceManager *mgr, const std::string &lexicon,
     const std::string &tokens, const OfflineTtsVitsModelMetaData &meta_data,

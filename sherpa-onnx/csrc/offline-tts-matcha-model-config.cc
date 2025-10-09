@@ -97,6 +97,12 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
     return false;
   }
 
+  if (!dict_dir.empty()) {
+    SHERPA_ONNX_LOGE(
+        "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
+        "this model. Ignore it");
+  }
+
   return true;
 }
 
@@ -109,7 +115,6 @@ std::string OfflineTtsMatchaModelConfig::ToString() const {
   os << "lexicon=\"" << lexicon << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
-  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "noise_scale=" << noise_scale << ", ";
   os << "length_scale=" << length_scale << ")";
 

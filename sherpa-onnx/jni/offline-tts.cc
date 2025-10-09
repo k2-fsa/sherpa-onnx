@@ -36,8 +36,6 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.data_dir, dataDir, vits_cls, vits);
 
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.vits.dict_dir, dictDir, vits_cls, vits);
-
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.vits.noise_scale, noiseScale, vits_cls,
                              vits);
 
@@ -68,9 +66,6 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.data_dir, dataDir, matcha_cls,
                               matcha);
 
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.matcha.dict_dir, dictDir, matcha_cls,
-                              matcha);
-
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.matcha.noise_scale, noiseScale,
                              matcha_cls, matcha);
 
@@ -97,9 +92,6 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.lang, lang, kokoro_cls, kokoro);
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.data_dir, dataDir, kokoro_cls,
-                              kokoro);
-
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.kokoro.dict_dir, dictDir, kokoro_cls,
                               kokoro);
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kokoro.length_scale, lengthScale,

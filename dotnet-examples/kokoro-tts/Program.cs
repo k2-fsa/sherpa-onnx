@@ -26,7 +26,6 @@ class KokoroTtsDemo
     config.Model.Kokoro.Voices = "./kokoro-multi-lang-v1_0/voices.bin";
     config.Model.Kokoro.Tokens = "./kokoro-multi-lang-v1_0/tokens.txt";
     config.Model.Kokoro.DataDir = "./kokoro-multi-lang-v1_0/espeak-ng-data";
-    config.Model.Kokoro.DictDir = "./kokoro-multi-lang-v1_0/dict";
     config.Model.Kokoro.Lexicon = "./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt";
 
     config.Model.NumThreads = 2;

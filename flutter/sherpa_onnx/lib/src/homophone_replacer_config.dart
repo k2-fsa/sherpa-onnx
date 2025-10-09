@@ -14,7 +14,7 @@ class HomophoneReplacerConfig {
 
   @override
   String toString() {
-    return 'HomophoneReplacerConfig(dictDir: $dictDir, lexicon: $lexicon, ruleFsts: $ruleFsts)';
+    return 'HomophoneReplacerConfig(lexicon: $lexicon, ruleFsts: $ruleFsts)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -23,7 +23,7 @@ class HomophoneReplacerConfig {
         'ruleFsts': ruleFsts,
       };
 
-  final String dictDir;
+  final String dictDir; // unused
   final String lexicon;
   final String ruleFsts;
 }

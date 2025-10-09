@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/jieba-lexicon.h
+// sherpa-onnx/csrc/character-lexicon.h
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_JIEBA_LEXICON_H_
-#define SHERPA_ONNX_CSRC_JIEBA_LEXICON_H_
+#ifndef SHERPA_ONNX_CSRC_CHARACTER_LEXICON_H_
+#define SHERPA_ONNX_CSRC_CHARACTER_LEXICON_H_
 
 #include <memory>
 #include <string>
@@ -14,17 +14,16 @@
 
 namespace sherpa_onnx {
 
-class JiebaLexicon : public OfflineTtsFrontend {
+class CharacterLexicon : public OfflineTtsFrontend {
  public:
-  ~JiebaLexicon() override;
+  ~CharacterLexicon() override;
 
-  JiebaLexicon(const std::string &lexicon, const std::string &tokens,
-               const std::string &dict_dir, bool debug);
+  CharacterLexicon(const std::string &lexicon, const std::string &tokens,
+                   bool debug);
 
   template <typename Manager>
-  JiebaLexicon(Manager *mgr, const std::string &lexicon,
-               const std::string &tokens, const std::string &dict_dir,
-               bool debug);
+  CharacterLexicon(Manager *mgr, const std::string &lexicon,
+                   const std::string &tokens, bool debug);
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text,
@@ -37,4 +36,4 @@ class JiebaLexicon : public OfflineTtsFrontend {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_JIEBA_LEXICON_H_
+#endif  // SHERPA_ONNX_CSRC_CHARACTER_LEXICON_H_

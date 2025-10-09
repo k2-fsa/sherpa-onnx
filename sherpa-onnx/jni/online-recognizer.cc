@@ -213,9 +213,6 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config, bool *ok) {
   jobject hr_config = env->GetObjectField(config, fid);
   jclass hr_config_cls = env->GetObjectClass(hr_config);
 
-  SHERPA_ONNX_JNI_READ_STRING(ans.hr.dict_dir, dictDir, hr_config_cls,
-                              hr_config);
-
   SHERPA_ONNX_JNI_READ_STRING(ans.hr.lexicon, lexicon, hr_config_cls,
                               hr_config);
 

@@ -41,15 +41,9 @@ void CallPhonemizeEspeak(const std::string &text,
 class KokoroMultiLangLexicon::Impl {
  public:
   Impl(const std::string &tokens, const std::string &lexicon,
-       const std::string &dict_dir, const std::string &data_dir,
+       const std::string &data_dir,
        const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
     InitTokens(tokens);
 
     InitLexicon(lexicon);
@@ -59,16 +53,9 @@ class KokoroMultiLangLexicon::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &tokens, const std::string &lexicon,
-       const std::string &dict_dir, const std::string &data_dir,
+       const std::string &data_dir,
        const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
-
     InitTokens(mgr, tokens);
 
     InitLexicon(mgr, lexicon);
@@ -610,18 +597,18 @@ KokoroMultiLangLexicon::~KokoroMultiLangLexicon() = default;
 
 KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     const std::string &tokens, const std::string &lexicon,
-    const std::string &dict_dir, const std::string &data_dir,
-    const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
-    : impl_(std::make_unique<Impl>(tokens, lexicon, dict_dir, data_dir,
-                                   meta_data, debug)) {}
+    const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
+    bool debug)
+    : impl_(std::make_unique<Impl>(tokens, lexicon, data_dir, meta_data,
+                                   debug)) {}
 
 template <typename Manager>
 KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     Manager *mgr, const std::string &tokens, const std::string &lexicon,
-    const std::string &dict_dir, const std::string &data_dir,
-    const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
-    : impl_(std::make_unique<Impl>(mgr, tokens, lexicon, dict_dir, data_dir,
-                                   meta_data, debug)) {}
+    const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
+    bool debug)
+    : impl_(std::make_unique<Impl>(mgr, tokens, lexicon, data_dir, meta_data,
+                                   debug)) {}
 
 std::vector<TokenIDs> KokoroMultiLangLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
@@ -631,16 +618,15 @@ std::vector<TokenIDs> KokoroMultiLangLexicon::ConvertTextToTokenIds(
 #if __ANDROID_API__ >= 9
 template KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     AAssetManager *mgr, const std::string &tokens, const std::string &lexicon,
-    const std::string &dict_dir, const std::string &data_dir,
-    const OfflineTtsKokoroModelMetaData &meta_data, bool debug);
+    const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
+    bool debug);
 #endif
 
 #if __OHOS__
 template KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     NativeResourceManager *mgr, const std::string &tokens,
-    const std::string &lexicon, const std::string &dict_dir,
-    const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
-    bool debug);
+    const std::string &lexicon, const std::string &data_dir,
+    const OfflineTtsKokoroModelMetaData &meta_data, bool debug);
 #endif
 
 }  // namespace sherpa_onnx

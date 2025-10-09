@@ -112,7 +112,6 @@ object TtsEngine {
         // modelDir = "vits-zh-hf-fanchen-C"
         // modelName = "vits-zh-hf-fanchen-C.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-zh-hf-fanchen-C/dict"
         // lang = "zho"
 
         // Example 5:
@@ -128,7 +127,6 @@ object TtsEngine {
         // modelDir = "vits-melo-tts-zh_en"
         // modelName = "model.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-melo-tts-zh_en/dict"
         // lang = "zho"
         // lang2 = "eng"
 
@@ -139,7 +137,6 @@ object TtsEngine {
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "matcha-icefall-zh-baker/dict"
         // lang = "zho"
 
         // Example 8
@@ -165,7 +162,6 @@ object TtsEngine {
         // modelName = "model.onnx"
         // voices = "voices.bin"
         // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
-        // dictDir = "kokoro-multi-lang-v1_0/dict"
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // lang = "eng"
         // lang2 = "zho"
@@ -197,14 +193,6 @@ object TtsEngine {
         if (dataDir != null) {
             val newDir = copyDataDir(context, dataDir!!)
             dataDir = "$newDir/$dataDir"
-        }
-
-        if (dictDir != null) {
-            val newDir = copyDataDir(context, dictDir!!)
-            dictDir = "$newDir/$dictDir"
-            if (ruleFsts == null) {
-                ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
-            }
         }
 
         val config = getOfflineTtsConfig(

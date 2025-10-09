@@ -13,8 +13,8 @@
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/character-lexicon.h"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/melo-tts-lexicon.h"
@@ -345,12 +345,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if (meta_data.jieba && meta_data.is_melo_tts) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      frontend_ = std::make_unique<JiebaLexicon>(
+          model_->GetMetaData(), config_.model.debug);
+    } else if (meta_data.jieba) {
+      frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, config_.model.debug);
+          config_.model.debug);
     } else if (meta_data.is_melo_tts && meta_data.language == "English") {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
@@ -378,34 +377,21 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();
 
-    if (meta_data.jieba && config_.model.vits.dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Please provide --vits-dict-dir for Chinese TTS models using jieba");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (!meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Current model is not using jieba but you provided --vits-dict-dir");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           config_.model.vits.tokens, meta_data);
     } else if (meta_data.jieba && meta_data.is_melo_tts) {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
+          model_->GetMetaData(), config_.model.debug);
     } else if (meta_data.is_melo_tts && meta_data.language == "English") {
       frontend_ = std::make_unique<MeloTtsLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
           model_->GetMetaData(), config_.model.debug);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      frontend_ = std::make_unique<JiebaLexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, config_.model.debug);
+    } else if (meta_data.jieba) {
+      frontend_ = std::make_unique<CharacterLexicon>(config_.model.vits.lexicon,
+                                                     config_.model.vits.tokens,
+                                                     config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {

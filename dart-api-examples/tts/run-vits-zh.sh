@@ -20,7 +20,6 @@ dart run \
   --model ./sherpa-onnx-vits-zh-ll/model.onnx \
   --lexicon ./sherpa-onnx-vits-zh-ll/lexicon.txt \
   --tokens ./sherpa-onnx-vits-zh-ll/tokens.txt \
-  --dict-dir ./sherpa-onnx-vits-zh-ll/dict \
   --sid 2 \
   --speed 1.0 \
   --text '当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。' \
@@ -31,7 +30,6 @@ dart run \
   --model ./sherpa-onnx-vits-zh-ll/model.onnx \
   --lexicon ./sherpa-onnx-vits-zh-ll/lexicon.txt \
   --tokens ./sherpa-onnx-vits-zh-ll/tokens.txt \
-  --dict-dir ./sherpa-onnx-vits-zh-ll/dict \
   --rule-fsts "./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/number.fst" \
   --sid 3 \
   --speed 1.0 \

@@ -123,7 +123,6 @@ std::string OfflineTtsKokoroModelConfig::ToString() const {
   os << "tokens=\"" << tokens << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
-  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "length_scale=" << length_scale << ", ";
   os << "lang=\"" << lang << "\")";
 

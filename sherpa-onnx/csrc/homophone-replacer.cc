@@ -43,7 +43,7 @@ void HomophoneReplacerConfig::Register(ParseOptions *po) {
 bool HomophoneReplacerConfig::Validate() const {
   if (!dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
-        "From sherpa-onnx v1.12.15, you don't need to provide dict dir for "
+        "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
         "this model. Ignore it");
   }
 
@@ -76,7 +76,6 @@ std::string HomophoneReplacerConfig::ToString() const {
   std::ostringstream os;
 
   os << "HomophoneReplacerConfig(";
-  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "rule_fsts=\"" << rule_fsts << "\")";
 

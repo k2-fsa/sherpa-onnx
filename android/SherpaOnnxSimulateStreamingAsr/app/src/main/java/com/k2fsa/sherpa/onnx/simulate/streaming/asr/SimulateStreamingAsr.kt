@@ -49,7 +49,6 @@ object SimulateStreamingAsr {
                 // dict and lexicon.txt can be shared by different apps
                 //
                 // replace.fst is specific for an app
-                dictDir = "dict",
                 lexicon = "lexicon.txt",
                 ruleFsts = "replace.fst",
             )
@@ -67,11 +66,6 @@ object SimulateStreamingAsr {
             }
 
             if (useHr) {
-                if (hr.dictDir.isNotEmpty() && hr.dictDir.first() != '/') {
-                    // We need to copy it from the assets directory to some path
-                    val newDir = copyDataDir(hr.dictDir, application)
-                    hr.dictDir = "$newDir/${hr.dictDir}"
-                }
                 config.hr = hr
             }
 
@@ -97,54 +91,5 @@ object SimulateStreamingAsr {
             config = config!!,
         )
         Log.i(TAG, "sherpa-onnx vad initialized")
-    }
-
-    private fun copyDataDir(dataDir: String, application: Application): String {
-        Log.i(TAG, "data dir is $dataDir")
-        copyAssets(dataDir, application)
-
-        val newDataDir = application.getExternalFilesDir(null)!!.absolutePath
-        Log.i(TAG, "newDataDir: $newDataDir")
-        return newDataDir
-    }
-
-    private fun copyAssets(path: String, application: Application) {
-        val assets: Array<String>?
-        try {
-            assets = application.assets.list(path)
-            if (assets!!.isEmpty()) {
-                copyFile(path, application)
-            } else {
-                val fullPath = "${application.getExternalFilesDir(null)}/$path"
-                val dir = File(fullPath)
-                dir.mkdirs()
-                for (asset in assets.iterator()) {
-                    val p: String = if (path == "") "" else "$path/"
-                    copyAssets(p + asset, application)
-                }
-            }
-        } catch (ex: IOException) {
-            Log.e(TAG, "Failed to copy $path. $ex")
-        }
-    }
-
-    private fun copyFile(filename: String, application: Application) {
-        try {
-            val istream = application.assets.open(filename)
-            val newFilename = application.getExternalFilesDir(null).toString() + "/" + filename
-            val ostream = FileOutputStream(newFilename)
-            // Log.i(TAG, "Copying $filename to $newFilename")
-            val buffer = ByteArray(1024)
-            var read = 0
-            while (read != -1) {
-                ostream.write(buffer, 0, read)
-                read = istream.read(buffer)
-            }
-            istream.close()
-            ostream.flush()
-            ostream.close()
-        } catch (ex: Exception) {
-            Log.e(TAG, "Failed to copy $filename, $ex")
-        }
     }
 }

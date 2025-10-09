@@ -11,7 +11,7 @@ export class OfflineTtsVitsModelConfig {
   public lexicon: string = '';
   public tokens: string = '';
   public dataDir: string = '';
-  public dictDir: String = '';
+  public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
   public noiseScaleW: number = 0.8;
   public lengthScale: number = 1.0;
@@ -23,7 +23,7 @@ export class OfflineTtsMatchaModelConfig {
   public lexicon: string = '';
   public tokens: string = '';
   public dataDir: string = '';
-  public dictDir: String = '';
+  public dictDir: String = '';  // unused
   public noiseScale: number = 0.667;
   public lengthScale: number = 1.0;
 }
@@ -34,7 +34,7 @@ export class OfflineTtsKokoroModelConfig {
   public tokens: string = '';
   public dataDir: string = '';
   public lengthScale: number = 1.0;
-  public dictDir: string = '';
+  public dictDir: string = '';  // unused
   public lexicon: string = '';
   public lang: string = '';
 }

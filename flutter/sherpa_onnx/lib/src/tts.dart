@@ -33,7 +33,7 @@ class OfflineTtsVitsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsVitsModelConfig(model: $model, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, noiseScaleW: $noiseScaleW, lengthScale: $lengthScale, dictDir: $dictDir)';
+    return 'OfflineTtsVitsModelConfig(model: $model, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, noiseScaleW: $noiseScaleW, lengthScale: $lengthScale)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -54,7 +54,7 @@ class OfflineTtsVitsModelConfig {
   final double noiseScale;
   final double noiseScaleW;
   final double lengthScale;
-  final String dictDir;
+  final String dictDir; // unused
 }
 
 class OfflineTtsMatchaModelConfig {
@@ -84,7 +84,7 @@ class OfflineTtsMatchaModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsMatchaModelConfig(acousticModel: $acousticModel, vocoder: $vocoder, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, lengthScale: $lengthScale, dictDir: $dictDir)';
+    return 'OfflineTtsMatchaModelConfig(acousticModel: $acousticModel, vocoder: $vocoder, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, lengthScale: $lengthScale)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -105,7 +105,7 @@ class OfflineTtsMatchaModelConfig {
   final String dataDir;
   final double noiseScale;
   final double lengthScale;
-  final String dictDir;
+  final String dictDir; // unused
 }
 
 class OfflineTtsKokoroModelConfig {
@@ -135,7 +135,7 @@ class OfflineTtsKokoroModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon, lang: $lang)';
+    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, lexicon: $lexicon, lang: $lang)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -154,7 +154,7 @@ class OfflineTtsKokoroModelConfig {
   final String tokens;
   final String dataDir;
   final double lengthScale;
-  final String dictDir;
+  final String dictDir; // unused
   final String lexicon;
   final String lang;
 }
@@ -315,7 +315,6 @@ class OfflineTts {
     c.ref.model.vits.noiseScale = config.model.vits.noiseScale;
     c.ref.model.vits.noiseScaleW = config.model.vits.noiseScaleW;
     c.ref.model.vits.lengthScale = config.model.vits.lengthScale;
-    c.ref.model.vits.dictDir = config.model.vits.dictDir.toNativeUtf8();
 
     c.ref.model.matcha.acousticModel =
         config.model.matcha.acousticModel.toNativeUtf8();
@@ -325,14 +324,12 @@ class OfflineTts {
     c.ref.model.matcha.dataDir = config.model.matcha.dataDir.toNativeUtf8();
     c.ref.model.matcha.noiseScale = config.model.matcha.noiseScale;
     c.ref.model.matcha.lengthScale = config.model.matcha.lengthScale;
-    c.ref.model.matcha.dictDir = config.model.matcha.dictDir.toNativeUtf8();
 
     c.ref.model.kokoro.model = config.model.kokoro.model.toNativeUtf8();
     c.ref.model.kokoro.voices = config.model.kokoro.voices.toNativeUtf8();
     c.ref.model.kokoro.tokens = config.model.kokoro.tokens.toNativeUtf8();
     c.ref.model.kokoro.dataDir = config.model.kokoro.dataDir.toNativeUtf8();
     c.ref.model.kokoro.lengthScale = config.model.kokoro.lengthScale;
-    c.ref.model.kokoro.dictDir = config.model.kokoro.dictDir.toNativeUtf8();
     c.ref.model.kokoro.lexicon = config.model.kokoro.lexicon.toNativeUtf8();
     c.ref.model.kokoro.lang = config.model.kokoro.lang.toNativeUtf8();
 
@@ -372,20 +369,17 @@ class OfflineTts {
 
     calloc.free(c.ref.model.kokoro.lang);
     calloc.free(c.ref.model.kokoro.lexicon);
-    calloc.free(c.ref.model.kokoro.dictDir);
     calloc.free(c.ref.model.kokoro.dataDir);
     calloc.free(c.ref.model.kokoro.tokens);
     calloc.free(c.ref.model.kokoro.voices);
     calloc.free(c.ref.model.kokoro.model);
 
-    calloc.free(c.ref.model.matcha.dictDir);
     calloc.free(c.ref.model.matcha.dataDir);
     calloc.free(c.ref.model.matcha.tokens);
     calloc.free(c.ref.model.matcha.lexicon);
     calloc.free(c.ref.model.matcha.vocoder);
     calloc.free(c.ref.model.matcha.acousticModel);
 
-    calloc.free(c.ref.model.vits.dictDir);
     calloc.free(c.ref.model.vits.dataDir);
     calloc.free(c.ref.model.vits.tokens);
     calloc.free(c.ref.model.vits.lexicon);

@@ -20,7 +20,6 @@ dotnet run \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
-  --dict-dir=./matcha-icefall-zh-baker/dict \
   --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --debug=1 \
   --output-filename=./matcha-zh.wav \

@@ -744,7 +744,6 @@ class OfflineRecognizer {
 
     c.ref.blankPenalty = config.blankPenalty;
 
-    c.ref.hr.dictDir = config.hr.dictDir.toNativeUtf8();
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
@@ -752,7 +751,6 @@ class OfflineRecognizer {
   }
 
   static void freeConfig(Pointer<SherpaOnnxOfflineRecognizerConfig> c) {
-    calloc.free(c.ref.hr.dictDir);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);

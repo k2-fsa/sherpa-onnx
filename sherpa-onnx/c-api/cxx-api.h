@@ -67,7 +67,7 @@ struct OnlineCtcFstDecoderConfig {
 };
 
 struct HomophoneReplacerConfig {
-  std::string dict_dir;
+  std::string dict_dir;  // unused
   std::string lexicon;
   std::string rule_fsts;
 };
@@ -381,7 +381,7 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
 
   float noise_scale = 0.667;
   float noise_scale_w = 0.8;
@@ -394,7 +394,7 @@ struct OfflineTtsMatchaModelConfig {
   std::string lexicon;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
 
   float noise_scale = 0.667;
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
@@ -405,7 +405,7 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
   std::string lexicon;
   std::string lang;
 

@@ -68,7 +68,8 @@ class IsolateTts {
     port.listen((msg) async {
       if (msg is SendPort) {
         print(11);
-        _ttsManager = _TtsManager(receivePort: port, isolate: isolate, isolatePort: msg);
+        _ttsManager =
+            _TtsManager(receivePort: port, isolate: isolate, isolatePort: msg);
         return;
       }
     });
@@ -76,7 +77,8 @@ class IsolateTts {
 
   static Future<void> _isolateEntry(_IsolateTask task) async {
     if (task.rootIsolateToken != null) {
-      BackgroundIsolateBinaryMessenger.ensureInitialized(task.rootIsolateToken!);
+      BackgroundIsolateBinaryMessenger.ensureInitialized(
+          task.rootIsolateToken!);
     }
     MediaKit.ensureInitialized();
     _player = Player();
@@ -90,7 +92,6 @@ class IsolateTts {
     String ruleFars = '';
     String lexicon = '';
     String dataDir = '';
-    String dictDir = '';
 
     // Example 7
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -98,10 +99,10 @@ class IsolateTts {
     modelDir = 'vits-melo-tts-zh_en';
     modelName = 'model.onnx';
     lexicon = 'lexicon.txt';
-    dictDir = 'vits-melo-tts-zh_en/dict';
 
     if (modelName == '') {
-      throw Exception('You are supposed to select a model by changing the code before you run the app');
+      throw Exception(
+          'You are supposed to select a model by changing the code before you run the app');
     }
 
     final Directory directory = await getApplicationSupportDirectory();
@@ -133,10 +134,6 @@ class IsolateTts {
       dataDir = p.join(directory.path, dataDir);
     }
 
-    if (dictDir != '') {
-      dictDir = p.join(directory.path, dictDir);
-    }
-
     final tokens = p.join(directory.path, modelDir, 'tokens.txt');
 
     final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
@@ -144,7 +141,6 @@ class IsolateTts {
       lexicon: lexicon,
       tokens: tokens,
       dataDir: dataDir,
-      dictDir: dictDir,
     );
 
     final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
@@ -170,8 +166,12 @@ class IsolateTts {
               _PortModel _v = msg;
               final stopwatch = Stopwatch();
               stopwatch.start();
-              final audio = _tts.generate(text: _v.data['text'], sid: _v.data['sid'], speed: _v.data['speed']);
-              final suffix = '-sid-${_v.data['sid']}-speed-${_v.data['sid'].toStringAsPrecision(2)}';
+              final audio = _tts.generate(
+                  text: _v.data['text'],
+                  sid: _v.data['sid'],
+                  speed: _v.data['speed']);
+              final suffix =
+                  '-sid-${_v.data['sid']}-speed-${_v.data['sid'].toStringAsPrecision(2)}';
               final filename = await generateWaveFilename(suffix);
 
               final ok = sherpa_onnx.writeWave(
@@ -184,7 +184,8 @@ class IsolateTts {
                 stopwatch.stop();
                 double elapsed = stopwatch.elapsed.inMilliseconds.toDouble();
 
-                double waveDuration = audio.samples.length.toDouble() / audio.sampleRate.toDouble();
+                double waveDuration = audio.samples.length.toDouble() /
+                    audio.sampleRate.toDouble();
 
                 print('Saved to\n$filename\n'
                     'Elapsed: ${(elapsed / 1000).toStringAsPrecision(4)} s\n'
@@ -203,7 +204,8 @@ class IsolateTts {
     _tts = sherpa_onnx.OfflineTts(config);
   }
 
-  static Future<void> generate({required String text, int sid = 0, double speed = 1.0}) async {
+  static Future<void> generate(
+      {required String text, int sid = 0, double speed = 1.0}) async {
     ReceivePort receivePort = ReceivePort();
     _sendPort.send(_PortModel(
       method: 'generate',

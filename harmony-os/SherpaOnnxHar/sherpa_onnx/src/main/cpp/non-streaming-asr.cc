@@ -349,7 +349,6 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.hotwords_file);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
-  SHERPA_ONNX_DELETE_C_STR(c.hr.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
 }

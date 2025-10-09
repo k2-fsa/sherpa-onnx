@@ -22,8 +22,6 @@ void main(List<String> arguments) async {
     ..addOption('use-itn',
         help: 'true to use inverse text normalization', defaultsTo: 'false')
     ..addOption('input-wav', help: 'Path to input.wav to transcribe')
-    ..addOption('hr-dict-dir',
-        help: 'Path to jieba dict for homophone replacer')
     ..addOption('hr-lexicon',
         help: 'Path to lexicon.txt for homophone replacer')
     ..addOption('hr-rule-fsts',
@@ -32,7 +30,6 @@ void main(List<String> arguments) async {
   final res = parser.parse(arguments);
   if (res['model'] == null ||
       res['tokens'] == null ||
-      res['hr-dict-dir'] == null ||
       res['hr-lexicon'] == null ||
       res['hr-rule-fsts'] == null ||
       res['input-wav'] == null) {
@@ -45,7 +42,6 @@ void main(List<String> arguments) async {
   final inputWav = res['input-wav'] as String;
   final language = res['language'] as String;
   final useItn = (res['use-itn'] as String).toLowerCase() == 'true';
-  final hrDictDir = res['hr-dict-dir'] as String;
   final hrLexicon = res['hr-lexicon'] as String;
   final hrRuleFsts = res['hr-rule-fsts'] as String;
 
@@ -60,7 +56,7 @@ void main(List<String> arguments) async {
   );
 
   final hr = sherpa_onnx.HomophoneReplacerConfig(
-      dictDir: hrDictDir, lexicon: hrLexicon, ruleFsts: hrRuleFsts);
+      lexicon: hrLexicon, ruleFsts: hrRuleFsts);
 
   final config =
       sherpa_onnx.OfflineRecognizerConfig(model: modelConfig, hr: hr);

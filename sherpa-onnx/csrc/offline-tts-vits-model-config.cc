@@ -80,7 +80,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
 
   if (!dict_dir.empty()) {
     SHERPA_ONNX_LOGE(
-        "From sherpa-onnx v1.12.15, you don't need to provide dict dir for "
+        "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
         "this model. Ignore it");
   }
 
@@ -95,7 +95,6 @@ std::string OfflineTtsVitsModelConfig::ToString() const {
   os << "lexicon=\"" << lexicon << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
-  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "noise_scale=" << noise_scale << ", ";
   os << "noise_scale_w=" << noise_scale_w << ", ";
   os << "length_scale=" << length_scale << ")";
