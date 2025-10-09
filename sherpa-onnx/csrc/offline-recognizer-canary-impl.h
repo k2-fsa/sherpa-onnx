@@ -76,7 +76,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
                      View(&enc_states), View(&enc_mask));
     }
 
-    auto [max_token_id, confidence] = GetMaxTokenIdWithConfidence(&logits);
+    std::vector<float> full_vocab_probs;
+    auto [max_token_id, confidence] =
+        GetMaxTokenIdWithConfidence(&logits, &full_vocab_probs);
 
     int32_t eos = symbol_table_["<|endoftext|>"];
 
@@ -167,7 +169,8 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   }
 
   std::pair<int32_t, float> GetMaxTokenIdWithConfidence(
-      Ort::Value *logits) const {
+      Ort::Value *logits,
+      std::vector<float> *full_distribution = nullptr) const {
     // logits is of shape (1, 1, vocab_size)
     auto meta = model_->GetModelMetadata();
     const float *p_logits = logits->GetTensorData<float>();
@@ -181,6 +184,14 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       sum_exp += std::exp(p_logits[i] - max_logit);
     }
     float log_sum = max_logit + std::log(sum_exp);
+
+    // Store full distribution if requested
+    if (full_distribution != nullptr) {
+      full_distribution->resize(meta.vocab_size);
+      for (int32_t i = 0; i < meta.vocab_size; ++i) {
+        (*full_distribution)[i] = p_logits[i] - log_sum;
+      }
+    }
 
     // Find the max token and its log probability
     int32_t max_token_id = 0;

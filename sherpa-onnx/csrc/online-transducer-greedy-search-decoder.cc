@@ -155,6 +155,10 @@ void OnlineTransducerGreedySearchDecoder::Decode(
                                            // now it contains normalized
                                            // probability
         r.ys_probs.push_back(p_logprob[y]);
+
+        // Store full vocabulary distribution
+        std::vector<float> full_vocab_probs(p_logprob, p_logprob + vocab_size);
+        r.vocab_log_probs.push_back(std::move(full_vocab_probs));
       }
     }
     if (emitted) {

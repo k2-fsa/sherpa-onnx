@@ -37,5 +37,40 @@ class OnlineStream {
     SherpaOnnxBindings.onlineStreamInputFinished?.call(ptr);
   }
 
+  Map<String, List<double>>? getVocabLogProbs() {
+    final getFunc = SherpaOnnxBindings.getOnlineStreamVocabLogProbs;
+    final destroyFunc = SherpaOnnxBindings.destroyVocabLogProbs;
+
+    if (getFunc == null || destroyFunc == null) {
+      return null;
+    }
+
+    final ptr = getFunc(this.ptr);
+    if (ptr == nullptr) {
+      return null;
+    }
+
+    final vocabLogProbs = ptr.ref;
+    final numTokens = vocabLogProbs.numTokens;
+    final vocabSize = vocabLogProbs.vocabSize;
+
+    final Map<String, List<double>> result = {};
+
+    for (int tokenIdx = 0; tokenIdx < numTokens; tokenIdx++) {
+      final List<double> tokenProbs = [];
+
+      for (int vocabIdx = 0; vocabIdx < vocabSize; vocabIdx++) {
+        final index = tokenIdx * vocabSize + vocabIdx;
+        final logProb = vocabLogProbs.logProbs[index];
+        tokenProbs.add(logProb);
+      }
+
+      result['token_$tokenIdx'] = tokenProbs;
+    }
+
+    destroyFunc(ptr);
+    return result;
+  }
+
   Pointer<SherpaOnnxOnlineStream> ptr;
 }

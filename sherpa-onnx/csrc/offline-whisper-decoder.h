@@ -19,6 +19,8 @@ struct OfflineWhisperDecoderResult {
   /// The log probabilities for each token
   std::vector<float> token_log_probs;
   std::string lang;
+  /// Full vocabulary log probabilities at each token position
+  std::vector<std::vector<float>> vocab_log_probs;
 };
 
 class OfflineWhisperDecoder {

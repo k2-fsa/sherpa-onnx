@@ -39,6 +39,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
 
   std::vector<int32_t> tokens;
   std::vector<float> token_log_probs;
+  std::vector<std::vector<float>> vocab_log_probs;  // ADD THIS
 
   std::array<int64_t, 2> token_shape = {1, 1};
   int64_t seq_len_shape = 1;
@@ -85,6 +86,13 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
     }
     tokens.push_back(max_token_id);
     token_log_probs.push_back(max_log_prob);
+    
+    // Store full vocabulary distribution (already log-softmaxed)
+    std::vector<float> full_vocab_probs(vocab_size);
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      full_vocab_probs[j] = p[j] - log_sum;
+    }
+    vocab_log_probs.push_back(std::move(full_vocab_probs));
 
     seq_len += 1;
 
@@ -108,6 +116,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   OfflineMoonshineDecoderResult ans;
   ans.tokens = std::move(tokens);
   ans.token_log_probs = std::move(token_log_probs);
+  ans.vocab_log_probs = std::move(vocab_log_probs);  // ADD THIS
 
   return {ans};
 }

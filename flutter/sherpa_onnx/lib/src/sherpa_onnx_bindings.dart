@@ -650,6 +650,17 @@ final class SherpaOnnxSpokenLanguageIdentificationResult extends Struct {
   external Pointer<Utf8> lang;
 }
 
+final class SherpaOnnxVocabLogProbs extends Struct {
+  // Flattened 2D array
+  external Pointer<Float> logProbs;
+
+  @Int32()
+  external int numTokens;
+
+  @Int32()
+  external int vocabSize;
+}
+
 final class SherpaOnnxSpokenLanguageIdentification extends Opaque {}
 
 final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
@@ -1392,6 +1403,20 @@ typedef SherpaOnnxGetGitSha1 = SherpaOnnxGetGitSha1Native;
 typedef SherpaOnnxGetGitDateNative = Pointer<Utf8> Function();
 typedef SherpaOnnxGetGitDate = SherpaOnnxGetGitDateNative;
 
+typedef SherpaOnnxOnlineStreamGetVocabLogProbsNative
+    = Pointer<SherpaOnnxVocabLogProbs> Function(
+        Pointer<SherpaOnnxOnlineStream> stream);
+
+typedef SherpaOnnxOfflineStreamGetVocabLogProbsNative
+    = Pointer<SherpaOnnxVocabLogProbs> Function(
+        Pointer<SherpaOnnxOfflineStream> stream);
+
+typedef SherpaOnnxDestroyVocabLogProbsNative = Void Function(
+    Pointer<SherpaOnnxVocabLogProbs> logProbs);
+
+typedef SherpaOnnxDestroyVocabLogProbsDart = void Function(
+    Pointer<SherpaOnnxVocabLogProbs>);
+
 class SherpaOnnxBindings {
   static SherpaOnnxCreateOfflineSpeechDenoiser?
       sherpaOnnxCreateOfflineSpeechDenoiser;
@@ -1616,6 +1641,12 @@ class SherpaOnnxBindings {
   static SherpaOnnxGetVersionStr? getVersionStr;
   static SherpaOnnxGetGitSha1? getGitSha1;
   static SherpaOnnxGetGitDate? getGitDate;
+
+  static SherpaOnnxOnlineStreamGetVocabLogProbsNative?
+      getOnlineStreamVocabLogProbs;
+  static SherpaOnnxOfflineStreamGetVocabLogProbsNative?
+      getOfflineStreamVocabLogProbs;
+  static SherpaOnnxDestroyVocabLogProbsDart? destroyVocabLogProbs;
 
   static void init(DynamicLibrary dynamicLibrary) {
     sherpaOnnxCreateOfflineSpeechDenoiser ??= dynamicLibrary
@@ -2263,5 +2294,23 @@ class SherpaOnnxBindings {
         .lookup<NativeFunction<SherpaOnnxGetGitDateNative>>(
             'SherpaOnnxGetGitDate')
         .asFunction();
+
+    getOnlineStreamVocabLogProbs = dynamicLibrary.lookupFunction<
+        SherpaOnnxOnlineStreamGetVocabLogProbsNative,
+        SherpaOnnxOnlineStreamGetVocabLogProbsNative>(
+      'SherpaOnnxOnlineStreamGetVocabLogProbs',
+    );
+
+    getOfflineStreamVocabLogProbs = dynamicLibrary.lookupFunction<
+        SherpaOnnxOfflineStreamGetVocabLogProbsNative,
+        SherpaOnnxOfflineStreamGetVocabLogProbsNative>(
+      'SherpaOnnxOfflineStreamGetVocabLogProbs',
+    );
+
+    destroyVocabLogProbs = dynamicLibrary.lookupFunction<
+        SherpaOnnxDestroyVocabLogProbsNative,
+        SherpaOnnxDestroyVocabLogProbsDart>(
+      'SherpaOnnxDestroyVocabLogProbs',
+    );
   }
 }
