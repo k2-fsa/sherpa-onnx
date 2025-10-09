@@ -179,7 +179,7 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config, bool *ok) {
   ans.model_config =
       GetOnlineModelConfig(env, model_config_cls, model_config, ok);
 
-  if (!ok) {
+  if (!*ok) {
     return ans;
   }
 

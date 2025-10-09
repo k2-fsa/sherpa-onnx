@@ -58,12 +58,12 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config,
   ans.model_config =
       GetOnlineModelConfig(env, model_config_cls, model_config, ok);
 
-  if (!ok) {
+  if (!*ok) {
     return ans;
   }
 
   // *ok = false;
-  // If there are more fields, rememeber to set *ok to false
+  // If there are more fields, remember to set *ok to false
 
   return ans;
 }

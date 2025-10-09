@@ -93,6 +93,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_newFromFile(JNIEnv *env,
 
         if (!config.Validate()) {
           SHERPA_ONNX_LOGE("Errors found in config!");
+          return 0;
         }
 
         auto speech_denoiser = new sherpa_onnx::OfflineSpeechDenoiser(config);
