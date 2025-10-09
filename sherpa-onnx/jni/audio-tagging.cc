@@ -9,7 +9,8 @@
 
 namespace sherpa_onnx {
 
-static AudioTaggingConfig GetAudioTaggingConfig(JNIEnv *env, jobject config) {
+static AudioTaggingConfig GetAudioTaggingConfig(JNIEnv *env, jobject config,
+                                                bool *ok) {
   AudioTaggingConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -40,6 +41,7 @@ static AudioTaggingConfig GetAudioTaggingConfig(JNIEnv *env, jobject config) {
 
   SHERPA_ONNX_JNI_READ_INT(ans.top_k, topK, cls, config);
 
+  *ok = true;
   return ans;
 }
 
@@ -56,7 +58,14 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_newFromAsset(
   }
 #endif
 
-  auto config = sherpa_onnx::GetAudioTaggingConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetAudioTaggingConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("audio tagging newFromAsset config:\n%s",
                    config.ToString().c_str());
 
@@ -72,7 +81,15 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_newFromAsset(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetAudioTaggingConfig(env, _config);
+  bool ok = false;
+
+  auto config = sherpa_onnx::GetAudioTaggingConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("audio tagging newFromFile config:\n%s",
                    config.ToString().c_str());
 

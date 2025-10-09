@@ -11,129 +11,85 @@
 namespace sherpa_onnx {
 
 OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
-                                       jobject model_config) {
+                                       jobject model_config, bool *ok) {
   OnlineModelConfig ans;
-  // transducer
+
   auto fid =
       env->GetFieldID(model_config_cls, "transducer",
                       "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
   jobject transducer_config = env->GetObjectField(model_config, fid);
   jclass transducer_config_cls = env->GetObjectClass(transducer_config);
 
-  fid = env->GetFieldID(transducer_config_cls, "encoder", "Ljava/lang/String;");
-  auto s = (jstring)env->GetObjectField(transducer_config, fid);
-  auto p = env->GetStringUTFChars(s, nullptr);
-  ans.transducer.encoder = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.encoder, encoder,
+                              transducer_config_cls, transducer_config);
 
-  fid = env->GetFieldID(transducer_config_cls, "decoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.transducer.decoder = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.decoder, decoder,
+                              transducer_config_cls, transducer_config);
 
-  fid = env->GetFieldID(transducer_config_cls, "joiner", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.transducer.joiner = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.joiner, joiner,
+                              transducer_config_cls, transducer_config);
 
-  // paraformer
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OnlineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);
   jclass paraformer_config_cls = env->GetObjectClass(paraformer_config);
 
-  fid = env->GetFieldID(paraformer_config_cls, "encoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(paraformer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.paraformer.encoder = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.paraformer.encoder, encoder,
+                              paraformer_config_cls, paraformer_config);
 
-  fid = env->GetFieldID(paraformer_config_cls, "decoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(paraformer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.paraformer.decoder = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.paraformer.decoder, decoder,
+                              paraformer_config_cls, paraformer_config);
 
-  // streaming zipformer2 CTC
   fid =
       env->GetFieldID(model_config_cls, "zipformer2Ctc",
                       "Lcom/k2fsa/sherpa/onnx/OnlineZipformer2CtcModelConfig;");
   jobject zipformer2_ctc_config = env->GetObjectField(model_config, fid);
   jclass zipformer2_ctc_config_cls = env->GetObjectClass(zipformer2_ctc_config);
 
-  fid =
-      env->GetFieldID(zipformer2_ctc_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(zipformer2_ctc_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.zipformer2_ctc.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.zipformer2_ctc.model, model,
+                              zipformer2_ctc_config_cls, zipformer2_ctc_config);
 
-  // streaming NeMo CTC
   fid = env->GetFieldID(model_config_cls, "neMoCtc",
                         "Lcom/k2fsa/sherpa/onnx/OnlineNeMoCtcModelConfig;");
   jobject nemo_ctc_config = env->GetObjectField(model_config, fid);
   jclass nemo_ctc_config_cls = env->GetObjectClass(nemo_ctc_config);
 
-  fid = env->GetFieldID(nemo_ctc_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(nemo_ctc_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.nemo_ctc.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.nemo_ctc.model, model, nemo_ctc_config_cls,
+                              nemo_ctc_config);
 
-  // streaming T-one CTC
   fid = env->GetFieldID(model_config_cls, "toneCtc",
                         "Lcom/k2fsa/sherpa/onnx/OnlineToneCtcModelConfig;");
   jobject t_one_ctc_config = env->GetObjectField(model_config, fid);
   jclass t_one_ctc_config_cls = env->GetObjectClass(t_one_ctc_config);
 
-  fid = env->GetFieldID(t_one_ctc_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(t_one_ctc_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.t_one_ctc.model = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.t_one_ctc.model, model, t_one_ctc_config_cls,
+                              t_one_ctc_config);
 
-  fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.tokens, tokens, model_config_cls,
+                              model_config);
 
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.num_threads = env->GetIntField(model_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.num_threads, numThreads, model_config_cls,
+                           model_config);
 
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.debug = env->GetBooleanField(model_config, fid);
+  SHERPA_ONNX_JNI_READ_BOOL(ans.debug, debug, model_config_cls, model_config);
 
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.provider_config.provider = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.provider_config.provider, provider,
+                              model_config_cls, model_config);
 
-  fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_type = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_type, modelType, model_config_cls,
+                              model_config);
 
-  fid = env->GetFieldID(model_config_cls, "modelingUnit", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.modeling_unit = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.modeling_unit, modelingUnit, model_config_cls,
+                              model_config);
 
-  fid = env->GetFieldID(model_config_cls, "bpeVocab", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.bpe_vocab = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.bpe_vocab, bpeVocab, model_config_cls,
+                              model_config);
 
+  *ok = true;
   return ans;
 }
 
-static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
+static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config, bool *ok) {
   OnlineRecognizerConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -142,60 +98,35 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   // https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
   // https://courses.cs.washington.edu/courses/cse341/99wi/java/tutorial/native1.1/implementing/field.html
 
-  //---------- decoding ----------
-  fid = env->GetFieldID(cls, "decodingMethod", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.decoding_method = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.decoding_method, decodingMethod, cls, config);
 
-  fid = env->GetFieldID(cls, "maxActivePaths", "I");
-  ans.max_active_paths = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.max_active_paths, maxActivePaths, cls, config);
 
-  fid = env->GetFieldID(cls, "hotwordsFile", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.hotwords_file = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.hotwords_file, hotwordsFile, cls, config);
 
-  fid = env->GetFieldID(cls, "hotwordsScore", "F");
-  ans.hotwords_score = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.hotwords_score, hotwordsScore, cls, config);
 
-  fid = env->GetFieldID(cls, "ruleFsts", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.rule_fsts = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.rule_fsts, ruleFsts, cls, config);
 
-  fid = env->GetFieldID(cls, "ruleFars", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.rule_fars = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.rule_fars, ruleFars, cls, config);
 
-  fid = env->GetFieldID(cls, "blankPenalty", "F");
-  ans.blank_penalty = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.blank_penalty, blankPenalty, cls, config);
 
-  //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
   jobject feat_config = env->GetObjectField(config, fid);
   jclass feat_config_cls = env->GetObjectClass(feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "sampleRate", "I");
-  ans.feat_config.sampling_rate = env->GetIntField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.feat_config.sampling_rate, sampleRate,
+                           feat_config_cls, feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
-  ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.feat_config.feature_dim, featureDim,
+                           feat_config_cls, feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "dither", "F");
-  ans.feat_config.dither = env->GetFloatField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.feat_config.dither, dither, feat_config_cls,
+                             feat_config);
 
-  //---------- enable endpoint ----------
-  fid = env->GetFieldID(cls, "enableEndpoint", "Z");
-  ans.enable_endpoint = env->GetBooleanField(config, fid);
-
-  //---------- endpoint_config ----------
+  SHERPA_ONNX_JNI_READ_BOOL(ans.enable_endpoint, enableEndpoint, cls, config);
 
   fid = env->GetFieldID(cls, "endpointConfig",
                         "Lcom/k2fsa/sherpa/onnx/EndpointConfig;");
@@ -245,7 +176,14 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
 
-  ans.model_config = GetOnlineModelConfig(env, model_config_cls, model_config);
+  ans.model_config =
+      GetOnlineModelConfig(env, model_config_cls, model_config, ok);
+
+  if (!ok) {
+    return ans;
+  }
+
+  *ok = false;
 
   //---------- rnn lm model config ----------
   fid = env->GetFieldID(cls, "lmConfig",
@@ -253,14 +191,10 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   jobject lm_model_config = env->GetObjectField(config, fid);
   jclass lm_model_config_cls = env->GetObjectClass(lm_model_config);
 
-  fid = env->GetFieldID(lm_model_config_cls, "model", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(lm_model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.lm_config.model = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(lm_model_config_cls, "scale", "F");
-  ans.lm_config.scale = env->GetFloatField(lm_model_config, fid);
+  SHERPA_ONNX_JNI_READ_STRING(ans.lm_config.model, model, lm_model_config_cls,
+                              lm_model_config);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.lm_config.scale, scale, lm_model_config_cls,
+                             lm_model_config);
 
   fid = env->GetFieldID(cls, "ctcFstDecoderConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineCtcFstDecoderConfig;");
@@ -268,42 +202,30 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   jobject fst_decoder_config = env->GetObjectField(config, fid);
   jclass fst_decoder_config_cls = env->GetObjectClass(fst_decoder_config);
 
-  fid = env->GetFieldID(fst_decoder_config_cls, "graph", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(fst_decoder_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.ctc_fst_decoder_config.graph = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.ctc_fst_decoder_config.graph, graph,
+                              fst_decoder_config_cls, fst_decoder_config);
 
-  fid = env->GetFieldID(fst_decoder_config_cls, "maxActive", "I");
-  ans.ctc_fst_decoder_config.max_active =
-      env->GetIntField(fst_decoder_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.ctc_fst_decoder_config.max_active, maxActive,
+                           fst_decoder_config_cls, fst_decoder_config);
 
-  // homophone replacer config
   fid = env->GetFieldID(cls, "hr",
                         "Lcom/k2fsa/sherpa/onnx/HomophoneReplacerConfig;");
   jobject hr_config = env->GetObjectField(config, fid);
   jclass hr_config_cls = env->GetObjectClass(hr_config);
 
-  fid = env->GetFieldID(hr_config_cls, "dictDir", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(hr_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.hr.dict_dir = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.hr.dict_dir, dictDir, hr_config_cls,
+                              hr_config);
 
-  fid = env->GetFieldID(hr_config_cls, "lexicon", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(hr_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.hr.lexicon = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.hr.lexicon, lexicon, hr_config_cls,
+                              hr_config);
 
-  fid = env->GetFieldID(hr_config_cls, "ruleFsts", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(hr_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.hr.rule_fsts = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.hr.rule_fsts, ruleFsts, hr_config_cls,
+                              hr_config);
 
+  *ok = true;
   return ans;
 }
+
 }  // namespace sherpa_onnx
 
 SHERPA_ONNX_EXTERN_C
@@ -319,7 +241,14 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
   for (const auto &s : str_vec) {
     SHERPA_ONNX_LOGE("%s", s.c_str());
@@ -337,7 +266,13 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
 
   auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
   for (const auto &s : str_vec) {
