@@ -406,6 +406,10 @@ See also <https://github.com/Mentra-Community/MentraOS/pull/861>
 
 It uses Swift for iOS and Java for Android.
 
+### [flet_sherpa_onnx](https://github.com/SamYuan1990/flet_sherpa_onnx)
+Flet ASR/STT component basing on sherpa onnx.
+Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
