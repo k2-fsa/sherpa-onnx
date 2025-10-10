@@ -218,7 +218,7 @@ jobs:
         run: |
           ls -lh *.tar.bz2
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
           path: ./*.tar.bz2
@@ -248,7 +248,7 @@ jobs:
           git diff .
 
       - name: Retrieve artifact from ubuntu-latest
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
           path: /tmp/files/
