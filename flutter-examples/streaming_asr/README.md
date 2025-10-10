@@ -4,15 +4,9 @@ This APP supports the following platforms:
 
   - Windows
   - macOS
+  - Linux
   - Android
   - iOS
-
-Note that it does not support Linux since we are using
-the package [record](https://pub.dev/packages/record), which does not
-support streaming recording on Linux.
-
-If you can find a recording package
-that works on Linux, please let us know and we will update this app to support Linux.
 
 See also <https://github.com/Jason-chen-coder/Flutter-EasySpeechRecognition>
 

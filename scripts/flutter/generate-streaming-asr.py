@@ -178,6 +178,7 @@ def main():
         "./build-macos-streaming-asr.sh",
         "./build-linux-streaming-asr.sh",
         "./build-windows-streaming-asr.sh",
+        "./build-android-streaming-asr.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()

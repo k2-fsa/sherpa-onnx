@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - flutter
-      # - fix-flutter-asr-example
+      - fix-flutter-asr-example
 
   workflow_dispatch:
 
-# concurrency:
-  # group: flutter-linux-${{ github.ref }}
-  # cancel-in-progress: true
+concurrency:
+  group: flutter-linux-${{ github.ref }}
+  cancel-in-progress: true
 
 # See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044
 # and
@@ -66,6 +66,21 @@ jobs:
         shell: bash
         run: |
           uname -a
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Install libgtk-3-dev
+        shell: bash
+        run: |
+          sudo apt install -y libgtk-3-dev tree clang pkg-config
 
       - name: Display flutter info
         shell: bash
