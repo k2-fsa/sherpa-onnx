@@ -364,7 +364,7 @@ function initSherpaOnnxHomophoneReplacerConfig(config, Module) {
   const len = 3 * 4;
   const ptr = Module._malloc(len);
 
-  dictDir = ''
+  const dictDir = '';
 
   const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
