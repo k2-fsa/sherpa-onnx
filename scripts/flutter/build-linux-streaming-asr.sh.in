@@ -60,8 +60,8 @@ sed -i.bak "s/final type = .*;$/final type = $type;/g" ./lib/streaming_asr.dart
 git diff .
 
 flutter pub get
-flutter upgrade
-flutter pub upgrade
+# flutter upgrade
+# flutter pub upgrade
 
 export FLUTTER_XCODE_ARCHS=$arch
 log "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
