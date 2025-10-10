@@ -369,7 +369,6 @@ python3 ./python-api-examples/offline-tts.py \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
   --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
-  --kokoro-dict-dir=./kokoro-multi-lang-v1_0/dict \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --num-threads=2 \
   --sid=18 \
@@ -431,7 +430,6 @@ python3 ./python-api-examples/offline-tts.py \
  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
  --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
- --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
  --output-filename=./tts/test-matcha-baker-zh.wav \
  "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 

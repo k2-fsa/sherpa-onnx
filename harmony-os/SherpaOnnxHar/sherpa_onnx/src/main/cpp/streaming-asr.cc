@@ -189,7 +189,6 @@ SherpaOnnxHomophoneReplacerConfig GetHomophoneReplacerConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("hr").As<Napi::Object>();
 
-  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
 
@@ -298,7 +297,6 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   SHERPA_ONNX_DELETE_C_STR(c.hotwords_buf);
   SHERPA_ONNX_DELETE_C_STR(c.ctc_fst_decoder_config.graph);
 
-  SHERPA_ONNX_DELETE_C_STR(c.hr.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
 

@@ -13,7 +13,6 @@ public class NonStreamingTtsMatchaZh {
     String vocoder = "./vocos-22khz-univ.onnx";
     String tokens = "./matcha-icefall-zh-baker/tokens.txt";
     String lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
-    String dictDir = "./matcha-icefall-zh-baker/dict";
     String ruleFsts =
         "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst";
     String text =
@@ -28,7 +27,6 @@ public class NonStreamingTtsMatchaZh {
             .setVocoder(vocoder)
             .setTokens(tokens)
             .setLexicon(lexicon)
-            .setDictDir(dictDir)
             .build();
 
     OfflineTtsModelConfig modelConfig =

@@ -48,7 +48,6 @@ def create_recognizer():
             use_itn=True,
             debug=True,
             hr_lexicon="./lexicon.txt",
-            hr_dict_dir="./dict",
             hr_rule_fsts="./replace.fst",
         ),
         test_wav,

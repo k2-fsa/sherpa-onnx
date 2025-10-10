@@ -416,7 +416,6 @@ class OnlineRecognizer {
 
     c.ref.blankPenalty = config.blankPenalty;
 
-    c.ref.hr.dictDir = config.hr.dictDir.toNativeUtf8();
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
@@ -431,7 +430,6 @@ class OnlineRecognizer {
           "Failed to create online recognizer. Please check your config");
     }
 
-    calloc.free(c.ref.hr.dictDir);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);

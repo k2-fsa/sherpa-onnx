@@ -364,7 +364,9 @@ function initSherpaOnnxHomophoneReplacerConfig(config, Module) {
   const len = 3 * 4;
   const ptr = Module._malloc(len);
 
-  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+  const dictDir = '';
+
+  const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
 
@@ -372,7 +374,7 @@ function initSherpaOnnxHomophoneReplacerConfig(config, Module) {
 
   const buffer = Module._malloc(bufferLen);
   let offset = 0
-  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  Module.stringToUTF8(dictDir, buffer + offset, dictDirLen);
   offset += dictDirLen;
 
   Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
@@ -426,7 +428,6 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
 
   if (!('hr' in config)) {
     config.hr = {
-      dictDir: '',
       lexicon: '',
       ruleFsts: '',
     };
@@ -1247,7 +1248,6 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
 
   if (!('hr' in config)) {
     config.hr = {
-      dictDir: '',
       lexicon: '',
       ruleFsts: '',
     };

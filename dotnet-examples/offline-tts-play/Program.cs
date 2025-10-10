@@ -27,9 +27,6 @@ class OfflineTtsPlayDemo
     [Option("tts-rule-fars", Required = false, Default = "", HelpText = "path to rule.far")]
     public string RuleFars { get; set; } = string.Empty;
 
-    [Option("dict-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for jieba.")]
-    public string DictDir { get; set; } = string.Empty;
-
     [Option("data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
     public string DataDir { get; set; } = string.Empty;
 
@@ -99,7 +96,6 @@ dotnet run \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
-  --dict-dir=./matcha-icefall-zh-baker/dict \
   --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --debug=1 \
   --output-filename=./matcha-zh.wav \
@@ -173,7 +169,6 @@ to download more models.
     config.Model.Vits.Lexicon = options.Lexicon;
     config.Model.Vits.Tokens = options.Tokens;
     config.Model.Vits.DataDir = options.DataDir;
-    config.Model.Vits.DictDir = options.DictDir;
     config.Model.Vits.NoiseScale = options.NoiseScale;
     config.Model.Vits.NoiseScaleW = options.NoiseScaleW;
     config.Model.Vits.LengthScale = options.LengthScale;
@@ -183,7 +178,6 @@ to download more models.
     config.Model.Matcha.Lexicon = options.Lexicon;
     config.Model.Matcha.Tokens = options.Tokens;
     config.Model.Matcha.DataDir = options.DataDir;
-    config.Model.Matcha.DictDir = options.DictDir;
     config.Model.Matcha.NoiseScale = options.NoiseScale;
     config.Model.Matcha.LengthScale = options.LengthScale;
 

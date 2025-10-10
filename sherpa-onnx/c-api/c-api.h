@@ -150,7 +150,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineCtcFstDecoderConfig {
 } SherpaOnnxOnlineCtcFstDecoderConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxHomophoneReplacerConfig {
-  const char *dict_dir;
+  const char *dict_dir;  // unused
   const char *lexicon;
   const char *rule_fsts;
 } SherpaOnnxHomophoneReplacerConfig;
@@ -1019,8 +1019,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
 
   float noise_scale;
   float noise_scale_w;
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
 } SherpaOnnxOfflineTtsVitsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
@@ -1031,8 +1031,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
   const char *data_dir;
 
   float noise_scale;
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
 } SherpaOnnxOfflineTtsMatchaModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
@@ -1041,8 +1041,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
   const char *tokens;
   const char *data_dir;
 
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
   const char *lexicon;
   const char *lang;
 } SherpaOnnxOfflineTtsKokoroModelConfig;

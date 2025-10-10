@@ -13,7 +13,7 @@
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
-#include "sherpa-onnx/csrc/jieba-lexicon.h"
+#include "sherpa-onnx/csrc/character-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/melo-tts-lexicon.h"
@@ -140,8 +140,8 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           tn_list_.push_back(
               std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
         }  // for (; !reader->Done(); reader->Next())
-      }  // for (const auto &f : files)
-    }  // if (!config.rule_fars.empty())
+      }    // for (const auto &f : files)
+    }      // if (!config.rule_fars.empty())
   }
 
   int32_t SampleRate() const override {
@@ -321,15 +321,12 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     // for piper phonemizer
     // we require that you copy espeak_ng_data
     // from assets to disk
-    //
-    // for jieba
-    // we require that you copy dict from assets to disk
     const auto &meta_data = model_->GetMetaData();
 
     if (meta_data.jieba && !meta_data.has_espeak) {
-      frontend_ = std::make_unique<JiebaLexicon>(
+      frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
-          config_.model.matcha.dict_dir, config_.model.debug);
+          config_.model.debug);
     } else if (meta_data.has_espeak && !meta_data.jieba) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.matcha.tokens, config_.model.matcha.data_dir,
@@ -344,9 +341,9 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     const auto &meta_data = model_->GetMetaData();
 
     if (meta_data.jieba && !meta_data.has_espeak) {
-      frontend_ = std::make_unique<JiebaLexicon>(
+      frontend_ = std::make_unique<CharacterLexicon>(
           config_.model.matcha.lexicon, config_.model.matcha.tokens,
-          config_.model.matcha.dict_dir, config_.model.debug);
+          config_.model.debug);
     } else if (meta_data.has_espeak && !meta_data.jieba) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.matcha.tokens, config_.model.matcha.data_dir,

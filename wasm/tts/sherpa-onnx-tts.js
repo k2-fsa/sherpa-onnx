@@ -29,7 +29,8 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
-  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+  const dictDir = ''
+  const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
 
   const n = modelLen + lexiconLen + tokensLen + dataDirLen + dictDirLen;
 
@@ -51,7 +52,7 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
   offset += dataDirLen;
 
-  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  Module.stringToUTF8(dictDir, buffer + offset, dictDirLen);
   offset += dictDirLen;
 
   offset = 0;
@@ -84,7 +85,9 @@ function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
-  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+
+  const dictDir = '';
+  const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
 
   const n = acousticModelLen + vocoderLen + lexiconLen + tokensLen +
       dataDirLen + dictDirLen;
@@ -111,7 +114,7 @@ function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
   offset += dataDirLen;
 
-  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  Module.stringToUTF8(dictDir, buffer + offset, dictDirLen);
   offset += dictDirLen;
 
   offset = 0;
@@ -145,7 +148,8 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   const voicesLen = Module.lengthBytesUTF8(config.voices) + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
-  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+  const dictDir = '';
+  const dictDirLen = Module.lengthBytesUTF8(dictDir) + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const langLen = Module.lengthBytesUTF8(config.lang || '') + 1;
 
@@ -170,7 +174,7 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
   offset += dataDirLen;
 
-  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  Module.stringToUTF8(dictDir, buffer + offset, dictDirLen);
   offset += dictDirLen;
 
   Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
@@ -264,7 +268,6 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       noiseScaleW: 0.8,
       lengthScale: 1.0,
       dataDir: '',
-      dictDir: '',
     };
   }
 
@@ -277,7 +280,6 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       noiseScale: 0.667,
       lengthScale: 1.0,
       dataDir: '',
-      dictDir: '',
     };
   }
 
@@ -288,7 +290,6 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       tokens: '',
       lengthScale: 1.0,
       dataDir: '',
-      dictDir: '',
       lexicon: '',
       lang: '',
     };
@@ -454,7 +455,6 @@ function createOfflineTts(Module, myConfig) {
     lexicon: '',
     tokens: './tokens.txt',
     dataDir: './espeak-ng-data',
-    dictDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
@@ -466,7 +466,6 @@ function createOfflineTts(Module, myConfig) {
     lexicon: '',
     tokens: '',
     dataDir: '',
-    dictDir: '',
     noiseScale: 0.667,
     lengthScale: 1.0,
   };
@@ -477,7 +476,6 @@ function createOfflineTts(Module, myConfig) {
     tokens: '',
     dataDir: '',
     lengthScale: 1.0,
-    dictDir: '',
     lexicon: '',
     lang: '',
   };

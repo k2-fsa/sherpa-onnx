@@ -22,7 +22,6 @@ set(sources
   fst-utils.cc
   homophone-replacer.cc
   hypothesis.cc
-  jieba.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
   lodr-fst.cc
@@ -189,8 +188,8 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    character-lexicon.cc
     hifigan-vocoder.cc
-    jieba-lexicon.cc
     kokoro-multi-lang-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
@@ -313,7 +312,6 @@ if(SHERPA_ONNX_ENABLE_TTS)
     cppinyin_core
     piper_phonemize)
 endif()
-target_link_libraries(sherpa-onnx-core cppjieba)
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -678,7 +676,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
-      cppjieba-test.cc
       offline-tts-zipvoice-frontend-test.cc
       piper-phonemize-test.cc
     )

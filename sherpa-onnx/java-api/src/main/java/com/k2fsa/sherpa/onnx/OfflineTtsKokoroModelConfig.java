@@ -8,7 +8,7 @@ public class OfflineTtsKokoroModelConfig {
     private final String lexicon;
     private final String lang;
     private final String dataDir;
-    private final String dictDir;
+    private final String dictDir;  // unused
     private final float lengthScale;
 
     private OfflineTtsKokoroModelConfig(Builder builder) {

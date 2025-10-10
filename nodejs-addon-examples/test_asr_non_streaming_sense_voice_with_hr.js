@@ -38,7 +38,6 @@ const config = {
   'hr': {
     // Please download files from
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
-    'dictDir': './dict',
     'lexicon': './lexicon.txt',
     'ruleFsts': './replace.fst',
   }

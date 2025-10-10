@@ -782,4 +782,21 @@ bool ContainsCJK(const std::u32string &text) {
   return false;
 }
 
+std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                    int32_t end) {
+  std::string ans;
+
+  int32_t ws = words.size();
+
+  if (start >= ws || end >= ws || start < 0 || end < 0) {
+    return ans;
+  }
+
+  for (int32_t i = start; i <= end; ++i) {
+    ans += words[i];
+  }
+
+  return ans;
+}
+
 }  // namespace sherpa_onnx

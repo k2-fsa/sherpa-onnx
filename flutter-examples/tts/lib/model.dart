@@ -29,7 +29,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   String ruleFars = '';
   String lexicon = '';
   String dataDir = '';
-  String dictDir = '';
 
   // You can select an example below and change it accordingly to match your
   // selected tts model
@@ -63,7 +62,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // modelDir = 'vits-zh-hf-fanchen-C';
   // modelName = 'vits-zh-hf-fanchen-C.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'vits-zh-hf-fanchen-C/dict';
 
   // Example 5:
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -83,7 +81,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // modelDir = 'vits-melo-tts-zh_en';
   // modelName = 'model.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'vits-melo-tts-zh_en/dict';
 
   // Example 8
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
@@ -98,7 +95,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // modelName = 'model.onnx';
   // voices = 'voices.bin';
   // dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
-  // dictDir = 'kokoro-multi-lang-v1_0/dict';
   // lexicon = 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt';
 
   // ============================================================
@@ -145,10 +141,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
     dataDir = p.join(directory.path, dataDir);
   }
 
-  if (dictDir != '') {
-    dictDir = p.join(directory.path, dictDir);
-  }
-
   final tokens = p.join(directory.path, modelDir, 'tokens.txt');
   if (voices != '') {
     voices = p.join(directory.path, modelDir, voices);
@@ -164,7 +156,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
       voices: voices,
       tokens: tokens,
       dataDir: dataDir,
-      dictDir: dictDir,
       lexicon: lexicon,
     );
   } else {
@@ -173,7 +164,6 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
       lexicon: lexicon,
       tokens: tokens,
       dataDir: dataDir,
-      dictDir: dictDir,
     );
 
     kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();

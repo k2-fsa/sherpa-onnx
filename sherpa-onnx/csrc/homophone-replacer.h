@@ -13,7 +13,7 @@
 namespace sherpa_onnx {
 
 struct HomophoneReplacerConfig {
-  std::string dict_dir;
+  std::string dict_dir;  // unused
   std::string lexicon;
 
   // comma separated fst files, e.g. a.fst,b.fst,c.fst

@@ -405,8 +405,6 @@ if(SHERPA_ONNX_ENABLE_TTS)
   include(piper-phonemize)
 endif()
 
-include(cppjieba) # It is a header-only C++ library
-
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   include(hclust-cpp)
 endif()

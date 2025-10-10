@@ -14,7 +14,6 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DBUILD_SHARED_LIBS=ON \
-    -DBUILD_SHARED_LIBS=ON \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     ..
@@ -24,7 +23,7 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
   popd
 fi
 
-export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD/../build/lib:$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 
 function testVersion() {

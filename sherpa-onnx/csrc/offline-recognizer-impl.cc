@@ -500,8 +500,7 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
     }
   }
 
-  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
-      !config.hr.rule_fsts.empty()) {
+  if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty()) {
     auto hr_config = config.hr;
     hr_config.debug = config.model_config.debug;
     hr_ = std::make_unique<HomophoneReplacer>(hr_config);
@@ -554,8 +553,7 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
     }    // for (const auto &f : files)
   }      // if (!config.rule_fars.empty())
 
-  if (!config.hr.dict_dir.empty() && !config.hr.lexicon.empty() &&
-      !config.hr.rule_fsts.empty()) {
+  if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty()) {
     auto hr_config = config.hr;
     hr_config.debug = config.model_config.debug;
     hr_ = std::make_unique<HomophoneReplacer>(mgr, hr_config);

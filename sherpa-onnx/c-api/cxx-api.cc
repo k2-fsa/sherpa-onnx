@@ -104,7 +104,6 @@ OnlineRecognizer OnlineRecognizer::Create(
   c.hotwords_buf = config.hotwords_buf.c_str();
   c.hotwords_buf_size = config.hotwords_buf.size();
 
-  c.hr.dict_dir = config.hr.dict_dir.c_str();
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
@@ -281,7 +280,6 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
 
   c.blank_penalty = config.blank_penalty;
 
-  c.hr.dict_dir = config.hr.dict_dir.c_str();
   c.hr.lexicon = config.hr.lexicon.c_str();
   c.hr.rule_fsts = config.hr.rule_fsts.c_str();
 
@@ -387,7 +385,6 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.vits.noise_scale = config.model.vits.noise_scale;
   c.model.vits.noise_scale_w = config.model.vits.noise_scale_w;
   c.model.vits.length_scale = config.model.vits.length_scale;
-  c.model.vits.dict_dir = config.model.vits.dict_dir.c_str();
 
   c.model.matcha.acoustic_model = config.model.matcha.acoustic_model.c_str();
   c.model.matcha.vocoder = config.model.matcha.vocoder.c_str();
@@ -396,14 +393,12 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.matcha.data_dir = config.model.matcha.data_dir.c_str();
   c.model.matcha.noise_scale = config.model.matcha.noise_scale;
   c.model.matcha.length_scale = config.model.matcha.length_scale;
-  c.model.matcha.dict_dir = config.model.matcha.dict_dir.c_str();
 
   c.model.kokoro.model = config.model.kokoro.model.c_str();
   c.model.kokoro.voices = config.model.kokoro.voices.c_str();
   c.model.kokoro.tokens = config.model.kokoro.tokens.c_str();
   c.model.kokoro.data_dir = config.model.kokoro.data_dir.c_str();
   c.model.kokoro.length_scale = config.model.kokoro.length_scale;
-  c.model.kokoro.dict_dir = config.model.kokoro.dict_dir.c_str();
   c.model.kokoro.lexicon = config.model.kokoro.lexicon.c_str();
   c.model.kokoro.lang = config.model.kokoro.lang.c_str();
 

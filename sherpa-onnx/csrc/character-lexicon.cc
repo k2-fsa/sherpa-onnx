@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/jieba-lexicon.cc
+// sherpa-onnx/csrc/character-lexicon.cc
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/jieba-lexicon.h"
+#include "sherpa-onnx/csrc/character-lexicon.h"
 
 #include <algorithm>
 #include <fstream>
@@ -13,6 +13,7 @@
 #include <strstream>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -39,33 +40,10 @@ static bool IsPunct(const std::string &s) {
   return puncts.count(s);
 }
 
-// end is inclusive
-std::string GetWord(const std::vector<std::string> &words, int32_t start,
-                    int32_t end) {
-  std::string ans;
-
-  if (start >= words.size() || end >= words.size()) {
-    return ans;
-  }
-
-  for (int32_t i = start; i <= end; ++i) {
-    ans += words[i];
-  }
-
-  return ans;
-}
-
-class JiebaLexicon::Impl {
+class CharacterLexicon::Impl {
  public:
-  Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir, bool debug)
+  Impl(const std::string &lexicon, const std::string &tokens, bool debug)
       : debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -84,15 +62,8 @@ class JiebaLexicon::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir, bool debug)
+       bool debug)
       : debug_(debug) {
-    if (!dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "From sherpa-onnx v1.12.15, you don't need to provide dict_dir or "
-          "dictDir for this model");
-      SHERPA_ONNX_LOGE("It is ignored if you provide it");
-    }
-
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -391,36 +362,34 @@ class JiebaLexicon::Impl {
   bool debug_ = false;
 };
 
-JiebaLexicon::~JiebaLexicon() = default;
+CharacterLexicon::~CharacterLexicon() = default;
 
-JiebaLexicon::JiebaLexicon(const std::string &lexicon,
-                           const std::string &tokens,
-                           const std::string &dict_dir, bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, debug)) {}
+CharacterLexicon::CharacterLexicon(const std::string &lexicon,
+                                   const std::string &tokens, bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, debug)) {}
 
 template <typename Manager>
-JiebaLexicon::JiebaLexicon(Manager *mgr, const std::string &lexicon,
-                           const std::string &tokens,
-                           const std::string &dict_dir, bool debug)
-    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, dict_dir, debug)) {}
+CharacterLexicon::CharacterLexicon(Manager *mgr, const std::string &lexicon,
+                                   const std::string &tokens, bool debug)
+    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, debug)) {}
 
-std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> CharacterLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
 
 #if __ANDROID_API__ >= 9
-template JiebaLexicon::JiebaLexicon(AAssetManager *mgr,
-                                    const std::string &lexicon,
-                                    const std::string &tokens,
-                                    const std::string &dict_dir, bool debug);
+template CharacterLexicon::CharacterLexicon(AAssetManager *mgr,
+                                            const std::string &lexicon,
+                                            const std::string &tokens,
+                                            bool debug);
 #endif
 
 #if __OHOS__
-template JiebaLexicon::JiebaLexicon(NativeResourceManager *mgr,
-                                    const std::string &lexicon,
-                                    const std::string &tokens,
-                                    const std::string &dict_dir, bool debug);
+template CharacterLexicon::CharacterLexicon(NativeResourceManager *mgr,
+                                            const std::string &lexicon,
+                                            const std::string &tokens,
+                                            bool debug);
 #endif
 
 }  // namespace sherpa_onnx

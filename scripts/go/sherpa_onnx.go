@@ -124,7 +124,7 @@ type OnlineCtcFstDecoderConfig struct {
 }
 
 type HomophoneReplacerConfig struct {
-	DictDir  string
+	DictDir  string // unused
 	Lexicon  string
 	RuleFsts string
 }
@@ -266,9 +266,6 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.ctc_fst_decoder_config.graph = C.CString(config.CtcFstDecoderConfig.Graph)
 	defer C.free(unsafe.Pointer(c.ctc_fst_decoder_config.graph))
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
-
-	c.hr.dict_dir = C.CString(config.Hr.DictDir)
-	defer C.free(unsafe.Pointer(c.hr.dict_dir))
 
 	c.hr.lexicon = C.CString(config.Hr.Lexicon)
 	defer C.free(unsafe.Pointer(c.hr.lexicon))
@@ -617,7 +614,6 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.rule_fsts = C.CString(config.RuleFsts)
 	c.rule_fars = C.CString(config.RuleFars)
 
-	c.hr.dict_dir = C.CString(config.Hr.DictDir)
 	c.hr.lexicon = C.CString(config.Hr.Lexicon)
 	c.hr.rule_fsts = C.CString(config.Hr.RuleFsts)
 	return &c
@@ -789,11 +785,6 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		c.rule_fars = nil
 	}
 
-	if c.hr.dict_dir != nil {
-		C.free(unsafe.Pointer(c.hr.dict_dir))
-		c.hr.dict_dir = nil
-	}
-
 	if c.hr.lexicon != nil {
 		C.free(unsafe.Pointer(c.hr.lexicon))
 		c.hr.lexicon = nil
@@ -923,7 +914,7 @@ type OfflineTtsVitsModelConfig struct {
 	NoiseScale  float32 // noise scale for vits models. Please use 0.667 in general
 	NoiseScaleW float32 // noise scale for vits models. Please use 0.8 in general
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
-	DictDir     string  // Path to dict directory for jieba (used only in Chinese tts)
+	DictDir     string  // unused
 }
 
 type OfflineTtsMatchaModelConfig struct {
@@ -934,7 +925,7 @@ type OfflineTtsMatchaModelConfig struct {
 	DataDir       string  // Path to espeak-ng-data directory
 	NoiseScale    float32 // noise scale for vits models. Please use 0.667 in general
 	LengthScale   float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
-	DictDir       string  // Path to dict directory for jieba (used only in Chinese tts)
+	DictDir       string  // unused
 }
 
 type OfflineTtsKokoroModelConfig struct {
@@ -942,7 +933,7 @@ type OfflineTtsKokoroModelConfig struct {
 	Voices      string  // Path to the voices.bin for kokoro
 	Tokens      string  // Path to tokens.txt
 	DataDir     string  // Path to espeak-ng-data directory
-	DictDir     string  // Path to dict directory
+	DictDir     string  // unused
 	Lexicon     string  // Path to lexicon files
 	Lang        string  // Example: es for Spanish, fr-fr for French. Can be empty
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
@@ -1074,9 +1065,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.vits.noise_scale_w = C.float(config.Model.Vits.NoiseScaleW)
 	c.model.vits.length_scale = C.float(config.Model.Vits.LengthScale)
 
-	c.model.vits.dict_dir = C.CString(config.Model.Vits.DictDir)
-	defer C.free(unsafe.Pointer(c.model.vits.dict_dir))
-
 	// matcha
 	c.model.matcha.acoustic_model = C.CString(config.Model.Matcha.AcousticModel)
 	defer C.free(unsafe.Pointer(c.model.matcha.acoustic_model))
@@ -1096,9 +1084,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.matcha.noise_scale = C.float(config.Model.Matcha.NoiseScale)
 	c.model.matcha.length_scale = C.float(config.Model.Matcha.LengthScale)
 
-	c.model.matcha.dict_dir = C.CString(config.Model.Matcha.DictDir)
-	defer C.free(unsafe.Pointer(c.model.matcha.dict_dir))
-
 	// kokoro
 	c.model.kokoro.model = C.CString(config.Model.Kokoro.Model)
 	defer C.free(unsafe.Pointer(c.model.kokoro.model))
@@ -1111,9 +1096,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.kokoro.data_dir = C.CString(config.Model.Kokoro.DataDir)
 	defer C.free(unsafe.Pointer(c.model.kokoro.data_dir))
-
-	c.model.kokoro.dict_dir = C.CString(config.Model.Kokoro.DictDir)
-	defer C.free(unsafe.Pointer(c.model.kokoro.dict_dir))
 
 	c.model.kokoro.lexicon = C.CString(config.Model.Kokoro.Lexicon)
 	defer C.free(unsafe.Pointer(c.model.kokoro.lexicon))

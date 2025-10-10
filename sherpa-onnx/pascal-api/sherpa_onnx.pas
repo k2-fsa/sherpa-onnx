@@ -1413,8 +1413,8 @@ end;
 
 function TSherpaOnnxHomophoneReplacerConfig.ToString: AnsiString;
 begin
-  Result := Format('TSherpaOnnxHomophoneReplacerConfig(DictDir := %s, Lexicon := %s, RuleFsts := %s)',
-  [Self.DictDir, Self.Lexicon, Self.RuleFsts]);
+  Result := Format('TSherpaOnnxHomophoneReplacerConfig(Lexicon := %s, RuleFsts := %s)',
+  [Self.Lexicon, Self.RuleFsts]);
 end;
 
 function TSherpaOnnxOnlineRecognizerConfig.ToString: AnsiString;
@@ -1518,7 +1518,6 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
-  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
   C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
   C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
@@ -1864,7 +1863,6 @@ begin
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
 
-  C.Hr.DictDir := PAnsiChar(Config.Hr.DictDir);
   C.Hr.Lexicon := PAnsiChar(Config.Hr.Lexicon);
   C.Hr.RuleFsts := PAnsiChar(Config.Hr.RuleFsts);
 
@@ -2299,11 +2297,10 @@ begin
     'DataDir := %s, ' +
     'NoiseScale := %.2f, ' +
     'NoiseScaleW := %.2f, ' +
-    'LengthScale := %.2f, ' +
-    'DictDir := %s' +
+    'LengthScale := %.2f' +
     ')',
     [Self.Model, Self.Lexicon, Self.Tokens, Self.DataDir, Self.NoiseScale,
-     Self.NoiseScaleW, Self.LengthScale, Self.DictDir
+     Self.NoiseScaleW, Self.LengthScale
     ]);
 end;
 
@@ -2323,11 +2320,10 @@ begin
     'Tokens := %s, ' +
     'DataDir := %s, ' +
     'NoiseScale := %.2f, ' +
-    'LengthScale := %.2f, ' +
-    'DictDir := %s' +
+    'LengthScale := %.2f'
     ')',
     [Self.AcousticModel, Self.Vocoder, Self.Lexicon, Self.Tokens,
-     Self.DataDir, Self.NoiseScale, Self.LengthScale, Self.DictDir
+     Self.DataDir, Self.NoiseScale, Self.LengthScale
     ]);
 end;
 
@@ -2345,12 +2341,11 @@ begin
     'Tokens := %s, ' +
     'DataDir := %s, ' +
     'LengthScale := %.2f, ' +
-    'DictDir := %s, ' +
     'Lexicon := %s, ' +
     'Lang := %s' +
     ')',
     [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale,
-     Self.DictDir, Self.Lexicon, Self.Lang]);
+     Self.Lexicon, Self.Lang]);
 end;
 
 class operator TSherpaOnnxOfflineTtsKokoroModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -2431,7 +2426,6 @@ begin
   C.Model.Vits.NoiseScale := Config.Model.Vits.NoiseScale;
   C.Model.Vits.NoiseScaleW := Config.Model.Vits.NoiseScaleW;
   C.Model.Vits.LengthScale := Config.Model.Vits.LengthScale;
-  C.Model.Vits.DictDir := PAnsiChar(Config.Model.Vits.DictDir);
 
   C.Model.Matcha.AcousticModel := PAnsiChar(Config.Model.Matcha.AcousticModel);
   C.Model.Matcha.Vocoder := PAnsiChar(Config.Model.Matcha.Vocoder);
@@ -2440,14 +2434,12 @@ begin
   C.Model.Matcha.DataDir := PAnsiChar(Config.Model.Matcha.DataDir);
   C.Model.Matcha.NoiseScale := Config.Model.Matcha.NoiseScale;
   C.Model.Matcha.LengthScale := Config.Model.Matcha.LengthScale;
-  C.Model.Matcha.DictDir := PAnsiChar(Config.Model.Matcha.DictDir);
 
   C.Model.Kokoro.Model := PAnsiChar(Config.Model.Kokoro.Model);
   C.Model.Kokoro.Voices := PAnsiChar(Config.Model.Kokoro.Voices);
   C.Model.Kokoro.Tokens := PAnsiChar(Config.Model.Kokoro.Tokens);
   C.Model.Kokoro.DataDir := PAnsiChar(Config.Model.Kokoro.DataDir);
   C.Model.Kokoro.LengthScale := Config.Model.Kokoro.LengthScale;
-  C.Model.Kokoro.DictDir := PAnsiChar(Config.Model.Kokoro.DictDir);
   C.Model.Kokoro.Lexicon := PAnsiChar(Config.Model.Kokoro.Lexicon);
   C.Model.Kokoro.Lang := PAnsiChar(Config.Model.Kokoro.Lang);
 

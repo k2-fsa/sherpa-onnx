@@ -164,7 +164,6 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
-  recognizer_config.hr.dict_dir = SHERPA_ONNX_OR(config->hr.dict_dir, "");
   recognizer_config.hr.lexicon = SHERPA_ONNX_OR(config->hr.lexicon, "");
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
@@ -533,7 +532,6 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
-  recognizer_config.hr.dict_dir = SHERPA_ONNX_OR(config->hr.dict_dir, "");
   recognizer_config.hr.lexicon = SHERPA_ONNX_OR(config->hr.lexicon, "");
   recognizer_config.hr.rule_fsts = SHERPA_ONNX_OR(config->hr.rule_fsts, "");
 
@@ -1183,8 +1181,6 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.vits.noise_scale_w, 0.8);
   tts_config.model.vits.length_scale =
       SHERPA_ONNX_OR(config->model.vits.length_scale, 1.0);
-  tts_config.model.vits.dict_dir =
-      SHERPA_ONNX_OR(config->model.vits.dict_dir, "");
 
   // matcha
   tts_config.model.matcha.acoustic_model =
@@ -1201,8 +1197,6 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.matcha.noise_scale, 0.667);
   tts_config.model.matcha.length_scale =
       SHERPA_ONNX_OR(config->model.matcha.length_scale, 1.0);
-  tts_config.model.matcha.dict_dir =
-      SHERPA_ONNX_OR(config->model.matcha.dict_dir, "");
 
   // kokoro
   tts_config.model.kokoro.model =
@@ -1215,8 +1209,6 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.kokoro.data_dir, "");
   tts_config.model.kokoro.length_scale =
       SHERPA_ONNX_OR(config->model.kokoro.length_scale, 1.0);
-  tts_config.model.kokoro.dict_dir =
-      SHERPA_ONNX_OR(config->model.kokoro.dict_dir, "");
   tts_config.model.kokoro.lexicon =
       SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
   tts_config.model.kokoro.lang = SHERPA_ONNX_OR(config->model.kokoro.lang, "");
