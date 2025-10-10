@@ -20,17 +20,15 @@ env:
 
 jobs:
   asr:
-    name: asr ${{ matrix.arch }}/${{ matrix.total }}
+    name: asr ${{ matrix.arch }} ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-        total: ["1"]
-        index: ["0"]
-        # total: ["3"]
-        # index: ["0", "1", "2"]
+        total: ["3"]
+        index: ["0", "1", "2"]
 
 
     steps:
@@ -149,130 +147,34 @@ jobs:
             git add .
             git commit -m "add more files"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+
   tts:
-    if: false
-    name: tts ${{ matrix.index }}/${{ matrix.total }}
+    name: tts ${{ matrix.arch }} ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
-    container: ubuntu:20.04
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        # total: ["20"]
-        # index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
-        total: ["1"]
-        index: ["0"]
+        arch: [x86_64]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
+
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install -y bc curl git
-
       - name: Update version
         shell: bash
         run: |
-          echo "pwd: $PWD"
-          ls -lh
-
-          ./new-release.sh || true
-          git diff . || true
-
-      - name: Show files
-        shell: bash
-        run: |
-          git config --global --add safe.directory /__w/sherpa-onnx/sherpa-onnx
-
-          ls -lha
-
-          git init
-          git add .
-          git config user.name "foo"
-          git config user.email "bar@g.com"
-          git commit -m "test"
-
-      - name: Generate tts script
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
-              uname -a
-              gcc --version
-              cmake --version
-              cat /etc/*release
-              id
-              pwd
-
-              find /opt -name "python*"
-              export PATH=/opt/_internal/cpython-3.8.19/bin:$PATH
-              python3 --version
-              python3 -m pip install --upgrade pip jinja2 iso639-lang
-
-              total=${{ matrix.total }}
-              index=${{ matrix.index }}
-
-              cd /home/runner/work/sherpa-onnx/sherpa-onnx
-              cd scripts/flutter
-              ls -lh
-              echo "---"
-              python3 ./generate-tts.py --total $total --index $index
-              chmod +x *.sh
-              ls -lh
-
-      # Ubuntu 18.04 uses cmake 3.10 by default, but we need cmake >= 3.11
-      - name: Install cmake
-        shell: bash
-        run: |
-          # see https://askubuntu.com/questions/355565/how-do-i-install-the-latest-version-of-cmake-from-the-command-line
-          version=3.28
-          build=1
-          ## don't modify from here
-          limit=3.20
-          result=$(echo "$version >= $limit" | bc -l)
-          os=$([ "$result" == 1 ] && echo "linux" || echo "Linux")
-          mkdir ~/temp
-          cd ~/temp
-          curl -SL -O https://cmake.org/files/v$version/cmake-$version.$build-$os-x86_64.sh
-          mkdir /opt/cmake
-          sh cmake-$version.$build-$os-x86_64.sh --skip-license --prefix=/opt/cmake
-          ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-
-          echo "/opt/cmake/bin" >> $GITHUB_PATH
-
-      - name: Display cmake version
-        shell: bash
-        run: |
-          cmake --version
-          which cmake
-
-      - name: Install deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install -y build-essential jq git python3-pip
-          apt-get install -y curl
-          apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
-
-      - name: Show files
-        shell: bash
-        run: |
-          echo "pwd: $PWD"
-          ls -lh
-          echo "---"
-          ls -lh scripts/flutter
+          ./new-release.sh
+          git diff .
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2 iso639-lang dataclasses
+          python3 -m pip install --break-system-packages --upgrade pip jinja2
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -280,18 +182,6 @@ jobs:
           channel: stable
           version: 3.24.3
           cache: true
-
-      - name: Install ninja
-        shell: bash
-        run: |
-          apt-get install -y ninja-build
-
-      - name: Display ninja version
-        shell: bash
-        run: |
-          ninja --version
-          ninja --help || true
-          which ninja
 
       - name: Display PWD
         shell: bash
@@ -311,20 +201,23 @@ jobs:
           which dart
 
           flutter --version
-
-          git config --global --add safe.directory /__t/flutter-Linux-*/flutter || true
-
-          flutter --version
-
           dart --version
           flutter doctor
 
       - name: Install libgtk-3-dev
         shell: bash
         run: |
-          apt install -y libgtk-3-dev tree clang pkg-config
+          sudo apt install -y libgtk-3-dev tree clang pkg-config
 
-      - name: Display flutter info (2)
+      - name: Install deps
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential jq git python3-pip
+          sudo apt-get install -y curl
+          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
+
+      - name: Display flutter info
         shell: bash
         run: |
           which flutter
@@ -334,11 +227,10 @@ jobs:
           dart --version
           flutter doctor
 
-          cd ..
-
       - name: Build flutter
         shell: bash
         run: |
+          export arch=${{ matrix.arch }}
           cd scripts/flutter
 
           total=${{ matrix.total }}
@@ -355,41 +247,6 @@ jobs:
         shell: bash
         run: |
           ls -lh *.tar.bz2
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
-          path: ./*.tar.bz2
-
-  tts_upload:
-    needs: [tts]
-    name: tts upload ${{ matrix.index }}/${{ matrix.total }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        total: ["20"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
-        # total: ["1"]
-        # index: ["0"]
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update version
-        shell: bash
-        run: |
-          ./new-release.sh
-          git diff .
-
-      - name: Retrieve artifact from ubuntu-latest
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
-          path: /tmp/files/
 
       - name: Publish to huggingface
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
@@ -416,9 +273,11 @@ jobs:
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
+
             dst=flutter/tts/linux/$SHERPA_ONNX_VERSION
             mkdir -p $dst
-            cp -v /tmp/files/*.tar.bz2 $dst
+
+            cp -v ../*.tar.bz2 $dst
 
             git status
             git lfs track "*.bz2"
