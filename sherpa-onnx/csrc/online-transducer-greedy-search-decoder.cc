@@ -138,12 +138,8 @@ void OnlineTransducerGreedySearchDecoder::Decode(
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);
         r.num_trailing_blanks = 0;
-      } else {
-        ++r.num_trailing_blanks;
-      }
 
-      // export the per-token log scores
-      if (y != 0 && y != unk_id_) {
+        // export the per-token log scores
         // apply temperature-scaling
         for (int32_t n = 0; n < vocab_size; ++n) {
           p_logit[n] /= temperature_scale_;
@@ -159,6 +155,8 @@ void OnlineTransducerGreedySearchDecoder::Decode(
         // Store full vocabulary distribution
         std::vector<float> full_vocab_probs(p_logprob, p_logprob + vocab_size);
         r.vocab_log_probs.push_back(std::move(full_vocab_probs));
+      } else {
+        ++r.num_trailing_blanks;
       }
     }
     if (emitted) {

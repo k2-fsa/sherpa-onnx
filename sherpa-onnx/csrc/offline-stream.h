@@ -48,6 +48,7 @@ struct OfflineRecognitionResult {
 
   /// Token-level probabilities
   std::vector<float> token_log_probs;
+  std::vector<std::vector<float>> vocab_log_probs;
 };
 
 struct WhisperTag {
