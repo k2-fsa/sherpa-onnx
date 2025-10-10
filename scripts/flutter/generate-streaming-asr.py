@@ -176,6 +176,7 @@ def main():
 
     filename_list = [
         "./build-macos-streaming-asr.sh",
+        "./build-linux-streaming-asr.sh",
         "./build-windows-streaming-asr.sh",
     ]
     for filename in filename_list:

@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SHERPA_ONNX_DIR=$(cd $SCRIPT_DIR/../.. && pwd)
+log "SCRIPT_DIR: $SCRIPT_DIR"
+log "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+log "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
+
+if [ -z $arch ]; then
+  arch=x86_64
+fi
+
+log "arch: $arch"
+
+{% for model in model_list %}
+pushd $SHERPA_ONNX_DIR/flutter-examples/streaming_asr/
+
+model_name={{ model.model_name }}
+lang={{ model.lang }}
+type={{ model.idx }}
+short_name={{ model.short_name }}
+
+rm -rf assets
+mkdir assets
+
+pushd assets
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+
+{{ model.cmd }}
+
+rm -rf  *.tar.bz2
+ls -lh $model_name
+
+ls -lh
+ls -lh *
+
+popd
+
+git checkout ./
+sed -i.bak "s|   - assets/$|   - assets/\n    - assets/$model_name/|g" ./pubspec.yaml
+
+sed -i.bak "s/final type = .*;$/final type = $type;/g" ./lib/streaming_asr.dart
+
+{% if model.rule_fsts %}
+  rule_fsts={{ model.rule_fsts }}
+  sed -i.bak "s|ruleFsts: ''|ruleFsts: await copyAssetFile(\'assets/$rule_fsts\')|g"  ./lib/streaming_asr.dart
+{% endif %}
+
+git diff .
+
+flutter pub get
+
+export FLUTTER_XCODE_ARCHS=$arch
+log "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
+
+flutter build linux
+
+pushd build/linux/x64/release/
+
+ls -lh
+echo "----"
+ls -lh bundle
+
+echo "----"
+ls -lh bundle/lib
+
+echo "----"
+ls -lh bundle/data
+echo "======"
+ls -lh bundle/data/flutter_assets
+
+
+echo "----"
+file bundle/streaming_asr
+
+echo "----"
+readelf -d bundle/streaming_asr
+
+echo "----"
+ldd bundle/streaming_asr
+
+app=sherpa-onnx-$SHERPA_ONNX_VERSION-linux-$arch-$lang-streaming_asr
+app=sherpa-onnx-$SHERPA_ONNX_VERSION-linux-$arch-asr-$lang-$short_name
+
+mv bundle $app
+tar cjf $app.tar.bz2 $app
+rm -rf $app
+mv $app.tar.bz2 $SHERPA_ONNX_DIR
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
+
+popd
+
+popd
+
+{% endfor %}
