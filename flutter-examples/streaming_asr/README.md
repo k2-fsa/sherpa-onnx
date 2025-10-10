@@ -8,6 +8,8 @@ This APP supports the following platforms:
   - Android
   - iOS
 
+Pre-built APPs for this folder can be found at <https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr>
+
 See also <https://github.com/Jason-chen-coder/Flutter-EasySpeechRecognition>
 
 ## Getting Started

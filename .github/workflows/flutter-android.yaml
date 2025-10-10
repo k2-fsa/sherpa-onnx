@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - flutter
-      - fix-flutter-asr-example
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 

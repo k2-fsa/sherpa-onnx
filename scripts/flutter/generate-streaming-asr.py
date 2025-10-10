@@ -51,7 +51,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20",
             idx=0,
             lang="bilingual_zh_en",
-            short_name="zipformer",
+            short_name="zipformer_2023_02_20",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
@@ -78,7 +78,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-en-2023-06-26",
             idx=1,
             lang="en",
-            short_name="zipformer2",
+            short_name="zipformer2_2023_06_26",
             cmd="""
             pushd $model_name
             rm -fv encoder-epoch-99-avg-1-chunk-16-left-128.onnx
@@ -98,7 +98,7 @@ def get_models():
             model_name="icefall-asr-zipformer-streaming-wenetspeech-20230615",
             idx=2,
             lang="zh",
-            short_name="zipformer2",
+            short_name="zipformer2_wenetspeech_2023_06_15",
             rule_fsts="itn_zh_number.fst",
             cmd="""
             if [ ! -f itn_zh_number.fst ]; then
@@ -124,7 +124,7 @@ def get_models():
             model_name="sherpa-onnx-streaming-zipformer-fr-2023-04-14",
             idx=3,
             lang="fr",
-            short_name="zipformer",
+            short_name="zipformer_2023_04_14",
             cmd="""
             pushd $model_name
             rm -fv encoder-epoch-29-avg-9-with-averaged-model.onnx
