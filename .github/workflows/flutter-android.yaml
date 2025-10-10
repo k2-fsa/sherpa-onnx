@@ -30,6 +30,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Check Java version
+        run: |
+          java -version
+          echo $JAVA_HOME
+
+      - name: Set JAVA_HOME for Gradle
+        run: echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+
+      - name: Check Java version
+        run: |
+          java -version
+          echo $JAVA_HOME
+
       - name: Update version
         shell: bash
         run: |
@@ -120,6 +139,13 @@ jobs:
         shell: bash
         run: |
           sudo apt install -y libgtk-3-dev tree clang pkg-config
+
+      - name: Accept Android licenses
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Install Android SDK Components
+        run: |
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Display flutter info (2)
         shell: bash
