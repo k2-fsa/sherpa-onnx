@@ -16,7 +16,7 @@ class PhraseMatcher::Impl {
   Impl(const std::unordered_set<std::string> *lexicon,
        const std::vector<std::string> &words, bool debug,
        int32_t max_search_len)
-      : lexicon_(lexicon), debug_(debug), max_search_len_(max_search_len) {
+      : lexicon_(lexicon), max_search_len_(max_search_len), debug_(debug) {
     if (max_search_len_ < 1) {
       max_search_len_ = 1;
     }
@@ -88,12 +88,16 @@ class PhraseMatcher::Impl {
 
       if (w.empty()) {
         w = words[i];
+
+        if (debug_) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("single word %{public}d-%{public}d: %{public}s", i, i,
-                         w.c_str());
+          SHERPA_ONNX_LOGE("single word %{public}d-%{public}d: %{public}s", i,
+                           i, w.c_str());
 #else
-        SHERPA_ONNX_LOGE("single word %d-%d: %s", i, i, w.c_str());
+          SHERPA_ONNX_LOGE("single word %d-%d: %s", i, i, w.c_str());
 #endif
+        }
+
         i += 1;
       }
 
@@ -102,10 +106,10 @@ class PhraseMatcher::Impl {
   }
 
  private:
-  const std::unordered_set<std::string> *lexicon_;
   std::vector<std::string> phrases_;
-  bool debug_;
+  const std::unordered_set<std::string> *lexicon_;
   int32_t max_search_len_;
+  bool debug_;
 };
 
 PhraseMatcher::PhraseMatcher(const std::unordered_set<std::string> *lexicon,
