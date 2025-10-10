@@ -92,7 +92,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: 3.29.0
           cache: true
 
       - name: Install ninja
@@ -344,7 +344,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: 3.24.3
+          version: 3.29.0
           cache: true
 
       - name: Install ninja
