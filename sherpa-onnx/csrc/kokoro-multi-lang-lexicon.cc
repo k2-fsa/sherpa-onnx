@@ -10,6 +10,7 @@
 #include <string>
 #include <strstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -29,6 +30,7 @@
 #include "phonemize.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/phrase-matcher.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -238,46 +240,9 @@ class KokoroMultiLangLexicon::Impl {
 
     this_sentence.push_back(0);
 
-    int32_t num_words = static_cast<int32_t>(words.size());
-    int32_t max_search_len = 10;
+    PhraseMatcher matcher(&all_words_, words, debug_);
 
-    for (int32_t i = 0; i < num_words;) {
-      int32_t start = i;
-      int32_t end = std::min(i + max_search_len, num_words - 1);
-
-      std::string w;
-      while (end > start) {
-        auto this_word = GetWord(words, start, end);
-        if (debug_) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
-                           this_word.c_str());
-#else
-          SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
-#endif
-        }
-        if (word2ids_.count(this_word)) {
-          i = end + 1;
-          w = std::move(this_word);
-          if (debug_) {
-#if __OHOS__
-            SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s", start,
-                             end, w.c_str());
-#else
-            SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
-#endif
-          }
-          break;
-        }
-
-        end -= 1;
-      }
-
-      if (w.empty()) {
-        w = words[i];
-        i += 1;
-      }
-
+    for (const std::string &w : matcher) {
       auto ids = ConvertWordToIds(w);
       if (ids.empty()) {
 #if __OHOS__
@@ -296,8 +261,7 @@ class KokoroMultiLangLexicon::Impl {
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-
-    }  // for (int32_t i = 0; i < num_words;)
+    }  // for (const std::string &w : matcher)
 
     if (this_sentence.size() > 1) {
       this_sentence.push_back(0);
@@ -576,6 +540,10 @@ class KokoroMultiLangLexicon::Impl {
 
       word2ids_.insert({std::move(word), std::move(ids)});
     }
+
+    for (const auto &[key, _] : word2ids_) {
+      all_words_.insert(key);
+    }
   }
 
  private:
@@ -583,6 +551,7 @@ class KokoroMultiLangLexicon::Impl {
 
   // word to token IDs
   std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
+  std::unordered_set<std::string> all_words_;
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
