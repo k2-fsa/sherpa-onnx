@@ -27,7 +27,6 @@ class OfflineTtsVitsModelConfig {
       noiseScale: (json['noiseScale'] as num?)?.toDouble() ?? 0.667,
       noiseScaleW: (json['noiseScaleW'] as num?)?.toDouble() ?? 0.8,
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
-      dictDir: json['dictDir'] as String? ?? '',
     );
   }
 
@@ -44,7 +43,6 @@ class OfflineTtsVitsModelConfig {
         'noiseScale': noiseScale,
         'noiseScaleW': noiseScaleW,
         'lengthScale': lengthScale,
-        'dictDir': dictDir,
       };
 
   final String model;
@@ -78,7 +76,6 @@ class OfflineTtsMatchaModelConfig {
       dataDir: json['dataDir'] as String? ?? '',
       noiseScale: (json['noiseScale'] as num?)?.toDouble() ?? 0.667,
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
-      dictDir: json['dictDir'] as String? ?? '',
     );
   }
 
@@ -95,7 +92,6 @@ class OfflineTtsMatchaModelConfig {
         'dataDir': dataDir,
         'noiseScale': noiseScale,
         'lengthScale': lengthScale,
-        'dictDir': dictDir,
       };
 
   final String acousticModel;
@@ -127,7 +123,6 @@ class OfflineTtsKokoroModelConfig {
       tokens: json['tokens'] as String? ?? '',
       dataDir: json['dataDir'] as String? ?? '',
       lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
-      dictDir: json['dictDir'] as String? ?? '',
       lexicon: json['lexicon'] as String? ?? '',
       lang: json['lang'] as String? ?? '',
     );
@@ -144,7 +139,6 @@ class OfflineTtsKokoroModelConfig {
         'tokens': tokens,
         'dataDir': dataDir,
         'lengthScale': lengthScale,
-        'dictDir': dictDir,
         'lexicon': lexicon,
         'lang': lang,
       };

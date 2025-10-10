@@ -26,7 +26,6 @@ fun createOfflineRecognizer(): OfflineRecognizer {
       featConfig = getFeatureConfig(sampleRate = 16000, featureDim = 80),
       modelConfig = getOfflineModelConfig(type = 15)!!,
       hr = HomophoneReplacerConfig(
-        dictDir = "./dict",
         lexicon = "./lexicon.txt",
         ruleFsts = "./replace.fst"),
   )

@@ -44,10 +44,10 @@ object SimulateStreamingAsr {
             val useHr = false
             val hr = HomophoneReplacerConfig(
                 // Used only when useHr is true
-                // Please download the following 3 files from
+                // Please download the following 2 files from
                 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
                 //
-                // dict and lexicon.txt can be shared by different apps
+                // lexicon.txt can be shared by different apps
                 //
                 // replace.fst is specific for an app
                 lexicon = "lexicon.txt",

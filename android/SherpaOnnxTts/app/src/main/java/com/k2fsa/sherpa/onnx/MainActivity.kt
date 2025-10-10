@@ -190,7 +190,6 @@ class MainActivity : AppCompatActivity() {
         var ruleFars: String?
         var lexicon: String?
         var dataDir: String?
-        var dictDir: String?
         var assets: AssetManager? = application.assets
         var isKitten = false
 
@@ -217,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         ruleFars = null
         lexicon = null
         dataDir = null
-        dictDir = null
 
         // Example 1:
         // modelDir = "vits-vctk"
@@ -309,7 +307,7 @@ class MainActivity : AppCompatActivity() {
             voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            dictDir = dictDir ?: "",
+            dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,

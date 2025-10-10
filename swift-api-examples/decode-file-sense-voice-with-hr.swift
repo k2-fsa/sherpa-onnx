@@ -33,7 +33,6 @@ func run() {
   )
 
   let hrConfig = sherpaOnnxHomophoneReplacerConfig(
-    dictDir: "./dict",
     lexicon: "./lexicon.txt",
     ruleFsts: "./replace.fst"
   )

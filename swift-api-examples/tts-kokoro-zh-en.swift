@@ -9,14 +9,12 @@ func run() {
   let voices = "./kokoro-multi-lang-v1_0/voices.bin"
   let tokens = "./kokoro-multi-lang-v1_0/tokens.txt"
   let dataDir = "./kokoro-multi-lang-v1_0/espeak-ng-data"
-  let dictDir = "./kokoro-multi-lang-v1_0/dict"
   let lexicon = "./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt"
   let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
     model: model,
     voices: voices,
     tokens: tokens,
     dataDir: dataDir,
-    dictDir: dictDir,
     lexicon: lexicon
   )
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro, debug: 0)

@@ -96,7 +96,6 @@ function initTts(context: Context): OfflineTts {
   let ruleFars = '';
   let lexicon = '';
   let dataDir = '';
-  let dictDir = '';  // unused
   /*
     You can select an example below and change it according to match your
     selected tts model

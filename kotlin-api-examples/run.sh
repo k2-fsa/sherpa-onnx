@@ -23,7 +23,7 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
   popd
 fi
 
-export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD/../build/lib:$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 
 function testVersion() {

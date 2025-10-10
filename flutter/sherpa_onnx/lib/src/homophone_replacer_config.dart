@@ -6,7 +6,6 @@ class HomophoneReplacerConfig {
 
   factory HomophoneReplacerConfig.fromJson(Map<String, dynamic> json) {
     return HomophoneReplacerConfig(
-      dictDir: json['dictDir'] as String? ?? '',
       lexicon: json['lexicon'] as String? ?? '',
       ruleFsts: json['ruleFsts'] as String? ?? '',
     );
@@ -18,7 +17,6 @@ class HomophoneReplacerConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'dictDir': dictDir,
         'lexicon': lexicon,
         'ruleFsts': ruleFsts,
       };

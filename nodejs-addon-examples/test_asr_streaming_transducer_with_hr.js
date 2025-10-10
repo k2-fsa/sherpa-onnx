@@ -24,7 +24,6 @@ const config = {
     'debug': 1,
   },
   'hr': {
-    'dictDir': './dict',
     'lexicon': './lexicon.txt',
     'ruleFsts': './replace.fst',
   },

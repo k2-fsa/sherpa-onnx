@@ -12,7 +12,6 @@ function createOfflineTts() {
         voices: './kokoro-multi-lang-v1_0/voices.bin',
         tokens: './kokoro-multi-lang-v1_0/tokens.txt',
         dataDir: './kokoro-multi-lang-v1_0/espeak-ng-data',
-        dictDir: './kokoro-multi-lang-v1_0/dict',
         lexicon:
             './kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt',
       },

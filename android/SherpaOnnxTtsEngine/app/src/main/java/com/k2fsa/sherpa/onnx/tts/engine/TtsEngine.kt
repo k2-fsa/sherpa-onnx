@@ -51,7 +51,6 @@ object TtsEngine {
     private var ruleFars: String? = null
     private var lexicon: String? = null
     private var dataDir: String? = null
-    private var dictDir: String? = null
     private var assets: AssetManager? = null
     private var isKitten = false
 
@@ -78,7 +77,6 @@ object TtsEngine {
         ruleFars = null
         lexicon = null
         dataDir = null
-        dictDir = null
         lang = null
         lang2 = null
 
@@ -203,7 +201,7 @@ object TtsEngine {
             voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            dictDir = dictDir ?: "",
+            dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,

@@ -171,7 +171,7 @@ class IsolateTts {
                   sid: _v.data['sid'],
                   speed: _v.data['speed']);
               final suffix =
-                  '-sid-${_v.data['sid']}-speed-${_v.data['sid'].toStringAsPrecision(2)}';
+                  '-sid-${_v.data['sid']}-speed-${_v.data['speed'].toStringAsPrecision(2)}';
               final filename = await generateWaveFilename(suffix);
 
               final ok = sherpa_onnx.writeWave(
