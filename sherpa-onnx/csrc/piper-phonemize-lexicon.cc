@@ -151,30 +151,53 @@ static std::vector<int64_t> PiperPhonemesToIdsVits(
   return ans;
 }
 
-static std::vector<int64_t> PiperPhonemesToIdsMatcha(
+static std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<piper::Phoneme> &phonemes, bool use_eos_bos) {
-  std::vector<int64_t> ans;
-  ans.reserve(phonemes.size());
+    const std::vector<piper::Phoneme> &phonemes, bool use_eos_bos,
+    int32_t max_token_len = 400) {
+  // We set max_token_len to 400 here to fix
+  // https://github.com/k2-fsa/sherpa-onnx/issues/2666
+  std::vector<std::vector<int64_t>> ans;
+  std::vector<int64_t> current;
 
   int32_t bos = token2id.at(U'^');
   int32_t eos = token2id.at(U'$');
 
   if (use_eos_bos) {
-    ans.push_back(bos);
+    current.push_back(bos);
   }
 
   for (auto p : phonemes) {
     if (token2id.count(p)) {
-      ans.push_back(token2id.at(p));
+      current.push_back(token2id.at(p));
     } else {
       SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
                        static_cast<uint32_t>(p));
     }
-  }
 
-  if (use_eos_bos) {
-    ans.push_back(eos);
+    if (current.size() > max_token_len + 1) {
+      if (use_eos_bos) {
+        current.push_back(eos);
+      }
+
+      ans.push_back(std::move(current));
+
+      if (use_eos_bos) {
+        current.push_back(bos);
+      }
+    }
+  }  // for (auto p : phonemes)
+
+  if (!current.empty()) {
+    if (use_eos_bos) {
+      if (current.size() > 1) {
+        current.push_back(eos);
+
+        ans.push_back(std::move(current));
+      }
+    } else {
+      ans.push_back(std::move(current));
+    }
   }
 
   return ans;
@@ -449,12 +472,13 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsMatcha(
 
   std::vector<TokenIDs> ans;
 
-  std::vector<int64_t> phoneme_ids;
-
   for (const auto &p : phonemes) {
-    phoneme_ids =
+    auto phoneme_ids =
         PiperPhonemesToIdsMatcha(token2id_, p, matcha_meta_data_.use_eos_bos);
-    ans.emplace_back(std::move(phoneme_ids));
+
+    for (auto &ids : phoneme_ids) {
+      ans.emplace_back(std::move(ids));
+    }
   }
 
   return ans;
