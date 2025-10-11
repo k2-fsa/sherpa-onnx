@@ -920,6 +920,7 @@ func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
   kokoro: SherpaOnnxOfflineTtsKokoroModelConfig = sherpaOnnxOfflineTtsKokoroModelConfig(),
+  zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = SherpaOnnxOfflineTtsZipvoiceModelConfig(),
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu",
@@ -932,7 +933,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     provider: toCPointer(provider),
     matcha: matcha,
     kokoro: kokoro,
-    kitten: kitten
+    kitten: kitten,
+    zipvoice: zipvoice
   )
 }
 
