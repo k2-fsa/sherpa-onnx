@@ -1166,17 +1166,21 @@ struct SherpaOnnxOfflineTts {
   std::unique_ptr<sherpa_onnx::OfflineTts> impl;
 };
 
+// iOS安全指针检查宏：防止FFI传递的无效指针导致崩溃
+// 检查指针是否为null或指向低地址区域（通常是无效指针）
+#define SAFE_SHERPA_ONNX_OR(x, y) ((x && (uintptr_t)(x) >= 0x1000) ? x : y)
+
 static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
     const SherpaOnnxOfflineTtsConfig *config) {
   sherpa_onnx::OfflineTtsConfig tts_config;
 
   // vits
-  tts_config.model.vits.model = SHERPA_ONNX_OR(config->model.vits.model, "");
+  tts_config.model.vits.model = SAFE_SHERPA_ONNX_OR(config->model.vits.model, "");
   tts_config.model.vits.lexicon =
-      SHERPA_ONNX_OR(config->model.vits.lexicon, "");
-  tts_config.model.vits.tokens = SHERPA_ONNX_OR(config->model.vits.tokens, "");
+      SAFE_SHERPA_ONNX_OR(config->model.vits.lexicon, "");
+  tts_config.model.vits.tokens = SAFE_SHERPA_ONNX_OR(config->model.vits.tokens, "");
   tts_config.model.vits.data_dir =
-      SHERPA_ONNX_OR(config->model.vits.data_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.vits.data_dir, "");
   tts_config.model.vits.noise_scale =
       SHERPA_ONNX_OR(config->model.vits.noise_scale, 0.667);
   tts_config.model.vits.noise_scale_w =
@@ -1184,64 +1188,64 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.model.vits.length_scale =
       SHERPA_ONNX_OR(config->model.vits.length_scale, 1.0);
   tts_config.model.vits.dict_dir =
-      SHERPA_ONNX_OR(config->model.vits.dict_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.vits.dict_dir, "");
 
   // matcha
   tts_config.model.matcha.acoustic_model =
-      SHERPA_ONNX_OR(config->model.matcha.acoustic_model, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.acoustic_model, "");
   tts_config.model.matcha.vocoder =
-      SHERPA_ONNX_OR(config->model.matcha.vocoder, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.vocoder, "");
   tts_config.model.matcha.lexicon =
-      SHERPA_ONNX_OR(config->model.matcha.lexicon, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.lexicon, "");
   tts_config.model.matcha.tokens =
-      SHERPA_ONNX_OR(config->model.matcha.tokens, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.tokens, "");
   tts_config.model.matcha.data_dir =
-      SHERPA_ONNX_OR(config->model.matcha.data_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.data_dir, "");
   tts_config.model.matcha.noise_scale =
       SHERPA_ONNX_OR(config->model.matcha.noise_scale, 0.667);
   tts_config.model.matcha.length_scale =
       SHERPA_ONNX_OR(config->model.matcha.length_scale, 1.0);
   tts_config.model.matcha.dict_dir =
-      SHERPA_ONNX_OR(config->model.matcha.dict_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.matcha.dict_dir, "");
 
   // kokoro
   tts_config.model.kokoro.model =
-      SHERPA_ONNX_OR(config->model.kokoro.model, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.model, "");
   tts_config.model.kokoro.voices =
-      SHERPA_ONNX_OR(config->model.kokoro.voices, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.voices, "");
   tts_config.model.kokoro.tokens =
-      SHERPA_ONNX_OR(config->model.kokoro.tokens, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.tokens, "");
   tts_config.model.kokoro.data_dir =
-      SHERPA_ONNX_OR(config->model.kokoro.data_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.data_dir, "");
   tts_config.model.kokoro.length_scale =
       SHERPA_ONNX_OR(config->model.kokoro.length_scale, 1.0);
   tts_config.model.kokoro.dict_dir =
-      SHERPA_ONNX_OR(config->model.kokoro.dict_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.dict_dir, "");
   tts_config.model.kokoro.lexicon =
-      SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
-  tts_config.model.kokoro.lang = SHERPA_ONNX_OR(config->model.kokoro.lang, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
+  tts_config.model.kokoro.lang = SAFE_SHERPA_ONNX_OR(config->model.kokoro.lang, "");
 
   // kitten
   tts_config.model.kitten.model =
-      SHERPA_ONNX_OR(config->model.kitten.model, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kitten.model, "");
   tts_config.model.kitten.voices =
-      SHERPA_ONNX_OR(config->model.kitten.voices, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kitten.voices, "");
   tts_config.model.kitten.tokens =
-      SHERPA_ONNX_OR(config->model.kitten.tokens, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kitten.tokens, "");
   tts_config.model.kitten.data_dir =
-      SHERPA_ONNX_OR(config->model.kitten.data_dir, "");
+      SAFE_SHERPA_ONNX_OR(config->model.kitten.data_dir, "");
   tts_config.model.kitten.length_scale =
       SHERPA_ONNX_OR(config->model.kitten.length_scale, 1.0);
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
-  tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  tts_config.model.provider = SAFE_SHERPA_ONNX_OR(config->model.provider, "cpu");
   if (tts_config.model.provider.empty()) {
     tts_config.model.provider = "cpu";
   }
 
-  tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
-  tts_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
+  tts_config.rule_fsts = SAFE_SHERPA_ONNX_OR(config->rule_fsts, "");
+  tts_config.rule_fars = SAFE_SHERPA_ONNX_OR(config->rule_fars, "");
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 1);
   tts_config.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
 
