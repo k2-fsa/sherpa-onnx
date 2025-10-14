@@ -17,21 +17,20 @@ def main():
     num_input_frames = get_num_input_frames(input_len_in_seconds)
 
     encoder_out = torch.randn(1, num_input_frames, 512, dtype=torch.float32)
-
-    num_input_frames = 23
     acoustic_embedding = torch.randn(1, num_input_frames, 512, dtype=torch.float32)
     mask = torch.ones([num_input_frames], dtype=torch.float32)
+
+    d = model.decoder(encoder_out, acoustic_embedding)
+    print("d", d.shape)
 
     opset_version = 14
     filename = f"decoder-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.decoder,
-        #  (encoder_out, acoustic_embedding, mask),
-        (encoder_out, acoustic_embedding),
+        (encoder_out, acoustic_embedding, mask),
         filename,
         opset_version=opset_version,
-        input_names=["encoder_out", "acoustic_embedding"],
-        #  input_names=["encoder_out", "acoustic_embedding", "mask"],
+        input_names=["encoder_out", "acoustic_embedding", "mask"],
         output_names=["decoder_out"],
         dynamic_axes={},
     )

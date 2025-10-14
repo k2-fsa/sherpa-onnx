@@ -1023,15 +1023,11 @@ class ParaformerSANMDecoder(torch.nn.Module):
         if self.normalize_before:
             hidden = self.after_norm(x)
 
-        if self.output_layer is not None and return_hidden is False:
-            x = self.output_layer(hidden)
-            return x
-
-        if return_both:
-            x = self.output_layer(hidden)
-            return x, hidden
-
-        return hidden
+        print("hidden", hidden.shape)
+        print("self.output_layer", self.output_layer)
+        x = self.output_layer(hidden)
+        print("x", x.shape)
+        return x
 
 
 def cif_wo_hidden_v1(alphas, threshold, return_fire_idxs=False):
@@ -1291,7 +1287,12 @@ def test():
         config = yaml.safe_load(f)
     print(config["encoder_conf"])
 
+    neg_mean = torch.rand(560)
+    inv_stddev = torch.rand(560)
+
     m = Paraformer(
+        neg_mean=neg_mean,
+        inv_stddev=inv_stddev,
         input_size=560,
         vocab_size=8404,
         encoder_conf=config["encoder_conf"],
@@ -1299,6 +1300,7 @@ def test():
         predictor_conf=config["predictor_conf"],
     )
     m.eval()
+    print(m.decoder)
 
     state_dict = torch.load("./model_state_dict.pt", map_location="cpu")["state_dict"]
     m.load_state_dict(state_dict)

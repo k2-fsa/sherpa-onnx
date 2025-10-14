@@ -93,26 +93,53 @@ class OnnxModel:
 
         self.session_opts = session_opts
 
-        print('init encoder')
+        print("init encoder")
         self.encoder = ort.InferenceSession(
             "./encoder-5-seconds.onnx",
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
 
-        print('init decoder')
+        print("init decoder")
         self.decoder = ort.InferenceSession(
             "./decoder-5-seconds.onnx",
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
 
-        print('init predictor')
+        print("init predictor")
         self.predictor = ort.InferenceSession(
             "./predictor-5-seconds.onnx",
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
+
+        print("---encoder---")
+        for i in self.encoder.get_inputs():
+            print(i)
+
+        print("-----")
+
+        for i in self.encoder.get_outputs():
+            print(i)
+
+        print("---decoder---")
+        for i in self.decoder.get_inputs():
+            print(i)
+
+        print("-----")
+
+        for i in self.decoder.get_outputs():
+            print(i)
+
+        print("---predictor---")
+        for i in self.predictor.get_inputs():
+            print(i)
+
+        print("-----")
+
+        for i in self.predictor.get_outputs():
+            print(i)
 
     def run_encoder(self, features, pos_emb):
         (encoder_out,) = self.encoder.run(
@@ -138,7 +165,12 @@ class OnnxModel:
         return alphas
 
     #  def run_decoder(self, encoder_out, acoustic_embedding, mask):
-    def run_decoder(self, encoder_out, acoustic_embedding):
+    def run_decoder(self, encoder_out, acoustic_embedding, mask):
+        print(
+            self.decoder.get_outputs()[0].name,
+            self.decoder.get_inputs()[0].name,
+            self.decoder.get_inputs()[1].name,
+        )
         (decoder_out,) = self.decoder.run(
             [
                 self.decoder.get_outputs()[0].name,
@@ -146,12 +178,10 @@ class OnnxModel:
             {
                 self.decoder.get_inputs()[0].name: encoder_out,
                 self.decoder.get_inputs()[1].name: acoustic_embedding,
-                #  self.decoder.get_inputs()[2].name: mask,
+                self.decoder.get_inputs()[2].name: mask,
             },
         )
         return decoder_out
-
-
 
 
 def get_acoustic_embedding(alpha: np.array, hidden: np.array):
@@ -189,15 +219,14 @@ def get_acoustic_embedding(alpha: np.array, hidden: np.array):
     return embeddings
 
 
-
 def main():
-    features = compute_feat("./2.wav")
-    print('here', features.shape, features.shape[0] > 83)
+    features = compute_feat("./1.wav")
+    print("here", features.shape, features.shape[0] > 83)
     if features.shape[0] >= 83:
         features = features[:83]
     else:
-        padding = features[-(83 - features.shape[0]):]
-        print('padding', features.shape, padding.shape)
+        padding = features[-(83 - features.shape[0]) :]
+        print("padding", features.shape, padding.shape)
         features = np.concatenate([features, padding])
 
     pos_emb = (
@@ -205,31 +234,40 @@ def main():
         .squeeze(0)
         .numpy()
     )
+
     print("features.shape", features.shape, pos_emb.shape)
+
+    print("sum", features.sum(), features.mean(), pos_emb.sum(), pos_emb.mean())
+
     model = OnnxModel()
 
     encoder_out = model.run_encoder(features[None], pos_emb[None])
+    print("encoder_out.shape", encoder_out.shape)
+    print("encoder_out.sum", encoder_out.sum(), encoder_out.mean())
 
     alpha = model.run_predictor(encoder_out)
     print("alpha.shape", alpha.shape)
+    print("alpha.sum()", alpha.sum(), alpha.mean())
 
     acoustic_embedding = get_acoustic_embedding(alpha[0], encoder_out[0])
     print("acoustic_embedding.shape", acoustic_embedding.shape)
     num_tokens = acoustic_embedding.shape[0]
 
     padding = np.zeros((83 - acoustic_embedding.shape[0], 512), dtype=np.float32)
-    print('padding.shape', padding.shape, acoustic_embedding.shape)
+    print("padding.shape", padding.shape, acoustic_embedding.shape)
 
-    #  acoustic_embedding = np.concatenate([acoustic_embedding, padding], axis=0)
+    acoustic_embedding = np.concatenate([acoustic_embedding, padding], axis=0)
     print("acoustic_embedding.shape", acoustic_embedding.shape)
+    print("acoustic_embedding.sum", acoustic_embedding.sum(), acoustic_embedding.mean())
 
-    #  mask = np.zeros((83,), dtype=np.float32)
-    #  mask[:num_tokens] = 1
-    #  print(mask)
+    mask = np.zeros((83,), dtype=np.float32)
+    mask[:num_tokens] = 1
+    print(mask)
 
-    #  decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None], mask)
-    decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None])
-    print('decoder_out', decoder_out.shape)
+    decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None], mask)
+    #  decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None])
+    print("decoder_out", decoder_out.shape)
+    print("decoder_out.sum", decoder_out.sum(), decoder_out.mean())
     yseq = decoder_out[0, :num_tokens].argmax(axis=-1).tolist()
     print(yseq, "-->", len(yseq))
 
