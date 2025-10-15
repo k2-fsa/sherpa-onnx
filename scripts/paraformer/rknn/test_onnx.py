@@ -141,14 +141,15 @@ class OnnxModel:
         for i in self.predictor.get_outputs():
             print(i)
 
-    def run_encoder(self, features, pos_emb):
+    #  def run_encoder(self, features, pos_emb):
+    def run_encoder(self, features):
         (encoder_out,) = self.encoder.run(
             [
                 self.encoder.get_outputs()[0].name,
             ],
             {
                 self.encoder.get_inputs()[0].name: features,
-                self.encoder.get_inputs()[1].name: pos_emb,
+                #  self.encoder.get_inputs()[1].name: pos_emb,
             },
         )
         return encoder_out
@@ -241,7 +242,8 @@ def main():
 
     model = OnnxModel()
 
-    encoder_out = model.run_encoder(features[None], pos_emb[None])
+    #  encoder_out = model.run_encoder(features[None], pos_emb[None])
+    encoder_out = model.run_encoder(features[None])
     print("encoder_out.shape", encoder_out.shape)
     print("encoder_out.sum", encoder_out.sum(), encoder_out.mean())
 

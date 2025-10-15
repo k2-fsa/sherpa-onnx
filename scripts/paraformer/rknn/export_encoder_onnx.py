@@ -59,6 +59,7 @@ if __name__ == "__main__":
         xs_pad = xs_pad + pos
 
         xs_pad = self.encoders0(xs_pad)[0]
+
         xs_pad = self.encoders(xs_pad)[0]
 
         if self.normalize_before:
@@ -68,7 +69,7 @@ if __name__ == "__main__":
 
         return xs_pad
 
-    SANMEncoder.forward = modified_sanm_encoder_forward
+    #  SANMEncoder.forward = modified_sanm_encoder_forward
 
 
 def load_model():
@@ -155,10 +156,12 @@ def main():
     filename = f"encoder-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.encoder,
-        (x, pos_emb),
+        #  (x, pos_emb),
+        x,
         filename,
         opset_version=opset_version,
-        input_names=["x", "pos_emb"],
+        #  input_names=["x", "pos_emb"],
+        input_names=["x"],
         output_names=["encoder_out"],
         dynamic_axes={},
     )
