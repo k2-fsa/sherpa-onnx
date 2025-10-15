@@ -415,6 +415,10 @@ Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
 It uses sherpa-onnx's Python API for real-time speech recognition in ROS2 with RK NPU.
 
+### [achatbot-go](https://github.com/ai-bot-pro/achatbot-go)
+
+a multimodal chatbot based on go with sherpa-onnx's speech lib api.
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
