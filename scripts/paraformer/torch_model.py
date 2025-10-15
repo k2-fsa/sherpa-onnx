@@ -93,6 +93,8 @@ class EncoderLayerSANM(nn.Module):
         if not self.normalize_before:
             x = self.norm2(x)
 
+        x = torch.clamp(x, -60000.0, 60000.0)
+
         return x, mask, cache, mask_shfit_chunk, mask_att_chunk_encoder
 
 
