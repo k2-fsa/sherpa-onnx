@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
-# wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
-# wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/tokens.json
-# wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/seg_dict
+wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
+wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
+wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/tokens.json
+wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/seg_dict
 wget https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/model_state_dict.pt
 
 python3 ./export_encoder_onnx.py  --input-len-in-seconds 5
