@@ -34,8 +34,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-
-
       - name: Show Python
         shell: bash
         run: |
@@ -66,6 +64,7 @@ jobs:
                   pyyaml
 
       - name: Setup tmate session
+        if: false
         uses: mxschmitt/action-tmate@v3
 
       - name: Run Paraformer from FunAsr
@@ -105,12 +104,16 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
-          atc --model=./encoder.onnx \
+
+
+          atc --model=./predictor.onnx \
             --framework=5 \
-            --output=encoder \
+            --output=predictor \
             --input_format=ND \
-            --input_shape="x:1,10~500,560" \
+            --input_shape="encoder_out:1,10~500,512" \
             --soc_version="Ascend910B"
+
+          ls -lh *.om
 
           atc --model=./decoder.onnx \
             --framework=5 \
@@ -119,11 +122,13 @@ jobs:
             --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
             --soc_version="Ascend910B"
 
-          atc --model=./predictor.onnx \
+          ls -lh *.om
+
+          atc --model=./encoder.onnx \
             --framework=5 \
-            --output=predictor \
+            --output=encoder \
             --input_format=ND \
-            --input_shape="encoder_out:1,10~500,512" \
+            --input_shape="x:1,10~500,560" \
             --soc_version="Ascend910B"
 
           ls -lh *.om
