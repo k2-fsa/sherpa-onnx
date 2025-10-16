@@ -28,6 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Verify environment
         shell: bash
         run: |
