@@ -6,9 +6,9 @@ on:
       - ascend-npu
   workflow_dispatch:
 
-concurrency:
-  group: export-paraformer-to-ascend-nput-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: export-paraformer-to-ascend-nput-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   export-paraformer-to-rknn:
@@ -21,15 +21,26 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10"]
+        python-version: ["3.8"]
         # framework: ["FunASR", "WSChuan-ASR"]
         framework: ["WSChuan-ASR"]
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: Setup tmate session
+        if: false
         uses: mxschmitt/action-tmate@v3
+
+      - name: Show Python
+        shell: bash
+        run: |
+          python3 --version
 
       - name: Verify environment
         shell: bash
@@ -40,20 +51,26 @@ jobs:
 
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
           echo "CANN environment:"
           which atc || echo "atc not found"
           atc --help
-          echo "---"
-          atc --version || true
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install "numpy<2" \
+                  onnx==1.17.0 \
+                  torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+                  attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
 
 
       - name: Run Paraformer from FunAsr
-        # if: matrix.framework == 'FunASR'
-        if: false
+        if: matrix.framework == 'FunASR'
         shell: bash
         run: |
-          cd scripts/paraformer/rknn
+          cd scripts/paraformer/ascend-npu
 
           curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/am.mvn
           curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/config.yaml
@@ -76,24 +93,23 @@ jobs:
           curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/README.md
 
           echo "export to onnx"
-          t=${{ matrix.input_in_seconds }}
-          p=${{ matrix.platform }}
 
-          export url="https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
-          export model_author="iic"
-          export comment="iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
-
-          echo "----$t---"
-          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+          python3 ./export_encoder_onnx.py
 
           ls -lh *.onnx
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./encoder.onnx \
+            --framework=5 \
+            --output=encoder_dynamic \
+            --input_format=ND \
+            --input_shape="x:1,10~500,560" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
           echo "---"
           ls -lh *.rknn
 
