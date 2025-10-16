@@ -6,9 +6,9 @@ on:
       - ascend-npu
   workflow_dispatch:
 
-# concurrency:
-#   group: export-paraformer-to-ascend-nput-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: export-paraformer-to-ascend-nput-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   export-paraformer-to-rknn:
@@ -104,8 +104,6 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
-
-
           atc --model=./predictor.onnx \
             --framework=5 \
             --output=predictor \
@@ -141,9 +139,9 @@ jobs:
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder_linux_aarch64.om $d/encoder.om
-          cp -v decoder_linux_aarch64.om $d/decoder.om
-          cp -v predictor_linux_aarch64.om $d/predictor.om
+          cp -v encoder_linux_x86_64.om $d/encoder.om
+          cp -v decoder_linux_x86_64.om $d/decoder.om
+          cp -v predictor_linux_x86_64.om $d/predictor.om
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
@@ -158,11 +156,10 @@ jobs:
           mv *.tar.bz2 ../../..
 
       - name: Run Paraformer from WSChuan-ASR
-        if: false
-        # if: matrix.framework == 'WSChuan-ASR'
+        if: matrix.framework == 'WSChuan-ASR'
         shell: bash
         run: |
-          cd scripts/paraformer/rknn
+          cd scripts/paraformer/ascend-npu
 
           curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
           curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
@@ -180,37 +177,54 @@ jobs:
           curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/README.md
 
           echo "export to onnx"
-          t=${{ matrix.input_in_seconds }}
-          p=${{ matrix.platform }}
 
-          export model_author="ASLP-lab"
-          export comment="ASLP-lab/WSChuan-ASR"
-          export url="https://huggingface.co/ASLP-lab/WSChuan-ASR/tree/main/Paraformer-large-Chuan"
-
-          echo "----$t---"
-          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+          python3 ./export_encoder_onnx.py
+          python3 ./export_decoder_onnx.py
+          python3 ./export_predictor_onnx.py
 
           ls -lh *.onnx
-          echo "---"
-          ls -lh *.rknn
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./predictor.onnx \
+            --framework=5 \
+            --output=predictor \
+            --input_format=ND \
+            --input_shape="encoder_out:1,10~500,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./decoder.onnx \
+            --framework=5 \
+            --output=decoder \
+            --input_format=ND \
+            --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./encoder.onnx \
+            --framework=5 \
+            --output=encoder \
+            --input_format=ND \
+            --input_shape="x:1,10~500,560" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
 
           echo "collect results"
-          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2025-10-07
+          d=sherpa-onnx-ascend-910B-paraformer-zh-2025-10-07
 
           mkdir -p $d
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
-          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
-          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+          cp -v encoder_linux_x86_64.om $d/encoder.om
+          cp -v decoder_linux_x86_64.om $d/decoder.om
+          cp -v predictor_linux_x86_64.om $d/predictor.om
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
