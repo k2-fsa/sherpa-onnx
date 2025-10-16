@@ -53,9 +53,11 @@ def load_tokens():
 class OmModel:
     def __init__(self):
         print("init encoder")
-        self.encoder = InferSession(device_id=0, model_path='./encoder_dynamic.om', debug=False)
-        self.decoder = InferSession(device_id=1, model_path='./decoder_dynamic.om', debug=False)
-        self.predictor = InferSession(device_id=0, model_path='./predictor_dynamic.om', debug=False)
+        self.encoder = InferSession(device_id=0, model_path="./encoder.om", debug=False)
+        self.decoder = InferSession(device_id=1, model_path="./decoder.om", debug=False)
+        self.predictor = InferSession(
+            device_id=0, model_path="./predictor.om", debug=False
+        )
 
         print("---encoder---")
         for i in self.encoder.get_inputs():
@@ -86,16 +88,18 @@ class OmModel:
 
     #  def run_encoder(self, features, pos_emb):
     def run_encoder(self, features):
-        encoder_out = self.encoder.infer([features], mode='dymshape')[0]
+        encoder_out = self.encoder.infer([features], mode="dymshape")[0]
         return encoder_out
 
     def run_predictor(self, encoder_out):
-        alphas = self.predictor.infer([encoder_out], mode='dymshape')[0]
+        alphas = self.predictor.infer([encoder_out], mode="dymshape")[0]
         return alphas
 
     #  def run_decoder(self, encoder_out, acoustic_embedding):
     def run_decoder(self, encoder_out, acoustic_embedding):
-        decoder_out = self.decoder.infer([encoder_out, acoustic_embedding], mode='dymshape')[0]
+        decoder_out = self.decoder.infer(
+            [encoder_out, acoustic_embedding], mode="dymshape"
+        )[0]
         return decoder_out
 
 
@@ -156,7 +160,7 @@ def main():
     acoustic_embedding = get_acoustic_embedding(alpha[0], encoder_out[0])
     print("acoustic_embedding.shape", acoustic_embedding.shape)
     num_tokens = acoustic_embedding.shape[0]
-    print('num_tokens', num_tokens)
+    print("num_tokens", num_tokens)
 
     print("acoustic_embedding.sum", acoustic_embedding.sum(), acoustic_embedding.mean())
 

@@ -3,7 +3,7 @@
 
 import torch
 
-from export_encoder_onnx_dynamic import load_model
+from export_encoder_onnx import load_model
 
 
 @torch.no_grad()
@@ -27,7 +27,7 @@ def main():
             "encoder_out": {1: "T"},
             "acoustic_embedding": {1: "num_tokens"},
             "decoder_out": {1: "num_tokens"},
-            },
+        },
     )
     print(f"Saved to {filename}")
 
