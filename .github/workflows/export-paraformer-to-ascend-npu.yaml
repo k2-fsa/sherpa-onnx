@@ -65,6 +65,7 @@ jobs:
                   onnx==1.17.0 \
                   torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
                   attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
+                  pyyaml
 
 
       - name: Run Paraformer from FunAsr
