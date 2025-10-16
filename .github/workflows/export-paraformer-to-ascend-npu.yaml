@@ -97,6 +97,8 @@ jobs:
           echo "export to onnx"
 
           python3 ./export_encoder_onnx.py
+          python3 ./export_decoder_onnx.py
+          python3 ./export_predictor_onnx.py
 
           ls -lh *.onnx
 
@@ -105,26 +107,38 @@ jobs:
 
           atc --model=./encoder.onnx \
             --framework=5 \
-            --output=encoder_dynamic \
+            --output=encoder \
             --input_format=ND \
             --input_shape="x:1,10~500,560" \
             --soc_version="Ascend910B"
 
+          atc --model=./decoder.onnx \
+            --framework=5 \
+            --output=decoder \
+            --input_format=ND \
+            --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
+            --soc_version="Ascend910B"
+
+          atc --model=./predictor.onnx \
+            --framework=5 \
+            --output=predictor \
+            --input_format=ND \
+            --input_shape="encoder_out:1,10~500,512" \
+            --soc_version="Ascend910B"
+
           ls -lh *.om
 
-          echo "---"
-          ls -lh *.rknn
 
           echo "collect results"
-          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2023-03-28
+          d=sherpa-onnx-ascend-910B-paraformer-zh-2023-03-28
 
           mkdir -p $d
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
-          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
-          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+          cp -v encoder_linux_aarch64.om $d/encoder.om
+          cp -v decoder_linux_aarch64.om $d/decoder.om
+          cp -v predictor_linux_aarch64.om $d/predictor.om
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
@@ -206,8 +220,7 @@ jobs:
           mv *.tar.bz2 ../../..
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj'
-        if: false
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -218,8 +231,7 @@ jobs:
           tag: asr-models
 
       - name: Release
-        # if: github.repository_owner == 'k2-fsa'
-        if: false
+        if: github.repository_owner == 'k2-fsa'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
