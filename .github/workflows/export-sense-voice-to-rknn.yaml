@@ -110,7 +110,7 @@ jobs:
           ls -lh $d
           tar cjfv $d.tar.bz2 $d
           ls -lh *.tar.bz2
-          rm -rf d
+          rm -rf $d
 
           echo "----show---"
           ls -lh *.tar.bz2
@@ -185,7 +185,7 @@ jobs:
           ls -lh $d
           tar cjfv $d.tar.bz2 $d
           ls -lh *.tar.bz2
-          rm -rf d
+          rm -rf $d
 
           echo "----show---"
           ls -lh *.tar.bz2
