@@ -1,27 +1,30 @@
-name: export-paraformer-to-rknn
+name: export-paraformer-to-ascend-npu
 
 on:
   push:
     branches:
-      - ci-paraformer-rknn
+      - ascend-npu
   workflow_dispatch:
 
 concurrency:
-  group: export-paraformer-to-rknn-${{ github.ref }}
+  group: export-paraformer-to-ascend-nput-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   export-paraformer-to-rknn:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.framework }} ${{ matrix.platform }} ${{ matrix.input_in_seconds }}
+    name: ${{ matrix.framework }}
     runs-on: ${{ matrix.os }}
+    container:
+      # image: ascendai/cann:latest
+      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      image: gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10"]
-        platform: ["rk3562", "rk3566", "rk3568", "rk3576", "rk3588"]
-        input_in_seconds: ["5", "10", "15", "20", "25", "30"]
+        python-version: ["3.8"]
         framework: ["FunASR", "WSChuan-ASR"]
 
     steps:
@@ -32,30 +35,48 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Show Python
+        shell: bash
+        run: |
+          python3 --version
+
+      - name: Install curl
+        shell: bash
+        run: apt-get update && apt-get install -y curl bzip2
+
+      - name: Verify environment
+        shell: bash
+        run: |
+          ls -lh /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+          find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
+
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          echo "CANN environment:"
+          which atc || echo "atc not found"
+          atc --help
+
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade \
-            pip \
-            "numpy<2" \
-            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
-            onnx==1.17.0 \
-            onnxruntime==1.17.1 \
-            librosa \
-            soundfile \
-            pyyaml \
-            onnxsim \
-            sentencepiece \
-            kaldi_native_fbank
+          python3 -m pip install "numpy<2" \
+                  onnx==1.17.0 \
+                  torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+                  attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
+                  pyyaml
 
-          curl -SL -O https://huggingface.co/csukuangfj/rknn-toolkit2/resolve/main/rknn_toolkit2-2.1.0%2B708089d1-cp310-cp310-linux_x86_64.whl
-          pip install ./*.whl "numpy<=1.26.4"
+      - name: Setup tmate session
+        if: false
+        uses: mxschmitt/action-tmate@v3
 
       - name: Run Paraformer from FunAsr
         if: matrix.framework == 'FunASR'
         shell: bash
         run: |
-          cd scripts/paraformer/rknn
+          cd scripts/paraformer/ascend-npu
 
           curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/am.mvn
           curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/config.yaml
@@ -78,37 +99,61 @@ jobs:
           curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/README.md
 
           echo "export to onnx"
-          t=${{ matrix.input_in_seconds }}
-          p=${{ matrix.platform }}
 
-          export url="https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
-          export model_author="iic"
-          export comment="iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
-
-          echo "----$t---"
-          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+          python3 ./export_encoder_onnx.py
+          python3 ./export_decoder_onnx.py
+          python3 ./export_predictor_onnx.py
 
           ls -lh *.onnx
-          echo "---"
-          ls -lh *.rknn
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./predictor.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=predictor \
+            --input_format=ND \
+            --input_shape="encoder_out:1,-1,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./decoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=decoder \
+            --input_format=ND \
+            --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./encoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=encoder \
+            --input_format=ND \
+            --input_shape="x:1,-1,560" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
 
           echo "collect results"
-          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2023-03-28
+          d=sherpa-onnx-ascend-910B-paraformer-zh-2023-03-28
 
           mkdir -p $d
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
-          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
-          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+          cp -v encoder_linux_aarch64.om $d/encoder.om
+          cp -v decoder_linux_aarch64.om $d/decoder.om
+          cp -v predictor_linux_aarch64.om $d/predictor.om
+          cp -v test_om.py $d/
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
@@ -126,7 +171,7 @@ jobs:
         if: matrix.framework == 'WSChuan-ASR'
         shell: bash
         run: |
-          cd scripts/paraformer/rknn
+          cd scripts/paraformer/ascend-npu
 
           curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
           curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
@@ -144,37 +189,61 @@ jobs:
           curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/README.md
 
           echo "export to onnx"
-          t=${{ matrix.input_in_seconds }}
-          p=${{ matrix.platform }}
 
-          export model_author="ASLP-lab"
-          export comment="ASLP-lab/WSChuan-ASR"
-          export url="https://huggingface.co/ASLP-lab/WSChuan-ASR/tree/main/Paraformer-large-Chuan"
-
-          echo "----$t---"
-          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
-
-          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
-          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+          python3 ./export_encoder_onnx.py
+          python3 ./export_decoder_onnx.py
+          python3 ./export_predictor_onnx.py
 
           ls -lh *.onnx
-          echo "---"
-          ls -lh *.rknn
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./predictor.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=predictor \
+            --input_format=ND \
+            --input_shape="encoder_out:1,-1,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./decoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=decoder \
+            --input_format=ND \
+            --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          atc --model=./encoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=encoder \
+            --input_format=ND \
+            --input_shape="x:1,-1,560" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
 
           echo "collect results"
-          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2025-10-07
+          d=sherpa-onnx-ascend-910B-paraformer-zh-2025-10-07
 
           mkdir -p $d
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
-          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
-          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+          cp -v encoder_linux_aarch64.om $d/encoder.om
+          cp -v decoder_linux_aarch64.om $d/decoder.om
+          cp -v predictor_linux_aarch64.om $d/predictor.om
+          cp -v test_om.py $d/
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
