@@ -121,7 +121,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=predictor \
             --input_format=ND \
-            --input_shape="encoder_out:1,10~500,512" \
+            --input_shape="encoder_out:1,-1,512" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -132,7 +133,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=decoder \
             --input_format=ND \
-            --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
+            --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -143,7 +145,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=encoder \
             --input_format=ND \
-            --input_shape="x:1,10~500,560" \
+            --input_shape="x:1,-1,560" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -211,7 +214,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=predictor \
             --input_format=ND \
-            --input_shape="encoder_out:1,10~500,512" \
+            --input_shape="encoder_out:1,-1,512" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -222,7 +226,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=decoder \
             --input_format=ND \
-            --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
+            --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -233,7 +238,8 @@ jobs:
             --host_env_cpu=aarch64 \
             --output=encoder \
             --input_format=ND \
-            --input_shape="x:1,10~500,560" \
+            --input_shape="x:1,-1,560" \
+            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
