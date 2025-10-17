@@ -38,6 +38,10 @@ jobs:
         run: |
           python3 --version
 
+      - name: Install curl
+        shell: bash
+        run: apt-get update && apt-get install -y curl
+
       - name: Verify environment
         shell: bash
         run: |
