@@ -17,7 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     container:
       # image: ascendai/cann:latest
-      image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      image: gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9
     strategy:
       fail-fast: false
       matrix:
@@ -122,7 +124,6 @@ jobs:
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -134,7 +135,6 @@ jobs:
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -146,7 +146,6 @@ jobs:
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,-1,560" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -215,7 +214,6 @@ jobs:
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -227,7 +225,6 @@ jobs:
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
@@ -239,7 +236,6 @@ jobs:
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,-1,560" \
-            --cann_version=8.0 \
             --soc_version="Ascend910B"
 
           ls -lh *.om
