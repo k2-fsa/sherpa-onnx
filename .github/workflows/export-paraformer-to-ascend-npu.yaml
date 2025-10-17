@@ -22,9 +22,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.8"]
-        # framework: ["FunASR", "WSChuan-ASR"]
-        framework: ["FunASR"]
-        # framework: ["WSChuan-ASR"]
+        framework: ["FunASR", "WSChuan-ASR"]
 
     steps:
       - uses: actions/checkout@v4
