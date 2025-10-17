@@ -16,7 +16,8 @@ jobs:
     name: ${{ matrix.framework }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ascendai/cann:latest
+      # image: ascendai/cann:latest
+      image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
     strategy:
       fail-fast: false
       matrix:
