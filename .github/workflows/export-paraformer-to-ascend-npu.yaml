@@ -44,14 +44,6 @@ jobs:
         shell: bash
         run: apt-get update && apt-get install -y curl bzip2
 
-      - name: test tar
-        shell: bash
-        run: |
-          mkdir to-delete
-          touch to-delete/a.txt
-          tar cjfv to-delete.tar.bz2 ./to-delete
-          rm -rf to-delete*
-
       - name: Verify environment
         shell: bash
         run: |

@@ -3,7 +3,6 @@
 
 import kaldi_native_fbank as knf
 import librosa
-import torch
 import numpy as np
 from ais_bench.infer.interface import InferSession
 
@@ -86,7 +85,6 @@ class OmModel:
         for i in self.predictor.get_outputs():
             print(i.name, i.datatype, i.shape)
 
-    #  def run_encoder(self, features, pos_emb):
     def run_encoder(self, features):
         encoder_out = self.encoder.infer([features], mode="dymshape")[0]
         return encoder_out
@@ -95,7 +93,6 @@ class OmModel:
         alphas = self.predictor.infer([encoder_out], mode="dymshape")[0]
         return alphas
 
-    #  def run_decoder(self, encoder_out, acoustic_embedding):
     def run_decoder(self, encoder_out, acoustic_embedding):
         decoder_out = self.decoder.infer(
             [encoder_out, acoustic_embedding], mode="dymshape"
@@ -113,7 +110,6 @@ def get_acoustic_embedding(alpha: np.array, hidden: np.array):
     """
     alpha = alpha.tolist()
     acc = 0
-    num_tokens = 0
 
     embeddings = []
     cur_embedding = np.zeros((hidden.shape[1],), dtype=np.float32)
@@ -148,7 +144,6 @@ def main():
 
     model = OmModel()
 
-    #  encoder_out = model.run_encoder(features[None], pos_emb[None])
     encoder_out = model.run_encoder(features[None])
     print("encoder_out.shape", encoder_out.shape)
     print("encoder_out.sum", encoder_out.sum(), encoder_out.mean())
@@ -165,7 +160,6 @@ def main():
     print("acoustic_embedding.sum", acoustic_embedding.sum(), acoustic_embedding.mean())
 
     decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None])
-    #  decoder_out = model.run_decoder(encoder_out, acoustic_embedding[None])
     print("decoder_out", decoder_out.shape)
     print("decoder_out.sum", decoder_out.sum(), decoder_out.mean())
     yseq = decoder_out[0, :num_tokens].argmax(axis=-1).tolist()

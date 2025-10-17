@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # Copyright (c)  2025  Xiaomi Corporation
 
-import os
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
-import onnx
 import torch
 import yaml
 
-from torch_model import Paraformer, SANMEncoder
+from torch_model import Paraformer
 
 
 def load_cmvn(filename) -> Tuple[List[float], List[float]]:
@@ -27,33 +25,6 @@ def load_cmvn(filename) -> Tuple[List[float], List[float]]:
                 inv_stddev = list(map(lambda x: float(x), t))
 
     return neg_mean, inv_stddev
-
-
-
-if __name__ == "__main__":
-
-    def modified_sanm_encoder_forward(
-        self: SANMEncoder, xs_pad: torch.Tensor, pos: torch.Tensor
-    ):
-        print("xs pad", xs_pad.shape)
-        xs_pad = (xs_pad + self.neg_mean) * self.inv_stddev
-
-        xs_pad = xs_pad * self.output_size() ** 0.5
-
-        xs_pad = xs_pad + pos
-
-        xs_pad = self.encoders0(xs_pad)[0]
-
-        xs_pad = self.encoders(xs_pad)[0]
-
-        if self.normalize_before:
-            xs_pad = self.after_norm(xs_pad)
-
-        print("xs pad--->", xs_pad.shape, pos.shape)
-
-        return xs_pad
-
-    #SANMEncoder.forward = modified_sanm_encoder_forward
 
 
 def load_model():
@@ -89,79 +60,28 @@ def load_model():
     return m
 
 
-def add_meta_data(filename: str, meta_data: Dict[str, Any]):
-    """Add meta data to an ONNX model. It is changed in-place.
-
-    Args:
-      filename:
-        Filename of the ONNX model to be changed.
-      meta_data:
-        Key-value pairs.
-    """
-    model = onnx.load(filename)
-    while len(model.metadata_props):
-        model.metadata_props.pop()
-
-    for key, value in meta_data.items():
-        meta = model.metadata_props.add()
-        meta.key = key
-        meta.value = str(value)
-
-    onnx.save(model, filename)
-
-
-lfr_window_size = 7
-lfr_window_shift = 6
-
-
 @torch.no_grad()
 def main():
     print("loading model")
     model = load_model()
 
     x = torch.randn(1, 100, 560, dtype=torch.float32)
-    pos_emb = torch.rand(1, 100, 560, dtype=torch.float32)
 
     opset_version = 14
     filename = "encoder.onnx"
     torch.onnx.export(
         model.encoder,
-        #(x, pos_emb),
         x,
         filename,
         opset_version=opset_version,
-        #input_names=["x", "pos_emb"],
         input_names=["x"],
         output_names=["encoder_out"],
         dynamic_axes={
             "x": {1: "T"},
             "encoder_out": {1: "T"},
-            #"pos_emb": {1: "T"}
-            },
+        },
     )
 
-    model_author = os.environ.get("model_author", "iic")
-    comment = os.environ.get(
-        "comment",
-        "iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
-    )
-    url = os.environ.get("url", "https://github.com/alibaba-damo-academy/FunASR")
-
-    meta_data = {
-        "lfr_window_size": lfr_window_size,
-        "lfr_window_shift": lfr_window_shift,
-        "normalize_samples": 0,  # input should be in the range [-32768, 32767]
-        "model_type": "paraformer",
-        "version": "1",
-        "model_author": model_author,
-        "maintainer": "k2-fsa",
-        "vocab_size": 8404,
-        "comment": comment,
-        "url": url,
-        "rknn": 1,
-    }
-
-    add_meta_data(filename=filename, meta_data=meta_data)
     print(f"Saved to {filename}")
 
 
