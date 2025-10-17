@@ -104,6 +104,8 @@ jobs:
 
           atc --model=./predictor.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,10~500,512" \
@@ -113,6 +115,8 @@ jobs:
 
           atc --model=./decoder.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
@@ -122,6 +126,8 @@ jobs:
 
           atc --model=./encoder.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,10~500,560" \
@@ -137,9 +143,9 @@ jobs:
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder_linux_x86_64.om $d/encoder.om
-          cp -v decoder_linux_x86_64.om $d/decoder.om
-          cp -v predictor_linux_x86_64.om $d/predictor.om
+          cp -v encoder_linux_aarch64.om $d/encoder.om
+          cp -v decoder_linux_aarch64.om $d/decoder.om
+          cp -v predictor_linux_aarch64.om $d/predictor.om
           cp -v test_om.py $d/
 
           cp -v tokens.txt $d
@@ -188,6 +194,8 @@ jobs:
 
           atc --model=./predictor.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,10~500,512" \
@@ -197,6 +205,8 @@ jobs:
 
           atc --model=./decoder.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,10~500,512;acoustic_embedding:1,1~200,512" \
@@ -206,6 +216,8 @@ jobs:
 
           atc --model=./encoder.onnx \
             --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,10~500,560" \
@@ -221,9 +233,9 @@ jobs:
           mkdir -p $d/test_wavs
 
           cp -v README.md $d
-          cp -v encoder_linux_x86_64.om $d/encoder.om
-          cp -v decoder_linux_x86_64.om $d/decoder.om
-          cp -v predictor_linux_x86_64.om $d/predictor.om
+          cp -v encoder_linux_aarch64.om $d/encoder.om
+          cp -v decoder_linux_aarch64.om $d/decoder.om
+          cp -v predictor_linux_aarch64.om $d/predictor.om
           cp -v test_om.py $d/
 
           cp -v tokens.txt $d
