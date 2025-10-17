@@ -140,6 +140,7 @@ jobs:
           cp -v encoder_linux_x86_64.om $d/encoder.om
           cp -v decoder_linux_x86_64.om $d/decoder.om
           cp -v predictor_linux_x86_64.om $d/predictor.om
+          cp -v test_om.py $d/
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs
@@ -223,6 +224,7 @@ jobs:
           cp -v encoder_linux_x86_64.om $d/encoder.om
           cp -v decoder_linux_x86_64.om $d/decoder.om
           cp -v predictor_linux_x86_64.om $d/predictor.om
+          cp -v test_om.py $d/
 
           cp -v tokens.txt $d
           cp -v *.wav $d/test_wavs

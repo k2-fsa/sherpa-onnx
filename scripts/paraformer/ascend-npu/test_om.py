@@ -139,7 +139,7 @@ def get_acoustic_embedding(alpha: np.array, hidden: np.array):
 
 
 def main():
-    features = compute_feat("./15.wav")
+    features = compute_feat("./test_wavs/1.wav")
     print("here", features.shape, features.shape[0] > 83)
 
     print("features.shape", features.shape)
