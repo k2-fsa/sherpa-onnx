@@ -21,11 +21,11 @@
 
 |Architecture| Android | iOS     | Windows    | macOS | linux | HarmonyOS |
 |------------|---------|---------|------------|-------|-------|-----------|
-|   x64      |  ✔️      |         |   ✔️        | ✔️     |  ✔️    |   ✔️       |
-|   x86      |  ✔️      |         |   ✔️        |       |       |           |
-|   arm64    |  ✔️      | ✔️       |   ✔️        | ✔️     |  ✔️    |   ✔️       |
-|   arm32    |  ✔️      |         |            |       |  ✔️    |   ✔️       |
-|   riscv64  |         |         |            |       |  ✔️    |           |
+|   x64      |  ✔️      |         |   ✔️      | ✔️    |  ✔️    |   ✔️   |
+|   x86      |  ✔️      |         |   ✔️      |       |        |        |
+|   arm64    |  ✔️      | ✔️      |   ✔️      | ✔️    |  ✔️    |   ✔️   |
+|   arm32    |  ✔️      |         |           |       |  ✔️    |   ✔️   |
+|   riscv64  |          |         |           |       |  ✔️    |        |
 
 ### Supported programming languages
 
@@ -66,7 +66,7 @@ This repository supports running the following functions **locally**
 
 on the following platforms and operating systems:
 
-  - x86, ``x86_64``, 32-bit ARM, 64-bit ARM (arm64, aarch64), RISC-V (riscv64), **RK NPU**
+  - x86, ``x86_64``, 32-bit ARM, 64-bit ARM (arm64, aarch64), RISC-V (riscv64), **RK NPU**, **Ascend NPU**
   - Linux, macOS, Windows, openKylin
   - Android, WearOS
   - iOS
