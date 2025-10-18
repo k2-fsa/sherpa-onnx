@@ -108,6 +108,7 @@ package-lock.json
 pubspec.lock
 sherpa-onnx-nemo-*
 sherpa-onnx-vits-*
+sherpa-onnx-zipvoice-*
 sherpa-onnx-telespeech-ctc-*
 *.fst
 .ccache
