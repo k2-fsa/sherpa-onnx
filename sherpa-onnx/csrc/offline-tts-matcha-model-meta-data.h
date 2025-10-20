@@ -21,6 +21,7 @@ struct OfflineTtsMatchaModelMetaData {
   int32_t has_espeak = 0;
   int32_t use_eos_bos = 0;
   int32_t pad_id = 0;
+  int32_t add_blank = 1;
 
   std::string voice;
 };

@@ -140,8 +140,8 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           tn_list_.push_back(
               std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
         }  // for (; !reader->Done(); reader->Next())
-      }    // for (const auto &f : files)
-    }      // if (!config.rule_fars.empty())
+      }  // for (const auto &f : files)
+    }  // if (!config.rule_fars.empty())
   }
 
   int32_t SampleRate() const override {
@@ -231,8 +231,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       x.push_back(std::move(i.tokens));
     }
 
-    for (auto &k : x) {
-      k = AddBlank(k, meta_data.pad_id);
+    if (meta_data.add_blank) {
+      for (auto &k : x) {
+        k = AddBlank(k, meta_data.pad_id);
+      }
     }
 
     int32_t x_size = static_cast<int32_t>(x.size());
@@ -323,11 +325,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     // from assets to disk
     const auto &meta_data = model_->GetMetaData();
 
-    if (meta_data.jieba && !meta_data.has_espeak) {
+    if (meta_data.jieba || meta_data.voice == "zh en-us") {
       frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
           config_.model.debug);
-    } else if (meta_data.has_espeak && !meta_data.jieba) {
+    } else if (meta_data.has_espeak) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.matcha.tokens, config_.model.matcha.data_dir,
           meta_data);
@@ -340,11 +342,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();
 
-    if (meta_data.jieba && !meta_data.has_espeak) {
+    if (meta_data.jieba || meta_data.voice == "zh en-us") {
       frontend_ = std::make_unique<CharacterLexicon>(
           config_.model.matcha.lexicon, config_.model.matcha.tokens,
           config_.model.debug);
-    } else if (meta_data.has_espeak && !meta_data.jieba) {
+    } else if (meta_data.has_espeak) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.matcha.tokens, config_.model.matcha.data_dir,
           meta_data);

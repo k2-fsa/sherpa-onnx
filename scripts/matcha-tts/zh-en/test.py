@@ -116,6 +116,7 @@ class OnnxVocosModel:
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
+        print(f"vocos {self.model.get_modelmeta().custom_metadata_map}")
 
         print("----------vocos----------")
         for i in self.model.get_inputs():
@@ -219,7 +220,6 @@ def main():
     token2id = load_tokens(args.tokens)
     id2token = {i: t for t, i in token2id.items()}
     lexicon = load_lexicon(args.lexicon, token2id)
-
 
     text = args.text
 

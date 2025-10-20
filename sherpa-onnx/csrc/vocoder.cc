@@ -65,7 +65,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type == "hifigan") {
     return ModelType::kHifigan;
-  } else if (model_type == "vocos") {
+  } else if (model_type == "vocos" || model_type == "matcha-tts vocos") {
     return ModelType::kVocoos;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());

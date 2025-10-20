@@ -17,11 +17,13 @@ static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4 +
-                      sizeof(SherpaOnnxOfflineTtsKittenModelConfig),
+                      sizeof(SherpaOnnxOfflineTtsKittenModelConfig) +
+                      sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
                   sizeof(SherpaOnnxOfflineTtsModelConfig) + 4 * 4,
@@ -33,6 +35,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto matcha_model_config = &tts_model_config->matcha;
   auto kokoro = &tts_model_config->kokoro;
   auto kitten = &tts_model_config->kitten;
+  auto zipvoice = &tts_model_config->zipvoice;
   fprintf(stdout, "----------vits model config----------\n");
   fprintf(stdout, "model: %s\n", vits_model_config->model);
   fprintf(stdout, "lexicon: %s\n", vits_model_config->lexicon);
@@ -69,6 +72,18 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "tokens: %s\n", kitten->tokens);
   fprintf(stdout, "data_dir: %s\n", kitten->data_dir);
   fprintf(stdout, "length scale: %.3f\n", kitten->length_scale);
+
+  fprintf(stdout, "----------zipvoice model config----------\n");
+  fprintf(stdout, "tokens: %s\n", zipvoice->tokens);
+  fprintf(stdout, "text_model: %s\n", zipvoice->text_model);
+  fprintf(stdout, "flow_matching_model: %s\n", zipvoice->flow_matching_model);
+  fprintf(stdout, "vocoder: %s\n", zipvoice->vocoder);
+  fprintf(stdout, "data_dir: %s\n", zipvoice->data_dir);
+  fprintf(stdout, "pinyin_dict: %s\n", zipvoice->pinyin_dict);
+  fprintf(stdout, "feat scale: %.3f\n", zipvoice->feat_scale);
+  fprintf(stdout, "t_shift: %.3f\n", zipvoice->t_shift);
+  fprintf(stdout, "target_rms: %.3f\n", zipvoice->target_rms);
+  fprintf(stdout, "guidance_scale: %.3f\n", zipvoice->guidance_scale);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
