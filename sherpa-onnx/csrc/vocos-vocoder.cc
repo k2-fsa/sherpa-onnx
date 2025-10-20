@@ -49,7 +49,7 @@ class VocosVocoder::Impl {
       buffer = ReadFile(config.zipvoice.vocoder);
     } else {
       SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     Init(buffer.data(), buffer.size());
   }
@@ -67,7 +67,7 @@ class VocosVocoder::Impl {
       buffer = ReadFile(mgr, config.zipvoice.vocoder);
     } else {
       SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     Init(buffer.data(), buffer.size());
   }
@@ -158,13 +158,17 @@ class VocosVocoder::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
-    SHERPA_ONNX_READ_META_DATA(meta_.n_fft, "n_fft");
-    SHERPA_ONNX_READ_META_DATA(meta_.hop_length, "hop_length");
-    SHERPA_ONNX_READ_META_DATA(meta_.win_length, "win_length");
-    SHERPA_ONNX_READ_META_DATA(meta_.center, "center");
-    SHERPA_ONNX_READ_META_DATA(meta_.normalized, "normalized");
-    SHERPA_ONNX_READ_META_DATA_STR(meta_.window_type, "window_type");
-    SHERPA_ONNX_READ_META_DATA_STR(meta_.pad_mode, "pad_mode");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.n_fft, "n_fft", 1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.hop_length, "hop_length",
+                                            256);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.win_length, "win_length",
+                                            1024);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.center, "center", 1);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.normalized, "normalized", 0);
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_.window_type,
+                                                "window_type", "hann");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_.pad_mode, "pad_mode",
+                                                "reflect");
   }
 
  private:

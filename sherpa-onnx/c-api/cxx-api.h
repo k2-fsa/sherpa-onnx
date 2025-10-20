@@ -421,11 +421,27 @@ struct OfflineTtsKittenModelConfig {
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
 
+struct OfflineTtsZipvoiceModelConfig {
+  std::string tokens;
+  std::string text_model;
+  std::string flow_matching_model;
+  std::string vocoder;
+  std::string data_dir;
+  std::string pinyin_dict;
+
+  float feat_scale = 0.1;
+  float t_shift = 0.5;
+  float target_rms = 0.1;
+  float guidance_scale = 1.0;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
+  OfflineTtsZipvoiceModelConfig zipvoice;
+
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";

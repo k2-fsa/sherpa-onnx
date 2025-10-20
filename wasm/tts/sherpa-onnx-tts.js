@@ -20,6 +20,10 @@ function freeConfig(config, Module) {
     freeConfig(config.kitten, Module)
   }
 
+  if ('zipvoice' in config) {
+    freeConfig(config.zipvoice, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -258,6 +262,72 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
+  const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
+  const textModelLen = Module.lengthBytesUTF8(config.textModel || '') + 1;
+  const flowMatchingModelLen =
+      Module.lengthBytesUTF8(config.flowMatchingModel || '') + 1;
+  const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
+  const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
+  const pinyinDictLen = Module.lengthBytesUTF8(config.pinyinDict || '') + 1;
+
+  const n = tokensLen + textModelLen + flowMatchingModelLen + vocoderLen +
+      dataDirLen + pinyinDictLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 10 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
+  offset += tokensLen;
+
+  Module.stringToUTF8(config.textModel || '', buffer + offset, textModelLen);
+  offset += textModelLen;
+
+  Module.stringToUTF8(
+      config.flowMatchingModel || '', buffer + offset, flowMatchingModelLen);
+  offset += flowMatchingModelLen;
+
+  Module.stringToUTF8(config.vocoder || '', buffer + offset, vocoderLen);
+  offset += vocoderLen;
+
+  Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
+  offset += dataDirLen;
+
+  Module.stringToUTF8(config.pinyinDict || '', buffer + offset, pinyinDictLen);
+  offset += pinyinDictLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += tokensLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += textModelLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += flowMatchingModelLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += vocoderLen;
+
+  Module.setValue(ptr + 16, buffer + offset, 'i8*');
+  offset += dataDirLen;
+
+  Module.setValue(ptr + 20, buffer + offset, 'i8*');
+  offset += pinyinDictLen;
+
+  Module.setValue(ptr + 24, config.featScale || 0.1, 'float');
+  Module.setValue(ptr + 28, config.tShift || 0.5, 'float');
+  Module.setValue(ptr + 32, config.targetRMS || 0.1, 'float');
+  Module.setValue(ptr + 36, config.guidanceScale || 1.0, 'float');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
@@ -304,6 +374,21 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     };
   }
 
+  if (!('offlineTtsZipVoiceModelConfig' in config)) {
+    config.offlineTtsZipVoiceModelConfig = {
+      tokens: '',
+      textModel: '',
+      flowMatchingModel: '',
+      vocoder: '',
+      dataDir: '',
+      pinyinDict: '',
+      featScale: 0.1,
+      tShift: 0.5,
+      targetRMS: 0.1,
+      guidanceScale: 1.0,
+    };
+  }
+
 
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
@@ -317,8 +402,12 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const kittenModelConfig = initSherpaOnnxOfflineTtsKittenModelConfig(
       config.offlineTtsKittenModelConfig, Module);
 
+  const zipVoiceModelConfig = initSherpaOnnxOfflineTtsZipVoiceModelConfig(
+      config.offlineTtsZipVoiceModelConfig, Module);
+
   const len = vitsModelConfig.len + matchaModelConfig.len +
-      kokoroModelConfig.len + kittenModelConfig.len + 3 * 4;
+      kokoroModelConfig.len + kittenModelConfig.len + zipVoiceModelConfig.len +
+      3 * 4;
 
   const ptr = Module._malloc(len);
 
@@ -347,10 +436,14 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   Module._CopyHeap(kittenModelConfig.ptr, kittenModelConfig.len, ptr + offset);
   offset += kittenModelConfig.len;
 
+  Module._CopyHeap(
+      zipVoiceModelConfig.ptr, zipVoiceModelConfig.len, ptr + offset);
+  offset += zipVoiceModelConfig.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
         matcha: matchaModelConfig, kokoro: kokoroModelConfig,
-        kitten: kittenModelConfig,
+        kitten: kittenModelConfig, zipvoice: zipVoiceModelConfig,
   }
 }
 
