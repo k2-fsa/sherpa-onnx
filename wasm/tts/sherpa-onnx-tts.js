@@ -263,8 +263,8 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
-  const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
-  const textModelLen = Module.lengthBytesUTF8(config.textModel) + 1;
+  const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
+  const textModelLen = Module.lengthBytesUTF8(config.textModel || '') + 1;
   const flowMatchingModelLen =
       Module.lengthBytesUTF8(config.flowMatchingModel || '') + 1;
   const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
