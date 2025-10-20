@@ -271,7 +271,7 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
   const pinyinDictLen = Module.lengthBytesUTF8(config.pinyinDict || '') + 1;
 
-  const n = tokensLen + textModelLen + flowMatchingModel + vocoderLen +
+  const n = tokensLen + textModelLen + flowMatchingModelLen + vocoderLen +
       dataDirLen + pinyinDictLen;
 
   const buffer = Module._malloc(n);
@@ -283,7 +283,7 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
   offset += tokensLen;
 
-  Module.stringToUTF8(config.textModel || '', buffer + offset, textModel);
+  Module.stringToUTF8(config.textModel || '', buffer + offset, textModelLen);
   offset += textModelLen;
 
   Module.stringToUTF8(
