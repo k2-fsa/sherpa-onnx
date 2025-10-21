@@ -13,10 +13,7 @@ from ais_bench.infer.interface import InferSession
 
 class OmModel:
     def __init__(self):
-        self.model = InferSession(
-                device_id=1,
-            model_path="./model.om",
-            debug=False)
+        self.model = InferSession(device_id=1, model_path="./model.om", debug=False)
 
         print("---model---")
         for i in self.model.get_inputs():
@@ -31,12 +28,18 @@ class OmModel:
         if language is not None and text_norm is not None:
             x_len = np.array([x.shape[1]], dtype=np.int32)
             print(x.shape, x_len, language, text_norm)
-            return self.model.infer([x, x_len, language, text_norm], mode="dymshape", custom_sizes=10000000)[0][0]
+            return self.model.infer(
+                [x, x_len, language, text_norm], mode="dymshape", custom_sizes=10000000
+            )[0][0]
         else:
-            return self.model.infer([x, prompt], mode="dymshape", custom_sizes=10000000)[0][0]
+            return self.model.infer(
+                [x, prompt], mode="dymshape", custom_sizes=10000000
+            )[0][0]
 
         return self.model.infer([x, prompt], mode="static", custom_sizes=10000000)[0][0]
-        logits_part1, logits_part2 = self.model.infer([x, prompt], mode="dymshape", custom_sizes=10000000)
+        logits_part1, logits_part2 = self.model.infer(
+            [x, prompt], mode="dymshape", custom_sizes=10000000
+        )
         logits = np.concatenate([logits_part1, logits_part2], axis=0)
         return logits
 
@@ -96,7 +99,7 @@ def compute_feat(
 
 
 def main():
-    samples, sample_rate = load_audio("./zh.wav")
+    samples, sample_rate = load_audio("./test_wavs/zh.wav")
     if sample_rate != 16000:
         import librosa
 
@@ -109,7 +112,7 @@ def main():
         samples=samples,
         sample_rate=sample_rate,
     )
-    print('features.shape', features.shape)
+    print("features.shape", features.shape)
 
     language_auto = 0
     language_zh = 3
@@ -127,18 +130,18 @@ def main():
     text_norm = with_itn
 
     prompt = np.array([language, 1, 2, text_norm], dtype=np.int32)
-    #language = np.array([language], dtype=np.int32)
-    #text_norm = np.array([text_norm], dtype=np.int32)
+    # language = np.array([language], dtype=np.int32)
+    # text_norm = np.array([text_norm], dtype=np.int32)
 
-    print('prompt', prompt.shape)
+    print("prompt", prompt.shape)
 
     logits = model(
         x=features[None],
         prompt=prompt,
-        #language=language,
+        # language=language,
         ##text_norm=text_norm,
     )
-    print('logits.shape', logits.shape, type(logits))
+    print("logits.shape", logits.shape, type(logits))
 
     idx = logits.argmax(axis=-1)
     print(idx)
@@ -152,7 +155,7 @@ def main():
     ids = [i for i in ids if i != 0]
     print(ids)
 
-    tokens = load_tokens('./tokens.txt')
+    tokens = load_tokens("./tokens.txt")
     text = "".join([tokens[i] for i in ids])
 
     text = text.replace("▁", " ")

@@ -1,0 +1,216 @@
+name: export-sense-voice-to-ascend-npu
+
+on:
+  push:
+    branches:
+      - export-sense-voice-ascend
+  workflow_dispatch:
+
+concurrency:
+  group: export-sense-voice-to-ascend-npu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-sense-voice-to-ascend-npu:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.framework }}
+    runs-on: ${{ matrix.os }}
+    container:
+      # image: ascendai/cann:latest
+      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      image: gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+        framework: ["FunASR", "WSYue-ASR"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Show Python
+        shell: bash
+        run: |
+          python3 --version
+
+      - name: Install curl
+        shell: bash
+        run: apt-get update && apt-get install -y curl bzip2
+
+      - name: Verify environment
+        shell: bash
+        run: |
+          ls -lh /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+          find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
+
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          echo "CANN environment:"
+          which atc || echo "atc not found"
+          atc --help
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install "numpy<2" \
+                  onnx==1.17.0 \
+                  torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+                  attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
+                  sentencepiece \
+                  pyyaml
+
+      - name: Run SenseVoice from FunAsr
+        if: matrix.framework == 'FunASR'
+        shell: bash
+        run: |
+          cd scripts/sense-voice/ascend-npu
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ko.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/README.md
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/LICENSE
+
+          echo "export to onnx"
+
+          python3 ./export_onnx.py
+
+          ls -lh *.onnx
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./model.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=model \
+            --input_format=ND \
+            --input_shape="x:1,-1,560;prompt:4" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          echo "collect results"
+          d=sherpa-onnx-ascend-910B-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v LICENSE $d
+          cp -v model_linux_aarch64.om $d/model.om
+          cp -v tokens.txt $d
+          cp -v test_om.py $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Run SenseVoice from WSYue-ASR
+        if: matrix.framework == 'WSYue-ASR'
+        shell: bash
+        run: |
+          cd scripts/sense-voice/ascend-npu
+
+          curl -SL -O https://huggingface.co/ASLP-lab/WSYue-ASR/resolve/main/sensevoice_small_yue/model.pt
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          for i in $(seq 0 17); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/test_wavs/yue-$i.wav
+          done
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/README.md
+
+          echo "export to onnx"
+          python3 ./export_onnx.py
+
+          ls -lh *.onnx
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          atc --model=./model.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=model \
+            --input_format=ND \
+            --input_shape="x:1,-1,560;prompt:4" \
+            --soc_version="Ascend910B"
+
+          ls -lh *.om
+
+          echo "collect results"
+          d=sherpa-onnx-ascend-910B-sense-voice-zh-en-ja-ko-yue-2025-09-09
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v model_linux_aarch64.om $d/model.om
+          cp -v tokens.txt $d
+          cp -v test_om.py $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: asr-models
