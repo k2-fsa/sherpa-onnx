@@ -13,7 +13,7 @@ from ais_bench.infer.interface import InferSession
 
 class OmModel:
     def __init__(self):
-        self.model = InferSession(device_id=1, model_path="./model.om", debug=False)
+        self.model = InferSession(device_id=0, model_path="./model.om", debug=False)
 
         print("---model---")
         for i in self.model.get_inputs():
