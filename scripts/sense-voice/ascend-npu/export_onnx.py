@@ -33,6 +33,7 @@ def generate_tokens(sp):
             f.write(f"{sp.id_to_piece(i)} {i}\n")
     print("saved to tokens.txt")
 
+
 class ModelWrapper(torch.nn.Module):
     def __init__(self, m):
         super().__init__()
@@ -45,6 +46,7 @@ class ModelWrapper(torch.nn.Module):
         part1 = part1.reshape(4, 25055)
         part2 = part2.reshape(x.size(0), 25055)
         return part1, part2
+
 
 @torch.no_grad()
 def main():
@@ -85,14 +87,13 @@ def main():
         filename,
         opset_version=opset_version,
         input_names=["x", "prompt"],
-        #output_names=["logits_part1", "logits_part2"],
         output_names=["logits"],
         dynamic_axes={
             "x": {0: "N", 1: "T"},
             "logits": {0: "N", 1: "T_4"},
-            },
+        },
     )
-    print(f'saved to {filename}')
+    print(f"saved to {filename}")
 
 
 if __name__ == "__main__":
