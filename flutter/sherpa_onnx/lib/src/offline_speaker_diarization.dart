@@ -230,13 +230,10 @@ class OfflineSpeakerDiarization {
           "Failed to create offline speaker diarization. Please check your config");
     }
 
-    int sampleRate = 0;
-    if (ptr != nullptr) {
-      sampleRate = SherpaOnnxBindings
+    int sampleRate sampleRate = SherpaOnnxBindings
               .sherpaOnnxOfflineSpeakerDiarizationGetSampleRate
-              ?.call(ptr) ??
-          0;
-    }
+              ?.call(ptr) ?? 0;
+
     return OfflineSpeakerDiarization._(
         ptr: ptr, config: config, sampleRate: sampleRate);
   }
