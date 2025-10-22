@@ -949,7 +949,7 @@ func sherpaOnnxOfflineTtsModelConfig(
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu",
-  kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig()
+  kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig(),
   zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
