@@ -365,6 +365,10 @@ class OfflineTts {
   /// The user is responsible to call the OfflineTts.free()
   /// method of the returned instance to avoid memory leak.
   factory OfflineTts(OfflineTtsConfig config) {
+    if (SherpaOnnxBindings.createOfflineTts == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOfflineTtsConfig>();
     c.ref.model.vits.model = config.model.vits.model.toNativeUtf8();
     c.ref.model.vits.lexicon = config.model.vits.lexicon.toNativeUtf8();
@@ -417,15 +421,7 @@ class OfflineTts {
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
     c.ref.silenceScale = config.silenceScale;
 
-    if (SherpaOnnxBindings.createOfflineTts == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
-
-    if (ptr == nullptr) {
-      throw Exception("Failed to create offline tts. Please check your config");
-    }
 
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
@@ -460,6 +456,11 @@ class OfflineTts {
     calloc.free(c.ref.model.vits.tokens);
     calloc.free(c.ref.model.vits.lexicon);
     calloc.free(c.ref.model.vits.model);
+    calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline tts. Please check your config");
+    }
 
     return OfflineTts._(ptr: ptr, config: config);
   }

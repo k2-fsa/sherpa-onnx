@@ -363,6 +363,10 @@ class OnlineRecognizer {
   /// The user is responsible to call the OnlineRecognizer.free()
   /// method of the returned instance to avoid memory leak.
   factory OnlineRecognizer(OnlineRecognizerConfig config) {
+    if (SherpaOnnxBindings.createOnlineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOnlineRecognizerConfig>();
     c.ref.feat.sampleRate = config.feat.sampleRate;
     c.ref.feat.featureDim = config.feat.featureDim;
@@ -419,16 +423,7 @@ class OnlineRecognizer {
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
-    if (SherpaOnnxBindings.createOnlineRecognizer == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
-
-    if (ptr == nullptr) {
-      throw Exception(
-          "Failed to create online recognizer. Please check your config");
-    }
 
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
@@ -452,6 +447,11 @@ class OnlineRecognizer {
     calloc.free(c.ref.model.transducer.decoder);
     calloc.free(c.ref.model.transducer.joiner);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create online recognizer. Please check your config");
+    }
 
     return OnlineRecognizer._(ptr: ptr, config: config);
   }

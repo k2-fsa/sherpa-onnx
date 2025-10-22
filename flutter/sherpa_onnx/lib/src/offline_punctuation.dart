@@ -69,6 +69,10 @@ class OfflinePunctuation {
 
   // The user has to invoke OfflinePunctuation.free() to avoid memory leak.
   factory OfflinePunctuation({required OfflinePunctuationConfig config}) {
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOfflinePunctuationConfig>();
 
     final ctTransformerPtr = config.model.ctTransformer.toNativeUtf8();
@@ -79,22 +83,18 @@ class OfflinePunctuation {
     final providerPtr = config.model.provider.toNativeUtf8();
     c.ref.model.provider = providerPtr;
 
-    if (SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation?.call(c) ??
             nullptr;
+
+    calloc.free(providerPtr);
+    calloc.free(ctTransformerPtr);
+    calloc.free(c);
 
     if (ptr == nullptr) {
       throw Exception(
           "Failed to create offline punctuation. Please check your config");
     }
-
-    calloc.free(providerPtr);
-    calloc.free(ctTransformerPtr);
-    calloc.free(c);
 
     return OfflinePunctuation._(ptr: ptr, config: config);
   }

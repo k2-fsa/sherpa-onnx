@@ -126,13 +126,14 @@ class OfflineSpeechDenoiser {
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser?.call(c) ??
             nullptr;
 
+    calloc.free(c.ref.model.provider);
+    calloc.free(c.ref.model.gtcrn.model);
+    calloc.free(c);
+
     if (ptr == nullptr) {
       throw Exception(
           "Failed to create offline speech denoiser. Please check your config");
     }
-
-    calloc.free(c.ref.model.provider);
-    calloc.free(c.ref.model.gtcrn.model);
 
     return OfflineSpeechDenoiser._(ptr: ptr, config: config);
   }

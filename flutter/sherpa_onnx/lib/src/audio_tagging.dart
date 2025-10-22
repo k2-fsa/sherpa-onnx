@@ -157,16 +157,16 @@ class AudioTagging {
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateAudioTagging?.call(c) ?? nullptr;
 
-    if (ptr == nullptr) {
-      throw Exception(
-          "Failed to create audio tagging. Please check your config");
-    }
-
     calloc.free(labelsPtr);
     calloc.free(providerPtr);
     calloc.free(cedPtr);
     calloc.free(zipformerPtr);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create audio tagging. Please check your config");
+    }
 
     return AudioTagging._(ptr: ptr, config: config);
   }

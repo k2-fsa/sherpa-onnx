@@ -192,6 +192,10 @@ class OfflineSpeakerDiarization {
   /// The user is responsible to call the OfflineSpeakerDiarization.free()
   /// method of the returned instance to avoid memory leak.
   factory OfflineSpeakerDiarization(OfflineSpeakerDiarizationConfig config) {
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOfflineSpeakerDiarizationConfig>();
 
     c.ref.segmentation.pyannote.model =
@@ -211,23 +215,20 @@ class OfflineSpeakerDiarization {
     c.ref.minDurationOn = config.minDurationOn;
     c.ref.minDurationOff = config.minDurationOff;
 
-    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization?.call(c) ??
             nullptr;
-
-    if (ptr == nullptr) {
-      throw Exception(
-          "Failed to create offline speaker diarization. Please check your config");
-    }
 
     calloc.free(c.ref.embedding.provider);
     calloc.free(c.ref.embedding.model);
     calloc.free(c.ref.segmentation.provider);
     calloc.free(c.ref.segmentation.pyannote.model);
+    calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create offline speaker diarization. Please check your config");
+    }
 
     int sampleRate = 0;
     if (ptr != nullptr) {

@@ -67,14 +67,14 @@ class SpeakerEmbeddingExtractor {
     final ptr =
         SherpaOnnxBindings.createSpeakerEmbeddingExtractor?.call(c) ?? nullptr;
 
+    calloc.free(providerPtr);
+    calloc.free(modelPtr);
+    calloc.free(c);
+
     if (ptr == nullptr) {
       throw Exception(
           "Failed to create speaker embedding extractor. Please check your config");
     }
-
-    calloc.free(providerPtr);
-    calloc.free(modelPtr);
-    calloc.free(c);
 
     final dim = SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
 
