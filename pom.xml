@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.k2fsa.sherpa.onnx</groupId>
     <artifactId>sherpa-onnx-android</artifactId>
-    <version>1.12.14</version>
+    <version>1.12.15</version>
     <url>https://github.com/k2-fsa/sherpa-onnx</url>
     <packaging>pom</packaging>
     <description>First Android Library</description>

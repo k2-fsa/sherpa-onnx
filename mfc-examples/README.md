@@ -5,9 +5,9 @@ for speech recognition.
 
 |Directory| Pre-built exe (x64)|Pre-built exe (x86)| Description|
 |---------|--------------------|-------------------|------------|
-|[./NonStreamingSpeechRecognition](./NonStreamingSpeechRecognition)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-non-streaming-asr-x64-v1.12.14.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-non-streaming-asr-x86-v1.12.14.exe)| Non-streaming speech recognition|
-|[./StreamingSpeechRecognition](./StreamingSpeechRecognition)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-streaming-asr-x64-v1.12.14.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-streaming-asr-x86-v1.12.14.exe)| Streaming speech recognition|
-|[./NonStreamingTextToSpeech](./NonStreamingTextToSpeech)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-non-streaming-tts-x64-v1.12.14.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-non-streaming-tts-x86-v1.12.14.exe)| Non-streaming text to speech|
+|[./NonStreamingSpeechRecognition](./NonStreamingSpeechRecognition)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-non-streaming-asr-x64-v1.12.15.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-non-streaming-asr-x86-v1.12.15.exe)| Non-streaming speech recognition|
+|[./StreamingSpeechRecognition](./StreamingSpeechRecognition)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-streaming-asr-x64-v1.12.15.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-streaming-asr-x86-v1.12.15.exe)| Streaming speech recognition|
+|[./NonStreamingTextToSpeech](./NonStreamingTextToSpeech)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-non-streaming-tts-x64-v1.12.15.exe)|[URL](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-non-streaming-tts-x86-v1.12.15.exe)| Non-streaming text to speech|
 
 Caution: You need to use Windows and install Visual Studio 2022 in order to
 compile it.

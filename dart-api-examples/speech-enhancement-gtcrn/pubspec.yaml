@@ -10,7 +10,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  sherpa_onnx: ^1.12.14
+  sherpa_onnx: ^1.12.15
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
   path: ^1.9.0

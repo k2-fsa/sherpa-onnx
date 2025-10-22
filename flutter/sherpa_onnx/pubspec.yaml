@@ -17,7 +17,7 @@ topics:
   - voice-activity-detection
 
 # remember to change the version in ../sherpa_onnx_macos/macos/sherpa_onnx_macos.podspec
-version: 1.12.14
+version: 1.12.15
 
 homepage: https://github.com/k2-fsa/sherpa-onnx
 
@@ -30,23 +30,23 @@ dependencies:
   flutter:
     sdk: flutter
 
-  sherpa_onnx_android: ^1.12.14
+  sherpa_onnx_android: ^1.12.15
   # sherpa_onnx_android:
   #   path: ../sherpa_onnx_android
 
-  sherpa_onnx_macos: ^1.12.14
+  sherpa_onnx_macos: ^1.12.15
   # sherpa_onnx_macos:
   #   path: ../sherpa_onnx_macos
 
-  sherpa_onnx_linux: ^1.12.14
+  sherpa_onnx_linux: ^1.12.15
   # sherpa_onnx_linux:
   #   path: ../sherpa_onnx_linux
 
-  sherpa_onnx_windows: ^1.12.14
+  sherpa_onnx_windows: ^1.12.15
   # sherpa_onnx_windows:
   #   path: ../sherpa_onnx_windows
 
-  sherpa_onnx_ios: ^1.12.14
+  sherpa_onnx_ios: ^1.12.15
   # sherpa_onnx_ios:
   #   path: ../sherpa_onnx_ios
 

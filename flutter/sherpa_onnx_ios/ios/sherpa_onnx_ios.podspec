@@ -7,7 +7,7 @@
 # https://groups.google.com/g/dart-ffi/c/nUATMBy7r0c
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_ios'
-  s.version          = '1.12.14'
+  s.version          = '1.12.15'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.

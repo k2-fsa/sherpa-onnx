@@ -9,8 +9,8 @@ android {
         applicationId "com.k2fsa.sherpa.onnx"
         minSdk 28
         targetSdk 34
-        versionCode 20250918
-        versionName "1.12.14"
+        versionCode 20251022
+        versionName "1.12.15"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,5 +34,5 @@ dependencies {
     implementation 'pub.devrel:easypermissions:3.0.0'
     implementation 'androidx.core:core-ktx:1.7.0'
     // implementation files('/Users/fangjun/open-source/sherpa-onnx/android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar')
-    implementation 'com.github.k2-fsa:sherpa-onnx:v1.12.14'
+    implementation 'com.github.k2-fsa:sherpa-onnx:v1.12.15'
 }
