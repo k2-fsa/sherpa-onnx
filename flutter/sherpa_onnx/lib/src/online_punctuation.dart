@@ -77,6 +77,10 @@ class OnlinePunctuation {
 
   // The user has to invoke OnlinePunctuation.free() to avoid memory leak.
   factory OnlinePunctuation({required OnlinePunctuationConfig config}) {
+    if (SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOnlinePunctuationConfig>();
 
     final cnnBiLstmPtr = config.model.cnnBiLstm.toNativeUtf8();
@@ -89,23 +93,18 @@ class OnlinePunctuation {
     final providerPtr = config.model.provider.toNativeUtf8();
     c.ref.model.provider = providerPtr;
 
-    if (SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr = SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation?.call(c) ??
         nullptr;
+
+    calloc.free(providerPtr);
+    calloc.free(cnnBiLstmPtr);
+    calloc.free(bpeVocabPtr);
+    calloc.free(c);
 
     if (ptr == nullptr) {
       throw Exception(
           "Failed to create online punctuation. Please check your config");
     }
-
-    // Free the allocated strings and struct memory
-    calloc.free(providerPtr);
-    calloc.free(cnnBiLstmPtr);
-    calloc.free(bpeVocabPtr);
-    calloc.free(c);
 
     return OnlinePunctuation._(ptr: ptr, config: config);
   }

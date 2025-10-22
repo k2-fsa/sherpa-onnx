@@ -916,6 +916,32 @@ func sherpaOnnxOfflineTtsKittenModelConfig(
   )
 }
 
+func sherpaOnnxOfflineTtsZipvoiceModelConfig(
+  tokens: String = "",
+  textModel: String = "",
+  flowMatchingModel: String = "",
+  vocoder: String = "",
+  dataDir: String = "",
+  pinyinDict: String = "",
+  featScale: Float = 0.1,
+  tShift: Float = 0.5,
+  targetRms: Float = 0.1,
+  guidanceScale: Float = 1.0
+) -> SherpaOnnxOfflineTtsZipvoiceModelConfig {
+  return SherpaOnnxOfflineTtsZipvoiceModelConfig(
+    tokens: toCPointer(tokens),
+    text_model: toCPointer(textModel),
+    flow_matching_model: toCPointer(flowMatchingModel),
+    vocoder: toCPointer(vocoder),
+    data_dir: toCPointer(dataDir),
+    pinyin_dict: toCPointer(pinyinDict),
+    feat_scale: featScale,
+    t_shift: tShift,
+    target_rms: targetRms,
+    guidance_scale: guidanceScale
+  )
+}
+
 func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
@@ -923,7 +949,8 @@ func sherpaOnnxOfflineTtsModelConfig(
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu",
-  kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig()
+  kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig(),
+  zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
     vits: vits,
@@ -932,7 +959,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     provider: toCPointer(provider),
     matcha: matcha,
     kokoro: kokoro,
-    kitten: kitten
+    kitten: kitten,
+    zipvoice: zipvoice
   )
 }
 

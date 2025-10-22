@@ -146,10 +146,6 @@ class KeywordSpotter {
 
     final ptr = SherpaOnnxBindings.createKeywordSpotter?.call(c) ?? nullptr;
 
-    if (ptr == nullptr) {
-      throw Exception("Failed to create kws. Please check your config");
-    }
-
     calloc.free(c.ref.keywordsBuf);
     calloc.free(c.ref.keywordsFile);
     calloc.free(c.ref.model.bpeVocab);
@@ -166,6 +162,10 @@ class KeywordSpotter {
     calloc.free(c.ref.model.transducer.decoder);
     calloc.free(c.ref.model.transducer.joiner);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create kws. Please check your config");
+    }
 
     return KeywordSpotter._(ptr: ptr, config: config);
   }

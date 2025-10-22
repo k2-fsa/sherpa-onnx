@@ -214,6 +214,27 @@ final class SherpaOnnxOfflineTtsKittenModelConfig extends Struct {
   external double lengthScale;
 }
 
+final class SherpaOnnxOfflineTtsZipVoiceModelConfig extends Struct {
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> textModel;
+  external Pointer<Utf8> flowMatchingModel;
+  external Pointer<Utf8> vocoder;
+  external Pointer<Utf8> dataDir;
+  external Pointer<Utf8> pinyinDict;
+
+  @Float()
+  external double featScale;
+
+  @Float()
+  external double tShift;
+
+  @Float()
+  external double targetRms;
+
+  @Float()
+  external double guidanceScale;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -226,6 +247,7 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsMatchaModelConfig matcha;
   external SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
   external SherpaOnnxOfflineTtsKittenModelConfig kitten;
+  external SherpaOnnxOfflineTtsZipVoiceModelConfig zipvoice;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {

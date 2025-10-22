@@ -71,8 +71,8 @@ rm -rf sherpa-onnx-*
 ./run-whisper.sh
 rm -rf sherpa-onnx-*
 
-./run-whisper-large-v3.sh
-rm -rf sherpa-onnx-*
+# ./run-whisper-large-v3.sh
+# rm -rf sherpa-onnx-*
 
 ./run-tdnn-yesno.sh
 rm -rf sherpa-onnx-*

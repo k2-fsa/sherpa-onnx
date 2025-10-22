@@ -192,12 +192,72 @@ class OfflineTtsKittenModelConfig {
   final double lengthScale;
 }
 
+class OfflineTtsZipVoiceModelConfig {
+  const OfflineTtsZipVoiceModelConfig({
+    this.tokens = '',
+    this.textModel = '',
+    this.flowMatchingModel = '',
+    this.vocoder = '',
+    this.dataDir = '',
+    this.pinyinDict = '',
+    this.featScale = 0.1,
+    this.tShift = 0.5,
+    this.targetRms = 0.1,
+    this.guidanceScale = 1.0,
+  });
+
+  factory OfflineTtsZipVoiceModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsZipVoiceModelConfig(
+      tokens: json['tokens'] as String? ?? '',
+      textModel: json['textModel'] as String? ?? '',
+      flowMatchingModel: json['flowMatchingModel'] as String? ?? '',
+      vocoder: json['vocoder'] as String? ?? '',
+      dataDir: json['dataDir'] as String? ?? '',
+      pinyinDict: json['pinyinDict'] as String? ?? '',
+      featScale: (json['featScale'] as num?)?.toDouble() ?? 0.1,
+      tShift: (json['tShift'] as num?)?.toDouble() ?? 0.5,
+      targetRms: (json['targetRms'] as num?)?.toDouble() ?? 0.1,
+      guidanceScale: (json['guidanceScale'] as num?)?.toDouble() ?? 1.0,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineTtsZipVoiceModelConfig(tokens: $tokens, textModel: $textModel, flowMatchingModel: $flowMatchingModel, vocoder: $vocoder, dataDir: $dataDir, pinyinDict: $pinyinDict, featScale: $featScale, tShift: $tShift, targetRms: $targetRms, guidanceScale: $guidanceScale)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'tokens': tokens,
+        'textModel': textModel,
+        'flowMatchingModel': flowMatchingModel,
+        'vocoder': vocoder,
+        'dataDir': dataDir,
+        'pinyinDict': pinyinDict,
+        'featScale': featScale,
+        'tShift': tShift,
+        'targetRms': targetRms,
+        'guidanceScale': guidanceScale,
+      };
+
+  final String tokens;
+  final String textModel;
+  final String flowMatchingModel;
+  final String vocoder;
+  final String dataDir;
+  final String pinyinDict;
+  final double featScale;
+  final double tShift;
+  final double targetRms;
+  final double guidanceScale;
+}
+
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
     this.vits = const OfflineTtsVitsModelConfig(),
     this.matcha = const OfflineTtsMatchaModelConfig(),
     this.kokoro = const OfflineTtsKokoroModelConfig(),
     this.kitten = const OfflineTtsKittenModelConfig(),
+    this.zipvoice = const OfflineTtsZipVoiceModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -213,6 +273,8 @@ class OfflineTtsModelConfig {
           json['kokoro'] as Map<String, dynamic>? ?? const {}),
       kitten: OfflineTtsKittenModelConfig.fromJson(
           json['kitten'] as Map<String, dynamic>? ?? const {}),
+      zipvoice: OfflineTtsZipVoiceModelConfig.fromJson(
+          json['zipvoice'] as Map<String, dynamic>? ?? const {}),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -221,7 +283,7 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -229,6 +291,7 @@ class OfflineTtsModelConfig {
         'matcha': matcha.toJson(),
         'kokoro': kokoro.toJson(),
         'kitten': kitten.toJson(),
+        'zipvoice': zipvoice.toJson(),
         'numThreads': numThreads,
         'debug': debug,
         'provider': provider,
@@ -238,6 +301,7 @@ class OfflineTtsModelConfig {
   final OfflineTtsMatchaModelConfig matcha;
   final OfflineTtsKokoroModelConfig kokoro;
   final OfflineTtsKittenModelConfig kitten;
+  final OfflineTtsZipVoiceModelConfig zipvoice;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -301,6 +365,10 @@ class OfflineTts {
   /// The user is responsible to call the OfflineTts.free()
   /// method of the returned instance to avoid memory leak.
   factory OfflineTts(OfflineTtsConfig config) {
+    if (SherpaOnnxBindings.createOfflineTts == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOfflineTtsConfig>();
     c.ref.model.vits.model = config.model.vits.model.toNativeUtf8();
     c.ref.model.vits.lexicon = config.model.vits.lexicon.toNativeUtf8();
@@ -333,6 +401,17 @@ class OfflineTts {
     c.ref.model.kitten.dataDir = config.model.kitten.dataDir.toNativeUtf8();
     c.ref.model.kitten.lengthScale = config.model.kitten.lengthScale;
 
+    c.ref.model.zipvoice.tokens = config.model.zipvoice.tokens.toNativeUtf8();
+    c.ref.model.zipvoice.textModel = config.model.zipvoice.textModel.toNativeUtf8();
+    c.ref.model.zipvoice.flowMatchingModel = config.model.zipvoice.flowMatchingModel.toNativeUtf8();
+    c.ref.model.zipvoice.vocoder = config.model.zipvoice.vocoder.toNativeUtf8();
+    c.ref.model.zipvoice.dataDir = config.model.zipvoice.dataDir.toNativeUtf8();
+    c.ref.model.zipvoice.pinyinDict = config.model.zipvoice.pinyinDict.toNativeUtf8();
+    c.ref.model.zipvoice.featScale = config.model.zipvoice.featScale;
+    c.ref.model.zipvoice.tShift = config.model.zipvoice.tShift;
+    c.ref.model.zipvoice.targetRms = config.model.zipvoice.targetRms;
+    c.ref.model.zipvoice.guidanceScale = config.model.zipvoice.guidanceScale;
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -342,19 +421,18 @@ class OfflineTts {
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
     c.ref.silenceScale = config.silenceScale;
 
-    if (SherpaOnnxBindings.createOfflineTts == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
-
-    if (ptr == nullptr) {
-      throw Exception("Failed to create offline tts. Please check your config");
-    }
 
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+
+    calloc.free(c.ref.model.zipvoice.pinyinDict);
+    calloc.free(c.ref.model.zipvoice.dataDir);
+    calloc.free(c.ref.model.zipvoice.vocoder);
+    calloc.free(c.ref.model.zipvoice.flowMatchingModel);
+    calloc.free(c.ref.model.zipvoice.textModel);
+    calloc.free(c.ref.model.zipvoice.tokens);
 
     calloc.free(c.ref.model.kitten.dataDir);
     calloc.free(c.ref.model.kitten.tokens);
@@ -378,6 +456,11 @@ class OfflineTts {
     calloc.free(c.ref.model.vits.tokens);
     calloc.free(c.ref.model.vits.lexicon);
     calloc.free(c.ref.model.vits.model);
+    calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline tts. Please check your config");
+    }
 
     return OfflineTts._(ptr: ptr, config: config);
   }
