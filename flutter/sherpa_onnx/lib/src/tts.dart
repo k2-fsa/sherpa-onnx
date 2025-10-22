@@ -234,7 +234,7 @@ class OfflineTtsZipVoiceModelConfig {
         'dataDir': dataDir,
         'pinyinDict': pinyinDict,
         'featScale': featScale,
-        'tShift': tShift ,
+        'tShift': tShift,
         'targetRms': targetRms,
         'guidanceScale': guidanceScale,
       };
