@@ -23,7 +23,7 @@ or update your `oh-package.json5` to include the following:
 
 ```
   "dependencies": {
-    "sherpa_onnx": "1.12.14",
+    "sherpa_onnx": "1.12.15",
   },
 ```
 

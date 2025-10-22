@@ -8,7 +8,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  sherpa_onnx: ^1.12.14
+  sherpa_onnx: ^1.12.15
   path: ^1.9.0
   args: ^2.5.0
 

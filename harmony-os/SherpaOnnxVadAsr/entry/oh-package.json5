@@ -7,7 +7,7 @@
   "license": "",
   "dependencies": {
     // please see https://ohpm.openharmony.cn/#/cn/detail/sherpa_onnx
-    "sherpa_onnx": "1.12.14",
+    "sherpa_onnx": "1.12.15",
   }
 }
 

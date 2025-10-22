@@ -2,8 +2,8 @@ jdk:
   - openjdk17
 
 before_install:
-  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.14/sherpa-onnx-1.12.14.aar
+  - wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.15/sherpa-onnx-1.12.15.aar
 
 install:
-  - FILE="-Dfile=sherpa-onnx-1.12.14.aar"
-  - mvn install:install-file $FILE -DgroupId=com.k2fsa.sherpa.onnx -DartifactId=sherpa-onnx -Dversion=1.12.14 -Dpackaging=aar -DgeneratePom=true
+  - FILE="-Dfile=sherpa-onnx-1.12.15.aar"
+  - mvn install:install-file $FILE -DgroupId=com.k2fsa.sherpa.onnx -DartifactId=sherpa-onnx -Dversion=1.12.15 -Dpackaging=aar -DgeneratePom=true

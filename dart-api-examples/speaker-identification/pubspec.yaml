@@ -9,7 +9,7 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  sherpa_onnx: ^1.12.14
+  sherpa_onnx: ^1.12.15
   path: ^1.9.0
   args: ^2.5.0
 

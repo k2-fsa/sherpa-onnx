@@ -1,6 +1,6 @@
 {
   "name": "sherpa_onnx",
-  "version": "1.12.14",
+  "version": "1.12.15",
   "description": "On-device speech-to-text, text-to-speech, and speaker diarization using Next-gen Kaldi without Internet connection",
   "main": "Index.ets",
   "author": "The next-gen Kaldi team",
