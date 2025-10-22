@@ -101,6 +101,22 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKittenModelConfig);
   end;
 
+  TSherpaOnnxOfflineTtsZipVoiceModelConfig = record
+    Tokens: AnsiString;
+    TextModel: AnsiString;
+    FlowMatchingModel: AnsiString;
+    Vocoder: AnsiString;
+    DataDir: AnsiString;
+    PinyinDict: AnsiString;
+    FeatScale: Single;
+    Tshift: Single;
+    TargetRms: Single;
+    GuidanceScale: Single;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsZipVoiceModelConfig);
+  end;
+
   TSherpaOnnxOfflineTtsModelConfig = record
     Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: Integer;
@@ -109,6 +125,7 @@ type
     Matcha: TSherpaOnnxOfflineTtsMatchaModelConfig;
     Kokoro: TSherpaOnnxOfflineTtsKokoroModelConfig;
     Kitten: TSherpaOnnxOfflineTtsKittenModelConfig;
+    ZipVoice: TSherpaOnnxOfflineTtsZipVoiceModelConfig;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
@@ -955,6 +972,19 @@ type
     LengthScale: cfloat;
   end;
 
+  SherpaOnnxOfflineTtsZipVoiceModelConfig = record
+    Tokens: PAnsiChar;
+    TextModel: PAnsiChar;
+    FlowMatchingModel: PAnsiChar;
+    Vocoder: PAnsiChar;
+    DataDir: PAnsiChar;
+    PinyinDict: PAnsiChar;
+    FeatScale: cfloat;
+    Tshift: cfloat;
+    TargetRms: cfloat;
+    GuidanceScale: cfloat;
+  end;
+
   SherpaOnnxOfflineTtsModelConfig = record
     Vits: SherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: cint32;
@@ -963,6 +993,7 @@ type
     Matcha: SherpaOnnxOfflineTtsMatchaModelConfig;
     Kokoro: SherpaOnnxOfflineTtsKokoroModelConfig;
     Kitten: SherpaOnnxOfflineTtsKittenModelConfig;
+    ZipVoice: SherpaOnnxOfflineTtsZipVoiceModelConfig;
   end;
 
   SherpaOnnxOfflineTtsConfig = record
@@ -2320,7 +2351,7 @@ begin
     'Tokens := %s, ' +
     'DataDir := %s, ' +
     'NoiseScale := %.2f, ' +
-    'LengthScale := %.2f'
+    'LengthScale := %.2f' +
     ')',
     [Self.AcousticModel, Self.Vocoder, Self.Lexicon, Self.Tokens,
      Self.DataDir, Self.NoiseScale, Self.LengthScale
@@ -2370,6 +2401,33 @@ begin
   Dest.LengthScale := 1.0;
 end;
 
+function TSherpaOnnxOfflineTtsZipVoiceModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsZipVoiceModelConfig(' +
+    'Tokens := %s, ' +
+    'TextModel := %s, ' +
+    'FlowMatchingModel := %s, ' +
+    'Vocoder := %s, ' +
+    'DataDir := %s, ' +
+    'PinyinDict := %s, ' +
+    'FeatScale := %.2f, ' +
+    'Tshift := %.2f, ' +
+    'TargetRms := %.2f, ' +
+    'GuidanceScale := %.2f' +
+    ')',
+    [Self.Tokens, Self.TextModel, Self.FlowMatchingModel, Self.Vocoder,
+     Self.DataDir, Self.PinyinDict, Self.FeatScale, Self.Tshift,
+     Self.TargetRms, Self.GuidanceScale]);
+end;
+
+class operator TSherpaOnnxOfflineTtsZipVoiceModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsZipVoiceModelConfig);
+begin
+  Dest.FeatScale := 0.1;
+  Dest.Tshift := 0.5;
+  Dest.TargetRms := 0.1;
+  Dest.GuidanceScale := 1.0;
+end;
+
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
@@ -2379,10 +2437,12 @@ begin
     'Provider := %s, ' +
     'Matcha := %s, ' +
     'Kokoro := %s, ' +
-    'Kitten := %s' +
+    'Kitten := %s, ' +
+    'ZipVoice := %s' +
     ')',
     [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider,
-     Self.Matcha.ToString, Self.Kokoro.ToString, Self.Kitten.ToString
+     Self.Matcha.ToString, Self.Kokoro.ToString, Self.Kitten.ToString,
+     Self.ZipVoice.ToString
     ]);
 end;
 
@@ -2448,6 +2508,17 @@ begin
   C.Model.Kitten.Tokens := PAnsiChar(Config.Model.Kitten.Tokens);
   C.Model.Kitten.DataDir := PAnsiChar(Config.Model.Kitten.DataDir);
   C.Model.Kitten.LengthScale := Config.Model.Kitten.LengthScale;
+
+  C.Model.ZipVoice.Tokens := PAnsiChar(Config.Model.ZipVoice.Tokens);
+  C.Model.ZipVoice.TextModel := PAnsiChar(Config.Model.ZipVoice.TextModel);
+  C.Model.ZipVoice.FlowMatchingModel := PAnsiChar(Config.Model.ZipVoice.FlowMatchingModel);
+  C.Model.ZipVoice.Vocoder := PAnsiChar(Config.Model.ZipVoice.Vocoder);
+  C.Model.ZipVoice.DataDir := PAnsiChar(Config.Model.ZipVoice.DataDir);
+  C.Model.ZipVoice.PinyinDict := PAnsiChar(Config.Model.ZipVoice.PinyinDict);
+  C.Model.ZipVoice.FeatScale := Config.Model.ZipVoice.FeatScale;
+  C.Model.ZipVoice.Tshift := Config.Model.ZipVoice.Tshift;
+  C.Model.ZipVoice.TargetRms := Config.Model.ZipVoice.TargetRms;
+  C.Model.ZipVoice.GuidanceScale := Config.Model.ZipVoice.GuidanceScale;
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
