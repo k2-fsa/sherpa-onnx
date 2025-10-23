@@ -3,7 +3,7 @@ name: export-sense-voice-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-310
+      - ascend-npu-310-
   workflow_dispatch:
 
 concurrency:
@@ -24,25 +24,21 @@ jobs:
           - soc_version: "910B"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
-            host_env_cpu: "aarch64"
 
           - soc_version: "910B"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "WSYue-ASR"
-            host_env_cpu: "aarch64"
 
           # ===== Ascend 310 =====
           - soc_version: "310P3"
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "FunASR"
-            host_env_cpu: "aarch64"
 
           - soc_version: "310P3"
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "WSYue-ASR"
-            host_env_cpu: "aarch64"
 
     container:
       # image: ascendai/cann:latest
@@ -125,12 +121,11 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
-          host_env_cpu=${{ matrix.host_env_cpu }}
 
           atc --model=./model.onnx \
             --framework=5 \
             --host_env_os=linux \
-            --host_env_cpu=$host_env_cpu \
+            --host_env_cpu=aarch64 \
             --output=model \
             --input_format=ND \
             --input_shape="x:1,-1,560;prompt:4" \
@@ -192,12 +187,11 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
-          host_env_cpu=${{ matrix.host_env_cpu }}
 
           atc --model=./model.onnx \
             --framework=5 \
             --host_env_os=linux \
-            --host_env_cpu=$host_env_cpu \
+            --host_env_cpu=aarch64 \
             --output=model \
             --input_format=ND \
             --input_shape="x:1,-1,560;prompt:4" \

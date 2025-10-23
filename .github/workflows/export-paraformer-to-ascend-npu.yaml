@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-310-
+      - ascend-npu-310
   workflow_dispatch:
 
 concurrency:
@@ -30,27 +30,30 @@ jobs:
             framework: "WSChuan-ASR"
 
           # ===== Ascend 310 =====
-          - soc_version: "310"
-            image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+          - soc_version: "310P3"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "FunASR"
 
-          - soc_version: "310"
-            image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+          - soc_version: "310P3"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "WSChuan-ASR"
 
     container:
       # image: ascendai/cann:latest
       # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
       # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
       image: ${{ matrix.image }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python 3.9
+      - name: Setup Python 3.8
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.8"
 
       - name: Show Python
         shell: bash
