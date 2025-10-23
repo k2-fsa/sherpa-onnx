@@ -32,15 +32,15 @@ jobs:
             host_env_cpu: "aarch64"
 
           # ===== Ascend 310 =====
-          - soc_version: "310"
+          - soc_version: "310P3"
             image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             framework: "FunASR"
-            host_env_cpu: "x86_64"
+            host_env_cpu: "aarch64"
 
-          - soc_version: "310"
+          - soc_version: "310P3"
             image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             framework: "WSYue-ASR"
-            host_env_cpu: "x86_64"
+            host_env_cpu: "aarch64"
 
     container:
       # image: ascendai/cann:latest
