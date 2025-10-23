@@ -33,12 +33,14 @@ jobs:
 
           # ===== Ascend 310 =====
           - soc_version: "310P3"
-            image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "FunASR"
             host_env_cpu: "aarch64"
 
           - soc_version: "310P3"
-            image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "WSYue-ASR"
             host_env_cpu: "aarch64"
 
@@ -46,6 +48,7 @@ jobs:
       # image: ascendai/cann:latest
       # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
       # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
       image: ${{ matrix.image }}
 
     steps:
