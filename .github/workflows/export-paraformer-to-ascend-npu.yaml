@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-acl-api
+      - ascend-npu-acl-api-
   workflow_dispatch:
 
 concurrency:
