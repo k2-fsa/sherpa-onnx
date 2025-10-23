@@ -1,5 +1,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,15 @@ import 'package:record/record.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './utils.dart';
+import './offline_model.dart';
 
 final modelDir = 'assets';
+Future<sherpa_onnx.OfflineRecognizer> createOfflineRecognizer() async {
+  final type = 2;
+  final modelConfig = await getOfflineModelConfig(type: type);
+  final config = sherpa_onnx.OfflineRecognizerConfig(model: modelConfig);
+  return sherpa_onnx.OfflineRecognizer(config);
+}
 
 class NoStreamingAsrVAdScreen extends StatefulWidget {
   const NoStreamingAsrVAdScreen({super.key});
@@ -21,6 +29,7 @@ class NoStreamingAsrVAdScreen extends StatefulWidget {
 }
 
 class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
+
   late final TextEditingController _controller;
   late final AudioRecorder _audioRecorder;
 
@@ -76,25 +85,11 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
       // 创建 VAD 和 buffer
       _vad = sherpa_onnx.VoiceActivityDetector(
         config: _vadConfig, 
-        bufferSizeInSeconds: 60
+        bufferSizeInSeconds: 30
       );
       _buffer = sherpa_onnx.CircularBuffer(capacity: 30 * 16000);
 
-      // 初始化离线识别器
-      final whisper = sherpa_onnx.OfflineWhisperModelConfig(
-        encoder: await copyAssetFile('$modelDir/base-encoder.onnx'),
-        decoder: await copyAssetFile('$modelDir/base-decoder.onnx'),
-      );
-
-      final modelConfig = sherpa_onnx.OfflineModelConfig(
-        whisper: whisper,
-        tokens: await copyAssetFile('$modelDir/base-tokens.txt'),
-        modelType: 'whisper',
-        debug: false,
-        numThreads: 1,
-      );
-      final config = sherpa_onnx.OfflineRecognizerConfig(model: modelConfig);
-      _recognizer = sherpa_onnx.OfflineRecognizer(config);
+      _recognizer = await createOfflineRecognizer();
       _isInitialized = true;
     }
 
@@ -176,7 +171,8 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
   }
 
   Future<void> _stop() async {
-  // 处理剩余的VAD数据
+    await _audioRecorder.stop();
+    // 处理剩余的VAD数据
      _vad!.flush();
     while (!_vad!.isEmpty()) {
       final segment = _vad!.front();
@@ -206,7 +202,6 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
           stream.free();
           _vad!.pop();
     }
-    await _audioRecorder.stop();
   }
 
   Future<void> _pause() => _audioRecorder.pause();
@@ -228,7 +223,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
 
       for (final e in AudioEncoder.values) {
         if (await _audioRecorder.isEncoderSupported(e)) {
-          debugPrint('- ${encoder.name}');
+          debugPrint('- ${e.name}');
         }
       }
     }
