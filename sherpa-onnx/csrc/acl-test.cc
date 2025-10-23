@@ -2,10 +2,11 @@
 #include "acl/acl.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <cstdint>
 
-int main() {
+int test1() {
   aclrtContext context = nullptr;
   aclrtStream stream = nullptr;
 
@@ -13,7 +14,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclInit: %s\n", msg);
-    return -1;
+    exit(-1);
   }
 
   printf("aclInit: Success\n");
@@ -24,7 +25,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtGetVersion: %s\n", msg);
-    return -1;
+    exit(-1);
   }
 
   int32_t device_id = 0;
@@ -32,7 +33,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtSetDevice: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclrtSetDevice: device id %d\n", device_id);
@@ -41,7 +42,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtCreateContext: %s\n", msg);
-    return 1;
+    exit(-1);
   }
   printf("aclrtCreateContext: Success\n");
 
@@ -49,7 +50,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtCreateStream: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclrtCreateStream: Success\n");
@@ -58,7 +59,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtDestroyStream: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclrtDestroyStream: Success\n");
@@ -67,7 +68,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtDestroyContext: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclrtDestroyContext: Success\n");
@@ -76,7 +77,7 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtResetDevice: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclrtResetDevice: Success\n");
@@ -86,10 +87,12 @@ int main() {
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclFinalize: %s\n", msg);
-    return 1;
+    exit(-1);
   }
 
   printf("aclFinalize: Success\n");
 
   return 0;
 }
+
+int main() { test1(); }
