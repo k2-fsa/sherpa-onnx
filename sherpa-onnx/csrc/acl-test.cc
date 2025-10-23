@@ -1,6 +1,8 @@
 
 #include "acl/acl.h"
 
+#include <stdio.h>
+
 #include <cstdint>
 
 int main() {
@@ -70,7 +72,7 @@ int main() {
 
   printf("aclrtDestroyContext: Success\n");
 
-  ret = aclrtResetDevice(deviceId);
+  ret = aclrtResetDevice(device_id);
   if (ret != ACL_ERROR_NONE) {
     const char *msg = aclGetRecentErrMsg();
     fprintf(stderr, "aclrtResetDevice: %s\n", msg);

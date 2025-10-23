@@ -323,6 +323,8 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
     set(ASCEND_TOOLKIT_HOME $ENV{ASCEND_TOOLKIT_HOME})
   endif()
 
+  message(STATUS "ASCEND_TOOLKIT_HOME: ${ASCEND_TOOLKIT_HOME}")
+
   if(NOT EXISTS ${ASCEND_TOOLKIT_HOME}/include/acl/acl.h)
     message(FATAL_ERROR "${ASCEND_TOOLKIT_HOME}/include/acl/acl.h does not exist")
   endif()

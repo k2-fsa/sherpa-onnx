@@ -729,7 +729,7 @@ add_custom_target(
 add_custom_target(check DEPENDS clang-tidy-check)
 
 add_executable(acl-test ./acl-test.cc)
-target_include_directories(acl-test ${ASCEND_TOOLKIT_HOME}/include)
+target_include_directories(acl-test PRIVATE ${ASCEND_TOOLKIT_HOME}/include)
 target_link_libraries(acl-test
   -L${ASCEND_TOOLKIT_HOME}/lib64
   -lascendcl
