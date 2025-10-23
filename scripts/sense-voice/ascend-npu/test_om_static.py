@@ -24,10 +24,11 @@ class OmModel:
         for i in self.model.get_outputs():
             print(i.name, i.datatype, i.shape)
 
+        self.num_frames = self.model.get_inputs()[0].shape[1]
+
     def __call__(self, x, prompt=None, language=None, text_norm=None):
-        return self.model.infer([x, prompt], mode="dymshape", custom_sizes=10000000)[0][
-            0
-        ]
+        return self.model.infer([x, prompt], mode="static", custom_sizes=10000000)[0][0]
+        return logits
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
@@ -99,6 +100,18 @@ def main():
         sample_rate=sample_rate,
     )
     print("features.shape", features.shape)
+    if model.num_frames > 0:
+        if features.shape[0] < model.num_frames:
+            features = np.pad(
+                features,
+                ((0, model.num_frames - features.shape[0]), (0, 0)),
+                mode="constant",
+                constant_values=0,
+            )
+        elif features.shape[0] > model.num_frames:
+            features = features[: model.num_frames]
+
+        print("features.shape (new)", features.shape)
 
     language_auto = 0
     language_zh = 3
@@ -116,12 +129,16 @@ def main():
     text_norm = with_itn
 
     prompt = np.array([language, 1, 2, text_norm], dtype=np.int32)
+    # language = np.array([language], dtype=np.int32)
+    # text_norm = np.array([text_norm], dtype=np.int32)
 
     print("prompt", prompt.shape)
 
     logits = model(
         x=features[None],
         prompt=prompt,
+        # language=language,
+        ##text_norm=text_norm,
     )
     print("logits.shape", logits.shape, type(logits))
 

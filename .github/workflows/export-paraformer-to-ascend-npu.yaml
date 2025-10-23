@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu
+      - ascend-npu-310
   workflow_dispatch:
 
 concurrency:
@@ -13,32 +13,53 @@ concurrency:
 jobs:
   export-paraformer-to-rknn:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.framework }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.framework }} ${{ matrix.soc_version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ===== Ascend 910B =====
+          - soc_version: "910B"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "FunASR"
+
+          - soc_version: "910B"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "WSChuan-ASR"
+
+          # ===== Ascend 310 =====
+          - soc_version: "310P3"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
+            framework: "FunASR"
+
+          - soc_version: "310P3"
+            # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
+            image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
+            framework: "WSChuan-ASR"
+
     container:
       # image: ascendai/cann:latest
       # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
       # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
-      image: gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.8"]
-        framework: ["FunASR", "WSChuan-ASR"]
+      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
+      image: ${{ matrix.image }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python 3.8
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.8"
 
       - name: Show Python
         shell: bash
         run: |
           python3 --version
+          which python3
 
       - name: Install curl
         shell: bash
@@ -109,6 +130,8 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
+          soc_version=${{ matrix.soc_version }}
+
           atc --model=./predictor.onnx \
             --framework=5 \
             --host_env_os=linux \
@@ -116,7 +139,7 @@ jobs:
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
@@ -127,7 +150,7 @@ jobs:
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
@@ -138,7 +161,7 @@ jobs:
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,-1,560" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
@@ -199,6 +222,8 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
+          soc_version=${{ matrix.soc_version }}
+
           atc --model=./predictor.onnx \
             --framework=5 \
             --host_env_os=linux \
@@ -206,7 +231,7 @@ jobs:
             --output=predictor \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
@@ -217,7 +242,7 @@ jobs:
             --output=decoder \
             --input_format=ND \
             --input_shape="encoder_out:1,-1,512;acoustic_embedding:1,-1,512" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
@@ -228,13 +253,13 @@ jobs:
             --output=encoder \
             --input_format=ND \
             --input_shape="x:1,-1,560" \
-            --soc_version="Ascend910B"
+            --soc_version="Ascend${soc_version}"
 
           ls -lh *.om
 
 
           echo "collect results"
-          d=sherpa-onnx-ascend-910B-paraformer-zh-2025-10-07
+          d=sherpa-onnx-ascend-${soc_version}-paraformer-zh-2025-10-07
 
           mkdir -p $d
           mkdir -p $d/test_wavs
