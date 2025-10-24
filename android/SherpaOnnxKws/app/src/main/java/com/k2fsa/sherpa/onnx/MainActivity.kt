@@ -104,9 +104,18 @@ class MainActivity : AppCompatActivity() {
             lastText = ""
             idx = 0
 
+            var keywords = inputText.text.toString()
+            Log.i(TAG, keywords)
+
+            keywords = keywords.replace("\n", "/")
+            keywords = keywords.trim()
+
+            Log.i(TAG, keywords)
+
             recordingThread = thread(true) {
-                processSamples()
+                processSamples(keywords)
             }
+
             Log.i(TAG, "Started recording")
         } else {
             isRecording = false
@@ -118,29 +127,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun processSamples() {
+    private fun processSamples(keywords: String) {
         Log.i(TAG, "processing samples")
 
         val interval = 0.1 // i.e., 100 ms
         val bufferSize = (interval * sampleRateInHz).toInt() // in samples
         val buffer = ShortArray(bufferSize)
 
-        var keywords = inputText.text.toString()
-
-        Log.i(TAG, keywords)
-        keywords = keywords.replace("\n", "/")
-        keywords = keywords.trim()
-
         stream = kws.createStream(keywords)
         if (stream.ptr == 0L) {
             Log.i(TAG, "Failed to create stream with keywords: $keywords")
-            Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
-                .show()
+
+            runOnUiThread {
+              Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
+                  .show()
+            }
             return
         }
 
         Log.i(TAG, "Created stream. Running ...")
-
 
         while (isRecording) {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
