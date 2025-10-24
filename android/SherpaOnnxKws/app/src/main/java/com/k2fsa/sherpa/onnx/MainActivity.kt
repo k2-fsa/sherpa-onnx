@@ -121,8 +121,8 @@ class MainActivity : AppCompatActivity() {
                 audioRecord?.let {
                   it.stop()
                   it.release()
-                  audioRecord = null
                 }
+                audioRecord = null
 
                 return
             }
@@ -187,8 +187,9 @@ class MainActivity : AppCompatActivity() {
         audioRecord?.let {
           it.stop()
           it.release()
-          audioRecord = null
         }
+
+        audioRecord = null
     }
 
     private fun initMicrophone(): Boolean {
