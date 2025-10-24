@@ -38,15 +38,15 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
   int _index = 0;
   bool _isInitialized = false;
 
-  // 离线识别相关变量
+  // offline recognizer related vars
   sherpa_onnx.OfflineRecognizer? _recognizer;
-  int _sampleRate = 16000;
+  static const int _sampleRate = 16000;
 
-  // VAD 相关变量 - 现在作为成员变量
+  // VAD related vars
   sherpa_onnx.VoiceActivityDetector? _vad;
   sherpa_onnx.CircularBuffer? _buffer;
   
-  // VAD 配置
+  // VAD config
   late sherpa_onnx.VadModelConfig _vadConfig;
 
   StreamSubscription<RecordState>? _recordSub;
@@ -82,12 +82,12 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
         debug: false,
       );
 
-      // 创建 VAD 和 buffer
+      // create VAD, use buffer model
       _vad = sherpa_onnx.VoiceActivityDetector(
         config: _vadConfig, 
         bufferSizeInSeconds: 30
       );
-      _buffer = sherpa_onnx.CircularBuffer(capacity: 30 * 16000);
+      _buffer = sherpa_onnx.CircularBuffer(capacity: 30 * _sampleRate);
 
       _recognizer = await createOfflineRecognizer();
       _isInitialized = true;
@@ -106,7 +106,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
 
         const config = RecordConfig(
           encoder: encoder,
-          sampleRate: 16000,
+          sampleRate: _sampleRate,
           numChannels: 1,
         );
 
@@ -116,7 +116,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
           (data) {
             final samplesFloat32 = convertBytesToFloat32(Uint8List.fromList(data));
             
-            // 使用成员变量 _buffer 和 _vad
+            // use _buffer and _vad for offline stream data making
             _buffer!.push(samplesFloat32);
             
             final windowSize = _vadConfig.sileroVad.windowSize;
@@ -132,7 +132,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
                 final segment = _vad!.front();
                 final samples = segment.samples;  
                 
-                // 创建新的流进行识别
+                // offline _recognizer stream handle logic
                 final stream = _recognizer!.createStream();
                 stream.acceptWaveform(samples: samples, sampleRate: _sampleRate);
                 _recognizer!.decode(stream);
@@ -141,7 +141,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
                 stream.free();
                 _vad!.pop();
                 
-                // 更新显示文本
+                // update text to display
                 String textToDisplay = _last;
                 if (text != '') {
                   _index += 1;
@@ -172,7 +172,7 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
 
   Future<void> _stop() async {
     await _audioRecorder.stop();
-    // 处理剩余的VAD数据
+    // handle rest of vad data
      _vad!.flush();
     while (!_vad!.isEmpty()) {
       final segment = _vad!.front();
@@ -267,8 +267,8 @@ class _NoStreamingAsrVAdScreenState extends State<NoStreamingAsrVAdScreen> {
     _recordSub?.cancel();
     _audioRecorder.dispose();
     _recognizer?.free();
-    _vad?.free(); // 释放 VAD 资源
-    _buffer?.free(); // 释放 buffer 资源
+    _vad?.free(); // release vad
+    _buffer?.free(); // release buffer
     super.dispose();
   }
 
