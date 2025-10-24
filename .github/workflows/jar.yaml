@@ -35,7 +35,7 @@ jobs:
           - os: macos-13
             arch: "x64"
 
-          - os: windows-latest
+          - os: windows-2022
             arch: "x64"
 
     steps:
@@ -126,7 +126,7 @@ jobs:
           rm -rf $src*
 
       - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
-        if: ${{ matrix.os == 'windows-latest' && matrix.arch == 'x64' }}
+        if: ${{ matrix.os == 'windows-2022' && matrix.arch == 'x64' }}
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -181,7 +181,7 @@ jobs:
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "macos-13" && $arch == "x64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
-          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+          elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
           else
             echo "Unknown os $os with arch $arch"
@@ -218,7 +218,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-native-*.jar
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.10
+          tag: v1.12.15
 
       - name: Test KittenTTS
         shell: bash
@@ -236,7 +236,7 @@ jobs:
             native_jar=sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "macos-13" && $arch == "x64" ]]; then
             native_jar=sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
-          elif [[ $os == "windows-latest" && $arch == "x64" ]]; then
+          elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             native_jar=sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
           else
             echo "Unknown os $os with arch $arch"
@@ -245,7 +245,7 @@ jobs:
           echo "native_jar: $native_jar"
           ls -lh sherpa-onnx/java-api/$native_jar
 
-          if [[ ${{ matrix.os }} == "windows-latest" ]]; then
+          if [[ ${{ matrix.os }} == "windows-2022" ]]; then
             SEP=";"
           else
             SEP=":"

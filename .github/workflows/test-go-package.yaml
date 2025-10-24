@@ -32,9 +32,9 @@ jobs:
             arch: amd64
           - os: macos-14
             arch: arm64
-          - os: windows-latest
+          - os: windows-2022
             arch: x64
-          - os: windows-latest
+          - os: windows-2022
             arch: x86 # use 386 for GOARCH
 
     steps:
@@ -59,25 +59,25 @@ jobs:
           go env GOARCH
 
       - name: Set up MinGW for x64
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
 
       - name: Set up MinGW for x86
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
           version: '12.2.0'
 
       - name: Show gcc
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         run: |
           gcc --version
 
       - name: Test NeMo Canary ASR
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-canary-decode-files
@@ -85,35 +85,35 @@ jobs:
           rm -rf sherpa-onnx-nemo-*
 
       - name: Test speech enhancement (GTCRN)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/speech-enhancement-gtcrn/
           ./run.sh
 
       - name: Test Keyword spotting
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/keyword-spotting-from-file/
           ./run.sh
 
       - name: Test adding punctuation
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/add-punctuation/
           ./run.sh
 
       - name: Test non-streaming speaker diarization
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-speaker-diarization/
           ./run.sh
 
       - name: Test non-streaming speaker diarization
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-speaker-diarization/
@@ -129,7 +129,7 @@ jobs:
           ./run.sh
 
       - name: Test non-streaming speaker diarization
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-speaker-diarization/
@@ -150,21 +150,21 @@ jobs:
           ./run.sh
 
       - name: Test streaming HLG decoding (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/streaming-hlg-decoding/
           ./run.sh
 
       - name: Test speaker identification (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/speaker-identification
           ./run.sh
 
       - name: Test speaker identification (Win64)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
         run: |
           cd go-api-examples/speaker-identification
@@ -185,7 +185,7 @@ jobs:
           go run ./main.go
 
       - name: Test speaker identification (Win32)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         shell: bash
         run: |
           cd go-api-examples/speaker-identification
@@ -221,7 +221,7 @@ jobs:
           rm -rf *.onnx
 
       - name: Test non-streaming TTS (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           mkdir tts-waves
@@ -271,7 +271,7 @@ jobs:
           cp *.wav ../../tts-waves/
 
       - name: Test non-streaming TTS (Win64)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
         run: |
           mkdir tts-waves
@@ -317,7 +317,7 @@ jobs:
           cp *.wav ../../tts-waves/
 
       - name: Test non-streaming TTS (Win32)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         shell: bash
         run: |
           mkdir tts-waves
@@ -371,7 +371,7 @@ jobs:
           cp *.wav ../../tts-waves/
 
       - name: Test non-streaming decoding files (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
@@ -402,7 +402,7 @@ jobs:
           rm -rf sherpa-onnx-tdnn-yesno
 
       - name: Test non-streaming decoding files (Win64)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
@@ -439,7 +439,7 @@ jobs:
           rm -rf sherpa-onnx-tdnn-yesno
 
       - name: Test non-streaming decoding files (Win32)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
@@ -484,7 +484,7 @@ jobs:
           rm -rf sherpa-onnx-tdnn-yesno
 
       - name: Test audio tagging (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/audio-tagging
@@ -497,7 +497,7 @@ jobs:
           ./run.sh
 
       - name: Test streaming decoding files (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd go-api-examples/streaming-decode-files
@@ -516,7 +516,7 @@ jobs:
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
       - name: Test streaming decoding files (Win64)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
         run: |
           cd go-api-examples/streaming-decode-files
@@ -541,7 +541,7 @@ jobs:
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
       - name: Test streaming decoding files (Win32)
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
         shell: bash
         run: |
           cd go-api-examples/streaming-decode-files
