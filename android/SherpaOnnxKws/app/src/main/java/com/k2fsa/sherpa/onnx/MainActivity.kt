@@ -112,40 +112,36 @@ class MainActivity : AppCompatActivity() {
 
             Log.i(TAG, keywords)
 
+            stream = kws.createStream(keywords)
+            if (stream.ptr == 0L) {
+                Log.i(TAG, "Failed to create stream with keywords: $keywords")
+
+                Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
+                    .show()
+                return
+            }
+
+            Log.i(TAG, "Created stream. Running ...")
+
             recordingThread = thread(true) {
-                processSamples(keywords)
+                processSamples()
             }
 
             Log.i(TAG, "Started recording")
         } else {
             isRecording = false
-            audioRecord!!.stop()
-            audioRecord!!.release()
-            audioRecord = null
+
             recordButton.setText(R.string.start)
             Log.i(TAG, "Stopped recording")
         }
     }
 
-    private fun processSamples(keywords: String) {
+    private fun processSamples() {
         Log.i(TAG, "processing samples")
 
         val interval = 0.1 // i.e., 100 ms
         val bufferSize = (interval * sampleRateInHz).toInt() // in samples
         val buffer = ShortArray(bufferSize)
-
-        stream = kws.createStream(keywords)
-        if (stream.ptr == 0L) {
-            Log.i(TAG, "Failed to create stream with keywords: $keywords")
-
-            runOnUiThread {
-              Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
-                  .show()
-            }
-            return
-        }
-
-        Log.i(TAG, "Created stream. Running ...")
 
         while (isRecording) {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
@@ -180,8 +176,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         stream.release()
-
         Log.i(TAG, "Released stream. Stopped")
+
+        audioRecord!!.stop()
+        audioRecord!!.release()
+        audioRecord = null
     }
 
     private fun initMicrophone(): Boolean {
