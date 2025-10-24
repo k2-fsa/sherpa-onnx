@@ -90,24 +90,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun onclick() {
         if (!isRecording) {
-            var keywords = inputText.text.toString()
-
-            Log.i(TAG, keywords)
-            keywords = keywords.replace("\n", "/")
-            keywords = keywords.trim()
-            // If keywords is an empty string, it just resets the decoding stream
-            // always returns true in this case.
-            // If keywords is not empty, it will create a new decoding stream with
-            // the given keywords appended to the default keywords.
-            // Return false if errors occurred when adding keywords, true otherwise.
-            stream.release()
-            stream = kws.createStream(keywords)
-            if (stream.ptr == 0L) {
-                Log.i(TAG, "Failed to create stream with keywords: $keywords")
-                Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
-                    .show()
-                return
-            }
 
             val ret = initMicrophone()
             if (!ret) {
@@ -132,7 +114,6 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.release()
             audioRecord = null
             recordButton.setText(R.string.start)
-            stream.release()
             Log.i(TAG, "Stopped recording")
         }
     }
@@ -143,6 +124,23 @@ class MainActivity : AppCompatActivity() {
         val interval = 0.1 // i.e., 100 ms
         val bufferSize = (interval * sampleRateInHz).toInt() // in samples
         val buffer = ShortArray(bufferSize)
+
+        var keywords = inputText.text.toString()
+
+        Log.i(TAG, keywords)
+        keywords = keywords.replace("\n", "/")
+        keywords = keywords.trim()
+
+        stream = kws.createStream(keywords)
+        if (stream.ptr == 0L) {
+            Log.i(TAG, "Failed to create stream with keywords: $keywords")
+            Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
+                .show()
+            return
+        }
+
+        Log.i(TAG, "Created stream. Running ...")
+
 
         while (isRecording) {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
@@ -175,6 +173,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        stream.release()
+
+        Log.i(TAG, "Released stream. Stopped")
     }
 
     private fun initMicrophone(): Boolean {
@@ -217,6 +219,5 @@ class MainActivity : AppCompatActivity() {
             assetManager = application.assets,
             config = config,
         )
-        stream = kws.createStream()
     }
 }
