@@ -118,6 +118,11 @@ class MainActivity : AppCompatActivity() {
 
                 Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
                     .show()
+
+                audioRecord!!.stop()
+                audioRecord!!.release()
+                audioRecord = null
+
                 return
             }
 
