@@ -90,7 +90,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun onclick() {
         if (!isRecording) {
-
             val ret = initMicrophone()
             if (!ret) {
                 Log.e(TAG, "Failed to initialize microphone")
@@ -105,12 +104,12 @@ class MainActivity : AppCompatActivity() {
             idx = 0
 
             var keywords = inputText.text.toString()
-            Log.i(TAG, keywords)
+            Log.i(TAG, "Raw keywords: $keywords")
 
             keywords = keywords.replace("\n", "/")
             keywords = keywords.trim()
 
-            Log.i(TAG, keywords)
+            Log.i(TAG, "Normalized keywords: $keywords")
 
             stream = kws.createStream(keywords)
             if (stream.ptr == 0L) {
@@ -119,9 +118,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
                     .show()
 
-                audioRecord!!.stop()
-                audioRecord!!.release()
-                audioRecord = null
+                audioRecord?.let {
+                  it.stop()
+                  it.release()
+                  audioRecord = null
+                }
 
                 return
             }
@@ -183,9 +184,11 @@ class MainActivity : AppCompatActivity() {
         stream.release()
         Log.i(TAG, "Released stream. Stopped")
 
-        audioRecord!!.stop()
-        audioRecord!!.release()
-        audioRecord = null
+        audioRecord?.let {
+          it.stop()
+          it.release()
+          audioRecord = null
+        }
     }
 
     private fun initMicrophone(): Boolean {
