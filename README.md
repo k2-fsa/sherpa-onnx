@@ -1,4 +1,4 @@
-### Supported functions
+ ### Supported functions
 
 |Speech recognition| [Speech synthesis][tts-url] | [Source separation][ss-url] |
 |------------------|------------------|-------------------|
@@ -174,8 +174,8 @@ We also have spaces built using WebAssembly. They are listed below:
 |------------------------------------------|------------------------------------|------------------------------------|
 | Android (arm64-v8a, armeabi-v7a, x86_64) | [Address][flutter-tts-android]     | [点此][flutter-tts-android-cn]     |
 | Linux (x64)                              | [Address][flutter-tts-linux]       | [点此][flutter-tts-linux-cn]       |
-| macOS (x64)                              | [Address][flutter-tts-macos-x64]   | [点此][flutter-tts-macos-arm64-cn] |
-| macOS (arm64)                            | [Address][flutter-tts-macos-arm64] | [点此][flutter-tts-macos-x64-cn]   |
+| macOS (x64)                              | [Address][flutter-tts-macos-x64]   | [点此][flutter-tts-macos-x64-cn] |
+| macOS (arm64)                            | [Address][flutter-tts-macos-arm64] | [点此][flutter-tts-macos-arm64-cn]   |
 | Windows (x64)                            | [Address][flutter-tts-win-x64]     | [点此][flutter-tts-win-x64-cn]     |
 
 > Note: You need to build from source for iOS.
@@ -522,9 +522,9 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [flutter-tts-linux]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux.html
 [flutter-tts-linux-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux-cn.html
 [flutter-tts-macos-x64]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-x64.html
-[flutter-tts-macos-arm64-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-x64-cn.html
+[flutter-tts-macos-arm64-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-arm64-cn.html
 [flutter-tts-macos-arm64]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-arm64.html
-[flutter-tts-macos-x64-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-arm64-cn.html
+[flutter-tts-macos-x64-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-x64-cn.html
 [flutter-tts-win-x64]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win.html
 [flutter-tts-win-x64-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win-cn.html
 [lazarus-subtitle]: https://k2-fsa.github.io/sherpa/onnx/lazarus/download-generated-subtitles.html
@@ -572,4 +572,4 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [vad-url]: https://k2-fsa.github.io/sherpa/onnx/vad/index.html
 [kws-url]: https://k2-fsa.github.io/sherpa/onnx/kws/index.html
 [punct-url]: https://k2-fsa.github.io/sherpa/onnx/punctuation/index.html
-[se-url]: https://k2-fsa.github.io/sherpa/onnx/speech-enhancment/index.html
+[se-url]: https://k2-fsa.github.io/sherpa/onnx/speech-enhancement/index.html
