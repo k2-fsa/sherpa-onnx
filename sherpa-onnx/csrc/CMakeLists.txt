@@ -729,10 +729,5 @@ add_custom_target(
 add_custom_target(check DEPENDS clang-tidy-check)
 
 if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
-  add_executable(acl-test ./acl-test.cc)
-  target_include_directories(acl-test PRIVATE ${ASCEND_TOOLKIT_HOME}/include)
-  target_link_libraries(acl-test
-    -L${ASCEND_TOOLKIT_HOME}/lib64
-    -lascendcl
-  )
+  add_subdirectory(./ascend)
 endif()
