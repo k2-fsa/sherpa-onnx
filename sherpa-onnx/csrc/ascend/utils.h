@@ -36,6 +36,7 @@ class AclContext {
   const AclContext &operator=(const AclContext &) = delete;
 
   aclrtContext Get() const;
+  operator aclrtContext() { return context_; }
 
  private:
   aclrtContext context_ = nullptr;
@@ -52,6 +53,8 @@ class AclDevicePtr {
   const AclDevicePtr &operator=(const AclDevicePtr &) = delete;
 
   void *Get() const { return p_; }
+  operator void *() { return p_; }
+
   size_t Size() const { return size_; }
 
  private:
@@ -69,6 +72,7 @@ class AclHostPtr {
   const AclHostPtr &operator=(const AclDevicePtr &) = delete;
 
   void *Get() const { return p_; }
+  operator void *() { return p_; }
 
  private:
   void *p_ = nullptr;
@@ -85,6 +89,8 @@ class AclModelDesc {
   const AclModelDesc &operator=(const AclModelDesc &) = delete;
 
   aclmdlDesc *Get() const { return p_; }
+  operator aclmdlDesc *() const { return p_; }
+
   size_t Size() const { return size_; }
 
  private:
@@ -98,6 +104,7 @@ class AclModel {
   ~AclModel();
 
   uint32_t Get() const { return model_id_; }
+  operator uint32_t() const { return model_id_; }
 
   AclModel(const AclModel &) = delete;
   const AclModel &operator=(const AclModel &) = delete;
@@ -148,6 +155,7 @@ class AclMdlDataset {
   void SetTensorDesc(aclTensorDesc *tensor_desc, size_t index) const;
 
   aclmdlDataset *Get() const { return p_; }
+  operator aclmdlDataset *() const { return p_; }
 
  private:
   aclmdlDataset *p_ = nullptr;
@@ -162,6 +170,7 @@ class AclDataBuffer {
   AclDataBuffer &operator=(const AclDataBuffer &) = delete;
 
   aclDataBuffer *Get() const { return p_; }
+  operator aclDataBuffer *() const { return p_; }
 
  private:
   aclDataBuffer *p_ = nullptr;
@@ -177,6 +186,7 @@ class AclTensorDesc {
   AclTensorDesc &operator=(const AclTensorDesc &) = delete;
 
   aclTensorDesc *Get() const { return p_; }
+  operator aclTensorDesc *() const { return p_; }
 
  private:
   aclTensorDesc *p_ = nullptr;

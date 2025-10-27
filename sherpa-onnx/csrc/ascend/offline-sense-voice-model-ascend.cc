@@ -40,23 +40,22 @@ class OfflineSenseVoiceModelAscend::Impl {
     int32_t num_frames = features.size() / 560;
     std::cout << "num_frames: " << num_frames << "\n";
 
-    aclError ret = aclrtMemcpy(x_ptr_->Get(), features.size() * sizeof(float),
-                               features.data(), features.size() * sizeof(float),
-                               ACL_MEMCPY_HOST_TO_DEVICE);
+    aclError ret =
+        aclrtMemcpy(*x_ptr_, features.size() * sizeof(float), features.data(),
+                    features.size() * sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     std::array<int32_t, 4> prompt_array = {0, 1, 2, 15};
-    ret = aclrtMemcpy(prompt_ptr_->Get(), prompt_ptr_->Size(),
-                      prompt_array.data(), prompt_ptr_->Size(),
-                      ACL_MEMCPY_HOST_TO_DEVICE);
+    ret = aclrtMemcpy(*prompt_ptr_, prompt_ptr_->Size(), prompt_array.data(),
+                      prompt_ptr_->Size(), ACL_MEMCPY_HOST_TO_DEVICE);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer x_buf(x_ptr_->Get(), features.size() * sizeof(float));
-    input_dataset.AddBuffer(x_buf.Get());
+    AclDataBuffer x_buf(*x_ptr_, features.size() * sizeof(float));
+    input_dataset.AddBuffer(x_buf);
 
-    AclDataBuffer prompt_buf(prompt_ptr_->Get(), prompt_ptr_->Size());
-    input_dataset.AddBuffer(prompt_buf.Get());
+    AclDataBuffer prompt_buf(*prompt_ptr_, prompt_ptr_->Size());
+    input_dataset.AddBuffer(prompt_buf);
 
     // 动态Shape输入（设置Shape范围）
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
@@ -64,27 +63,25 @@ class OfflineSenseVoiceModelAscend::Impl {
     std::array<int64_t, 3> x_shape = {1, 93, 560};
     AclTensorDesc x_desc(ACL_FLOAT, x_shape.size(), x_shape.data(),
                          ACL_FORMAT_ND);
-    input_dataset.SetTensorDesc(x_desc.Get(), 0);
+    input_dataset.SetTensorDesc(x_desc, 0);
 
     std::array<int64_t, 1> prompt_shape = {4};
     AclTensorDesc prompt_desc(ACL_INT32, prompt_shape.size(),
                               prompt_shape.data(), ACL_FORMAT_ND);
-    input_dataset.SetTensorDesc(prompt_desc.Get(), 1);
+    input_dataset.SetTensorDesc(prompt_desc, 1);
 
     AclMdlDataset output_dataset;
 
-    AclDataBuffer logits_buf(logits_ptr_->Get(),
+    AclDataBuffer logits_buf(*logits_ptr_,
                              num_frames * vocab_size_ * sizeof(float));
-    output_dataset.AddBuffer(logits_buf.Get());
+    output_dataset.AddBuffer(logits_buf);
 
-    ret =
-        aclmdlExecute(model_->Get(), input_dataset.Get(), output_dataset.Get());
+    ret = aclmdlExecute(*model_, input_dataset, output_dataset);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
 
     std::vector<float> logits(num_frames * vocab_size_);
     ret = aclrtMemcpy(logits.data(), num_frames * vocab_size_ * sizeof(float),
-                      logits_ptr_->Get(),
-                      num_frames * vocab_size_ * sizeof(float),
+                      *logits_ptr_, num_frames * vocab_size_ * sizeof(float),
                       ACL_MEMCPY_DEVICE_TO_HOST);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
