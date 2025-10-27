@@ -182,12 +182,73 @@ AclModel::AclModel(const std::string &model_path) {
                            model_path.c_str());
 
   desc_ = std::make_unique<AclModelDesc>(model_id_);
+
+  InitInputNames();
+  InitInputShapes();
+
+  InitOutputNames();
+  InitOutputShapes();
 }
 
 AclModel::~AclModel() {
   if (model_id_ != 0) {
     aclError ret = aclmdlUnload(model_id_);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlUnload");
+  }
+}
+
+void AclModel::InitInputNames() {
+  size_t num_inputs = aclmdlGetNumInputs(desc_->Get());
+  input_names_.resize(num_inputs);
+
+  for (int32_t i = 0; i < num_inputs; ++i) {
+    const char *name = aclmdlGetInputNameByIndex(desc_->Get(), i);
+    input_names_[i] = name;
+  }
+}
+
+void AclModel::InitInputShapes() {
+  size_t num_inputs = aclmdlGetNumInputs(desc_->Get());
+  input_shapes_.resize(num_inputs);
+
+  std::vector<int64_t> shape;
+  for (int32_t i = 0; i < num_inputs; ++i) {
+    aclmdlIODims dims;
+    aclError ret = aclmdlGetInputDims(desc_->Get(), i, &dims);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlGetInputDims");
+
+    shape.resize(dims.dimCount);
+    for (int32_t k = 0; k < dims.dimCount; ++k) {
+      shape[k] = dims.dims[k];
+    }
+    input_shapes_[i] = std::move(shape);
+  }
+}
+
+void AclModel::InitOutputNames() {
+  size_t num_outputs = aclmdlGetNumOutputs(desc_->Get());
+  output_names_.resize(num_outputs);
+  for (int32_t i = 0; i < num_outputs; ++i) {
+    const char *name = aclmdlGetOutputNameByIndex(desc_->Get(), i);
+    output_names_[i] = name;
+  }
+}
+
+void AclModel::InitOutputShapes() {
+  size_t num_outputs = aclmdlGetNumOutputs(desc_->Get());
+  output_shapes_.resize(num_outputs);
+
+  std::vector<int64_t> shape;
+  for (int32_t i = 0; i < num_outputs; ++i) {
+    aclmdlIODims dims;
+    aclError ret = aclmdlGetOutputDims(desc_->Get(), i, &dims);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlGetOutputDims");
+
+    shape.resize(dims.dimCount);
+    for (int32_t k = 0; k < dims.dimCount; ++k) {
+      shape[k] = dims.dims[k];
+    }
+    output_shapes_[i] = std::move(shape);
   }
 }
 
@@ -251,6 +312,65 @@ std::string AclModel::GetInfo() const {
   }
 
   return os.str();
+}
+
+AclMdlDataset::AclMdlDataset() {
+  p_ = aclmdlCreateDataset();
+  if (!p_) {
+    SHERPA_ONNX_LOGE("Failed to call aclmdlCreateDataset");
+    SHERPA_ONNX_EXIT(-1);
+  }
+}
+
+AclMdlDataset::~AclMdlDataset() {
+  if (p_) {
+    aclError ret = aclmdlDestroyDataset(p_);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlDestroyDataset");
+  }
+}
+
+void AclMdlDataset::AddBuffer(aclDataBuffer *buffer) const {
+  aclError ret = aclmdlAddDatasetBuffer(p_, buffer);
+  SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlAddDatasetBuffer");
+}
+
+void AclMdlDataset::SetTensorDesc(aclTensorDesc *tensor_desc,
+                                  size_t index) const {
+  aclError ret = aclmdlSetDatasetTensorDesc(p_, tensor_desc, index);
+
+  SHERPA_ONNX_ASCEND_CHECK(
+      ret, "Failed to call aclmdlSetDatasetTensorDesc for input %zu", index);
+}
+
+AclDataBuffer::AclDataBuffer(void *data, size_t size) {
+  p_ = aclCreateDataBuffer(data, size);
+
+  if (!p_) {
+    SHERPA_ONNX_LOGE("Failed to call aclCreateDataBuffer");
+    SHERPA_ONNX_EXIT(-1);
+  }
+}
+
+AclDataBuffer::~AclDataBuffer() {
+  if (p_) {
+    aclError ret = aclDestroyDataBuffer(p_);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclDestroyDataBuffer");
+  }
+}
+
+AclTensorDesc::AclTensorDesc(aclDataType data_type, int num_dims,
+                             const int64_t *dims, aclFormat format) {
+  p_ = aclCreateTensorDesc(data_type, num_dims, dims, format);
+  if (!p_) {
+    SHERPA_ONNX_LOGE("Failed to call aclCreateTensorDesc");
+    SHERPA_ONNX_EXIT(-1);
+  }
+}
+
+AclTensorDesc::~AclTensorDesc() {
+  if (p_) {
+    aclDestroyTensorDesc(p_);
+  }
 }
 
 }  // namespace sherpa_onnx
