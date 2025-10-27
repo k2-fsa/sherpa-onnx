@@ -50,9 +50,11 @@ class AclDevicePtr {
   const AclDevicePtr &operator=(const AclDevicePtr &) = delete;
 
   void *Get() const { return p_; }
+  size_t Size() const { return size_; }
 
  private:
   void *p_ = nullptr;
+  size_t size_ = 0;
 };
 
 class AclHostPtr {
@@ -68,6 +70,7 @@ class AclHostPtr {
 
  private:
   void *p_ = nullptr;
+  size_t size_ = 0;
 };
 
 class AclModelDesc {
@@ -80,9 +83,11 @@ class AclModelDesc {
   const AclModelDesc &operator=(const AclModelDesc &) = delete;
 
   aclmdlDesc *Get() const { return p_; }
+  size_t Size() const { return size_; }
 
  private:
   aclmdlDesc *p_ = nullptr;
+  size_t size_ = 0;
 };
 
 class AclModel {

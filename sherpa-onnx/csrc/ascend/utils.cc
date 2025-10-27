@@ -129,6 +129,7 @@ AclDevicePtr::AclDevicePtr(
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMalloc with size: %zu",
                              size);
   }
+  size_ = size;
 }
 
 AclDevicePtr::~AclDevicePtr() {
@@ -145,6 +146,7 @@ AclHostPtr::AclHostPtr(size_t size) {
     SHERPA_ONNX_ASCEND_CHECK(
         ret, "Failed to call aclrtMallocHost with size: %zu", size);
   }
+  size_ = size;
 }
 
 AclHostPtr::~AclHostPtr() {
@@ -194,6 +196,7 @@ std::string AclModel::GetInfo() const {
   size_t num_outputs = aclmdlGetNumOutputs(desc_->Get());
 
   std::ostringstream os;
+  os << "Model id: " << model_id_ << "\n";
   os << "Num inputs: " << num_inputs << "\n";
   os << "Num outputs: " << num_outputs << "\n";
 
