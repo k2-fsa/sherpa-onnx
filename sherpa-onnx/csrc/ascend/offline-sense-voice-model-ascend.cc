@@ -6,10 +6,8 @@
 // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/API/appdevgapi/aclcppdevg_03_0298.html
 #include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 
-#include <stdio.h>
-
 #include <algorithm>
-#include <iostream>
+#include <mutex>  // NOLINT
 #include <vector>
 
 #include "sherpa-onnx/csrc/ascend/macros.h"
@@ -42,6 +40,9 @@ class OfflineSenseVoiceModelAscend::Impl {
 
   std::vector<float> Run(std::vector<float> features, int32_t language,
                          int32_t text_norm) {
+    // TODO(fangjun): Support multi clients
+    std::lock_guard<std::mutex> lock(mutex_);
+
     features = ApplyLFR(std::move(features));
 
     int32_t num_frames = features.size() / 560;
@@ -179,6 +180,7 @@ class OfflineSenseVoiceModelAscend::Impl {
   }
 
  private:
+  std::mutex mutex_;
   Acl acl_;
 
   std::unique_ptr<AclContext> context_;
