@@ -5,6 +5,8 @@
 #ifndef SHERPA_ONNX_CSRC_ASCEND_UTILS_H_
 #define SHERPA_ONNX_CSRC_ASCEND_UTILS_H_
 
+#include <memory>
+
 #include "acl/acl.h"
 
 namespace sherpa_onnx {
@@ -66,6 +68,38 @@ class AclHostPtr {
 
  private:
   void *p_ = nullptr;
+};
+
+class AclModelDesc {
+ public:
+  explicit AclModelDesc(uint32_t model_id);
+
+  ~AclModelDesc();
+
+  AclModelDesc(const AclModelDesc &) = delete;
+  const AclModelDesc &operator=(const AclModelDesc &) = delete;
+
+  aclmdlDesc *Get() const { return p_; }
+
+ private:
+  aclmdlDesc *p_ = nullptr;
+};
+
+class AclModel {
+ public:
+  explicit AclModel(const std::string &model_path);
+  ~AclModel();
+
+  uint32_t Get() const { return model_id_; }
+
+  AclModel(const AclModel &) = delete;
+  const AclModel &operator=(const AclModel &) = delete;
+
+  std::string GetInfo() const;
+
+ private:
+  uint32_t model_id_ = 0;
+  std::unique_ptr<AclModelDesc> desc_;
 };
 
 }  // namespace sherpa_onnx
