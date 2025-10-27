@@ -310,7 +310,7 @@ std::string AclModel::GetInfo() const {
     aclFormat format = aclmdlGetOutputFormat(desc_->Get(), i);
 
     os << " format: " << AclFormatToString(format) << "\n";
-    aclDataType type = aclmdlGetInputDataType(desc_->Get(), i);
+    aclDataType type = aclmdlGetOutputDataType(desc_->Get(), i);
     os << " data type: " << AclDataTypeToString(type) << "\n";
 
     aclmdlIODims dims;
