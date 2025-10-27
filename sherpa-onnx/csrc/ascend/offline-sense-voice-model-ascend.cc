@@ -18,29 +18,17 @@
 
 namespace sherpa_onnx {
 
-std::vector<float> LoadFeatures() {
-  FILE *fp = fopen("./features.bin", "rb");
-  fseek(fp, 0, SEEK_END);
-  int32_t n = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  printf("n: %d\n", n);
-
-  std::vector<float> d(n / sizeof(float));
-  fread(d.data(), sizeof(float), n, fp);
-  fclose(fp);
-
-  return d;
-}
-
 class OfflineSenseVoiceModelAscend::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
+    PreInit();
     InitModel(config_.sense_voice.model);
     PostInit();
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
+    PreInit();
     {
       auto buf = ReadFile(mgr, config_.sense_voice.model);
       InitModel(buf.data(), buf.size());
@@ -52,17 +40,18 @@ class OfflineSenseVoiceModelAscend::Impl {
     return meta_data_;
   }
 
-  void Test() {
-    std::vector<float> features = LoadFeatures();
+  std::vector<float> Run(std::vector<float> features, int32_t language,
+                         int32_t text_norm) {
+    features = ApplyLFR(std::move(features));
+
     int32_t num_frames = features.size() / 560;
-    std::cout << "num_frames: " << num_frames << "\n";
 
     aclError ret =
         aclrtMemcpy(*x_ptr_, features.size() * sizeof(float), features.data(),
                     features.size() * sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
-    std::array<int32_t, 4> prompt_array = {0, 1, 2, 15};
+    std::array<int32_t, 4> prompt_array{language, 1, 2, text_norm};
     ret = aclrtMemcpy(*prompt_ptr_, prompt_ptr_->Size(), prompt_array.data(),
                       prompt_ptr_->Size(), ACL_MEMCPY_HOST_TO_DEVICE);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
@@ -77,7 +66,7 @@ class OfflineSenseVoiceModelAscend::Impl {
     // 动态Shape输入（设置Shape范围）
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
 
-    std::array<int64_t, 3> x_shape = {1, 93, 560};
+    std::array<int64_t, 3> x_shape = {1, num_frames, 560};
     AclTensorDesc x_desc(ACL_FLOAT, x_shape.size(), x_shape.data(),
                          ACL_FORMAT_ND);
     input_dataset.SetTensorDesc(x_desc, 0);
@@ -102,28 +91,7 @@ class OfflineSenseVoiceModelAscend::Impl {
                       ACL_MEMCPY_DEVICE_TO_HOST);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
-    const float *p = logits.data();
-    int32_t blank = 0;
-    int32_t prev_id = -1;
-    std::vector<int32_t> tokens;
-
-    for (int32_t t = 0; t != num_frames; ++t) {
-      auto y = static_cast<int64_t>(std::distance(
-          static_cast<const float *>(p),
-          std::max_element(static_cast<const float *>(p),
-                           static_cast<const float *>(p) + vocab_size_)));
-      p += vocab_size_;
-
-      if (y != 0 && y != prev_id) {
-        tokens.push_back(y);
-      }
-      prev_id = y;
-    }  // for (int32_t t = 0; ...)
-
-    for (auto t : tokens) {
-      std::cout << t << ", ";
-    }
-    std::cout << "\n";
+    return logits;
   }
 
  private:
@@ -143,6 +111,18 @@ class OfflineSenseVoiceModelAscend::Impl {
     }
   }
 
+  void PreInit() {
+    int32_t device_id = 0;
+    aclError ret = aclrtSetDevice(device_id);
+    SHERPA_ONNX_ASCEND_CHECK(
+        ret, "Failed to call aclrtSetDevice with device id: %d", device_id);
+
+    context_ = std::make_unique<AclContext>(device_id);
+
+    ret = aclrtSetCurrentContext(*context_);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtSetCurrentContext");
+  }
+
   void PostInit() {
     vocab_size_ = model_->GetOutputShapes()[0].back();
 
@@ -160,7 +140,49 @@ class OfflineSenseVoiceModelAscend::Impl {
                                                  vocab_size_ * sizeof(float));
   }
 
+  std::vector<float> ApplyLFR(std::vector<float> in) const {
+    int32_t lfr_window_size = meta_data_.window_size;
+    int32_t lfr_window_shift = meta_data_.window_shift;
+    int32_t in_feat_dim = 80;
+
+    int32_t in_num_frames = in.size() / in_feat_dim;
+    int32_t out_num_frames =
+        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
+
+    if (out_num_frames > max_num_frames_) {
+      SHERPA_ONNX_LOGE(
+          "Number of input frames %d is too large. Truncate it to %d frames.",
+          out_num_frames, max_num_frames_);
+
+      SHERPA_ONNX_LOGE(
+          "Recognition result may be truncated/incomplete. Please select a "
+          "model accepting longer audios.");
+
+      out_num_frames = max_num_frames_;
+    }
+
+    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
+
+    std::vector<float> out(out_num_frames * out_feat_dim);
+
+    const float *p_in = in.data();
+    float *p_out = out.data();
+
+    for (int32_t i = 0; i != out_num_frames; ++i) {
+      std::copy(p_in, p_in + out_feat_dim, p_out);
+
+      p_out += out_feat_dim;
+      p_in += lfr_window_shift * in_feat_dim;
+    }
+
+    return out;
+  }
+
  private:
+  Acl acl_;
+
+  std::unique_ptr<AclContext> context_;
+
   OfflineModelConfig config_;
   OfflineSenseVoiceModelMetaData meta_data_;
 
@@ -179,6 +201,11 @@ OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
     : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineSenseVoiceModelAscend::~OfflineSenseVoiceModelAscend() = default;
+
+std::vector<float> OfflineSenseVoiceModelAscend::Run(
+    std::vector<float> features, int32_t language, int32_t text_norm) const {
+  return impl_->Run(std::move(features), language, text_norm);
+}
 
 const OfflineSenseVoiceModelMetaData &
 OfflineSenseVoiceModelAscend::GetModelMetadata() const {

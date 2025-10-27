@@ -5,6 +5,10 @@
 #define SHERPA_ONNX_CSRC_ASCEND_OFFLINE_SENSE_VOICE_MODEL_ASCEND_H_
 
 #include <memory>
+#include <vector>
+
+#include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/offline-sense-voice-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -28,10 +32,6 @@ class OfflineSenseVoiceModelAscend {
                          int32_t text_norm) const;
 
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const;
-
- private:
-  class Impl;
-  std::unique_ptr<Impl> impl_;
 
  private:
   class Impl;

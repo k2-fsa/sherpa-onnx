@@ -196,7 +196,6 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
     ./ascend/offline-sense-voice-model-ascend.cc
     ./ascend/utils.cc
   )
-
 endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
