@@ -1,20 +1,20 @@
-// sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-rknn-impl.h
+// sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_SENSE_VOICE_RKNN_IMPL_H_
-#define SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_SENSE_VOICE_RKNN_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_
+#define SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_
 
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/rknn/offline-ctc-greedy-search-decoder-rknn.h"
-#include "sherpa-onnx/csrc/rknn/offline-sense-voice-model-rknn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -24,15 +24,15 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor);
 
-class OfflineRecognizerSenseVoiceRknnImpl : public OfflineRecognizerImpl {
+class OfflineRecognizerSenseVoiceAscendImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerSenseVoiceRknnImpl(
+  explicit OfflineRecognizerSenseVoiceAscendImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
         config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(
-            std::make_unique<OfflineSenseVoiceModelRknn>(config.model_config)) {
+        model_(std::make_unique<OfflineSenseVoiceModelAscend>(
+            config.model_config)) {
     const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineCtcGreedySearchDecoderRknn>(
@@ -47,12 +47,12 @@ class OfflineRecognizerSenseVoiceRknnImpl : public OfflineRecognizerImpl {
   }
 
   template <typename Manager>
-  OfflineRecognizerSenseVoiceRknnImpl(Manager *mgr,
-                                      const OfflineRecognizerConfig &config)
+  OfflineRecognizerSenseVoiceAscendImpl(Manager *mgr,
+                                        const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineSenseVoiceModelRknn>(
+        model_(std::make_unique<OfflineSenseVoiceModelAscend>(
             mgr, config.model_config)) {
     const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
@@ -129,10 +129,10 @@ class OfflineRecognizerSenseVoiceRknnImpl : public OfflineRecognizerImpl {
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OfflineSenseVoiceModelRknn> model_;
+  std::unique_ptr<OfflineSenseVoiceModelAscend> model_;
   std::unique_ptr<OfflineCtcGreedySearchDecoderRknn> decoder_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_SENSE_VOICE_RKNN_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_

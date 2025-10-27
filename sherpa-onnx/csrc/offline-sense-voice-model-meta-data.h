@@ -12,14 +12,14 @@ namespace sherpa_onnx {
 
 struct OfflineSenseVoiceModelMetaData {
   // ID for using inverse text normalization
-  int32_t with_itn_id;
+  int32_t with_itn_id = 14;
 
   // ID for not using inverse text normalization
-  int32_t without_itn_id;
+  int32_t without_itn_id = 15;
 
-  int32_t window_size;   // lfr_m
-  int32_t window_shift;  // lfr_n
-  int32_t vocab_size;
+  int32_t window_size = 7;   // lfr_m
+  int32_t window_shift = 6;  // lfr_n
+  int32_t vocab_size = 25055;
 
   int32_t subsampling_factor = 1;
 
@@ -39,10 +39,12 @@ struct OfflineSenseVoiceModelMetaData {
   //  ko is Korean
   //  yue is Cantonese
   //  auto is to let the model recognize the language
-  std::unordered_map<std::string, int32_t> lang2id;
+  std::unordered_map<std::string, int32_t> lang2id{
+      {"auto", 0}, {"zh", 3}, {"en", 4}, {"yue", 7}, {"ya", 11}, {"ko", 12},
+  };
 
-  std::vector<float> neg_mean;
-  std::vector<float> inv_stddev;
+  std::vector<float> neg_mean;    // not used in rk npu and ascend npu
+  std::vector<float> inv_stddev;  // not used in rk npu and ascend npu
 };
 
 }  // namespace sherpa_onnx

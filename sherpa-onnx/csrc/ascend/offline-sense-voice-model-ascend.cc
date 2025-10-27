@@ -14,6 +14,7 @@
 
 #include "sherpa-onnx/csrc/ascend/macros.h"
 #include "sherpa-onnx/csrc/ascend/utils.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 
 namespace sherpa_onnx {
 
@@ -33,9 +34,25 @@ std::vector<float> LoadFeatures() {
 
 class OfflineSenseVoiceModelAscend::Impl {
  public:
-  Impl() {
-    Init();
+  explicit Impl(const OfflineModelConfig &config) : config_(config) {
+    InitModel(config_.sense_voice.model);
+    PostInit();
+  }
 
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
+    {
+      auto buf = ReadFile(mgr, config_.sense_voice.model);
+      InitModel(buf.data(), buf.size());
+    }
+    PostInit();
+  }
+
+  const OfflineSenseVoiceModelMetaData &GetModelMetadata() const {
+    return meta_data_;
+  }
+
+  void Test() {
     std::vector<float> features = LoadFeatures();
     int32_t num_frames = features.size() / 560;
     std::cout << "num_frames: " << num_frames << "\n";
@@ -110,18 +127,26 @@ class OfflineSenseVoiceModelAscend::Impl {
   }
 
  private:
-  void Init() {
-    InitModel();
-    Preallocate();
+  void InitModel(const std::string &filename) {
+    model_ = std::make_unique<AclModel>(filename);
+    if (config_.debug) {
+      auto s = model_->GetInfo();
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
   }
 
-  void InitModel() {
-    std::string filename = "./model.om";
-    model_ = std::make_unique<AclModel>(filename);
-    auto s = model_->GetInfo();
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  void InitModel(void *data, size_t size) {
+    model_ = std::make_unique<AclModel>(data, size);
+    if (config_.debug) {
+      auto s = model_->GetInfo();
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
+  }
 
+  void PostInit() {
     vocab_size_ = model_->GetOutputShapes()[0].back();
+
+    Preallocate();
   }
 
   void Preallocate() {
@@ -136,6 +161,9 @@ class OfflineSenseVoiceModelAscend::Impl {
   }
 
  private:
+  OfflineModelConfig config_;
+  OfflineSenseVoiceModelMetaData meta_data_;
+
   std::unique_ptr<AclModel> model_;
   int32_t vocab_size_ = 0;
   int32_t max_num_frames_ = 0;
@@ -146,9 +174,25 @@ class OfflineSenseVoiceModelAscend::Impl {
   std::unique_ptr<AclDevicePtr> logits_ptr_;
 };
 
-OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend()
-    : impl_(std::make_unique<Impl>()) {}
+OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
+    const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineSenseVoiceModelAscend::~OfflineSenseVoiceModelAscend() = default;
+
+const OfflineSenseVoiceModelMetaData &
+OfflineSenseVoiceModelAscend::GetModelMetadata() const {
+  return impl_->GetModelMetadata();
+}
+
+#if __ANDROID_API__ >= 9
+template OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

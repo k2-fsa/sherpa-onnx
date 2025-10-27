@@ -10,8 +10,28 @@ namespace sherpa_onnx {
 
 class OfflineSenseVoiceModelAscend {
  public:
-  OfflineSenseVoiceModelAscend();
   ~OfflineSenseVoiceModelAscend();
+
+  explicit OfflineSenseVoiceModelAscend(const OfflineModelConfig &config);
+
+  template <typename Manager>
+  OfflineSenseVoiceModelAscend(Manager *mgr, const OfflineModelConfig &config);
+
+  /**
+   * @param features A tensor of shape (num_frames, feature_dim)
+   *                 before applying LFR.
+   * @param language
+   * @param text_norm
+   * @returns Return a tensor of shape (num_output_frames, vocab_size)
+   */
+  std::vector<float> Run(std::vector<float> features, int32_t language,
+                         int32_t text_norm) const;
+
+  const OfflineSenseVoiceModelMetaData &GetModelMetadata() const;
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 
  private:
   class Impl;

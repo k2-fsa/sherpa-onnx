@@ -176,18 +176,18 @@ AclModelDesc::~AclModelDesc() {
 
 AclModel::AclModel(const std::string &model_path) {
   aclError ret = aclmdlLoadFromFile(model_path.c_str(), &model_id_);
-
   SHERPA_ONNX_ASCEND_CHECK(ret,
                            "Failed to call aclmdlLoadFromFile from file '%s'",
                            model_path.c_str());
 
-  desc_ = std::make_unique<AclModelDesc>(model_id_);
+  Init();
+}
 
-  InitInputNames();
-  InitInputShapes();
+AclModel::AclModel(const void *model, size_t model_size) {
+  aclError ret = aclmdlLoadFromMem(model, model_size, &model_id_);
+  SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlLoadFromMemfrom");
 
-  InitOutputNames();
-  InitOutputShapes();
+  Init();
 }
 
 AclModel::~AclModel() {
@@ -195,6 +195,16 @@ AclModel::~AclModel() {
     aclError ret = aclmdlUnload(model_id_);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlUnload");
   }
+}
+
+void AclModel::Init() {
+  desc_ = std::make_unique<AclModelDesc>(model_id_);
+
+  InitInputNames();
+  InitInputShapes();
+
+  InitOutputNames();
+  InitOutputShapes();
 }
 
 void AclModel::InitInputNames() {

@@ -101,6 +101,7 @@ class AclModelDesc {
 class AclModel {
  public:
   explicit AclModel(const std::string &model_path);
+  AclModel(const void *model, size_t model_size);
   ~AclModel();
 
   uint32_t Get() const { return model_id_; }
@@ -126,6 +127,7 @@ class AclModel {
   }
 
  private:
+  void Init();
   void InitInputNames();
   void InitInputShapes();
 
