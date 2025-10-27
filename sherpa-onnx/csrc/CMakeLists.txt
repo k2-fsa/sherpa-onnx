@@ -173,6 +173,7 @@ list(APPEND sources
 )
 if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
+    ./rknn/offline-sense-voice-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc
@@ -746,7 +747,3 @@ add_custom_target(
   DEPENDS ${sources})
 
 add_custom_target(check DEPENDS clang-tidy-check)
-
-if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
-  add_subdirectory(./ascend)
-endif()
