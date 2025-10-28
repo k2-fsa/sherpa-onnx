@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 
 #include "sherpa-onnx/csrc/keyword-spotter-transducer-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
 #include "sherpa-onnx/csrc/rknn/keyword-spotter-transducer-rknn-impl.h"

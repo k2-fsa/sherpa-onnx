@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-310
+      - ascend-npu-acl-api-
   workflow_dispatch:
 
 concurrency:
@@ -167,7 +167,7 @@ jobs:
 
 
           echo "collect results"
-          d=sherpa-onnx-ascend-910B-paraformer-zh-2023-03-28
+          d=sherpa-onnx-ascend-${soc_version}-paraformer-zh-2023-03-28
 
           mkdir -p $d
           mkdir -p $d/test_wavs

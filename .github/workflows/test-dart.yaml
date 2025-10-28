@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm] #, windows-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm] #, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
             os=linux-aarch64
           elif [[ ${{ matrix.os }} == macos-latest ]]; then
             os=macos
-          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+          elif [[ ${{ matrix.os }} == windows-2022 ]]; then
             os=windows
           fi
 

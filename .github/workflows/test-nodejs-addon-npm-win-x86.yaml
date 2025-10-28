@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         node-version: ["16", "17", "18", "19", "21", "22"]
 
     steps:

@@ -39,6 +39,10 @@
 #include "sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-rknn-impl.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_ASCEND_NPU
+#include "sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
@@ -56,6 +60,25 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider == "ascend") {
+#if SHERPA_ONNX_ENABLE_ASCEND_NPU
+    if (config.model_config.sense_voice.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice models are currently supported "
+          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
+    } else if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON if "
+        "you "
+        "want to use Ascend NPU.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -264,6 +287,26 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider == "ascend") {
+#if SHERPA_ONNX_ENABLE_ASCEND_NPU
+    if (config.model_config.sense_voice.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice models are currently supported "
+          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
+    } else if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(mgr,
+                                                                     config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON if "
+        "you "
+        "want to use Ascend NPU.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -550,8 +593,8 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
         itn_list_.push_back(
             std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
       }  // for (; !reader->Done(); reader->Next())
-    }    // for (const auto &f : files)
-  }      // if (!config.rule_fars.empty())
+    }  // for (const auto &f : files)
+  }  // if (!config.rule_fars.empty())
 
   if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty()) {
     auto hr_config = config.hr;

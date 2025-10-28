@@ -60,6 +60,7 @@ option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-i
 option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ${SUGGEST_BUILD_BINARIES})
 option(SHERPA_ONNX_ENABLE_RKNN "Whether to build for RKNN NPU " OFF)
+option(SHERPA_ONNX_ENABLE_ASCEND_NPU "Whether to build for Ascend NPU " OFF)
 
 set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. Set to 1.11.0 if you use CUDA 10.2 and cudnn8. Set it to 1.16.0 if you use CUDA 11.4 and cudnn8. Set it to 1.18.0 if you use CUDA 12.2 and cudnn8. Set it to 1.18.1 if you use CUDA 12.6 and cudnn9")
 
@@ -177,6 +178,7 @@ message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_
 message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
 message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
 message(STATUS "SHERPA_ONNX_ENABLE_RKNN: ${SHERPA_ONNX_ENABLE_RKNN}")
+message(STATUS "SHERPA_ONNX_ENABLE_ASCEND_NPU: ${SHERPA_ONNX_ENABLE_ASCEND_NPU}")
 message(STATUS "SHERPA_ONNX_LINK_D3D: ${SHERPA_ONNX_LINK_D3D}")
 
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
@@ -298,6 +300,41 @@ include(CheckIncludeFileCXX)
 
 if(SHERPA_ONNX_ENABLE_RKNN)
   add_definitions(-DSHERPA_ONNX_ENABLE_RKNN=1)
+endif()
+
+if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
+  set(ASCEND_TOOLKIT_HOME)
+  if(NOT DEFINED ENV{ASCEND_TOOLKIT_HOME})
+    if(EXISTS /usr/local/Ascend/ascend-toolkit/latest)
+      set(ASCEND_TOOLKIT_HOME /usr/local/Ascend/ascend-toolkit/latest)
+    else()
+      message(FATAL_ERROR "\
+      Please specify the installation directory of the ascend toolkit.
+      For instance, if it is installed in
+
+        /usr/local/Ascend/ascend-toolkit/latest
+
+      You can run
+
+        export ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest
+      ")
+    endif()
+  else()
+    set(ASCEND_TOOLKIT_HOME $ENV{ASCEND_TOOLKIT_HOME})
+  endif()
+
+  message(STATUS "ASCEND_TOOLKIT_HOME: ${ASCEND_TOOLKIT_HOME}")
+
+  if(NOT EXISTS ${ASCEND_TOOLKIT_HOME}/include/acl/acl.h)
+    message(FATAL_ERROR "${ASCEND_TOOLKIT_HOME}/include/acl/acl.h does not exist")
+  endif()
+
+  if(NOT EXISTS ${ASCEND_TOOLKIT_HOME}/lib64/libascendcl.so)
+    message(FATAL_ERROR "${ASCEND_TOOLKIT_HOME}/lib64/libascendcl.so does not exist")
+  endif()
+
+  add_definitions(-DSHERPA_ONNX_ENABLE_ASCEND_NPU=1)
+  message(STATUS "Build with Ascend NPU")
 endif()
 
 if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT CMAKE_SYSTEM_NAME STREQUAL Android AND NOT CMAKE_SYSTEM_NAME STREQUAL OHOS)

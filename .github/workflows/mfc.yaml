@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         arch: [x64, x86]
 
     steps:
@@ -125,6 +125,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-streaming-*.exe
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.15
 
       - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -133,6 +136,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-*.exe
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.15
 
       - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -141,3 +147,6 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./mfc-examples/${{ matrix.arch }}/sherpa-onnx-non-streaming-*.exe
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.15

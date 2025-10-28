@@ -21,11 +21,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-2022]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
         exclude:
-          - os: windows-latest
+          - os: windows-2022
             build_type: Debug
             shared_lib: OFF
 
@@ -67,7 +67,7 @@ jobs:
           cmake --build . --target install --config ${{ matrix.build_type }}
 
       - name: run test
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           cd build
@@ -79,7 +79,7 @@ jobs:
           ./bin/piper-phonemize-test
 
       - name: run test
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           cd build

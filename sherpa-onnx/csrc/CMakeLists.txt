@@ -173,7 +173,6 @@ list(APPEND sources
 )
 if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
-    ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
     ./rknn/offline-sense-voice-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
@@ -185,6 +184,19 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/utils.cc
   )
 
+endif()
+
+if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU)
+  list(APPEND sources
+    ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
+  )
+endif()
+
+if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
+  list(APPEND sources
+    ./ascend/offline-sense-voice-model-ascend.cc
+    ./ascend/utils.cc
+  )
 endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
@@ -290,6 +302,14 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   else()
     target_link_libraries(sherpa-onnx-core rknnrt)
   endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
+    target_include_directories(sherpa-onnx-core PRIVATE ${ASCEND_TOOLKIT_HOME}/include)
+    target_link_libraries(sherpa-onnx-core
+      -L${ASCEND_TOOLKIT_HOME}/lib64
+      -lascendcl
+    )
 endif()
 
 if(TARGET onnxruntime)

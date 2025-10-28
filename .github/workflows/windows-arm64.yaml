@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
 
