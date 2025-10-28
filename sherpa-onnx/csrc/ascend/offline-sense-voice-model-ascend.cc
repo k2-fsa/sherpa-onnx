@@ -140,7 +140,8 @@ class OfflineSenseVoiceModelAscend::Impl {
   }
 
   void Preallocate() {
-    max_num_frames_ = (10 * 100 - 7) / 6 + 1;
+    // max 30 seconds
+    max_num_frames_ = (30 * 100 - 7) / 6 + 1;
     x_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ * feat_dim_ *
                                             sizeof(float));
 
