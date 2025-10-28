@@ -28,7 +28,6 @@ class Acl {
 class AclContext {
  public:
   explicit AclContext(int32_t device_id);
-  explicit AclContext(aclrtContext context) : context_(context) {}
 
   ~AclContext();
 
@@ -56,23 +55,6 @@ class AclDevicePtr {
   operator void *() { return p_; }
 
   size_t Size() const { return size_; }
-
- private:
-  void *p_ = nullptr;
-  size_t size_ = 0;
-};
-
-class AclHostPtr {
- public:
-  explicit AclHostPtr(size_t size);
-
-  ~AclHostPtr();
-
-  AclHostPtr(const AclDevicePtr &) = delete;
-  const AclHostPtr &operator=(const AclDevicePtr &) = delete;
-
-  void *Get() const { return p_; }
-  operator void *() { return p_; }
 
  private:
   void *p_ = nullptr;

@@ -40,7 +40,7 @@ struct OfflineSenseVoiceModelMetaData {
   //  yue is Cantonese
   //  auto is to let the model recognize the language
   std::unordered_map<std::string, int32_t> lang2id{
-      {"auto", 0}, {"zh", 3}, {"en", 4}, {"yue", 7}, {"ya", 11}, {"ko", 12},
+      {"auto", 0}, {"zh", 3}, {"en", 4}, {"yue", 7}, {"ja", 11}, {"ko", 12},
   };
 
   std::vector<float> neg_mean;    // not used in rk npu and ascend npu

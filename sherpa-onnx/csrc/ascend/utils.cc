@@ -139,23 +139,6 @@ AclDevicePtr::~AclDevicePtr() {
   }
 }
 
-AclHostPtr::AclHostPtr(size_t size) {
-  if (size > 0) {
-    aclError ret = aclrtMallocHost(&p_, size);
-
-    SHERPA_ONNX_ASCEND_CHECK(
-        ret, "Failed to call aclrtMallocHost with size: %zu", size);
-  }
-  size_ = size;
-}
-
-AclHostPtr::~AclHostPtr() {
-  if (p_) {
-    aclError ret = aclrtFreeHost(p_);
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtFreeHost");
-  }
-}
-
 AclModelDesc::AclModelDesc(uint32_t model_id) {
   p_ = aclmdlCreateDesc();
   if (!p_) {
@@ -185,7 +168,7 @@ AclModel::AclModel(const std::string &model_path) {
 
 AclModel::AclModel(const void *model, size_t model_size) {
   aclError ret = aclmdlLoadFromMem(model, model_size, &model_id_);
-  SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlLoadFromMemfrom");
+  SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlLoadFromMem");
 
   Init();
 }
