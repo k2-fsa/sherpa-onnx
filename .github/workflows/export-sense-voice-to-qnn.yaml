@@ -80,7 +80,10 @@ jobs:
             onnx==1.17.0 \
             onnxruntime==1.17.1 \
             soundfile \
-            onnxsim
+            librosa \
+            onnxsim \
+            sentencepiece \
+            pyyaml
 
       - name: Show qnn-onnx-converter help
         shell: bash
