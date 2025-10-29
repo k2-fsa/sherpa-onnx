@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <mutex>  // NOLINT
 #include <vector>
+#include <array>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
