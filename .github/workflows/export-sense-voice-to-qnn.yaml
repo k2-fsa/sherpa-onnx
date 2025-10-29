@@ -22,8 +22,7 @@ jobs:
         python-version: ["3.10"]
         # input_in_seconds: ["5", "8", "10", "13", "15", "18", "20", "25", "30"]
         input_in_seconds: ["5"]
-        # framework: ["FunASR", "WSYue-ASR"]
-        framework: ["FunASR"]
+        framework: ["FunASR", "WSYue-ASR"]
 
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +82,33 @@ jobs:
             soundfile \
             onnxsim
 
+      - name: Show qnn-onnx-converter help
+        shell: bash
+        run: |
+          pushd qairt/2.32.6.250402/bin
+          source envsetup.sh
+          popd
+
+          qnn-onnx-converter --help
+
+      - name: Show qnn-model-lib-generator help
+        shell: bash
+        run: |
+          pushd qairt/2.32.6.250402/bin
+          source envsetup.sh
+          popd
+
+          qnn-model-lib-generator --help
+
+      - name: Show qnn-net-run help
+        shell: bash
+        run: |
+          pushd qairt/2.32.6.250402/bin
+          source envsetup.sh
+          popd
+
+          qnn-net-run --help
+
       - name: Run SenseVoice from FunAsr
         if: matrix.framework == 'FunASR'
         shell: bash
@@ -120,8 +146,6 @@ jobs:
           ls -lh *.onnx
 
           python3 ../../pyannote/segmentation/show-onnx.py --filename ./model-$t-seconds.onnx
-
-          exit 0
 
           echo "test exported onnx models"
 
@@ -171,6 +195,9 @@ jobs:
               d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-linux-x64
             elif [[ $p == aarch64-android ]]; then
               d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
             fi
 
             mkdir -p $d
@@ -197,11 +224,17 @@ jobs:
           mv *.tar.bz2 ../../..
 
       - name: Run SenseVoice from WSYue-ASR
-        # if: matrix.framework == 'WSYue-ASR'
-        if: false
+        if: matrix.framework == 'WSYue-ASR'
         shell: bash
         run: |
-          cd scripts/sense-voice/rknn
+          pushd qairt/2.32.6.250402/bin
+          source envsetup.sh
+          popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+
+          cd scripts/sense-voice/qnn
 
           curl -SL -O https://huggingface.co/ASLP-lab/WSYue-ASR/resolve/main/sensevoice_small_yue/model.pt
 
@@ -222,7 +255,6 @@ jobs:
 
           echo "export to onnx"
           t=${{ matrix.input_in_seconds }}
-          p=${{ matrix.platform }}
 
           echo "----$t---"
 
@@ -233,6 +265,8 @@ jobs:
           python3 ./export-onnx.py --input-len-in-seconds $t
 
           ls -lh *.onnx
+
+          python3 ../../pyannote/segmentation/show-onnx.py --filename ./model-$t-seconds.onnx
 
           echo "test exported onnx models"
 
@@ -247,25 +281,62 @@ jobs:
 
           echo "export to qnn"
           echo "----------$t----------"
-          echo "----------$p----------"
-          python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
+          num_frames=$(python3 -c "print(int(5*100 / 6 + 0.5))")
 
-          ls -lh *.rknn
+          echo "num_frames: $num_frames"
+
+          qnn-onnx-converter \
+            --input_network ./model-$t-seconds.onnx \
+            --output_path ./model \
+            --out_node logits \
+            --input_dtype x float32 \
+            --input_dtype prompt int32 \
+            --input_layout x NTF \
+            --float_bitwidth 16 \
+            --use_per_row_quantization \
+            --input_dim x 1,$num_frames,560 \
+            --input_dim prompt 4
+
+          ls -lh model*
+          mv model model.cpp
+          echo "---"
+          ls -lh model*
+
+          python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+            -c "model.cpp" \
+            -b "model.bin" \
+            -o model_libs
+
+          ls -lh model_libs/*/
+
 
           echo "collect results"
-          d=sherpa-onnx-$p-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
 
-          mkdir -p $d
-          mkdir -p $d/test_wavs
+            mkdir -p $d
+            mkdir -p $d/test_wavs
 
-          cp -v README.md $d
-          cp -v model-$p-$t-seconds.rknn $d/model.rknn
-          cp -v tokens.txt $d
-          cp -v *.wav $d/test_wavs
-          ls -lh $d
-          tar cjfv $d.tar.bz2 $d
-          ls -lh *.tar.bz2
-          rm -rf $d
+            cp -v README.md $d
+            cp -v model_libs/$p/lib*.so $d/
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+
+            echo "num_frames=$num_frames" > $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
 
           echo "----show---"
           ls -lh *.tar.bz2
