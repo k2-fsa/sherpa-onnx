@@ -25,6 +25,12 @@ def get_args():
         how long the model can process.
         """,
     )
+
+    parser.add_argument(
+        "--opset-version",
+        type=int,
+        default=13,
+    )
     return parser.parse_args()
 
 
@@ -118,7 +124,7 @@ def main():
     text_norm = 15
     prompt = torch.tensor([language, 1, 2, text_norm], dtype=torch.int32)
 
-    opset_version = 13
+    opset_version = args.opset_version
     filename = f"model-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model,

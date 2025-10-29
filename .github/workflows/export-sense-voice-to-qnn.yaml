@@ -20,8 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         python-version: ["3.10"]
-        # input_in_seconds: ["5", "8", "10", "13", "15", "18", "20", "25", "30"]
-        input_in_seconds: ["5"]
+        input_in_seconds: ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
         framework: ["FunASR", "WSYue-ASR"]
 
     steps:
@@ -169,7 +168,7 @@ jobs:
           t=${{ matrix.input_in_seconds }}
 
           echo "----$t---"
-          python3 ./export-onnx.py --input-len-in-seconds $t
+          python3 ./export-onnx.py --input-len-in-seconds $t --opset-version 9
 
           ls -lh *.onnx
 
@@ -292,7 +291,7 @@ jobs:
           export comment="ASLP-lab/WSYue-ASR"
           export url="https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/sensevoice_small_yue"
 
-          python3 ./export-onnx.py --input-len-in-seconds $t
+          python3 ./export-onnx.py --input-len-in-seconds $t --opset-version 9
 
           ls -lh *.onnx
 
