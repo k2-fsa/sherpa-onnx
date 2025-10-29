@@ -88,6 +88,7 @@ jobs:
         run: |
           source py310/bin/activate
           python3 -m pip install --upgrade \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
             pip \
             "numpy<2" \
             onnx==1.17.0 \
