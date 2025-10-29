@@ -92,6 +92,7 @@ jobs:
           popd
 
           export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
 
           cd scripts/sense-voice/qnn
 
@@ -160,6 +161,8 @@ jobs:
             -o model_libs
 
           ls -lh model_libs/*/
+
+          readelf -lW model_libs/*/lib*.so
 
           echo "collect results"
 
@@ -242,7 +245,7 @@ jobs:
             python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue-$i.wav
           done
 
-          echo "export to rknn"
+          echo "export to qnn"
           echo "----------$t----------"
           echo "----------$p----------"
           python3 export-rknn.py --target-platform $p --in-model model-$t-seconds.onnx --out-model model-$p-$t-seconds.rknn >/dev/null  2>&1
@@ -270,8 +273,7 @@ jobs:
           mv *.tar.bz2 ../../..
 
       - name: Release
-        # if: github.repository_owner == 'csukuangfj'
-        if: false
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
