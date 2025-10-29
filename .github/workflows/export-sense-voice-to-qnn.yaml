@@ -42,6 +42,7 @@ jobs:
       - name: Show ndk-build help
         shell: bash
         run: |
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
           ndk-build --help
 
       - name: Download toolkit
@@ -89,6 +90,8 @@ jobs:
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
 
           cd scripts/sense-voice/qnn
 
