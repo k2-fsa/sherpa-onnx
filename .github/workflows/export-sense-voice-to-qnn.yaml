@@ -38,6 +38,14 @@ jobs:
           echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
           ls -lh ${ANDROID_NDK_LATEST_HOME}
 
+      - name: Create Python virtual environment
+        shell: bash
+        run: |
+          python3 -m venv py310
+          which python3
+          source py310/bin/activate
+          which python3
+
       - name: Show ndk-build help
         shell: bash
         run: |
@@ -66,14 +74,19 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
+          source py310/bin/activate
+
           cd qairt/2.32.6.250402/bin
           source envsetup.sh
 
           python3 "${QNN_SDK_ROOT}/bin/check-python-dependency"
 
+          which python3
+
       - name: Install onnx dependencies
         shell: bash
         run: |
+          source py310/bin/activate
           python3 -m pip install --upgrade \
             pip \
             "numpy<2" \
@@ -85,9 +98,13 @@ jobs:
             sentencepiece \
             pyyaml
 
+          which python3
+
       - name: Show qnn-onnx-converter help
         shell: bash
         run: |
+          source py310/bin/activate
+
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
@@ -97,6 +114,8 @@ jobs:
       - name: Show qnn-model-lib-generator help
         shell: bash
         run: |
+          source py310/bin/activate
+
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
@@ -106,6 +125,8 @@ jobs:
       - name: Show qnn-net-run help
         shell: bash
         run: |
+          source py310/bin/activate
+
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
@@ -116,6 +137,8 @@ jobs:
         if: matrix.framework == 'FunASR'
         shell: bash
         run: |
+          source py310/bin/activate
+
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
@@ -230,6 +253,8 @@ jobs:
         if: matrix.framework == 'WSYue-ASR'
         shell: bash
         run: |
+          source py310/bin/activate
+
           pushd qairt/2.32.6.250402/bin
           source envsetup.sh
           popd
