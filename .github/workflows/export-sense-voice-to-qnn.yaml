@@ -61,7 +61,7 @@ jobs:
           cd qairt/2.32.6.250402/bin
           source envsetup.sh
 
-          ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh
+          yes | sudo ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true
 
       - name: Install Python dependencies
         shell: bash
