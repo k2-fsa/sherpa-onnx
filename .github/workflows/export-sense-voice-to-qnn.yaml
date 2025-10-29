@@ -47,7 +47,7 @@ jobs:
       - name: Download toolkit
         shell: bash
         run: |
-          curl -SL -O https://modelscope.cn/models/csukuangfj/2025-10-14/resolve/master/v2.32.6.250402.zip
+          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.32.6.250402.zip
           ls -lh v2.32.6.250402.zip
 
       - name: Unzip toolkit
