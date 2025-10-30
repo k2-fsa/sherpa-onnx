@@ -191,6 +191,7 @@ jobs:
           echo "num_frames: $num_frames"
 
           qnn-onnx-converter \
+            --define_symbol N 1 \
             --input_network ./model-$t-seconds.onnx \
             --output_path ./model \
             --out_node logits \
@@ -337,6 +338,7 @@ jobs:
           echo "num_frames: $num_frames"
 
           qnn-onnx-converter \
+            --define_symbol N 1 \
             --input_network ./model-$t-seconds.onnx \
             --output_path ./model \
             --out_node logits \
