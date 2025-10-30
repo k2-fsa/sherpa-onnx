@@ -185,7 +185,7 @@ jobs:
 
           echo "export to qnn"
           echo "----------$t----------"
-          num_frames=$(python3 -c "print(int(5*100 / 6 + 0.5))")
+          num_frames=$(python3 -c "print(int($t*100 / 6 + 0.5))")
 
           echo "num_frames: $num_frames"
 
@@ -209,11 +209,30 @@ jobs:
           python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
             -c "model.cpp" \
             -b "model.bin" \
-            -o model_libs
+            -o model_libs > /dev/null 2>&1
 
           ls -lh model_libs/*/
 
           readelf -lW model_libs/*/lib*.so
+
+          echo "test qnn model"
+
+          for wav in en.wav ja.wav ko.wav yue.wav zh.wav; do
+            ./generate_test_data.py --num-frames $num_frames --wav $wav
+            echo "$PWD/features.raw $PWD/prompt.raw" > input_list.txt
+
+            ${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-net-run \
+              --log_level info \
+              --model ./model_libs/x86_64-linux-clang/libmodel.so \
+              --backend ${QNN_SDK_ROOT}/lib/x86_64-linux-clang/libQnnCpu.so \
+              --input_list ./input_list.txt \
+              --use_native_input_files=true \
+              --output_dir ./output_qnn_x64
+
+            mv output_qnn_x64/Result_0/logits.raw ./
+
+            ./decode_logits.py
+          done
 
           echo "collect results"
 
@@ -310,7 +329,7 @@ jobs:
 
           echo "export to qnn"
           echo "----------$t----------"
-          num_frames=$(python3 -c "print(int(5*100 / 6 + 0.5))")
+          num_frames=$(python3 -c "print(int($t*100 / 6 + 0.5))")
 
           echo "num_frames: $num_frames"
 
@@ -334,10 +353,27 @@ jobs:
           python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
             -c "model.cpp" \
             -b "model.bin" \
-            -o model_libs
+            -o model_libs > /dev/null 2>&1
 
           ls -lh model_libs/*/
 
+          for wav in en.wav yue.wav zh.wav; do
+            ./generate_test_data.py --num-frames $num_frames --wav $wav
+
+            echo "$PWD/features.raw $PWD/prompt.raw" > input_list.txt
+
+            ${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-net-run \
+              --log_level info \
+              --model ./model_libs/x86_64-linux-clang/libmodel.so \
+              --backend ${QNN_SDK_ROOT}/lib/x86_64-linux-clang/libQnnCpu.so \
+              --input_list ./input_list.txt \
+              --use_native_input_files=true \
+              --output_dir ./output_qnn_x64
+
+            mv output_qnn_x64/Result_0/logits.raw ./
+
+            ./decode_logits.py
+          done
 
           echo "collect results"
           for p in x86_64-linux-clang aarch64-android; do

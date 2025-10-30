@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 import numpy as np
 
 
@@ -12,7 +13,7 @@ def load_tokens(filename):
     return ans
 
 
-logits1 = np.fromfile("./logits.raw", dtype=np.float32).reshape((-1, 25055))
+logits = np.fromfile("./logits.raw", dtype=np.float32).reshape((-1, 25055))
 print(logits.shape)
 
 idx = logits.argmax(axis=-1)

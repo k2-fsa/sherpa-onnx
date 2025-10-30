@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import argparse
 from typing import Tuple
 
 import kaldi_native_fbank as knf
 import numpy as np
 import soundfile as sf
-from ais_bench.infer.interface import InferSession
 
 
-class OmModel:
-    def __init__(self):
-        self.model = InferSession(device_id=0, model_path="./model.om", debug=False)
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
-        print("---model---")
-        for i in self.model.get_inputs():
-            print(i.name, i.datatype, i.shape)
+    parser.add_argument(
+        "--num-frames",
+        type=int,
+        required=True,
+    )
 
-        print("-----")
-
-        for i in self.model.get_outputs():
-            print(i.name, i.datatype, i.shape)
-
-    def __call__(self, x, prompt=None, language=None, text_norm=None):
-        return self.model.infer([x, prompt], mode="dymshape", custom_sizes=10000000)[0][
-            0
-        ]
+    parser.add_argument(
+        "--wav",
+        type=str,
+        required=True,
+    )
+    return parser.parse_args()
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
@@ -37,16 +37,6 @@ def load_audio(filename: str) -> Tuple[np.ndarray, int]:
     data = data[:, 0]  # use only the first channel
     samples = np.ascontiguousarray(data)
     return samples, sample_rate
-
-
-def load_tokens(filename):
-    ans = dict()
-    i = 0
-    with open(filename, encoding="utf-8") as f:
-        for line in f:
-            ans[i] = line.strip().split()[0]
-            i += 1
-    return ans
 
 
 def compute_feat(
@@ -83,20 +73,29 @@ def compute_feat(
 
 
 def main():
-    samples, sample_rate = load_audio("./test_wavs/zh.wav")
+    args = get_args()
+    print(vars(args))
+
+    samples, sample_rate = load_audio(args.wav)
     if sample_rate != 16000:
         import librosa
 
         samples = librosa.resample(samples, orig_sr=sample_rate, target_sr=16000)
         sample_rate = 16000
 
-    model = OmModel()
-
     features = compute_feat(
         samples=samples,
         sample_rate=sample_rate,
     )
     print("features.shape", features.shape)
+    if features.shape[0] > args.num_frames:
+        features = features[: args.num_frames]
+    elif features.shape[0] < args.num_frames:
+        pad_width = ((0, args.num_frames - features.shape[0]), (0, 0))
+        padding = np.zeros(())
+        features = np.pad(features, pad_width, mode="constant", constant_values=0)
+
+    features.tofile("features.raw")
 
     language_auto = 0
     language_zh = 3
@@ -114,32 +113,7 @@ def main():
     text_norm = with_itn
 
     prompt = np.array([language, 1, 2, text_norm], dtype=np.int32)
-
-    print("prompt", prompt.shape)
-
-    logits = model(
-        x=features[None],
-        prompt=prompt,
-    )
-    print("logits.shape", logits.shape, type(logits))
-
-    idx = logits.argmax(axis=-1)
-    print(idx)
-    print(len(idx))
-    prev = -1
-    ids = []
-    for i in idx:
-        if i != prev:
-            ids.append(i)
-        prev = i
-    ids = [i for i in ids if i != 0]
-    print(ids)
-
-    tokens = load_tokens("./tokens.txt")
-    text = "".join([tokens[i] for i in ids])
-
-    text = text.replace("▁", " ")
-    print(text)
+    prompt.tofile("prompt.raw")
 
 
 if __name__ == "__main__":
