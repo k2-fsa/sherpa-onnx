@@ -190,7 +190,7 @@ jobs:
 
           echo "num_frames: $num_frames"
 
-          if true; then
+          if false; then
             qnn-onnx-converter \
               --input_network ./model-$t-seconds.onnx \
               --output_path ./model \
@@ -208,7 +208,7 @@ jobs:
               --input_dtype x float32 \
               --input_dtype prompt int32 \
               --input_layout x NTF \
-              --float_bitwidth 16 \
+              --float_bitwidth 32 \
               --use_per_row_quantization \
               --input_dim x 1,$num_frames,560 \
               --input_dim prompt 4
@@ -349,7 +349,7 @@ jobs:
 
           echo "num_frames: $num_frames"
 
-          if true; then
+          if false; then
             qnn-onnx-converter \
               --input_network ./model-$t-seconds.onnx \
               --output_path ./model \
@@ -367,7 +367,7 @@ jobs:
               --input_dtype x float32 \
               --input_dtype prompt int32 \
               --input_layout x NTF \
-              --float_bitwidth 16 \
+              --float_bitwidth 32 \
               --use_per_row_quantization \
               --input_dim x 1,$num_frames,560 \
               --input_dim prompt 4
