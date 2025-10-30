@@ -670,6 +670,10 @@ class NonStreamingServer:
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
+            if path == "/upload.html":
+                path = "/non_streaming_upload.html"
+            if path == "/offline_record.html":
+                path = "/non_streaming_record.html"
             if path[-1] == "?":
                 path = path[:-1]
 
