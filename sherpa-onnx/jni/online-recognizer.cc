@@ -406,6 +406,7 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
   jfloatArray timestamps_arr = env->NewFloatArray(result.timestamps.size());
   env->SetFloatArrayRegion(timestamps_arr, 0, result.timestamps.size(),
                            result.timestamps.data());
+
   env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
 
   jfloatArray ys_probs_arr = env->NewFloatArray(result.ys_probs.size());
