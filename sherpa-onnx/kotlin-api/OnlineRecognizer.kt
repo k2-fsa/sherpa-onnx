@@ -83,6 +83,7 @@ data class OnlineRecognizerResult(
     val text: String,
     val tokens: Array<String>,
     val timestamps: FloatArray,
+    val ysProbs: FloatArray,
     // TODO(fangjun): Add more fields
 )
 
@@ -124,8 +125,9 @@ class OnlineRecognizer(
         val text = objArray[0] as String
         val tokens = objArray[1] as Array<String>
         val timestamps = objArray[2] as FloatArray
+        val ysProbs = objArray[3] as FloatArray
 
-        return OnlineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps)
+        return OnlineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps, ysProbs = ysProbs)
     }
 
     private external fun delete(ptr: Long)

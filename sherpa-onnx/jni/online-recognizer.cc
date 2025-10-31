@@ -384,8 +384,9 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
   // [0]: text, jstring
   // [1]: tokens, array of jstring
   // [2]: timestamps, array of float
+  // [3]: ys_probs, array of float
   jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      3, env->FindClass("java/lang/Object"), nullptr);
+      4, env->FindClass("java/lang/Object"), nullptr);
 
   jstring text = env->NewStringUTF(result.text.c_str());
   env->SetObjectArrayElement(obj_arr, 0, text);
@@ -405,8 +406,12 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
   jfloatArray timestamps_arr = env->NewFloatArray(result.timestamps.size());
   env->SetFloatArrayRegion(timestamps_arr, 0, result.timestamps.size(),
                            result.timestamps.data());
-
   env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+
+  jfloatArray ys_probs_arr = env->NewFloatArray(result.ys_probs.size());
+  env->SetFloatArrayRegion(ys_probs_arr, 0, result.ys_probs.size(),
+                           result.ys_probs.data());
+  env->SetObjectArrayElement(obj_arr, 3, ys_probs_arr);
 
   return obj_arr;
 }
