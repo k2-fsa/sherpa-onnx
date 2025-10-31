@@ -66,7 +66,8 @@ public class OnlineRecognizer {
         String text = (String) arr[0];
         String[] tokens = (String[]) arr[1];
         float[] timestamps = (float[]) arr[2];
-        return new OnlineRecognizerResult(text, tokens, timestamps);
+        float[] ysProbs = (float[]) arr[3];
+        return new OnlineRecognizerResult(text, tokens, timestamps, ysProbs);
     }
 
 
