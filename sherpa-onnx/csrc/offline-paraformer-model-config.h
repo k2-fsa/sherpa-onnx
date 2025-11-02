@@ -11,6 +11,8 @@
 namespace sherpa_onnx {
 
 struct OfflineParaformerModelConfig {
+  // for ascend npu,
+  // model is "/path/to/encoder.om,/path/to/predictor.om,/path/to/decoder.om"
   std::string model;
 
   OfflineParaformerModelConfig() = default;
