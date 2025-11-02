@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-acl-api-
+      - ascend-npu-acl-api
   workflow_dispatch:
 
 concurrency:
@@ -29,6 +29,15 @@ jobs:
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "WSChuan-ASR"
 
+          # ===== Ascend 910B2 =====
+          - soc_version: "910B2"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "FunASR"
+
+          - soc_version: "910B2"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "WSChuan-ASR"
+
           # ===== Ascend 310 =====
           - soc_version: "310P3"
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
@@ -45,6 +54,8 @@ jobs:
       # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
       # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
       # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
+      # and
+      # https://quay.io/repository/ascend/cann?tab=tags
       image: ${{ matrix.image }}
 
     steps:
