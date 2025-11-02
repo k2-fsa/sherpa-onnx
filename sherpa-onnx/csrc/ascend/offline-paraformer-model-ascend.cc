@@ -4,12 +4,12 @@
 
 // References:
 // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/API/appdevgapi/aclcppdevg_03_0298.html
+#include "sherpa-onnx/csrc/ascend/offline-paraformer-model-ascend.h"
+
 #include <algorithm>
 #include <array>
 #include <mutex>  // NOLINT
 #include <vector>
-
-#include "sherpa-onnx/csrc/ascend/offline-paraformer-model-ascend.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -78,12 +78,7 @@ class OfflineParaformerModelAscend::Impl {
     PostInit();
   }
 
-  const OfflineParaformerModelMetaData &GetModelMetadata() const {
-    return meta_data_;
-  }
-
-  std::vector<float> Run(std::vector<float> features, int32_t language,
-                         int32_t text_norm) {
+  std::vector<float> Run(std::vector<float> features) {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -91,45 +86,32 @@ class OfflineParaformerModelAscend::Impl {
 
     int32_t num_frames = features.size() / 560;
 
-    aclError ret =
-        aclrtMemcpy(*x_ptr_, features.size() * sizeof(float), features.data(),
-                    features.size() * sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
-
-    std::array<int32_t, 4> prompt_array{language, 1, 2, text_norm};
-    ret = aclrtMemcpy(*prompt_ptr_, prompt_ptr_->Size(), prompt_array.data(),
-                      prompt_ptr_->Size(), ACL_MEMCPY_HOST_TO_DEVICE);
+    aclError ret = aclrtMemcpy(*features_ptr_, features.size() * sizeof(float),
+                               features.data(), features.size() * sizeof(float),
+                               ACL_MEMCPY_HOST_TO_DEVICE);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer x_buf(*x_ptr_, features.size() * sizeof(float));
-    input_dataset.AddBuffer(x_buf);
-
-    AclDataBuffer prompt_buf(*prompt_ptr_, prompt_ptr_->Size());
-    input_dataset.AddBuffer(prompt_buf);
+    AclDataBuffer features_buf(*features_ptr_, features.size() * sizeof(float));
+    input_dataset.AddBuffer(features_buf);
 
     // 动态Shape输入（设置Shape范围）
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
 
-    std::array<int64_t, 3> x_shape = {1, num_frames, 560};
-    AclTensorDesc x_desc(ACL_FLOAT, x_shape.size(), x_shape.data(),
-                         ACL_FORMAT_ND);
-    input_dataset.SetTensorDesc(x_desc, 0);
+    std::array<int64_t, 3> features_shape = {1, num_frames, 560};
+    AclTensorDesc features_desc(ACL_FLOAT, features_shape.size(),
+                                features_shape.data(), ACL_FORMAT_ND);
+    input_dataset.SetTensorDesc(features_desc, 0);
 
-    std::array<int64_t, 1> prompt_shape = {4};
-    AclTensorDesc prompt_desc(ACL_INT32, prompt_shape.size(),
-                              prompt_shape.data(), ACL_FORMAT_ND);
-    input_dataset.SetTensorDesc(prompt_desc, 1);
+    AclMdlDataset encoder_output_dataset;
 
-    AclMdlDataset output_dataset;
+    AclDataBuffer encoder_out(*encoder_out_ptr_,
+                              num_frames * encoder_dim_ * sizeof(float));
+    encoder_output_dataset.AddBuffer(encoder_out);
 
-    AclDataBuffer logits_buf(*logits_ptr_,
-                             num_frames * vocab_size_ * sizeof(float));
-    output_dataset.AddBuffer(logits_buf);
-
-    ret = aclmdlExecute(*model_, input_dataset, output_dataset);
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
-
+    ret = aclmdlExecute(*encoder_model_, input_dataset, encoder_output_dataset);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute for encoder");
+#if 0
     std::vector<float> logits(num_frames * vocab_size_);
     ret = aclrtMemcpy(logits.data(), num_frames * vocab_size_ * sizeof(float),
                       *logits_ptr_, num_frames * vocab_size_ * sizeof(float),
@@ -137,6 +119,8 @@ class OfflineParaformerModelAscend::Impl {
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     return logits;
+#endif
+    return {};
   }
 
  private:
@@ -170,7 +154,7 @@ class OfflineParaformerModelAscend::Impl {
   void InitEncoder(void *data, size_t size) {
     encoder_model_ = std::make_unique<AclModel>(data, size);
     if (config_.debug) {
-      auto s = model_->GetInfo();
+      auto s = encoder_model_->GetInfo();
       SHERPA_ONNX_LOGE("----encoder----\n%s\n", s.c_str());
     }
   }
@@ -178,7 +162,7 @@ class OfflineParaformerModelAscend::Impl {
   void InitPredictor(void *data, size_t size) {
     predictor_model_ = std::make_unique<AclModel>(data, size);
     if (config_.debug) {
-      auto s = model_->GetInfo();
+      auto s = predictor_model_->GetInfo();
       SHERPA_ONNX_LOGE("----predictor----\n%s\n", s.c_str());
     }
   }
@@ -186,7 +170,7 @@ class OfflineParaformerModelAscend::Impl {
   void InitDecoder(void *data, size_t size) {
     decoder_model_ = std::make_unique<AclModel>(data, size);
     if (config_.debug) {
-      auto s = model_->GetInfo();
+      auto s = decoder_model_->GetInfo();
       SHERPA_ONNX_LOGE("----decoder----\n%s\n", s.c_str());
     }
   }
@@ -205,7 +189,7 @@ class OfflineParaformerModelAscend::Impl {
 
   void PostInit() {
     encoder_dim_ = encoder_model_->GetOutputShapes()[0].back();
-    vocab_size_ = deocder_model_->GetOutputShapes()[0].back();
+    vocab_size_ = decoder_model_->GetOutputShapes()[0].back();
 
     Preallocate();
   }
@@ -231,8 +215,8 @@ class OfflineParaformerModelAscend::Impl {
   }
 
   std::vector<float> ApplyLFR(std::vector<float> in) const {
-    int32_t lfr_window_size = meta_data_.window_size;
-    int32_t lfr_window_shift = meta_data_.window_shift;
+    int32_t lfr_window_size = 7;
+    int32_t lfr_window_shift = 6;
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
