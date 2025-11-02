@@ -27,26 +27,7 @@ class OfflineParaformerModelAscend {
    */
   std::vector<float> Run(std::vector<float> features) const;
 
-#if 0
-
-  /**
-   * @param encoder_out A tensor of shape (num_frames, encoder_dim)
-   * @returns Return a tensor of shape (num_frames, encoder_dim)
-   */
-  std::vector<float> RunPredictor(const std::vector<float> &encoder_out) const;
-
-  /**
-   * @param encoder_out A tensor of shape (num_frames, encoder_dim)
-   * @param acoustic_embedding A tensor of shape (num_tokens, encoder_dim)
-   * @returns Return a tensor of shape (num_tokens, vocab_size)
-   */
-  std::vector<float> RunDecoder(std::vector<float> encoder_out,
-                                std::vector<float> acoustic_embedding) const;
-
-  int32_t GetEncoderOutputDim() const;
-
-  int32_t GetVocabSize() const;
-#endif
+  int32_t VocabSize() const;
 
  private:
   class Impl;

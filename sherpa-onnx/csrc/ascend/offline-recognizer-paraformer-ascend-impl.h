@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h
+// sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
+#include "sherpa-onnx/csrc/ascend/offline-paraformer-model-ascend.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -19,25 +19,20 @@
 
 namespace sherpa_onnx {
 
-// defined in ../offline-recognizer-sense-voice-impl.h
-OfflineRecognitionResult ConvertSenseVoiceResult(
-    const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor);
+// defined in ../online-recognizer-paraformer-impl.h
+OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
+                                 const SymbolTable &sym_table);
 
-class OfflineRecognizerSenseVoiceAscendImpl : public OfflineRecognizerImpl {
+class OfflineRecognizerParaformerAscendImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerSenseVoiceAscendImpl(
+  explicit OfflineRecognizerParaformerAscendImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
         config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(std::make_unique<OfflineSenseVoiceModelAscend>(
+        model_(std::make_unique<OfflineParaformerModelAscend>(
             config.model_config)) {
-    const auto &meta_data = model_->GetModelMetadata();
-    if (config.decoding_method == "greedy_search") {
-      decoder_ = std::make_unique<OfflineCtcGreedySearchDecoderRknn>(
-          meta_data.blank_id);
-    } else {
+    if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
       SHERPA_ONNX_EXIT(-1);
@@ -47,18 +42,14 @@ class OfflineRecognizerSenseVoiceAscendImpl : public OfflineRecognizerImpl {
   }
 
   template <typename Manager>
-  OfflineRecognizerSenseVoiceAscendImpl(Manager *mgr,
+  OfflineRecognizerParaformerAscendImpl(Manager *mgr,
                                         const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineSenseVoiceModelAscend>(
+        model_(std::make_unique<OfflineParaformerModelAscend>(
             mgr, config.model_config)) {
-    const auto &meta_data = model_->GetModelMetadata();
-    if (config.decoding_method == "greedy_search") {
-      decoder_ = std::make_unique<OfflineCtcGreedySearchDecoderRknn>(
-          meta_data.blank_id);
-    } else {
+    if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
       SHERPA_ONNX_EXIT(-1);
@@ -90,46 +81,42 @@ class OfflineRecognizerSenseVoiceAscendImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeOneStream(OfflineStream *s) const {
-    const auto &meta_data = model_->GetModelMetadata();
-
     std::vector<float> f = s->GetFrames();
 
-    int32_t language = 0;
-    if (config_.model_config.sense_voice.language.empty()) {
-      language = 0;
-    } else if (meta_data.lang2id.count(
-                   config_.model_config.sense_voice.language)) {
-      language =
-          meta_data.lang2id.at(config_.model_config.sense_voice.language);
-    } else {
-      SHERPA_ONNX_LOGE("Unknown language: %s. Use 0 instead.",
-                       config_.model_config.sense_voice.language.c_str());
+    std::vector<float> logits = model_->Run(std::move(f));
+    if (logits.empty()) {
+      SHERPA_ONNX_LOGE("No speech detected");
+      return;
     }
 
-    int32_t text_norm = config_.model_config.sense_voice.use_itn
-                            ? meta_data.with_itn_id
-                            : meta_data.without_itn_id;
+    int32_t vocab_size = model_->VocabSize();
+    int32_t num_tokens = logits.size() / vocab_size;
 
-    std::vector<float> logits = model_->Run(std::move(f), language, text_norm);
-    int32_t num_out_frames = logits.size() / meta_data.vocab_size;
+    int32_t eos_id = symbol_table_["</s>"];
 
-    auto result =
-        decoder_->Decode(logits.data(), num_out_frames, meta_data.vocab_size);
+    OfflineParaformerDecoderResult r;
+    const float *p = logits.data();
+    for (int32_t i = 0; i < num_tokens; ++i) {
+      auto max_idx = static_cast<int64_t>(
+          std::distance(p, std::max_element(p, p + vocab_size)));
 
-    int32_t frame_shift_ms = 10;
-    int32_t subsampling_factor = meta_data.window_shift;
-    auto r = ConvertSenseVoiceResult(result, symbol_table_, frame_shift_ms,
-                                     subsampling_factor);
+      if (max_idx == eos_id) {
+        break;
+      }
+      r.tokens.push_back(max_idx);
+      p += vocab_size;
+    }
 
-    r.text = ApplyInverseTextNormalization(std::move(r.text));
-    r.text = ApplyHomophoneReplacer(std::move(r.text));
-    s->SetResult(r);
+    auto result = Convert(result, symbol_table_);
+    result.text = ApplyInverseTextNormalization(std::move(result.text));
+    result.text = ApplyHomophoneReplacer(std::move(result.text));
+    s->SetResult(result);
   }
 
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OfflineSenseVoiceModelAscend> model_;
+  std::unique_ptr<OfflineParaformerModelAscend> model_;
   std::unique_ptr<OfflineCtcGreedySearchDecoderRknn> decoder_;
 };
 

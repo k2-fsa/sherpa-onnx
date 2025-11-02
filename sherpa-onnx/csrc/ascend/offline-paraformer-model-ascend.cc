@@ -28,6 +28,50 @@
 
 namespace sherpa_onnx {
 
+static void ScaleAdd(const float *src, float scale, int32_t n, float *in_out) {
+  for (int32_t i = 0; i < n; ++i) {
+    in_out[i] += scale * src[i];
+  }
+}
+
+static void Scale(const float *src, float scale, int32_t n, float *out) {
+  for (int32_t i = 0; i < n; ++i) {
+    out[i] = scale * src[i];
+  }
+}
+
+static std::vector<float> ComputeAcousticEmbedding(
+    std::vector<float> encoder_out, std::vector<float> alphas,
+    int32_t encoder_dim) {
+  std::vector<float> ans;
+  ans.reserve(encoder_out.size());
+
+  float acc = 0;
+  std::vector<float> cur_emb(encoder_dim);
+  for (int32_t i = 0; i < static_cast<int32_t>(alphas.size()); ++i) {
+    float w = alphas[i];
+    acc += w;
+    if (acc >= 1) {
+      float overflow = acc - 1;
+      float remain = w - overflow;
+
+      ScaleAdd(encoder_out.data() + i * encoder_dim, remain, encoder_dim,
+               cur_emb.data());
+
+      ans.insert(ans.end(), cur_emb.begin(), cur_emb.end());
+
+      Scale(encoder_out.data() + i * encoder_dim, overflow, encoder_dim,
+            cur_emb.data());
+    } else {
+      ScaleAdd(encoder_out.data() + i * encoder_dim, w, encoder_dim,
+               cur_emb.data());
+    }
+  }
+  // TODO(fangjun): The last cur_emb is not used
+
+  return ans;
+}
+
 class OfflineParaformerModelAscend::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
@@ -86,9 +130,56 @@ class OfflineParaformerModelAscend::Impl {
 
     int32_t num_frames = features.size() / 560;
 
+    RunEncoder(std::move(features));
+
+    std::vector<float> encoder_out_cpu(num_frames * encoder_dim_);
+    aclError ret = aclrtMemcpy(
+        encoder_out_cpu.data(), num_frames * encoder_dim_ * sizeof(float),
+        *encoder_out_ptr_, num_frames * encoder_dim_ * sizeof(float),
+        ACL_MEMCPY_DEVICE_TO_HOST);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    RunPredictor(num_frames);
+
+    std::vector<float> alphas_cpu(num_frames);
+
+    ret =
+        aclrtMemcpy(alphas_cpu.data(), num_frames * sizeof(float), *alphas_ptr_,
+                    num_frames * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    std::vector<float> acoustic_embedding = ComputeAcousticEmbedding(
+        std::move(encoder_out_cpu), std::move(alphas_cpu), encoder_dim_);
+    if (acoustic_embedding.empty()) {
+      // no speech in the audio file
+      return {};
+    }
+
+    int32_t num_tokens = acoustic_embedding.size() / encoder_dim_;
+
+    RunDecoder(num_frames, std::move(acoustic_embedding));
+
+    std::vector<float> logits(num_tokens * vocab_size_);
+
+    ret = aclrtMemcpy(logits.data(), num_tokens * vocab_size_ * sizeof(float),
+                      *logits_ptr_, num_tokens * vocab_size_ * sizeof(float),
+                      ACL_MEMCPY_DEVICE_TO_HOST);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    return logits;
+  }
+
+  int32_t VocabSize() const { return vocab_size_; }
+
+ private:
+  void RunEncoder(std::vector<float> features) {
+    int32_t num_frames = features.size() / 560;
+
     aclError ret = aclrtMemcpy(*features_ptr_, features.size() * sizeof(float),
                                features.data(), features.size() * sizeof(float),
                                ACL_MEMCPY_HOST_TO_DEVICE);
+
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
@@ -103,27 +194,71 @@ class OfflineParaformerModelAscend::Impl {
                                 features_shape.data(), ACL_FORMAT_ND);
     input_dataset.SetTensorDesc(features_desc, 0);
 
-    AclMdlDataset encoder_output_dataset;
+    AclMdlDataset output_dataset;
 
     AclDataBuffer encoder_out(*encoder_out_ptr_,
                               num_frames * encoder_dim_ * sizeof(float));
-    encoder_output_dataset.AddBuffer(encoder_out);
+    output_dataset.AddBuffer(encoder_out);
 
-    ret = aclmdlExecute(*encoder_model_, input_dataset, encoder_output_dataset);
+    ret = aclmdlExecute(*encoder_model_, input_dataset, output_dataset);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute for encoder");
-#if 0
-    std::vector<float> logits(num_frames * vocab_size_);
-    ret = aclrtMemcpy(logits.data(), num_frames * vocab_size_ * sizeof(float),
-                      *logits_ptr_, num_frames * vocab_size_ * sizeof(float),
-                      ACL_MEMCPY_DEVICE_TO_HOST);
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
-
-    return logits;
-#endif
-    return {};
   }
 
- private:
+  void RunPredictor(int32_t num_frames) {
+    AclMdlDataset input_dataset;
+    AclDataBuffer encoder_out_buf(*encoder_out_ptr_,
+                                  num_frames * encoder_dim_ * sizeof(float));
+    input_dataset.AddBuffer(encoder_out_buf);
+
+    std::array<int64_t, 3> encoder_out_shape = {1, num_frames, encoder_dim_};
+    AclTensorDesc encoder_out_desc(ACL_FLOAT, encoder_out_shape.size(),
+                                   encoder_out_shape.data(), ACL_FORMAT_ND);
+    input_dataset.SetTensorDesc(encoder_out_desc, 0);
+
+    AclMdlDataset output_dataset;
+    AclDataBuffer alphas_buf(*alphas_ptr_, num_frames * sizeof(float));
+    output_dataset.AddBuffer(alphas_buf);
+
+    aclError ret =
+        aclmdlExecute(*predictor_model_, input_dataset, output_dataset);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute for predictor");
+  }
+
+  void RunDecoder(int32_t num_frames, std::vector<float> acoustic_embedding) {
+    int32_t num_tokens = acoustic_embedding.size() / encoder_dim_;
+
+    AclMdlDataset input_dataset;
+    AclDataBuffer encoder_out_buf(*encoder_out_ptr_,
+                                  num_frames * encoder_dim_ * sizeof(float));
+    input_dataset.AddBuffer(encoder_out_buf);
+
+    std::array<int64_t, 3> encoder_out_shape = {1, num_frames, encoder_dim_};
+    AclTensorDesc encoder_out_desc(ACL_FLOAT, encoder_out_shape.size(),
+                                   encoder_out_shape.data(), ACL_FORMAT_ND);
+    input_dataset.SetTensorDesc(encoder_out_desc, 0);
+
+    AclDataBuffer acoustic_embedding_buf(
+        *acoustic_embedding_ptr_, num_tokens * encoder_dim_ * sizeof(float));
+    input_dataset.AddBuffer(acoustic_embedding_buf);
+
+    std::array<int64_t, 3> acoustic_embedding_shape = {1, num_tokens,
+                                                       encoder_dim_};
+    AclTensorDesc acoustic_embedding_desc(
+        ACL_FLOAT, acoustic_embedding_shape.size(),
+        acoustic_embedding_shape.data(), ACL_FORMAT_ND);
+    input_dataset.SetTensorDesc(acoustic_embedding_desc, 1);
+
+    AclMdlDataset output_dataset;
+    AclDataBuffer logits_buf(*logits_ptr_,
+                             num_tokens * vocab_size_ * sizeof(float));
+    output_dataset.AddBuffer(logits_buf);
+
+    aclError ret =
+        aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute for decoder");
+  }
+
   void InitEncoder(const std::string &filename) {
     encoder_model_ = std::make_unique<AclModel>(filename);
     if (config_.debug) {
@@ -204,8 +339,8 @@ class OfflineParaformerModelAscend::Impl {
     encoder_out_ptr_ = std::make_unique<AclDevicePtr>(
         max_num_frames_ * encoder_dim_ * sizeof(float));
 
-    alphas_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ *
-                                                 encoder_dim_ * sizeof(float));
+    alphas_ptr_ =
+        std::make_unique<AclDevicePtr>(max_num_frames_ * sizeof(float));
 
     acoustic_embedding_ptr_ = std::make_unique<AclDevicePtr>(
         max_num_frames_ * encoder_dim_ * sizeof(float));
@@ -285,6 +420,10 @@ OfflineParaformerModelAscend::~OfflineParaformerModelAscend() = default;
 std::vector<float> OfflineParaformerModelAscend::Run(
     std::vector<float> features) const {
   return impl_->Run(std::move(features));
+}
+
+int32_t OfflineParaformerModelAscend::VocabSize() const {
+  return impl_->VocabSize();
 }
 
 #if __ANDROID_API__ >= 9
