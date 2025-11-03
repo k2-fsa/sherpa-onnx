@@ -14,12 +14,11 @@
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/rknn/offline-ctc-greedy-search-decoder-rknn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
 
-// defined in ../online-recognizer-paraformer-impl.h
+// defined in ../offline-recognizer-paraformer-impl.h
 OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
                                  const SymbolTable &sym_table);
 
@@ -115,7 +114,6 @@ class OfflineRecognizerParaformerAscendImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineParaformerModelAscend> model_;
-  std::unique_ptr<OfflineCtcGreedySearchDecoderRknn> decoder_;
 };
 
 }  // namespace sherpa_onnx
