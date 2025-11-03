@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/ascend/utils.h"
 
 #include <sstream>
+#include <utility>
 
 #include "sherpa-onnx/csrc/ascend/macros.h"
 

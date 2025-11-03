@@ -7,9 +7,11 @@
 #include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 
 #include <algorithm>
-#include <mutex>  // NOLINT
-#include <vector>
 #include <array>
+#include <mutex>  // NOLINT
+#include <string>
+#include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -74,7 +76,7 @@ class OfflineSenseVoiceModelAscend::Impl {
     AclDataBuffer prompt_buf(*prompt_ptr_, prompt_ptr_->Size());
     input_dataset.AddBuffer(prompt_buf);
 
-    // 动态Shape输入（设置Shape范围）
+    // dynamic shape input
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
 
     std::array<int64_t, 3> x_shape = {1, num_frames, 560};
