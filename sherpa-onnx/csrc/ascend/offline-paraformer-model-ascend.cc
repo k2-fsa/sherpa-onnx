@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <array>
 #include <mutex>  // NOLINT
+#include <string>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -51,7 +53,6 @@ static std::vector<float> ComputeAcousticEmbedding(
   for (int32_t i = 0; i < static_cast<int32_t>(alphas.size()); ++i) {
     float w = alphas[i];
 
-    SHERPA_ONNX_LOGE("%d : %.3f", i, w);
     acc += w;
     if (acc >= 1) {
       float overflow = acc - 1;

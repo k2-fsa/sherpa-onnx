@@ -7,9 +7,11 @@
 #include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 
 #include <algorithm>
-#include <mutex>  // NOLINT
-#include <vector>
 #include <array>
+#include <mutex>  // NOLINT
+#include <string>
+#include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"

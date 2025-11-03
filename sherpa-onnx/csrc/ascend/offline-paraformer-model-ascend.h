@@ -23,7 +23,7 @@ class OfflineParaformerModelAscend {
   /**
    * @param features A tensor of shape (num_frames, feature_dim)
    *                 before applying LFR.
-   * @returns Return a tensor of shape (num_output_frames, encoder_dim)
+   * @returns Return a tensor of shape (num_output_frames, vocab_size)
    */
   std::vector<float> Run(std::vector<float> features) const;
 
