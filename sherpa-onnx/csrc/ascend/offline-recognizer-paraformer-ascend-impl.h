@@ -2,8 +2,8 @@
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_
-#define SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_PARAFORMER_ASCEND_IMPL_H_
+#define SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_PARAFORMER_ASCEND_IMPL_H_
 
 #include <memory>
 #include <utility>
@@ -72,9 +72,7 @@ class OfflineRecognizerParaformerAscendImpl : public OfflineRecognizerImpl {
 
  private:
   void InitFeatConfig() {
-    const auto &meta_data = model_->GetModelMetadata();
-
-    config_.feat_config.normalize_samples = meta_data.normalize_samples;
+    config_.feat_config.normalize_samples = false;
     config_.feat_config.window_type = "hamming";
     config_.feat_config.high_freq = 0;
     config_.feat_config.snip_edges = true;
@@ -107,7 +105,7 @@ class OfflineRecognizerParaformerAscendImpl : public OfflineRecognizerImpl {
       p += vocab_size;
     }
 
-    auto result = Convert(result, symbol_table_);
+    auto result = Convert(r, symbol_table_);
     result.text = ApplyInverseTextNormalization(std::move(result.text));
     result.text = ApplyHomophoneReplacer(std::move(result.text));
     s->SetResult(result);
@@ -122,4 +120,4 @@ class OfflineRecognizerParaformerAscendImpl : public OfflineRecognizerImpl {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_SENSE_VOICE_ASCEND_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_ASCEND_OFFLINE_RECOGNIZER_PARAFORMER_ASCEND_IMPL_H_

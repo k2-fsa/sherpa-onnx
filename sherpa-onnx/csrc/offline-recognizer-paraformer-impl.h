@@ -22,8 +22,8 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(
-    const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
+OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
+                                 const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps = src.timestamps;
@@ -94,7 +94,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();
@@ -114,7 +114,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();

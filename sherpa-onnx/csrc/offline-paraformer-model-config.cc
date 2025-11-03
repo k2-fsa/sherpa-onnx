@@ -39,8 +39,7 @@ bool OfflineParaformerModelConfig::Validate() const {
     }
   }
 
-  SHERPA_ONNX_LOGE("Invalid Paraformer model '%s'", model);
-  return false;
+  return true;
 }
 
 std::string OfflineParaformerModelConfig::ToString() const {

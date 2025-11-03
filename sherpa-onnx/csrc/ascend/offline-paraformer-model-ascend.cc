@@ -50,6 +50,8 @@ static std::vector<float> ComputeAcousticEmbedding(
   std::vector<float> cur_emb(encoder_dim);
   for (int32_t i = 0; i < static_cast<int32_t>(alphas.size()); ++i) {
     float w = alphas[i];
+
+    SHERPA_ONNX_LOGE("%d : %.3f", i, w);
     acc += w;
     if (acc >= 1) {
       float overflow = acc - 1;
@@ -62,6 +64,8 @@ static std::vector<float> ComputeAcousticEmbedding(
 
       Scale(encoder_out.data() + i * encoder_dim, overflow, encoder_dim,
             cur_emb.data());
+
+      acc = overflow;
     } else {
       ScaleAdd(encoder_out.data() + i * encoder_dim, w, encoder_dim,
                cur_emb.data());
@@ -225,6 +229,12 @@ class OfflineParaformerModelAscend::Impl {
   }
 
   void RunDecoder(int32_t num_frames, std::vector<float> acoustic_embedding) {
+    aclError ret = aclrtMemcpy(
+        *acoustic_embedding_ptr_, acoustic_embedding.size() * sizeof(float),
+        acoustic_embedding.data(), acoustic_embedding.size() * sizeof(float),
+        ACL_MEMCPY_HOST_TO_DEVICE);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
     int32_t num_tokens = acoustic_embedding.size() / encoder_dim_;
 
     AclMdlDataset input_dataset;
@@ -253,8 +263,7 @@ class OfflineParaformerModelAscend::Impl {
                              num_tokens * vocab_size_ * sizeof(float));
     output_dataset.AddBuffer(logits_buf);
 
-    aclError ret =
-        aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
+    ret = aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute for decoder");
   }

@@ -40,6 +40,7 @@
 #endif
 
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
+#include "sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h"
 #endif
 
@@ -59,7 +60,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
-        "want to use rknn.");
+        "want to use rknn. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/rknn/install.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -67,18 +69,20 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (config.model_config.provider == "ascend") {
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
-    if (config.model_config.sense_voice.model.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported "
-          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
-    } else if (!config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty()) {
       return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(config);
+    } else if (!config.model_config.paraformer.model.empty()) {
+      return std::make_unique<OfflineRecognizerParaformerAscendImpl>(config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice and Paraformer models are currently supported "
+          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
     }
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON if "
-        "you "
-        "want to use Ascend NPU.");
+        "you want to use Ascend NPU. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/ascend/install.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -286,7 +290,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
-        "want to use rknn.");
+        "want to use rknn. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/rknn/install.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -294,19 +299,22 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (config.model_config.provider == "ascend") {
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
-    if (config.model_config.sense_voice.model.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported "
-          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
-    } else if (!config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty()) {
       return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(mgr,
                                                                      config);
+    } else if (!config.model_config.paraformer.model.empty()) {
+      return std::make_unique<OfflineRecognizerParaformerAscendImpl>(mgr,
+                                                                     config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice and Paraformer models are currently supported "
+          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
     }
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON if "
-        "you "
-        "want to use Ascend NPU.");
+        "you want to use Ascend NPU. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/ascend/install.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
