@@ -191,7 +191,7 @@ class OfflineParaformerModelAscend::Impl {
     AclDataBuffer features_buf(*features_ptr_, features.size() * sizeof(float));
     input_dataset.AddBuffer(features_buf);
 
-    // 动态Shape输入（设置Shape范围）
+    // dynamic shape input
     // https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha003/appdevg/acldevg/aclcppdevg_000044.html
 
     std::array<int64_t, 3> features_shape = {1, num_frames, 560};
