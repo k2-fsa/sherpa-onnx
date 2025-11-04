@@ -13,7 +13,7 @@ concurrency:
 jobs:
   export-sense-voice-to-ascend-npu:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.framework }} ${{ matrix.soc_version }}
+    name: ${{ matrix.framework }} ${{ matrix.soc_version }} ${{ matrix.cann }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,19 +24,43 @@ jobs:
           - soc_version: "910B"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
+            cann: "8.0"
 
           - soc_version: "910B"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "WSYue-ASR"
+            cann: "8.0"
+
+          - soc_version: "910B"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "FunASR"
+            cann: "8.2"
+
+          - soc_version: "910B"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "WSYue-ASR"
+            cann: "8.2"
 
           # ===== Ascend 910B2 =====
           - soc_version: "910B2"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
+            cann: "8.0"
 
           - soc_version: "910B2"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "WSYue-ASR"
+            cann: "8.0"
+
+          - soc_version: "910B2"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "FunASR"
+            cann: "8.2"
+
+          - soc_version: "910B2"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "WSYue-ASR"
+            cann: "8.2"
 
 
           # ===== Ascend 310 =====
@@ -44,11 +68,23 @@ jobs:
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "FunASR"
+            cann: "8.0"
 
           - soc_version: "310P3"
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
             framework: "WSYue-ASR"
+            cann: "8.0"
+
+          - soc_version: "310P3"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-310p-ubuntu20.04-v2"
+            framework: "FunASR"
+            cann: "8.2"
+
+          - soc_version: "310P3"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-310p-ubuntu20.04-v2"
+            framework: "WSYue-ASR"
+            cann: "8.2"
 
     container:
       # image: ascendai/cann:latest
@@ -133,6 +169,7 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
+          cann=${{ matrix.cann }}
 
           atc --model=./model.onnx \
             --framework=5 \
@@ -146,7 +183,7 @@ jobs:
           ls -lh *.om
 
           echo "collect results"
-          d=sherpa-onnx-ascend-${soc_version}-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          d=sherpa-onnx-ascend-${soc_version}-cann-${cann}-sense-voice-zh-en-ja-ko-yue-2024-07-17
 
           mkdir -p $d
           mkdir -p $d/test_wavs
@@ -199,6 +236,7 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
+          cann=${{ matrix.cann }}
 
           atc --model=./model.onnx \
             --framework=5 \
@@ -212,7 +250,7 @@ jobs:
           ls -lh *.om
 
           echo "collect results"
-          d=sherpa-onnx-ascend-${soc_version}-sense-voice-zh-en-ja-ko-yue-2025-09-09
+          d=sherpa-onnx-ascend-${soc_version}-cann-${cann}-sense-voice-zh-en-ja-ko-yue-2025-09-09
 
           mkdir -p $d
           mkdir -p $d/test_wavs
