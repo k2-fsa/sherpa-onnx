@@ -21,10 +21,15 @@ void OfflineParaformerModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineParaformerModelConfig::Validate() const {
-  if (EndsWith(model, ".onnx") && !FileExists(model)) {
-    SHERPA_ONNX_LOGE("Paraformer model '%s' does not exist", model.c_str());
-    return false;
-  } else if (EndsWith(model, ".om")) {
+  if (EndsWith(model, ".onnx")) {
+    if (!FileExists(model)) {
+      SHERPA_ONNX_LOGE("Paraformer model '%s' does not exist", model.c_str());
+      return false;
+    }
+    return true;
+  }
+
+  if (EndsWith(model, ".om")) {
     std::vector<std::string> filenames;
     SplitStringToVector(model, ",", false, &filenames);
     if (filenames.size() != 3 || !EndsWith(filenames[0], "encoder.om") ||
@@ -37,13 +42,13 @@ bool OfflineParaformerModelConfig::Validate() const {
           model.c_str());
       return false;
     }
-  } else {
-    SHERPA_ONNX_LOGE("Please pass *.onnx or *.om models. Given '%s'",
-                     model.c_str());
-    return false;
+
+    return true;
   }
 
-  return true;
+  SHERPA_ONNX_LOGE("Please pass *.onnx or *.om models. Given '%s'",
+                   model.c_str());
+  return false;
 }
 
 std::string OfflineParaformerModelConfig::ToString() const {
