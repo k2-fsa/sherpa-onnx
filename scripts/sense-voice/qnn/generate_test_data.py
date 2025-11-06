@@ -95,7 +95,7 @@ def main():
         padding = np.zeros(())
         features = np.pad(features, pad_width, mode="constant", constant_values=0)
 
-    features.tofile("features.raw")
+    features.tofile("input0.raw")
 
     language_auto = 0
     language_zh = 3
@@ -113,7 +113,7 @@ def main():
     text_norm = with_itn
 
     prompt = np.array([language, 1, 2, text_norm], dtype=np.int32)
-    prompt.tofile("prompt.raw")
+    prompt.tofile("input1.raw")
 
 
 if __name__ == "__main__":

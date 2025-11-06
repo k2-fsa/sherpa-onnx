@@ -14,7 +14,6 @@ def load_tokens(filename):
 
 
 logits = np.fromfile("./logits.raw", dtype=np.float32).reshape((-1, 25055))
-print(logits.shape)
 
 idx = logits.argmax(axis=-1)
 print("idx", idx)
