@@ -95,7 +95,31 @@ jobs:
           cd qairt/2.33.0.250327/bin
           source envsetup.sh
 
-          python3 "${QNN_SDK_ROOT}/bin/check-python-dependency"
+          python3 -m pip install \
+            mock \
+            numpy \
+            opencv-python \
+            optuna \
+            packaging \
+            pandas \
+            paramiko \
+            pathlib2 \
+            pillow \
+            plotly \
+            protobuf \
+            psutil \
+            pydantic \
+            pytest \
+            pyyaml \
+            rich \
+            scikit-optimize \
+            scipy \
+            six \
+            tabulate \
+            typing-extensions \
+            xlsxwriter
+
+          python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true
 
           which python3
 
