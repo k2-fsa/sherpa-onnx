@@ -92,7 +92,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
     iss >> std::ws;
     if (!iss.eof()) {
       SHERPA_ONNX_LOGE("Error when reading tokens: %s", line.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     s = conv.from_bytes(sym);
@@ -105,7 +105,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
       SHERPA_ONNX_LOGE("Error when reading tokens at Line %s. size: %d",
                        line.c_str(), static_cast<int32_t>(s.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     char32_t c = s[0];
@@ -113,7 +113,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
     if (token2id.count(c)) {
       SHERPA_ONNX_LOGE("Duplicated token %s. Line %s. Existing ID: %d",
                        sym.c_str(), line.c_str(), token2id.at(c));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     token2id.insert({c, id});
@@ -322,7 +322,7 @@ void InitEspeak(const std::string &data_dir) {
           "Failed to initialize espeak-ng with data dir: %s. Return code is: "
           "%d",
           data_dir.c_str(), result);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   });
 }
@@ -541,7 +541,7 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsVits(
 
   } else {
     SHERPA_ONNX_LOGE("Unsupported model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   return ans;

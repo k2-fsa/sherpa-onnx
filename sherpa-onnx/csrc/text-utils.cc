@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -708,6 +709,14 @@ bool EndsWith(const std::string &haystack, const std::string &needle) {
   return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
 }
 
+bool Contains(const std::string &haystack, const std::string &needle) {
+  if (needle.size() > haystack.size()) {
+    return false;
+  }
+
+  return haystack.find(needle) != std::string::npos;
+}
+
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
   std::vector<std::string> ans;
   if (chunk_size < 1 || chunk_size > s.size()) {
@@ -797,6 +806,14 @@ std::string GetWord(const std::vector<std::string> &words, int32_t start,
   }
 
   return ans;
+}
+
+bool IsPunct(const std::string &s) {
+  static const std::unordered_set<std::string> puncts = {
+      ",",  ".",  "!",  "?", ":", "\"", "'", "，",
+      "。", "！", "？", "“", "”", "‘",  "’",
+  };
+  return puncts.count(s);
 }
 
 }  // namespace sherpa_onnx

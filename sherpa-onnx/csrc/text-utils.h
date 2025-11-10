@@ -147,6 +147,8 @@ std::string ToString(const std::wstring &s);
 
 bool EndsWith(const std::string &haystack, const std::string &needle);
 
+bool Contains(const std::string &haystack, const std::string &needle);
+
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size);
 
 // Converts a UTF-8 std::string to a UTF-32 std::u32string
@@ -175,6 +177,8 @@ bool StringToBool(const std::string &s);
 // end is inclusive
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end);
+
+bool IsPunct(const std::string &s);
 
 }  // namespace sherpa_onnx
 

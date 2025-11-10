@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_IMPL_H_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <strstream>
@@ -16,6 +17,7 @@
 #include "sherpa-onnx/csrc/character-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 #include "sherpa-onnx/csrc/melo-tts-lexicon.h"
 #include "sherpa-onnx/csrc/offline-tts-character-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
@@ -32,8 +34,26 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsMatchaImpl(const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsMatchaModel>(config.model)),
-        vocoder_(Vocoder::Create(config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(config.model)) {
+    const auto &meta_data = model_->GetMetaData();
+    if (meta_data.need_vocoder) {
+      if (config.model.matcha.vocoder.empty()) {
+        SHERPA_ONNX_LOGE("Please provide vocoder for this model");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (!FileExists(config.model.matcha.vocoder)) {
+        SHERPA_ONNX_LOGE("Please vocoder '%s' does not exist",
+                         config.model.matcha.vocoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      vocoder_ = Vocoder::Create(config.model);
+    } else if (!config.model.matcha.vocoder.empty()) {
+      SHERPA_ONNX_LOGE(
+          "You don't need to provide vocoder for this model. Ignore it");
+    }
+
     InitFrontend();
 
     if (!config.rule_fsts.empty()) {
@@ -84,13 +104,38 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         SHERPA_ONNX_LOGE("FST archives loaded!");
       }
     }
+
+    if (meta_data.sample_rate == 16000 && meta_data.is_zh_en == 1) {
+      if (!Contains(config.model.matcha.vocoder, "16") &&
+          Contains(config.model.matcha.vocoder, "2")) {
+        SHERPA_ONNX_LOGE(
+            "This Chinese+English TTS model requires a 16khz Vocoder.");
+        SHERPA_ONNX_LOGE("You should use vocos-16khz-univ.onnx.");
+        SHERPA_ONNX_LOGE(
+            "Please re-download a vocoder from "
+            "https://github.com/k2-fsa/sherpa-onnx/releases/tag/"
+            "vocoder-models.");
+      }
+    }
   }
 
   template <typename Manager>
   OfflineTtsMatchaImpl(Manager *mgr, const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsMatchaModel>(mgr, config.model)),
-        vocoder_(Vocoder::Create(mgr, config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(mgr, config.model)) {
+    const auto &meta_data = model_->GetMetaData();
+    if (meta_data.need_vocoder) {
+      if (config.model.matcha.vocoder.empty()) {
+        SHERPA_ONNX_LOGE("Please provide vocoder for this model");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      vocoder_ = Vocoder::Create(mgr, config.model);
+    } else if (!config.model.matcha.vocoder.empty()) {
+      SHERPA_ONNX_LOGE(
+          "You don't need to provide vocoder for this model. Ignore it");
+    }
+
     InitFrontend(mgr);
 
     if (!config.rule_fsts.empty()) {
@@ -142,6 +187,19 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         }  // for (; !reader->Done(); reader->Next())
       }  // for (const auto &f : files)
     }  // if (!config.rule_fars.empty())
+
+    if (meta_data.sample_rate == 16000 && meta_data.is_zh_en == 1) {
+      if (!Contains(config.model.matcha.vocoder, "16") &&
+          Contains(config.model.matcha.vocoder, "2")) {
+        SHERPA_ONNX_LOGE(
+            "This Chinese+English TTS model requires a 16khz Vocoder.");
+        SHERPA_ONNX_LOGE("You should use vocos-16khz-univ.onnx.");
+        SHERPA_ONNX_LOGE(
+            "Please re-download a vocoder from "
+            "https://github.com/k2-fsa/sherpa-onnx/releases/tag/"
+            "vocoder-models.");
+      }
+    }
   }
 
   int32_t SampleRate() const override {
@@ -325,7 +383,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     // from assets to disk
     const auto &meta_data = model_->GetMetaData();
 
-    if (meta_data.jieba || meta_data.voice == "zh en-us") {
+    if (meta_data.is_zh_en) {
+      frontend_ = std::make_unique<MatchaTtsLexicon>(
+          mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
+          config_.model.matcha.data_dir, config_.model.debug);
+    } else if (meta_data.jieba) {
       frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
           config_.model.debug);
@@ -334,7 +396,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           mgr, config_.model.matcha.tokens, config_.model.matcha.data_dir,
           meta_data);
     } else {
-      SHERPA_ONNX_LOGE("jieba + espeaker-ng is not supported yet");
+      SHERPA_ONNX_LOGE("Unsupported matcha tts model. Please ask for help");
       SHERPA_ONNX_EXIT(-1);
     }
   }
@@ -342,7 +404,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();
 
-    if (meta_data.jieba || meta_data.voice == "zh en-us") {
+    if (meta_data.is_zh_en) {
+      frontend_ = std::make_unique<MatchaTtsLexicon>(
+          config_.model.matcha.lexicon, config_.model.matcha.tokens,
+          config_.model.matcha.data_dir, config_.model.debug);
+    } else if (meta_data.jieba) {
       frontend_ = std::make_unique<CharacterLexicon>(
           config_.model.matcha.lexicon, config_.model.matcha.tokens,
           config_.model.debug);
@@ -351,7 +417,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
           config_.model.matcha.tokens, config_.model.matcha.data_dir,
           meta_data);
     } else {
-      SHERPA_ONNX_LOGE("jieba + espeaker-ng is not supported yet");
+      SHERPA_ONNX_LOGE("Unsupported matcha tts model. Please ask for help");
       SHERPA_ONNX_EXIT(-1);
     }
   }
@@ -376,11 +442,24 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
-
     GeneratedAudio ans;
 
-    ans.samples = vocoder_->Run(std::move(mel));
+    Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
+
+    const auto &meta_data = model_->GetMetaData();
+    if (meta_data.need_vocoder) {
+      ans.samples = vocoder_->Run(std::move(mel));
+    } else {
+      std::vector<int64_t> shape = mel.GetTensorTypeAndShapeInfo().GetShape();
+      int64_t num_samples = 1;
+      for (auto s : shape) {
+        num_samples *= s;
+      }
+      ans.samples.resize(num_samples);
+      auto p = mel.GetTensorData<float>();
+      std::copy(p, p + num_samples, ans.samples.data());
+    }
+
     ans.sample_rate = model_->GetMetaData().sample_rate;
 
     float silence_scale = config_.silence_scale;

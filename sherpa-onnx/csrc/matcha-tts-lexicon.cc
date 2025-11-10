@@ -1,10 +1,11 @@
-// sherpa-onnx/csrc/character-lexicon.cc
+// sherpa-onnx/csrc/matcha-tts-lexicon.cc
 //
-// Copyright (c)  2022-2024  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/character-lexicon.h"
+#include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 
 #include <algorithm>
+#include <codecvt>
 #include <fstream>
 #include <memory>
 #include <regex>  // NOLINT
@@ -25,6 +26,9 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "espeak-ng/speak_lib.h"
+#include "phoneme_ids.hpp"
+#include "phonemize.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -34,9 +38,14 @@
 
 namespace sherpa_onnx {
 
-class CharacterLexicon::Impl {
+void CallPhonemizeEspeak(const std::string &text,
+                         piper::eSpeakPhonemeConfig &config,  // NOLINT
+                         std::vector<std::vector<piper::Phoneme>> *phonemes);
+
+class MatchaTtsLexicon::Impl {
  public:
-  Impl(const std::string &lexicon, const std::string &tokens, bool debug)
+  Impl(const std::string &lexicon, const std::string &tokens,
+       const std::string &data_dir, bool debug)
       : debug_(debug) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
@@ -52,11 +61,18 @@ class CharacterLexicon::Impl {
       std::ifstream is(lexicon);
       InitLexicon(is);
     }
+
+    if (data_dir.empty()) {
+      SHERPA_ONNX_LOGE("Please provide data dir for this model");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       bool debug)
+       const std::string &data_dir, bool debug)
       : debug_(debug) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
@@ -75,32 +91,41 @@ class CharacterLexicon::Impl {
       std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
+
+    if (data_dir.empty()) {
+      SHERPA_ONNX_LOGE("Please provide data dir for this model");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
-  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &text) const {
-    // see
-    // https://github.com/Plachtaa/VITS-fast-fine-tuning/blob/main/text/mandarin.py#L244
-    std::regex punct_re{"：|、|；"};
-    std::string s = std::regex_replace(text, punct_re, "，");
+  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
+    std::string text = _text;
+    std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
+        {"，", ","}, {":", ","},  {"、", ","}, {"；", ";"},   {"：", ":"},
+        {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
+    };
+    for (const auto &p : replace_str_pairs) {
+      std::regex re(p.first);
+      text = std::regex_replace(text, re, p.second);
+    }
 
-    std::regex punct_re2("[.]");
-    s = std::regex_replace(s, punct_re2, "。");
-
-    std::regex punct_re3("[?]");
-    s = std::regex_replace(s, punct_re3, "？");
-
-    std::regex punct_re4("[!]");
-    s = std::regex_replace(s, punct_re4, "！");
+    if (debug_) {
+      SHERPA_ONNX_LOGE("After replacing punctuations and merging spaces:\n%s",
+                       text.c_str());
+    }
 
     std::vector<std::string> words = SplitUtf8(text);
 
     if (debug_) {
 #if __OHOS__
-      SHERPA_ONNX_LOGE("input text:\n%{public}s", text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s", s.c_str());
+      SHERPA_ONNX_LOGE("input text:\n%{public}s", _text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s",
+                       text.c_str());
 #else
-      SHERPA_ONNX_LOGE("input text:\n%s", text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", s.c_str());
+      SHERPA_ONNX_LOGE("input text:\n%s", _text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", text.c_str());
 #endif
 
       std::ostringstream os;
@@ -164,8 +189,10 @@ class CharacterLexicon::Impl {
 
     PhraseMatcher matcher(&all_words_, words, debug_);
 
+    std::vector<int32_t> ids;
     for (const std::string &w : matcher) {
-      auto ids = ConvertWordToIds(w);
+      ids = ConvertWordToIds(w);
+
       if (ids.empty()) {
 #if __OHOS__
         SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
@@ -199,21 +226,41 @@ class CharacterLexicon::Impl {
     } else if (token2id_.count(w)) {
       ans = {token2id_.at(w)};
     } else {
-      std::vector<std::string> words = SplitUtf8(w);
-      for (const auto &word : words) {
-        if (word2ids_.count(word)) {
-          auto ids = ConvertWordToIds(word);
-          ans.insert(ans.end(), ids.begin(), ids.end());
+      if (ContainsCJK(w)) {
+        std::vector<std::string> words = SplitUtf8(w);
+        for (const auto &word : words) {
+          if (word2ids_.count(word)) {
+            auto ids = ConvertWordToIds(word);
+            ans.insert(ans.end(), ids.begin(), ids.end());
+          }
+        }
+      } else {
+        SHERPA_ONNX_LOGE("use espeak for %s", w.c_str());
+        // use espeak
+        piper::eSpeakPhonemeConfig config;
+        config.voice = "en-us";
+        std::vector<std::vector<piper::Phoneme>> phonemes;
+        CallPhonemizeEspeak(w, config, &phonemes);
+        for (const auto &ps : phonemes) {
+          for (const auto &p : ps) {
+            if (phoneme2id_.count(p)) {
+              ans.push_back(phoneme2id_.at(p));
+            } else {
+              SHERPA_ONNX_LOGE(
+                  "Skip unknown phonemes. Unicode codepoint: \\U+%04x. for %s",
+                  static_cast<uint32_t>(p), w.c_str());
+            }
+          }
         }
       }
     }
+
     if (debug_) {
       std::ostringstream os;
       os << w << ": ";
       for (auto i : ans) {
         os << id2token_.at(i) << " ";
       }
-      os << "\n";
 #if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
 #else
@@ -253,6 +300,29 @@ class CharacterLexicon::Impl {
     if (debug_) {
       for (const auto &p : token2id_) {
         id2token_[p.second] = p.first;
+      }
+    }
+
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    std::u32string s;
+    for (const auto &p : token2id_) {
+      if ((p.first.front() == '<' && p.first.back() == '>') ||
+          p.first.back() == '1' || p.first.back() == '2' ||
+          p.first.back() == '3' || p.first.back() == '4' ||
+          p.first.back() == '5') {
+        continue;
+      }
+      s = conv.from_bytes(p.first);
+
+      if (s.size() != 1) {
+        SHERPA_ONNX_LOGE("Error for token %s with id %d", p.first.c_str(),
+                         p.second);
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      char32_t c = s[0];
+      if (!phoneme2id_.count(c)) {
+        phoneme2id_.insert({c, p.second});
       }
     }
   }
@@ -318,39 +388,44 @@ class CharacterLexicon::Impl {
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+  std::unordered_map<char32_t, int32_t> phoneme2id_;
 
   std::unordered_map<int32_t, std::string> id2token_;
 
   bool debug_ = false;
-};
+};  // namespace sherpa_onnx
 
-CharacterLexicon::~CharacterLexicon() = default;
+MatchaTtsLexicon::~MatchaTtsLexicon() = default;
 
-CharacterLexicon::CharacterLexicon(const std::string &lexicon,
-                                   const std::string &tokens, bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, debug)) {}
+MatchaTtsLexicon::MatchaTtsLexicon(const std::string &lexicon,
+                                   const std::string &tokens,
+                                   const std::string &data_dir, bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, data_dir, debug)) {}
 
 template <typename Manager>
-CharacterLexicon::CharacterLexicon(Manager *mgr, const std::string &lexicon,
-                                   const std::string &tokens, bool debug)
-    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, debug)) {}
+MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
+                                   const std::string &tokens,
+                                   const std::string &data_dir, bool debug)
+    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, data_dir, debug)) {}
 
-std::vector<TokenIDs> CharacterLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> MatchaTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
 
 #if __ANDROID_API__ >= 9
-template CharacterLexicon::CharacterLexicon(AAssetManager *mgr,
+template MatchaTtsLexicon::MatchaTtsLexicon(AAssetManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
+                                            const std::string &data_dir,
                                             bool debug);
 #endif
 
 #if __OHOS__
-template CharacterLexicon::CharacterLexicon(NativeResourceManager *mgr,
+template MatchaTtsLexicon::MatchaTtsLexicon(NativeResourceManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
+                                            const std::string &data_dir,
                                             bool debug);
 #endif
 

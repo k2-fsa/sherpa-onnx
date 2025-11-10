@@ -42,16 +42,6 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
     return false;
   }
 
-  if (vocoder.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --matcha-vocoder");
-    return false;
-  }
-
-  if (!FileExists(vocoder)) {
-    SHERPA_ONNX_LOGE("--matcha-vocoder: '%s' does not exist", vocoder.c_str());
-    return false;
-  }
-
   if (tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --matcha-tokens");
     return false;
