@@ -736,6 +736,35 @@ class SHERPA_ONNX_API OfflinePunctuation
 };
 
 // ============================================================================
+// Online Punctuation
+// ============================================================================
+struct OnlinePunctuationModelConfig {
+  std::string cnn_bilstm;
+  std::string bpe_vocab;
+  int32_t num_threads = 1;
+  int32_t debug = false;
+  std::string provider = "cpu";
+};
+
+struct OnlinePunctuationConfig {
+  OnlinePunctuationModelConfig model;
+};
+
+class SHERPA_ONNX_API OnlinePunctuation
+    : public MoveOnly<OnlinePunctuation, SherpaOnnxOnlinePunctuation> {
+ public:
+  static OnlinePunctuation Create(const OnlinePunctuationConfig &config);
+
+  void Destroy(const SherpaOnnxOnlinePunctuation *p) const;
+
+  // Add punctuations to the input text and return it.
+  std::string AddPunctuation(const std::string &text) const;
+
+ private:
+  explicit OnlinePunctuation(const SherpaOnnxOnlinePunctuation *p);
+};
+
+// ============================================================================
 // Audio tagging
 // ============================================================================
 struct OfflineZipformerAudioTaggingModelConfig {
