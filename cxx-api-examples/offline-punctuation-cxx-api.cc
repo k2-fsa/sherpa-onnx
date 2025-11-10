@@ -1,4 +1,4 @@
-// cxx-api-examples/punctuation-cxx-api.cc
+// cxx-api-examples/offline-punctuation-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 
 // To use punctuation model:
