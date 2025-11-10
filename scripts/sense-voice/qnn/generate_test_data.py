@@ -92,7 +92,6 @@ def main():
         features = features[: args.num_frames]
     elif features.shape[0] < args.num_frames:
         pad_width = ((0, args.num_frames - features.shape[0]), (0, 0))
-        padding = np.zeros(())
         features = np.pad(features, pad_width, mode="constant", constant_values=0)
 
     features.tofile("input0.raw")

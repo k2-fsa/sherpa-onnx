@@ -3,7 +3,7 @@ name: export-sense-voice-to-qnn
 on:
   push:
     branches:
-      - export-sense-voice-qnn
+      - export-sense-voice-qnn-2
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +13,7 @@ concurrency:
 jobs:
   export-sense-voice-to-qnn:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.framework }} ${{ matrix.platform }} ${{ matrix.input_in_seconds }}
+    name: ${{ matrix.framework }} ${{ matrix.input_in_seconds }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
