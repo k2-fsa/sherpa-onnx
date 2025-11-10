@@ -171,6 +171,11 @@ class OfflineTtsMatchaModel::Impl {
       // for models from
       // https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010
       meta_data_.add_blank = 0;
+      meta_data_.is_zh_en = 1;
+    }
+
+    if (output_names_.front() == "audio_output") {
+      meta_data_.need_vocoder = false;
     }
   }
 

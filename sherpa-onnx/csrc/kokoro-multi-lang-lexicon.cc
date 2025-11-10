@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/kokoro-multi-lang-lexicon.h"
 
+#include <codecvt>
 #include <fstream>
 #include <regex>  // NOLINT
 #include <sstream>
@@ -22,8 +23,6 @@
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
-
-#include <codecvt>
 
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
@@ -72,9 +71,6 @@ class KokoroMultiLangLexicon::Impl {
     // we cannot convert text to lowercase here since it will affect
     // how piper_phonemize handles punctuations inside the text
     std::string text = _text;
-    if (debug_) {
-      SHERPA_ONNX_LOGE("After converting to lowercase:\n%s", text.c_str());
-    }
 
     std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
         {"，", ","}, {":", ","},  {"、", ","}, {"；", ";"},   {"：", ":"},

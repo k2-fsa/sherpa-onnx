@@ -206,6 +206,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     hifigan-vocoder.cc
     kokoro-multi-lang-lexicon.cc
     lexicon.cc
+    matcha-tts-lexicon.cc
     melo-tts-lexicon.cc
     offline-tts-character-frontend.cc
     offline-tts-frontend.cc
@@ -220,8 +221,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
     offline-tts-zipvoice-frontend.cc
-    offline-tts-zipvoice-model.cc
     offline-tts-zipvoice-model-config.cc
+    offline-tts-zipvoice-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
     vocoder.cc

@@ -8,6 +8,11 @@ load_phrases_dict(
         "银行行长": [["yin2"], ["hang2"], ["hang2"], ["zhang3"]],
     }
 )
+user_defined = {
+    "微调": ["wei1", "tiao2"],
+    "这个": ["zhe4", "ge4"],
+    "方便地": ["fang1", "bian2", "de1"],
+}
 
 
 def main():
@@ -32,7 +37,12 @@ def main():
 
             f.write(f"{w} {tokens}\n")
 
+        for key, value in user_defined.items():
+            f.write(f"{key} {' '.join(value)}\n")
+
         for key in phrases:
+            if key in user_defined:
+                continue
             tokens = lazy_pinyin(key, style=Style.TONE3, tone_sandhi=True)
             for i in range(len(tokens)):
                 if tokens[i] == "shei2":
