@@ -176,9 +176,14 @@ class OfflineTtsZipvoiceModel::Impl {
                   keep_frames * feat_dim * sizeof(float));
     }
     std::vector<int64_t> out_shape = {batch_size, keep_frames, feat_dim};
-    return Ort::Value::CreateTensor<float>(memory_info, out_data.data(),
-                                           out_data.size(), out_shape.data(),
-                                           out_shape.size());
+
+    Ort::Value ans = Ort::Value::CreateTensor<float>(
+        allocator_, out_shape.data(), out_shape.size());
+
+    std::copy(out_data.begin(), out_data.end(),
+              ans.GetTensorMutableData<float>());
+
+    return ans;
   }
 
  private:
