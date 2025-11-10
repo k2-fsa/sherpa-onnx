@@ -45,6 +45,9 @@ target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
 add_executable(offline-punctuation-cxx-api ./offline-punctuation-cxx-api.cc)
 target_link_libraries(offline-punctuation-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(online-punctuation-cxx-api ./online-punctuation-cxx-api.cc)
+target_link_libraries(online-punctuation-cxx-api sherpa-onnx-cxx-api)
+
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   add_executable(sense-voice-simulate-streaming-microphone-cxx-api
     ./sense-voice-simulate-streaming-microphone-cxx-api.cc
