@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-npu-acl-api
+      - ascend-910b3
   workflow_dispatch:
 
 concurrency:
@@ -58,6 +58,27 @@ jobs:
             cann: "8.2"
 
           - soc_version: "910B2"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "WSChuan-ASR"
+            cann: "8.2"
+
+          # ===== Ascend 910B3 =====
+          - soc_version: "910B3"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "FunASR"
+            cann: "8.0"
+
+          - soc_version: "910B3"
+            image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+            framework: "WSChuan-ASR"
+            cann: "8.0"
+
+          - soc_version: "910B3"
+            image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
+            framework: "FunASR"
+            cann: "8.2"
+
+          - soc_version: "910B3"
             image: "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2"
             framework: "WSChuan-ASR"
             cann: "8.2"
@@ -339,7 +360,7 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models
+          tag: asr-models-ascend
 
       - name: Release
         if: github.repository_owner == 'k2-fsa'
@@ -348,4 +369,4 @@ jobs:
           file_glob: true
           file: ./*.tar.bz2
           overwrite: true
-          tag: asr-models
+          tag: asr-models-ascend
