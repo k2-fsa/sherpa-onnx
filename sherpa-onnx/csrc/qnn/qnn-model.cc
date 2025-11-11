@@ -37,17 +37,18 @@ class QnnModel::Impl {
 
     InitGraph();
 
-    AllocateBuffer();
-    SetupPointers();
+    PostInit();
   }
 
   Impl(const std::string &binary_context_file, const std::string &system_lib,
        const QnnBackend *backend, BinaryContextTag)
       : backend_(backend) {
-    LoadSystemLib(binary_context_file, system_lib);
+    bool ok = LoadSystemLib(binary_context_file, system_lib);
+    if (!ok) {
+      return;
+    }
 
-    AllocateBuffer();
-    SetupPointers();
+    PostInit();
   }
 
   bool LoadSystemLib(const std::string &binary_context_file,
@@ -144,7 +145,7 @@ class QnnModel::Impl {
       return false;
     }
 
-    auto free_graphs_info = [graphs_info, graphs_count] {
+    auto free_graphs_info = [&graphs_info, &graphs_count] {
       for (uint32_t i = 0; i < graphs_count; ++i) {
         for (uint32_t k = 0; k < graphs_info[i]->num_input_tensors; ++k) {
           FreeTensor(&graphs_info[i]->input_tensors[k]);
@@ -188,7 +189,7 @@ class QnnModel::Impl {
             &((*graphs_info)[0].graph)) != QNN_SUCCESS) {
       free_graphs_info();
       SHERPA_ONNX_LOGE("Unable to retrieve graph handle for graph %d", 0);
-      return true;
+      return false;
     }
 
     graph_handle_ = (*graphs_info)[0].graph;
@@ -348,7 +349,7 @@ class QnnModel::Impl {
       SHERPA_ONNX_LOGE("tensor '%s' expects %d bytes, but you provide %d bytes",
                        name.c_str(),
                        static_cast<int32_t>(t->v1.clientBuf.dataSize),
-                       static_cast<int32_t>(n * sizeof(uint32_t)));
+                       static_cast<int32_t>(n * sizeof(int32_t)));
       return false;
     }
 
@@ -416,7 +417,16 @@ class QnnModel::Impl {
     return true;
   }
 
+  bool IsInitialized() const { return is_initialized_; }
+
  private:
+  void PostInit() {
+    AllocateBuffer();
+    SetupPointers();
+
+    is_initialized_ = true;
+  }
+
   bool InitModel(const std::string &model_so) {
     model_lib_handle_ = std::unique_ptr<void, decltype(&dlclose)>(
         dlopen(model_so.c_str(), RTLD_NOW | RTLD_LOCAL), &dlclose);
@@ -590,6 +600,7 @@ class QnnModel::Impl {
   Qnn_GraphHandle_t graph_handle_ = nullptr;
 
   const QnnContext_Config_t **context_config_ = nullptr;
+  bool is_initialized_ = false;
 };
 
 QnnModel::~QnnModel() = default;
@@ -643,5 +654,7 @@ std::vector<float> QnnModel::GetOutputTensorData(
 }
 
 bool QnnModel::Run() const { return impl_->Run(); }
+
+bool QnnModel::IsInitialized() const { return impl_->IsInitialized(); }
 
 }  // namespace sherpa_onnx

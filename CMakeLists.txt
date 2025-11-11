@@ -61,6 +61,7 @@ option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ${SUGGEST_BUILD_BINARIES})
 option(SHERPA_ONNX_ENABLE_RKNN "Whether to build for RKNN NPU " OFF)
 option(SHERPA_ONNX_ENABLE_ASCEND_NPU "Whether to build for Ascend NPU " OFF)
+option(SHERPA_ONNX_ENABLE_QNN "Whether to build for Qualcomm NPU" OFF)
 
 set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. Set to 1.11.0 if you use CUDA 10.2 and cudnn8. Set it to 1.16.0 if you use CUDA 11.4 and cudnn8. Set it to 1.18.0 if you use CUDA 12.2 and cudnn8. Set it to 1.18.1 if you use CUDA 12.6 and cudnn9")
 
@@ -179,6 +180,7 @@ message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
 message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
 message(STATUS "SHERPA_ONNX_ENABLE_RKNN: ${SHERPA_ONNX_ENABLE_RKNN}")
 message(STATUS "SHERPA_ONNX_ENABLE_ASCEND_NPU: ${SHERPA_ONNX_ENABLE_ASCEND_NPU}")
+message(STATUS "SHERPA_ONNX_ENABLE_QNN: ${SHERPA_ONNX_ENABLE_QNN}")
 message(STATUS "SHERPA_ONNX_LINK_D3D: ${SHERPA_ONNX_LINK_D3D}")
 
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
@@ -335,6 +337,44 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
 
   add_definitions(-DSHERPA_ONNX_ENABLE_ASCEND_NPU=1)
   message(STATUS "Build with Ascend NPU")
+endif()
+
+if(SHERPA_ONNX_ENABLE_QNN)
+  if(NOT DEFINED ENV{QNN_SDK_ROOT})
+      message(FATAL_ERROR "\
+      Please specify the installation directory of the QNN SDK toolkit.
+      For instance, if it is installed in
+
+        /mnt/sdb/open-source/qairt/2.33.0.250327
+
+      You can run
+
+        source /mnt/sdb/open-source/qairt/2.33.0.250327/bin/envsetup.sh
+
+      which will give you the following output
+
+      [INFO] AISW SDK environment set
+      [INFO] QNN_SDK_ROOT: /mnt/sdb/open-source/qairt/2.33.0.250327
+      [INFO] SNPE_ROOT: /mnt/sdb/open-source/qairt/2.33.0.250327
+
+      Then run
+
+        echo $QNN_SDK_ROOT
+
+      It should print:
+
+        /mnt/sdb/open-source/qairt/2.33.0.250327
+
+      You can choose a version of QNN SDK by yourself. You don't need
+      to use 2.33.0.250327
+      ")
+  endif()
+
+  set(QNN_SDK_ROOT $ENV{QNN_SDK_ROOT})
+
+  if(NOT EXISTS ${QNN_SDK_ROOT}/include/QNN/QnnInterface.h)
+    message(FATAL_ERROR "${QNN_SDK_ROOT}/include/QNN/QnnInterface.h does not exist")
+  endif()
 endif()
 
 if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT CMAKE_SYSTEM_NAME STREQUAL Android AND NOT CMAKE_SYSTEM_NAME STREQUAL OHOS)

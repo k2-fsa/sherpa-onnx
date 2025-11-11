@@ -36,6 +36,7 @@ std::string TensorTypeToString(Qnn_TensorType_t t) {
     SHERPA_ONNX_TO_STRING(QNN_TENSOR_TYPE_OPTIONAL_APP_READWRITE);
     SHERPA_ONNX_TO_STRING(QNN_TENSOR_TYPE_UNDEFINED);
   }
+  return "Unknown";
 }
 
 std::string QuantizationEncodingToString(Qnn_QuantizationEncoding_t q) {
@@ -289,16 +290,6 @@ static void CopyTensorInfoV1(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
     dst.v1.clientBuf.dataSize =
         GetSizeInBytes(dst.v1.dimensions, dst.v1.rank, dst.v1.dataType);
   }
-
-  CopyDimensions(src.v2.isDynamicDimensions, src.v2.rank,
-                 &dst.v2.isDynamicDimensions);
-
-  dst.v2.sparseParams.type = src.v2.sparseParams.type;
-  dst.v2.sparseParams.hybridCoo.numSpecifiedElements =
-      src.v2.sparseParams.hybridCoo.numSpecifiedElements;
-  dst.v2.sparseParams.hybridCoo.numSparseDimensions =
-      src.v2.sparseParams.hybridCoo.numSparseDimensions;
-  dst.v2.isProduced = src.v2.isProduced;
 }
 
 static void CopyTensorInfoV2(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
@@ -325,10 +316,20 @@ static void CopyTensorInfoV2(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
     SHERPA_ONNX_LOGE("Unsupported mem type: %s",
                      TensorMemTypeToString(dst.v2.memType).c_str());
   } else {
-    dst.v1.clientBuf.data = nullptr;
+    dst.v2.clientBuf.data = nullptr;
     dst.v2.clientBuf.dataSize =
         GetSizeInBytes(dst.v2.dimensions, dst.v2.rank, dst.v2.dataType);
   }
+
+  CopyDimensions(src.v2.isDynamicDimensions, src.v2.rank,
+                 &dst.v2.isDynamicDimensions);
+
+  dst.v2.sparseParams.type = src.v2.sparseParams.type;
+  dst.v2.sparseParams.hybridCoo.numSpecifiedElements =
+      src.v2.sparseParams.hybridCoo.numSpecifiedElements;
+  dst.v2.sparseParams.hybridCoo.numSparseDimensions =
+      src.v2.sparseParams.hybridCoo.numSparseDimensions;
+  dst.v2.isProduced = src.v2.isProduced;
 }
 
 void CopyTensorInfo(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
@@ -508,12 +509,12 @@ bool CopyMetadataToGraphsInfo(const QnnSystemContext_BinaryInfo_t *binary_info,
     case QNN_SYSTEM_CONTEXT_BINARY_INFO_VERSION_1: {
       SHERPA_ONNX_LOGE("Unsupported binary context version: %d",
                        binary_info->version);
-      return true;
+      return false;
     }
     case QNN_SYSTEM_CONTEXT_BINARY_INFO_VERSION_2: {
       SHERPA_ONNX_LOGE("Unsupported binary context version: %d",
                        binary_info->version);
-      return true;
+      return false;
     }
     case QNN_SYSTEM_CONTEXT_BINARY_INFO_VERSION_3: {
       bool ok = CopyGraphsInfo(binary_info->contextBinaryInfoV3.graphs,

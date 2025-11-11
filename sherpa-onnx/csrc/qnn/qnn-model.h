@@ -43,6 +43,7 @@ class QnnModel {
   std::vector<float> GetOutputTensorData(const std::string &name) const;
 
   bool Run() const;
+  bool IsInitialized() const;
 
  private:
   class Impl;

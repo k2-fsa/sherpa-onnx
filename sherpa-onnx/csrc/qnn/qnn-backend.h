@@ -3,7 +3,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_QNN_QNN_BACKEND_H_
 #define SHERPA_ONNX_CSRC_QNN_QNN_BACKEND_H_
-#pragma once
 
 #include <memory>
 #include <string>
@@ -25,6 +24,7 @@ class QnnBackend {
   Qnn_ContextHandle_t ContextHandle() const;
   QNN_INTERFACE_VER_TYPE QnnInterface() const;
   QnnLog_Level_t LogLevel() const;
+  bool IsInitialized() const;
 
  private:
   class Impl;

@@ -32,6 +32,8 @@ class QnnBackend::Impl {
     InitLog();
     InitBackend();
     InitDevice();
+
+    is_initialized_ = true;
   }
 
   ~Impl() {
@@ -80,6 +82,8 @@ class QnnBackend::Impl {
   QNN_INTERFACE_VER_TYPE QnnInterface() const { return qnn_interface_; }
 
   QnnLog_Level_t LogLevel() const { return log_level_; }
+
+  bool IsInitialized() const { return is_initialized_; }
 
  private:
   bool InitQnnInterface(const std::string &backend_lib) {
@@ -208,6 +212,7 @@ class QnnBackend::Impl {
 
   Qnn_ContextHandle_t context_handle_ = nullptr;
   const QnnContext_Config_t **context_config_ = nullptr;
+  bool is_initialized_ = false;
 };
 
 QnnBackend::~QnnBackend() = default;
@@ -240,5 +245,7 @@ QNN_INTERFACE_VER_TYPE QnnBackend::QnnInterface() const {
 }
 
 QnnLog_Level_t QnnBackend::LogLevel() const { return impl_->LogLevel(); }
+
+bool QnnBackend::IsInitialized() const { return impl_->IsInitialized(); }
 
 }  // namespace sherpa_onnx

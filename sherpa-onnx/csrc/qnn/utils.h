@@ -11,12 +11,16 @@
 
 #include "QnnInterface.h"
 #include "System/QnnSystemInterface.h"
-
-void PrintTensor(Qnn_TensorV2_t t);
+#include "sherpa-onnx/csrc/macros.h"
 
 template <typename T>
 std::vector<T> ReadFile(const std::string &filename) {
   FILE *fp = fopen(filename.c_str(), "rb");
+  if (!fp) {
+    SHERPA_ONNX_LOGE("Failed to open '%s'", filename.c_str());
+    return {};
+  }
+
   fseek(fp, 0, SEEK_END);
   int32_t n = ftell(fp);
   fseek(fp, 0, SEEK_SET);
@@ -27,6 +31,8 @@ std::vector<T> ReadFile(const std::string &filename) {
 
   return ans;
 }
+
+void PrintTensor(Qnn_TensorV2_t t);
 
 // float -> uint16_t
 void FillData(Qnn_Tensor_t *t, const float *data, int32_t n);
