@@ -165,6 +165,8 @@ std::string ToUpperAscii(const std::string &str);
 // unchanged)
 std::string ToLowerAscii(const std::string &str);
 
+bool IsAlphaOrPunct(int ch);
+
 // Detect if a codepoint is a CJK character
 bool IsCJK(char32_t cp);
 

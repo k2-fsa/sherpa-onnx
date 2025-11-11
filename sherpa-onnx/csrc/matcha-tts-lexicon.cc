@@ -4,8 +4,6 @@
 
 #include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 
-#include <ctype.h>
-
 #include <algorithm>
 #include <codecvt>
 #include <fstream>
@@ -105,7 +103,7 @@ class MatchaTtsLexicon::Impl {
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
     std::string text = _text;
     std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
-        {"，", ","}, {"：", ":"}, {"、", ","}, {"；", ";"},   {"：", ":"},
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ":"},
         {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
     };
     for (const auto &p : replace_str_pairs) {
@@ -234,8 +232,6 @@ class MatchaTtsLexicon::Impl {
  private:
   std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
     std::vector<int32_t> ans;
-    int32_t space_id = token2id_.at(" ");
-
     if (word2ids_.count(w)) {
       ans = word2ids_.at(w);
     } else if (token2id_.count(w)) {
@@ -270,7 +266,7 @@ class MatchaTtsLexicon::Impl {
       }
     }
 
-    if (isalpha(w.front())) {
+    if (IsAlphaOrPunct(w.front())) {
       ans.push_back(token2id_.at(" "));
     }
 

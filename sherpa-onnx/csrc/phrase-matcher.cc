@@ -3,8 +3,6 @@
 // Copyright (c)  2025  Xiaomi Corporation
 #include "sherpa-onnx/csrc/phrase-matcher.h"
 
-#include <ctype.h>
-
 #include <algorithm>
 #include <sstream>
 #include <utility>
@@ -61,12 +59,12 @@ class PhraseMatcher::Impl {
 
       std::string w;
 
-      if (!isascii(words[i].front())) {
+      if (!IsAlphaOrPunct(words[i].front())) {
         int32_t end = std::min(i + max_search_len_ - 1, num_words - 1);
 
         while (end > start) {
           auto this_word = GetWord(words, start, end);
-          if (isascii(this_word.back())) {
+          if (IsAlphaOrPunct(this_word.back())) {
             --end;
             continue;
           }
