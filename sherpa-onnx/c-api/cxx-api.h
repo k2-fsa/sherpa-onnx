@@ -742,7 +742,7 @@ struct OnlinePunctuationModelConfig {
   std::string cnn_bilstm;
   std::string bpe_vocab;
   int32_t num_threads = 1;
-  int32_t debug = false;
+  bool debug = false;
   std::string provider = "cpu";
 };
 

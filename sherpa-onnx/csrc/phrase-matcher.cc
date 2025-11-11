@@ -3,6 +3,8 @@
 // Copyright (c)  2025  Xiaomi Corporation
 #include "sherpa-onnx/csrc/phrase-matcher.h"
 
+#include <ctype.h>
+
 #include <algorithm>
 #include <sstream>
 #include <utility>
@@ -56,34 +58,43 @@ class PhraseMatcher::Impl {
     int32_t num_words = static_cast<int32_t>(words.size());
     for (int32_t i = 0; i < num_words;) {
       int32_t start = i;
-      int32_t end = std::min(i + max_search_len_ - 1, num_words - 1);
 
       std::string w;
-      while (end > start) {
-        auto this_word = GetWord(words, start, end);
-        if (debug_) {
-#if __OHOS__
-          SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
-                           this_word.c_str());
-#else
-          SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
-#endif
-        }
-        if (lexicon_->count(this_word)) {
-          i = end + 1;
-          w = std::move(this_word);
+
+      if (!isascii(words[i].front())) {
+        int32_t end = std::min(i + max_search_len_ - 1, num_words - 1);
+
+        while (end > start) {
+          auto this_word = GetWord(words, start, end);
+          if (isascii(this_word.back())) {
+            --end;
+            continue;
+          }
+
           if (debug_) {
 #if __OHOS__
-            SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s", start,
-                             end, w.c_str());
+            SHERPA_ONNX_LOGE("%{public}d-%{public}d: %{public}s", start, end,
+                             this_word.c_str());
 #else
-            SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
+            SHERPA_ONNX_LOGE("%d-%d: %s", start, end, this_word.c_str());
 #endif
           }
-          break;
-        }
+          if (lexicon_->count(this_word)) {
+            i = end + 1;
+            w = std::move(this_word);
+            if (debug_) {
+#if __OHOS__
+              SHERPA_ONNX_LOGE("matched %{public}d-%{public}d: %{public}s",
+                               start, end, w.c_str());
+#else
+              SHERPA_ONNX_LOGE("matched %d-%d: %s", start, end, w.c_str());
+#endif
+            }
+            break;
+          }
 
-        end -= 1;
+          end -= 1;
+        }
       }
 
       if (w.empty()) {
