@@ -101,6 +101,10 @@ if [ -z $SHERPA_ONNX_ENABLE_RKNN ]; then
   SHERPA_ONNX_ENABLE_RKNN=OFF
 fi
 
+if [ -z $SHERPA_ONNX_ENABLE_QNN ]; then
+  SHERPA_ONNX_ENABLE_QNN=OFF
+fi
+
 if [ $SHERPA_ONNX_ENABLE_RKNN == ON ]; then
   rknn_version=2.2.0
   if [ ! -d ./librknnrt-android ]; then
@@ -130,6 +134,10 @@ if [ -z $SHERPA_ONNX_ENABLE_C_API ]; then
   SHERPA_ONNX_ENABLE_C_API=OFF
 fi
 
+if [ -z $SHERPA_ONNX_ANDRIOD_PLATFORM ]; then
+  SHERPA_ONNX_ANDRIOD_PLATFORM=android-21
+fi
+
 if [ -z $SHERPA_ONNX_ENABLE_JNI ]; then
   SHERPA_ONNX_ENABLE_JNI=ON
 fi
@@ -153,8 +161,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_ENABLE_C_API=$SHERPA_ONNX_ENABLE_C_API \
     -DCMAKE_INSTALL_PREFIX=./install \
     -DSHERPA_ONNX_ENABLE_RKNN=$SHERPA_ONNX_ENABLE_RKNN \
+    -DSHERPA_ONNX_ENABLE_QNN=$SHERPA_ONNX_ENABLE_QNN \
     -DANDROID_ABI="arm64-v8a" \
-    -DANDROID_PLATFORM=android-21 ..
+    -DANDROID_PLATFORM=$SHERPA_ONNX_ANDRIOD_PLATFORM ..
 
     # By default, it links to libc++_static.a
     # -DANDROID_STL=c++_shared \

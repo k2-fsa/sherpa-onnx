@@ -200,6 +200,14 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_RKNN)
+  list(APPEND sources
+    ./qnn/qnn-backend.cc
+    ./qnn/qnn-model.cc
+    ./qnn/qnn-utils.cc
+  )
+endif()
+
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     character-lexicon.cc
@@ -312,6 +320,10 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
       -L${ASCEND_TOOLKIT_HOME}/lib64
       -lascendcl
     )
+endif()
+
+if(SHERPA_ONNX_ENABLE_QNN)
+  target_include_directories(sherpa-onnx-core PRIVATE ${QNN_SDK_ROOT}/include)
 endif()
 
 if(TARGET onnxruntime)
