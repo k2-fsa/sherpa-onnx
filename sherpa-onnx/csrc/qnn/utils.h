@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -47,7 +48,7 @@ void FreeTensor(Qnn_Tensor_t *t);
 
 using TensorPtr = std::unique_ptr<Qnn_Tensor_t, decltype(&FreeTensor)>;
 
-void CopyTensorInfo(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst);
+void CopyTensorInfo(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst);  // NOLINT
 
 std::string QuantizationEncodingToString(Qnn_QuantizationEncoding_t q);
 
@@ -88,5 +89,6 @@ void LogCallback(const char *fmt, QnnLog_Level_t level, uint64_t timestamp,
                  va_list args);
 
 bool CopyMetadataToGraphsInfo(const QnnSystemContext_BinaryInfo_t *binary_info,
-                              GraphInfo **&graphs_info, uint32_t &graphs_count);
+                              GraphInfo **&graphs_info,  // NOLINT
+                              uint32_t &graphs_count);   // NOLINT
 #endif  // SHERPA_ONNX_CSRC_QNN_UTILS_H_

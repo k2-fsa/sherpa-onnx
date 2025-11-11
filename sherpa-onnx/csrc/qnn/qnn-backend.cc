@@ -21,7 +21,7 @@ namespace sherpa_onnx {
 
 class QnnBackend::Impl {
  public:
-  Impl(const std::string &backend_lib) {
+  explicit Impl(const std::string &backend_lib) {
     bool ok = InitQnnInterface(backend_lib);
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to init qnn interface from '%s'",

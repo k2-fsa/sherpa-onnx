@@ -244,7 +244,7 @@ void CopyDimensions(const T *src, uint32_t n, T **dst) {
 }
 
 static void CopyQuantizeParams(const Qnn_QuantizeParams_t &src,
-                               Qnn_QuantizeParams_t &dst) {
+                               Qnn_QuantizeParams_t &dst) {  // NOLINT
   dst.encodingDefinition = src.encodingDefinition;
   dst.quantizationEncoding = src.quantizationEncoding;
 
@@ -262,7 +262,8 @@ static void CopyQuantizeParams(const Qnn_QuantizeParams_t &src,
   }
 }
 
-static void CopyTensorInfoV1(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
+static void CopyTensorInfoV1(const Qnn_Tensor_t &src,
+                             Qnn_Tensor_t &dst) {  // NOLINT
   dst.version = src.version;
   dst.v1.id = src.v1.id;
   if (src.v1.name) {
@@ -292,7 +293,8 @@ static void CopyTensorInfoV1(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
   }
 }
 
-static void CopyTensorInfoV2(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
+static void CopyTensorInfoV2(const Qnn_Tensor_t &src,
+                             Qnn_Tensor_t &dst) {  // NOLINT
   dst.version = src.version;
   dst.v2.id = src.v2.id;
   if (src.v2.name) {
@@ -332,7 +334,7 @@ static void CopyTensorInfoV2(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
   dst.v2.isProduced = src.v2.isProduced;
 }
 
-void CopyTensorInfo(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {
+void CopyTensorInfo(const Qnn_Tensor_t &src, Qnn_Tensor_t &dst) {  // NOLINT
   if (src.version == QNN_TENSOR_VERSION_1) {
     CopyTensorInfoV1(src, dst);
   } else if (src.version == QNN_TENSOR_VERSION_2) {
@@ -452,7 +454,8 @@ static bool CopyGraphsInfoV3(const QnnSystemContext_GraphInfoV3_t *src,
 }
 
 static bool CopyGraphsInfo(const QnnSystemContext_GraphInfo_t *graphs_input,
-                           uint32_t num_graphs, GraphInfo **&graphs_info) {
+                           uint32_t num_graphs,
+                           GraphInfo **&graphs_info) {  // NOLINT
   SHERPA_ONNX_LOGE("version: %d", (int)graphs_input[0].version);
 
   // remember to free graphs_info
@@ -501,8 +504,8 @@ static bool CopyGraphsInfo(const QnnSystemContext_GraphInfo_t *graphs_input,
 }
 
 bool CopyMetadataToGraphsInfo(const QnnSystemContext_BinaryInfo_t *binary_info,
-                              GraphInfo **&graphs_info,
-                              uint32_t &graphs_count) {
+                              GraphInfo **&graphs_info,  // NOLINT
+                              uint32_t &graphs_count) {  // NOLINT
   graphs_count = 0;
 
   switch (binary_info->version) {
