@@ -808,6 +808,8 @@ std::string GetWord(const std::vector<std::string> &words, int32_t start,
   return ans;
 }
 
+bool IsAlphaOrPunct(int ch) { return std::isalpha(ch) || std::ispunct(ch); }
+
 bool IsPunct(const std::string &s) {
   static const std::unordered_set<std::string> puncts = {
       ",",  ".",  "!",  "?", ":", "\"", "'", "，",

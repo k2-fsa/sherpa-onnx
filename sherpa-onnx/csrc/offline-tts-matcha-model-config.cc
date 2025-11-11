@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -15,8 +16,10 @@ void OfflineTtsMatchaModelConfig::Register(ParseOptions *po) {
   po->Register("matcha-acoustic-model", &acoustic_model,
                "Path to matcha acoustic model");
   po->Register("matcha-vocoder", &vocoder, "Path to matcha vocoder");
-  po->Register("matcha-lexicon", &lexicon,
-               "Path to lexicon.txt for Matcha models");
+  po->Register(
+      "matcha-lexicon", &lexicon,
+      "Path to lexicon.txt for Matcha models. You can pass multiple "
+      "files separated by comma , e.g., lexicon.txt,lexicon2.txt,lexicon3.txt");
   po->Register("matcha-tokens", &tokens,
                "Path to tokens.txt for Matcha models");
   po->Register("matcha-data-dir", &data_dir,
@@ -82,9 +85,17 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
     }
   }
 
-  if (!lexicon.empty() && !FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("--matcha-lexicon: '%s' does not exist", lexicon.c_str());
-    return false;
+  if (!lexicon.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE(
+            "lexicon '%s' does not exist. Please re-check --matcha-lexicon",
+            f.c_str());
+        return false;
+      }
+    }
   }
 
   if (!dict_dir.empty()) {

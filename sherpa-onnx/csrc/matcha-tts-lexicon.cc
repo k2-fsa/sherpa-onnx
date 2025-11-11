@@ -57,10 +57,7 @@ class MatchaTtsLexicon::Impl {
       InitTokens(is);
     }
 
-    {
-      std::ifstream is(lexicon);
-      InitLexicon(is);
-    }
+    InitLexicon(lexicon);
 
     if (data_dir.empty()) {
       SHERPA_ONNX_LOGE("Please provide data dir for this model");
@@ -86,8 +83,11 @@ class MatchaTtsLexicon::Impl {
       InitTokens(is);
     }
 
-    {
-      auto buf = ReadFile(mgr, lexicon);
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      auto buf = ReadFile(mgr, f);
+
       std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
@@ -103,7 +103,7 @@ class MatchaTtsLexicon::Impl {
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
     std::string text = _text;
     std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
-        {"，", ","}, {":", ","},  {"、", ","}, {"；", ";"},   {"：", ":"},
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ":"},
         {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
     };
     for (const auto &p : replace_str_pairs) {
@@ -205,6 +205,18 @@ class MatchaTtsLexicon::Impl {
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
 
       if (IsPunct(w)) {
+        if (debug_) {
+          std::ostringstream os;
+          std::string sep;
+          os << "new sentence: [";
+          for (auto i : this_sentence) {
+            os << sep << i;
+            sep = ", ";
+          }
+          os << "]";
+          SHERPA_ONNX_LOGE("%s", os.str().c_str());
+        }
+
         ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
@@ -220,7 +232,6 @@ class MatchaTtsLexicon::Impl {
  private:
   std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
     std::vector<int32_t> ans;
-
     if (word2ids_.count(w)) {
       ans = word2ids_.at(w);
     } else if (token2id_.count(w)) {
@@ -255,11 +266,15 @@ class MatchaTtsLexicon::Impl {
       }
     }
 
+    if (IsAlphaOrPunct(w.front())) {
+      ans.push_back(token2id_.at(" "));
+    }
+
     if (debug_) {
       std::ostringstream os;
       os << w << ": ";
       for (auto i : ans) {
-        os << id2token_.at(i) << " ";
+        os << "'" << id2token_.at(i) << "'(" << i << ")" << ",";
       }
 #if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
@@ -273,29 +288,6 @@ class MatchaTtsLexicon::Impl {
 
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);
-
-    std::vector<std::pair<std::string, std::string>> puncts = {
-        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}, {":", "："},
-        {"\"", "“"}, {"\"", "”"}, {"'", "‘"},  {"'", "’"},  {";", "；"},
-    };
-
-    for (const auto &p : puncts) {
-      if (token2id_.count(p.first) && !token2id_.count(p.second)) {
-        token2id_[p.second] = token2id_[p.first];
-      }
-
-      if (!token2id_.count(p.first) && token2id_.count(p.second)) {
-        token2id_[p.first] = token2id_[p.second];
-      }
-    }
-
-    if (!token2id_.count("、") && token2id_.count("，")) {
-      token2id_["、"] = token2id_["，"];
-    }
-
-    if (!token2id_.count(";") && token2id_.count(",")) {
-      token2id_[";"] = token2id_[","];
-    }
 
     if (debug_) {
       for (const auto &p : token2id_) {
@@ -324,6 +316,20 @@ class MatchaTtsLexicon::Impl {
       if (!phoneme2id_.count(c)) {
         phoneme2id_.insert({c, p.second});
       }
+    }
+  }
+
+  void InitLexicon(const std::string &lexicon) {
+    if (lexicon.empty()) {
+      SHERPA_ONNX_LOGE("Empty lexicon!");
+      return;
+    }
+
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      std::ifstream is(f);
+      InitLexicon(is);
     }
   }
 
