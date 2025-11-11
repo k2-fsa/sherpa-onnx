@@ -8,8 +8,8 @@
 
 #include <algorithm>
 #include <functional>
-#include <iostream>
 #include <numeric>
+#include <sstream>
 #include <string>
 
 #include "sherpa-onnx/csrc/qnn/macros.h"
@@ -371,7 +371,8 @@ void LogCallback(const char *fmt, QnnLog_Level_t level, uint64_t timestamp,
 }
 
 void PrintTensor(Qnn_TensorV2_t t) {
-  std::ostringstream os os << "  id: " << t.id << "\n";
+  std::ostringstream os;
+  os << "  id: " << t.id << "\n";
   os << "  name: " << t.name << "\n";
   os << "  type: " << TensorTypeToString(t.type) << "\n";
   os << "  data format: " << t.dataFormat << "\n";

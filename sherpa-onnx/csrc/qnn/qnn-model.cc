@@ -2,7 +2,7 @@
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#include " sherpa-onnx/csrc/qnn/qnn-model.h"
+#include "sherpa-onnx/csrc/qnn/qnn-model.h"
 
 #include <dlfcn.h>
 
@@ -31,7 +31,7 @@ class QnnModel::Impl {
     ok = InitSymbols();
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to get model symbols from '%s'",
-                       model_so.c_str())
+                       model_so.c_str());
       return;
     }
 

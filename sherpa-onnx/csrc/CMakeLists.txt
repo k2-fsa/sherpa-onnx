@@ -200,11 +200,11 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
   )
 endif()
 
-if(SHERPA_ONNX_ENABLE_RKNN)
+if(SHERPA_ONNX_ENABLE_QNN)
   list(APPEND sources
     ./qnn/qnn-backend.cc
     ./qnn/qnn-model.cc
-    ./qnn/qnn-utils.cc
+    ./qnn/utils.cc
   )
 endif()
 
@@ -323,7 +323,7 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
 endif()
 
 if(SHERPA_ONNX_ENABLE_QNN)
-  target_include_directories(sherpa-onnx-core PRIVATE ${QNN_SDK_ROOT}/include)
+  target_include_directories(sherpa-onnx-core PRIVATE ${QNN_SDK_ROOT}/include/QNN)
 endif()
 
 if(TARGET onnxruntime)
