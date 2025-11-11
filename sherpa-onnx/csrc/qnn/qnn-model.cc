@@ -132,6 +132,8 @@ class QnnModel::Impl {
     if (ret != QNN_SUCCESS) {
       SHERPA_ONNX_LOGE("Failed to get context binary info from '%s'",
                        binary_context_file.c_str());
+
+      qnn_system_interface_.systemContextFree(sys_ctx_handle);
       return false;
     }
 
@@ -143,8 +145,12 @@ class QnnModel::Impl {
 
     if (!CopyMetadataToGraphsInfo(binary_info, graphs_info, graphs_count)) {
       SHERPA_ONNX_LOGE("Failed to call CopyMetadataToGraphsInfo");
+
+      qnn_system_interface_.systemContextFree(sys_ctx_handle);
       return false;
     }
+
+    qnn_system_interface_.systemContextFree(sys_ctx_handle);
 
     auto free_graphs_info = [&graphs_info, &graphs_count] {
       for (uint32_t i = 0; i < graphs_count; ++i) {
@@ -169,8 +175,6 @@ class QnnModel::Impl {
     if (graphs_count > 1) {
       SHERPA_ONNX_LOGE("Only the first graph is used");
     }
-
-    qnn_system_interface_.systemContextFree(sys_ctx_handle);
 
     Qnn_ContextHandle_t context_handle = nullptr;
 

@@ -456,6 +456,12 @@ static bool CopyGraphsInfoV3(const QnnSystemContext_GraphInfoV3_t *src,
 static bool CopyGraphsInfo(const QnnSystemContext_GraphInfo_t *graphs_input,
                            uint32_t num_graphs,
                            GraphInfo **&graphs_info) {  // NOLINT
+  if (num_graphs == 0) {
+    SHERPA_ONNX_LOGE("empty graphs");
+    graphs_info = nullptr;
+    return false;
+  }
+
   SHERPA_ONNX_LOGE("version: %d", (int)graphs_input[0].version);
 
   // remember to free graphs_info

@@ -27,7 +27,7 @@ std::vector<T> ReadFile(const std::string &filename) {
   fseek(fp, 0, SEEK_SET);
 
   std::vector<T> ans(n / sizeof(T));
-  fread(ans.data(), sizeof(T), n, fp);
+  fread(ans.data(), sizeof(T), ans.size(), fp);
   fclose(fp);
 
   return ans;
