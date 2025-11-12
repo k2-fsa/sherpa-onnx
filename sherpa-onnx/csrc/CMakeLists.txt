@@ -160,6 +160,10 @@ list(APPEND sources
   offline-zipformer-audio-tagging-model.cc
 )
 
+list(APPEND sources
+  qnn-config.cc
+)
+
 # punctuation
 list(APPEND sources
   offline-ct-transformer-model.cc

@@ -136,6 +136,11 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
+
+  if (!qnn_config.backend_lib.empty()) {
+    os << "qnn_config=" << qnn_config.ToString() << ", ";
+  }
+
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
