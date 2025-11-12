@@ -6,6 +6,9 @@
 
 #include <sstream>
 
+#include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/macros.h"
+
 namespace sherpa_onnx {
 
 void QnnConfig::Register(ParseOptions *po) {
@@ -42,12 +45,14 @@ bool QnnConfig::Validate() const {
   if (!context_binary.empty() && FileExists(context_binary)) {
     if (system_lib.empty()) {
       SHERPA_ONNX_LOGE(
-          "Please provide --qnn-system-lib when you provide --qnn-backend-lib");
+          "Please provide --qnn-system-lib when you provide "
+          "--qnn-context-binary");
       return false;
     }
 
     if (!FileExists(system_lib)) {
-      SHERPA_ONNX_LOGE("--qnn-system-lib: '%s' does not exist", system.c_str());
+      SHERPA_ONNX_LOGE("--qnn-system-lib: '%s' does not exist",
+                       system_lib.c_str());
       return false;
     }
   }
