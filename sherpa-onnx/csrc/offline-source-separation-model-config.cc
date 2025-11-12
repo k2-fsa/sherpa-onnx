@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-source-separation-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {

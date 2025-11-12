@@ -4,7 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 
-#include "sherpa-onnx/csrc/offline-speech-denoiser-impl.h"
+#include <string>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -14,6 +14,8 @@
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
+
+#include "sherpa-onnx/csrc/offline-speech-denoiser-impl.h"
 
 namespace sherpa_onnx {
 

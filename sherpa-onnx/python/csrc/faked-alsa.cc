@@ -2,6 +2,8 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/python/csrc/alsa.h"
 

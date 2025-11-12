@@ -6,6 +6,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-ctc.h"

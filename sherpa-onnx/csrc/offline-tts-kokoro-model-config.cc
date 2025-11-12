@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-tts-kokoro-model-config.h"
 
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"

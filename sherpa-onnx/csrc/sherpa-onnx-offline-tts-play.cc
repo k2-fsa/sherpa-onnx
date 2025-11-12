@@ -5,12 +5,15 @@
 #include <signal.h>
 
 #include <algorithm>
-#include <chrono>              // NOLINT
-#include <condition_variable>  // NOLINT
+#include <chrono>
+#include <condition_variable>
+#include <cstdio>
 #include <fstream>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <queue>
-#include <thread>  // NOLINT
+#include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include "portaudio.h"  // NOLINT

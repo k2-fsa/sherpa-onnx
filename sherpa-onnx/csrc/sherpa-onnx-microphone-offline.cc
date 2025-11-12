@@ -8,8 +8,10 @@
 
 #include <algorithm>
 #include <cctype>  // std::tolower
-#include <mutex>   // NOLINT
-#include <thread>  // NOLINT
+#include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"

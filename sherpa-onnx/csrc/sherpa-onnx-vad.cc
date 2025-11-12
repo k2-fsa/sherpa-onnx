@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"

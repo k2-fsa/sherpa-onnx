@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/vocos-vocoder.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

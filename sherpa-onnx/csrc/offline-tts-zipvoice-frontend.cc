@@ -7,10 +7,14 @@
 #include <codecvt>
 #include <fstream>
 #include <locale>
-#include <regex>  // NOLINT
+#include <memory>
+#include <regex>
 #include <sstream>
+#include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -23,8 +27,8 @@
 
 #include "cppinyin/csrc/cppinyin.h"
 #include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"
-#include "phonemize.hpp"
+#include "phoneme_ids.hpp"  // NOLINT
+#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-frontend.h"

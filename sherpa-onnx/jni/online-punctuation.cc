@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 

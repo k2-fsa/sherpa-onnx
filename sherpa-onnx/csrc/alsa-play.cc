@@ -7,6 +7,9 @@
 #include "sherpa-onnx/csrc/alsa-play.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <memory>
+#include <vector>
 
 namespace sherpa_onnx {
 

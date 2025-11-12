@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/audio-tagging.h"
 
+#include <memory>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 

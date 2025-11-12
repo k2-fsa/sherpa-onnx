@@ -8,10 +8,11 @@
 #include <fstream>
 #include <locale>
 #include <map>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,8 +26,8 @@
 #endif
 
 #include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"
-#include "phonemize.hpp"
+#include "phoneme_ids.hpp"  // NOLINT
+#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 

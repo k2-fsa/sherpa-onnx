@@ -3,8 +3,10 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/macros.h"

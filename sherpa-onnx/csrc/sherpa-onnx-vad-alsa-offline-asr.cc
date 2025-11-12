@@ -7,7 +7,10 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <memory>
 #include <mutex>  // NOLINT
+#include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"

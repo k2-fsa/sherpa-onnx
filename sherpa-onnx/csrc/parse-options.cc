@@ -17,6 +17,7 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <string>
 
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"

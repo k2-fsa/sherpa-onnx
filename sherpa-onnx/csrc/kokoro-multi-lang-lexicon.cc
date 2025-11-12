@@ -6,7 +6,7 @@
 
 #include <codecvt>
 #include <fstream>
-#include <regex>  // NOLINT
+#include <regex>
 #include <sstream>
 #include <string>
 #include <strstream>
@@ -25,8 +25,8 @@
 #endif
 
 #include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"
-#include "phonemize.hpp"
+#include "phoneme_ids.hpp"  // NOLINT
+#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/phrase-matcher.h"
@@ -565,7 +565,7 @@ KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
     bool debug)
     : impl_(std::make_unique<Impl>(tokens, lexicon, data_dir, meta_data,
-                                   debug)) {}
+                                   debug)) {}  // NOLINT
 
 template <typename Manager>
 KokoroMultiLangLexicon::KokoroMultiLangLexicon(
@@ -573,7 +573,7 @@ KokoroMultiLangLexicon::KokoroMultiLangLexicon(
     const std::string &data_dir, const OfflineTtsKokoroModelMetaData &meta_data,
     bool debug)
     : impl_(std::make_unique<Impl>(mgr, tokens, lexicon, data_dir, meta_data,
-                                   debug)) {}
+                                   debug)) {}  // NOLINT
 
 std::vector<TokenIDs> KokoroMultiLangLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {

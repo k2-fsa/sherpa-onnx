@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <clocale>
 #include <cwctype>
+#include <string>
+#include <vector>
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/display.h"

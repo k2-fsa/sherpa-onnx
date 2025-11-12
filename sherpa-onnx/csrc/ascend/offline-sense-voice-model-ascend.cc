@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <mutex>  // NOLINT
 #include <string>
 #include <utility>

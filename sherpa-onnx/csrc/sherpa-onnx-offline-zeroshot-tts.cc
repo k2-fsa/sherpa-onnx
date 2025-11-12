@@ -2,8 +2,11 @@
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#include <chrono>  // NOLINT
+#include <chrono>
+#include <cstdio>
 #include <fstream>
+#include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"

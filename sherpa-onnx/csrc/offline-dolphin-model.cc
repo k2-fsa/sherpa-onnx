@@ -5,8 +5,10 @@
 #include "sherpa-onnx/csrc/offline-dolphin-model.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"

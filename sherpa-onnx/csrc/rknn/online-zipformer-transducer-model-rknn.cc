@@ -442,7 +442,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
 };
 
 OnlineZipformerTransducerModelRknn::~OnlineZipformerTransducerModelRknn() =
-    default;
+    default;  // NOLINT
 
 OnlineZipformerTransducerModelRknn::OnlineZipformerTransducerModelRknn(
     const OnlineModelConfig &config)

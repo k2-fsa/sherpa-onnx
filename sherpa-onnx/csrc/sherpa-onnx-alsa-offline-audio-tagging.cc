@@ -7,8 +7,11 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <mutex>   // NOLINT
+#include <mutex>  // NOLINT
+#include <string>
 #include <thread>  // NOLINT
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/audio-tagging.h"

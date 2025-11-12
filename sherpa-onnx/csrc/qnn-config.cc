@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/qnn-config.h"
 
 #include <sstream>
+#include <string>
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"

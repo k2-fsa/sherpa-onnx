@@ -8,9 +8,13 @@
 
 #include <algorithm>
 #include <fstream>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <sstream>
-#include <thread>  // NOLINT
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"

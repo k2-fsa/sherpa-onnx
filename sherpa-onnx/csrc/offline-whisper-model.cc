@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -405,13 +407,13 @@ const std::vector<int32_t> &OfflineWhisperModel::GetAllLanguageIDs() const {
   return impl_->GetAllLanguageIDs();
 }
 
-const std::unordered_map<std::string, int32_t>
-    &OfflineWhisperModel::GetLang2ID() const {
+const std::unordered_map<std::string, int32_t> &
+OfflineWhisperModel::GetLang2ID() const {
   return impl_->GetLang2ID();
 }
 
-const std::unordered_map<int32_t, std::string>
-    &OfflineWhisperModel::GetID2Lang() const {
+const std::unordered_map<int32_t, std::string> &
+OfflineWhisperModel::GetID2Lang() const {
   return impl_->GetID2Lang();
 }
 

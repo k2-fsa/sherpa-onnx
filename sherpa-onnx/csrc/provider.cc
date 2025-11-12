@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <string>
 
 #include "sherpa-onnx/csrc/macros.h"
 

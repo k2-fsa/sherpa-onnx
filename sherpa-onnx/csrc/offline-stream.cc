@@ -9,7 +9,10 @@
 #include <cmath>
 #include <iomanip>
 #include <limits>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"

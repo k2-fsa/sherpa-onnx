@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/jni/common.h"

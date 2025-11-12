@@ -1,7 +1,9 @@
 // scripts/node-addon-api/src/streaming-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <memory>
 #include <sstream>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
