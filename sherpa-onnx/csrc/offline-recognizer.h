@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
@@ -27,6 +28,7 @@ struct OfflineRecognizerConfig {
   OfflineModelConfig model_config;
   OfflineLMConfig lm_config;
   OfflineCtcFstDecoderConfig ctc_fst_decoder_config;
+  QnnConfig qnn_config;
 
   std::string decoding_method = "greedy_search";
   int32_t max_active_paths = 4;
