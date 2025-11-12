@@ -2,7 +2,10 @@
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
+#include <iostream>
 #include <regex>  // NOLINT
+#include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/text-utils.cc"

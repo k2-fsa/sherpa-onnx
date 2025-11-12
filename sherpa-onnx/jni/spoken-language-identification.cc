@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 
+#include <memory>
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 

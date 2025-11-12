@@ -617,7 +617,7 @@ QnnModel::QnnModel(const std::string &binary_context_file,
                    const std::string &system_lib, const QnnBackend *backend,
                    BinaryContextTag tag)
     : impl_(std::make_unique<Impl>(binary_context_file, system_lib, backend,
-                                   tag)) {}
+                                   tag)) {}  // NOLINT
 
 bool QnnModel::SaveBinaryContext(const std::string &filename) const {
   return impl_->SaveBinaryContext(filename);

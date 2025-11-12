@@ -171,7 +171,7 @@ class OfflineSourceSeparationSpleeterModel::Impl {
 };
 
 OfflineSourceSeparationSpleeterModel::~OfflineSourceSeparationSpleeterModel() =
-    default;
+    default;  // NOLINT
 
 OfflineSourceSeparationSpleeterModel::OfflineSourceSeparationSpleeterModel(
     const OfflineSourceSeparationModelConfig &config)

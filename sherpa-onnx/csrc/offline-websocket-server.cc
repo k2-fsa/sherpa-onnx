@@ -2,7 +2,9 @@
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
-#include "asio.hpp"
+#include <vector>
+
+#include "asio.hpp"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-websocket-server-impl.h"
 #include "sherpa-onnx/csrc/parse-options.h"

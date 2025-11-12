@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
 
 #if __ANDROID_API__ >= 9

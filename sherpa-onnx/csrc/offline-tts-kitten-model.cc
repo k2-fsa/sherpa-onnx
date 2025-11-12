@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kitten-model.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

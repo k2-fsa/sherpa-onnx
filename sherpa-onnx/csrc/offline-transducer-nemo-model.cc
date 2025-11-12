@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-nemo-model.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

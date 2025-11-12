@@ -2,6 +2,11 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"

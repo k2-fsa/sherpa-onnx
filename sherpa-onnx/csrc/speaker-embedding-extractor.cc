@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
+#include <memory>
+#include <string>
 #include <vector>
 
 #if __ANDROID_API__ >= 9

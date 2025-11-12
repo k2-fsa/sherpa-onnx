@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/homophone-replacer.h"
 
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <strstream>

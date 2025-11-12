@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
+#include <string>
+#include <vector>
+
 #include "gtest/gtest.h"
 
 namespace sherpa_onnx {

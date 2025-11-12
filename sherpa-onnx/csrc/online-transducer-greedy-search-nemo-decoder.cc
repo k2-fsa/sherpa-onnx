@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"

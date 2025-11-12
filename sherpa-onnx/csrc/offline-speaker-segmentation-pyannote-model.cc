@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -112,18 +113,18 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
 };
 
 OfflineSpeakerSegmentationPyannoteModel::
-    OfflineSpeakerSegmentationPyannoteModel(
+    OfflineSpeakerSegmentationPyannoteModel(  // NOLINT
         const OfflineSpeakerSegmentationModelConfig &config)
-    : impl_(std::make_unique<Impl>(config)) {}
+    : impl_(std::make_unique<Impl>(config)) {}  // NOLINT
 
 template <typename Manager>
 OfflineSpeakerSegmentationPyannoteModel::
-    OfflineSpeakerSegmentationPyannoteModel(
+    OfflineSpeakerSegmentationPyannoteModel(  // NOLINT
         Manager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
-    : impl_(std::make_unique<Impl>(mgr, config)) {}
+    : impl_(std::make_unique<Impl>(mgr, config)) {}  // NOLINT
 
 OfflineSpeakerSegmentationPyannoteModel::
-    ~OfflineSpeakerSegmentationPyannoteModel() = default;
+    ~OfflineSpeakerSegmentationPyannoteModel() = default;  // NOLINT
 
 const OfflineSpeakerSegmentationPyannoteModelMetaData &
 OfflineSpeakerSegmentationPyannoteModel::GetModelMetaData() const {
@@ -137,14 +138,14 @@ Ort::Value OfflineSpeakerSegmentationPyannoteModel::Forward(
 
 #if __ANDROID_API__ >= 9
 template OfflineSpeakerSegmentationPyannoteModel::
-    OfflineSpeakerSegmentationPyannoteModel(
+    OfflineSpeakerSegmentationPyannoteModel(  // NOLINT
         AAssetManager *mgr,
         const OfflineSpeakerSegmentationModelConfig &config);
 #endif
 
 #if __OHOS__
 template OfflineSpeakerSegmentationPyannoteModel::
-    OfflineSpeakerSegmentationPyannoteModel(
+    OfflineSpeakerSegmentationPyannoteModel(  // NOLINT
         NativeResourceManager *mgr,
         const OfflineSpeakerSegmentationModelConfig &config);
 #endif

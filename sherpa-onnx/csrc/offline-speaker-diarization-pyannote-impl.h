@@ -41,11 +41,11 @@ struct PairHash {
 };
 }  // namespace
 
-using Matrix2D =
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using Matrix2D = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+                               Eigen::RowMajor>;  // NOLINT
 
-using Matrix2DInt32 =
-    Eigen::Matrix<int32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using Matrix2DInt32 = Eigen::Matrix<int32_t, Eigen::Dynamic, Eigen::Dynamic,
+                                    Eigen::RowMajor>;  // NOLINT
 
 using FloatRowVector = Eigen::Matrix<float, 1, Eigen::Dynamic>;
 using Int32RowVector = Eigen::Matrix<int32_t, 1, Eigen::Dynamic>;

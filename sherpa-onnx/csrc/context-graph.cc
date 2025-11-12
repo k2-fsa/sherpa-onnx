@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include <queue>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 

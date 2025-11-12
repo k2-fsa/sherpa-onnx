@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 

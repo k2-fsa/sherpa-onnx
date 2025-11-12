@@ -11,6 +11,7 @@
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
@@ -258,7 +259,7 @@ void PrintShape(const Ort::Value *v) {
     os << i << ", ";
   }
   os << "\n";
-  fprintf(stderr, "%s", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s", os.str().c_str());
 }
 
 template <typename T /*= float*/>
@@ -270,7 +271,7 @@ void Print1D(const Ort::Value *v) {
     os << d[i] << " ";
   }
   os << "\n";
-  fprintf(stderr, "%s\n", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 }
 
 template void Print1D<int64_t>(const Ort::Value *v);
@@ -289,7 +290,7 @@ void Print2D(const Ort::Value *v) {
     }
     os << "\n";
   }
-  fprintf(stderr, "%s\n", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 }
 
 template void Print2D<int64_t>(const Ort::Value *v);
@@ -300,15 +301,15 @@ void Print3D(const Ort::Value *v) {
   const float *d = v->GetTensorData<float>();
 
   for (int32_t p = 0; p != static_cast<int32_t>(shape[0]); ++p) {
-    fprintf(stderr, "---plane %d---\n", p);
+    SHERPA_ONNX_LOGE("---plane %d---\n", p);
     for (int32_t r = 0; r != static_cast<int32_t>(shape[1]); ++r) {
       for (int32_t c = 0; c != static_cast<int32_t>(shape[2]); ++c, ++d) {
-        fprintf(stderr, "%.3f ", *d);
+        SHERPA_ONNX_LOGE("%.3f ", *d);
       }
-      fprintf(stderr, "\n");
+      SHERPA_ONNX_LOGE("\n");
     }
   }
-  fprintf(stderr, "\n");
+  SHERPA_ONNX_LOGE("\n");
 }
 
 void Print4D(const Ort::Value *v) {
@@ -316,19 +317,19 @@ void Print4D(const Ort::Value *v) {
   const float *d = v->GetTensorData<float>();
 
   for (int32_t p = 0; p != static_cast<int32_t>(shape[0]); ++p) {
-    fprintf(stderr, "---plane %d---\n", p);
+    SHERPA_ONNX_LOGE("---plane %d---\n", p);
     for (int32_t q = 0; q != static_cast<int32_t>(shape[1]); ++q) {
-      fprintf(stderr, "---subplane %d---\n", q);
+      SHERPA_ONNX_LOGE("---subplane %d---\n", q);
       for (int32_t r = 0; r != static_cast<int32_t>(shape[2]); ++r) {
         for (int32_t c = 0; c != static_cast<int32_t>(shape[3]); ++c, ++d) {
-          fprintf(stderr, "%.3f ", *d);
+          SHERPA_ONNX_LOGE("%.3f ", *d);
         }
-        fprintf(stderr, "\n");
+        SHERPA_ONNX_LOGE("\n");
       }
-      fprintf(stderr, "\n");
+      SHERPA_ONNX_LOGE("\n");
     }
   }
-  fprintf(stderr, "\n");
+  SHERPA_ONNX_LOGE("\n");
 }
 
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,

@@ -4,8 +4,11 @@
 
 #include "sherpa-onnx/csrc/ascend/utils.h"
 
+#include <memory>
 #include <sstream>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/ascend/macros.h"
 

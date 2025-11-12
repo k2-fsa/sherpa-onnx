@@ -4,6 +4,10 @@
 
 #include "sherpa-onnx/csrc/online-websocket-server-impl.h"
 
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"

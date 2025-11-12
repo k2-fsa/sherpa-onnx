@@ -7,9 +7,13 @@
 #include <codecvt>
 #include <fstream>
 #include <locale>
+#include <memory>
 #include <sstream>
+#include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"

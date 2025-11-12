@@ -5,11 +5,12 @@
 #include <stdio.h>
 
 #include <atomic>
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <fstream>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <string>
-#include <thread>  // NOLINT
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"

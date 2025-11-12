@@ -4,12 +4,7 @@
 
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 
-#include "sherpa-onnx/csrc/keyword-spotter-transducer-impl.h"
-#include "sherpa-onnx/csrc/macros.h"
-
-#if SHERPA_ONNX_ENABLE_RKNN
-#include "sherpa-onnx/csrc/rknn/keyword-spotter-transducer-rknn-impl.h"
-#endif
+#include <memory>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -18,6 +13,13 @@
 
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
+#endif
+
+#include "sherpa-onnx/csrc/keyword-spotter-transducer-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
+
+#if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/keyword-spotter-transducer-rknn-impl.h"
 #endif
 
 namespace sherpa_onnx {

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/base64-decode.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {

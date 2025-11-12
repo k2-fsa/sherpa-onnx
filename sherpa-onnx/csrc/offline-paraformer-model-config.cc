@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 

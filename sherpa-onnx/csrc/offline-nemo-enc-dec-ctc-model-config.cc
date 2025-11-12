@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 

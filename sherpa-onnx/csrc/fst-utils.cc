@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/fst-utils.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {

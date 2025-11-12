@@ -9,6 +9,7 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
