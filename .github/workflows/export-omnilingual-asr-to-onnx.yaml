@@ -1,0 +1,171 @@
+name: export-omnilingual-asr-to-onnx
+
+on:
+  push:
+    branches:
+      - export-omnilingual-asr
+  workflow_dispatch:
+
+concurrency:
+  group: export-omnilingual-asr-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-omnilingual-asr-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export omnilingual-asr
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt install libsndfile1
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install fairseq2 \
+            --extra-index-url https://fair.pkg.atmeta.com/fairseq2/whl/pt2.8.0/cpu \
+            torch==2.8.0+cpu -f https://download.pytorch.org/whl/torch \
+            torchaudio==2.8.0+cpu -f https://download.pytorch.org/whl/torchaudio \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            soundfile \
+            librosa
+
+          pip install --no-deps omnilingual_asr
+
+          pip install retrying pandas polars pyarrow xxhash
+
+      - name: Setup tmate session
+        if: false
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/omnilingual-asr
+          python3 ./export-onnx.py
+
+          ls -lh *.onnx
+
+          rm README.md
+
+          curl -SL -O https://raw.githubusercontent.com/facebookresearch/omnilingual-asr/refs/heads/main/README.md
+          curl -SL -O https://raw.githubusercontent.com/facebookresearch/omnilingual-asr/refs/heads/main/LICENSE
+          curl -SL -O https://raw.githubusercontent.com/facebookresearch/omnilingual-asr/refs/heads/main/LICENSE-CC-BY-4.0.md
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/es.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/fr.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/de.wav
+
+          echo "---test----"
+          python3 ./test.py
+
+          echo "---collect files----"
+
+          d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          mv -v model.onnx $d
+          cp -v tokens.txt $d
+          cp -v README.md $d
+          cp -v LICENSE* $d
+          cp -v *.wav $d/test_wavs
+
+          ls -lh $d
+
+          tar cjfv $d.tar.bz2 $d
+          mv $d ../..
+
+          d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          mv -v model.int8.onnx $d
+          cp -v tokens.txt $d
+          cp -v README.md $d
+          cp -v LICENSE* $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          mv $d ../..
+
+          mv *.tar.bz2 ../../
+
+          cd ../..
+
+          ls -lh *.tar.bz2
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            dirs=(
+              sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
+              sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+            )
+
+            for d in ${dirs[@]}; do
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              pushd huggingface
+
+              git fetch
+              git pull
+              echo "pwd: $PWD"
+              cp -a ../$d/* .
+
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              ls -lh
+              git add .
+
+              ls -lh
+
+              git status
+
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
+              popd
+            done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
