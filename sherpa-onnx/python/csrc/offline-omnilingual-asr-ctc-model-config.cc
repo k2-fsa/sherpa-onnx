@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-omnilingual-asr-ctc-model-config.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/python/csrc/offline-omnilingual-asr-ctc-model-config.h"
 
