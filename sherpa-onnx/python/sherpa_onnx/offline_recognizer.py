@@ -7,6 +7,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
+    OfflineOmnilingualAsrCtcModelConfig,
     OfflineCtcFstDecoderConfig,
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,
@@ -530,6 +531,56 @@ class OfflineRecognizer(object):
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
             ),
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_omnilingual_asr_ctc(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/omnilingual-asr/index.html>`_
+        to download pre-trained models.
+
+        Args:
+          model:
+            Path to ``model.onnx``.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          decoding_method:
+            The only supported decoding method is greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            omnilingual=OfflineOmnilingualAsrCtcModelConfig(model=model),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            model_config=model_config,
+            decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
