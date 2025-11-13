@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>

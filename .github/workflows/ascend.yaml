@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - master
-      - ci-ascend
-  pull_request:
-    branches:
-      - master
 
   workflow_dispatch:
 
