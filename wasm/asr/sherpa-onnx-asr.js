@@ -55,6 +55,10 @@ function freeConfig(config, Module) {
     freeConfig(config.wenetCtc, Module)
   }
 
+  if ('omnilingual' in config) {
+    freeConfig(config.omnilingual, Module)
+  }
+
   if ('moonshine' in config) {
     freeConfig(config.moonshine, Module)
   }
@@ -755,6 +759,23 @@ function initSherpaOnnxOfflineWenetCtcModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
@@ -1025,6 +1046,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('omnilingual' in config)) {
+    config.omnilingual = {
+      model: '',
+    };
+  }
+
   if (!('whisper' in config)) {
     config.whisper = {
       encoder: '',
@@ -1109,9 +1136,13 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const wenetCtc =
       initSherpaOnnxOfflineWenetCtcModelConfig(config.wenetCtc, Module);
 
+  const omnilingual = initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(
+      config.omnilingual, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
-      dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len;
+      dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
+      omnilingual.len;
 
   const ptr = Module._malloc(len);
 
@@ -1222,12 +1253,15 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(wenetCtc.ptr, wenetCtc.len, ptr + offset);
   offset += wenetCtc.len;
 
+  Module._CopyHeap(omnilingual.ptr, omnilingual.len, ptr + offset);
+  offset += omnilingual.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
         paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
         senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr,
         dolphin: dolphin, zipformerCtc: zipformerCtc, canary: canary,
-        wenetCtc: wenetCtc,
+        wenetCtc: wenetCtc, omnilingual: omnilingual
   }
 }
 

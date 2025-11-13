@@ -203,10 +203,26 @@ rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
 node ./test-offline-zipformer-ctc.js
 ```
 
+## ./test-offline-omnilingual-asr-ctc.js
+
+[./test-offline-omnilingual-asr-ctc.js](./test-offline-omnilingual-asr-ctc.js) demonstrates
+how to decode a file with a Omnilingual ASR CTC model. In the code we use
+[sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+
+node ./test-offline-omnilingual-asr-ctc.js
+```
+
 ## ./test-offline-wenet-ctc.js
 
 [./test-offline-wenet-ctc.js](./test-offline-wenet-ctc.js) demonstrates
-how to decode a file with a Wenet CTC model. In the code we use
+how to decode a file with a WeNet CTC model. In the code we use
 [sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2).
 
 You can use the following command to run it:
