@@ -562,8 +562,6 @@ class OfflineRecognizer(object):
 
           num_threads:
             Number of threads for neural network computation.
-          sample_rate:
-            Sample rate of the training data used to train the model.
           decoding_method:
             Valid values are greedy_search.
           debug:
