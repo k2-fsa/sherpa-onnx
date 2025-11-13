@@ -427,4 +427,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         shell: bash
         run: |
-          twine upload dist/sherpa-onnx-*.tar.gz
+          twine upload dist/sherpa*.tar.gz

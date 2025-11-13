@@ -31,7 +31,8 @@ function linux() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_x86_64.whl
   unzip sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_x86_64.whl
 
-  cp -v sherpa_onnx/lib/*.so* $dst
+  rm -fv $dst/_sherpa*.so
+  cp -v sherpa_onnx/lib/lib*.so* $dst
 
   cd ..
   rm -rf t
@@ -43,7 +44,8 @@ function linux() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_aarch64.whl
   unzip ./sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_aarch64.whl
 
-  cp -v sherpa_onnx/lib/*.so* $dst
+  rm -fv $dst/_sherpa*.so
+  cp -v sherpa_onnx/lib/lib*.so* $dst
 
   cd ..
   rm -rf t
@@ -55,7 +57,8 @@ function linux() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
 
-  cp -v sherpa_onnx/lib/*.so* $dst
+  rm -fv $dst/_sherpa*.so
+  cp -v sherpa_onnx/lib/lib*.so* $dst
 
   cd ..
   rm -rf t
