@@ -126,6 +126,77 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal test (Non Streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd non-streaming-asr
+
+          ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-omnilingual-asr-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-canary.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-zipformer-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-dolphin-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-moonshine.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-fire-red-asr.sh
+          rm -rf sherpa-onnx-fire-red-asr*
+          echo "---"
+
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-sense-voice.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-paraformer.sh
+
+          ./run-paraformer-itn.sh
+
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ls -lh
+          popd
+
       - name:  Run Pascal test (Streaming ASR)
         shell: bash
         run: |
@@ -194,69 +265,6 @@ jobs:
           pushd speech-enhancement-gtcrn
           ./run-gtcrn.sh
           ls -lh
-
-      - name:  Run Pascal test (Non Streaming ASR)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd non-streaming-asr
-
-          ./run-nemo-canary.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-zipformer-ctc.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-dolphin-ctc.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-zipformer-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-moonshine.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-fire-red-asr.sh
-          rm -rf sherpa-onnx-fire-red-asr*
-          echo "---"
-
-          ./run-whisper.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-nemo-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-nemo-ctc.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-sense-voice.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-telespeech-ctc.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-paraformer.sh
-
-          ./run-paraformer-itn.sh
-
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ls -lh
-          popd
 
       - name:  Run Pascal test (Speaker diarization)
         shell: bash
