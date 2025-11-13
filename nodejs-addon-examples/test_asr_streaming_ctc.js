@@ -37,7 +37,7 @@ stream.acceptWaveform({samples: tailPadding, sampleRate: wave.sampleRate});
 while (recognizer.isReady(stream)) {
   recognizer.decode(stream);
 }
-const result = recognizer.getResult(stream)
+const result = recognizer.getResult(stream);
 let stop = Date.now();
 console.log('Done')
 
