@@ -15,6 +15,7 @@ static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWenetCtcModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
@@ -37,7 +38,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineDolphinModelConfig) +
                       sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineCanaryModelConfig) +
-                      sizeof(SherpaOnnxOfflineWenetCtcModelConfig),
+                      sizeof(SherpaOnnxOfflineWenetCtcModelConfig) +
+                      sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -86,6 +88,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto zipformer_ctc = &model_config->zipformer_ctc;
   auto canary = &model_config->canary;
   auto wenet_ctc = &model_config->wenet_ctc;
+  auto omnilingual = &model_config->omnilingual;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -138,6 +141,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline wenet ctc model config----------\n");
   fprintf(stdout, "model: %s\n", wenet_ctc->model);
+
+  fprintf(stdout, "----------offline Omnilingual ASR model config----------\n");
+  fprintf(stdout, "model: %s\n", omnilingual->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);
