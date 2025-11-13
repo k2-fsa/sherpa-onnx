@@ -368,6 +368,14 @@ func sherpaOnnxOfflineWenetCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineOmnilingualAsrCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineOmnilingualAsrCtcModelConfig {
+  return SherpaOnnxOfflineOmnilingualAsrCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -492,7 +500,9 @@ func sherpaOnnxOfflineModelConfig(
     sherpaOnnxOfflineZipformerCtcModelConfig(),
   canary: SherpaOnnxOfflineCanaryModelConfig = sherpaOnnxOfflineCanaryModelConfig(),
   wenetCtc: SherpaOnnxOfflineWenetCtcModelConfig =
-    sherpaOnnxOfflineWenetCtcModelConfig()
+    sherpaOnnxOfflineWenetCtcModelConfig(),
+  omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig =
+    sherpaOnnxOfflineOmnilingualAsrCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -514,7 +524,8 @@ func sherpaOnnxOfflineModelConfig(
     dolphin: dolphin,
     zipformer_ctc: zipformerCtc,
     canary: canary,
-    wenet_ctc: wenetCtc
+    wenet_ctc: wenetCtc,
+    omnilingual: omnilingual
   )
 }
 
