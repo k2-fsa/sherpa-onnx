@@ -563,7 +563,7 @@ class OfflineRecognizer(object):
           num_threads:
             Number of threads for neural network computation.
           decoding_method:
-            Valid values are greedy_search.
+            The only supported decoding method is greedy_search.
           debug:
             True to show debug messages.
           provider:

@@ -196,13 +196,16 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         !config_.model_config.omnilingual.model.empty()) {
       // If the model does not support batch processing,
       // we process each stream independently.
+      //
+      // omnilingual asr is disabled for batch processing at present
       for (int32_t i = 0; i != n; ++i) {
         DecodeStream(ss[i]);
       }
       return;
     }
 
-    // the following code does not work with omnilingual asr models
+    // Even if the omnilingual asr model can process batch input, the following
+    // code does not support batching raw audio samples.
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);

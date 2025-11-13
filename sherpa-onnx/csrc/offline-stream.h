@@ -57,7 +57,7 @@ struct CEDTag {};
 // audio samples to features
 struct MoonshineTag {};
 
-// It is based-on Wav2vec, accepting raw audio samples as input
+// It is based on Wav2Vec, accepting raw audio samples as input
 struct OmnilingualAsrTag {};
 
 class OfflineStream {

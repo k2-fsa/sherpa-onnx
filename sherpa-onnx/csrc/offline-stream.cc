@@ -331,7 +331,7 @@ class OfflineStream::Impl {
   bool is_moonshine_ = false;
   bool is_omnilingual_asr_ = false;
 
-  // used only when (is_moonshine_|| is_omnilingual_asr_ == true)
+  // used only when (is_moonshine_ || is_omnilingual_asr_) == true
   std::vector<float> samples_;
 };
 
