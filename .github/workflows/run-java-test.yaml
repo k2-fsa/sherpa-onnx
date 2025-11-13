@@ -108,6 +108,20 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (Omnilingual ASR CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-omnilingual-asr-ctc.sh
+          rm -rf sherpa-onnx-omnilingual-*
+
+      - name:  Run java test (WeNet CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-wenet-ctc.sh
+          rm -rf sherpa-onnx-wenet*
+
       - name:  Run java test (Streaming T-one)
         shell: bash
         run: |
