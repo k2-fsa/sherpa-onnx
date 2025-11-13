@@ -746,6 +746,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12",
+            idx=44,
+            lang="1600",
+            lang2="1600_languages",
+            short_name="1600_languages",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

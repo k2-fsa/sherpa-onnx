@@ -40,6 +40,10 @@ data class OfflineWenetCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineOmnilingualAsrCtcModelConfig(
+    var model: String = "",
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -85,6 +89,7 @@ data class OfflineModelConfig(
     var dolphin: OfflineDolphinModelConfig = OfflineDolphinModelConfig(),
     var zipformerCtc: OfflineZipformerCtcModelConfig = OfflineZipformerCtcModelConfig(),
     var wenetCtc: OfflineWenetCtcModelConfig = OfflineWenetCtcModelConfig(),
+    var omnilingual: OfflineOmnilingualAsrCtcModelConfig = OfflineOmnilingualAsrCtcModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
@@ -729,6 +734,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "paraformer",
+            )
+        }
+
+        44 -> {
+            val modelDir = "sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12"
+            return OfflineModelConfig(
+                omnilingual = OfflineOmnilingualAsrCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }
