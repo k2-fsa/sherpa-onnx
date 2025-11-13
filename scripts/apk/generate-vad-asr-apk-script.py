@@ -751,7 +751,7 @@ def get_models():
             idx=44,
             lang="1600",
             lang2="1600_languages",
-            short_name="1600_languages",
+            short_name="omnilingual_asr_300M_ctc_int8",
             cmd="""
             pushd $model_name
 
