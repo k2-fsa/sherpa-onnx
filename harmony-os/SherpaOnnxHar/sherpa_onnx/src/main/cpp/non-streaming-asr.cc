@@ -78,6 +78,22 @@ static SherpaOnnxOfflineWenetCtcModelConfig GetOfflineWenetCtcModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineOmnilingualAsrCtcModelConfig
+GetOfflineOmnilingualAsrCtcModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineOmnilingualAsrCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("omnilingual") || !obj.Get("omnilingual").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("omnilingual").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineDolphinModelConfig c;
@@ -243,6 +259,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.zipformer_ctc = GetOfflineZipformerCtcModelConfig(o);
   c.canary = GetOfflineCanaryModelConfig(o);
   c.wenet_ctc = GetOfflineWenetCtcModelConfig(o);
+  c.omnilingual = GetOfflineOmnilingualAsrCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -336,6 +353,7 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.tgt_lang);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.wenet_ctc.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.omnilingual.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
