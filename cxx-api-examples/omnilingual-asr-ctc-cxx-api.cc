@@ -1,4 +1,4 @@
-// cxx-api-examples/sense-voice-cxx-api.cc
+// cxx-api-examples/omnilingual-asr-ctc-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 
 //
