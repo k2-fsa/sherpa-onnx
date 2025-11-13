@@ -9,6 +9,9 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-omnilingual-asr-ctc-asr.sh
+rm -rf sherpa-onnx-omnilingual-*
+
 ./run-decode-file-t-one-streaming.sh
 rm -rf sherpa-onnx-streaming-*
 
