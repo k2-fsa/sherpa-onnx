@@ -9,10 +9,12 @@ const config = {
     'featureDim': 80,
   },
   'modelConfig': {
-    'zipformerCtc': {
-      'model': './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx',
+    'omnilingual': {
+      'model':
+          './sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/model.int8.onnx',
     },
-    'tokens': './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt',
+    'tokens':
+        './sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/tokens.txt',
     'numThreads': 2,
     'provider': 'cpu',
     'debug': 1,
@@ -20,7 +22,7 @@ const config = {
 };
 
 const waveFilename =
-    './sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/test_wavs/0.wav';
+    './sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/test_wavs/en.wav';
 
 const recognizer = new sherpa_onnx.OfflineRecognizer(config);
 console.log('Started')
