@@ -11,8 +11,8 @@
 namespace sherpa_onnx {
 
 void PybindOfflineOmnilingualAsrCtcModelConfig(py::module *m) {
-  using PyClass = OfflineOminlingualAsrCtcModelConfig;
-  py::class_<PyClass>(*m, "OfflineOminlingualAsrCtcModelConfig")
+  using PyClass = OfflineOmnilingualAsrCtcModelConfig;
+  py::class_<PyClass>(*m, "OfflineOmnilingualAsrCtcModelConfig")
       .def(py::init<>())
       .def(py::init<const std::string &>(), py::arg("model"))
       .def_readwrite("model", &PyClass::model)

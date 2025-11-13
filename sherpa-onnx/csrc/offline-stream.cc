@@ -145,6 +145,10 @@ class OfflineStream::Impl {
     config_.sampling_rate = 16000;
   }
 
+  explicit Impl(OmnilingualAsrTag /*tag*/) : is_omnilingual_asr_(true) {
+    config_.sampling_rate = 16000;
+  }
+
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     if (config_.normalize_samples) {
       AcceptWaveformImpl(sampling_rate, waveform, n);
@@ -176,7 +180,7 @@ class OfflineStream::Impl {
       std::vector<float> samples;
       resampler->Resample(waveform, n, true, &samples);
 
-      if (is_moonshine_) {
+      if (is_moonshine_ || is_omnilingual_asr_) {
         samples_.insert(samples_.end(), samples.begin(), samples.end());
       } else if (fbank_) {
         fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
@@ -195,7 +199,7 @@ class OfflineStream::Impl {
       return;
     }  // if (sampling_rate != config_.sampling_rate)
 
-    if (is_moonshine_) {
+    if (is_moonshine_ || is_omnilingual_asr_) {
       samples_.insert(samples_.end(), waveform, waveform + n);
     } else if (fbank_) {
       fbank_->AcceptWaveform(sampling_rate, waveform, n);
@@ -210,7 +214,7 @@ class OfflineStream::Impl {
   }
 
   int32_t FeatureDim() const {
-    if (is_moonshine_) {
+    if (is_moonshine_ || is_omnilingual_asr_) {
       return samples_.size();
     }
 
@@ -218,7 +222,7 @@ class OfflineStream::Impl {
   }
 
   std::vector<float> GetFrames() const {
-    if (is_moonshine_) {
+    if (is_moonshine_ || is_omnilingual_asr_) {
       return samples_;
     }
 
@@ -325,8 +329,9 @@ class OfflineStream::Impl {
   ContextGraphPtr context_graph_;
   bool is_ced_ = false;
   bool is_moonshine_ = false;
+  bool is_omnilingual_asr_ = false;
 
-  // used only when is_moonshine_== true
+  // used only when (is_moonshine_|| is_omnilingual_asr_ == true)
   std::vector<float> samples_;
 };
 
@@ -340,6 +345,9 @@ OfflineStream::OfflineStream(WhisperTag tag)
 OfflineStream::OfflineStream(CEDTag tag) : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::OfflineStream(MoonshineTag tag)
+    : impl_(std::make_unique<Impl>(tag)) {}
+
+OfflineStream::OfflineStream(OmnilingualAsrTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::~OfflineStream() = default;

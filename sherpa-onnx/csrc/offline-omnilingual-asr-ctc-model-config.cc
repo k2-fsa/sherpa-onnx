@@ -12,7 +12,7 @@
 namespace sherpa_onnx {
 
 void OfflineOmnilingualAsrCtcModelConfig::Register(ParseOptions *po) {
-  po->Register("omnilingual-asr-ctc-model", &model,
+  po->Register("omnilingual-asr-model", &model,
                "Path to Omnilingual ASR CTC model");
 }
 

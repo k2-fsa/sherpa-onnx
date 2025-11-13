@@ -57,6 +57,9 @@ struct CEDTag {};
 // audio samples to features
 struct MoonshineTag {};
 
+// It is based-on Wav2vec, accepting raw audio samples as input
+struct OmnilingualAsrTag {};
+
 class OfflineStream {
  public:
   explicit OfflineStream(const FeatureExtractorConfig &config = {},
@@ -65,6 +68,7 @@ class OfflineStream {
   explicit OfflineStream(WhisperTag tag);
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
+  explicit OfflineStream(OmnilingualAsrTag tag);
   ~OfflineStream();
 
   /**
