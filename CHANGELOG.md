@@ -1,3 +1,7 @@
+## 1.12.17
+
+* Fix releasing
+
 ## 1.12.16
 
 * Support exporting SenseVoice and Paraformer to Ascend 310P3 NPU. (#2716)
@@ -33,7 +37,7 @@
 * Add Dart API for Omnilingual ASR CTC models (#2779)
 * Add JavaScript (WebAssembly) API for Omnilingual ASR CTC models (#2781)
 * Add Pascal API for Omnilingual ASR CTC models (#2782)
-* Add Koltin and Java API for Omnilingual ASR CTC models (#2783)
+* Add Kotlin and Java API for Omnilingual ASR CTC models (#2783)
 
 ## 1.12.15
 
@@ -504,7 +508,7 @@
 * Fix: Prepend 0 to tokenization to prevent word skipping for Kokoro. (#1787)
 * Export Kokoro 1.0 to sherpa-onnx (#1788)
 * Add C++ and Python API for Kokoro 1.0 multilingual TTS model (#1795)
-* Add Java and Koltin API for Kokoro TTS 1.0 (#1798)
+* Add Java and Kotlin API for Kokoro TTS 1.0 (#1798)
 * Add Android demo for Kokoro TTS 1.0 (#1799)
 * Add C API for Kokoro TTS 1.0 (#1801)
 * Add CXX API for Kokoro TTS 1.0 (#1802)
@@ -544,7 +548,7 @@
 * Add Pascal API for Kokoro TTS models (#1724)
 * Add JavaScript API (node-addon) for Kokoro TTS models (#1725)
 * Add JavaScript (WebAssembly) API for Kokoro TTS models. (#1726)
-* Add Koltin and Java API for Kokoro TTS models (#1728)
+* Add Kotlin and Java API for Kokoro TTS models (#1728)
 * Update README.md for KWS to not use git lfs. (#1729)
 
 

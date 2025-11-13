@@ -12,7 +12,7 @@ android {
         minSdk = 28
         targetSdk = 34
         versionCode = 20251113
-        versionName = "1.12.16"
+        versionName = "1.12.17"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
-    implementation("com.github.k2-fsa:sherpa-onnx:v1.12.16")
+    implementation("com.github.k2-fsa:sherpa-onnx:v1.12.17")
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
