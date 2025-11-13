@@ -268,6 +268,10 @@ struct SHERPA_ONNX_API OfflineWenetCtcModelConfig {
   std::string model;
 };
 
+struct SHERPA_ONNX_API OfflineOmnilingualAsrCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -297,6 +301,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineCanaryModelConfig canary;
   OfflineWenetCtcModelConfig wenet_ctc;
+  OfflineOmnilingualAsrCtcModelConfig omnilingual;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
