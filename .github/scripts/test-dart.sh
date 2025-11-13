@@ -74,6 +74,10 @@ popd
 
 pushd non-streaming-asr
 
+echo '----------Omnilingual ASR CTC----------'
+./run-omnilingual-asr-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Wenet CTC----------'
 ./run-wenet-ctc.sh
 rm -rf sherpa-onnx-*
