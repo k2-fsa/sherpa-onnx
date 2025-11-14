@@ -56,6 +56,9 @@ Ort::SessionOptions GetSessionOptionsImpl(
   // sess_opts.SetLogSeverityLevel(ORT_LOGGING_LEVEL_VERBOSE);
   // sess_opts.EnableProfiling("profile");
 
+  // If you want to speed up initialization, please uncomment the following line
+  // sess_opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
+
   switch (p) {
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider

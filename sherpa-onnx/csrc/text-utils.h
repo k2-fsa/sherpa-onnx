@@ -182,6 +182,12 @@ std::string GetWord(const std::vector<std::string> &words, int32_t start,
 
 bool IsPunct(const std::string &s);
 
+#if defined(_WIN32)
+#define SHERPA_ONNX_TO_ORT_PATH(s) (ToWideString(s).c_str())
+#else
+#define SHERPA_ONNX_TO_ORT_PATH(s) ((s).c_str())
+#endif
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

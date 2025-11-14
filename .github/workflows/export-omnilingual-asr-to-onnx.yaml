@@ -3,7 +3,7 @@ name: export-omnilingual-asr-to-onnx
 on:
   push:
     branches:
-      - export-omnilingual-asr
+      - omnilingual-1b
   workflow_dispatch:
 
 concurrency:
@@ -13,13 +13,14 @@ concurrency:
 jobs:
   export-omnilingual-asr-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export omnilingual-asr
+    name: ${{ matrix.model_card }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.10"]
+        model_card: ["omniASR_CTC_300M", "omniASR_CTC_1B"]
 
     steps:
       - uses: actions/checkout@v4
@@ -58,9 +59,11 @@ jobs:
         shell: bash
         run: |
           cd scripts/omnilingual-asr
-          python3 ./export-onnx.py
+          model_card=${{ matrix.model_card }}
+          python3 ./export-onnx.py --model-card $model_card
 
           ls -lh *.onnx
+          ls -lh *.weights || true
 
           rm README.md
 
@@ -78,11 +81,15 @@ jobs:
           echo "---collect files----"
 
           d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
+          if [[ $model_card == omniASR_CTC_1B ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-2025-11-12
+          fi
 
           mkdir -p $d
           mkdir -p $d/test_wavs
 
           mv -v model.onnx $d
+          mv -v model.weights $d || true
           cp -v tokens.txt $d
           cp -v README.md $d
           cp -v LICENSE* $d
@@ -94,6 +101,9 @@ jobs:
           mv $d ../..
 
           d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+          if [[ $model_card == omniASR_CTC_1B ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-int8-2025-11-12
+          fi
 
           mkdir -p $d
           mkdir -p $d/test_wavs
@@ -115,6 +125,16 @@ jobs:
 
           ls -lh *.tar.bz2
 
+          df -h
+          rm -fv onnx_* model.encoder* model.final*
+
+          ls -lh ~/.cache/fairseq2/assets/*
+
+          rm -rf ~/.cache/fairseq2/assets/
+          rm -rf ~/.cache
+
+          df -h
+
       - name: Publish to huggingface
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -130,10 +150,18 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            model_card=${{ matrix.model_card }}
+
             dirs=(
               sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
               sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
             )
+            if [[ $model_card == omniASR_CTC_1B ]]; then
+              dirs=(
+                sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-2025-11-12
+                sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-int8-2025-11-12
+              )
+            fi
 
             for d in ${dirs[@]}; do
               rm -rf huggingface
@@ -143,9 +171,11 @@ jobs:
               git fetch
               git pull
               echo "pwd: $PWD"
-              cp -a ../$d/* .
+              rm -fv ./*.weights
+              mv -v ../$d/* .
 
               git lfs track "*.onnx"
+              git lfs track "*.weights"
               git lfs track "*.wav"
               ls -lh
               git add .
@@ -158,6 +188,20 @@ jobs:
               git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
               popd
             done
+
+      # List large files first (safe)
+      - name: List .tar.bz2 files larger than 2GB
+        run: |
+          ls -lh *.tar.bz2
+          echo "----"
+          find . -type f -name "*.tar.bz2" -size +2G -print
+
+      # Delete large files
+      - name: Delete .tar.bz2 files larger than 2GB
+        run: |
+          find . -type f -name "*.tar.bz2" -size +2G -delete
+
+          ls -lh *.tar.bz2
 
       - name: Release
         uses: svenstaro/upload-release-action@v2

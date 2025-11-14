@@ -76,7 +76,7 @@ def load_audio(filename):
     return (samples - mean) / np.sqrt(var + eps)
 
 
-def test(filename, wav_file_list, num_iter=10):
+def test(filename, wav_file_list, num_iter=1):
     id2token = load_tokens()
     model = OnnxModel(filename)
 
