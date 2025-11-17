@@ -22,12 +22,12 @@ log "Building TTS APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
-log "====================armv7-eabi================"
-./build-android-armv7-eabi.sh
-log "====================x86-64===================="
-./build-android-x86-64.sh
-log "====================x86===================="
-./build-android-x86.sh
+#log "====================armv7-eabi================"
+#./build-android-armv7-eabi.sh
+#log "====================x86-64===================="
+#./build-android-x86-64.sh
+#log "====================x86===================="
+#./build-android-x86.sh
 
 export SHERPA_ONNX_ENABLE_TTS=ON
 
@@ -132,7 +132,7 @@ if [[ $model_dir == kokoro-multi-lang-v1_0 || $model_dir == kokoro-multi-lang-v1
   lang=zh_en
 fi
 
-for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+for arch in arm64-v8a; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"
   log "------------------------------------------------------------"
@@ -150,10 +150,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxTts
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease
+  ./gradlew assembleDebug
   popd
 
-  mv android/SherpaOnnxTts/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-$model_dir.apk
+  mv android/SherpaOnnxTts/app/build/outputs/apk/*/*.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-$model_dir.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxTts/app/src/main/jniLibs/$arch/*.so
 done
