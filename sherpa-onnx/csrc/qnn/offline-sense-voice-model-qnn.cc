@@ -76,6 +76,7 @@ class OfflineSenseVoiceModelQnn::Impl {
     SHERPA_ONNX_LOGE(
         "Please copy all files from assets to SD card and set assetManager to "
         "null");
+    SHERPA_ONNX_EXIT(-1);
   }
 
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const {
@@ -148,31 +149,31 @@ class OfflineSenseVoiceModelQnn::Impl {
     }
 
     if (input_tensor_names[0] != "x") {
-      SHERPA_ONNX_LOGE("The 1st input should be x, atctual '%s'",
+      SHERPA_ONNX_LOGE("The 1st input should be x, actual '%s'",
                        input_tensor_names[0].c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_tensor_names[1] != "prompt") {
-      SHERPA_ONNX_LOGE("The 2nd input should be prompt, atctual '%s'",
+      SHERPA_ONNX_LOGE("The 2nd input should be prompt, actual '%s'",
                        input_tensor_names[1].c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
     std::vector<int32_t> x_shape = model_->TensorShape(input_tensor_names[0]);
     if (x_shape.size() != 3) {
-      SHERPA_ONNX_LOGE("The 1st input should be 3-d, atctual '%d'",
+      SHERPA_ONNX_LOGE("The 1st input should be 3-d, actual '%d'",
                        static_cast<int32_t>(x_shape.size()));
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (x_shape[0] != 1) {
-      SHERPA_ONNX_LOGE("The x.shape[0] should be 1, atctual '%d'", x_shape[0]);
+      SHERPA_ONNX_LOGE("The x.shape[0] should be 1, actual '%d'", x_shape[0]);
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (x_shape[2] != feat_dim_) {
-      SHERPA_ONNX_LOGE("The x.shape[2] should be 960, atctual '%d'",
+      SHERPA_ONNX_LOGE("The x.shape[2] should be %d, actual '%d'", feat_dim_,
                        x_shape[2]);
       SHERPA_ONNX_EXIT(-1);
     }
@@ -181,13 +182,13 @@ class OfflineSenseVoiceModelQnn::Impl {
         model_->TensorShape(input_tensor_names[1]);
 
     if (prompt_shape.size() != 1) {
-      SHERPA_ONNX_LOGE("The 2st input should be 1-d, atctual '%d'",
+      SHERPA_ONNX_LOGE("The 2st input should be 1-d, actual '%d'",
                        static_cast<int32_t>(prompt_shape.size()));
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (prompt_shape[0] != 4) {
-      SHERPA_ONNX_LOGE("The prompt.shape[0] should be 4, atctual '%d'",
+      SHERPA_ONNX_LOGE("The prompt.shape[0] should be 4, actual '%d'",
                        prompt_shape[0]);
       SHERPA_ONNX_EXIT(-1);
     }
@@ -248,7 +249,6 @@ class OfflineSenseVoiceModelQnn::Impl {
   std::unique_ptr<QnnBackend> backend_;
   std::unique_ptr<QnnModel> model_;
 
-  int32_t vocab_size_ = 0;
   int32_t expected_num_frames_ = 0;
   int32_t feat_dim_ = 560;
 };

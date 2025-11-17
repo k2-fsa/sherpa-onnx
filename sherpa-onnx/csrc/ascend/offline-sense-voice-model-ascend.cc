@@ -219,7 +219,7 @@ OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
 template <typename Manager>
 OfflineSenseVoiceModelAscend::OfflineSenseVoiceModelAscend(
     Manager *mgr, const OfflineModelConfig &config)
-    : impl_(std::make_unique<Impl>(config)) {}
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 OfflineSenseVoiceModelAscend::~OfflineSenseVoiceModelAscend() = default;
 
