@@ -61,7 +61,9 @@ class QnnModel::Impl {
                        system_lib.c_str(), dlerror());
       return false;
     }
-    SHERPA_ONNX_LOGE("loaded %s", system_lib.c_str());
+    if (debug_) {
+      SHERPA_ONNX_LOGE("loaded %s", system_lib.c_str());
+    }
 
     auto get_system_interface_providers =
         reinterpret_cast<QnnSystemInterfaceGetProvidersFnType>(
@@ -363,7 +365,6 @@ class QnnModel::Impl {
     }
 
     FillData(t, p, n);
-    SHERPA_ONNX_LOGE("set %s", name.c_str());
 
     return true;
   }

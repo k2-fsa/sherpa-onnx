@@ -132,8 +132,8 @@ class OfflineSenseVoiceModelQnn::Impl {
     if (config_.debug && ok) {
       SHERPA_ONNX_LOGE("Saved context binary to '%s'.", context_binary.c_str());
       SHERPA_ONNX_LOGE(
-          "It should be super fast the next time you init the system.")
-      SHERPA_ONNX_LOGE("Remember to also provide libQnnSystem.so.")
+          "It should be super fast the next time you init the system.");
+      SHERPA_ONNX_LOGE("Remember to also provide libQnnSystem.so.");
     }
   }
 
