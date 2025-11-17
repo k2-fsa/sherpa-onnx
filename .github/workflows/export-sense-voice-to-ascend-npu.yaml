@@ -3,7 +3,7 @@ name: export-sense-voice-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-910b3
+      - cann-7.0
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +21,16 @@ jobs:
       matrix:
         include:
           # ===== Ascend 910B =====
+          - soc_version: "910B"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "FunASR"
+            cann: "7.0"
+
+          - soc_version: "910B"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "WSYue-ASR"
+            cann: "7.0"
+
           - soc_version: "910B"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
@@ -43,6 +53,16 @@ jobs:
 
           # ===== Ascend 910B2 =====
           - soc_version: "910B2"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "FunASR"
+            cann: "7.0"
+
+          - soc_version: "910B2"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "WSYue-ASR"
+            cann: "7.0"
+
+          - soc_version: "910B2"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
             cann: "8.0"
@@ -63,6 +83,16 @@ jobs:
             cann: "8.2"
 
           # ===== Ascend 910B3 =====
+          - soc_version: "910B3"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "FunASR"
+            cann: "7.0"
+
+          - soc_version: "910B3"
+            image: "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8"
+            framework: "WSYue-ASR"
+            cann: "7.0"
+
           - soc_version: "910B3"
             image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
             framework: "FunASR"
@@ -85,6 +115,16 @@ jobs:
 
 
           # ===== Ascend 310 =====
+          - soc_version: "310P3"
+            image: "quay.io/ascend/cann:7.0.1-310p-ubuntu22.04-py3.9"
+            framework: "FunASR"
+            cann: "7.0"
+
+          - soc_version: "310P3"
+            image: "quay.io/ascend/cann:7.0.1-310p-ubuntu22.04-py3.9"
+            framework: "WSYue-ASR"
+            cann: "7.0"
+
           - soc_version: "310P3"
             # image: "gpustack/ascendai-cann:8.0.RC2.alpha003-310p-ubuntu20.04-py3.9"
             image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
@@ -145,6 +185,9 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
 
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
+
           echo "CANN environment:"
           which atc || echo "atc not found"
           atc --help
@@ -188,6 +231,9 @@ jobs:
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
           cann=${{ matrix.cann }}
@@ -255,6 +301,9 @@ jobs:
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
           cann=${{ matrix.cann }}
