@@ -26,8 +26,19 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
-  std::ifstream input(filename, std::ios::binary);
-  std::vector<char> buffer(std::istreambuf_iterator<char>(input), {});
+  std::ifstream file(filename, std::ios::binary | std::ios::ate);
+  if (!file.is_open()) {
+    return {};
+  }
+
+  std::streamsize size = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  std::vector<char> buffer(size);
+  if (!file.read(buffer.data(), size)) {
+    return {};
+  }
+
   return buffer;
 }
 

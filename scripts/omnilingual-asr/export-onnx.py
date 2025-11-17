@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import argparse
 from typing import Dict
 
 import onnx
@@ -10,7 +11,20 @@ from omnilingual_asr.models.inference.pipeline import ASRInferencePipeline
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
 
-def add_meta_data(filename: str, meta_data: Dict[str, str]):
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--model-card",
+        type=str,
+        required=True,
+        help="omniASR_CTC_300M, or omniASR_CTC_1B",
+    )
+    return parser.parse_args()
+
+
+def add_meta_data(filename: str, meta_data: Dict[str, str], model_card: str):
     """Add meta data to an ONNX model. It is changed in-place.
 
     Args:
@@ -27,6 +41,18 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         meta = model.metadata_props.add()
         meta.key = key
         meta.value = str(value)
+
+    if "300M" in model_card:
+        onnx.save(model, filename)
+    else:
+        external_filename = filename.split(".onnx")[0]
+        onnx.save(
+            model,
+            filename,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location=external_filename + ".weights",
+        )
 
 
 class ModelWrapper(torch.nn.Module):
@@ -46,8 +72,10 @@ class ModelWrapper(torch.nn.Module):
 
 @torch.no_grad()
 def main():
+    args = get_args()
+    print(vars(args))
     pipeline = ASRInferencePipeline(
-        model_card="omniASR_CTC_300M",
+        model_card=args.model_card,
         device="cpu",
         dtype=torch.float32,
     )
@@ -87,7 +115,7 @@ def main():
         "comment": "300M-CTC",
     }
 
-    add_meta_data("model.onnx", meta_data)
+    add_meta_data("model.onnx", meta_data, args.model_card)
     print("saved to model.onnx")
 
     quantize_dynamic(
