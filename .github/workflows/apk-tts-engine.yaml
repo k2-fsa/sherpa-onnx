@@ -16,15 +16,14 @@ permissions:
 
 jobs:
   apk_tts_engine:
-    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     name: apk for tts engine ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["40"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]
+        total: ["2"]
+        index: ["0", "1"]
 
     steps:
       - uses: actions/checkout@v4
@@ -105,82 +104,7 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      # https://github.com/marketplace/actions/sign-android-release
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        with:
-          releaseDirectory: ./apks
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
-
-      - name: Display APK for TTS engine after signing
-        shell: bash
-        run: |
-          ls -lh ./apks/
-          du -h -d1 .
-
-      - name: Rename APK for TTS engine after signing
-        shell: bash
-        run: |
-          cd apks
-          rm -fv signingKey.jks
-          rm -fv *.apk.idsig
-          rm -fv *-aligned.apk
-
-          all_apks=$(ls -1 *-signed.apk)
-          echo "----"
-          echo $all_apks
-          echo "----"
-          for apk in ${all_apks[@]}; do
-            n=$(echo $apk | sed -e s/-signed//)
-            mv -v $apk $n
-          done
-
-          cd ..
-
-          ls -lh ./apks/
-          du -h -d1 .
-
       - uses: actions/upload-artifact@v4
-        if: false
         with:
           name: tts-engine-apk-${{ matrix.index }}
           path: ./apks/*.apk
-
-      - name: Publish to huggingface
-        if: true
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf huggingface
-            export GIT_LFS_SKIP_SMUDGE=1
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-
-            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
-
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
-            cd huggingface
-            git fetch
-            git pull
-            git merge -m "merge remote" --ff origin main
-
-            d=tts-engine-new/$SHERPA_ONNX_VERSION
-            mkdir -p $d
-            cp -v ../apks/*.apk $d/
-            git status
-            git lfs track "*.apk"
-            git add .
-            git commit -m "add more tts engine apks"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main
