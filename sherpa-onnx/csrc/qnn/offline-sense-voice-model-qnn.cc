@@ -53,7 +53,7 @@ class OfflineSenseVoiceModelQnn::Impl {
     } else if (!FileExists(context_binary)) {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
-            "Init from model lib since context binary '%s' doest not exist",
+            "Init from model lib since context binary '%s' does not exist",
             context_binary.c_str());
       }
 
@@ -182,7 +182,7 @@ class OfflineSenseVoiceModelQnn::Impl {
         model_->TensorShape(input_tensor_names[1]);
 
     if (prompt_shape.size() != 1) {
-      SHERPA_ONNX_LOGE("The 2st input should be 1-d, actual '%d'",
+      SHERPA_ONNX_LOGE("The 2nd input should be 1-d, actual '%d'",
                        static_cast<int32_t>(prompt_shape.size()));
       SHERPA_ONNX_EXIT(-1);
     }
