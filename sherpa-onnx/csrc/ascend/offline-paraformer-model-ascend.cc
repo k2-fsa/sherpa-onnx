@@ -426,6 +426,11 @@ OfflineParaformerModelAscend::OfflineParaformerModelAscend(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
+template <typename Manager>
+OfflineParaformerModelAscend::OfflineParaformerModelAscend(
+    Manager *mgr, const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+
 OfflineParaformerModelAscend::~OfflineParaformerModelAscend() = default;
 
 std::vector<float> OfflineParaformerModelAscend::Run(

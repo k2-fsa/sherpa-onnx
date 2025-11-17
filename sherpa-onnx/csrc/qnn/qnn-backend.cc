@@ -22,7 +22,7 @@ namespace sherpa_onnx {
 
 class QnnBackend::Impl {
  public:
-  explicit Impl(const std::string &backend_lib) {
+  explicit Impl(const std::string &backend_lib, bool debug) : debug_(debug) {
     bool ok = InitQnnInterface(backend_lib);
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to init qnn interface from '%s'",
@@ -95,7 +95,10 @@ class QnnBackend::Impl {
                        backend_lib.c_str(), dlerror());
       return false;
     }
-    SHERPA_ONNX_LOGE("loaded %s", backend_lib.c_str());
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("loaded %s", backend_lib.c_str());
+    }
 
     const char *symbol = "QnnInterface_getProviders";
     auto get_interface_providers =
@@ -106,7 +109,10 @@ class QnnBackend::Impl {
                        dlerror());
       return false;
     }
-    SHERPA_ONNX_LOGE("Got %s", symbol);
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("Got %s", symbol);
+    }
 
     const QnnInterface_t **interface_providers = nullptr;
     uint32_t num_providers = 0;
@@ -218,8 +224,8 @@ class QnnBackend::Impl {
 
 QnnBackend::~QnnBackend() = default;
 
-QnnBackend::QnnBackend(const std::string &backend_lib)
-    : impl_(std::make_unique<Impl>(backend_lib)) {}
+QnnBackend::QnnBackend(const std::string &backend_lib, bool debug)
+    : impl_(std::make_unique<Impl>(backend_lib, debug)) {}
 
 void QnnBackend::InitContext() const { impl_->InitContext(); }
 
