@@ -44,6 +44,9 @@ object TtsEngine {
 
     private var modelDir: String? = null
     private var modelName: String? = null
+    private var textModel: String? = null
+    private var flowMatchingModel: String? = null
+    private var pinyinDict: String? = null
     private var acousticModelName: String? = null // for matcha tts
     private var vocoder: String? = null // for matcha tts
     private var voices: String? = null // for kokoro
@@ -53,6 +56,7 @@ object TtsEngine {
     private var dataDir: String? = null
     private var assets: AssetManager? = null
     private var isKitten = false
+    var isZipvoice = false
 
     init {
         // The purpose of such a design is to make the CI test easier
@@ -71,6 +75,13 @@ object TtsEngine {
         // For Kokoro -- begin
         voices = null
         // For Kokoro -- end
+
+        // Zipvoice -- begin
+        textModel = null
+        flowMatchingModel = null
+        vocoder = null
+        pinyinDict = null
+        // Zipvoice -- end
 
         modelDir = null
         ruleFsts = null
@@ -176,6 +187,26 @@ object TtsEngine {
         // dataDir = "kitten-nano-en-v0_1-fp16/espeak-ng-data"
         // lang = "eng"
         // isKitten = true
+
+        // Example 12
+        // sherpa-onnx-zipvoice-distill-zh-en-emilia
+        // modelDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia"
+        // textModel = "text_encoder.onnx"
+        // flowMatchingModel = "fm_decoder.onnx"
+        // vocoder = "vocos_24khz.onnx"
+        // pinyinDict = "pinyinDict"
+        // dataDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data"
+        // isZipvoice = true
+
+        // Example 13
+        // sherpa-onnx-zipvoice-distill-zh-en-emilia
+        // modelDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia"
+        // textModel = "text_encoder_int8.onnx"
+        // flowMatchingModel = "fm_decoder_int8.onnx"
+        // vocoder = "vocos_24khz.onnx"
+        // pinyinDict = "pinyinDict"
+        // dataDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data"
+        // isZipvoice = true
     }
 
     fun createTts(context: Context) {
@@ -199,12 +230,16 @@ object TtsEngine {
             acousticModelName = acousticModelName ?: "",
             vocoder = vocoder ?: "",
             voices = voices ?: "",
+            textModel = textModel ?: "",
+            flowMatchingModel = flowMatchingModel ?: "",
+            pinyinDict = pinyinDict ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,
+            isZipvoice = isZipvoice,
         )
 
         speed = PreferenceHelper(context).getSpeed()

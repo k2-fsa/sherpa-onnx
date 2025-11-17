@@ -40,6 +40,9 @@ model_name={{ tts_model.model_name }}
 acoustic_model_name={{ tts_model.acoustic_model_name }}
 vocoder={{ tts_model.vocoder }}
 voices={{ tts_model.voices }}
+text_model={{ tts_model.text_model }}
+flow_matching_model={{ tts_model.flow_matching_model }}
+pinyin_dict={{ tts_model.pinyin_dict }}
 lang={{ tts_model.lang }}
 lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 lang_iso_639_3_2={{ tts_model.lang_iso_639_3_2 }}
@@ -48,9 +51,11 @@ wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$mod
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
-{% if tts_model.vocoder %}
+{% if tts_model.vocoder and not tts_model.is_zipvoice %}
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
 {% endif %}
+
+{{ tts_model.cmd }}
 
 popd
 # Now we are at the project root directory
@@ -68,6 +73,10 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./TtsEngine.kt
 {% endif %}
 
+{% if tts_model.is_zipvoice %}
+  sed -i.bak s/"isZipvoice = false"/"isZipvoice = true"/ ./TtsEngine.kt
+{% endif %}
+
 {% if tts_model.model_name %}
   sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
 {% endif %}
@@ -82,6 +91,18 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.voices %}
   sed -i.bak s/"voices = null"/"voices = \"$voices\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.text_model %}
+  sed -i.bak s/"textModel = null"/"textModel = \"$text_model\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.flow_matching_model %}
+  sed -i.bak s/"flowMatchingModel = null"/"flowMatchingModel = \"$flow_matching_model\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.pinyin_dict %}
+  sed -i.bak s/"pinyinDict = null"/"pinyinDict = \"$pinyin_dict\""/ ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.rule_fsts %}
