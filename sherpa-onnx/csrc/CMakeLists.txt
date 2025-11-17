@@ -192,7 +192,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
 
 endif()
 
-if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU)
+if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN)
   list(APPEND sources
     ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
   )
@@ -211,6 +211,7 @@ if(SHERPA_ONNX_ENABLE_QNN)
     ./qnn/qnn-backend.cc
     ./qnn/qnn-model.cc
     ./qnn/utils.cc
+    ./qnn/offline-sense-voice-model-qnn.cc
   )
 endif()
 

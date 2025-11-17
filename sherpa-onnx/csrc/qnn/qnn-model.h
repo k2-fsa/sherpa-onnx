@@ -18,10 +18,10 @@ struct BinaryContextTag {};
 
 class QnnModel {
  public:
-  QnnModel(const std::string &model_so, const QnnBackend *backend);
+  QnnModel(const std::string &model_so, const QnnBackend *backend, bool debug);
   QnnModel(const std::string &binary_context_file,
            const std::string &system_lib, const QnnBackend *backend,
-           BinaryContextTag tag);
+           BinaryContextTag tag, bool debug);
   ~QnnModel();
 
   bool SaveBinaryContext(const std::string &filename) const;

@@ -21,8 +21,8 @@ namespace sherpa_onnx {
 
 class QnnModel::Impl {
  public:
-  Impl(const std::string &model_so, const QnnBackend *backend)
-      : backend_(backend) {
+  Impl(const std::string &model_so, const QnnBackend *backend, bool debug)
+      : debug_(debug), backend_(backend) {
     bool ok = InitModel(model_so);
     if (!ok) {
       SHERPA_ONNX_LOGE("Failed to load '%s'", model_so.c_str());
@@ -42,8 +42,8 @@ class QnnModel::Impl {
   }
 
   Impl(const std::string &binary_context_file, const std::string &system_lib,
-       const QnnBackend *backend, BinaryContextTag)
-      : backend_(backend) {
+       const QnnBackend *backend, BinaryContextTag, bool debug)
+      : debug_(debug), backend_(backend) {
     bool ok = LoadSystemLib(binary_context_file, system_lib);
     if (!ok) {
       return;
@@ -247,6 +247,11 @@ class QnnModel::Impl {
       return false;
     }
     std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    if (!ofs) {
+      SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
+      return false;
+    }
+
     ofs.write(reinterpret_cast<const char *>(saveBuffer.data()),
               saveBuffer.size());
 
@@ -329,7 +334,6 @@ class QnnModel::Impl {
     }
 
     FillData(t, p, n);
-    SHERPA_ONNX_LOGE("set %s", name.c_str());
 
     return true;
   }
@@ -440,7 +444,10 @@ class QnnModel::Impl {
                        model_so.c_str(), dlerror());
       return false;
     }
-    SHERPA_ONNX_LOGE("loaded %s", model_so.c_str());
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("loaded %s", model_so.c_str());
+    }
 
     return true;
   }
@@ -480,7 +487,9 @@ class QnnModel::Impl {
         &graphs_info, &graphs_count, debug_, LogCallback, backend_->LogLevel());
     SHERPA_ONNX_QNN_CHECK(ret, "Failed to call compose_graphs_fn_handle_");
 
-    SHERPA_ONNX_LOGE("graphs_count: %d", (int32_t)graphs_count);
+    if (debug_) {
+      SHERPA_ONNX_LOGE("graphs_count: %d", (int32_t)graphs_count);
+    }
 
     for (uint32_t i = 0; i < graphs_count; ++i) {
       if (debug_) {
@@ -509,11 +518,14 @@ class QnnModel::Impl {
     input_tensor_names_.reserve(graph.num_input_tensors);
 
     for (uint32_t i = 0; i < graph.num_input_tensors; ++i) {
-      SHERPA_ONNX_LOGE("input %d", (int)i);
       auto p = TensorPtr(new Qnn_Tensor_t(QNN_TENSOR_INIT), &FreeTensor);
 
       CopyTensorInfo(graph.input_tensors[i], *p);
-      PrintTensor(p->v2);
+
+      if (debug_) {
+        SHERPA_ONNX_LOGE("input %d", (int)i);
+        PrintTensor(p->v2);
+      }
 
       std::string name = p->v1.name;
       name2tensor_[name] = p.get();
@@ -531,8 +543,11 @@ class QnnModel::Impl {
 
       CopyTensorInfo(graph.output_tensors[i], *p);
 
-      SHERPA_ONNX_LOGE("output %d", (int)i);
-      PrintTensor(p->v2);
+      if (debug_ && (i + 3 > graph.num_output_tensors)) {
+        SHERPA_ONNX_LOGE("output %d", (int)i);
+
+        PrintTensor(p->v2);
+      }
 
       std::string name = p->v1.name;
       name2tensor_[name] = p.get();
@@ -610,14 +625,15 @@ class QnnModel::Impl {
 
 QnnModel::~QnnModel() = default;
 
-QnnModel::QnnModel(const std::string &model_so, const QnnBackend *backend)
-    : impl_(std::make_unique<Impl>(model_so, backend)) {}
+QnnModel::QnnModel(const std::string &model_so, const QnnBackend *backend,
+                   bool debug)
+    : impl_(std::make_unique<Impl>(model_so, backend, debug)) {}
 
 QnnModel::QnnModel(const std::string &binary_context_file,
                    const std::string &system_lib, const QnnBackend *backend,
-                   BinaryContextTag tag)
+                   BinaryContextTag tag, bool debug)
     : impl_(std::make_unique<Impl>(binary_context_file, system_lib, backend,
-                                   tag)) {}  // NOLINT
+                                   tag, debug)) {}  // NOLINT
 
 bool QnnModel::SaveBinaryContext(const std::string &filename) const {
   return impl_->SaveBinaryContext(filename);
