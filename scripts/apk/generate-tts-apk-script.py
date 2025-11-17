@@ -32,8 +32,11 @@ class TtsModel:
     model_dir: str
     model_name: str = ""  # for vits
     acoustic_model_name: str = ""  # for matcha
-    vocoder: str = ""  # for matcha
+    vocoder: str = ""  # for matcha and zipvoice
     voices: str = ""  # for kokoro
+    text_model: str = "" # for zipvoice
+    flow_matching_model: str = "" # for zipvoice
+    pinyin_dict: str = "" # for zipvoice
     lang: str = ""  # en, zh, fr, de, etc.
     lang2: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
@@ -45,6 +48,7 @@ class TtsModel:
     lang_iso_639_3_2: str = ""
     lexicon: str = ""
     is_kitten: bool = False
+    is_zipvoice: bool = False
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -540,6 +544,33 @@ def get_kitten_models() -> List[TtsModel]:
 
     return english_models
 
+def get_zipvoice_models() -> List[TtsModel]:
+    multi_lingual_models = [
+        TtsModel(
+            model_dir="sherpa-onnx-zipvoice-distill-zh-en-emilia",
+            text_model="text_encoder.onnx",
+            flow_matching_model="fm_decoder.onnx",
+            vocoder="vocos_24khz.onnx",
+            pinyin_dict="pinyin.raw",
+            lang="en",
+            lang2="zh",
+        ),
+        TtsModel(
+            model_dir="sherpa-onnx-zipvoice-distill-zh-en-emilia",
+            text_model="text_encoder_int8.onnx",
+            flow_matching_model="fm_decoder_int8.onnx",
+            vocoder="vocos_24khz.onnx",
+            pinyin_dict="pinyin.raw",
+            lang="en",
+            lang2="zh",
+        ),
+    ]
+    for m in multi_lingual_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.is_zipvoice = True
+
+    return multi_lingual_models
+
 
 def main():
     args = get_args()
@@ -555,6 +586,7 @@ def main():
     all_model_list += get_matcha_models()
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
+    all_model_list += get_zipvoice_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
