@@ -120,6 +120,21 @@ class OfflineTts(
         )
     }
 
+    fun generateWithPrompt(
+        text: String,
+        prompt_text: String,
+	prompt_samples: FloatArray,
+        sample_rate: Int,
+        speed: Float = 1.0f,
+	num_step: Int = 4
+    ): GeneratedAudio {
+        val objArray = generateWithPromptImpl(ptr, text, prompt_text, prompt_samples, sample_rate, speed, num_step)
+        return GeneratedAudio(
+            samples = objArray[0] as FloatArray,
+            sampleRate = objArray[1] as Int
+        )
+    }
+
     fun generateWithCallback(
         text: String,
         sid: Int = 0,
@@ -133,6 +148,22 @@ class OfflineTts(
             speed = speed,
             callback = callback
         )
+        return GeneratedAudio(
+            samples = objArray[0] as FloatArray,
+            sampleRate = objArray[1] as Int
+        )
+    }
+
+    fun generateWithPromptWithCallback(
+        text: String,
+        prompt_text: String,
+	prompt_samples: FloatArray,
+        sample_rate: Int,
+        speed: Float = 1.0f,
+	num_step: Int = 4,
+        callback: (samples: FloatArray) -> Int
+    ): GeneratedAudio {
+        val objArray = generateWithPromptWithCallbackImpl(ptr, text, prompt_text, prompt_samples, sample_rate, speed, num_step, callback)
         return GeneratedAudio(
             samples = objArray[0] as FloatArray,
             sampleRate = objArray[1] as Int
@@ -189,11 +220,32 @@ class OfflineTts(
         speed: Float = 1.0f
     ): Array<Any>
 
+    private external fun generateWithPromptImpl(
+        ptr: Long,
+        text: String,
+        prompt_text: String,
+	prompt_samples: FloatArray,
+        sample_rate: Int,
+        speed: Float = 1.0f,
+	num_step: Int = 4
+    ): Array<Any>
+
     private external fun generateWithCallbackImpl(
         ptr: Long,
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f,
+        callback: (samples: FloatArray) -> Int
+    ): Array<Any>
+
+    private external fun generateWithPromptWithCallbackImpl(
+        ptr: Long,
+        text: String,
+        prompt_text: String,
+	prompt_samples: FloatArray,
+        sample_rate: Int,
+        speed: Float = 1.0f,
+	num_step: Int = 4,
         callback: (samples: FloatArray) -> Int
     ): Array<Any>
 

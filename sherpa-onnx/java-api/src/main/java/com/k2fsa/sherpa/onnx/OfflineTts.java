@@ -30,6 +30,21 @@ public class OfflineTts {
         return new GeneratedAudio(samples, sampleRate);
     }
 
+    public GeneratedAudio generateWithPrompt(String text, String prompt_text, float[] prompt_samples, int sample_rate) {
+        return generateWithPrompt(text, prompt_text, prompt_samples, sample_rate, 1.0f);
+    }
+
+    public GeneratedAudio generateWithPrompt(String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed) {
+        return generateWithPrompt(text, prompt_text, prompt_samples, sample_rate, speed, 4);
+    }
+
+    public GeneratedAudio generateWithPrompt(String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed, int num_step) {
+        Object[] arr = generateWithPromptImpl(ptr, text, prompt_text, prompt_samples, sample_rate, speed, num_step);
+        float[] samples = (float[]) arr[0];
+        int sampleRate = (int) arr[1];
+        return new GeneratedAudio(samples, sampleRate);
+    }
+
     public GeneratedAudio generateWithCallback(String text, OfflineTtsCallback callback) {
         return generateWithCallback(text, 0, 1.0f, callback);
     }
@@ -40,6 +55,21 @@ public class OfflineTts {
 
     public GeneratedAudio generateWithCallback(String text, int sid, float speed, OfflineTtsCallback callback) {
         Object[] arr = generateWithCallbackImpl(ptr, text, sid, speed, callback);
+        float[] samples = (float[]) arr[0];
+        int sampleRate = (int) arr[1];
+        return new GeneratedAudio(samples, sampleRate);
+    }
+
+    public GeneratedAudio generateWithPromptWithCallback(String text, String prompt_text, float[] prompt_samples, int sample_rate, OfflineTtsCallback callback) {
+        return generateWithPromptWithCallback(text, prompt_text, prompt_samples, sample_rate, 1.0f, callback);
+    }
+
+    public GeneratedAudio generateWithPromptWithCallback(String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed, OfflineTtsCallback callback) {
+        return generateWithPromptWithCallback(text, prompt_text, prompt_samples, sample_rate, speed, 4, callback);
+    }
+
+    public GeneratedAudio generateWithPromptWithCallback(String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed, int num_step, OfflineTtsCallback callback) {
+        Object[] arr = generateWithPromptWithCallbackImpl(ptr, text, prompt_text, prompt_samples, sample_rate, speed, num_step, callback);
         float[] samples = (float[]) arr[0];
         int sampleRate = (int) arr[1];
         return new GeneratedAudio(samples, sampleRate);
@@ -66,7 +96,11 @@ public class OfflineTts {
 
     private native Object[] generateImpl(long ptr, String text, int sid, float speed);
 
+    private native Object[] generateWithPromptImpl(long ptr, String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed, int num_step);
+
     private native Object[] generateWithCallbackImpl(long ptr, String text, int sid, float speed, OfflineTtsCallback callback);
+
+    private native Object[] generateWithPromptWithCallbackImpl(long ptr, String text, String prompt_text, float[] prompt_samples, int sample_rate, float speed, int num_step, OfflineTtsCallback callback);
 
     private native long newFromFile(OfflineTtsConfig config);
 }
