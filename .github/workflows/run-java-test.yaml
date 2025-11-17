@@ -321,6 +321,7 @@ jobs:
         run: |
           cd ./java-api-examples
 
+          ./run-non-streaming-tts-zipvoice-zh-en.sh
           ./run-non-streaming-tts-kitten-en.sh
           ./run-non-streaming-tts-kokoro-zh-en.sh
           ./run-non-streaming-tts-kokoro-en.sh
@@ -328,6 +329,7 @@ jobs:
           ./run-non-streaming-tts-matcha-en.sh
           ls -lh
 
+          rm -rf sherpa-onnx-zipvoice-distill-zh-en-emilia
           rm -rf kitten-nano-en-*
           rm -rf kokoro-multi-*
           rm -rf kokoro-en-*
