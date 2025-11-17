@@ -44,11 +44,25 @@ data class OfflineTtsKittenModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+data class OfflineTtsZipvoiceModelConfig(
+    var tokens: String = "",
+    var textModel: String = "",
+    var flowMatchingModel: String = "",
+    var vocoder: String = "",
+    var dataDir: String = "",
+    var pinyinDict: String = "",
+    var featScale: Float = 0.1f,
+    var tShift: Float = 0.5f,
+    var targetRms: Float = 0.1f,
+    var guidanceScale: Float = 1.0f,
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
+    var zipvoice: OfflineTtsZipvoiceModelConfig = OfflineTtsZipvoiceModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -197,15 +211,19 @@ fun getOfflineTtsConfig(
     modelDir: String,
     modelName: String, // for VITS
     acousticModelName: String, // for Matcha
-    vocoder: String, // for Matcha
+    vocoder: String, // for Matcha and zipvoice
     voices: String, // for Kokoro or kitten
+    textModel: String, //for zipvoice
+    flowMatchingModel: String, //for zipvoice
+    pinyinDict: String, //for zipvoice
     lexicon: String,
     dataDir: String,
     dictDir: String, // unused
     ruleFsts: String,
     ruleFars: String,
     numThreads: Int? = null,
-    isKitten: Boolean = false
+    isKitten: Boolean = false,
+    isZipvoice: Boolean = false
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -216,11 +234,17 @@ fun getOfflineTtsConfig(
     // For Kitten TTS, please set
     // modelName, voices, isKitten
 
+    // For Zipvoice TTS, please set
+    // textModel, flowMatchingModel, vocoder, pinyinDict, isZipvoice
+
     // For VITS, please set
     // modelName
 
     val numberOfThreads = if (numThreads != null) {
         numThreads
+    } else if (isZipvoice) {
+        // for Zipvoice TTS models, we use more threads
+        8
     } else if (voices.isNotEmpty()) {
         // for Kokoro and Kitten TTS models, we use more threads
         4
@@ -228,7 +252,7 @@ fun getOfflineTtsConfig(
         2
     }
 
-    if (modelName.isEmpty() && acousticModelName.isEmpty()) {
+    if (modelName.isEmpty() && acousticModelName.isEmpty() && !isZipvoice) {
         throw IllegalArgumentException("Please specify a TTS model")
     }
 
@@ -236,8 +260,20 @@ fun getOfflineTtsConfig(
         throw IllegalArgumentException("Please specify either a VITS or a Matcha model, but not both")
     }
 
-    if (acousticModelName.isNotEmpty() && vocoder.isEmpty()) {
-        throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
+    if ((isZipvoice || acousticModelName.isNotEmpty()) && vocoder.isEmpty()) {
+        throw IllegalArgumentException("Please provide vocoder for Matcha / Zipvoice TTS")
+    }
+
+    if (isZipvoice && textModel.isEmpty()) {
+        throw IllegalArgumentException("Please provide textModel for Zipvoice TTS")
+    }
+
+    if (isZipvoice && flowMatchingModel.isEmpty()) {
+        throw IllegalArgumentException("Please provide flowMatchingModel for Zipvoice TTS")
+    }
+
+    if (isZipvoice && pinyinDict.isEmpty()) {
+        throw IllegalArgumentException("Please provide pinyinDict for Zipvoice TTS")
     }
 
     val vits = if (modelName.isNotEmpty() && voices.isEmpty()) {
@@ -290,12 +326,26 @@ fun getOfflineTtsConfig(
         OfflineTtsKittenModelConfig()
     }
 
+    val zipvoice = if (isZipvoice) {
+        OfflineTtsZipvoiceModelConfig(
+            textModel = "$modelDir/$textModel",
+            flowMatchingModel = "$modelDir/$flowMatchingModel",
+            vocoder = "$modelDir/$vocoder",
+            pinyinDict = "$modelDir/$pinyinDict",
+            tokens = "$modelDir/tokens.txt",
+            dataDir = dataDir,
+        )
+    } else {
+        OfflineTtsZipvoiceModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
             kitten = kitten,
+            zipvoice = zipvoice,
             numThreads = numberOfThreads,
             debug = true,
             provider = "cpu",

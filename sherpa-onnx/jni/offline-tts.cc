@@ -118,6 +118,34 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kitten.length_scale, lengthScale,
                              kitten_cls, kitten);
 
+
+  // zipvoice
+  fid = env->GetFieldID(model_config_cls, "zipvoice",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsZipvoiceModelConfig;");
+  jobject zipvoice = env->GetObjectField(model, fid);
+  jclass zipvoice_cls = env->GetObjectClass(zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.tokens, tokens, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.text_model, textModel, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.flow_matching_model, flowMatchingModel, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.vocoder, vocoder, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.data_dir, dataDir, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.pinyin_dict, pinyinDict, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.feat_scale, featScale, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.t_shift, tShift, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.target_rms, targetRms, zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.guidance_scale, guidanceScale, zipvoice_cls, zipvoice);
+
+
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
 
