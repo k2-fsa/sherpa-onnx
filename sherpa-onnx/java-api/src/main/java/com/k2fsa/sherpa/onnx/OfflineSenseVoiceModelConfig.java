@@ -6,11 +6,13 @@ public class OfflineSenseVoiceModelConfig {
     private final String model;
     private final String language;
     private final boolean useInverseTextNormalization;
+    private final QnnConfig qnnConfig;
 
     private OfflineSenseVoiceModelConfig(Builder builder) {
         this.model = builder.model;
         this.language = builder.language;
         this.useInverseTextNormalization = builder.useInverseTextNormalization;
+        this.qnnConfig = builder.qnnConfig;
     }
 
     public static Builder builder() {
@@ -29,10 +31,15 @@ public class OfflineSenseVoiceModelConfig {
         return useInverseTextNormalization;
     }
 
+    public QnnConfig getQnnConfig() {
+        return qnnConfig;
+    }
+
     public static class Builder {
         private String model = "";
         private String language = "";
         private boolean useInverseTextNormalization = true;
+        private QnnConfig qnnConfig = QnnConfig.builder().build();
 
         public OfflineSenseVoiceModelConfig build() {
             return new OfflineSenseVoiceModelConfig(this);
@@ -50,6 +57,11 @@ public class OfflineSenseVoiceModelConfig {
 
         public Builder setInverseTextNormalization(boolean useInverseTextNormalization) {
             this.useInverseTextNormalization = useInverseTextNormalization;
+            return this;
+        }
+
+        public Builder setQnnConfig(QnnConfig qnnConfig) {
+            this.qnnConfig = qnnConfig;
             return this;
         }
     }

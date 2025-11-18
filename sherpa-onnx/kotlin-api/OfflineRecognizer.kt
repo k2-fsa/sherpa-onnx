@@ -76,6 +76,7 @@ data class OfflineSenseVoiceModelConfig(
     var model: String = "",
     var language: String = "",
     var useInverseTextNormalization: Boolean = true,
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineModelConfig(
@@ -742,6 +743,24 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             return OfflineModelConfig(
                 omnilingual = OfflineOmnilingualAsrCtcModelConfig(
                     model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9000 -> {
+            val modelDir = "sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                      // Please copy libQnnHtp.so and libQnnSystem.so to modelDir by yourself
+                      // model.bin is created in the first run and is used from the second run
+                      // to speed up the initialization
+                      backendLib = "$modelDir/libQnnHtp.so",
+                      systemLib = "$modelDir/libQnnSystem.so",
+                      contextBinary = "$modelDir/model.bin",
+                    ),
                 ),
                 tokens = "$modelDir/tokens.txt",
             )
