@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/bbpe.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -149,6 +150,23 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
       } else if (modeling_unit == "bpe") {
         std::vector<std::string> bpes;
         bpe_encoder->Encode(word, &bpes);
+        for (const auto &bpe : bpes) {
+          oss << " " << bpe;
+        }
+      } else if (modeling_unit == "bbpe") {
+        std::vector<std::string> bpes;
+
+        const auto &id2token = GetByteBpeTableId2Token();
+        std::string tokens;
+        for (size_t i = 0; i < word.length(); ++i) {
+          uint8_t byte = static_cast<uint8_t>(word[i]);
+          tokens += id2token.at(byte);
+          if ((i + 1) % 3 == 0 && (i + 1) < word.length()) {
+            tokens += " ";
+          }
+        }
+
+        bpe_encoder->Encode(tokens, &bpes);
         for (const auto &bpe : bpes) {
           oss << " " << bpe;
         }

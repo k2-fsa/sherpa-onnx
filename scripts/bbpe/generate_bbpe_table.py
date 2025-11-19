@@ -46,10 +46,35 @@ def main():
     s += "      "
     for i, (k, v) in enumerate(BCHAR_TO_BYTE.items()):
         s += "{"
-        if k in ["\\", '"']:
-            s += f'"\{k}", {v}'
+        if k == "\\":
+            s += f'"\\\\", {v}'
+        elif k == '"':
+            s += f'"\\"", {v}'
         else:
             s += f'"{k}", {v}'
+        s += "}, "
+        if i > 0 and i % 7 == 0:
+            s += "\n"
+            s += "      "
+    s += "};\n"
+    s += "\n"
+    s += "  return table\n;"
+    s += "}\n"
+
+    s += "\n"
+    s += "const std::unordered_map<uint8_t, std::string> &GetByteBpeTableId2Token() {\n"
+    s += "  static const std::unordered_map<uint8_t, std::string> table = {\n"
+
+    s += "      "
+    for i, (k, v) in enumerate(BCHAR_TO_BYTE.items()):
+        s += "{"
+        if k == "\\":
+            s += f'{v}, "\\\\"'
+        elif k == '"':
+            s += f'{v}, "\\""'
+        else:
+            s += f'{v}, "{k}"'
+
         s += "}, "
         if i > 0 and i % 7 == 0:
             s += "\n"

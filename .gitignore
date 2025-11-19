@@ -158,3 +158,4 @@ config.yaml
 configuration.json
 sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
 sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64
+sherpa-onnx-paraformer-zh-int8-2025-10-07
