@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
+#include <stdlib.h>
+
 #include <memory>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -330,7 +332,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
     }
   }
 
-  if (!config.Validate()) {
+  if (config.model_config.provider != "qnn" && !config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");
     return 0;
   }

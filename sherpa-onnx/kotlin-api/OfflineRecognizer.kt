@@ -751,15 +751,17 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         9000 -> {
             val modelDir = "sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
+                provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
                     model = "$modelDir/libmodel.so",
                     qnnConfig = QnnConfig(
-                      // Please copy libQnnHtp.so and libQnnSystem.so to modelDir by yourself
+                      // Please copy libQnnHtp.so and libQnnSystem.so to jniLibs/arm64-v8a by yourself
+                      //
                       // model.bin is created in the first run and is used from the second run
                       // to speed up the initialization
-                      backendLib = "$modelDir/libQnnHtp.so",
-                      systemLib = "$modelDir/libQnnSystem.so",
-                      contextBinary = "$modelDir/model.bin",
+                      backendLib = "libQnnHtp.so",
+                      systemLib = "libQnnSystem.so",
+                      contextBinary = "model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",

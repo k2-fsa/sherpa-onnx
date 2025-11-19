@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
         }
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
-        SimulateStreamingAsr.initOfflineRecognizer(this.assets, this.application)
+        SimulateStreamingAsr.initOfflineRecognizer(this, this.application)
         SimulateStreamingAsr.initVad(this.assets)
     }
 

@@ -1,7 +1,9 @@
 package com.k2fsa.sherpa.onnx.simulate.streaming.asr
 
 import android.app.Application
+import android.content.Context
 import android.content.res.AssetManager
+import android.os.Build
 import android.util.Log
 import com.k2fsa.sherpa.onnx.HomophoneReplacerConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
@@ -11,7 +13,51 @@ import com.k2fsa.sherpa.onnx.getOfflineModelConfig
 import com.k2fsa.sherpa.onnx.getVadModelConfig
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+
+
+fun assetExists(assetManager: AssetManager, path: String): Boolean {
+    val dir = path.substringBeforeLast('/', "")
+    val fileName = path.substringAfterLast('/')
+
+    val files = assetManager.list(dir) ?: return false
+    return files.contains(fileName)
+}
+
+fun copyAssetToSdCard(path: String, context: Context): String {
+    val targetRoot = context.filesDir
+
+    if (!assetExists(context.assets, path = path)) {
+        // for context binary, if it is does not exist, we return a path
+        // that can be written to
+        Log.i(TAG, "$path does not exist, return $targetRoot/$path")
+        return "$targetRoot/$path"
+    }
+
+    val outFile = File(targetRoot, path)
+
+    if (outFile.exists()) {
+        val assetSize = context.assets.open(path).use { it.available() }
+        if (outFile.length() == assetSize.toLong()) {
+            Log.i(TAG, "$targetRoot/$path already exists, skip copying, return $targetRoot/$path")
+
+            return "$targetRoot/$path"
+        }
+    }
+
+    outFile.parentFile?.mkdirs()
+
+    context.assets.open(path).use { input: InputStream ->
+        FileOutputStream(outFile).use { output: OutputStream ->
+            input.copyTo(output)
+        }
+    }
+    Log.i(TAG, "Copied $path to $targetRoot/$path")
+
+    return "$targetRoot/$path"
+}
+
 
 object SimulateStreamingAsr {
     private var _recognizer: OfflineRecognizer? = null
@@ -26,7 +72,7 @@ object SimulateStreamingAsr {
             return _vad!!
         }
 
-    fun initOfflineRecognizer(assetManager: AssetManager? = null, application: Application) {
+    fun initOfflineRecognizer(context: Context, application: Application) {
         synchronized(this) {
             if (_recognizer != null) {
                 return
@@ -35,13 +81,13 @@ object SimulateStreamingAsr {
             // Please change getOfflineModelConfig() to add new models
             // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
             // for a list of available models
-            val asrModelType = 15
+            val asrModelType = 9000
             val asrRuleFsts: String?
             asrRuleFsts = null
             Log.i(TAG, "Select model type $asrModelType for ASR")
 
             val useHr = false
-            val hr =  HomophoneReplacerConfig(
+            val hr = HomophoneReplacerConfig(
                 // Used only when useHr is true
                 // Please download the following 2 files from
                 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
@@ -67,6 +113,27 @@ object SimulateStreamingAsr {
 
             if (useHr) {
                 config.hr = hr
+            }
+
+            var assetManager: AssetManager? = context.assets
+
+            if (config.modelConfig.provider == "qnn") {
+                // for qnn, we need to copy *.so files from assets folder to sd card
+                if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty()) {
+                    Log.e(TAG, "You should provide libQnnHtp.so for qnn")
+                    throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
+                }
+                config.modelConfig.tokens = copyAssetToSdCard(config.modelConfig.tokens, context)
+
+                config.modelConfig.senseVoice.model =
+                    copyAssetToSdCard(config.modelConfig.senseVoice.model, context)
+
+                config.modelConfig.senseVoice.qnnConfig.contextBinary = copyAssetToSdCard(
+                    config.modelConfig.senseVoice.qnnConfig.contextBinary,
+                    context
+                )
+
+                assetManager = null
             }
 
             _recognizer = OfflineRecognizer(
