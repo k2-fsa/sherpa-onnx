@@ -158,16 +158,13 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
 
         const auto &id2token = GetByteBpeTableId2Token();
         std::string tokens;
-        int32_t kk = 0;
-        for (char c : word) {
-          uint8_t byte = static_cast<uint8_t>(c);
+        for (size_t i = 0; i < word.length(); ++i) {
+          uint8_t byte = static_cast<uint8_t>(word[i]);
           tokens += id2token.at(byte);
-          kk += 1;
-          if (kk % 3 == 0) {
+          if ((i + 1) % 3 == 0 && (i + 1) < word.length()) {
             tokens += " ";
           }
         }
-        tokens.pop_back();
 
         bpe_encoder->Encode(tokens, &bpes);
         for (const auto &bpe : bpes) {
