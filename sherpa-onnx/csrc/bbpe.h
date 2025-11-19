@@ -13,4 +13,6 @@
 // https://github.com/k2-fsa/icefall/blob/master/icefall/byte_utils.py#L280
 const std::unordered_map<std::string, uint8_t> &GetByteBpeTable();
 
+const std::unordered_map<uint8_t, std::string> &GetByteBpeTableId2Token();
+
 #endif  // SHERPA_ONNX_CSRC_BBPE_H_
