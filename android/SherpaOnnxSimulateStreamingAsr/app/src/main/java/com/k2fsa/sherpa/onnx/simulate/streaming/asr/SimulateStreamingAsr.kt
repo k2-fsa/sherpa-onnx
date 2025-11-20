@@ -141,6 +141,15 @@ object SimulateStreamingAsr {
                     context
                 )
 
+                if (config.hr.lexicon.isNotEmpty()) {
+                    config.hr.lexicon = copyAssetToSdCard(config.hr.lexicon, context)
+                }
+
+                if (config.hr.ruleFsts.isNotEmpty()) {
+                    // it assumes there is only one fst. otherwise, you need to copy each fst separately
+                    config.hr.ruleFsts = copyAssetToSdCard(config.hr.ruleFsts, context)
+                }
+
                 assetManager = null
             }
 

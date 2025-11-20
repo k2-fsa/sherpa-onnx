@@ -834,6 +834,102 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        9005 -> {
+            val modelDir = "sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9006 -> {
+            val modelDir = "sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9007 -> {
+            val modelDir = "sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9008 -> {
+            val modelDir = "sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9009 -> {
+            val modelDir = "sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9010 -> {
+            val modelDir = "sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }
