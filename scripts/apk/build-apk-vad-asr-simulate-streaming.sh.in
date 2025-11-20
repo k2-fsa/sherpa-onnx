@@ -70,8 +70,12 @@ popd
 # Now we are at the project root directory
 
 git checkout .
+
+pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr/screens
+sed -i.bak s/"asrModelType = 15/asrModelType = $type/" ./Home.kt
+popd
+
 pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr
-sed -i.bak s/"asrModelType = 15/asrModelType = $type/" ./SimulateStreamingAsr.kt
 
 {% if model.use_hr %}
   sed -i.bak s/"useHr = false/useHr = true/" ./SimulateStreamingAsr.kt

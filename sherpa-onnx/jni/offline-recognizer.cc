@@ -480,3 +480,13 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
 
   return obj_arr;
 }
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_prependAdspLibraryPath(
+    JNIEnv *env, jclass /*cls*/, jstring new_path) {
+  const char *p = env->GetStringUTFChars(new_path, nullptr);
+  sherpa_onnx::PrependAdspLibraryPath(p);
+
+  env->ReleaseStringUTFChars(new_path, p);
+}

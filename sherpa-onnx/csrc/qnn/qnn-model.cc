@@ -132,8 +132,9 @@ class QnnModel::Impl {
         sys_ctx_handle, static_cast<void *>(buffer.data()), buffer.size(),
         &binary_info, &binary_info_size);
     if (ret != QNN_SUCCESS) {
-      SHERPA_ONNX_LOGE("Failed to get context binary info from '%s'",
-                       binary_context_file.c_str());
+      SHERPA_ONNX_LOGE(
+          "Failed to get context binary info from '%s'. ret code is %d",
+          binary_context_file.c_str(), ret);
 
       qnn_system_interface_.systemContextFree(sys_ctx_handle);
       return false;

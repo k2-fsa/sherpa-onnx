@@ -72,7 +72,7 @@ object SimulateStreamingAsr {
             return _vad!!
         }
 
-    fun initOfflineRecognizer(context: Context, application: Application) {
+    fun initOfflineRecognizer(context: Context, asrModelType: Int) {
         synchronized(this) {
             if (_recognizer != null) {
                 return
@@ -81,7 +81,6 @@ object SimulateStreamingAsr {
             // Please change getOfflineModelConfig() to add new models
             // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
             // for a list of available models
-            val asrModelType = 9000
             val asrRuleFsts: String?
             asrRuleFsts = null
             Log.i(TAG, "Select model type $asrModelType for ASR")
@@ -118,6 +117,15 @@ object SimulateStreamingAsr {
             var assetManager: AssetManager? = context.assets
 
             if (config.modelConfig.provider == "qnn") {
+                // We assume you have copied files like libQnnHtpV81Skel.so to jniLibs/arm64-v8a
+                Log.i(TAG, "nativelibdir: ${context.applicationInfo.nativeLibraryDir}")
+
+                // If we don't set the environment variable for ADSP_LIBRARY_PATH, we will see
+                // the error code 1008 from qnn_interface.deviceCreate()
+                // See also
+                // https://workbench.aihub.qualcomm.com/docs/hub/faq.html#why-am-i-seeing-error-1008-when-trying-to-use-htp
+                OfflineRecognizer.prependAdspLibraryPath(context.applicationInfo.nativeLibraryDir)
+
                 // for qnn, we need to copy *.so files from assets folder to sd card
                 if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty()) {
                     Log.e(TAG, "You should provide libQnnHtp.so for qnn")

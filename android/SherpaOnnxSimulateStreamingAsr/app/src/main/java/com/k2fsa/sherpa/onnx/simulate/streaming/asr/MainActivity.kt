@@ -57,9 +57,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
-
-        SimulateStreamingAsr.initOfflineRecognizer(this, this.application)
-        SimulateStreamingAsr.initVad(this.assets)
     }
 
     @Deprecated("Deprecated in Java")
