@@ -764,7 +764,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                       // to speed up the initialization
                       backendLib = "libQnnHtp.so",
                       systemLib = "libQnnSystem.so",
-                      contextBinary = "model.bin",
+                      contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -780,7 +780,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -796,7 +796,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -812,7 +812,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -828,7 +828,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -844,7 +844,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -860,7 +860,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -876,7 +876,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -892,7 +892,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -908,7 +908,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -924,7 +924,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
-                        contextBinary = "model.bin",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",

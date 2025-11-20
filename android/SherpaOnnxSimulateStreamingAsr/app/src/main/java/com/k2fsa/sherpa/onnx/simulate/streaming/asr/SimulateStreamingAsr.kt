@@ -27,15 +27,15 @@ fun assetExists(assetManager: AssetManager, path: String): Boolean {
 
 fun copyAssetToSdCard(path: String, context: Context): String {
     val targetRoot = context.filesDir
+    val outFile = File(targetRoot, path)
 
     if (!assetExists(context.assets, path = path)) {
         // for context binary, if it is does not exist, we return a path
         // that can be written to
-        Log.i(TAG, "$path does not exist, return $targetRoot/$path")
-        return "$targetRoot/$path"
+        outFile.parentFile?.mkdirs()
+        Log.i(TAG, "$path does not exist, return ${outFile.absolutePath}")
+        return outFile.absolutePath
     }
-
-    val outFile = File(targetRoot, path)
 
     if (outFile.exists()) {
         val assetSize = context.assets.open(path).use { it.available() }
@@ -55,7 +55,7 @@ fun copyAssetToSdCard(path: String, context: Context): String {
     }
     Log.i(TAG, "Copied $path to $targetRoot/$path")
 
-    return "$targetRoot/$path"
+    return outFile.absolutePath
 }
 
 

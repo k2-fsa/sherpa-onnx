@@ -72,7 +72,7 @@ fun HomeScreen() {
 
     LaunchedEffect(Unit) {
         if (asrModelType >= 9000) {
-            resultList.add("Using Qnn")
+            resultList.add("Using QNN for Qualcomm NPU (HTP backend)")
             resultList.add("It takes about 10s for the first run to start")
             resultList.add("Later runs require less than 1 second")
         }
@@ -237,8 +237,6 @@ fun HomeScreen() {
         }
     }
 
-
-
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -250,8 +248,14 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(text = "Initializing... Please wait")
-
-
+                }
+            }
+            if (asrModelType >= 9000) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(text = "Qualcomm NPU (HTP backend with QNN)")
                 }
             }
 
