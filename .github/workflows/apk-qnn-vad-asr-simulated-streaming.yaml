@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: apk-vad-asr-simulated-streaming-${{ github.ref }}
+  group: apk-qnn-vad-asr-simulated-streaming-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

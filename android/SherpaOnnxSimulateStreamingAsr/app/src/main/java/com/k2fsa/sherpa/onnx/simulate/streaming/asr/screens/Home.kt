@@ -71,6 +71,12 @@ fun HomeScreen() {
     val asrModelType = 15
 
     LaunchedEffect(Unit) {
+        if (asrModelType >= 9000) {
+            resultList.add("Using Qnn")
+            resultList.add("It takes about 10s for the first run to start")
+            resultList.add("Later runs require less than 1 second")
+        }
+
         withContext(Dispatchers.Default) {
             // Call your heavy initialization off the main thread
             SimulateStreamingAsr.initOfflineRecognizer(activity, asrModelType)
@@ -245,11 +251,7 @@ fun HomeScreen() {
                 ) {
                     Text(text = "Initializing... Please wait")
 
-                    if (asrModelType >= 9000) {
-                        resultList.add("Using Qnn")
-                        resultList.add("It takes about 10s for the first run to start")
-                        resultList.add("Later runs require less than 1 second")
-                    }
+
                 }
             }
 

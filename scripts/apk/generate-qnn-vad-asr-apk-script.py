@@ -141,7 +141,7 @@ def get_models():
             idx=9005,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="18-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -158,7 +158,7 @@ def get_models():
             idx=9006,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="20-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -175,7 +175,7 @@ def get_models():
             idx=9007,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="23-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -192,7 +192,7 @@ def get_models():
             idx=9008,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="25-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -209,7 +209,7 @@ def get_models():
             idx=9009,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="28-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
@@ -226,7 +226,7 @@ def get_models():
             idx=9010,
             lang="zh_en_ko_ja_yue",
             lang2="中英粤日韩",
-            short_name="15-seconds-sense_voice_2024_07_17_int8",
+            short_name="30-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
