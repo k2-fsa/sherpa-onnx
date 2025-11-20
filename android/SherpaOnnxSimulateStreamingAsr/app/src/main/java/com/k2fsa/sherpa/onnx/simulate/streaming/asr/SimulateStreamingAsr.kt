@@ -25,7 +25,7 @@ fun assetExists(assetManager: AssetManager, path: String): Boolean {
     return files.contains(fileName)
 }
 
-fun copyAssetToSdCard(path: String, context: Context): String {
+fun copyAssetToInternalStorage(path: String, context: Context): String {
     val targetRoot = context.filesDir
     val outFile = File(targetRoot, path)
 
@@ -131,23 +131,24 @@ object SimulateStreamingAsr {
                     Log.e(TAG, "You should provide libQnnHtp.so for qnn")
                     throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
                 }
-                config.modelConfig.tokens = copyAssetToSdCard(config.modelConfig.tokens, context)
+                config.modelConfig.tokens =
+                    copyAssetToInternalStorage(config.modelConfig.tokens, context)
 
                 config.modelConfig.senseVoice.model =
-                    copyAssetToSdCard(config.modelConfig.senseVoice.model, context)
+                    copyAssetToInternalStorage(config.modelConfig.senseVoice.model, context)
 
-                config.modelConfig.senseVoice.qnnConfig.contextBinary = copyAssetToSdCard(
+                config.modelConfig.senseVoice.qnnConfig.contextBinary = copyAssetToInternalStorage(
                     config.modelConfig.senseVoice.qnnConfig.contextBinary,
                     context
                 )
 
                 if (config.hr.lexicon.isNotEmpty()) {
-                    config.hr.lexicon = copyAssetToSdCard(config.hr.lexicon, context)
+                    config.hr.lexicon = copyAssetToInternalStorage(config.hr.lexicon, context)
                 }
 
                 if (config.hr.ruleFsts.isNotEmpty()) {
                     // it assumes there is only one fst. otherwise, you need to copy each fst separately
-                    config.hr.ruleFsts = copyAssetToSdCard(config.hr.ruleFsts, context)
+                    config.hr.ruleFsts = copyAssetToInternalStorage(config.hr.ruleFsts, context)
                 }
 
                 assetManager = null

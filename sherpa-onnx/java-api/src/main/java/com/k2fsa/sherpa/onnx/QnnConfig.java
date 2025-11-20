@@ -3,7 +3,7 @@
 package com.k2fsa.sherpa.onnx;
 
 public class QnnConfig {
-    private final String backendLib;  // unused
+    private final String backendLib;
     private final String contextBinary;
     private final String systemLib;
 
