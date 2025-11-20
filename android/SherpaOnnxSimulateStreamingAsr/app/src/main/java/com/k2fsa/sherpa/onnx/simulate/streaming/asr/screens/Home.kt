@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private var audioRecord: AudioRecord? = null
 
@@ -62,6 +64,29 @@ fun HomeScreen() {
     val resultList: MutableList<String> = remember { mutableStateListOf() }
     val lazyColumnListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    var isInitialized by remember { mutableStateOf(false) }
+
+    // we change asrModelType in github actions
+    val asrModelType = 15
+
+    LaunchedEffect(Unit) {
+        if (asrModelType >= 9000) {
+            resultList.add("Using QNN for Qualcomm NPU (HTP backend)")
+            resultList.add("It takes about 10s for the first run to start")
+            resultList.add("Later runs require less than 1 second")
+        }
+
+        withContext(Dispatchers.Default) {
+            // Call your heavy initialization off the main thread
+            SimulateStreamingAsr.initOfflineRecognizer(activity, asrModelType)
+            SimulateStreamingAsr.initVad(activity.assets)
+        }
+
+        // Back on the Main thread: update UI state
+        isInitialized = true
+        resultList.clear()
+    }
 
     val onRecordingButtonClick: () -> Unit = {
         isStarted = !isStarted
@@ -211,13 +236,32 @@ fun HomeScreen() {
             audioRecord = null
         }
     }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
     ) {
         Column(modifier = Modifier) {
+            if (!isInitialized) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(text = "Initializing... Please wait")
+                }
+            }
+            if (asrModelType >= 9000) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(text = "Qualcomm NPU (HTP backend with QNN)")
+                }
+            }
+
             HomeButtonRow(
                 isStarted = isStarted,
+                isInitialized = isInitialized,
                 onRecordingButtonClick = onRecordingButtonClick,
                 onCopyButtonClick = {
                     if (resultList.isNotEmpty()) {
@@ -255,7 +299,7 @@ fun HomeScreen() {
                     state = lazyColumnListState
                 ) {
                     itemsIndexed(resultList) { index, line ->
-                        Text(text = "${index+1}: $line")
+                        Text(text = "${index + 1}: $line")
                     }
                 }
             }
@@ -269,6 +313,7 @@ fun HomeScreen() {
 private fun HomeButtonRow(
     modifier: Modifier = Modifier,
     isStarted: Boolean,
+    isInitialized: Boolean,
     onRecordingButtonClick: () -> Unit,
     onCopyButtonClick: () -> Unit,
     onClearButtonClick: () -> Unit,
@@ -278,20 +323,27 @@ private fun HomeButtonRow(
         horizontalArrangement = Arrangement.Center,
     ) {
         Button(
-            onClick = onRecordingButtonClick
+            onClick = onRecordingButtonClick,
+            enabled = isInitialized,
         ) {
             Text(text = stringResource(if (isStarted) R.string.stop else R.string.start))
         }
 
         Spacer(modifier = Modifier.width(24.dp))
 
-        Button(onClick = onCopyButtonClick) {
+        Button(
+            onClick = onCopyButtonClick,
+            enabled = isInitialized,
+        ) {
             Text(text = stringResource(id = R.string.copy))
         }
 
         Spacer(modifier = Modifier.width(24.dp))
 
-        Button(onClick = onClearButtonClick) {
+        Button(
+            onClick = onClearButtonClick,
+            enabled = isInitialized,
+        ) {
             Text(text = stringResource(id = R.string.clear))
         }
     }

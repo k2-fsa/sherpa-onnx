@@ -18,29 +18,46 @@ log() {
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-log "Building simulated-streaming VAD + ASR APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+log "Building simulated-streaming VAD + ASR APK + QNN for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 export SHERPA_ONNX_ENABLE_TTS=OFF
 
+export SHERPA_ONNX_ENABLE_QNN=ON
+
+log "Download qnn header files"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/qnn-include-2.40.0.251030.tar.bz2
+tar xf qnn-include-2.40.0.251030.tar.bz2
+rm qnn-include-2.40.0.251030.tar.bz2
+ls -lh qnn-include-2.40.0.251030
+
+export QNN_SDK_ROOT=$PWD/qnn-include-2.40.0.251030
+
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
-log "====================armv7-eabi================"
-./build-android-armv7-eabi.sh
-log "====================x86-64===================="
-./build-android-x86-64.sh
-log "====================x86===================="
-./build-android-x86.sh
+
+cp -v ./build-android-arm64-v8a/install/lib/*.so ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
+
+log "=======Download qnn libs============"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/qnn-libs-2.40.0.251030.tar.bz2
+tar xvf qnn-libs-2.40.0.251030.tar.bz2
+rm qnn-libs-2.40.0.251030.tar.bz2
+cp -v qnn-libs-2.40.0.251030/*.so ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
+
+rm -rf qnn-libs-2.40.0.251030
+
+ls -lh ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
 
 mkdir -p apks
 
 {% for model in model_list %}
 pushd ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/
-model_name={{ model.model_name }}
+model_name={{ model.model_name }}-android-aarch64
 type={{ model.idx }}
 lang={{ model.lang }}
 short_name={{ model.short_name }}
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/${model_name}.tar.bz2
 tar xvf ${model_name}.tar.bz2
 
 {% if model.use_hr %}
@@ -83,7 +100,7 @@ pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/
 git diff
 popd
 
-for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+for arch in arm64-v8a; do
   log "------------------------------------------------------------"
   log "build simulated-streaming ASR apk for $arch"
   log "------------------------------------------------------------"
@@ -94,19 +111,14 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
     src_arch=x86-64
   fi
 
-  ls -lh ./build-android-$src_arch/install/lib/*.so
-
-  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/$arch/
-
   pushd ./android/SherpaOnnxSimulateStreamingAsr
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
   ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxSimulateStreamingAsr/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-simulated_streaming_asr-$lang-$short_name.apk
+  mv android/SherpaOnnxSimulateStreamingAsr/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-qnn-$arch-simulated_streaming_asr-$lang-$short_name.apk
   ls -lh apks
-  rm -v ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/$arch/*.so
 done
 
 rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/$model_name

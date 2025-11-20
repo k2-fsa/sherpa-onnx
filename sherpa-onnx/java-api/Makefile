@@ -15,6 +15,7 @@ java_files += WaveWriter.java
 java_files += EndpointRule.java
 java_files += EndpointConfig.java
 java_files += FeatureConfig.java
+java_files += QnnConfig.java
 java_files += HomophoneReplacerConfig.java
 java_files += OnlineLMConfig.java
 java_files += OnlineParaformerModelConfig.java

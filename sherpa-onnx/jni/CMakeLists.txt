@@ -12,6 +12,7 @@ endif()
 
 set(sources
   audio-tagging.cc
+  common.cc
   jni.cc
   keyword-spotter.cc
   offline-punctuation.cc

@@ -14,6 +14,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SimulateStreamingAsr"
         tools:targetApi="31">
+
+        <!--
+        required by qnn
+
+        If you don't add it, you would get an error from the deviceCreate() API
+        and the error code is 14001
+
+        It is located at /vendor/lib64/libcdsprpc.so on your Phone
+        -->
+        <uses-native-library
+            android:name="libcdsprpc.so"
+            android:required="false"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
