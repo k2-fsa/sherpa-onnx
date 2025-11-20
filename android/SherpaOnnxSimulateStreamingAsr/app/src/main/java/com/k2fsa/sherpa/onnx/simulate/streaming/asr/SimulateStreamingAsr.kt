@@ -1,9 +1,7 @@
 package com.k2fsa.sherpa.onnx.simulate.streaming.asr
 
-import android.app.Application
 import android.content.Context
 import android.content.res.AssetManager
-import android.os.Build
 import android.util.Log
 import com.k2fsa.sherpa.onnx.HomophoneReplacerConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
