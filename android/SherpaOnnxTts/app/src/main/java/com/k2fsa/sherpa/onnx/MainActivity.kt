@@ -140,8 +140,14 @@ class MainActivity : AppCompatActivity() {
         play.isEnabled = false
         generate.isEnabled = false
         stopped = false
+        var isZipvoice = false
         Thread {
-            val audio = tts.generateWithCallback(
+            val audio = if (isZipvoice) {
+		    val prompt_text = "周日被我射熄火了，所以今天是周一。"
+
+    val reader = WaveReader.readWave(application.assets, "sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav")
+
+		    tts.generateWithPromptWithCallback(textStr, prompt_text, reader.samples, reader.sampleRate, speedFloat, callback = this::callback)} else tts.generateWithCallback(
                 text = textStr,
                 sid = sidInt,
                 speed = speedFloat,
@@ -183,6 +189,9 @@ class MainActivity : AppCompatActivity() {
     private fun initTts() {
         var modelDir: String?
         var modelName: String?
+        var textModel: String?
+        var flowMatchingModel: String?
+        var pinyinDict: String?
         var acousticModelName: String?
         var vocoder: String?
         var voices: String?
@@ -192,6 +201,7 @@ class MainActivity : AppCompatActivity() {
         var dataDir: String?
         var assets: AssetManager? = application.assets
         var isKitten = false
+        var isZipvoice = false
 
         // The purpose of such a design is to make the CI test easier
         // Please see
@@ -209,6 +219,13 @@ class MainActivity : AppCompatActivity() {
         // For Kokoro -- begin
         voices = null
         // For Kokoro -- end
+
+        // Zipvoice -- begin
+        textModel = null
+        flowMatchingModel = null
+        vocoder = null
+        pinyinDict = null
+        // Zipvoice -- end
 
 
         modelDir = null
@@ -294,6 +311,16 @@ class MainActivity : AppCompatActivity() {
         // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
         // isKitten = true
 
+        // Example 12
+        // sherpa-onnx-zipvoice-distill-zh-en-emilia
+        // modelDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia"
+        // textModel = "text_encoder.onnx"
+        // flowMatchingModel = "fm_decoder.onnx"
+        // vocoder = "vocos_24khz.onnx"
+        // pinyinDict = "pinyinDict"
+        // dataDir = "sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data"
+        // isZipvoice = true
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
@@ -305,12 +332,16 @@ class MainActivity : AppCompatActivity() {
             acousticModelName = acousticModelName ?: "",
             vocoder = vocoder ?: "",
             voices = voices ?: "",
+            textModel = textModel ?: "",
+            flowMatchingModel = flowMatchingModel ?: "",
+            pinyinDict = pinyinDict ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,
+            isZipvoice = isZipvoice,
         )!!
 
         tts = OfflineTts(assetManager = assets, config = config)

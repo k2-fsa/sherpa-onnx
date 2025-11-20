@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
+import com.k2fsa.sherpa.onnx.WaveReader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -113,7 +114,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 val scrollState = rememberScrollState(0)
 
-                                val numSpeakers = TtsEngine.tts!!.numSpeakers()
+                                val numSpeakers = if (TtsEngine.isZipvoice) 1 else TtsEngine.tts!!.numSpeakers()
                                 if (numSpeakers > 1) {
                                     OutlinedTextField(
                                         value = TtsEngine.speakerIdState.value.toString(),
@@ -199,7 +200,12 @@ class MainActivity : ComponentActivity() {
                                                     val timeSource = TimeSource.Monotonic
                                                     val startTime = timeSource.markNow()
 
-                                                    val audio =
+                                                    val audio =if (TtsEngine.isZipvoice) {
+		    val prompt_text = "周日被我射熄火了，所以今天是周一。"
+
+    val reader = WaveReader.readWave(application.assets, "sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav")
+
+		    TtsEngine.tts!!.generateWithPromptWithCallback(testText, prompt_text, reader.samples, reader.sampleRate, TtsEngine.speed, callback = ::callback)} else 
                                                         TtsEngine.tts!!.generateWithCallback(
                                                             text = testText,
                                                             sid = TtsEngine.speakerId,

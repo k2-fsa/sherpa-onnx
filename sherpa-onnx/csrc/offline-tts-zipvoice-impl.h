@@ -86,8 +86,12 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     std::vector<int64_t> tokens = text_token_ids[0].tokens;
     std::vector<int64_t> prompt_tokens = prompt_token_ids[0].tokens;
 
-    return Process(tokens, prompt_tokens, prompt_samples, sample_rate, speed,
+    auto ans = Process(tokens, prompt_tokens, prompt_samples, sample_rate, speed,
                    num_steps);
+    if (callback) {
+      callback(ans.samples.data(), ans.samples.size(), 1.0);
+    }
+    return ans;
   }
 
  private:
