@@ -332,7 +332,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
     }
   }
 
-  if (config.model_config.provider != "qnn" && !config.Validate()) {
+  if (!config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");
     return 0;
   }

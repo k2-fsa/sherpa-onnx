@@ -22,7 +22,10 @@ void OfflineSenseVoiceModelConfig::Register(ParseOptions *po) {
       "sense-voice-use-itn", &use_itn,
       "True to enable inverse text normalization. False to disable it.");
 
-  qnn_config.Register(po);
+  std::string prefix = "sense-voice";
+  ParseOptions p(prefix, po);
+
+  qnn_config.Register(&p);
 }
 
 bool OfflineSenseVoiceModelConfig::Validate() const {
