@@ -37,23 +37,14 @@ bool QnnConfig::Validate() const {
     return false;
   }
 
-  if (!FileExists(backend_lib)) {
-    SHERPA_ONNX_LOGE("--qnn-backend-lib: '%s' does not exist",
-                     backend_lib.c_str());
-    return false;
-  }
+  // we don't check whether backend_lib and system_lib exist or not since
+  // dlopen() will find them by searching predefined paths
 
   if (!context_binary.empty() && FileExists(context_binary)) {
     if (system_lib.empty()) {
       SHERPA_ONNX_LOGE(
           "Please provide --qnn-system-lib when you provide "
           "--qnn-context-binary");
-      return false;
-    }
-
-    if (!FileExists(system_lib)) {
-      SHERPA_ONNX_LOGE("--qnn-system-lib: '%s' does not exist",
-                       system_lib.c_str());
       return false;
     }
   }

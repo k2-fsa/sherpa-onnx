@@ -8,11 +8,17 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
 void OfflineZipformerCtcModelConfig::Register(ParseOptions *po) {
   po->Register("zipformer-ctc-model", &model, "Path to zipformer CTC model");
+
+  std::string prefix = "zipformer-ctc";
+  ParseOptions p(prefix, po);
+
+  qnn_config.Register(&p);
 }
 
 bool OfflineZipformerCtcModelConfig::Validate() const {
@@ -20,6 +26,10 @@ bool OfflineZipformerCtcModelConfig::Validate() const {
     SHERPA_ONNX_LOGE("zipformer CTC model file '%s' does not exist",
                      model.c_str());
     return false;
+  }
+
+  if (EndsWith(model, ".so") || EndsWith(model, ".bin")) {
+    return qnn_config.Validate();
   }
 
   return true;
