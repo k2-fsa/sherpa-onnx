@@ -34,6 +34,7 @@ data class OfflineDolphinModelConfig(
 
 data class OfflineZipformerCtcModelConfig(
     var model: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineWenetCtcModelConfig(

@@ -227,7 +227,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9011,
             lang="zh",
             short_name="5-seconds-zipformer_ctc_2025_07_03_int8",
@@ -243,7 +243,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9012,
             lang="zh",
             short_name="8-seconds-zipformer_ctc_2025_07_03_int8",
@@ -259,7 +259,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9013,
             lang="zh",
             short_name="10-seconds-zipformer_ctc_2025_07_03_int8",
@@ -275,7 +275,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9014,
             lang="zh",
             short_name="13-seconds-zipformer_ctc_2025_07_03_int8",
@@ -291,7 +291,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9015,
             lang="zh",
             short_name="15-seconds-zipformer_ctc_2025_07_03_int8",
@@ -307,7 +307,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9016,
             lang="zh",
             short_name="16-seconds-zipformer_ctc_2025_07_03_int8",
@@ -323,7 +323,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9017,
             lang="zh",
             short_name="20-seconds-zipformer_ctc_2025_07_03_int8",
@@ -339,7 +339,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9018,
             lang="zh",
             short_name="23-seconds-zipformer_ctc_2025_07_03_int8",
@@ -355,7 +355,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9019,
             lang="zh",
             short_name="25-seconds-zipformer_ctc_2025_07_03_int8",
@@ -371,7 +371,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9020,
             lang="zh",
             short_name="28-seconds-zipformer_ctc_2025_07_03_int8",
@@ -387,7 +387,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
+            model_name="sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9021,
             lang="zh",
             short_name="30-seconds-zipformer_ctc_2025_07_03_int8",

@@ -125,20 +125,32 @@ object SimulateStreamingAsr {
                 OfflineRecognizer.prependAdspLibraryPath(context.applicationInfo.nativeLibraryDir)
 
                 // for qnn, we need to copy *.so files from assets folder to sd card
-                if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty()) {
+                if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty() && config.modelConfig.zipformerCtc.qnnConfig.backendLib.isEmpty()) {
                     Log.e(TAG, "You should provide libQnnHtp.so for qnn")
                     throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
                 }
                 config.modelConfig.tokens =
                     copyAssetToInternalStorage(config.modelConfig.tokens, context)
 
-                config.modelConfig.senseVoice.model =
-                    copyAssetToInternalStorage(config.modelConfig.senseVoice.model, context)
+                if (config.modelConfig.senseVoice.model.isNotEmpty()) {
+                    config.modelConfig.senseVoice.model =
+                        copyAssetToInternalStorage(config.modelConfig.senseVoice.model, context)
 
-                config.modelConfig.senseVoice.qnnConfig.contextBinary = copyAssetToInternalStorage(
-                    config.modelConfig.senseVoice.qnnConfig.contextBinary,
-                    context
-                )
+                    config.modelConfig.senseVoice.qnnConfig.contextBinary =
+                        copyAssetToInternalStorage(
+                            config.modelConfig.senseVoice.qnnConfig.contextBinary,
+                            context
+                        )
+                } else if (config.modelConfig.zipformerCtc.model.isNotEmpty()) {
+                    config.modelConfig.zipformerCtc.model =
+                        copyAssetToInternalStorage(config.modelConfig.zipformerCtc.model, context)
+
+                    config.modelConfig.zipformerCtc.qnnConfig.contextBinary =
+                        copyAssetToInternalStorage(
+                            config.modelConfig.zipformerCtc.qnnConfig.contextBinary,
+                            context
+                        )
+                }
 
                 if (config.hr.lexicon.isNotEmpty()) {
                     config.hr.lexicon = copyAssetToInternalStorage(config.hr.lexicon, context)
