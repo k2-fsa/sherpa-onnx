@@ -310,7 +310,7 @@ def get_models():
             model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8",
             idx=9016,
             lang="zh",
-            short_name="16-seconds-zipformer_ctc_2025_07_03_int8",
+            short_name="18-seconds-zipformer_ctc_2025_07_03_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
