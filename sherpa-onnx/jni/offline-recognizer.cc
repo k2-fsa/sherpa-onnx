@@ -203,6 +203,24 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.zipformer_ctc.model, model,
                               zipformer_ctc_config_cls, zipformer_ctc_config);
 
+  fid = env->GetFieldID(zipformer_ctc_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+
+  qnn_config = env->GetObjectField(zipformer_ctc_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.backend_lib, backendLib,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.system_lib, systemLib,
+      qnn_config_cls, qnn_config);
+
   // wenet ctc
   fid = env->GetFieldID(model_config_cls, "wenetCtc",
                         "Lcom/k2fsa/sherpa/onnx/OfflineWenetCtcModelConfig;");
@@ -332,7 +350,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
     }
   }
 
-  if (config.model_config.provider != "qnn" && !config.Validate()) {
+  if (!config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");
     return 0;
   }

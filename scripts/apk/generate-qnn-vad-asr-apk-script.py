@@ -35,7 +35,6 @@ class Model:
 
     # e.g., zh, en, zh_en
     lang: str
-    lang2: str
 
     # e.g., whisper, paraformer, zipformer
     short_name: str = ""
@@ -55,7 +54,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9000,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="5-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -72,7 +70,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-8-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9001,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="8-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -89,7 +86,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9002,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="10-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -106,7 +102,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-13-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9003,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="13-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -123,7 +118,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-15-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9004,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="15-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -140,7 +134,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9005,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="18-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -157,7 +150,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9006,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="20-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -174,7 +166,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9007,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="23-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -191,7 +182,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9008,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="25-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -208,7 +198,6 @@ def get_models():
             model_name="sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9009,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="28-seconds-sense_voice_2024_07_17_int8",
             use_hr=True,
             cmd="""
@@ -225,8 +214,183 @@ def get_models():
             model_name="sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
             idx=9010,
             lang="zh_en_ko_ja_yue",
-            lang2="中英粤日韩",
             short_name="30-seconds-sense_voice_2024_07_17_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9011,
+            lang="zh",
+            short_name="5-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9012,
+            lang="zh",
+            short_name="8-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9013,
+            lang="zh",
+            short_name="10-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9014,
+            lang="zh",
+            short_name="13-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9015,
+            lang="zh",
+            short_name="15-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9016,
+            lang="zh",
+            short_name="18-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9017,
+            lang="zh",
+            short_name="20-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9018,
+            lang="zh",
+            short_name="23-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9019,
+            lang="zh",
+            short_name="25-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9020,
+            lang="zh",
+            short_name="28-seconds-zipformer_ctc_2025_07_03_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            idx=9021,
+            lang="zh",
+            short_name="30-seconds-zipformer_ctc_2025_07_03_int8",
             use_hr=True,
             cmd="""
             pushd $model_name
