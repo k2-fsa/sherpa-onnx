@@ -99,7 +99,6 @@ class OfflineRecognizerZipformerCtcQnnImpl : public OfflineRecognizerImpl {
   // Decode a single stream.
   // Some models do not support batch size > 1, e.g., WeNet CTC models.
   void DecodeStream(OfflineStream *s) const {
-    int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
 
     int32_t vocab_size = model_->VocabSize();

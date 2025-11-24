@@ -39,7 +39,13 @@ std::string OfflineZipformerCtcModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineZipformerCtcModelConfig(";
-  os << "model=\"" << model << "\")";
+  os << "model=\"" << model << "\"";
+
+  if (!qnn_config.backend_lib.empty()) {
+    os << ", qnn_config=" << qnn_config.ToString() << ", ";
+  }
+
+  os << ")";
 
   return os.str();
 }
