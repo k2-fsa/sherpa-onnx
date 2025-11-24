@@ -768,6 +768,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
+                debug = true,
             )
         }
 
@@ -784,6 +785,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
+                debug = true,
             )
         }
 
@@ -800,6 +802,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
+                debug = true,
             )
         }
 
@@ -920,6 +923,185 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9011 -> {
+            val modelDir = "sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9012 -> {
+            val modelDir = "sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9013 -> {
+            val modelDir = "sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9014 -> {
+            val modelDir = "sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9015 -> {
+            val modelDir = "sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9016 -> {
+            val modelDir = "sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9017 -> {
+            val modelDir = "sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9018 -> {
+            val modelDir = "sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9019 -> {
+            val modelDir = "sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9020 -> {
+            val modelDir = "sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
+                    model = "$modelDir/libmodel.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        9021 -> {
+            val modelDir = "sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                zipformerCtc = OfflineZipformerCtcModelConfig(
                     model = "$modelDir/libmodel.so",
                     qnnConfig = QnnConfig(
                         backendLib = "libQnnHtp.so",
