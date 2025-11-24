@@ -22,12 +22,12 @@ log "Building TTS engine APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
-log "====================armv7-eabi================"
-./build-android-armv7-eabi.sh
-log "====================x86-64===================="
-./build-android-x86-64.sh
-log "====================x86===================="
-./build-android-x86.sh
+#log "====================armv7-eabi================"
+#./build-android-armv7-eabi.sh
+#log "====================x86-64===================="
+#./build-android-x86-64.sh
+#log "====================x86===================="
+#./build-android-x86.sh
 
 export SHERPA_ONNX_ENABLE_TTS=ON
 
@@ -40,6 +40,9 @@ model_name={{ tts_model.model_name }}
 acoustic_model_name={{ tts_model.acoustic_model_name }}
 vocoder={{ tts_model.vocoder }}
 voices={{ tts_model.voices }}
+text_model={{ tts_model.text_model }}
+flow_matching_model={{ tts_model.flow_matching_model }}
+pinyin_dict={{ tts_model.pinyin_dict }}
 lang={{ tts_model.lang }}
 lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 lang_iso_639_3_2={{ tts_model.lang_iso_639_3_2 }}
@@ -48,7 +51,15 @@ wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$mod
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
-{% if tts_model.vocoder %}
+{% if tts_model.is_zipvoice %}
+  {% if tts_model.text_model == "text_encoder.onnx" %}
+    rm "$model_dir/text_encoder_int8.onnx" "$model_dir/fm_decoder_int8.onnx"
+  {% elif tts_model.text_model == "text_encoder_int8.onnx" %}
+    rm "$model_dir/text_encoder.onnx" "$model_dir/fm_decoder.onnx"
+  {% endif %}
+{% endif %}
+
+{% if tts_model.vocoder and not tts_model.is_zipvoice %}
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
 {% endif %}
 
@@ -68,6 +79,10 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./TtsEngine.kt
 {% endif %}
 
+{% if tts_model.is_zipvoice %}
+  sed -i.bak s/"isZipvoice = false"/"isZipvoice = true"/ ./TtsEngine.kt
+{% endif %}
+
 {% if tts_model.model_name %}
   sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
 {% endif %}
@@ -82,6 +97,18 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.voices %}
   sed -i.bak s/"voices = null"/"voices = \"$voices\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.text_model %}
+  sed -i.bak s/"textModel = null"/"textModel = \"$text_model\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.flow_matching_model %}
+  sed -i.bak s/"flowMatchingModel = null"/"flowMatchingModel = \"$flow_matching_model\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.pinyin_dict %}
+  sed -i.bak s/"pinyinDict = null"/"pinyinDict = \"$pinyin_dict\""/ ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.rule_fsts %}
@@ -117,7 +144,7 @@ if [[ $model_dir == kokoro-multi-lang-v1_0 || $model_dir == kokoro-multi-lang-v1
   lang=zh_en
 fi
 
-for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+for arch in arm64-v8a; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"
   log "------------------------------------------------------------"
@@ -135,10 +162,10 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   pushd ./android/SherpaOnnxTtsEngine
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew assembleRelease
+  ./gradlew assembleDebug
   popd
 
-  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
+  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/*/*.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxTtsEngine/app/src/main/jniLibs/$arch/*.so
 done

@@ -6,6 +6,7 @@ import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeechService
 import android.util.Log
+import com.k2fsa.sherpa.onnx.WaveReader
 
 /*
 https://developer.android.com/reference/java/util/Locale#getISO3Language()
@@ -146,7 +147,12 @@ class TtsService : TextToSpeechService() {
         }
 
         Log.i(TAG, "text: $text")
-        tts.generateWithCallback(
+        if (TtsEngine.isZipvoice) {
+		    val prompt_text = "周日被我射熄火了，所以今天是周一。"
+
+    val reader = WaveReader.readWave(application.assets, "sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav")
+
+		    tts.generateWithPromptWithCallback(text, prompt_text, reader.samples, reader.sampleRate, TtsEngine.speed, callback = ttsCallback)} else tts.generateWithCallback(
             text = text,
             sid = TtsEngine.speakerId,
             speed = TtsEngine.speed,
