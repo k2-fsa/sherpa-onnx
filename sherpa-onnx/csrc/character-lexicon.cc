@@ -266,7 +266,7 @@ class CharacterLexicon::Impl {
 
     while (std::getline(is, line)) {
       ++line_num;
-      if (line.find_first_not_of(" \t") == std::string::npos) {
+      if (line.find_first_not_of(" \t\n\v\f\r") == std::string::npos) {
         // Line is empty or only spaces/tabs, skip it
         continue;
       }
