@@ -202,6 +202,7 @@ if(SHERPA_ONNX_ENABLE_ASCEND_NPU)
   list(APPEND sources
     ./ascend/offline-paraformer-model-ascend.cc
     ./ascend/offline-sense-voice-model-ascend.cc
+    ./ascend/offline-zipformer-ctc-model-ascend.cc
     ./ascend/utils.cc
   )
 endif()

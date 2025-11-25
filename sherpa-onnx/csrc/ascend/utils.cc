@@ -50,8 +50,10 @@ static const char *AclDataTypeToString(aclDataType data_type) {
       return "ACL_COMPLEX128";
     case ACL_BF16:
       return "ACL_BF16";
+#if defined(ACL_INT4)
     case ACL_INT4:
       return "ACL_INT4";
+#endif
     case ACL_UINT1:
       return "ACL_UINT1";
     case ACL_COMPLEX32:
