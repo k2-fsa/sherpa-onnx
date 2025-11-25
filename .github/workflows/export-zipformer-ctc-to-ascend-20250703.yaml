@@ -1,0 +1,177 @@
+name: export-zipformer-ctc-to-ascend-npu-20250703
+
+on:
+  push:
+    branches:
+      - export-zipformer-ctc-ascend
+  workflow_dispatch:
+
+concurrency:
+  group: export-zipformer-ctc-to-ascend-npu-20250703-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-ascend/generate_zipformer_ctc_20250703.py
+          MATRIX=$(python3 .github/scripts/export-ascend/generate_zipformer_ctc_20250703.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  export-zipformer-ctc-to-ascend-npu-20250703:
+    needs: generate_build_matrix
+    name: ${{ matrix.soc_version }} ${{ matrix.cann }} ${{ matrix.num_seconds }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Show Python
+        shell: bash
+        run: |
+          python3 --version
+          which python3
+
+      - name: Install curl
+        shell: bash
+        run: apt-get update && apt-get install -y curl bzip2
+
+      - name: Verify environment
+        shell: bash
+        run: |
+          ls -lh /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+          find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
+
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
+
+          echo "CANN environment:"
+          which atc || echo "atc not found"
+          atc --help
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install "numpy<2" \
+                  onnx==1.17.0 \
+                  torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+                  attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
+                  sentencepiece \
+                  pyyaml
+
+      - name: Export ${{ matrix.num_seconds }}
+        shell: bash
+        run: |
+          mkdir tmp
+          cd tmp
+
+          t=${{ matrix.num_seconds }}
+          num_frames=$(($t*100))
+
+          echo "num_frames: $num_frames"
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/generate_test_data.py
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/test.py
+          chmod +x generate_test_data.py
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/0.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/1.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/8k.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/tokens.txt
+
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
+
+          soc_version=${{ matrix.soc_version }}
+          cann=${{ matrix.cann }}
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/model-$t-seconds.onnx
+          mv model-$t-seconds.onnx model.onnx
+
+          atc --model=./model.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=model \
+            --input_format=ND \
+            --input_shape="x:1,${num_frames},80" \
+            --soc_version="Ascend${soc_version}"
+
+          ls -lh *.om
+
+          echo "collect results"
+          d=sherpa-onnx-ascend-${soc_version}-cann-${cann}-$t-seconds-zipformer-ctc-zh-2025-07-03
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v model_linux_aarch64.om $d/model.om || cp -v model.om $d/model.om
+          cp -v tokens.txt $d
+          cp -v ../scripts/zipformer-ctc/ascend/2025-07-03/onnx_test.py $d
+          cp -v ../scripts/zipformer-ctc/ascend/2025-07-03/test_om.py $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-ascend
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: asr-models-ascend
