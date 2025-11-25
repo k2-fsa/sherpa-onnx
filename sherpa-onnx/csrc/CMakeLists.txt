@@ -716,6 +716,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc
+    wave-reader-test.cc
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
