@@ -12,6 +12,16 @@ add_library(sherpa-onnx-cxx-api cxx-api.cc)
 target_link_libraries(sherpa-onnx-cxx-api sherpa-onnx-c-api)
 target_include_directories(sherpa-onnx-cxx-api PUBLIC ${PROJECT_SOURCE_DIR})
 
+if(ANDROID OR (UNIX AND NOT APPLE))
+  set_target_properties(sherpa-onnx-c-api PROPERTIES
+    LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.lds"
+  )
+elseif(APPLE)
+  set_target_properties(sherpa-onnx-c-api PROPERTIES
+    LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.exp"
+  )
+endif()
+
 install(
   TARGETS
     sherpa-onnx-c-api
