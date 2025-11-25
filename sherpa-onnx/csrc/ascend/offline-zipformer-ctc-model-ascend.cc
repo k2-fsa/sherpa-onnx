@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.cc
+// sherpa-onnx/csrc/ascend/offline-zipformer-ctc-model-ascend.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
@@ -80,7 +80,7 @@ class OfflineZipformerCtcModelAscend::Impl {
 
     AclMdlDataset output_dataset;
 
-    AclDataBuffer logits_buf(*log_probs_ptr,
+    AclDataBuffer logits_buf(*log_probs_ptr_,
                              num_output_frames_ * vocab_size_ * sizeof(float));
     output_dataset.AddBuffer(logits_buf);
 
@@ -90,7 +90,7 @@ class OfflineZipformerCtcModelAscend::Impl {
     std::vector<float> log_probs(num_output_frames_ * vocab_size_);
     ret = aclrtMemcpy(
         log_probs.data(), num_output_frames_ * vocab_size_ * sizeof(float),
-        *log_probs_ptr, num_output_frames_ * vocab_size_ * sizeof(float),
+        *log_probs_ptr_, num_output_frames_ * vocab_size_ * sizeof(float),
         ACL_MEMCPY_DEVICE_TO_HOST);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
@@ -156,8 +156,8 @@ class OfflineZipformerCtcModelAscend::Impl {
     x_ptr_ = std::make_unique<AclDevicePtr>(max_num_frames_ * feat_dim_ *
                                             sizeof(float));
 
-    log_probs_ptr = std::make_unique<AclDevicePtr>(num_output_frames_ *
-                                                   vocab_size_ * sizeof(float));
+    log_probs_ptr_ = std::make_unique<AclDevicePtr>(
+        num_output_frames_ * vocab_size_ * sizeof(float));
   }
 
  private:
@@ -176,7 +176,7 @@ class OfflineZipformerCtcModelAscend::Impl {
   int32_t subsampling_factor_ = 0;
 
   std::unique_ptr<AclDevicePtr> x_ptr_;
-  std::unique_ptr<AclDevicePtr> log_probs_ptr;
+  std::unique_ptr<AclDevicePtr> log_probs_ptr_;
 };
 
 OfflineZipformerCtcModelAscend::OfflineZipformerCtcModelAscend(
