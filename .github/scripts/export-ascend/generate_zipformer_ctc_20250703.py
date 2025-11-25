@@ -34,7 +34,7 @@ class Config:
     # 910B, 910B2, 910B3, 310P3
     soc_version: str
 
-    num_seconds: int
+    num_seconds: str
 
     image: str = ""
 
@@ -47,16 +47,14 @@ def main():
     soc_version = ["910B", "910B2", "910B3", "310P3"]
     input_in_seconds = ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
 
-    configs = []
-    for cann, soc, sec in itertools.product(
-        cann_version, soc_version, input_in_seconds
-    ):
-        c = Config(cann=cann, soc_version=soc, num_seconds=sec)
-        configs.append(c)
+    configs = [
+        Config(cann=cann, soc_version=soc, num_seconds=sec)
+        for cann, soc, sec in itertools.product(
+            cann_version, soc_version, input_in_seconds
+        )
+    ]
 
-    ans = []
-    for c in configs:
-        ans.append(asdict(c))
+    ans = [asdict(c) for c in configs]
 
     print(json.dumps({"include": ans}))
 
