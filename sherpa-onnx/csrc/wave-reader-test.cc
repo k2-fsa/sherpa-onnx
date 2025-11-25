@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/wave-reader-test.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2025  Posit Software, PBC
 
 #include "sherpa-onnx/csrc/wave-reader.h"
 
