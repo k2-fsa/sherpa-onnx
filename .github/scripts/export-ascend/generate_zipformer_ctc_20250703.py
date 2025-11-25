@@ -6,6 +6,12 @@ import json
 from dataclasses import asdict, dataclass
 
 
+# image: ascendai/cann:latest
+# image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+# see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+# see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
+# and
+# https://quay.io/repository/ascend/cann?tab=tags
 def get_image(cann: str, soc_version: str):
     cann2image_910 = {
         "7.0": "quay.io/ascend/cann:7.0.1.beta1-910b-ubuntu22.04-py3.8",
