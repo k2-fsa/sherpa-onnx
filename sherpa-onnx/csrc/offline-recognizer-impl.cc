@@ -43,6 +43,7 @@
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h"
+#include "sherpa-onnx/csrc/ascend/offline-recognizer-zipformer-ctc-ascend-impl.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_QNN
@@ -81,10 +82,12 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(config);
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerAscendImpl>(config);
+    } else if (!config.model_config.zipformer_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice and Paraformer models are currently supported "
-          "by Ascend NPU for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
+          "supported by Ascend NPU for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -115,7 +118,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_QNN=ON if "
         "you want to use qnn. See also "
-        "https://k2-fsa.github.io/sherpa/onnx/qnn/install.html");
+        "https://k2-fsa.github.io/sherpa/onnx/qnn/build.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -339,10 +342,13 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerAscendImpl>(mgr,
                                                                      config);
+    } else if (!config.model_config.zipformer_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(mgr,
+                                                                       config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice and Paraformer models are currently supported "
-          "by Ascend NPU for non-streaming ASR. Fallback to CPU");
+          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
+          "supported by Ascend NPU for non-streaming ASR. Fallback to CPU");
     }
 #else
     SHERPA_ONNX_LOGE(
@@ -372,7 +378,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_QNN=ON if "
         "you want to use qnn. See also "
-        "https://k2-fsa.github.io/sherpa/onnx/qnn/install.html");
+        "https://k2-fsa.github.io/sherpa/onnx/qnn/build.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
