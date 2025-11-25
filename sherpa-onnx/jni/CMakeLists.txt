@@ -49,7 +49,7 @@ target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_SHARED_LIBS
 target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_MAIN_LIB=1)
 
 if(ANDROID OR (UNIX AND NOT APPLE))
-  set_target_properties(sherpa-onnx-jnii PROPERTIES
+  set_target_properties(sherpa-onnx-jni PROPERTIES
     LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols.lds"
   )
 elseif(APPLE)
