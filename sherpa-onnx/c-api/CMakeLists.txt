@@ -13,16 +13,16 @@ target_link_libraries(sherpa-onnx-cxx-api sherpa-onnx-c-api)
 target_include_directories(sherpa-onnx-cxx-api PUBLIC ${PROJECT_SOURCE_DIR})
 
 if(UNIX AND NOT APPLE)
-  set(EXPORTED_SYMBOLS_FILE_C "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.lds")
-  set(LINK_FLAGS_C "-Wl,--version-script=${EXPORTED_SYMBOLS_FILE_C}")
-elseif(APPLE)
-  set(EXPORTED_SYMBOLS_FILE_C "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.exp")
-  set(LINK_FLAGS_C "-Wl,-exported_symbols_list,${EXPORTED_SYMBOLS_FILE_C}")
-endif()
-
-if(DEFINED LINK_FLAGS_C)
   set_target_properties(sherpa-onnx-c-api PROPERTIES
-    LINK_FLAGS "${LINK_FLAGS_C}"
+    LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.lds"
+  )
+elseif(APPLE)
+  set_target_properties(sherpa-onnx-c-api PROPERTIES
+    LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.exp"
+  )
+elseif(WIN32)
+  set_target_properties(sherpa-onnx-c-api PROPERTIES
+    LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols-c.def"
   )
 endif()
 
