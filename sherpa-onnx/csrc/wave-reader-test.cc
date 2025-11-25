@@ -4,19 +4,68 @@
 
 #include "sherpa-onnx/csrc/wave-reader.h"
 
+#include <cstdio>
 #include <fstream>
 #include <string>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "gtest/gtest.h"
 
 namespace sherpa_onnx {
 
+// RAII helper class for managing temporary test files
+class TempFile {
+ public:
+  TempFile() : TempFile("") {}
+
+  explicit TempFile(const std::string& suffix) {
+#if defined(_WIN32)
+    char temp_path[MAX_PATH];
+    char temp_file[MAX_PATH];
+    GetTempPathA(MAX_PATH, temp_path);
+    GetTempFileNameA(temp_path, "sot", 0, temp_file);
+    path_ = temp_file;
+    if (!suffix.empty()) {
+      path_ += suffix;
+      std::remove(temp_file);  // Remove the file without suffix
+    }
+#else
+    char temp_template[] = "/tmp/sherpa_onnx_test_XXXXXX";
+    int fd = mkstemp(temp_template);
+    if (fd != -1) {
+      close(fd);
+      path_ = temp_template;
+      if (!suffix.empty()) {
+        path_ += suffix;
+        std::remove(temp_template);  // Remove the file without suffix
+      }
+    }
+#endif
+  }
+
+  ~TempFile() {
+    if (!path_.empty()) {
+      std::remove(path_.c_str());
+    }
+  }
+
+  const char* path() const { return path_.c_str(); }
+
+ private:
+  std::string path_;
+};
+
 TEST(WaveReader, TestNonWavFile) {
   // Create a temporary file with non-WAV content (e.g., webm-like header)
-  const char* temp_file = "/tmp/test_non_wav_file.webm";
+  TempFile temp_file(".webm");
 
   {
-    std::ofstream out(temp_file, std::ios::binary);
+    std::ofstream out(temp_file.path(), std::ios::binary);
     // Write some content that doesn't start with RIFF
     // (webm files typically start with EBML header: 0x1a45dfa3)
     const unsigned char webm_header[] = {
@@ -35,34 +84,33 @@ TEST(WaveReader, TestNonWavFile) {
   // Test C++ API - should not segfault
   int32_t sample_rate = -1;
   bool is_ok = false;
-  std::vector<float> samples = ReadWave(temp_file, &sample_rate, &is_ok);
+  std::vector<float> samples = ReadWave(temp_file.path(), &sample_rate, &is_ok);
 
   EXPECT_FALSE(is_ok);
   EXPECT_TRUE(samples.empty());
   EXPECT_EQ(sample_rate, -1);
-
-  // Clean up
-  std::remove(temp_file);
 }
 
 TEST(WaveReader, TestNonExistentFile) {
-  const char* non_existent = "/tmp/this_file_does_not_exist_12345.wav";
+  // Generate a unique path but don't create the file
+  TempFile temp_file(".wav");
 
   // Test C++ API - should not segfault
   int32_t sample_rate = -1;
   bool is_ok = false;
-  std::vector<float> samples = ReadWave(non_existent, &sample_rate, &is_ok);
+  std::vector<float> samples = ReadWave(temp_file.path(), &sample_rate, &is_ok);
 
   EXPECT_FALSE(is_ok);
   EXPECT_TRUE(samples.empty());
+  EXPECT_EQ(sample_rate, -1);
 }
 
 TEST(WaveReader, TestTruncatedWaveFile) {
   // Create a temporary file with truncated WAV header
-  const char* temp_file = "/tmp/test_truncated_wave.wav";
+  TempFile temp_file(".wav");
 
   {
-    std::ofstream out(temp_file, std::ios::binary);
+    std::ofstream out(temp_file.path(), std::ios::binary);
     // Write only partial WAV header (less than 44 bytes required)
     const unsigned char partial_wav[] = {
         'R', 'I', 'F', 'F',  // chunk_id
@@ -76,13 +124,11 @@ TEST(WaveReader, TestTruncatedWaveFile) {
   // Test C++ API - should not segfault
   int32_t sample_rate = -1;
   bool is_ok = false;
-  std::vector<float> samples = ReadWave(temp_file, &sample_rate, &is_ok);
+  std::vector<float> samples = ReadWave(temp_file.path(), &sample_rate, &is_ok);
 
   EXPECT_FALSE(is_ok);
   EXPECT_TRUE(samples.empty());
-
-  // Clean up
-  std::remove(temp_file);
+  EXPECT_EQ(sample_rate, -1);
 }
 
 }  // namespace sherpa_onnx
