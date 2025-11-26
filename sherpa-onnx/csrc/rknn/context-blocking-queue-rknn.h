@@ -13,7 +13,7 @@ namespace sherpa_onnx {
 class ContextBlockingQueueRknn {
  public:
   ContextBlockingQueueRknn(rknn_context context, int32_t num_threads,
-                           int32_t capacity = 20);
+                           int32_t capacity = 10);
   ~ContextBlockingQueueRknn();
 
   rknn_context Take();

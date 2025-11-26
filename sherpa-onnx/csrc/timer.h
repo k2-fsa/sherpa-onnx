@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/timer.cc
+// sherpa-onnx/csrc/timer.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
