@@ -344,6 +344,10 @@ std::vector<float> ReadWave(std::istream &is, int32_t *sampling_rate,
                             bool *is_ok) {
   auto samples = ReadWaveImpl(is, sampling_rate, is_ok);
 
+  if (!*is_ok || samples.empty()) {
+    return {};
+  }
+
   if (samples.size() > 1) {
     SHERPA_ONNX_LOGE(
         "Warning: %d channels are found. We only use the first channel.\n",
