@@ -16,6 +16,7 @@
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/timer.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 typedef struct {
@@ -96,7 +97,10 @@ for a list of pre-trained models to download.
     return -1;
   }
 
+  printf("Start to create recognizer\n");
+  sherpa_onnx::Timer timer;
   sherpa_onnx::OnlineRecognizer recognizer(config);
+  printf("Recognizer created in %.5f s\n", timer.Elapsed());
 
   std::vector<Stream> ss;
 

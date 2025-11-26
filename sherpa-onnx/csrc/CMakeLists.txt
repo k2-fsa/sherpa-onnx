@@ -130,6 +130,7 @@ set(sources
   ten-vad-model-config.cc
   ten-vad-model.cc
   text-utils.cc
+  timer.cc
   transducer-keyword-decoder.cc
   transpose.cc
   unbind.cc
@@ -179,6 +180,7 @@ list(APPEND sources
 )
 if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
+    ./rknn/context-blocking-queue-rknn.cc
     ./rknn/offline-sense-voice-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
