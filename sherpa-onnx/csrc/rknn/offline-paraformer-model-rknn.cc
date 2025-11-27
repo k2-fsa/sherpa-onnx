@@ -52,7 +52,7 @@ class OfflineParaformerModelRknn::Impl {
     std::vector<std::string> filenames;
     SplitStringToVector(config_.paraformer.model, ",", false, &filenames);
     if (filenames.size() != 3) {
-      SHERPA_ONNX_LOGE("Invalid paraformer ascend NPU model '%s'",
+      SHERPA_ONNX_LOGE("Invalid Paraformer RK NPU model '%s'",
                        config_.paraformer.model.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
@@ -80,7 +80,7 @@ class OfflineParaformerModelRknn::Impl {
     std::vector<std::string> filenames;
     SplitStringToVector(config_.paraformer.model, ",", false, &filenames);
     if (filenames.size() != 3) {
-      SHERPA_ONNX_LOGE("Invalid paraformer ascend NPU model '%s'",
+      SHERPA_ONNX_LOGE("Invalid Paraformer RK NPU model '%s'",
                        config_.paraformer.model.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
