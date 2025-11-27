@@ -51,13 +51,13 @@ def enable_alsa():
 
 def get_binaries():
     binaries = [
-        "sherpa-onnx",
+        # "sherpa-onnx",
         "sherpa-onnx-keyword-spotter",
-        "sherpa-onnx-microphone",
-        "sherpa-onnx-microphone-offline",
+        # "sherpa-onnx-microphone",
+        # "sherpa-onnx-microphone-offline",
         "sherpa-onnx-microphone-offline-audio-tagging",
         "sherpa-onnx-microphone-offline-speaker-identification",
-        "sherpa-onnx-offline",
+        # "sherpa-onnx-offline",
         "sherpa-onnx-offline-audio-tagging",
         "sherpa-onnx-offline-denoiser",
         "sherpa-onnx-offline-language-identification",
@@ -66,10 +66,10 @@ def get_binaries():
         "sherpa-onnx-offline-speaker-diarization",
         "sherpa-onnx-offline-tts",
         "sherpa-onnx-offline-tts-play",
-        "sherpa-onnx-offline-websocket-server",
+        # "sherpa-onnx-offline-websocket-server",
         "sherpa-onnx-online-punctuation",
-        "sherpa-onnx-online-websocket-client",
-        "sherpa-onnx-online-websocket-server",
+        # "sherpa-onnx-online-websocket-client",
+        # "sherpa-onnx-online-websocket-server",
         "sherpa-onnx-vad",
         "sherpa-onnx-vad-microphone",
         "sherpa-onnx-vad-microphone-offline-asr",
@@ -149,7 +149,7 @@ class BuildExtension(build_ext):
         extra_cmake_args = ""
         if not need_split_package():
             extra_cmake_args += f" -DCMAKE_INSTALL_PREFIX={install_dir} "
-        extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+        extra_cmake_args += " -DBUILD_SHARED_LIBS=OFF "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
@@ -161,9 +161,9 @@ class BuildExtension(build_ext):
         extra_cmake_args += " -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=ON "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF "
         if not need_split_package():
-            extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON "
+            extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")

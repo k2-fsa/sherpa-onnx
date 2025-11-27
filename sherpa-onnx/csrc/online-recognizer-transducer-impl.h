@@ -80,6 +80,14 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   r.segment = segment;
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
+  r.num_processed_frames = std::move(src.num_processed_frames);
+  r.num_blank_frames = std::move(src.num_blank_frames);
+  r.timestamp_frames = std::move(src.timestamp_frames);
+  r.silences = std::move(src.silences);
+  // make sure to push back any trailing silences at the end
+  r.silences.push_back(src.num_processed_frames);
+  r.silences.push_back(src.num_processed_frames - src.num_trailing_blanks);
+
   return r;
 }
 

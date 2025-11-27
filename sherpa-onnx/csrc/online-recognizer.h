@@ -37,6 +37,11 @@ struct OnlineRecognizerResult {
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
+  /// silences
+  std::vector<int32_t> silences;
+  /// timestamp frames indices
+  std::vector<int32_t> timestamp_frames;
+
   std::vector<float> ys_probs;  //< log-prob scores from ASR model
   std::vector<float> lm_probs;  //< log-prob scores from language model
                                 //
@@ -56,6 +61,9 @@ struct OnlineRecognizerResult {
   /// True if the end of this segment is reached, i.e., an endpoint is detected
   /// used only in ./online-websocket-server-impl.cc
   bool is_final = false;
+
+  int32_t num_processed_frames;
+  int32_t num_blank_frames;
 
   /// used only in ./online-websocket-server-impl.cc
   /// If it is true, it means the server has processed all received samples

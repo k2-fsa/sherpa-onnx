@@ -137,10 +137,26 @@ void OnlineTransducerGreedySearchDecoder::Decode(
         emitted = true;
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);
+        r.timestamp_frames.push_back(r.num_processed_frames);
+        // emmited also means we _might_ have an _end_ timestamp for a silence
+              // segment, but we should only consider this given certain conditions.
+              // out heuristic for a silence segment: we want a 'chunk' that isn't just
+              // a natural break between tokens or words '12' here is observational
+        if (r.num_trailing_blanks < 12) {
+          r.num_blank_frames -= r.num_trailing_blanks;
+        } else {
+          // push back the current index - 1, and the current index - duration
+                // this will only be triggered if we have something that matches our
+                // the value we have set for our silence heuristic!!!
+          r.silences.push_back(r.num_processed_frames - 1);
+          r.silences.push_back(r.num_processed_frames - r.num_trailing_blanks);
+        }
         r.num_trailing_blanks = 0;
       } else {
         ++r.num_trailing_blanks;
+        ++r.num_blank_frames;
       }
+      ++r.num_processed_frames;
 
       // export the per-token log scores
       if (y != 0 && y != unk_id_) {

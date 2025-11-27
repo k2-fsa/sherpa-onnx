@@ -29,6 +29,16 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           "timestamps",
           [](PyClass &self) -> std::vector<float> { return self.timestamps; })
       .def_property_readonly(
+          "segment",
+          [](PyClass &self) -> int { return self.segment; })
+      .def_property_readonly("num_processed_frames", [](PyClass &self) { return self.num_processed_frames; })
+      .def_property_readonly(
+          "json",
+          [](PyClass &self) -> std::string { return self.AsJsonString(); })
+      .def_property_readonly("silences", [](PyClass &self) { return self.silences; })
+      .def_property_readonly("timestamp_frames", [](PyClass &self) { return self.timestamp_frames; }) 
+      .def_property_readonly("num_blank_frames", [](PyClass &self) { return self.num_blank_frames; })
+      .def_property_readonly(
           "ys_probs",
           [](PyClass &self) -> std::vector<float> { return self.ys_probs; })
       .def_property_readonly(

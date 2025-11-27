@@ -74,7 +74,7 @@ def get_binaries_to_install():
 setuptools.setup(
     name=package_name,
     python_requires=">=3.7",
-    version=get_package_version(),
+    version=str(get_package_version()),
     author="The sherpa-onnx development team",
     author_email="dpovey@gmail.com",
     package_dir={

@@ -1,6 +1,6 @@
 # Copyright (c)  2023  Xiaomi Corporation
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from sherpa_onnx.lib._sherpa_onnx import (
     CudaConfig,
@@ -1004,6 +1004,9 @@ class OnlineRecognizer(object):
         return self.recognizer.is_ready(s)
 
     def get_result_all(self, s: OnlineStream) -> OnlineRecognizerResult:
+        return self.recognizer.get_result(s)
+    
+    def get_result_obj(self, s: OnlineStream) -> Any:
         return self.recognizer.get_result(s)
 
     def get_result(self, s: OnlineStream) -> str:
