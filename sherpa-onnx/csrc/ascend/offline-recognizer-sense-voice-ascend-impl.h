@@ -111,6 +111,10 @@ class OfflineRecognizerSenseVoiceAscendImpl : public OfflineRecognizerImpl {
                             : meta_data.without_itn_id;
 
     std::vector<float> logits = model_->Run(std::move(f), language, text_norm);
+    if (logits.empty()) {
+      return;
+    }
+
     int32_t num_out_frames = logits.size() / meta_data.vocab_size;
 
     auto result =

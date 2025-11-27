@@ -27,56 +27,10 @@
 #include "sherpa-onnx/csrc/ascend/utils.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-static void ScaleAdd(const float *src, float scale, int32_t n, float *in_out) {
-  for (int32_t i = 0; i < n; ++i) {
-    in_out[i] += scale * src[i];
-  }
-}
-
-static void Scale(const float *src, float scale, int32_t n, float *out) {
-  for (int32_t i = 0; i < n; ++i) {
-    out[i] = scale * src[i];
-  }
-}
-
-static std::vector<float> ComputeAcousticEmbedding(
-    std::vector<float> encoder_out, std::vector<float> alphas,
-    int32_t encoder_dim) {
-  std::vector<float> ans;
-  ans.reserve(encoder_out.size());
-
-  float acc = 0;
-  std::vector<float> cur_emb(encoder_dim);
-  for (int32_t i = 0; i < static_cast<int32_t>(alphas.size()); ++i) {
-    float w = alphas[i];
-
-    acc += w;
-    if (acc >= 1) {
-      float overflow = acc - 1;
-      float remain = w - overflow;
-
-      ScaleAdd(encoder_out.data() + i * encoder_dim, remain, encoder_dim,
-               cur_emb.data());
-
-      ans.insert(ans.end(), cur_emb.begin(), cur_emb.end());
-
-      Scale(encoder_out.data() + i * encoder_dim, overflow, encoder_dim,
-            cur_emb.data());
-
-      acc = overflow;
-    } else {
-      ScaleAdd(encoder_out.data() + i * encoder_dim, w, encoder_dim,
-               cur_emb.data());
-    }
-  }
-  // TODO(fangjun): The last cur_emb is not used
-
-  return ans;
-}
 
 class OfflineParaformerModelAscend::Impl {
  public:
@@ -133,6 +87,9 @@ class OfflineParaformerModelAscend::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
 
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     int32_t num_frames = features.size() / 560;
 
@@ -154,12 +111,15 @@ class OfflineParaformerModelAscend::Impl {
                     num_frames * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
-    std::vector<float> acoustic_embedding = ComputeAcousticEmbedding(
-        std::move(encoder_out_cpu), std::move(alphas_cpu), encoder_dim_);
+    std::vector<float> acoustic_embedding =
+        ComputeAcousticEmbedding(encoder_out_cpu, alphas_cpu, encoder_dim_);
     if (acoustic_embedding.empty()) {
       // no speech in the audio file
       return {};
     }
+
+    encoder_out_cpu.clear();
+    alphas_cpu.clear();
 
     int32_t num_tokens = acoustic_embedding.size() / encoder_dim_;
 
@@ -366,6 +326,10 @@ class OfflineParaformerModelAscend::Impl {
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
     int32_t out_num_frames =
         (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
 

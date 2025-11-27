@@ -57,6 +57,9 @@ class OfflineSenseVoiceModelAscend::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
 
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     int32_t num_frames = features.size() / 560;
 
@@ -161,6 +164,10 @@ class OfflineSenseVoiceModelAscend::Impl {
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
     int32_t out_num_frames =
         (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
 

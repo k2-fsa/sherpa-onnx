@@ -37,6 +37,7 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/offline-recognizer-paraformer-rknn-impl.h"
 #include "sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-rknn-impl.h"
 #endif
 
@@ -57,14 +58,16 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
-    if (config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(config);
+    } else if (!config.model_config.paraformer.model.empty()) {
+      return std::make_unique<OfflineRecognizerParaformerRknnImpl>(config);
+    } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported "
+          "Only SenseVoice and Paraformer models are currently supported "
           "by rknn for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
-    } else if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(config);
     }
 #else
     SHERPA_ONNX_LOGE(
@@ -317,12 +320,16 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     Manager *mgr, const OfflineRecognizerConfig &config) {
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
-    if (config.model_config.sense_voice.model.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported "
-          "by rknn for non-streaming ASR. Fallback to CPU");
-    } else if (!config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty()) {
       return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(mgr, config);
+    } else if (!config.model_config.paraformer.model.empty()) {
+      return std::make_unique<OfflineRecognizerParaformerRknnImpl>(mgr, config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice and Paraformer models are currently supported "
+          "by rknn for non-streaming ASR.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
     }
 #else
     SHERPA_ONNX_LOGE(
@@ -348,7 +355,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
-          "supported by Ascend NPU for non-streaming ASR. Fallback to CPU");
+          "supported by Ascend NPU for non-streaming ASR.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
     }
 #else
     SHERPA_ONNX_LOGE(
@@ -666,8 +675,8 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
         itn_list_.push_back(
             std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
       }  // for (; !reader->Done(); reader->Next())
-    }  // for (const auto &f : files)
-  }  // if (!config.rule_fars.empty())
+    }    // for (const auto &f : files)
+  }      // if (!config.rule_fars.empty())
 
   if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty()) {
     auto hr_config = config.hr;
