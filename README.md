@@ -45,6 +45,12 @@ For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
+### Supported NPUs
+
+| [1. Rockchip NPU (RKNN)][rknpu-doc] | [2. Qualcomm NPU (QNN)][qnn-doc]  | [3. Ascend NPU][ascend-doc] |
+|-------------------------------------|-----------------------------------|-----------------------------|
+|     ✔️                              |                  ✔️               |     ✔️                      |
+
 [Join our discord](https://discord.gg/fJdxzg2VbG)
 
 
@@ -573,3 +579,6 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [kws-url]: https://k2-fsa.github.io/sherpa/onnx/kws/index.html
 [punct-url]: https://k2-fsa.github.io/sherpa/onnx/punctuation/index.html
 [se-url]: https://k2-fsa.github.io/sherpa/onnx/speech-enhancement/index.html
+[rknpu-doc]: https://k2-fsa.github.io/sherpa/onnx/rknn/index.html
+[qnn-doc]: https://k2-fsa.github.io/sherpa/onnx/qnn/index.html
+[ascend-doc]: https://k2-fsa.github.io/sherpa/onnx/ascend/index.html
