@@ -76,7 +76,7 @@ class ContextBlockingQueueRknn::Impl {
 
 ContextBlockingQueueRknn::ContextBlockingQueueRknn(rknn_context context,
                                                    int32_t num_threads,
-                                                   int32_t capacity /*= 20*/)
+                                                   int32_t capacity /*= 10*/)
     : impl_(std::make_unique<Impl>(context, num_threads, capacity)) {}
 
 ContextBlockingQueueRknn::~ContextBlockingQueueRknn() = default;

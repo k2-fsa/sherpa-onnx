@@ -25,6 +25,7 @@ set(sources
   keyword-spotter-impl.cc
   keyword-spotter.cc
   lodr-fst.cc
+  math.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc
@@ -182,6 +183,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
     ./rknn/context-blocking-queue-rknn.cc
     ./rknn/offline-sense-voice-model-rknn.cc
+    ./rknn/offline-paraformer-model-rknn.cc
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
     ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc

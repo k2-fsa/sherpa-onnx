@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "rknn_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-meta-data.h"
 

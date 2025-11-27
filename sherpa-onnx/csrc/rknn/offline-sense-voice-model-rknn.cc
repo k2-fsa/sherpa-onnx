@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -56,6 +57,9 @@ class OfflineSenseVoiceModelRknn::Impl {
   std::vector<float> Run(std::vector<float> features, int32_t language,
                          int32_t text_norm) {
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     std::vector<rknn_input> inputs(input_attrs_.size());
 
@@ -160,6 +164,11 @@ class OfflineSenseVoiceModelRknn::Impl {
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
+
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
     int32_t out_num_frames =
         (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
 
