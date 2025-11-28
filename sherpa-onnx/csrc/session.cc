@@ -23,6 +23,10 @@
 #include "dml_provider_factory.h"  // NOLINT
 #endif
 
+#if defined(SHERPA_ONNX_ENABLE_SPACEMIT)
+#include "spacemit_ort_env.h"  // NOLINT
+#endif
+
 namespace sherpa_onnx {
 
 static void OrtStatusFailure(OrtStatus *status, const char *s) {
@@ -239,6 +243,21 @@ Ort::SessionOptions GetSessionOptionsImpl(
           (int32_t)__ANDROID_API__);
 #else
       SHERPA_ONNX_LOGE("NNAPI is for Android only. Fallback to cpu");
+#endif
+      break;
+    }
+    case Provider::kSpacemiT: {
+#if defined(SHERPA_ONNX_ENABLE_SPACEMIT)
+      SHERPA_ONNX_LOGE("Use SpacemiT Execution Provider");
+      std::unordered_map<std::string, std::string> provider_options;
+      SHERPA_ONNX_LOGE("Set IntraOpNumThreads to 1");
+      sess_opts.SetIntraOpNumThreads(1);
+      SHERPA_ONNX_LOGE("Set InterOpNumThreads to 1");
+      sess_opts.SetInterOpNumThreads(1);
+      SHERPA_ONNX_LOGE("Set SPACEMIT_EP_INTRA_THREAD_NUM to %d", num_threads);
+      provider_options.insert(
+          std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM", std::to_string(num_threads)));
+      OrtStatus* sts = Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
 #endif
       break;
     }
