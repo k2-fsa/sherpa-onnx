@@ -1473,6 +1473,13 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
   return nullptr;
 }
 
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
+    const SherpaOnnxOfflineTts *tts, const char *text, const char *prompt_text,
+    const float *prompt_samples, int32_t n_prompt, int32_t prompt_sr,
+    float speed, int32_t num_steps) {
+  return nullptr;
+}
+
 void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
