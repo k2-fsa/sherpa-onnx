@@ -342,7 +342,7 @@ std::vector<TokenIDs> OfflineTtsZipvoiceFrontend::ConvertTextToTokenIds(
       TokenizeZh(pt.first, pinyin_encoder_.get(), token2id_, &token_ids,
                  &tokens);
     } else if (pt.second == "en") {
-      TokenizeEn(pt.first, token2id_, voice, &token_ids, &tokens);
+      TokenizeEn(pt.first, token2id_, "en-us", &token_ids, &tokens);
     } else if (pt.second == "pinyin") {
       TokenizePinyin(pt.first, pinyin_encoder_.get(), token2id_, &token_ids,
                      &tokens);
