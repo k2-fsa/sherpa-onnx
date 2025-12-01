@@ -52,10 +52,43 @@ if(NOT onnxruntime_POPULATED)
 endif()
 message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-file(GLOB onnxruntime_lib_files
-  "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime*"
-  "${onnxruntime_SOURCE_DIR}/lib/libspacemit_ep*"
+find_library(location_onnxruntime
+  NAMES onnxruntime
+  PATHS "${onnxruntime_SOURCE_DIR}/lib"
+  NO_CMAKE_SYSTEM_PATH
 )
-set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
+
+message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+
+find_library(location_spacemit_ep
+  NAMES spacemit_ep
+  PATHS "${onnxruntime_SOURCE_DIR}/lib"
+  NO_CMAKE_SYSTEM_PATH
+)
+
+message(STATUS "location_spacemit_ep: ${location_spacemit_ep}")
+
+add_library(onnxruntime SHARED IMPORTED)
+add_library(spacemit_ep SHARED IMPORTED)
+
+set_target_properties(onnxruntime PROPERTIES
+  IMPORTED_LOCATION ${location_onnxruntime}
+  IMPORTED_LOCATION "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include/"
+)
+
+set_target_properties(spacemit_ep PROPERTIES
+  IMPORTED_LOCATION ${location_spacemit_ep}
+  IMPORTED_LOCATION "${onnxruntime_SOURCE_DIR}/lib/libspacemit_ep.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include/"
+)
+
+file(GLOB onnxruntime_lib_files
+  "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime*")
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+
+file(GLOB spacemit_ep_lib_files
+  "${onnxruntime_SOURCE_DIR}/lib/libspacemit_ep*")
+message(STATUS "spacemit_ep lib files: ${spacemit_ep_lib_files}")
+install(FILES ${spacemit_ep_lib_files} DESTINATION lib)
