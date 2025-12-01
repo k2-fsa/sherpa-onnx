@@ -50,76 +50,65 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
     return s->GetNumProcessedFrames() < s->NumFramesReady();
   }
 
-  std::vector<float> Compute(OnlineStream *s) const override {
-    int32_t num_frames = s->NumFramesReady() - s->GetNumProcessedFrames();
-    if (num_frames <= 0) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE(
-          "Please make sure IsReady(s) returns true. num_frames: %{public}d",
-          num_frames);
-#else
-      SHERPA_ONNX_LOGE(
-          "Please make sure IsReady(s) returns true. num_frames: %d",
-          num_frames);
-#endif
-      return {};
-    }
-
-    std::vector<float> features =
-        s->GetFrames(s->GetNumProcessedFrames(), num_frames);
-
-    s->GetNumProcessedFrames() += num_frames;
-
-    int32_t feat_dim = features.size() / num_frames;
-
-    const auto &meta_data = model_.GetMetaData();
-    if (!meta_data.feature_normalize_type.empty()) {
-      if (meta_data.feature_normalize_type == "per_feature") {
-        NormalizePerFeature(features.data(), num_frames, feat_dim);
-      } else {
-#if __OHOS__
-        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %{public}s",
-                         meta_data.feature_normalize_type.c_str());
-#else
-
-        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
-                         meta_data.feature_normalize_type.c_str());
-#endif
-        exit(-1);
-      }
-    }
-
-    if (num_frames % 16 != 0) {
-      int32_t pad = 16 - num_frames % 16;
-      features.resize((num_frames + pad) * feat_dim);
-    }
-
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-    std::array<int64_t, 3> x_shape{1, num_frames, feat_dim};
-    Ort::Value x =
-        Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
-                                 x_shape.data(), x_shape.size());
-
-    x = Transpose12(model_.Allocator(), &x);
-
-    int64_t x_lens = num_frames;
-    std::array<int64_t, 1> x_lens_shape{1};
-    Ort::Value x_lens_tensor = Ort::Value::CreateTensor(
-        memory_info, &x_lens, 1, x_lens_shape.data(), x_lens_shape.size());
-
-    Ort::Value embedding =
-        model_.Compute(std::move(x), std::move(x_lens_tensor));
-    std::vector<int64_t> embedding_shape =
-        embedding.GetTensorTypeAndShapeInfo().GetShape();
-
-    std::vector<float> ans(embedding_shape[1]);
-    std::copy(embedding.GetTensorData<float>(),
-              embedding.GetTensorData<float>() + ans.size(), ans.begin());
-
-    return ans;
+ std::vector<float> Compute(OnlineStream *s) const override {
+  int32_t num_frames = s->NumFramesReady() - s->GetNumProcessedFrames();
+  if (num_frames <= 0) {
+    SHERPA_ONNX_LOG("The number of frames is less than 0");
+    return {};
   }
+
+  std::vector<float> features =
+      s->GetFrames(s->GetNumProcessedFrames(), num_frames);
+
+  s->SetNumProcessedFrames(s->GetNumProcessedFrames() + num_frames);
+
+  int32_t feat_dim = features.size() / num_frames;
+  const auto &meta_data = model_.GetMetaData();
+
+  if (!meta_data.feature_normalize_type.empty()) {
+    if (meta_data.feature_normalize_type == "per_feature") {
+      NormalizePerFeature(features.data(), num_frames, feat_dim);
+    } else {
+      SHERPA_ONNX_LOG("Unexpect feature_normalize_type");
+      exit(-1);
+    }
+  }
+
+  int64_t original_num_frames = num_frames;
+
+  if (num_frames % 16 != 0) {
+    int32_t pad = 16 - num_frames % 16;
+    features.resize((num_frames + pad) * feat_dim, 0.0f);
+    num_frames += pad;
+  }
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  std::array<int64_t, 3> x_shape{1, num_frames, feat_dim};
+  Ort::Value x =
+      Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
+                               x_shape.data(), x_shape.size());
+
+  x = Transpose12(model_.Allocator(), &x);
+
+  int64_t x_lens = original_num_frames;
+  std::array<int64_t, 1> x_lens_shape{1};
+  Ort::Value x_lens_tensor = Ort::Value::CreateTensor(
+      memory_info, &x_lens, 1, x_lens_shape.data(), x_lens_shape.size());
+
+  Ort::Value embedding =
+      model_.Compute(std::move(x), std::move(x_lens_tensor));
+
+  std::vector<int64_t> embedding_shape =
+      embedding.GetTensorTypeAndShapeInfo().GetShape();
+
+  std::vector<float> ans(embedding_shape[1]);
+  std::copy(embedding.GetTensorData<float>(),
+            embedding.GetTensorData<float>() + ans.size(), ans.begin());
+
+  return ans;
+}
 
  private:
   void NormalizePerFeature(float *p, int32_t num_frames,
