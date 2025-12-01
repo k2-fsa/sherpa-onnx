@@ -71,6 +71,7 @@ s->GetNumProcessedFrames() += num_frames;
     } else {
       SHERPA_ONNX_LOG(FATAL) << "Unsupported feature_normalize_type: "
                          << meta_data.feature_normalize_type;
+      return {};
     }
   }
 
