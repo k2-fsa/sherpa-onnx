@@ -24,6 +24,9 @@ struct OfflineTransducerDecoderResult {
   /// (post-subsampling). It is converted to seconds by higher layers
   /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
   std::vector<float> durations;
+
+  /// ys_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_probs;
 };
 
 class OfflineTransducerDecoder {

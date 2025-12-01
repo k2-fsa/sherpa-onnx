@@ -42,6 +42,9 @@ struct OfflineRecognitionResult {
   /// only)
   std::vector<float> durations;
 
+  /// ys_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_probs;
+
   std::vector<int32_t> words;
 
   std::string AsJsonString() const;
