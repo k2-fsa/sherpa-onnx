@@ -69,8 +69,8 @@ s->GetNumProcessedFrames() += num_frames;
     if (meta_data.feature_normalize_type == "per_feature") {
       NormalizePerFeature(features.data(), num_frames, feat_dim);
     } else {
-      SHERPA_ONNX_LOG("Unexpect feature_normalize_type");
-      exit(-1);
+      SHERPA_ONNX_LOG(FATAL) << "Unsupported feature_normalize_type: "
+                         << meta_data.feature_normalize_type;
     }
   }
 
