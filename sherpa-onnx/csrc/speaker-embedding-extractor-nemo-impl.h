@@ -53,7 +53,7 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
  std::vector<float> Compute(OnlineStream *s) const override {
   int32_t num_frames = s->NumFramesReady() - s->GetNumProcessedFrames();
   if (num_frames <= 0) {
-    SHERPA_ONNX_LOG("The number of frames is less than 0");
+SHERPA_ONNX_LOG(ERROR) << "Please make sure IsReady(s) returns true. num_frames: " << num_frames;
     return {};
   }
 
