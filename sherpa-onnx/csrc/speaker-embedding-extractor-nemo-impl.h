@@ -60,7 +60,7 @@ SHERPA_ONNX_LOG(ERROR) << "Please make sure IsReady(s) returns true. num_frames:
   std::vector<float> features =
       s->GetFrames(s->GetNumProcessedFrames(), num_frames);
 
-  s->SetNumProcessedFrames(s->GetNumProcessedFrames() + num_frames);
+s->GetNumProcessedFrames() += num_frames;
 
   int32_t feat_dim = features.size() / num_frames;
   const auto &meta_data = model_.GetMetaData();
