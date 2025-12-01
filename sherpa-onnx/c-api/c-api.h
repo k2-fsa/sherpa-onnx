@@ -666,6 +666,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   // Pointer to continuous memory which holds durations (in seconds) for each
   // token It is NULL if the model does not support durations
   float *durations;
+
+  // Pointer to continuous memory which holds log probabilities (confidence)
+  // for each token. It is NULL if the model does not support probabilities.
+  // ys_probs[i] is the log probability for token i.
+  float *ys_probs;
 } SherpaOnnxOfflineRecognizerResult;
 
 /// Get the result of the offline stream.
