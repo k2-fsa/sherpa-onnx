@@ -200,7 +200,15 @@ if(SHERPA_ONNX_ENABLE_AXERA)
 
 endif()
 
-if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN OR SHERPA_ONNX_ENABLE_AXERA)
+if(SHERPA_ONNX_ENABLE_AXCL)
+  list(APPEND sources
+    ./axcl/offline-sense-voice-model-axcl.cc
+    ./axcl/ax_model_runner_axcl.cc
+  )
+
+endif()
+
+if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN OR SHERPA_ONNX_ENABLE_AXERA OR SHERPA_ONNX_ENABLE_AXCL)
   list(APPEND sources
     ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
   )
@@ -344,6 +352,19 @@ if(SHERPA_ONNX_ENABLE_AXERA)
       ax_interpreter
       ax_sys
       pthread
+    )
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_AXCL)
+  if(DEFINED ENV{SHERPA_ONNX_AXCL_LIB_DIR})
+    target_link_libraries(sherpa-onnx-core
+      -L$ENV{SHERPA_ONNX_AXCL_LIB_DIR}
+      -laxcl_rt
+      )
+  else()
+    target_link_libraries(sherpa-onnx-core
+      axcl_rt
     )
   endif()
 endif()

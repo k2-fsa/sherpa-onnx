@@ -44,6 +44,10 @@
 #include "sherpa-onnx/csrc/axera/offline-recognizer-sense-voice-axera-impl.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-recognizer-sense-voice-axcl-impl.h"
+#endif
+
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h"
@@ -78,7 +82,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 #endif
   }
 
-    if (config.model_config.provider == "axera") {
+  if (config.model_config.provider == "axera") {
 #if SHERPA_ONNX_ENABLE_AXERA
     if (config.model_config.sense_voice.model.empty()) {
       SHERPA_ONNX_LOGE(
@@ -94,6 +98,27 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXERA=ON if you "
         "want to use axera. See also "
         "https://k2-fsa.github.io/sherpa/onnx/axera/install.html");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (config.model_config.sense_voice.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only SenseVoice models are currently supported "
+          "by axcl for non-streaming ASR.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    } else if (!config.model_config.sense_voice.model.empty()) {
+      return std::make_unique<OfflineRecognizerSenseVoiceAxclImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/axcl/install.html");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
