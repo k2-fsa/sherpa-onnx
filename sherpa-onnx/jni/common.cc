@@ -15,6 +15,11 @@ namespace sherpa_onnx {
 
 https://workbench.aihub.qualcomm.com/docs/hub/faq.html#why-am-i-seeing-error-1008-when-trying-to-use-htp
  */
+#if defined(_WIN32)
+void PrependAdspLibraryPath(const std::string &new_path) {
+  SHERPA_ONNX_LOGE("This function is not for Windows. Ignore it");
+}
+#else
 void PrependAdspLibraryPath(const std::string &new_path) {
   const char *old_path = getenv("ADSP_LIBRARY_PATH");
   std::string updated_path;
@@ -43,5 +48,6 @@ Successfully set ADSP_LIBRARY_PATH to
 
    */
 }
+#endif
 
 }  // namespace sherpa_onnx
