@@ -14,6 +14,12 @@
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
+/**
+ * Convert the recognition result into a JSON-formatted string.
+ *
+ * @returns A JSON string containing the result fields (e.g. `text`, `tokens`,
+ * `lang`, `emotion`, `event`, `timestamps`, `durations`, `ys_probs`, `words`).
+ */
 namespace sherpa_onnx {
 
 struct OfflineRecognitionResult {
@@ -41,6 +47,9 @@ struct OfflineRecognitionResult {
   /// durations[i] contains the duration (in seconds) for tokens[i] (TDT models
   /// only)
   std::vector<float> durations;
+
+  /// ys_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_probs;
 
   std::vector<int32_t> words;
 

@@ -28,7 +28,28 @@
 #include "sherpa-onnx/csrc/utils.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
 
-namespace sherpa_onnx {
+/**
+   * Convert an OfflineTransducerDecoderResult into an OfflineRecognitionResult.
+   *
+   * Maps token indices to symbols using the provided symbol table, constructs
+   * the concatenated text (decoding Byte BPE if applicable), formats single-byte
+   * non-printable symbols as `<0xXX>`, and copies tokens, scaled timestamps,
+   * scaled durations, and token log-probabilities into the result.
+   *
+   * @param src The decoder result to convert.
+   * @param sym_table Symbol table used to map token ids to string symbols and
+   *                  to decode Byte BPE when applicable.
+   * @param frame_shift_ms Frame shift of input features in milliseconds.
+   * @param subsampling_factor The model subsampling factor used to scale frame
+   *                           indices to time.
+   * @returns An OfflineRecognitionResult containing:
+   *          - text: concatenated (and Byte BPE–decoded) output text,
+   *          - tokens: per-token string symbols (with non-printable bytes as `<0xXX>`),
+   *          - timestamps: token timestamps in seconds,
+   *          - durations: token durations in seconds,
+   *          - ys_probs: token log-probabilities.
+   */
+  namespace sherpa_onnx {
 
 static OfflineRecognitionResult Convert(
     const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
@@ -71,6 +92,9 @@ static OfflineRecognitionResult Convert(
   for (auto d : src.durations) {
     r.durations.push_back(d * frame_shift_s);
   }
+
+  // Copy token log probabilities (confidence scores)
+  r.ys_probs = src.ys_probs;
 
   return r;
 }

@@ -374,6 +374,23 @@ const ContextGraphPtr &OfflineStream::GetContextGraph() const {
 const OfflineRecognitionResult &OfflineStream::GetResult() const {
   return impl_->GetResult();
 }
+/**
+ * @brief Serialize the recognition result to a JSON-style string.
+ *
+ * The produced JSON contains the following fields in order:
+ * `lang`, `emotion`, `event`, `text`, `timestamps`, `durations`, `tokens`,
+ * `ys_probs`, and `words`.
+ *
+ * - `timestamps` and `durations` are arrays of numbers formatted with two
+ *   decimal places.
+ * - `tokens` is an array of strings; single-byte non-ASCII tokens are emitted
+ *   as quoted hex escapes in the form `<0xXX>`.
+ * - `ys_probs` is an array of floating-point numbers formatted with six decimal
+ *   places.
+ * - `words` is an array of integers.
+ *
+ * @return std::string A JSON-style representation of this OfflineRecognitionResult.
+ */
 std::string OfflineRecognitionResult::AsJsonString() const {
   std::ostringstream os;
   os << "{";
@@ -438,6 +455,18 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     } else {
       os << sep << std::quoted(t);
     }
+    sep = ", ";
+  }
+  os << "], ";
+
+  os << "\""
+     << "ys_probs"
+     << "\""
+     << ": ";
+  os << "[";
+  sep = "";
+  for (auto p : ys_probs) {
+    os << sep << std::fixed << std::setprecision(6) << p;
     sep = ", ";
   }
   os << "], ";

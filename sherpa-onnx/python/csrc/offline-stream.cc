@@ -22,6 +22,14 @@ Args:
     to the range [-1, 1].
 )";
 
+/**
+ * @brief Bind the OfflineRecognitionResult C++ type into the given Python module.
+ *
+ * Exposes a Python class "OfflineRecognitionResult" with:
+ * - __str__ mapped to AsJsonString()
+ * - read-only properties: text, lang, emotion, event, tokens, words, timestamps,
+ *   durations, ys_probs
+ */
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult")
@@ -45,9 +53,20 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("timestamps",
         [](const PyClass &self) { return self.timestamps; })
       .def_property_readonly("durations",
-        [](const PyClass &self) { return self.durations; });
+        [](const PyClass &self) { return self.durations; })
+      .def_property_readonly("ys_probs",
+        [](const PyClass &self) { return self.ys_probs; });
 }
 
+/**
+ * @brief Bind the OfflineStream API into the provided Python module.
+ *
+ * Ensures OfflineRecognitionResult is registered, then exposes a Python
+ * class named "OfflineStream" with an accept_waveform(sample_rate, waveform)
+ * method (the call releases the Python GIL) and a read-only "result" property.
+ *
+ * @param m Pointer to the pybind11 module to populate with these bindings.
+ */
 void PybindOfflineStream(py::module *m) {
   PybindOfflineRecognitionResult(m);
 

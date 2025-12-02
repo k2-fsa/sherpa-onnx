@@ -17,6 +17,28 @@
 
 namespace sherpa_onnx {
 
+/**
+ * @brief Perform modified beam-search decoding for an offline transducer model.
+ *
+ * Decodes padded encoder outputs into a best-path hypothesis per input using a
+ * modified beam-search that supports per-utterance context biasing and optional
+ * language-model rescoring. Hypotheses carry token sequences, per-token log
+ * probabilities, and timestamps; returned entries are ordered to match the
+ * original (unsorted) batch order.
+ *
+ * @param encoder_out Ort::Value containing padded encoder outputs.
+ * @param encoder_out_length Ort::Value containing lengths of encoder outputs.
+ * @param ss Optional array of pointers to OfflineStream; when provided, per-utterance
+ *           ContextGraph pointers are obtained from these streams for context biasing.
+ *           If `ss` is non-null, `n` must equal the decoding batch size.
+ * @param n When `ss` is provided, the expected batch size (must equal the internal batch size).
+ *
+ * @return std::vector<OfflineTransducerDecoderResult> A vector with one result per
+ *         original batch item. For each result:
+ *         - `tokens` contains the decoded token sequence with initial context tokens removed.
+ *         - `timestamps` contains per-token time-step indices for non-blank tokens.
+ *         - `ys_probs` contains the original per-token log probabilities (one entry per non-blank token).
+ */
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerModifiedBeamSearchDecoder::Decode(
     Ort::Value encoder_out, Ort::Value encoder_out_length,
@@ -136,6 +158,11 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
         if (new_token != 0 && new_token != unk_id_) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t);
+
+          // Store the token log probability (subtract prev log_prob to get original)
+          float token_log_prob = p_logprob[k] - prev[hyp_index].log_prob;
+          new_hyp.ys_probs.push_back(token_log_prob);
+
           if (context_graphs[i] != nullptr) {
             auto context_res =
                 context_graphs[i]->ForwardOneStep(context_state,
@@ -186,6 +213,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
     // strip leading blanks
     r.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
     r.timestamps = std::move(hyp.timestamps);
+    r.ys_probs = std::move(hyp.ys_probs);
   }
 
   return unsorted_ans;
