@@ -5,11 +5,11 @@
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
 
 #include <algorithm>
-#include <cmath>
 #include <iterator>
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -54,22 +54,14 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
       if (blank_penalty_ > 0.0) {
         p_logit[0] -= blank_penalty_;  // assuming blank id is 0
       }
-
-      // Compute log softmax to get log probabilities
-      const float *max_it = std::max_element(p_logit, p_logit + vocab_size);
-      float max_logit = *max_it;
-      float sum_exp = 0.0f;
-      for (int32_t k = 0; k != vocab_size; ++k) {
-        sum_exp += std::exp(p_logit[k] - max_logit);
-      }
-      float log_sum_exp = max_logit + std::log(sum_exp);
+      
+      LogSoftmax(p_logit, vocab_size);
 
       auto y = static_cast<int32_t>(std::distance(
-          static_cast<const float *>(p_logit),
-          max_it));
+          p_logit,
+          std::max_element(p_logit, p_logit + vocab_size)));
 
-      // Compute log probability for the selected token
-      float log_prob = p_logit[y] - log_sum_exp;
+      float log_prob = p_logit[y];
 
       p_logit += vocab_size;
       // blank id is hardcoded to 0
@@ -77,7 +69,7 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
       if (y != 0 && y != unk_id_) {
         ans[i].tokens.push_back(y);
         ans[i].timestamps.push_back(t);
-        ans[i].ys_probs.push_back(log_prob);
+        ans[i].ys_log_probs.push_back(log_prob);
         emitted = true;
       }
     }

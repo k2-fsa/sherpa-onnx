@@ -25,8 +25,8 @@ struct OfflineTransducerDecoderResult {
   /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
   std::vector<float> durations;
 
-  /// ys_probs[i] contains the log probability (confidence) for tokens[i].
-  std::vector<float> ys_probs;
+  /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_log_probs;
 };
 
 class OfflineTransducerDecoder {

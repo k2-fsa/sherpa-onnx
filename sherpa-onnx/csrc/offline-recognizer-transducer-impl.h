@@ -73,7 +73,7 @@ static OfflineRecognitionResult Convert(
   }
 
   // Copy token log probabilities (confidence scores)
-  r.ys_probs = src.ys_probs;
+  r.ys_log_probs = src.ys_log_probs;
 
   return r;
 }
