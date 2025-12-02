@@ -56,7 +56,8 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
       }
 
       // Compute log softmax to get log probabilities
-      float max_logit = *std::max_element(p_logit, p_logit + vocab_size);
+      const float *max_it = std::max_element(p_logit, p_logit + vocab_size);
+      float max_logit = *max_it;
       float sum_exp = 0.0f;
       for (int32_t k = 0; k != vocab_size; ++k) {
         sum_exp += std::exp(p_logit[k] - max_logit);
@@ -65,8 +66,7 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
 
       auto y = static_cast<int32_t>(std::distance(
           static_cast<const float *>(p_logit),
-          std::max_element(static_cast<const float *>(p_logit),
-                           static_cast<const float *>(p_logit) + vocab_size)));
+          max_it));
 
       // Compute log probability for the selected token
       float log_prob = p_logit[y] - log_sum_exp;
