@@ -284,7 +284,7 @@ jobs:
           tar xf vits-piper-en_US-lessac-medium.tar.bz2
           rm vits-piper-en_US-lessac-medium.tar.bz2
 
-          qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts \
+          qemu-riscv64 ${QEMU_ARGS} ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts \
             --provider=spacemit \
             --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \
             --vits-data-dir=./vits-piper-en_US-lessac-medium/espeak-ng-data \
