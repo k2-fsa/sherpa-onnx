@@ -136,6 +136,11 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
         if (new_token != 0 && new_token != unk_id_) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t);
+
+          // Store the token log probability (subtract prev log_prob to get original)
+          float token_log_prob = p_logprob[k] - prev[hyp_index].log_prob;
+          new_hyp.ys_log_probs.push_back(token_log_prob);
+
           if (context_graphs[i] != nullptr) {
             auto context_res =
                 context_graphs[i]->ForwardOneStep(context_state,
@@ -186,6 +191,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
     // strip leading blanks
     r.tokens = {hyp.ys.begin() + context_size, hyp.ys.end()};
     r.timestamps = std::move(hyp.timestamps);
+    r.ys_log_probs = std::move(hyp.ys_log_probs);
   }
 
   return unsorted_ans;
