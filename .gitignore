@@ -161,3 +161,5 @@ sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-a
 sherpa-onnx-paraformer-zh-int8-2025-10-07
 sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64
 sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64
+build-riscv64-linux-gnu-spacemit/
+spacemit-toolchain*
