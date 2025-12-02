@@ -10,7 +10,7 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL riscv64)
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}, SHERPA_ONNX_ENABLE_SPACEMIT: ${SHERPA_ONNX_ENABLE_SPACEMIT}")
 endif()
 
 set(onnxruntime_pkg_name "spacemit-ort.riscv64.2.0.1.tar.gz")

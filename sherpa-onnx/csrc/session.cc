@@ -249,6 +249,10 @@ Ort::SessionOptions GetSessionOptionsImpl(
     case Provider::kSpacemiT: {
 #if defined(SHERPA_ONNX_ENABLE_SPACEMIT)
       SHERPA_ONNX_LOGE("Use SpacemiT Execution Provider");
+      // when using SpacemiT Execution Provider, set intra_op_num_threads and
+      // inter_op_num_threads to 1 can improve performance.
+      // all ops run on ep, no need to create multiple threads in onnxruntime.
+      // ep will create SPACEMIT_EP_INTRA_THREAD_NUM threads as intra threads.
       std::unordered_map<std::string, std::string> provider_options;
       SHERPA_ONNX_LOGE("Set IntraOpNumThreads to 1");
       sess_opts.SetIntraOpNumThreads(1);
@@ -258,6 +262,14 @@ Ort::SessionOptions GetSessionOptionsImpl(
       provider_options.insert(
           std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM", std::to_string(num_threads)));
       OrtStatus* sts = Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
+      if (sts) {
+        const auto &api = Ort::GetApi();
+        const char *msg = api.GetErrorMessage(sts);
+        SHERPA_ONNX_LOGE("Failed to enable SpacemiT Execution Provider: %s. Fallback to cpu", msg);
+        api.ReleaseStatus(sts);
+      }
+#else
+      SHERPA_ONNX_LOGE("SpacemiT Execution Provider is for SpacemiT AI-CPUs only. Fallback to cpu!");
 #endif
       break;
     }

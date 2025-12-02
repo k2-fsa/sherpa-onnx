@@ -230,19 +230,20 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+          export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
 
           ls -lh ./build-riscv64-linux-gnu-spacemit/bin
 
           echo "----------sherpa-onnx----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx --help
+          qemu-riscv64 ${QEMU_ARGS} ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx --help
           readelf -d ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx
 
           echo "----------sherpa-onnx-offline----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline --help
+          qemu-riscv64 ${QEMU_ARGS} ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline --help
           readelf -d ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline
 
           echo "----------sherpa-onnx-offline-tts----------"
-          qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts --help
+          qemu-riscv64 ${QEMU_ARGS} ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts --help
           readelf -d ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts
 
       - name: Test streaming speech recognition
@@ -252,12 +253,16 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+          export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
+          echo "Some mistakes in ep graph partition, disable op Gather for spacemit-ep now, will be fixed soon."
+          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
           tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
           rm sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
 
-          qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx \
+          qemu-riscv64 ${QEMU_ARGS} ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx \
+            --provider=spacemit \
             --tokens=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/tokens.txt \
             --encoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/encoder-epoch-99-avg-1.onnx \
             --decoder=./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/decoder-epoch-99-avg-1.onnx \
@@ -271,12 +276,16 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
+          export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
+          echo "Some mistakes in ep graph partition, disable op Gather;Cast;ConvTranspose for spacemit-ep now, will be fixed soon."
+          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather;Cast;ConvTranspose"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
           tar xf vits-piper-en_US-lessac-medium.tar.bz2
           rm vits-piper-en_US-lessac-medium.tar.bz2
 
           qemu-riscv64 ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts \
+            --provider=spacemit \
             --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \
             --vits-data-dir=./vits-piper-en_US-lessac-medium/espeak-ng-data \
             --vits-tokens=./vits-piper-en_US-lessac-medium/tokens.txt \
