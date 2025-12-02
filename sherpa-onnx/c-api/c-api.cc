@@ -624,6 +624,19 @@ void SherpaOnnxDecodeMultipleOfflineStreams(
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
+/**
+ * @brief Create and return a copy of the latest offline recognition result for a stream.
+ *
+ * Copies the stream's result into a newly allocated SherpaOnnxOfflineRecognizerResult containing
+ * null-terminated C strings for text, language, emotion, event and JSON, and per-token data
+ * (a contiguous tokens buffer with an array of token pointers, token count, and optional
+ * per-token timestamps, durations, and `ys_probs` arrays when available and matching the token count).
+ *
+ * @param stream Pointer to the offline stream whose current result will be copied.
+ * @return const SherpaOnnxOfflineRecognizerResult* Pointer to a newly allocated result; the caller
+ *         owns the returned pointer and must release it (and all internal buffers) using
+ *         SherpaOnnxDestroyOfflineRecognizerResult.
+ */
 const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     const SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
@@ -703,23 +716,41 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
       r->durations = nullptr;
     }
 
+    if (!result.ys_probs.empty() && result.ys_probs.size() == r->count) {
+      r->ys_probs = new float[r->count];
+      std::copy(result.ys_probs.begin(), result.ys_probs.end(), r->ys_probs);
+    } else {
+      r->ys_probs = nullptr;
+    }
+
     r->tokens = tokens;
   } else {
     r->count = 0;
     r->timestamps = nullptr;
     r->tokens = nullptr;
     r->tokens_arr = nullptr;
+    r->ys_probs = nullptr;
   }
 
   return r;
 }
 
+/**
+ * @brief Free all memory owned by an offline recognition result and delete the result object.
+ *
+ * This function releases any heap-allocated fields contained in the provided
+ * SherpaOnnxOfflineRecognizerResult (text, tokens, timestamps, durations,
+ * ys_probs, json, language, emotion, event, etc.) and then deletes the struct itself.
+ *
+ * @param r Pointer to the result to free; passing `nullptr` has no effect.
+ */
 void SherpaOnnxDestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r) {
   if (r) {
     delete[] r->text;
     delete[] r->timestamps;
     delete[] r->durations;
+    delete[] r->ys_probs;
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->json;

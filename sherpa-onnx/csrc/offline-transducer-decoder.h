@@ -10,6 +10,16 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-stream.h"
 
+/**
+ * Performs transducer beam search using encoder outputs.
+ *
+ * @param encoder_out A 3-D tensor of shape (N, T, joiner_dim) containing encoder outputs.
+ * @param encoder_out_length A 1-D tensor of shape (N,) with the number of valid frames in each encoder_out before padding.
+ * @param ss Optional pointer to an array of OfflineStream pointers associated with each batch entry (may be nullptr).
+ * @param n Number of streams provided in `ss` (typically the batch size when `ss` is not nullptr).
+ *
+ * @return A vector of OfflineTransducerDecoderResult of length N, one result per input in the batch.
+ */
 namespace sherpa_onnx {
 
 struct OfflineTransducerDecoderResult {
@@ -24,6 +34,9 @@ struct OfflineTransducerDecoderResult {
   /// (post-subsampling). It is converted to seconds by higher layers
   /// (e.g., Convert() in offline-recognizer-transducer-impl.h).
   std::vector<float> durations;
+
+  /// ys_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_probs;
 };
 
 class OfflineTransducerDecoder {
