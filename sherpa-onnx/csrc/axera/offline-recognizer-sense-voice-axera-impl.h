@@ -19,7 +19,7 @@
 
 namespace sherpa_onnx {
 
-// defined in ../online-recognizer-sense-voice-impl.h
+// defined in ../offline-recognizer-sense-voice-impl.h
 OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor);

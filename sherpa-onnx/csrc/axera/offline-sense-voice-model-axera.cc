@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -19,7 +20,9 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "sherpa-onnx/csrc/axera/io.hpp"
+#include "ax_engine_api.h"  // NOLINT
+#include "ax_sys_api.h"     // NOLINT
+#include "sherpa-onnx/csrc/axera/ax-engine-guard.h"
 #include "sherpa-onnx/csrc/axera/utils.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -29,7 +32,7 @@ namespace sherpa_onnx {
 class OfflineSenseVoiceModelAxera::Impl {
  public:
   ~Impl() {
-    middleware::free_io(&io_data_);
+    FreeIO(&io_data_);
     if (handle_) {
       AX_ENGINE_DestroyHandle(handle_);
     }
@@ -52,14 +55,12 @@ class OfflineSenseVoiceModelAxera::Impl {
 
   std::vector<float> Run(std::vector<float> features, int32_t language,
                          int32_t text_norm) {
+    // TODO(fangjun): Support multi clients
+    std::lock_guard<std::mutex> lock(mutex_);
+
     features = ApplyLFR(std::move(features));
 
     std::array<int32_t, 4> prompt{language, 1, 2, text_norm};
-
-    if (!io_info_ || io_info_->nInputSize < 1) {
-      SHERPA_ONNX_LOGE("Axera model expects at least 1 input tensor");
-      SHERPA_ONNX_EXIT(-1);
-    }
 
     const auto &in0_meta = io_info_->pInputs[0];
     size_t bytes0 = in0_meta.nSize;
@@ -73,28 +74,19 @@ class OfflineSenseVoiceModelAxera::Impl {
 
     std::memcpy(io_data_.pInputs[0].pVirAddr, features.data(), bytes0);
 
-    //   io_info_->nInputSize >= 2
-    //   io_info_->pInputs[1].nSize == prompt.size() * sizeof(int32_t)
-    if (io_info_->nInputSize >= 2) {
-      const auto &in1_meta = io_info_->pInputs[1];
-      size_t bytes1 = in1_meta.nSize;
-      if (bytes1 != prompt.size() * sizeof(int32_t)) {
-        SHERPA_ONNX_LOGE(
-            "Prompt size mismatch. model expects %u bytes, but got %zu bytes",
-            in1_meta.nSize, prompt.size() * sizeof(int32_t));
-        SHERPA_ONNX_EXIT(-1);
-      }
-      std::memcpy(io_data_.pInputs[1].pVirAddr, prompt.data(), bytes1);
+    const auto &in1_meta = io_info_->pInputs[1];
+    size_t bytes1 = in1_meta.nSize;
+    if (bytes1 != prompt.size() * sizeof(int32_t)) {
+      SHERPA_ONNX_LOGE(
+          "Prompt size mismatch. model expects %u bytes, but got %zu bytes",
+          in1_meta.nSize, prompt.size() * sizeof(int32_t));
+      SHERPA_ONNX_EXIT(-1);
     }
+    std::memcpy(io_data_.pInputs[1].pVirAddr, prompt.data(), bytes1);
 
     auto ret = AX_ENGINE_RunSync(handle_, &io_data_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("AX_ENGINE_RunSync failed, ret = %d", ret);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (io_info_->nOutputSize < 1) {
-      SHERPA_ONNX_LOGE("Axera model has no output tensor");
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -111,17 +103,13 @@ class OfflineSenseVoiceModelAxera::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    InitEngine(config_.debug);
-
     InitContext(model_data, model_data_length, config_.debug, &handle_);
 
     InitInputOutputAttrs(handle_, config_.debug, &io_info_);
 
-    std::memset(&io_data_, 0, sizeof(io_data_));
-
     PrepareIO(io_info_, &io_data_, config_.debug);
 
-    if (!io_info_ || io_info_->nInputSize == 0 || !io_info_->pInputs) {
+    if (!io_info_ || io_info_->nInputSize != 2 || !io_info_->pInputs) {
       SHERPA_ONNX_LOGE("No input tensor in Axera model");
       SHERPA_ONNX_EXIT(-1);
     }
@@ -133,6 +121,11 @@ class OfflineSenseVoiceModelAxera::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
     num_input_frames_ = in0.pShape[1];
+
+    if (io_info_->nOutputSize != 1) {
+      SHERPA_ONNX_LOGE("Axera sense voice model expected only 1 output tensor");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     if (config_.debug) {
       SHERPA_ONNX_LOGE("Axera SenseVoice model init done.");
@@ -173,6 +166,9 @@ class OfflineSenseVoiceModelAxera::Impl {
   }
 
  private:
+  std::mutex mutex_;
+  AxEngineGuard ax_engine_guard_;
+
   OfflineModelConfig config_;
   AX_ENGINE_HANDLE handle_ = nullptr;
   AX_ENGINE_IO_INFO_T *io_info_ = nullptr;

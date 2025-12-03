@@ -198,10 +198,10 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_AXERA)
   list(APPEND sources
+    ./axera/ax-engine-guard.cc
     ./axera/offline-sense-voice-model-axera.cc
     ./axera/utils.cc
   )
-
 endif()
 
 if(SHERPA_ONNX_ENABLE_AXCL)
@@ -209,7 +209,6 @@ if(SHERPA_ONNX_ENABLE_AXCL)
     ./axcl/offline-sense-voice-model-axcl.cc
     ./axcl/ax_model_runner_axcl.cc
   )
-
 endif()
 
 if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN OR SHERPA_ONNX_ENABLE_AXERA OR SHERPA_ONNX_ENABLE_AXCL)
