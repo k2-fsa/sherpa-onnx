@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pypinyin import Style, lazy_pinyin, load_phrases_dict, phrases_dict, pinyin_dict
+from pypinyin import Style, pinyin, load_phrases_dict, phrases_dict, pinyin_dict
 
 load_phrases_dict(
     {
@@ -28,7 +28,8 @@ def main():
                 continue
 
             w = chr(key)
-            tokens = lazy_pinyin(w, style=Style.TONE3, tone_sandhi=True)[0]
+            tokens = pinyin(w, style=Style.TONE3, neutral_tone_with_five=True)[0][0]
+
             if tokens == "shei2":
                 tokens = "shui2"
 
@@ -43,7 +44,7 @@ def main():
         for key in phrases:
             if key in user_defined:
                 continue
-            tokens = lazy_pinyin(key, style=Style.TONE3, tone_sandhi=True)
+            tokens = pinyin(key, style=Style.TONE3, neutral_tone_with_five=True)
             for i in range(len(tokens)):
                 if tokens[i] == "shei2":
                     tokens[i] = "shui2"
@@ -51,7 +52,9 @@ def main():
                 if tokens[i][-1] not in ("1", "2", "3", "4", "5"):
                     tokens[i] += "1"
 
-            tokens = " ".join(tokens)
+            flatten = [t[0] for t in tokens]
+
+            tokens = " ".join(flatten)
 
             f.write(f"{key} {tokens}\n")
 
