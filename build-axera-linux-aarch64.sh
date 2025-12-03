@@ -16,19 +16,103 @@
 #
 # Usage of this file
 #
+# ./build-axera-linux-aarch64.sh ax650
+# ./build-axera-linux-aarch64.sh ax630c
+# ./build-axera-linux-aarch64.sh ax620q
 
 set -ex
 
-# Before you run this file, make sure you have first cloned
-# https://github.com/AXERA-TECH/ax650n_bsp_sdk
-# and set the environment variable SHERPA_ONNX_AXERA_PATH
+SUPPORTED_TARGETS=("ax650" "ax630c" "ax620q")
+
+function print_info() {
+    echo -e "\033[32m[INFO]\033[0m $1"
+}
+
+function print_error() {
+    echo -e "\033[31m[ERROR]\033[0m $1"
+}
+
+function print_warn() {
+    echo -e "\033[33m[WARN]\033[0m $1"
+}
+
+function usage() {
+    print_info "Usage: $0 <axera_target_chip>"
+    print_info "Supported chips: ${SUPPORTED_TARGETS[*]}"
+    print_info "Example: $0 ax650"
+    print_info "Example: $0 ax630c"
+    print_info "Example: $0 ax620q"
+}
+
+function download_650_bsp_sdk() {
+  local version=1.45.0_p39
+  if [ -d ax650n_bsp_sdk-$version ]; then
+    echo $PWD/ax650n_bsp_sdk-$version/msp/out
+    return 0
+  fi
+
+  # 166 MB
+  if [ ! -f v$version.zip ]; then
+    wget https://github.com/AXERA-TECH/ax650n_bsp_sdk/archive/refs/tags/v$version.zip
+  fi
+
+  unzip -qq v$version.zip
+
+  echo $PWD/ax650n_bsp_sdk-$version/msp/out
+
+  return 0
+}
+
+function download_620e_bsp_sdk() {
+  local version=2.0.0_P7
+  if [ -d ax620e_bsp_sdk-$version ]; then
+    echo $PWD/ax620e_bsp_sdk-$version/msp/out/arm64_glibc
+    return 0
+  fi
+
+  # 166 MB
+  if [ ! -f v$version.zip ]; then
+    wget https://github.com/AXERA-TECH/ax620e_bsp_sdk/archive/refs/tags/v2.0.0_P7.zip
+  fi
+
+  unzip -qq v$version.zip
+
+  echo $PWD/ax620e_bsp_sdk-$version/msp/out/arm64_glibc
+
+  return 0
+}
+
+if [ $# -ne 1 ]; then
+    print_error "Error: You need to provide the axera target chip"
+    usage
+    exit 1
+fi
+
+target_chip=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+if ! [[ " ${SUPPORTED_TARGETS[*]} " =~ " ${target_chip} " ]]; then
+    print_error "Unsupported target chip '$target_chip'!"
+    print_info "Supported target chips are ${SUPPORTED_TARGETS[*]}"
+    exit 1
+fi
+
 
 if [ -z "$AXERA_SDK_ROOT" ]; then
-  AXERA_SDK_ROOT=/home/m5stack/Workspace/kaldi/sherpa-onnx/ax650n_bsp_sdk/out
-  echo "Please set AXERA_SDK_ROOT to your Axera SDK path, e.g.:"
-  echo "  export AXERA_SDK_ROOT=$PWD/ax650n_bsp_sdk/out"
-  exit 1
+  case "$target_chip" in
+    ax650)
+      AXERA_SDK_ROOT=$(download_650_bsp_sdk)
+      ;;
+    ax630c|ax620q)
+      AXERA_SDK_ROOT=$(download_620e_bsp_sdk)
+      ;;
+    *)
+      print_error "Unsupported target chip $target_chip"
+      exit 1
+      ;;
+  esac
 fi
+
+echo "AXERA_SDK_ROOT: $AXERA_SDK_ROOT"
 
 if [ ! -d "$AXERA_SDK_ROOT" ]; then
   echo "AXERA_SDK_ROOT ($AXERA_SDK_ROOT) does not exist"
@@ -64,7 +148,7 @@ if ! command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
 fi
 
 
-dir=$PWD/build-axera-linux-aarch64
+dir=$PWD/build-axera-linux-aarch64-$target_chip
 mkdir -p $dir
 
 cd $dir
@@ -79,6 +163,9 @@ if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
   # Please use:
   #  sudo apt-get install libtool m4 automake
   #
+  # If it shows plantuml: command not found
+  # Please use
+  #   sudo apt-get install plantuml
   pushd alsa-lib
   CC=aarch64-linux-gnu-gcc ./gitcompile --host=aarch64-linux-gnu
   popd
@@ -115,11 +202,9 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-make VERBOSE=1 -j22
+make VERBOSE=1 -j2
 make install/strip
+
 
 # Enable it if only needed
 # cp -v $SHERPA_ONNX_ALSA_LIB_DIR/libasound.so* ./install/lib/
-
-# See also
-# https://github.com/airockchip/rknn-toolkit2/blob/master/rknpu2/examples/rknn_api_demo/build-linux.sh
