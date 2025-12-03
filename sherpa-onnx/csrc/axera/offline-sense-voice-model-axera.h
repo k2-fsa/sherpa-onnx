@@ -8,8 +8,6 @@
 #include <memory>
 #include <vector>
 
-#include "ax_engine_api.h"
-#include "ax_sys_api.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-meta-data.h"
 

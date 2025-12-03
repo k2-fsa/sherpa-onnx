@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
