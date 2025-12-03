@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/axera/utils.cc
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2025  M5Stack Technology CO LTD
 
 #include "sherpa-onnx/csrc/axera/utils.h"
 

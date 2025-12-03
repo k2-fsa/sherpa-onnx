@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/axera/offline-sense-voice-model-axera.cc
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2025  M5Stack Technology CO LTD
 
 #include "sherpa-onnx/csrc/axera/offline-sense-voice-model-axera.h"
 

@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/axcl/offline-sense-voice-model-axcl.h
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2025  M5Stack Technology CO LTD
 
 #ifndef SHERPA_ONNX_CSRC_AXCL_OFFLINE_SENSE_VOICE_MODEL_AXCL_H_
 #define SHERPA_ONNX_CSRC_AXCL_OFFLINE_SENSE_VOICE_MODEL_AXCL_H_

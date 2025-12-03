@@ -3,7 +3,7 @@
 // This file is adapted from AXERA's ax-samples project.
 // See the original BSD 3-Clause license below.
 //
-// Copyright (c) 2025  Xiaomi Corporation
+// Copyright (c)  2025  M5Stack Technology CO LTD
 
 /*
  * AXERA is pleased to support the open source community by making ax-samples

@@ -1,3 +1,7 @@
+// sherpa-onnx/csrc/axcl/ax_model_runner.hpp
+//
+// Copyright (c)  2025  M5Stack Technology CO LTD
+
 #pragma once
 #include <map>
 #include <stdexcept>

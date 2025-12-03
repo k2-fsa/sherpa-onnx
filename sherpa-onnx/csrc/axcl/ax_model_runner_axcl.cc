@@ -1,3 +1,7 @@
+// sherpa-onnx/csrc/axcl/ax_model_runner_axcl.cc
+//
+// Copyright (c)  2025  M5Stack Technology CO LTD
+
 #include "ax_model_runner_axcl.hpp"
 
 #include <axcl.h>
@@ -315,11 +319,11 @@ int ax_runner_axcl::sub_init() {
     _parepare_io = true;
   } else {
   }
-  for (int grpid = 0; grpid < group_count; grpid++) {
-    printf("\ngrpid: %d\n", grpid);
-    print_io_info(mgroup_input_tensors[grpid], mgroup_output_tensors[grpid]);
-    printf("==================================================\n\n");
-  }
+  // for (int grpid = 0; grpid < group_count; grpid++) {
+  //   printf("\ngrpid: %d\n", grpid);
+  //   print_io_info(mgroup_input_tensors[grpid], mgroup_output_tensors[grpid]);
+  //   printf("==================================================\n\n");
+  // }
 
   return ret;
 }
