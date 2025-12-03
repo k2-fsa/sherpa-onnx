@@ -7,7 +7,7 @@
 
 #include <cstddef>
 
-#include "ax_engine_api.h"
+#include "ax_engine_api.h"  // NOLINT
 
 namespace sherpa_onnx {
 

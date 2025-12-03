@@ -54,12 +54,11 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
       if (blank_penalty_ > 0.0) {
         p_logit[0] -= blank_penalty_;  // assuming blank id is 0
       }
-      
+
       LogSoftmax(p_logit, vocab_size);
 
       auto y = static_cast<int32_t>(std::distance(
-          p_logit,
-          std::max_element(p_logit, p_logit + vocab_size)));
+          p_logit, std::max_element(p_logit, p_logit + vocab_size)));
 
       float log_prob = p_logit[y];
 

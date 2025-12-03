@@ -137,15 +137,14 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t);
 
-          // Store the token log probability (subtract prev log_prob to get original)
+          // Store the token log probability (subtract prev log_prob to get
+          // original)
           float token_log_prob = p_logprob[k] - prev[hyp_index].log_prob;
           new_hyp.ys_probs.push_back(token_log_prob);
 
           if (context_graphs[i] != nullptr) {
-            auto context_res =
-                context_graphs[i]->ForwardOneStep(context_state,
-                  new_token,
-                  false /* non-strict mode */);
+            auto context_res = context_graphs[i]->ForwardOneStep(
+                context_state, new_token, false /* non-strict mode */);
             context_score = std::get<0>(context_res);
             new_hyp.context_state = std::get<1>(context_res);
           }

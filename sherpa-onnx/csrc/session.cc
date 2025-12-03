@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -259,17 +260,22 @@ Ort::SessionOptions GetSessionOptionsImpl(
       SHERPA_ONNX_LOGE("Set InterOpNumThreads to 1");
       sess_opts.SetInterOpNumThreads(1);
       SHERPA_ONNX_LOGE("Set SPACEMIT_EP_INTRA_THREAD_NUM to %d", num_threads);
-      provider_options.insert(
-          std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM", std::to_string(num_threads)));
-      OrtStatus* sts = Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
+      provider_options.insert(std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM",
+                                             std::to_string(num_threads)));
+      OrtStatus *sts =
+          Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
       if (sts) {
         const auto &api = Ort::GetApi();
         const char *msg = api.GetErrorMessage(sts);
-        SHERPA_ONNX_LOGE("Failed to enable SpacemiT Execution Provider: %s. Fallback to cpu", msg);
+        SHERPA_ONNX_LOGE(
+            "Failed to enable SpacemiT Execution Provider: %s. Fallback to cpu",
+            msg);
         api.ReleaseStatus(sts);
       }
 #else
-      SHERPA_ONNX_LOGE("SpacemiT Execution Provider is for SpacemiT AI-CPUs only. Fallback to cpu!");
+      SHERPA_ONNX_LOGE(
+          "SpacemiT Execution Provider is for SpacemiT AI-CPUs only. Fallback "
+          "to cpu!");
 #endif
       break;
     }

@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-#include "axcl.h"
+#include "axcl.h"  // NOLINT
 #include "sherpa-onnx/csrc/axcl/ax_model_runner_axcl.hpp"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-meta-data.h"
