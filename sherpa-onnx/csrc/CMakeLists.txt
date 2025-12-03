@@ -196,7 +196,23 @@ if(SHERPA_ONNX_ENABLE_RKNN)
 
 endif()
 
-if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN)
+if(SHERPA_ONNX_ENABLE_AXERA)
+  list(APPEND sources
+    ./axera/offline-sense-voice-model-axera.cc
+    ./axera/utils.cc
+  )
+
+endif()
+
+if(SHERPA_ONNX_ENABLE_AXCL)
+  list(APPEND sources
+    ./axcl/offline-sense-voice-model-axcl.cc
+    ./axcl/ax_model_runner_axcl.cc
+  )
+
+endif()
+
+if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN OR SHERPA_ONNX_ENABLE_AXERA OR SHERPA_ONNX_ENABLE_AXCL)
   list(APPEND sources
     ./rknn/offline-ctc-greedy-search-decoder-rknn.cc
   )
@@ -324,6 +340,38 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     target_link_libraries(sherpa-onnx-core -L$ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR} -lrknnrt)
   else()
     target_link_libraries(sherpa-onnx-core rknnrt)
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_AXERA)
+  if(DEFINED ENV{SHERPA_ONNX_AXERA_LIB_DIR})
+    target_link_libraries(sherpa-onnx-core
+      -L$ENV{SHERPA_ONNX_AXERA_LIB_DIR}
+      -lax_engine
+      -lax_interpreter
+      -lax_sys
+      -lpthread
+    )
+  else()
+    target_link_libraries(sherpa-onnx-core
+      ax_engine
+      ax_interpreter
+      ax_sys
+      pthread
+    )
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_AXCL)
+  if(DEFINED ENV{SHERPA_ONNX_AXCL_LIB_DIR})
+    target_link_libraries(sherpa-onnx-core
+      -L$ENV{SHERPA_ONNX_AXCL_LIB_DIR}
+      -laxcl_rt
+      )
+  else()
+    target_link_libraries(sherpa-onnx-core
+      axcl_rt
+    )
   endif()
 endif()
 
