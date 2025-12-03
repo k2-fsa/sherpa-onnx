@@ -266,10 +266,6 @@ class MatchaTtsLexicon::Impl {
       }
     }
 
-    if (IsAlphaOrPunct(w.front())) {
-      ans.push_back(token2id_.at(" "));
-    }
-
     if (debug_) {
       std::ostringstream os;
       os << w << ": ";
