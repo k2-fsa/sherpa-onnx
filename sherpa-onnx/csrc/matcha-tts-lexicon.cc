@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 
+#include <ctype.h>
+
 #include <algorithm>
 #include <fstream>
 #include <memory>
@@ -281,7 +283,10 @@ class MatchaTtsLexicon::Impl {
 
     PhraseMatcher matcher(&all_words_, words, debug_);
 
+    int32_t blank = token2id_.at(" ");
+
     std::vector<int32_t> ids;
+    std::string last_word;
     for (const std::string &w : matcher) {
       ids = ConvertWordToIds(w);
 
@@ -291,7 +296,13 @@ class MatchaTtsLexicon::Impl {
 #else
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
 #endif
+
+        last_word = w;
         continue;
+      }
+
+      if (!last_word.empty() && isalpha(last_word[0])) {
+        this_sentence.push_back(blank);
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
@@ -312,6 +323,8 @@ class MatchaTtsLexicon::Impl {
         ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
+
+      last_word = w;
     }  // for (const std::string &w : matcher)
 
     if (!this_sentence.empty()) {
