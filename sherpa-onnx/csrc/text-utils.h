@@ -151,6 +151,9 @@ bool Contains(const std::string &haystack, const std::string &needle);
 
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size);
 
+std::string Join(const std::vector<std::string> &ss,
+                 const std::string &delim = "");
+
 // Converts a UTF-8 std::string to a UTF-32 std::u32string
 std::u32string Utf8ToUtf32(const std::string &str);
 

@@ -92,14 +92,6 @@ std::vector<std::string> ConvertPhonemesToUTF8(
   return out;
 }
 
-std::string JoinTokensNoSpace(const std::vector<std::string> &tokens) {
-  std::string out;
-  for (const auto &t : tokens) {
-    out += t;
-  }
-  return out;
-}
-
 std::string ApplyReplacements(std::string s) {
   for (const auto &p : kReplacements) {
     const std::string &from = p.first;
@@ -131,7 +123,7 @@ std::vector<std::string> SplitTokensUTF8(const std::string &s) {
 std::vector<std::string> ProcessPhonemes(
     const std::vector<std::vector<char32_t>> &phonemes) {
   auto tokens = ConvertPhonemesToUTF8(phonemes);
-  std::string joined = JoinTokensNoSpace(tokens);
+  std::string joined = Join(tokens);
   std::string replaced = ApplyReplacements(joined);
   return SplitTokensUTF8(replaced);
 }
