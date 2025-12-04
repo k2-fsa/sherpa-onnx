@@ -733,8 +733,7 @@ std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
   return ans;
 }
 
-std::string Join(const std::vector<std::string> &ss,
-                 const std::string &delim) {
+std::string Join(const std::vector<std::string> &ss, const std::string &delim) {
   std::ostringstream oss;
   if (!ss.empty()) {
     oss << ss[0];
