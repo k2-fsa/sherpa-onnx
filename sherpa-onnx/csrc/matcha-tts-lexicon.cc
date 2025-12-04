@@ -197,7 +197,7 @@ class MatchaTtsLexicon::Impl {
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
     std::string text = _text;
     std::vector<std::pair<std::string, std::string>> replace_str_pairs = {
-        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ":"},
+        {"，", ","}, {"、", ","}, {"；", ";"}, {"：", ","},   {":", ","},
         {"。", "."}, {"？", "?"}, {"！", "!"}, {"\\s+", " "},
     };
     for (const auto &p : replace_str_pairs) {
