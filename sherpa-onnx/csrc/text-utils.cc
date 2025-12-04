@@ -734,15 +734,15 @@ std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
 }
 
 std::string Join(const std::vector<std::string> &ss,
-                 const std::string &delim /*= ""*/) {
-  std::string out;
-  std::string sep;
-  for (const auto &s : ss) {
-    out += sep;
-    out += s;
-    sep = delim;
+                 const std::string &delim) {
+  std::ostringstream oss;
+  if (!ss.empty()) {
+    oss << ss[0];
+    for (size_t i = 1; i < ss.size(); ++i) {
+      oss << delim << ss[i];
+    }
   }
-  return out;
+  return oss.str();
 }
 
 std::u32string Utf8ToUtf32(const std::string &str) {
