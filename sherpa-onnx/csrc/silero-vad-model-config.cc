@@ -43,6 +43,12 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
       "512, 1024, 1536 samples for 16000 sample rate and 256, 512, 768 samples "
       "for 8000 sample rate. Values other than these may affect model "
       "performance!");
+
+  po->Register(
+    "silero-vad-neg-threshold", &neg_threshold,
+    "Negative threshold (noise threshold). If < 0, defaults to "
+    "(threshold - 0.15) with lower bound 0.01."
+  );
 }
 
 bool SileroVadModelConfig::Validate() const {
