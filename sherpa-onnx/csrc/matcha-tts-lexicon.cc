@@ -39,6 +39,9 @@ namespace sherpa_onnx {
 
 namespace {
 // code in this anonymous namespace is written by ChatGPT
+//
+// Please see https://github.com/k2-fsa/sherpa-onnx/pull/2853
+// for why we need to do the replacement
 static const std::vector<std::pair<std::string, std::string>> kReplacements = {
     {"ɝ", "ɜɹ"}, {"ɚ", "əɹ"},
 
