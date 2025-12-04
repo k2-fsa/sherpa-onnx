@@ -36,23 +36,7 @@ jobs:
           pip install "numpy<=1.26.4" pypinyin soundfile \
             sherpa-onnx -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 
-      - name: Run
-        if: true
-        shell: bash
-        run: |
-          cd scripts/matcha-tts/zh-en
-          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/model-steps-3.onnx
-          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/vocab_tts.txt
-
-          ./generate_tokens.py
-          ./generate_lexicon.py
-
-          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
-          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
-          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
-
       - name: Generate samples
-        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
@@ -83,8 +67,21 @@ jobs:
 
           ls -lh
 
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/matcha-tts/zh-en
+          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/model-steps-3.onnx
+          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/vocab_tts.txt
+
+          ./generate_tokens.py
+          ./generate_lexicon.py
+
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
       - name: Collect results ${{ matrix.version }}
-        if: false
         shell: bash
         run: |
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
@@ -109,7 +106,6 @@ jobs:
           ls -lh $dst.tar.bz2
 
       - name: Publish to huggingface
-        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -147,8 +143,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-icefall-zh-en main || true
 
       - name: Release
-        if: false
-        # if: github.repository_owner == 'csukuangfj'
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -159,8 +154,7 @@ jobs:
           tag: tts-models
 
       - name: Release
-        if: false
-        # if: github.repository_owner == 'k2-fsa'
+        if: github.repository_owner == 'k2-fsa'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
