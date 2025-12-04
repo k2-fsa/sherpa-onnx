@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
