@@ -733,6 +733,17 @@ std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
   return ans;
 }
 
+std::string Join(const std::vector<std::string> &ss, const std::string &delim) {
+  std::ostringstream oss;
+  if (!ss.empty()) {
+    oss << ss[0];
+    for (size_t i = 1; i < ss.size(); ++i) {
+      oss << delim << ss[i];
+    }
+  }
+  return oss.str();
+}
+
 std::u32string Utf8ToUtf32(const std::string &str) {
   std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
   return conv.from_bytes(str);
