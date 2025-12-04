@@ -431,10 +431,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
     std::vector<int64_t> x;
     x.reserve(num_tokens);
+    for (const auto &k : tokens) {
+      x.insert(x.end(), k.begin(), k.end());
+    }
+
     if (config_.model.debug) {
-      for (const auto &k : tokens) {
-        x.insert(x.end(), k.begin(), k.end());
-      }
       std::ostringstream oss;
       for (int32_t i : x) {
         oss << i << ", ";
