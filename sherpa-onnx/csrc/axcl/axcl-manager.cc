@@ -13,24 +13,25 @@ namespace sherpa_onnx {
 
 std::mutex AxclManager::mutex_;
 
-std::atomic<int> AxclManager::instanceCount_{0};
+int32_t AxclManager::count_{0};
 
 AxclManager::AxclManager(const char *config /*= nullptr*/) {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (instanceCount_++ == 0) {
+  if (count_ == 0) {
     auto ret = axclInit(config);
     if (ret != 0) {
-      instanceCount_--;
       SHERPA_ONNX_LOGE("Failed to call axclInit(). Return code: %d",
                        static_cast<int32_t>(ret));
       SHERPA_ONNX_EXIT(-1);
     }
   }
+
+  ++count_;
 }
 
 AxclManager::~AxclManager() {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (--instanceCount_ == 0) {
+  if (--count_ == 0) {
     auto ret = axclFinalize();
 
     if (ret != 0) {

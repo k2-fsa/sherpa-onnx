@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <memory>
 #include <utility>
 #include <vector>
 

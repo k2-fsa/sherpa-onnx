@@ -5,7 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_AXCL_AXCL_MANAGER_H_
 #define SHERPA_ONNX_CSRC_AXCL_AXCL_MANAGER_H_
 
-#include <atomic>
+#include <cstdint>
 #include <mutex>
 
 namespace sherpa_onnx {
@@ -23,7 +23,7 @@ class AxclManager {
 
  private:
   static std::mutex mutex_;
-  static std::atomic<int> instanceCount_;
+  static int32_t count_;
 };
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_AXCL_AXCL_MANAGER_H_
