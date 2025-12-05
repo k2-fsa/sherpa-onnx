@@ -11,8 +11,8 @@ android {
         applicationId "com.k2fsa.sherpa.onnx"
         minSdk 21
         targetSdk 33
-        versionCode 20251127
-        versionName "1.12.18"
+        versionCode 20251205
+        versionName "1.12.19"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
