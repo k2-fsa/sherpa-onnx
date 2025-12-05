@@ -10,25 +10,25 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/axcl/ax_model_runner_axcl.hpp"
-#include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/axcl/acl-model.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
 class OfflineSenseVoiceModelAxcl::Impl {
  public:
-  ~Impl() { runner_.release(); }
-
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
-    auto buf = ReadFile(config_.sense_voice.model);
-    Init(buf.data(), buf.size());
+    model_ = std::make_unique<AxclModel>(config_.sense_voice.model_);
+
+    PostInit();
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
     auto buf = ReadFile(mgr, config_.sense_voice.model);
-    Init(buf.data(), buf.size());
+    model_ = std::make_unique<AxclModel>(buf.data(), buf.size());
+
+    PostInit();
   }
 
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const {
@@ -40,86 +40,23 @@ class OfflineSenseVoiceModelAxcl::Impl {
     features = ApplyLFR(std::move(features));
     std::array<int32_t, 4> prompt{language, 1, 2, text_norm};
 
-    // input 0: features
-    auto &in0 = runner_.get_input(0);
-    size_t bytes0 = in0.nSize;
-    if (bytes0 != features.size() * sizeof(float)) {
-      SHERPA_ONNX_LOGE(
-          "Feature size mismatch. model expects %u bytes, but got %zu bytes",
-          in0.nSize, features.size() * sizeof(float));
-      SHERPA_ONNX_EXIT(-1);
-    }
-    std::memcpy(in0.pVirAddr, features.data(), bytes0);
-
-    auto &in1 = runner_.get_input(1);
-    size_t bytes1 = in1.nSize;
-    if (bytes1 != prompt.size() * sizeof(int32_t)) {
-      SHERPA_ONNX_LOGE(
-          "Prompt size mismatch. model expects %u bytes, but got %zu bytes",
-          in1.nSize, prompt.size() * sizeof(int32_t));
-      SHERPA_ONNX_EXIT(-1);
-    }
-    std::memcpy(in1.pVirAddr, prompt.data(), bytes1);
-
-    int ret = runner_.inference();
-    if (ret != 0) {
-      SHERPA_ONNX_LOGE("ax_runner_axcl inference failed, ret = %d", ret);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    // output 0
-    auto &out0 = runner_.get_output(0);
-    size_t out_elems = out0.nSize / sizeof(float);
-    std::vector<float> out(out_elems);
-    std::memcpy(out.data(), out0.pVirAddr, out0.nSize);
-    return out;
+    model_->SetInputTensorData("x", features.data(), features.size());
+    model_->SetInputTensorData("prompt", prompt.data(), prompt.size());
+    model_->Run();
+    return GetOutputTensorData("logits");
   }
 
  private:
-  void Init(void *model_data, size_t model_data_length) {
-    {
-      if (auto ret = axclInit(0); 0 != ret) {
-        fprintf(stderr, "Init AXCL failed{0x%8x}.\n", ret);
-        return;
-      }
-      axclrtDeviceList lst;
-      if (const auto ret = axclrtGetDeviceList(&lst);
-          0 != ret || 0 == lst.num) {
-        fprintf(stderr,
-                "Get AXCL device failed{0x%8x}, find total %d device.\n", ret,
-                lst.num);
-        return;
-      }
-      if (const auto ret = axclrtSetDevice(lst.devices[0]); 0 != ret) {
-        fprintf(stderr, "Set AXCL device failed{0x%8x}.\n", ret);
-        return;
-      }
-      int ret = axclrtEngineInit(AXCL_VNPU_DISABLE);
-      if (0 != ret) {
-        fprintf(stderr, "axclrtEngineInit %d\n", ret);
-        return;
-      }
-    }
-
-    int ret =
-        runner_.init(reinterpret_cast<char *>(model_data), model_data_length);
-    if (ret != 0) {
-      SHERPA_ONNX_LOGE("Init ax_runner_axcl failed, ret = %d", ret);
+  void PostInit() {
+    if (!model_->IsInitialized()) {
+      SHERPA_ONNX_LOGE("Failed to initialize the model with '%s'",
+                       config_.sense_voice.model.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
-    auto &in0 = runner_.get_input(0);
-    if (in0.vShape.size() < 2) {
-      SHERPA_ONNX_LOGE(
-          "Input tensor rank is too small (rank = %zu). Shape vector is empty "
-          "or has only 1 dim.",
-          in0.vShape.size());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    num_input_frames_ = in0.vShape[1];
+    num_input_frames_ = model_->TensorShape("x")[1];
 
     if (config_.debug) {
-      SHERPA_ONNX_LOGE("Axcl SenseVoice model init done with ax_runner_axcl.");
       SHERPA_ONNX_LOGE("  num_input_frames_ = %d", num_input_frames_);
     }
   }
@@ -156,7 +93,7 @@ class OfflineSenseVoiceModelAxcl::Impl {
 
  private:
   OfflineModelConfig config_;
-  ax_runner_axcl runner_;
+  std::unique_ptr<AxclModel> model_;
   OfflineSenseVoiceModelMetaData meta_data_;
   int32_t num_input_frames_ = -1;
 };
