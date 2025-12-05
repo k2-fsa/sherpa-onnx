@@ -405,40 +405,40 @@ AxclModel::AxclModel(const void *cpu_buf, size_t buf_len_in_bytes,
 const std::vector<std::string> &AxclModel::InputTensorNames() const {
   return impl_->InputTensorNames();
 }
-const std::vector<std::string> &AclModel::OutputTensorNames() const {
+const std::vector<std::string> &AxclModel::OutputTensorNames() const {
   return impl_->OutputTensorNames();
 }
 
-const std::vector<int32_t> &AclModel::TensorShape(
+const std::vector<int32_t> &AxclModel::TensorShape(
     const std::string &name) const {
   return impl_->TensorShape(name);
 }
 
-int32_t AclModel::TensorSizeInBytes(const std::string &name) const {
+int32_t AxclModel::TensorSizeInBytes(const std::string &name) const {
   return impl_->TensorSizeInBytes(name);
 }
 
-bool AclModel::HasTensor(const std::string &name) const {
+bool AxclModel::HasTensor(const std::string &name) const {
   return impl_->HasTensor(name);
 }
 
-bool AclModel::SetInputTensorData(const std::string &name, const float *p,
-                                  int32_t n) const {
+bool AxclModel::SetInputTensorData(const std::string &name, const float *p,
+                                   int32_t n) const {
   return impl_->SetInputTensorData(name, p, n);
 }
 
-bool AclModel::SetInputTensorData(const std::string &name, const int32_t *p,
-                                  int32_t n) const {
+bool AxclModel::SetInputTensorData(const std::string &name, const int32_t *p,
+                                   int32_t n) const {
   return impl_->SetInputTensorData(name, p, n);
 }
 
-std::vector<float> AclModel::GetOutputTensorData(
+std::vector<float> AxclModel::GetOutputTensorData(
     const std::string &name) const {
   return impl_->GetOutputTensorData(name);
 }
 
-bool AclModel::Run() const { return impl_->Run(); }
+bool AxclModel::Run() const { return impl_->Run(); }
 
-bool AclModel::IsInitialized() const { return impl_->IsInitialized(); }
+bool AxclModel::IsInitialized() const { return impl_->IsInitialized(); }
 
 }  // namespace sherpa_onnx
