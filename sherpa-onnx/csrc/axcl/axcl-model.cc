@@ -261,7 +261,7 @@ class AxclModel::Impl {
     io_info_guard_ = std::make_unique<AxclEngineIOInfoGuard>(model_id_);
 
     int32_t count = 0;
-    ret = axclrtEngineGetShapeGroupsCount(*io_info_guard_, &count);
+    auto ret = axclrtEngineGetShapeGroupsCount(*io_info_guard_, &count);
     if (ret != 0) {
       SHERPA_ONNX_LOGE(
           "Failed to call axclrtEngineGetShapeGroupsCount(). Return code is: "
