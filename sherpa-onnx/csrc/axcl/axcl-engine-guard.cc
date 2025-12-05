@@ -21,7 +21,7 @@ AxclEngineGuard::AxclEngineGuard(axclrtEngineVNpuKind npuKind) {
   initialized_ = true;
 }
 
-~AxclEngineGuard() {
+AxclEngineGuard::~AxclEngineGuard() {
   if (initialized_) {
     auto ret = axclrtEngineFinalize();
 
