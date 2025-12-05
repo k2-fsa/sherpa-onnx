@@ -25,7 +25,7 @@ AxclEngineIOInfoGuard::AxclEngineIOInfoGuard(uint64_t model_id) {
 
 AxclEngineIOInfoGuard::~AxclEngineIOInfoGuard() {
   if (initialized_) {
-    auto ret = axclrtEngineDestroyIOInfo(io_);
+    auto ret = axclrtEngineDestroyIOInfo(io_info_);
 
     if (ret != 0) {
       SHERPA_ONNX_LOGE(
