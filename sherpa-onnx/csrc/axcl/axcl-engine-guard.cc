@@ -10,6 +10,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
+
 AxclEngineGuard::AxclEngineGuard(axclrtEngineVNpuKind npuKind) {
   axclError ret = axclrtEngineInit(npuKind);
   if (ret != 0) {
@@ -33,4 +34,5 @@ AxclEngineGuard::~AxclEngineGuard() {
     }
   }
 }
+
 }  // namespace sherpa_onnx

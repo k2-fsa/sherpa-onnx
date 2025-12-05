@@ -22,7 +22,7 @@ class AxclModel {
   const std::vector<std::string> &InputTensorNames() const;
   const std::vector<std::string> &OutputTensorNames() const;
 
-  std::vector<int32_t> TensorShape(const std::string &name) const;
+  const std::vector<int32_t> &TensorShape(const std::string &name) const;
   int32_t TensorSizeInBytes(const std::string &name) const;
 
   bool HasTensor(const std::string &name) const;
