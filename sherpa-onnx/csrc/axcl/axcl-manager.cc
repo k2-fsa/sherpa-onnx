@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/axcl/axcl-manager.h"
 
+#include <cstdint>
+
 #include "axcl.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -17,7 +19,7 @@ AxclManager::AxclManager(const char *config /*= nullptr*/) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (instanceCount_++ == 0) {
     auto ret = axclInit(config);
-    if (!ret) {
+    if (ret != 0) {
       instanceCount_--;
       SHERPA_ONNX_LOGE("Failed to call axclInit(). Return code: %d",
                        static_cast<int32_t>(ret));
@@ -31,7 +33,7 @@ AxclManager::~AxclManager() {
   if (--instanceCount_ == 0) {
     auto ret = axclFinalize();
 
-    if (!ret) {
+    if (ret != 0) {
       SHERPA_ONNX_LOGE("Failed to call axclFinalize(). Return code: %d",
                        static_cast<int32_t>(ret));
       SHERPA_ONNX_EXIT(-1);
