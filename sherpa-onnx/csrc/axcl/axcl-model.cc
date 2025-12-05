@@ -396,6 +396,8 @@ AxclModel::AxclModel(const void *cpu_buf, size_t buf_len_in_bytes,
                      int32_t device_id /*= 0*/)
     : impl_(std::make_unique<Impl>(cpu_buf, buf_len_in_bytes, device_id)) {}
 
+AxclModel::~AxclModel() = default;
+
 const std::vector<std::string> &AxclModel::InputTensorNames() const {
   return impl_->InputTensorNames();
 }

@@ -18,6 +18,7 @@ class AxclModel {
 
   AxclModel(const void *cpu_buf, size_t buf_len_in_bytes,
             int32_t device_id = 0);
+  ~AxclModel();
 
   const std::vector<std::string> &InputTensorNames() const;
   const std::vector<std::string> &OutputTensorNames() const;
