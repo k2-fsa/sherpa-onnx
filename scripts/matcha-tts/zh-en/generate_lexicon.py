@@ -45,12 +45,13 @@ def main():
             if key in user_defined:
                 continue
             tokens = pinyin(key, style=Style.TONE3, neutral_tone_with_five=True)
-            for i in range(len(tokens)):
-                if tokens[i] == "shei2":
-                    tokens[i] = "shui2"
 
-                if tokens[i][-1] not in ("1", "2", "3", "4", "5"):
-                    tokens[i] += "1"
+            for i in range(len(tokens)):
+                if tokens[i][0] == "shei2":
+                    tokens[i][0] = "shui2"
+
+                if tokens[i][0][-1] not in ("1", "2", "3", "4", "5"):
+                    tokens[i][0] += "1"
 
             flatten = [t[0] for t in tokens]
 

@@ -6,9 +6,10 @@ https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/summary
 Note that you have to use
 vocos-16khz-univ.onnx
 
-You can download it from 
+You can download it from
  https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/vocos-16khz-univ.onnx
 or
+ https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-16khz-univ.onnx
 
 ```
 {'am': './model-steps-3.onnx', 'vocoder': './vocos-16khz-univ.onnx', 'tokens': './tokens.txt', 'lexicon': './lexicon.txt', 'text': '中英文合成测试. It supports both English 和中文合成', 'out_wav': 'generated.wav'}
