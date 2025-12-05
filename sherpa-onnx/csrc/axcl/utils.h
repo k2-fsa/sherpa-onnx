@@ -21,7 +21,10 @@ class AxclDevicePtr {
 
   AxclDevicePtr(AxclDevicePtr &&other) {
     p_ = other.p_;
+    size_ = other.size_;
+
     other.p_ = nullptr;
+    other.size_ = 0;
   }
   AxclDevicePtr &operator=(AxclDevicePtr &&other) {
     if (this == &other) {
@@ -29,7 +32,10 @@ class AxclDevicePtr {
     }
     Release();
     p_ = other.p_;
+    size_ = other.size_;
+
     other.p_ = nullptr;
+    other.size_ = 0;
 
     return *this;
   }

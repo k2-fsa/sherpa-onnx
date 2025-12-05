@@ -42,7 +42,7 @@ class AxclModel::Impl {
       SHERPA_ONNX_LOGE(
           "Failed to call axclrtEngineLoadFromFile() with file: %s. Return "
           "code is: %d",
-          filename.c_str(), static_cast<int32_t>(0));
+          filename.c_str(), static_cast<int32_t>(ret));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -173,6 +173,8 @@ class AxclModel::Impl {
               name.c_str(), static_cast<int32_t>(ret));
           return false;
         }
+
+        return true;
       }
     }
 
@@ -239,7 +241,7 @@ class AxclModel::Impl {
     // device_id counts from 0
     if (device_id < 0 || device_id >= lst.num) {
       SHERPA_ONNX_LOGE("Invalid device_id: %d. Validate range: 0-%d", device_id,
-                       0, lst.num - 1);
+                       lst.num - 1);
       return false;
     }
 

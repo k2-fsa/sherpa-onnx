@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/axcl/axcl-model.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {

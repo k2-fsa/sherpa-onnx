@@ -33,6 +33,7 @@ void AxclDevicePtr::Release() {
     SHERPA_ONNX_EXIT(-1);
   }
   p_ = nullptr;
+  size_ = 0;
 }
 
 AxclDevicePtr::~AxclDevicePtr() { Release(); }
