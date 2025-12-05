@@ -11,6 +11,7 @@
 #include "axcl.h"  // NOLINT
 #include "sherpa-onnx/csrc/axcl/axcl-engine-guard.h"
 #include "sherpa-onnx/csrc/axcl/axcl-engine-io-guard.h"
+#include "sherpa-onnx/csrc/axcl/axcl-engine-io-info-guard.h"
 #include "sherpa-onnx/csrc/axcl/axcl-manager.h"
 #include "sherpa-onnx/csrc/axcl/utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -257,16 +258,10 @@ class AxclModel::Impl {
   void PostInit() {
     InitContext();
 
-    axclError ret = axclrtEngineGetIOInfo(model_id_, &io_info_);
-    if (ret != 0) {
-      SHERPA_ONNX_LOGE(
-          "Failed to call axclrtEngineGetIOInfo(). Return code is: %d",
-          static_cast<int32_t>(ret));
-      SHERPA_ONNX_EXIT(-1);
-    }
+    io_info_guard_ = std::make_unique<AxclEngineIOInfoGuard>(model_id_);
 
     int32_t count = 0;
-    ret = axclrtEngineGetShapeGroupsCount(io_info_, &count);
+    ret = axclrtEngineGetShapeGroupsCount(*io_info_guard_, &count);
     if (ret != 0) {
       SHERPA_ONNX_LOGE(
           "Failed to call axclrtEngineGetShapeGroupsCount(). Return code is: "
@@ -280,7 +275,7 @@ class AxclModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    engine_io_guard_ = std::make_unique<AxclEngineIOGuard>(io_info_);
+    engine_io_guard_ = std::make_unique<AxclEngineIOGuard>(*io_info_guard_);
 
     InitInput();
     InitOutput();
@@ -300,18 +295,18 @@ class AxclModel::Impl {
   void InitInput() {
     uint32_t group = 0;
 
-    int32_t num_inputs = axclrtEngineGetNumInputs(io_info_);
+    int32_t num_inputs = axclrtEngineGetNumInputs(*io_info_guard_);
 
     input_tensor_names_.resize(num_inputs);
     input_tensor_shapes_.reserve(num_inputs);
 
     for (int32_t i = 0; i < num_inputs; ++i) {
       size_t size_in_bytes =
-          axclrtEngineGetInputSizeByIndex(io_info_, group, i);
+          axclrtEngineGetInputSizeByIndex(*io_info_guard_, group, i);
       input_tensors_.emplace_back(size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST);
 
       axclrtEngineIODims dims;
-      auto ret = axclrtEngineGetInputDims(io_info_, group, i, &dims);
+      auto ret = axclrtEngineGetInputDims(*io_info_guard_, group, i, &dims);
       if (ret != 0) {
         SHERPA_ONNX_LOGE(
             "Failed to call axclrtEngineGetInputDims(). Return code is: %d",
@@ -321,7 +316,8 @@ class AxclModel::Impl {
 
       input_tensor_shapes_.emplace_back(dims.dims, dims.dims + dims.dimCount);
 
-      input_tensor_names_[i] = axclrtEngineGetInputNameByIndex(io_info_, i);
+      input_tensor_names_[i] =
+          axclrtEngineGetInputNameByIndex(*io_info_guard_, i);
 
       ret = axclrtEngineSetInputBufferByIndex(*engine_io_guard_, i,
                                               input_tensors_[i], size_in_bytes);
@@ -338,17 +334,18 @@ class AxclModel::Impl {
   void InitOutput() {
     uint32_t group = 0;
 
-    int32_t num_outputs = axclrtEngineGetNumOutputs(io_info_);
+    int32_t num_outputs = axclrtEngineGetNumOutputs(*io_info_guard_);
 
     output_tensor_names_.resize(num_outputs);
     output_tensor_shapes_.reserve(num_outputs);
 
     for (int32_t i = 0; i < num_outputs; ++i) {
-      auto size_in_bytes = axclrtEngineGetOutputSizeByIndex(io_info_, group, i);
+      auto size_in_bytes =
+          axclrtEngineGetOutputSizeByIndex(*io_info_guard_, group, i);
       output_tensors_.emplace_back(size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST);
 
       axclrtEngineIODims dims;
-      auto ret = axclrtEngineGetOutputDims(io_info_, group, i, &dims);
+      auto ret = axclrtEngineGetOutputDims(*io_info_guard_, group, i, &dims);
       if (ret != 0) {
         SHERPA_ONNX_LOGE(
             "Failed to call axclrtEngineGetOutputDims(). Return code is: %d",
@@ -357,7 +354,8 @@ class AxclModel::Impl {
       }
 
       output_tensor_shapes_.emplace_back(dims.dims, dims.dims + dims.dimCount);
-      output_tensor_names_[i] = axclrtEngineGetOutputNameByIndex(io_info_, i);
+      output_tensor_names_[i] =
+          axclrtEngineGetOutputNameByIndex(*io_info_guard_, i);
 
       ret = axclrtEngineSetOutputBufferByIndex(
           *engine_io_guard_, i, output_tensors_[i], size_in_bytes);
@@ -375,13 +373,11 @@ class AxclModel::Impl {
   AxclManager manager_;
   std::unique_ptr<AxclEngineGuard> engine_guard_;
   std::unique_ptr<AxclEngineIOGuard> engine_io_guard_;
+  std::unique_ptr<AxclEngineIOInfoGuard> io_info_guard_;
 
   bool model_loaded_ = false;
   uint64_t model_id_ = 0;
   uint64_t context_id_ = 0;
-
-  axclrtEngineIOInfo io_info_ = nullptr;
-  axclrtEngineIO io_ = nullptr;
 
   std::vector<std::string> input_tensor_names_;
   std::vector<std::string> output_tensor_names_;

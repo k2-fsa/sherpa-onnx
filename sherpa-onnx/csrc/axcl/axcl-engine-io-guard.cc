@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/axcl/axcl-engine-io-guard.h
+// sherpa-onnx/csrc/axcl/axcl-engine-io-guard.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
