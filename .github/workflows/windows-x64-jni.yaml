@@ -81,9 +81,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-jni
           mkdir -p $dst
 
-          cp -a build/install/bin $dst/ || true
           cp -a build/install/lib $dst/ || true
-          cp -a build/install/include $dst/ || true
 
           tar cjvf ${dst}.tar.bz2 $dst
 

@@ -1,3 +1,24 @@
+## 1.12.19
+
+* Fix building without TTS for C API (#2838)
+* [ZipVoice] Fix english tokenization error (#2834)
+* Add simulate streaming ASR Python example for Paraformer (#2839)
+* Fix building JNI for Windows (#2840)
+* Avoid NaN in NeMo speaker embedding models. (#2844)
+* Add spacemit ort ep for spacemit riscv cpus (#2837)
+* Add token-level confidence scores (ys_probs) for offline transducer models (#2843)
+* Fix token log probabilities in offline transducer modified beam search decoder (#2846)
+* Support AXERA ax630, ax650, and axcl backends. (#2849)
+* Refactor axera npu examples (#2850)
+* Fix matcha tts zh-en model (#2851)
+* Fix the English part for Matcha TTS. (#2853)
+* Refactor text-utils (#2855)
+* Fix matcha tts (#2856)
+* Add a space between English words for Matcha zh-en TTS (#2858)
+* Fix punctuations in matcha zh-en tts (#2859)
+* Upload matcha tts zh-en model (#2865)
+* Fix the discrepancy with the Silero VAD isSpeech logic (#2863)
+
 ## 1.12.18
 
 * Fix building wheels (#2786)
