@@ -18,7 +18,7 @@ namespace sherpa_onnx {
 class OfflineSenseVoiceModelAxcl::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
-    model_ = std::make_unique<AxclModel>(config_.sense_voice.model_);
+    model_ = std::make_unique<AxclModel>(config_.sense_voice.model);
 
     PostInit();
   }
@@ -43,7 +43,7 @@ class OfflineSenseVoiceModelAxcl::Impl {
     model_->SetInputTensorData("x", features.data(), features.size());
     model_->SetInputTensorData("prompt", prompt.data(), prompt.size());
     model_->Run();
-    return GetOutputTensorData("logits");
+    return model_->GetOutputTensorData("logits");
   }
 
  private:
