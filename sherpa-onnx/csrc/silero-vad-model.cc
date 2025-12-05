@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -131,7 +132,13 @@ class SileroVadModel::Impl {
       return false;
     }
 
-    if ((prob > threshold - 0.15) && triggered_) {
+    float neg_threshold;
+    if (config_.silero_vad.neg_threshold < 0) {
+        neg_threshold = std::max(threshold - 0.15f, 0.01f);
+    } else {
+        neg_threshold = std::max(config_.silero_vad.neg_threshold, 0.01f);
+    }
+    if ((prob > neg_threshold) && triggered_) {
       // speaking
       return true;
     }
