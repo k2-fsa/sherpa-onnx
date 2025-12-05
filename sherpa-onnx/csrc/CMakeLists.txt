@@ -206,8 +206,13 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_AXCL)
   list(APPEND sources
+    ./axcl/axcl-engine-guard.cc
+    ./axcl/axcl-engine-io-guard.cc
+    ./axcl/axcl-engine-io-info-guard.cc
+    ./axcl/axcl-manager.cc
+    ./axcl/axcl-model.cc
     ./axcl/offline-sense-voice-model-axcl.cc
-    ./axcl/ax_model_runner_axcl.cc
+    ./axcl/utils.cc
   )
 endif()
 
