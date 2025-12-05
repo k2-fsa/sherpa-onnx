@@ -12,7 +12,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
-#if defined(__APPLE__)
+#if defined(__APPLE__) && (ORT_API_VERSION >= 10)
 #include "coreml_provider_factory.h"  // NOLINT
 #endif
 
@@ -84,9 +84,10 @@ Ort::SessionOptions GetSessionOptionsImpl(
       break;
     }
     case Provider::kTRT: {
+#if ORT_API_VERSION >= 10
       if (provider_config == nullptr) {
         SHERPA_ONNX_LOGE(
-            "Tensorrt support for Online models ony,"
+            "Tensorrt support for Online models only,"
             "Must be extended for offline and others");
         exit(1);
       }
@@ -159,6 +160,12 @@ Ort::SessionOptions GetSessionOptionsImpl(
       }
       // break; is omitted here intentionally so that
       // if TRT not available, CUDA will be used
+#else
+      SHERPA_ONNX_LOGE(
+          "Tensorrt is not supported. Version of onnxruntime %d is too old. "
+          "Fallback to cuda provider",
+          static_cast<int32_t>(ORT_API_VERSION));
+#endif
     }
     case Provider::kCUDA: {
       if (std::find(available_providers.begin(), available_providers.end(),
@@ -173,7 +180,11 @@ Ort::SessionOptions GetSessionOptionsImpl(
         } else {
           options.device_id = 0;
           // Default OrtCudnnConvAlgoSearchExhaustive is extremely slow
+#if ORT_API_VERSION >= 10
           options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
+#else
+          options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearch(1);
+#endif
           // set more options on need
         }
         sess_opts.AppendExecutionProvider_CUDA(options);
@@ -204,7 +215,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
       break;
     }
     case Provider::kCoreML: {
-#if defined(__APPLE__)
+#if defined(__APPLE__) && (ORT_API_VERSION >= 10)
       uint32_t coreml_flags = 0;
       (void)OrtSessionOptionsAppendExecutionProvider_CoreML(sess_opts,
                                                             coreml_flags);
