@@ -36,7 +36,7 @@ class AxclModel::Impl {
 
     InitEngine();
 
-    axclError ret = axclrtEngineLoadFromFile(filename, &model_id_);
+    axclError ret = axclrtEngineLoadFromFile(filename.c_str(), &model_id_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE(
           "Failed to call axclrtEngineLoadFromFile() with file: %s. Return "
@@ -101,16 +101,16 @@ class AxclModel::Impl {
     return output_tensor_names_;
   }
 
-  const std::vector<int32_t> &TensorShape(const std::string &name) const {
+  std::vector<int32_t> TensorShape(const std::string &name) const {
     for (size_t i = 0; i < input_tensor_names_.size(); ++i) {
       if (input_tensor_names_[i] == name) {
-        return input_tensors_shapes_[i];
+        return input_tensor_shapes_[i];
       }
     }
 
     for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
       if (output_tensor_names_[i] == name) {
-        return output_tensors_shapes_[i];
+        return output_tensor_shapes_[i];
       }
     }
 
@@ -162,8 +162,9 @@ class AxclModel::Impl {
           return false;
         }
 
-        auto ret = axclrtMemcpy(input_tensors_[i], p, input_tensors_[i].Size(),
-                                AXCL_MEMCPY_HOST_TO_DEVICE);
+        auto ret =
+            axclrtMemcpy(input_tensors_[i].Get(), p, input_tensors_[i].Size(),
+                         AXCL_MEMCPY_HOST_TO_DEVICE);
         if (ret != 0) {
           SHERPA_ONNX_LOGE(
               "Failed to call axclrtMemcpy(). tensor name: '%s', return code: "
@@ -185,7 +186,7 @@ class AxclModel::Impl {
         size_t bytes = output_tensors_[i].Size();
         std::vector<float> out(bytes / sizeof(float));
 
-        auto ret = axclrtMemcpy(out.data(), output_tensors_[i], bytes,
+        auto ret = axclrtMemcpy(out.data(), output_tensors_[i].Get(), bytes,
                                 AXCL_MEMCPY_DEVICE_TO_HOST);
         if (ret != 0) {
           SHERPA_ONNX_LOGE(
@@ -207,7 +208,7 @@ class AxclModel::Impl {
   bool Run() const {
     uint32_t group = 0;
     auto ret =
-        axclrtEngineExecute(model_id_, context_id, group, engine_io_guard_);
+        axclrtEngineExecute(model_id_, context_id_, group, *engine_io_guard_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("Failed to call axclrtEngineExecute(), return code: %d",
                        static_cast<int32_t>(ret));
@@ -287,7 +288,7 @@ class AxclModel::Impl {
 
   void InitContext() {
     // Note(fangjun): No need to destroy context_id_
-    auto ret = axclrtEngineCreateContext(model_id_, context_id_);
+    auto ret = axclrtEngineCreateContext(model_id_, &context_id_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE(
           "Failed to call axclrtEngineCreateContext(). Return code is: %d",
@@ -303,11 +304,11 @@ class AxclModel::Impl {
 
     input_tensor_names_.resize(num_inputs);
     input_tensor_shapes_.reserve(num_inputs);
-    input_tensor_.reserve(num_inputs);
 
     for (int32_t i = 0; i < num_inputs; ++i) {
-      auto size_in_bytes = axclrtEngineGetInputSizeByIndex(io_info_, group, i);
-      input_tensors_.emplace_back({size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST});
+      size_t size_in_bytes =
+          axclrtEngineGetInputSizeByIndex(io_info_, group, i);
+      input_tensors_.emplace_back(size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST);
 
       axclrtEngineIODims dims;
       auto ret = axclrtEngineGetInputDims(io_info_, group, i, &dims);
@@ -318,12 +319,11 @@ class AxclModel::Impl {
         SHERPA_ONNX_EXIT(-1);
       }
 
-      input_tensors_shapes_.emplace_back(
-          {dims.dims, dims.dims + dims.dimCount});
+      input_tensor_shapes_.emplace_back(dims.dims, dims.dims + dims.dimCount);
 
       input_tensor_names_[i] = axclrtEngineGetInputNameByIndex(io_info_, i);
 
-      ret = axclrtEngineSetInputBufferByIndex(engine_io_guard_, i,
+      ret = axclrtEngineSetInputBufferByIndex(*engine_io_guard_, i,
                                               input_tensors_[i], size_in_bytes);
       if (ret != 0) {
         SHERPA_ONNX_LOGE(
@@ -342,14 +342,13 @@ class AxclModel::Impl {
 
     output_tensor_names_.resize(num_outputs);
     output_tensor_shapes_.reserve(num_outputs);
-    output_tensor_.reserve(num_outputs);
 
     for (int32_t i = 0; i < num_outputs; ++i) {
       auto size_in_bytes = axclrtEngineGetOutputSizeByIndex(io_info_, group, i);
-      output_tensors_.emplace_back({size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST});
+      output_tensors_.emplace_back(size_in_bytes, AXCL_MEM_MALLOC_HUGE_FIRST);
 
       axclrtEngineIODims dims;
-      ret = axclrtEngineGetOutputDims(io_info_, group, i, &dims);
+      auto ret = axclrtEngineGetOutputDims(io_info_, group, i, &dims);
       if (ret != 0) {
         SHERPA_ONNX_LOGE(
             "Failed to call axclrtEngineGetOutputDims(). Return code is: %d",
@@ -357,12 +356,11 @@ class AxclModel::Impl {
         SHERPA_ONNX_EXIT(-1);
       }
 
-      output_tensors_shapes_.emplace_back(
-          {dims.dims, dims.dims + dims.dimCount});
+      output_tensor_shapes_.emplace_back(dims.dims, dims.dims + dims.dimCount);
       output_tensor_names_[i] = axclrtEngineGetOutputNameByIndex(io_info_, i);
 
       ret = axclrtEngineSetOutputBufferByIndex(
-          engine_io_guard_, i, output_tensors_[i], size_in_bytes);
+          *engine_io_guard_, i, output_tensors_[i], size_in_bytes);
       if (ret != 0) {
         SHERPA_ONNX_LOGE(
             "Failed to call axclrtEngineSetOutputBufferByIndex(). Return code "
@@ -409,8 +407,7 @@ const std::vector<std::string> &AxclModel::OutputTensorNames() const {
   return impl_->OutputTensorNames();
 }
 
-const std::vector<int32_t> &AxclModel::TensorShape(
-    const std::string &name) const {
+std::vector<int32_t> AxclModel::TensorShape(const std::string &name) const {
   return impl_->TensorShape(name);
 }
 

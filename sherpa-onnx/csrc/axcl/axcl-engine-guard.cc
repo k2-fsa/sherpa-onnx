@@ -11,7 +11,8 @@
 
 namespace sherpa_onnx {
 
-AxclEngineGuard::AxclEngineGuard(axclrtEngineVNpuKind npuKind) {
+AxclEngineGuard::AxclEngineGuard(
+    axclrtEngineVNpuKind npuKind /*= AXCL_VNPU_DISABLE*/) {
   axclError ret = axclrtEngineInit(npuKind);
   if (ret != 0) {
     SHERPA_ONNX_LOGE("Failed to call axclrtEngineInit(). Return code is: %d",

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/axcl/utils.h"
 
+#include "sherpa-onnx/csrc/macros.h"
+
 namespace sherpa_onnx {
 
 AxclDevicePtr::AxclDevicePtr(
@@ -19,13 +21,20 @@ AxclDevicePtr::AxclDevicePtr(
   size_ = size;
 }
 
-AxclDevicePtr::~AxclDevicePtr() {
+void AxclDevicePtr::Release() {
+  if (!p_) {
+    return;
+  }
+
   auto ret = axclrtFree(p_);
   if (ret != 0) {
     SHERPA_ONNX_LOGE("Failed to call axclrtFree(). Return code: %d",
                      static_cast<int32_t>(ret));
     SHERPA_ONNX_EXIT(-1);
   }
+  p_ = nullptr;
 }
+
+AxclDevicePtr::~AxclDevicePtr() { Release(); }
 
 }  // namespace sherpa_onnx

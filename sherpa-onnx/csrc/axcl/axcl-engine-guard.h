@@ -10,7 +10,7 @@ namespace sherpa_onnx {
 
 class AxclEngineGuard {
  public:
-  explicit AxclEngineGuard(axclrtEngineVNpuKind npuKind);
+  explicit AxclEngineGuard(axclrtEngineVNpuKind npuKind = AXCL_VNPU_DISABLE);
   ~AxclEngineGuard();
 
   AxclEngineGuard(const AxclEngineGuard &) = delete;

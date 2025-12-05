@@ -19,8 +19,22 @@ class AxclDevicePtr {
   AxclDevicePtr(const AxclDevicePtr &) = delete;
   AxclDevicePtr &operator=(const AxclDevicePtr &) = delete;
 
-  AxclDevicePtr(AxclDevicePtr &&) = delete;
-  AxclDevicePtr &operator=(AxclDevicePtr &&) = delete;
+  AxclDevicePtr(AxclDevicePtr &&other) {
+    p_ = other.p_;
+    other.p_ = nullptr;
+  }
+  AxclDevicePtr &operator=(AxclDevicePtr &&other) {
+    if (this == &other) {
+      return *this;
+    }
+    Release();
+    p_ = other.p_;
+    other.p_ = nullptr;
+
+    return *this;
+  }
+
+  void Release();
 
   void *Get() const { return p_; }
   operator void *() { return p_; }
