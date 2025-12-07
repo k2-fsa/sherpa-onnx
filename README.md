@@ -51,6 +51,10 @@ It also supports WebAssembly.
 |-------------------------------------|-----------------------------------|-----------------------------|
 |     ✔️                              |                  ✔️               |     ✔️                      |
 
+| [4. Axera NPU][axera-npu] |
+|---------------------------|
+|     ✔️                    |
+
 [Join our discord](https://discord.gg/fJdxzg2VbG)
 
 
@@ -582,3 +586,4 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [rknpu-doc]: https://k2-fsa.github.io/sherpa/onnx/rknn/index.html
 [qnn-doc]: https://k2-fsa.github.io/sherpa/onnx/qnn/index.html
 [ascend-doc]: https://k2-fsa.github.io/sherpa/onnx/ascend/index.html
+[axera-npu]: https://axera-tech.com/Skill/166.html
