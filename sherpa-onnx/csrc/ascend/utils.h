@@ -19,7 +19,10 @@ class Acl {
   ~Acl();
 
   Acl(const Acl &) = delete;
-  const Acl &operator=(const Acl &) = delete;
+  Acl &operator=(const Acl &) = delete;
+
+  Acl(Acl &&) = delete;
+  Acl &operator=(Acl &&) = delete;
 
  private:
   bool initialized_ = false;
@@ -32,7 +35,10 @@ class AclContext {
   ~AclContext();
 
   AclContext(const AclContext &) = delete;
-  const AclContext &operator=(const AclContext &) = delete;
+  AclContext &operator=(const AclContext &) = delete;
+
+  AclContext(AclContext &&) = delete;
+  AclContext &operator=(AclContext &&) = delete;
 
   aclrtContext Get() const;
   operator aclrtContext() { return context_; }
@@ -49,7 +55,10 @@ class AclDevicePtr {
   ~AclDevicePtr();
 
   AclDevicePtr(const AclDevicePtr &) = delete;
-  const AclDevicePtr &operator=(const AclDevicePtr &) = delete;
+  AclDevicePtr &operator=(const AclDevicePtr &) = delete;
+
+  AclDevicePtr(AclDevicePtr &&) = delete;
+  AclDevicePtr &operator=(AclDevicePtr &&) = delete;
 
   void *Get() const { return p_; }
   operator void *() { return p_; }
@@ -68,7 +77,10 @@ class AclModelDesc {
   ~AclModelDesc();
 
   AclModelDesc(const AclModelDesc &) = delete;
-  const AclModelDesc &operator=(const AclModelDesc &) = delete;
+  AclModelDesc &operator=(const AclModelDesc &) = delete;
+
+  AclModelDesc(AclModelDesc &&) = delete;
+  AclModelDesc &operator=(AclModelDesc &&) = delete;
 
   aclmdlDesc *Get() const { return p_; }
   operator aclmdlDesc *() const { return p_; }
@@ -90,7 +102,10 @@ class AclModel {
   operator uint32_t() const { return model_id_; }
 
   AclModel(const AclModel &) = delete;
-  const AclModel &operator=(const AclModel &) = delete;
+  AclModel &operator=(const AclModel &) = delete;
+
+  AclModel(AclModel &&) = delete;
+  AclModel &operator=(AclModel &&) = delete;
 
   std::string GetInfo() const;
 
@@ -135,6 +150,9 @@ class AclMdlDataset {
   AclMdlDataset(const AclMdlDataset &) = delete;
   AclMdlDataset &operator=(const AclMdlDataset &) = delete;
 
+  AclMdlDataset(AclMdlDataset &&) = delete;
+  AclMdlDataset &operator=(AclMdlDataset &&) = delete;
+
   void AddBuffer(aclDataBuffer *buffer) const;
   void SetTensorDesc(aclTensorDesc *tensor_desc, size_t index) const;
 
@@ -153,6 +171,9 @@ class AclDataBuffer {
   AclDataBuffer(const AclDataBuffer &) = delete;
   AclDataBuffer &operator=(const AclDataBuffer &) = delete;
 
+  AclDataBuffer(AclDataBuffer &&) = delete;
+  AclDataBuffer &operator=(AclDataBuffer &&) = delete;
+
   aclDataBuffer *Get() const { return p_; }
   operator aclDataBuffer *() const { return p_; }
 
@@ -168,6 +189,9 @@ class AclTensorDesc {
 
   AclTensorDesc(const AclTensorDesc &) = delete;
   AclTensorDesc &operator=(const AclTensorDesc &) = delete;
+
+  AclTensorDesc(AclTensorDesc &&) = delete;
+  AclTensorDesc &operator=(AclTensorDesc &&) = delete;
 
   aclTensorDesc *Get() const { return p_; }
   operator aclTensorDesc *() const { return p_; }
