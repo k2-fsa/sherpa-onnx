@@ -31,6 +31,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-sense-voice-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
@@ -42,22 +43,22 @@
 #endif
 
 #if SHERPA_ONNX_ENABLE_AXERA
-#include "sherpa-onnx/csrc/axera/offline-recognizer-sense-voice-axera-impl.h"
+#include "sherpa-onnx/csrc/axera/offline-sense-voice-model-axera.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_AXCL
-#include "sherpa-onnx/csrc/axcl/offline-recognizer-sense-voice-axcl-impl.h"
+#include "sherpa-onnx/csrc/axcl/offline-sense-voice-model-axcl.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h"
-#include "sherpa-onnx/csrc/ascend/offline-recognizer-sense-voice-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-zipformer-ctc-ascend-impl.h"
+#include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_QNN
-#include "sherpa-onnx/csrc/qnn/offline-recognizer-sense-voice-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-zipformer-ctc-qnn-impl.h"
+#include "sherpa-onnx/csrc/qnn/offline-sense-voice-model-qnn.h"
 #endif
 
 namespace sherpa_onnx {
@@ -92,7 +93,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "axera") {
 #if SHERPA_ONNX_ENABLE_AXERA
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAxeraImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxera>>(
+          config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice models are currently supported by Axera NPU for "
@@ -113,7 +116,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAxclImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
+          config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice models are currently supported by axcl for "
@@ -135,7 +140,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "ascend") {
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAscend>>(
+          config);
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerAscendImpl>(config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
@@ -160,7 +167,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "qnn") {
 #if SHERPA_ONNX_ENABLE_QNN
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceQnnImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
+          config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcQnnImpl>(config);
     } else {
@@ -399,8 +408,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "axera") {
 #if SHERPA_ONNX_ENABLE_AXERA
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAxeraImpl>(mgr,
-                                                                    config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxera>>(
+          mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice models are currently supported by Axera NPU for "
@@ -421,7 +431,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAxclImpl>(mgr, config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
+          mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice models are currently supported by axcl for "
@@ -443,8 +455,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "ascend") {
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceAscendImpl>(mgr,
-                                                                     config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAscend>>(
+          mgr, config);
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerAscendImpl>(mgr,
                                                                      config);
@@ -471,7 +484,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "qnn") {
 #if SHERPA_ONNX_ENABLE_QNN
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceQnnImpl>(mgr, config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
+          mgr, config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcQnnImpl>(mgr,
                                                                     config);
