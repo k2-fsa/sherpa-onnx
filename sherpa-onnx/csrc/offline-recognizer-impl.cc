@@ -38,7 +38,7 @@
 
 #if SHERPA_ONNX_ENABLE_RKNN
 #include "sherpa-onnx/csrc/rknn/offline-recognizer-paraformer-rknn-impl.h"
-#include "sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-rknn-impl.h"
+#include "sherpa-onnx/csrc/rknn/offline-sense-voice-model-rknn.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_AXERA
@@ -67,7 +67,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelRknn>>(
+          config);
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerRknnImpl>(config);
     } else {
@@ -372,7 +374,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (config.model_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     if (!config.model_config.sense_voice.model.empty()) {
-      return std::make_unique<OfflineRecognizerSenseVoiceRknnImpl>(mgr, config);
+      return std::make_unique<
+          OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelRknn>>(
+          mgr, config);
     } else if (!config.model_config.paraformer.model.empty()) {
       return std::make_unique<OfflineRecognizerParaformerRknnImpl>(mgr, config);
     } else {
@@ -770,8 +774,8 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
         itn_list_.push_back(
             std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
       }  // for (; !reader->Done(); reader->Next())
-    }    // for (const auto &f : files)
-  }      // if (!config.rule_fars.empty())
+    }  // for (const auto &f : files)
+  }  // if (!config.rule_fars.empty())
 
   if (!config.hr.lexicon.empty() && !config.hr.rule_fsts.empty()) {
     auto hr_config = config.hr;
