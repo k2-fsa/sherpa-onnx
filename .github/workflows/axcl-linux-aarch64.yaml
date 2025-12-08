@@ -1,0 +1,241 @@
+name: axcl-linux-aarch64
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/axcl-linux-aarch64.yaml'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/csrc/axcl/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
+
+  workflow_dispatch:
+
+concurrency:
+  group: axcl-linux-aarch64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  axcl_linux_aarch64:
+    runs-on: ubuntu-22.04-arm
+    name: axcl npu
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Download SDK
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/Abandon-ht/axcl_bsp_sdk
+          mv axcl_bsp_sdk/out sdk_dir
+
+          ls -lh sdk_dir/include
+          echo "---"
+          ls -lh sdk_dir/bsp
+          echo "---"
+          ls -lh sdk_dir/lib
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: axcl-linux-aarch64
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux_2_28_aarch64
+            # image: quay.io/pypa/manylinux2014_aarch64 # won't work
+            options: |
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              which gcc
+
+              gcc --version
+              g++ --version
+
+              cmake --version
+
+
+              cd /k2-fsa/sherpa-onnx/
+
+              export AXCL_SDK_ROOT=$PWD/sdk_dir
+              echo "AXCL_SDK_ROOT: $AXCL_SDK_ROOT"
+              export CPLUS_INCLUDE_PATH="$AXCL_SDK_ROOT/include:$AXCL_SDK_ROOT/bsp:$CPLUS_INCLUDE_PATH"
+              export SHERPA_ONNX_AXCL_LIB_DIR="$AXCL_SDK_ROOT/lib"
+
+              echo "pwd"
+
+              ls -lh
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              ls -lh $PWD/alsa-lib/src/.libs
+
+              strings $PWD/alsa-lib/src/.libs/libasound.so.2.0.0 | grep "^GLIBC"
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export C_INCLUDE_PATH=$PWD/alsa-lib/include:$C_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+              p=$PWD
+
+              export SHERPA_ONNX_ENABLE_ALSA=1
+
+              mkdir build
+              cd build
+
+              BUILD_SHARED_LIBS=ON
+
+              cmake \
+                -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
+                -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
+                -DBUILD_SHARED_LIBS=ON \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DSHERPA_ONNX_ENABLE_AXCL=ON \
+                -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+                ..
+
+              make -j4 install
+
+              rm -rf install/lib/pkgconfig
+              rm -fv install/lib/cargs.h
+              rm -fv install/lib/libcargs.so
+
+      - name: Display system info
+        shell: bash
+        run: |
+          uname -a
+          gcc --version
+          g++ --version
+
+      - name: Display generated files
+        shell: bash
+        run: |
+          export AXCL_SDK_ROOT=$PWD/sdk_dir
+          export LD_LIBRARY_PATH=$AXCL_SDK_ROOT/lib:$LD_LIBRARY_PATH
+
+          ls -lh $AXCL_SDK_ROOT/lib/
+
+          cd build/install
+
+          ls -lh bin
+
+          echo "---"
+
+          ls -lh lib
+
+          file bin/sherpa-onnx
+
+          readelf -d bin/sherpa-onnx
+
+          ldd bin/sherpa-onnx
+
+          echo "---"
+          strings bin/sherpa-onnx | grep "^GLIBC"
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          suffix=shared
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-axcl-linux-aarch64-$suffix
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+
+          mkdir -p $dst/lib
+          cp -v build/install/lib/lib*.so $dst/lib/
+
+          ls -lh build/install/lib
+          ls -lh build/install/bin
+
+          ls -lh $dst/bin/
+          echo "strip"
+          strip $dst/bin/*
+
+          echo "after strip"
+          ls -lh $dst/bin/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-axcl-linux-aarch64-shared
+          path: sherpa-onnx-*linux-aarch64*.tar.bz2
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=axcl-linux-aarch64/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../sherpa-onnx-*axcl*-*.tar.bz2 $dst
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-axcl-linux-aarch64.tar.bz2"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.19
