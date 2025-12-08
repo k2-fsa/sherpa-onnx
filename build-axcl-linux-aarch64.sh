@@ -21,7 +21,7 @@ set -ex
 
 # Before you run this file, make sure you have first cloned
 # https://github.com/Abandon-ht/axcl_bsp_sdk
-# and set the environment variable SHERPA_ONNX_AXERA_PATH
+# and set the environment variable SHERPA_ONNX_ASCL_SDK_ROOT
 
 if [ -z "$AXCL_SDK_ROOT" ]; then
   AXCL_SDK_ROOT=/home/m5stack/Workspace/kaldi/sherpa-onnx/axcl_bsp_sdk/out
@@ -114,7 +114,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-make VERBOSE=1 -j22
+make VERBOSE=1 -j2
 make install/strip
 
 # Enable it if only needed
