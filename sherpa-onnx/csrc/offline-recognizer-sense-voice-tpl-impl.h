@@ -1,15 +1,14 @@
-// sherpa-onnx/csrc/rknn/offline-recognizer-sense-voice-axera-impl.h
+// sherpa-onnx/csrc/offline-recognizer-sense-voice-tpl-impl.h
 //
-// Copyright (c)  2025  M5Stack Technology CO LTD
+// Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_AXERA_OFFLINE_RECOGNIZER_SENSE_VOICE_AXERA_IMPL_H_
-#define SHERPA_ONNX_CSRC_AXERA_OFFLINE_RECOGNIZER_SENSE_VOICE_AXERA_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_TPL_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_TPL_IMPL_H_
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/axera/offline-sense-voice-model-axera.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -24,15 +23,15 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor);
 
-class OfflineRecognizerSenseVoiceAxeraImpl : public OfflineRecognizerImpl {
+template <typename SenseVoiceModel>
+class OfflineRecognizerSenseVoiceTplImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerSenseVoiceAxeraImpl(
+  explicit OfflineRecognizerSenseVoiceTplImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
         config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(std::make_unique<OfflineSenseVoiceModelAxera>(
-            config.model_config)) {
+        model_(std::make_unique<SenseVoiceModel>(config.model_config)) {
     const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineCtcGreedySearchDecoderRknn>(
@@ -47,13 +46,12 @@ class OfflineRecognizerSenseVoiceAxeraImpl : public OfflineRecognizerImpl {
   }
 
   template <typename Manager>
-  OfflineRecognizerSenseVoiceAxeraImpl(Manager *mgr,
-                                       const OfflineRecognizerConfig &config)
+  OfflineRecognizerSenseVoiceTplImpl(Manager *mgr,
+                                     const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineSenseVoiceModelAxera>(
-            mgr, config.model_config)) {
+        model_(std::make_unique<SenseVoiceModel>(mgr, config.model_config)) {
     const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineCtcGreedySearchDecoderRknn>(
@@ -111,6 +109,10 @@ class OfflineRecognizerSenseVoiceAxeraImpl : public OfflineRecognizerImpl {
                             : meta_data.without_itn_id;
 
     std::vector<float> logits = model_->Run(std::move(f), language, text_norm);
+    if (logits.empty()) {
+      return;
+    }
+
     int32_t num_out_frames = logits.size() / meta_data.vocab_size;
 
     auto result =
@@ -129,10 +131,10 @@ class OfflineRecognizerSenseVoiceAxeraImpl : public OfflineRecognizerImpl {
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OfflineSenseVoiceModelAxera> model_;
+  std::unique_ptr<SenseVoiceModel> model_;
   std::unique_ptr<OfflineCtcGreedySearchDecoderRknn> decoder_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_AXERA_OFFLINE_RECOGNIZER_SENSE_VOICE_AXERA_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_TPL_IMPL_H_
