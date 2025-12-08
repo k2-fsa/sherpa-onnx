@@ -23,6 +23,10 @@ set -ex
 # https://github.com/Abandon-ht/axcl_bsp_sdk
 # and set the environment variable SHERPA_ONNX_AXCL_SDK_ROOT
 
+if [ -d ./axcl_bsp_sdk ]; then
+  AXCL_SDK_ROOT=/star-fj/fangjun/open-source/sherpa-onnx/axcl_bsp_sdk/out
+fi
+
 if [ -z "$AXCL_SDK_ROOT" ]; then
   AXCL_SDK_ROOT=/home/m5stack/Workspace/kaldi/sherpa-onnx/axcl_bsp_sdk/out
   echo "Please set AXCL_SDK_ROOT to your Axcl SDK path, e.g.:"
