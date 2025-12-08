@@ -114,15 +114,12 @@ jobs:
               mkdir build
               cd build
 
-              BUILD_SHARED_LIBS=ON
-
               cmake \
                 -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
                 -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
                 -DBUILD_SHARED_LIBS=ON \
                 -DCMAKE_INSTALL_PREFIX=./install \
                 -DSHERPA_ONNX_ENABLE_AXERA=ON \
-                -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
                 ..
 
               make -j4 install
@@ -234,7 +231,7 @@ jobs:
 
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
-      - name: Release pre-compiled binaries and libs for inux aarch64
+      - name: Release pre-compiled binaries and libs for linux aarch64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:

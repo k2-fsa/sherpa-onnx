@@ -103,15 +103,12 @@ jobs:
               mkdir build
               cd build
 
-              BUILD_SHARED_LIBS=ON
-
               cmake \
                 -DALSA_INCLUDE_DIR=$p/alsa-lib/include \
                 -DALSA_LIBRARY=$p/alsa-lib/src/.libs/libasound.so \
                 -DBUILD_SHARED_LIBS=ON \
                 -DCMAKE_INSTALL_PREFIX=./install \
                 -DSHERPA_ONNX_ENABLE_AXCL=ON \
-                -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
                 ..
 
               make -j4 install
