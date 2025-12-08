@@ -30,6 +30,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
