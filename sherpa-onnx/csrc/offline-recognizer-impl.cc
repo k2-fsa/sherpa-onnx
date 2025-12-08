@@ -38,7 +38,7 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
-#include "sherpa-onnx/csrc/rknn/offline-recognizer-paraformer-rknn-impl.h"
+#include "sherpa-onnx/csrc/rknn/offline-paraformer-model-rknn.h"
 #include "sherpa-onnx/csrc/rknn/offline-sense-voice-model-rknn.h"
 #endif
 
@@ -51,7 +51,7 @@
 #endif
 
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
-#include "sherpa-onnx/csrc/ascend/offline-recognizer-paraformer-ascend-impl.h"
+#include "sherpa-onnx/csrc/ascend/offline-paraformer-model-ascend.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-zipformer-ctc-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
 #endif
@@ -72,7 +72,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelRknn>>(
           config);
     } else if (!config.model_config.paraformer.model.empty()) {
-      return std::make_unique<OfflineRecognizerParaformerRknnImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerParaformerTplImpl<OfflineParaformerModelRknn>>(
+          config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice and Paraformer models are currently supported "
@@ -144,7 +146,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAscend>>(
           config);
     } else if (!config.model_config.paraformer.model.empty()) {
-      return std::make_unique<OfflineRecognizerParaformerAscendImpl>(config);
+      return std::make_unique<
+          OfflineRecognizerParaformerTplImpl<OfflineParaformerModelAscend>>(
+          config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(config);
     } else {
@@ -387,7 +391,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelRknn>>(
           mgr, config);
     } else if (!config.model_config.paraformer.model.empty()) {
-      return std::make_unique<OfflineRecognizerParaformerRknnImpl>(mgr, config);
+      return std::make_unique<
+          OfflineRecognizerParaformerTplImpl<OfflineParaformerModelRknn>>(
+          mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice and Paraformer models are currently supported "
@@ -459,8 +465,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAscend>>(
           mgr, config);
     } else if (!config.model_config.paraformer.model.empty()) {
-      return std::make_unique<OfflineRecognizerParaformerAscendImpl>(mgr,
-                                                                     config);
+      return std::make_unique<
+          OfflineRecognizerParaformerTplImpl<OfflineParaformerModelAscend>>(
+          mgr, config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(mgr,
                                                                        config);

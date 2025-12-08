@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/rknn/offline-recognizer-paraformer-rknn-impl.h
+// sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_PARAFORMER_RKNN_IMPL_H_
-#define SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_PARAFORMER_RKNN_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_TPL_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_TPL_IMPL_H_
 
 #include <memory>
 #include <utility>
@@ -13,7 +13,6 @@
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/rknn/offline-paraformer-model-rknn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -22,15 +21,15 @@ namespace sherpa_onnx {
 OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
                                  const SymbolTable &sym_table);
 
-class OfflineRecognizerParaformerRknnImpl : public OfflineRecognizerImpl {
+template <typename ParaformerModel>
+class OfflineRecognizerParaformerTplImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerParaformerRknnImpl(
+  explicit OfflineRecognizerParaformerTplImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
         config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(
-            std::make_unique<OfflineParaformerModelRknn>(config.model_config)) {
+        model_(std::make_unique<ParaformerModel>(config.model_config)) {
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
@@ -41,13 +40,12 @@ class OfflineRecognizerParaformerRknnImpl : public OfflineRecognizerImpl {
   }
 
   template <typename Manager>
-  OfflineRecognizerParaformerRknnImpl(Manager *mgr,
-                                      const OfflineRecognizerConfig &config)
+  OfflineRecognizerParaformerTplImpl(Manager *mgr,
+                                     const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineParaformerModelRknn>(
-            mgr, config.model_config)) {
+        model_(std::make_unique<ParaformerModel>(mgr, config.model_config)) {
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
@@ -113,9 +111,9 @@ class OfflineRecognizerParaformerRknnImpl : public OfflineRecognizerImpl {
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OfflineParaformerModelRknn> model_;
+  std::unique_ptr<ParaformerModel> model_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_RKNN_OFFLINE_RECOGNIZER_PARAFORMER_RKNN_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_TPL_IMPL_H_
