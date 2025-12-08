@@ -143,6 +143,7 @@ fun HomeScreen() {
                     var startTime = System.currentTimeMillis()
                     var lastText = ""
                     var added = false
+                    var speechStartOffset = 0
 
 
                     while (isStarted) {
@@ -162,6 +163,11 @@ fun HomeScreen() {
                                 offset += windowSize
                                 if (!isSpeechStarted && SimulateStreamingAsr.vad.isSpeechDetected()) {
                                     isSpeechStarted = true
+                                    // offset 0.25s
+                                    speechStartOffset = offset - 6400
+                                    if(speechStartOffset < 0) {
+                                        speechStartOffset = 0
+                                    }
                                     startTime = System.currentTimeMillis()
                                 }
                             }
@@ -172,7 +178,7 @@ fun HomeScreen() {
                                 // You can change it to some other value
                                 val stream = SimulateStreamingAsr.recognizer.createStream()
                                 stream.acceptWaveform(
-                                    buffer.subList(0, offset).toFloatArray(),
+                                    buffer.subList(speechStartOffset, offset).toFloatArray(),
                                     sampleRateInHz
                                 )
                                 SimulateStreamingAsr.recognizer.decode(stream)
