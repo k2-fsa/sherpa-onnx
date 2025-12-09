@@ -39,14 +39,14 @@ class Chipset(IntEnum):
     SM8650 = 57  # v75
     SM8750 = 69  # v79
     SM8850 = 87  # v81
-    SSG2115P = 46  # v73
-    SSG2125P = 58  # v73
-    SXR1230P = 45  # v73
-    SXR2230P = 53  # v69
-    SXR2330P = 75  # v79
+    #  SSG2115P = 46  # v73
+    #  SSG2125P = 58  # v73
+    #  SXR1230P = 45  # v73
+    #  SXR2230P = 53  # v69
+    #  SXR2330P = 75  # v79
     QCS9100 = 77  # v73
-    SAR2230P = 95  # v81
-    SW6100 = 96  # v81
+    #  SAR2230P = 95  # v81
+    #  SW6100 = 96  # v81
 
 
 @dataclass
@@ -82,14 +82,14 @@ soc_info_list = [
     SocInfo(Chipset.SM8650, HtpInfo(HtpArch.v75, 8)),
     SocInfo(Chipset.SM8750, HtpInfo(HtpArch.v79, 8)),
     SocInfo(Chipset.SM8850, HtpInfo(HtpArch.v81, 8)),
-    SocInfo(Chipset.SSG2115P, HtpInfo(HtpArch.v73, 2)),
-    SocInfo(Chipset.SSG2125P, HtpInfo(HtpArch.v73, 2)),
-    SocInfo(Chipset.SXR1230P, HtpInfo(HtpArch.v73, 2)),
-    SocInfo(Chipset.SXR2230P, HtpInfo(HtpArch.v69, 8)),
-    SocInfo(Chipset.SXR2330P, HtpInfo(HtpArch.v79, 8)),
+    #  SocInfo(Chipset.SSG2115P, HtpInfo(HtpArch.v73, 2)),
+    #  SocInfo(Chipset.SSG2125P, HtpInfo(HtpArch.v73, 2)),
+    #  SocInfo(Chipset.SXR1230P, HtpInfo(HtpArch.v73, 2)),
+    #  SocInfo(Chipset.SXR2230P, HtpInfo(HtpArch.v69, 8)),
+    #  SocInfo(Chipset.SXR2330P, HtpInfo(HtpArch.v79, 8)),
     SocInfo(Chipset.QCS9100, HtpInfo(HtpArch.v73, 8)),
-    SocInfo(Chipset.SAR2230P, HtpInfo(HtpArch.v81, 4)),
-    SocInfo(Chipset.SW6100, HtpInfo(HtpArch.v81, 4)),
+    #  SocInfo(Chipset.SAR2230P, HtpInfo(HtpArch.v81, 4)),
+    #  SocInfo(Chipset.SW6100, HtpInfo(HtpArch.v81, 4)),
 ]
 
 soc_info_dict = {soc.model.name: soc for soc in soc_info_list}

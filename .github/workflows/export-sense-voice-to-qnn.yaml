@@ -376,6 +376,7 @@ jobs:
         if: matrix.framework == 'WSYue-ASR'
         shell: bash
         run: |
+          dir=$PWD
           source py310/bin/activate
 
           pushd qairt/2.40.0.251030/bin
@@ -484,6 +485,47 @@ jobs:
 
           readelf -lW model_libs/*/lib*.so
 
+          readelf -lW model_libs/*/lib*.so
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+
+          echo "num_frames=$num_frames" > $d/info.txt
+          echo "target=$p" >> $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../../../binary/
+
           echo "collect results"
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
@@ -519,11 +561,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.framework }}-${{ matrix.input_in_seconds }}-${{ matrix.soc }}-seconds
+          name: ${{ matrix.framework }}-${{ matrix.soc }}-${{ matrix.input_in_seconds }}-seconds
           path: ./scripts/sense-voice/qnn/*.json
 
       - name: Release
-        if: github.repository_owner == 'csukuangfj'
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -545,7 +587,7 @@ jobs:
           tag: asr-models-qnn-binary
 
       - name: Release
-        if: github.repository_owner == 'k2-fsa'
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

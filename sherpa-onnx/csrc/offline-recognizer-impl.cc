@@ -171,7 +171,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (config.model_config.provider == "qnn") {
 #if SHERPA_ONNX_ENABLE_QNN
-    if (!config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty() ||
+        !config.model_config.sense_voice.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           config);
@@ -491,7 +492,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (config.model_config.provider == "qnn") {
 #if SHERPA_ONNX_ENABLE_QNN
-    if (!config.model_config.sense_voice.model.empty()) {
+    if (!config.model_config.sense_voice.model.empty() ||
+        !config.model_config.sense_voice.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           mgr, config);

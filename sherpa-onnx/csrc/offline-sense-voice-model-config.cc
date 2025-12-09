@@ -29,9 +29,16 @@ void OfflineSenseVoiceModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineSenseVoiceModelConfig::Validate() const {
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("SenseVoice model '%s' does not exist", model.c_str());
-    return false;
+  if (qnn_config.context_binary.empty()) {
+    if (model.empty()) {
+      SHERPA_ONNX_LOGE("Please provide a senseVoice model");
+      return false;
+    }
+
+    if (!FileExists(model)) {
+      SHERPA_ONNX_LOGE("SenseVoice model '%s' does not exist", model.c_str());
+      return false;
+    }
   }
 
   if (!language.empty()) {
@@ -46,7 +53,18 @@ bool OfflineSenseVoiceModelConfig::Validate() const {
     }
   }
 
-  if (EndsWith(model, ".so") || EndsWith(model, ".bin")) {
+  if (model.empty() && !qnn_config.context_binary.empty()) {
+    // we require that the context_binary exists
+    if (!FileExists(qnn_config.context_binary)) {
+      SHERPA_ONNX_LOGE(
+          "Model is empty, but you provide a context binary that does not "
+          "exist");
+      return false;
+    }
+  }
+
+  if (EndsWith(model, ".so") || EndsWith(model, ".bin") ||
+      (model.empty() && !qnn_config.context_binary.empty())) {
     return qnn_config.Validate();
   }
 

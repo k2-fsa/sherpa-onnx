@@ -20,16 +20,11 @@ class Config:
 def main():
 
     input_in_seconds = ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
-    input_in_seconds = ["5", "10"]
     framework_list = ["FunASR", "WSYue-ASR"]
-    framework_list = ["FunASR"]
 
     configs = []
 
     for name, soc in soc_info_dict.items():
-        if name != "SM8850":
-            continue
-
         for num_seconds, framework in itertools.product(
             input_in_seconds, framework_list
         ):

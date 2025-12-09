@@ -135,7 +135,8 @@ bool OfflineModelConfig::Validate() const {
     return wenet_ctc.Validate();
   }
 
-  if (!sense_voice.model.empty()) {
+  if (!sense_voice.model.empty() ||
+      !sense_voice.qnn_config.context_binary.empty()) {
     return sense_voice.Validate();
   }
 
