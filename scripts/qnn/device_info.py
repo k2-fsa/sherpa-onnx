@@ -26,7 +26,7 @@ SW6100 soc_id    96 dsp_arch     v81 vtcm_size (MB)      4
 """
 
 
-@dataclass
+@unique
 class Chipset(IntEnum):
     # see https://github.com/pytorch/executorch/blob/main/backends/qualcomm/serialization/qc_schema.py#L41
     # SA8255, soc_id 52,  dsp_arch v73
@@ -49,7 +49,7 @@ class Chipset(IntEnum):
     #  SW6100 = 96  # v81
 
 
-@dataclass
+@unique
 class HtpArch(IntEnum):
     v68 = 68
     v69 = 69

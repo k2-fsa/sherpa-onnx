@@ -329,7 +329,6 @@ jobs:
           cp -v *.wav $d/test_wavs
 
           echo "num_frames=$num_frames" > $d/info.txt
-          echo "target=$p" >> $d/info.txt
 
           ls -lh $d
           tar cjfv $d.tar.bz2 $d
@@ -485,8 +484,6 @@ jobs:
 
           readelf -lW model_libs/*/lib*.so
 
-          readelf -lW model_libs/*/lib*.so
-
           $dir/scripts/qnn/generate_config.py  \
             --soc ${{ matrix.soc }} \
             --graph-name "model_${t}_seconds_quantized" \
@@ -518,7 +515,6 @@ jobs:
           cp -v *.wav $d/test_wavs
 
           echo "num_frames=$num_frames" > $d/info.txt
-          echo "target=$p" >> $d/info.txt
 
           ls -lh $d
           tar cjfv $d.tar.bz2 $d
