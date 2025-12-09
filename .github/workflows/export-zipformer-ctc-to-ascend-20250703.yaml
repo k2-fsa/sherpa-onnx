@@ -3,7 +3,7 @@ name: export-zipformer-ctc-to-ascend-npu-20250703
 on:
   push:
     branches:
-      - export-zipformer-ctc-ascend
+      - ascend-910b4-2
   workflow_dispatch:
 
 concurrency:

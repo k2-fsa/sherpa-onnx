@@ -5,7 +5,7 @@ import itertools
 import json
 from dataclasses import asdict, dataclass
 
-from generate_zipformer_ctc_20250703 import get_image
+from generate_zipformer_ctc_20250703 import get_cann_version, get_image, get_soc_version
 
 
 @dataclass
@@ -26,8 +26,8 @@ class Config:
 
 
 def main():
-    cann_version = ["7.0", "8.0", "8.2"]
-    soc_version = ["910B", "910B2", "910B3", "310P3"]
+    cann_version = get_cann_version()
+    soc_version = get_soc_version()
     framework_list = ["FunASR", "WSChuan-ASR"]
 
     configs = [

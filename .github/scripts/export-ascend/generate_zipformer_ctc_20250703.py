@@ -32,6 +32,16 @@ def get_image(cann: str, soc_version: str):
         raise ValueError(f"Unsupported soc_version {soc_version}")
 
 
+def get_soc_version():
+    soc_version = ["910B", "910B2", "910B3", "910B4", "310P3"]
+    return soc_version
+
+
+def get_cann_version():
+    cann_version = ["7.0", "8.0", "8.2"]
+    return cann_version
+
+
 @dataclass
 class Config:
     # 7.0, 8.0, 8.2
@@ -49,8 +59,8 @@ class Config:
 
 
 def main():
-    cann_version = ["7.0", "8.0", "8.2"]
-    soc_version = ["910B", "910B2", "910B3", "310P3"]
+    cann_version = get_cann_version()
+    soc_version = get_soc_version()
     input_in_seconds = ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
 
     configs = [
