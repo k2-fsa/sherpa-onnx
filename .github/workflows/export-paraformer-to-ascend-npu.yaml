@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - refactor-ascend-export-script
+      - ascend-910b4-2
   workflow_dispatch:
 
 concurrency:
@@ -26,8 +26,8 @@ jobs:
         id: set-matrix
         run: |
           # outputting for debugging purposes
-          python3 .github/scripts/export-ascend/generate_sense_voice.py
-          MATRIX=$(python3 .github/scripts/export-ascend/generate_sense_voice.py)
+          python3 .github/scripts/export-ascend/generate_paraformer.py
+          MATRIX=$(python3 .github/scripts/export-ascend/generate_paraformer.py)
 
           # deprecated
           # echo "::set-output name=matrix::${MATRIX}"
@@ -74,6 +74,9 @@ jobs:
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
 
           echo "CANN environment:"
           which atc || echo "atc not found"
@@ -128,6 +131,9 @@ jobs:
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
           cann=${{ matrix.cann }}
@@ -221,6 +227,9 @@ jobs:
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
 
           soc_version=${{ matrix.soc_version }}
           cann=${{ matrix.cann }}

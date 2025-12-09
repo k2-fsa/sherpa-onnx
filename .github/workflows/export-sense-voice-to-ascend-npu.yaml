@@ -3,7 +3,7 @@ name: export-sense-voice-to-ascend-npu
 on:
   push:
     branches:
-      - refactor-ascend-export-script
+      - ascend-910b4-2
   workflow_dispatch:
 
 concurrency:
