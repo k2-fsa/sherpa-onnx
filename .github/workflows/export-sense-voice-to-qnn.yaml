@@ -3,7 +3,7 @@ name: export-sense-voice-to-qnn
 on:
   push:
     branches:
-      - export-sense-voice-qnn-2
+      - qnn-binary-2
   workflow_dispatch:
 
 concurrency:
@@ -11,31 +11,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-qnn/generate_sense_voice.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_sense_voice.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   export-sense-voice-to-qnn:
+    needs: generate_build_matrix
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.framework }} ${{ matrix.input_in_seconds }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.framework }} ${{ matrix.input_in_seconds }} ${{ matrix.soc }}
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        python-version: ["3.10"]
-        input_in_seconds: ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
-        framework: ["FunASR", "WSYue-ASR"]
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
 
       - name: Display NDK HOME
         shell: bash
         run: |
           echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
           ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
 
       - name: Create Python virtual environment
         shell: bash
@@ -54,13 +79,13 @@ jobs:
       - name: Download toolkit
         shell: bash
         run: |
-          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.33.0.250327.zip
-          ls -lh v2.33.0.250327.zip
+          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          ls -lh v2.40.0.251030.zip
 
       - name: Unzip toolkit
         shell: bash
         run: |
-          unzip v2.33.0.250327.zip
+          unzip v2.40.0.251030.zip
 
       - name: Show
         shell: bash
@@ -82,7 +107,7 @@ jobs:
 
           ls -lh qairt
 
-          cd qairt/2.33.0.250327/bin
+          cd qairt/2.40.0.251030/bin
           source envsetup.sh
 
           yes | sudo ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true
@@ -92,7 +117,7 @@ jobs:
         run: |
           source py310/bin/activate
 
-          cd qairt/2.33.0.250327/bin
+          cd qairt/2.40.0.251030/bin
           source envsetup.sh
 
           python3 -m pip install \
@@ -147,7 +172,7 @@ jobs:
         run: |
           source py310/bin/activate
 
-          pushd qairt/2.33.0.250327/bin
+          pushd qairt/2.40.0.251030/bin
           source envsetup.sh
           popd
 
@@ -158,7 +183,7 @@ jobs:
         run: |
           source py310/bin/activate
 
-          pushd qairt/2.33.0.250327/bin
+          pushd qairt/2.40.0.251030/bin
           source envsetup.sh
           popd
 
@@ -169,7 +194,7 @@ jobs:
         run: |
           source py310/bin/activate
 
-          pushd qairt/2.33.0.250327/bin
+          pushd qairt/2.40.0.251030/bin
           source envsetup.sh
           popd
 
@@ -181,12 +206,13 @@ jobs:
         run: |
           source py310/bin/activate
 
-          pushd qairt/2.33.0.250327/bin
+          pushd qairt/2.40.0.251030/bin
           source envsetup.sh
           popd
 
           export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
           export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
 
           cd scripts/sense-voice/qnn
 
@@ -269,7 +295,47 @@ jobs:
 
           readelf -lW model_libs/*/lib*.so
 
+          echo "Generate context binary"
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
           echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v LICENSE $d
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../../../binary/
+
 
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
@@ -302,15 +368,17 @@ jobs:
           echo "----show---"
           ls -lh *.tar.bz2
 
-          mv *.tar.bz2 ../../..
+          mv *.tar.bz2 ../../../so/
+
 
       - name: Run SenseVoice from WSYue-ASR
         if: matrix.framework == 'WSYue-ASR'
         shell: bash
         run: |
+          dir=$PWD
           source py310/bin/activate
 
-          pushd qairt/2.33.0.250327/bin
+          pushd qairt/2.40.0.251030/bin
           source envsetup.sh
           popd
 
@@ -416,6 +484,44 @@ jobs:
 
           readelf -lW model_libs/*/lib*.so
 
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../../../binary/
+
           echo "collect results"
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
@@ -447,22 +553,42 @@ jobs:
           echo "----show---"
           ls -lh *.tar.bz2
 
-          mv *.tar.bz2 ../../..
+          mv *.tar.bz2 ../../../so/
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.framework }}-${{ matrix.input_in_seconds }}-seconds
+          name: ${{ matrix.framework }}-${{ matrix.soc }}-${{ matrix.input_in_seconds }}-seconds
           path: ./scripts/sense-voice/qnn/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./binary/*.tar.bz2
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
           tag: asr-models-qnn
 
       - name: Release
@@ -470,6 +596,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./binary/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn
+          tag: asr-models-qnn-binary
