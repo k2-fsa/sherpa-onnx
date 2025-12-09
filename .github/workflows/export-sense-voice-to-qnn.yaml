@@ -3,7 +3,7 @@ name: export-sense-voice-to-qnn
 on:
   push:
     branches:
-      - qnn-binary
+      - qnn-binary-2
   workflow_dispatch:
 
 concurrency:

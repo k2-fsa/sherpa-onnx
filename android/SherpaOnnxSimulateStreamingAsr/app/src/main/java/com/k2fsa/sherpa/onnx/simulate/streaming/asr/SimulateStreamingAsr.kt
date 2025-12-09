@@ -132,9 +132,15 @@ object SimulateStreamingAsr {
                 config.modelConfig.tokens =
                     copyAssetToInternalStorage(config.modelConfig.tokens, context)
 
-                if (config.modelConfig.senseVoice.model.isNotEmpty()) {
-                    config.modelConfig.senseVoice.model =
-                        copyAssetToInternalStorage(config.modelConfig.senseVoice.model, context)
+                if (config.modelConfig.senseVoice.model.isNotEmpty() || assetExists(
+                        context.assets,
+                        path = config.modelConfig.senseVoice.qnnConfig.contextBinary
+                    )
+                ) {
+                    if (config.modelConfig.senseVoice.model.isNotEmpty()) {
+                        config.modelConfig.senseVoice.model =
+                            copyAssetToInternalStorage(config.modelConfig.senseVoice.model, context)
+                    }
 
                     config.modelConfig.senseVoice.qnnConfig.contextBinary =
                         copyAssetToInternalStorage(

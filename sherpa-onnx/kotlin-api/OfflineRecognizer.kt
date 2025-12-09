@@ -1113,6 +1113,24 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        9022 -> {
+            // for my Xiaomi 17 Pro
+            val modelDir = "sherpa-onnx-qnn-SM8850-binary-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8"
+            return OfflineModelConfig(
+                provider = "qnn",
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    qnnConfig = QnnConfig(
+                        // Please copy libQnnHtp.so and libQnnSystem.so to jniLibs/arm64-v8a by yourself
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
     }
     return null
 }
