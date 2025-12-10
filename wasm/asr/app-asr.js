@@ -15,7 +15,7 @@ let resultList = [];
 clearBtn.onclick = function() {
   resultList = [];
   textArea.value = getDisplayResult();
-  textArea.scrollTop = textArea.scrollHeight; // auto scroll
+  textArea.scrollTop = textArea.scrollHeight;  // auto scroll
 };
 
 function getDisplayResult() {
@@ -48,9 +48,21 @@ Module.locateFile = function(path, scriptDirectory = '') {
 Module.setStatus = function(status) {
   console.log(`status ${status}`);
   const statusElement = document.getElementById('status');
-  if (status == "Running...") {
+  if (status == 'Running...') {
     status = 'Model downloaded. Initializing recongizer...'
   }
+
+  const downloadMatch = status.match(/Downloading data... \((\d+)\/(\d+)\)/);
+  if (downloadMatch) {
+    const downloaded = BigInt(downloadMatch[1]);
+    const total = BigInt(downloadMatch[2]);
+    const percent =
+        total === 0 ? 0.00 : Number((downloaded * 10000n) / total) / 100;
+    status = `Downloading data... ${percent.toFixed(2)}% (${downloadMatch[1]}/${
+        downloadMatch[2]})`;
+    console.log(`here ${status}`)
+  }
+
   statusElement.textContent = status;
   if (status === '') {
     statusElement.style.display = 'none';
@@ -80,11 +92,11 @@ let audioCtx;
 let mediaStream;
 
 let expectedSampleRate = 16000;
-let recordSampleRate; // the sampleRate of the microphone
-let recorder = null;  // the microphone
-let leftchannel = []; // TODO: Use a single channel
+let recordSampleRate;  // the sampleRate of the microphone
+let recorder = null;   // the microphone
+let leftchannel = [];  // TODO: Use a single channel
 
-let recordingLength = 0; // number of samples so far
+let recordingLength = 0;  // number of samples so far
 
 let recognizer = null;
 let recognizer_stream = null;
@@ -93,11 +105,11 @@ if (navigator.mediaDevices.getUserMedia) {
   console.log('getUserMedia supported.');
 
   // see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getusermedia
-  const constraints = {audio : true};
+  const constraints = {audio: true};
 
   let onSuccess = function(stream) {
     if (!audioCtx) {
-      audioCtx = new AudioContext({sampleRate : 16000});
+      audioCtx = new AudioContext({sampleRate: 16000});
     }
     console.log(audioCtx);
     recordSampleRate = audioCtx.sampleRate;
@@ -160,7 +172,7 @@ if (navigator.mediaDevices.getUserMedia) {
       }
 
       textArea.value = getDisplayResult();
-      textArea.scrollTop = textArea.scrollHeight; // auto scroll
+      textArea.scrollTop = textArea.scrollHeight;  // auto scroll
 
       let buf = new Int16Array(samples.length);
       for (var i = 0; i < samples.length; ++i) {
@@ -247,8 +259,9 @@ if (navigator.mediaDevices.getUserMedia) {
     };
   };
 
-  let onError = function(
-      err) { console.log('The following error occured: ' + err); };
+  let onError = function(err) {
+    console.log('The following error occured: ' + err);
+  };
 
   navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
 } else {
@@ -281,22 +294,22 @@ function toWav(samples) {
 
   // http://soundfile.sapp.org/doc/WaveFormat/
   //                   F F I R
-  view.setUint32(0, 0x46464952, true);              // chunkID
-  view.setUint32(4, 36 + samples.length * 2, true); // chunkSize
+  view.setUint32(0, 0x46464952, true);               // chunkID
+  view.setUint32(4, 36 + samples.length * 2, true);  // chunkSize
   //                   E V A W
-  view.setUint32(8, 0x45564157, true); // format
-                                       //
+  view.setUint32(8, 0x45564157, true);  // format
+                                        //
   //                      t m f
-  view.setUint32(12, 0x20746d66, true);             // subchunk1ID
-  view.setUint32(16, 16, true);                     // subchunk1Size, 16 for PCM
-  view.setUint32(20, 1, true);                      // audioFormat, 1 for PCM
-  view.setUint16(22, 1, true);                      // numChannels: 1 channel
-  view.setUint32(24, expectedSampleRate, true);     // sampleRate
-  view.setUint32(28, expectedSampleRate * 2, true); // byteRate
-  view.setUint16(32, 2, true);                      // blockAlign
-  view.setUint16(34, 16, true);                     // bitsPerSample
-  view.setUint32(36, 0x61746164, true);             // Subchunk2ID
-  view.setUint32(40, samples.length * 2, true);     // subchunk2Size
+  view.setUint32(12, 0x20746d66, true);          // subchunk1ID
+  view.setUint32(16, 16, true);                  // subchunk1Size, 16 for PCM
+  view.setUint32(20, 1, true);                   // audioFormat, 1 for PCM
+  view.setUint16(22, 1, true);                   // numChannels: 1 channel
+  view.setUint32(24, expectedSampleRate, true);  // sampleRate
+  view.setUint32(28, expectedSampleRate * 2, true);  // byteRate
+  view.setUint16(32, 2, true);                       // blockAlign
+  view.setUint16(34, 16, true);                      // bitsPerSample
+  view.setUint32(36, 0x61746164, true);              // Subchunk2ID
+  view.setUint32(40, samples.length * 2, true);      // subchunk2Size
 
   let offset = 44;
   for (let i = 0; i < samples.length; ++i) {
@@ -304,7 +317,7 @@ function toWav(samples) {
     offset += 2;
   }
 
-  return new Blob([ view ], {type : 'audio/wav'});
+  return new Blob([view], {type: 'audio/wav'});
 }
 
 // this function is copied from

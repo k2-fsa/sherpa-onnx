@@ -139,8 +139,11 @@ We also have spaces built using WebAssembly. They are listed below:
 |VAD + speech recognition (English + Chinese, 及多种中文方言) with Paraformer-large          |[Click me][wasm-hf-vad-asr-zh-en-paraformer-large]| [地址][wasm-ms-vad-asr-zh-en-paraformer-large]|
 |VAD + speech recognition (English + Chinese, 及多种中文方言) with Paraformer-small          |[Click me][wasm-hf-vad-asr-zh-en-paraformer-small]| [地址][wasm-ms-vad-asr-zh-en-paraformer-small]|
 |VAD + speech recognition (多语种及多种中文方言) with [Dolphin][Dolphin]-base          |[Click me][wasm-hf-vad-asr-multi-lang-dolphin-base]| [地址][wasm-ms-vad-asr-multi-lang-dolphin-base]|
-|Speech synthesis (English)                                                                  |[Click me][wasm-hf-tts-piper-en]| [地址][wasm-ms-tts-piper-en]|
-|Speech synthesis (German)                                                                   |[Click me][wasm-hf-tts-piper-de]| [地址][wasm-ms-tts-piper-de]|
+|Speech synthesis (Piper, English)                                                                  |[Click me][wasm-hf-tts-piper-en]| [地址][wasm-ms-tts-piper-en]|
+|Speech synthesis (Piper, German)                                                                   |[Click me][wasm-hf-tts-piper-de]| [地址][wasm-ms-tts-piper-de]|
+|Speech synthesis (Matcha, Chinese)                                                                  |[Click me][wasm-hf-tts-matcha-zh]| [地址][wasm-ms-tts-matcha-zh]|
+|Speech synthesis (Matcha, English)                                                                  |[Click me][wasm-hf-tts-matcha-en]| [地址][wasm-ms-tts-matcha-en]|
+|Speech synthesis (Matcha, Chinese+English)                                                          |[Click me][wasm-hf-tts-matcha-zh-en]| [地址][wasm-ms-tts-matcha-zh-en]|
 |Speaker diarization                                                                         |[Click me][wasm-hf-speaker-diarization]|[地址][wasm-ms-speaker-diarization]|
 
 </details>
@@ -495,6 +498,12 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [wasm-ms-vad-asr-multi-lang-dolphin-base]: https://modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-multi-lang-dophin-ctc
 [wasm-hf-vad-asr-multi-lang-dolphin-base]: https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-multi-lang-dophin-ctc
 
+[wasm-hf-tts-matcha-zh-en]: https://huggingface.co/spaces/k2-fsa/web-assembly-zh-en-tts-matcha
+[wasm-hf-tts-matcha-zh]: https://huggingface.co/spaces/k2-fsa/web-assembly-zh-tts-matcha
+[wasm-ms-tts-matcha-zh-en]: https://modelscope.cn/studios/csukuangfj/web-assembly-zh-en-tts-matcha
+[wasm-ms-tts-matcha-zh]: https://modelscope.cn/studios/csukuangfj/web-assembly-zh-tts-matcha
+[wasm-hf-tts-matcha-en]: https://huggingface.co/spaces/k2-fsa/web-assembly-en-tts-matcha
+[wasm-ms-tts-matcha-en]: https://modelscope.cn/studios/csukuangfj/web-assembly-en-tts-matcha
 [wasm-hf-tts-piper-en]: https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en
 [wasm-ms-tts-piper-en]: https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en
 [wasm-hf-tts-piper-de]: https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de
