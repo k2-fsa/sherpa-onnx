@@ -543,17 +543,17 @@ class OfflineTts {
 }
 
 function createOfflineTts(Module, myConfig) {
-  const offlineTtsVitsModelConfig = {
-    model: './model.onnx',
+  const vits = {
+    model: '',
     lexicon: '',
-    tokens: './tokens.txt',
-    dataDir: './espeak-ng-data',
+    tokens: '',
+    dataDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
   };
 
-  const offlineTtsMatchaModelConfig = {
+  const matcha = {
     acousticModel: '',
     vocoder: '',
     lexicon: '',
@@ -581,9 +581,48 @@ function createOfflineTts(Module, myConfig) {
     lengthScale: 1.0,
   };
 
+  let ruleFsts = '';
+
+  let type = 0;
+  switch (type) {
+    case 0:
+      // vits
+      vits.model = './model.onnx';
+      vits.tokens = './tokens.txt';
+      vits.dataDir = './espeak-ng-data';
+      break;
+    case 1:
+      // matcha zh-en
+      // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/matcha-icefall-zh-en.html
+      matcha.acousticModel = './model-steps-3.onnx';
+      matcha.vocoder = './vocos-16khz-univ.onnx';
+      matcha.lexicon = './lexicon.txt';
+      matcha.tokens = './tokens.txt';
+      matcha.dataDir = './espeak-ng-data';
+      ruleFsts = './phone-zh.fst,./date-zh.fst,./number-zh.fst';
+      break;
+    case 2:
+      // matcha zh
+      // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese/matcha-icefall-zh-baker.html
+      matcha.acousticModel = './model-steps-3.onnx';
+      matcha.vocoder = './vocos-22khz-univ.onnx';
+      matcha.lexicon = './lexicon.txt';
+      matcha.tokens = './tokens.txt';
+      ruleFsts = './phone.fst,./date.fst,./number.fst';
+      break;
+    case 3:
+      // matcha en
+      // https://k2-fsa.github.io/sherpa/onnx/tts/all/English/matcha-icefall-en_US-ljspeech.html
+      matcha.acousticModel = './model-steps-3.onnx';
+      matcha.vocoder = './vocos-22khz-univ.onnx';
+      matcha.tokens = './tokens.txt';
+      matcha.dataDir = './espeak-ng-data';
+      break;
+  }
+
   const offlineTtsModelConfig = {
-    offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
-    offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
+    offlineTtsVitsModelConfig: vits,
+    offlineTtsMatchaModelConfig: matcha,
     offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
     offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     numThreads: 1,
@@ -593,7 +632,7 @@ function createOfflineTts(Module, myConfig) {
 
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
-    ruleFsts: '',
+    ruleFsts: ruleFsts,
     ruleFars: '',
     maxNumSentences: 1,
   }
