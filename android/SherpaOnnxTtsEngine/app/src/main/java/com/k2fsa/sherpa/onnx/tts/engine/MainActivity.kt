@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,7 +65,9 @@ class MainActivity : ComponentActivity() {
 
     private var stopped: Boolean = false
 
-    private var samplesChannel = Channel<FloatArray>()
+    private var samplesChannel = Channel<FloatArray>(capacity = 128)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -177,8 +180,16 @@ class MainActivity : ComponentActivity() {
                                                 rtfText = ""
                                                 Log.i(TAG, "Started with text $testText")
 
-                                                CoroutineScope(Dispatchers.IO).launch {
+                                                scope.launch {
                                                     for (samples in samplesChannel) {
+                                                        if (samples.isEmpty()) {
+                                                            break
+                                                        }
+
+                                                        Log.i(
+                                                            TAG,
+                                                            "Received ${samples.count()} samples"
+                                                        )
                                                         track.write(
                                                             samples,
                                                             0,
@@ -189,10 +200,14 @@ class MainActivity : ComponentActivity() {
                                                             break
                                                         }
                                                     }
+                                                    Log.i(TAG, "Draining the channel")
 
-                                                    for (s in samplesChannel) {
-                                                        // drain the channel
+                                                    // drain remaining
+                                                    while (!samplesChannel.isEmpty) {
+                                                        samplesChannel.tryReceive().getOrNull()
                                                     }
+                                                    Log.i(TAG, "Channel drained")
+
                                                 }
 
                                                 CoroutineScope(Dispatchers.Default).launch {
@@ -222,6 +237,13 @@ class MainActivity : ComponentActivity() {
                                                         elapsed / audioDuration
                                                     )
 
+                                                    scope.launch {
+                                                        Log.i(TAG, "send 0 samples")
+                                                        val ok =
+                                                            samplesChannel.trySend(FloatArray(0)).isSuccess
+                                                        Log.i(TAG, "send 0 samples done")
+                                                    }
+
                                                     val filename =
                                                         application.filesDir.absolutePath + "/generated.wav"
 
@@ -237,8 +259,10 @@ class MainActivity : ComponentActivity() {
                                                             playEnabled = true
                                                             rtfText = RTF
                                                         }
+
+
                                                     }
-                                                }.start()
+                                                }
                                             }
                                         }) {
                                         Text("Start")
@@ -311,8 +335,10 @@ class MainActivity : ComponentActivity() {
     private fun callback(samples: FloatArray): Int {
         if (!stopped) {
             val samplesCopy = samples.copyOf()
-            CoroutineScope(Dispatchers.IO).launch {
-                samplesChannel.send(samplesCopy)
+            scope.launch {
+                Log.i(TAG, "callback called with ${samplesCopy.count()} samples")
+                val ok = samplesChannel.trySend(samplesCopy).isSuccess
+                Log.i(TAG, "callback called with $ok")
             }
             return 1
         } else {

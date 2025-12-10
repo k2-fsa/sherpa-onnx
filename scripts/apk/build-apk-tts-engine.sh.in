@@ -113,6 +113,10 @@ if [[ $model_dir == vits-melo-tts-zh_en ]]; then
   lang=zh_en
 fi
 
+if [[ $model_dir == matcha-icefall-zh-en ]]; then
+  lang=zh_en
+fi
+
 if [[ $model_dir == kokoro-multi-lang-v1_0 || $model_dir == kokoro-multi-lang-v1_1 || $model_dir == kokoro-int8-multi-lang-v1_1 ]]; then
   lang=zh_en
 fi
