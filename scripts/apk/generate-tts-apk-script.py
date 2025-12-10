@@ -411,7 +411,6 @@ def get_vits_models() -> List[TtsModel]:
             or "melo-tts" in m.model_dir
         ):
             s = s[:-1]
-            m.dict_dir = m.model_dir + "/dict"
         else:
             m.rule_fars = f"{m.model_dir}/rule.far"
 
@@ -440,14 +439,29 @@ def get_matcha_models() -> List[TtsModel]:
             model_dir="matcha-icefall-zh-baker",
             acoustic_model_name="model-steps-3.onnx",
             lang="zh",
+            lexicon="lexicon.txt",
         )
     ]
     rule_fsts = ["phone.fst", "date.fst", "number.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
         m.rule_fsts = ",".join(s)
-        m.dict_dir = m.model_dir + "/dict"
         m.vocoder = "vocos-22khz-univ.onnx"
+
+    chinese_english_models = [
+        TtsModel(
+            model_dir="matcha-icefall-zh-en",
+            acoustic_model_name="model-steps-3.onnx",
+            lang="zh",
+            lexicon="lexicon.txt",
+        )
+    ]
+    rule_fsts_zh = ["phone-zh.fst", "date-zh.fst", "number-zh.fst"]
+    for m in chinese_english_models:
+        s = [f"{m.model_dir}/{r}" for r in rule_fsts_zh]
+        m.rule_fsts = ",".join(s)
+        m.vocoder = "vocos-16khz-univ.onnx"
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
 
     english_persian_models = [
         TtsModel(
@@ -470,7 +484,7 @@ def get_matcha_models() -> List[TtsModel]:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.vocoder = "vocos-22khz-univ.onnx"
 
-    return chinese_models + english_persian_models
+    return chinese_models + english_persian_models + chinese_english_models
 
 
 def get_kokoro_models() -> List[TtsModel]:
@@ -507,7 +521,6 @@ def get_kokoro_models() -> List[TtsModel]:
     ]
     for m in multi_lingual_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
-        m.dict_dir = f"{m.model_dir}/dict"
         m.voices = "voices.bin"
         m.lexicon = f"{m.model_dir}/lexicon-us-en.txt,{m.model_dir}/lexicon-zh.txt"
         m.rule_fsts = f"{m.model_dir}/phone-zh.fst,{m.model_dir}/date-zh.fst,{m.model_dir}/number-zh.fst"
@@ -555,6 +568,8 @@ def main():
     all_model_list += get_matcha_models()
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
+
+    all_model_list = get_matcha_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
