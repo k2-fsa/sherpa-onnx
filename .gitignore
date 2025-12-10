@@ -164,3 +164,4 @@ sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64
 build-riscv64-linux-gnu-spacemit/
 spacemit-toolchain*
 sherpa-onnx-qnn-*
+matcha-icefall-*
