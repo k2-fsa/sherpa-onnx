@@ -239,8 +239,7 @@ class MainActivity : ComponentActivity() {
 
                                                     scope.launch {
                                                         Log.i(TAG, "send 0 samples")
-                                                        val ok =
-                                                            samplesChannel.trySend(FloatArray(0)).isSuccess
+                                                            samplesChannel.send(FloatArray(0))
                                                         Log.i(TAG, "send 0 samples done")
                                                     }
 
