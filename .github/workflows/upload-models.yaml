@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - upload-models
-      # - upload-more-models
   workflow_dispatch:
 
 concurrency:
@@ -30,6 +29,10 @@ jobs:
         run: |
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
+
+      - name: Setup tmate session
+        if: false
+        uses: mxschmitt/action-tmate@v3
 
       - name: Streaming zipformer from Banafo/Kroko-ASR
         if: false
@@ -178,7 +181,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: wenetspeech chuan paraformer
-        if: true
+        if: false
         shell: bash
         run: |
           git lfs install
@@ -482,7 +485,14 @@ jobs:
               popd
             done
 
+      - uses: actions/upload-artifact@v4
+        if: false
+        with:
+          name: here
+          path: ./*.tar.bz2
+
       - name: Release
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
