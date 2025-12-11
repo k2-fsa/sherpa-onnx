@@ -261,7 +261,6 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
-    offline-tts-zipvoice-frontend.cc
     offline-tts-zipvoice-model-config.cc
     offline-tts-zipvoice-model.cc
     offline-tts.cc
@@ -417,7 +416,6 @@ target_link_libraries(sherpa-onnx-core fstfar fst)
 
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core
-    cppinyin_core
     piper_phonemize)
 endif()
 

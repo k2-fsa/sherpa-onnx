@@ -123,8 +123,12 @@ std::vector<std::string> SplitTokensUTF8(const std::string &s) {
 }
 
 std::vector<std::string> ProcessPhonemes(
-    const std::vector<std::vector<char32_t>> &phonemes) {
+    const std::vector<std::vector<char32_t>> &phonemes, bool skip_replacement) {
   auto tokens = ConvertPhonemesToUTF8(phonemes);
+  if (skip_replacement) {
+    return tokens;
+  }
+
   std::string joined = Join(tokens);
   std::string replaced = ApplyReplacements(joined);
   return SplitTokensUTF8(replaced);
@@ -139,8 +143,8 @@ void CallPhonemizeEspeak(const std::string &text,
 class MatchaTtsLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug)
-      : debug_(debug) {
+       const std::string &data_dir, bool debug, bool skip_replacement)
+      : debug_(debug), skip_replacement_(skip_replacement) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -163,8 +167,8 @@ class MatchaTtsLexicon::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &data_dir, bool debug)
-      : debug_(debug) {
+       const std::string &data_dir, bool debug, bool skip_replacement)
+      : debug_(debug), skip_replacement_(skip_replacement) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide lexicon.txt for this model");
       SHERPA_ONNX_EXIT(-1);
@@ -360,7 +364,7 @@ class MatchaTtsLexicon::Impl {
         std::vector<std::vector<piper::Phoneme>> phonemes;
         CallPhonemizeEspeak(w, config, &phonemes);
 
-        auto pp = ProcessPhonemes(phonemes);
+        auto pp = ProcessPhonemes(phonemes, skip_replacement_);
 
         for (const auto &p : pp) {
           if (token2id_.count(p)) {
@@ -477,20 +481,25 @@ class MatchaTtsLexicon::Impl {
   std::unordered_map<int32_t, std::string> id2token_;
 
   bool debug_ = false;
+  bool skip_replacement_ = false;
 };  // namespace sherpa_onnx
 
 MatchaTtsLexicon::~MatchaTtsLexicon() = default;
 
 MatchaTtsLexicon::MatchaTtsLexicon(const std::string &lexicon,
                                    const std::string &tokens,
-                                   const std::string &data_dir, bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, data_dir, debug)) {}
+                                   const std::string &data_dir, bool debug,
+                                   bool skip_replacement)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, data_dir, debug,
+                                   skip_replacement)) {}
 
 template <typename Manager>
 MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
                                    const std::string &tokens,
-                                   const std::string &data_dir, bool debug)
-    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, data_dir, debug)) {}
+                                   const std::string &data_dir, bool debug,
+                                   bool skip_replacement)
+    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, data_dir, debug,
+                                   skip_replacement)) {}
 
 std::vector<TokenIDs> MatchaTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
@@ -502,7 +511,7 @@ template MatchaTtsLexicon::MatchaTtsLexicon(AAssetManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
                                             const std::string &data_dir,
-                                            bool debug);
+                                            bool debug, bool skip_replacement);
 #endif
 
 #if __OHOS__
@@ -510,7 +519,7 @@ template MatchaTtsLexicon::MatchaTtsLexicon(NativeResourceManager *mgr,
                                             const std::string &lexicon,
                                             const std::string &tokens,
                                             const std::string &data_dir,
-                                            bool debug);
+                                            bool debug, bool skip_replacement);
 #endif
 
 }  // namespace sherpa_onnx

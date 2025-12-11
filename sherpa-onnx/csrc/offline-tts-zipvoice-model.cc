@@ -68,7 +68,7 @@ class OfflineTtsZipvoiceModel::Impl {
     if (batch_size != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(batch_size));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     std::vector<int64_t> prompt_feat_shape =
@@ -108,7 +108,10 @@ class OfflineTtsZipvoiceModel::Impl {
     std::random_device rd;
     std::default_random_engine rng(rd());
     std::normal_distribution<float> norm(0, 1);
-    for (auto &v : x_data) v = norm(rng);
+    for (auto &v : x_data) {
+      v = norm(rng);
+    }
+
     std::vector<int64_t> x_shape = {batch_size, num_frames, feat_dim};
     Ort::Value x = Ort::Value::CreateTensor<float>(
         memory_info, x_data.data(), x_data.size(), x_shape.data(),

@@ -386,7 +386,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     if (meta_data.is_zh_en) {
       frontend_ = std::make_unique<MatchaTtsLexicon>(
           mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
-          config_.model.matcha.data_dir, config_.model.debug);
+          config_.model.matcha.data_dir, config_.model.debug, false);
     } else if (meta_data.jieba) {
       frontend_ = std::make_unique<CharacterLexicon>(
           mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
@@ -407,7 +407,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     if (meta_data.is_zh_en) {
       frontend_ = std::make_unique<MatchaTtsLexicon>(
           config_.model.matcha.lexicon, config_.model.matcha.tokens,
-          config_.model.matcha.data_dir, config_.model.debug);
+          config_.model.matcha.data_dir, config_.model.debug, false);
     } else if (meta_data.jieba) {
       frontend_ = std::make_unique<CharacterLexicon>(
           config_.model.matcha.lexicon, config_.model.matcha.tokens,
