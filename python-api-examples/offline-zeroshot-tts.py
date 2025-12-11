@@ -16,8 +16,8 @@ tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
 python3 ./python-api-examples/offline-zeroshot-tts.py \
-  --zipvoice-flow-matching-model sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
-  --zipvoice-text-model sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
+  --zipvoice-encoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
+  --zipvoice-decoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
   --zipvoice-data-dir sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data \
   --zipvoice-lexicon sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt \
   --zipvoice-tokens sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt \
@@ -49,17 +49,17 @@ def add_zipvoice_args(parser):
     )
 
     parser.add_argument(
-        "--zipvoice-text-model",
+        "--zipvoice-encoder",
         type=str,
         default="",
-        help="Path to zipvoice text model.",
+        help="Path to zipvoice text encoder model.",
     )
 
     parser.add_argument(
-        "--zipvoice-flow-matching-model",
+        "--zipvoice-decoder",
         type=str,
         default="",
-        help="Path to zipvoice flow matching model.",
+        help="Path to zipvoice flow matching decoder model.",
     )
 
     parser.add_argument(
@@ -235,8 +235,8 @@ def main():
         model=sherpa_onnx.OfflineTtsModelConfig(
             zipvoice=sherpa_onnx.OfflineTtsZipvoiceModelConfig(
                 tokens=args.zipvoice_tokens,
-                text_model=args.zipvoice_text_model,
-                flow_matching_model=args.zipvoice_flow_matching_model,
+                encoder=args.zipvoice_encoder,
+                decoder=args.zipvoice_decoder,
                 data_dir=args.zipvoice_data_dir,
                 lexicon=args.zipvoice_lexicon,
                 vocoder=args.zipvoice_vocoder,

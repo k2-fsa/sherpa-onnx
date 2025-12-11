@@ -50,10 +50,10 @@ func main() {
 	flag.Float32Var(&config.Model.Kitten.LengthScale, "kitten-length-scale", 1.0, "length_scale for kitten. small -> faster; large -> slower")
 
 	flag.StringVar(&config.Model.Zipvoice.Tokens, "zipvoice-tokens", "", "Path to tokens.txt for ZipVoice")
-	flag.StringVar(&config.Model.Zipvoice.TextModel, "zipvoice-text-model", "", "Path to ZipVoice text encoder model")
-	flag.StringVar(&config.Model.Zipvoice.FlowMatchingModel, "zipvoice-flow-matching-model", "", "Path to ZipVoice flow-matching decoder")
+	flag.StringVar(&config.Model.Zipvoice.Encoder, "zipvoice-encoder", "", "Path to ZipVoice text encoder model")
+	flag.StringVar(&config.Model.Zipvoice.Decoder, "zipvoice-decoder", "", "Path to ZipVoice flow-matching decoder")
 	flag.StringVar(&config.Model.Zipvoice.DataDir, "zipvoice-data-dir", "", "Path to espeak-ng-data")
-	flag.StringVar(&config.Model.Zipvoice.PinyinDict, "zipvoice-pinyin-dict", "", "Path to pinyin.raw (for zh)")
+	flag.StringVar(&config.Model.Zipvoice.Lexicon, "zipvoice-lexicon", "", "Path to lexicon.txt (for zh)")
 	flag.StringVar(&config.Model.Zipvoice.Vocoder, "zipvoice-vocoder", "", "Path to vocoder (e.g., vocos_24khz.onnx)")
 
 	flag.Float32Var(&config.Model.Zipvoice.FeatScale, "zipvoice-feat-scale", 0.1, "Feature scale for ZipVoice")

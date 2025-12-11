@@ -1242,10 +1242,10 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   // zipvoice
   tts_config.model.zipvoice.tokens =
       SHERPA_ONNX_OR(config->model.zipvoice.tokens, "");
-  tts_config.model.zipvoice.text_model =
-      SHERPA_ONNX_OR(config->model.zipvoice.text_model, "");
-  tts_config.model.zipvoice.flow_matching_model =
-      SHERPA_ONNX_OR(config->model.zipvoice.flow_matching_model, "");
+  tts_config.model.zipvoice.encoder =
+      SHERPA_ONNX_OR(config->model.zipvoice.encoder, "");
+  tts_config.model.zipvoice.decoder =
+      SHERPA_ONNX_OR(config->model.zipvoice.decoder, "");
   tts_config.model.zipvoice.vocoder =
       SHERPA_ONNX_OR(config->model.zipvoice.vocoder, "");
   tts_config.model.zipvoice.data_dir =

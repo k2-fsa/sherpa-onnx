@@ -75,8 +75,8 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
 
   fprintf(stdout, "----------zipvoice model config----------\n");
   fprintf(stdout, "tokens: %s\n", zipvoice->tokens);
-  fprintf(stdout, "text_model: %s\n", zipvoice->text_model);
-  fprintf(stdout, "flow_matching_model: %s\n", zipvoice->flow_matching_model);
+  fprintf(stdout, "encoder: %s\n", zipvoice->encoder);
+  fprintf(stdout, "decoder: %s\n", zipvoice->decoder);
   fprintf(stdout, "vocoder: %s\n", zipvoice->vocoder);
   fprintf(stdout, "data_dir: %s\n", zipvoice->data_dir);
   fprintf(stdout, "lexicon: %s\n", zipvoice->lexicon);
