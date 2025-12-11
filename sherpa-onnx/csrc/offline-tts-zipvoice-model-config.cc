@@ -17,13 +17,14 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
                "Path to tokens.txt for ZipVoice models");
   po->Register("zipvoice-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
+  po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
   po->Register("zipvoice-pinyin-dict", &pinyin_dict,
                "Path to the pinyin dictionary for cppinyin (i.e converting "
                "Chinese into phones).");
   po->Register("zipvoice-text-model", &text_model,
                "Path to zipvoice text model");
   po->Register("zipvoice-flow-matching-model", &flow_matching_model,
-               "Path to zipvoice flow-matching model");
+               "Path to zipvoice flow-matching model, i.e., the decoder model");
   po->Register("zipvoice-vocoder", &vocoder, "Path to zipvoice vocoder");
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");
@@ -96,12 +97,6 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     }
   }
 
-  if (!pinyin_dict.empty() && !FileExists(pinyin_dict)) {
-    SHERPA_ONNX_LOGE("--zipvoice-pinyin-dict: '%s' does not exist",
-                     pinyin_dict.c_str());
-    return false;
-  }
-
   if (feat_scale <= 0) {
     SHERPA_ONNX_LOGE("--zipvoice-feat-scale must be positive. Given: %f",
                      feat_scale);
@@ -138,7 +133,7 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
   os << "flow_matching_model=\"" << flow_matching_model << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
-  os << "pinyin_dict=\"" << pinyin_dict << "\", ";
+  os << "lexicon=\"" << lexicon << "\", ";
   os << "feat_scale=" << feat_scale << ", ";
   os << "t_shift=" << t_shift << ", ";
   os << "target_rms=" << target_rms << ", ";
