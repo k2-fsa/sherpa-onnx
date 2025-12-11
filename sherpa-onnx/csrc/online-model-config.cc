@@ -110,6 +110,28 @@ bool OnlineModelConfig::Validate() const {
     }
   }
 
+  if (provider_config.provider == "axera") {
+    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".onnx") ||
+                                        EndsWith(transducer.decoder, ".onnx") ||
+                                        EndsWith(transducer.joiner, ".onnx"))) {
+      SHERPA_ONNX_LOGE(
+          "--provider is axera, but you pass onnx model "
+          "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
+          transducer.encoder.c_str(), transducer.decoder.c_str(),
+          transducer.joiner.c_str());
+      return false;
+    }
+
+    if (!zipformer2_ctc.model.empty() &&
+        EndsWith(zipformer2_ctc.model, ".onnx")) {
+      SHERPA_ONNX_LOGE(
+          "--provider axera, but you pass onnx model filename for "
+          "zipformer2_ctc: '%s'",
+          zipformer2_ctc.model.c_str());
+      return false;
+    }
+  }
+
   if (!tokens_buf.empty() && FileExists(tokens)) {
     SHERPA_ONNX_LOGE(
         "you can not provide a tokens_buf and a tokens file: '%s', "

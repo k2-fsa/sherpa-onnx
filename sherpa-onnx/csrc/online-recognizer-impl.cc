@@ -34,6 +34,10 @@
 #include "sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/online-recognizer-transducer-axera-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
