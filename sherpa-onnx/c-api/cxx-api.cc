@@ -414,9 +414,8 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.kitten.length_scale = config.model.kitten.length_scale;
 
   c.model.zipvoice.tokens = config.model.zipvoice.tokens.c_str();
-  c.model.zipvoice.text_model = config.model.zipvoice.text_model.c_str();
-  c.model.zipvoice.flow_matching_model =
-      config.model.zipvoice.flow_matching_model.c_str();
+  c.model.zipvoice.encoder = config.model.zipvoice.encoder.c_str();
+  c.model.zipvoice.decoder = config.model.zipvoice.decoder.c_str();
   c.model.zipvoice.vocoder = config.model.zipvoice.vocoder.c_str();
   c.model.zipvoice.data_dir = config.model.zipvoice.data_dir.c_str();
   c.model.zipvoice.lexicon = config.model.zipvoice.lexicon.c_str();

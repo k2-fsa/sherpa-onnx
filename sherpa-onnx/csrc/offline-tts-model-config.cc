@@ -41,7 +41,7 @@ bool OfflineTtsModelConfig::Validate() const {
     return matcha.Validate();
   }
 
-  if (!zipvoice.flow_matching_model.empty()) {
+  if (!zipvoice.decoder.empty()) {
     return zipvoice.Validate();
   }
 

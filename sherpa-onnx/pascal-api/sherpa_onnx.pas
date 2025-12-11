@@ -103,11 +103,11 @@ type
 
   TSherpaOnnxOfflineTtsZipVoiceModelConfig = record
     Tokens: AnsiString;
-    TextModel: AnsiString;
-    FlowMatchingModel: AnsiString;
+    Encoder: AnsiString;
+    Decoder: AnsiString;
     Vocoder: AnsiString;
     DataDir: AnsiString;
-    PinyinDict: AnsiString;
+    Lexicon: AnsiString;
     FeatScale: Single;
     Tshift: Single;
     TargetRms: Single;
@@ -983,11 +983,11 @@ type
 
   SherpaOnnxOfflineTtsZipVoiceModelConfig = record
     Tokens: PAnsiChar;
-    TextModel: PAnsiChar;
-    FlowMatchingModel: PAnsiChar;
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
     Vocoder: PAnsiChar;
     DataDir: PAnsiChar;
-    PinyinDict: PAnsiChar;
+    Lexicon: PAnsiChar;
     FeatScale: cfloat;
     Tshift: cfloat;
     TargetRms: cfloat;
@@ -2423,18 +2423,18 @@ function TSherpaOnnxOfflineTtsZipVoiceModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsZipVoiceModelConfig(' +
     'Tokens := %s, ' +
-    'TextModel := %s, ' +
-    'FlowMatchingModel := %s, ' +
+    'Encoder := %s, ' +
+    'Decoder := %s, ' +
     'Vocoder := %s, ' +
     'DataDir := %s, ' +
-    'PinyinDict := %s, ' +
+    'Lexicon := %s, ' +
     'FeatScale := %.2f, ' +
     'Tshift := %.2f, ' +
     'TargetRms := %.2f, ' +
     'GuidanceScale := %.2f' +
     ')',
-    [Self.Tokens, Self.TextModel, Self.FlowMatchingModel, Self.Vocoder,
-     Self.DataDir, Self.PinyinDict, Self.FeatScale, Self.Tshift,
+    [Self.Tokens, Self.Encoder, Self.Decoder, Self.Vocoder,
+     Self.DataDir, Self.Lexicon, Self.FeatScale, Self.Tshift,
      Self.TargetRms, Self.GuidanceScale]);
 end;
 
@@ -2528,11 +2528,11 @@ begin
   C.Model.Kitten.LengthScale := Config.Model.Kitten.LengthScale;
 
   C.Model.ZipVoice.Tokens := PAnsiChar(Config.Model.ZipVoice.Tokens);
-  C.Model.ZipVoice.TextModel := PAnsiChar(Config.Model.ZipVoice.TextModel);
-  C.Model.ZipVoice.FlowMatchingModel := PAnsiChar(Config.Model.ZipVoice.FlowMatchingModel);
+  C.Model.ZipVoice.Encoder := PAnsiChar(Config.Model.ZipVoice.Encoder);
+  C.Model.ZipVoice.Decoder := PAnsiChar(Config.Model.ZipVoice.Decoder);
   C.Model.ZipVoice.Vocoder := PAnsiChar(Config.Model.ZipVoice.Vocoder);
   C.Model.ZipVoice.DataDir := PAnsiChar(Config.Model.ZipVoice.DataDir);
-  C.Model.ZipVoice.PinyinDict := PAnsiChar(Config.Model.ZipVoice.PinyinDict);
+  C.Model.ZipVoice.Lexicon := PAnsiChar(Config.Model.ZipVoice.Lexicon);
   C.Model.ZipVoice.FeatScale := Config.Model.ZipVoice.FeatScale;
   C.Model.ZipVoice.Tshift := Config.Model.ZipVoice.Tshift;
   C.Model.ZipVoice.TargetRms := Config.Model.ZipVoice.TargetRms;

@@ -264,15 +264,14 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
 
 function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
-  const textModelLen = Module.lengthBytesUTF8(config.textModel || '') + 1;
-  const flowMatchingModelLen =
-      Module.lengthBytesUTF8(config.flowMatchingModel || '') + 1;
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
   const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
 
-  const n = tokensLen + textModelLen + flowMatchingModelLen + vocoderLen +
-      dataDirLen + lexiconLen;
+  const n = tokensLen + encoderLen + decoderLen + vocoderLen + dataDirLen +
+      lexiconLen;
 
   const buffer = Module._malloc(n);
 
@@ -283,12 +282,11 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
   offset += tokensLen;
 
-  Module.stringToUTF8(config.textModel || '', buffer + offset, textModelLen);
-  offset += textModelLen;
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
 
-  Module.stringToUTF8(
-      config.flowMatchingModel || '', buffer + offset, flowMatchingModelLen);
-  offset += flowMatchingModelLen;
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
 
   Module.stringToUTF8(config.vocoder || '', buffer + offset, vocoderLen);
   offset += vocoderLen;
@@ -304,10 +302,10 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   offset += tokensLen;
 
   Module.setValue(ptr + 4, buffer + offset, 'i8*');
-  offset += textModelLen;
+  offset += encoderLen;
 
   Module.setValue(ptr + 8, buffer + offset, 'i8*');
-  offset += flowMatchingModelLen;
+  offset += decoderLen;
 
   Module.setValue(ptr + 12, buffer + offset, 'i8*');
   offset += vocoderLen;
@@ -377,8 +375,8 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsZipVoiceModelConfig' in config)) {
     config.offlineTtsZipVoiceModelConfig = {
       tokens: '',
-      textModel: '',
-      flowMatchingModel: '',
+      encoder: '',
+      decoder: '',
       vocoder: '',
       dataDir: '',
       lexicon: '',

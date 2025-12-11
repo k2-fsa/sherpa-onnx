@@ -1068,8 +1068,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKittenModelConfig {
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   const char *tokens;
-  const char *text_model;
-  const char *flow_matching_model;
+  const char *encoder;
+  const char *decoder;
   const char *vocoder;
   const char *data_dir;
   const char *lexicon;

@@ -14,8 +14,8 @@ namespace sherpa_onnx {
 
 struct OfflineTtsZipvoiceModelConfig {
   std::string tokens;
-  std::string text_model;
-  std::string flow_matching_model;  // decoder
+  std::string encoder;
+  std::string decoder;
   std::string vocoder;
 
   std::string data_dir;
@@ -29,14 +29,14 @@ struct OfflineTtsZipvoiceModelConfig {
   OfflineTtsZipvoiceModelConfig() = default;
 
   OfflineTtsZipvoiceModelConfig(
-      const std::string &tokens, const std::string &text_model,
-      const std::string &flow_matching_model, const std::string &vocoder,
+      const std::string &tokens, const std::string &encoder,
+      const std::string &decoder, const std::string &vocoder,
       const std::string &data_dir, const std::string &lexicon,
       float feat_scale = 0.1, float t_shift = 0.5, float target_rms = 0.1,
       float guidance_scale = 1.0)
       : tokens(tokens),
-        text_model(text_model),
-        flow_matching_model(flow_matching_model),
+        encoder(encoder),
+        decoder(decoder),
         vocoder(vocoder),
         data_dir(data_dir),
         lexicon(lexicon),

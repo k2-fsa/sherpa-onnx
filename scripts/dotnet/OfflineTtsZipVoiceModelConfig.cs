@@ -10,11 +10,11 @@ namespace SherpaOnnx
         public OfflineTtsZipVoiceModelConfig()
         {
             Tokens = "";
-            TextModel = "";
-            FlowMatchingModel = "";
+            Encoder = "";
+            Decoder = "";
             Vocoder = "";
             DataDir = "";
-            PinyinDict = "";
+            Lexicon = "";
 
             FeatScale = 0.1F;
             Tshift = 0.5F;
@@ -25,10 +25,10 @@ namespace SherpaOnnx
         public string Tokens;
 
         [MarshalAs(UnmanagedType.LPStr)]
-        public string TextModel;
+        public string Encoder;
 
         [MarshalAs(UnmanagedType.LPStr)]
-        public string FlowMatchingModel;
+        public string Decoder;
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Vocoder;
@@ -37,7 +37,7 @@ namespace SherpaOnnx
         public string DataDir;
 
         [MarshalAs(UnmanagedType.LPStr)]
-        public string PinyinDict;
+        public string Lexicon;
 
         public float FeatScale;
         public float Tshift;

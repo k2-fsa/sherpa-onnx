@@ -3,26 +3,30 @@
 set -ex
 
 # to download more models
-if [ ! -f ./sherpa-onnx-zipvoice-distill-zh-en-emilia/fm_decoder.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
-  tar xf sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
-  rm sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
+if [ ! -f ./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+  tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+  rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+fi
+
+if [ ! -f vocos_24khz.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 fi
 
 go mod tidy
 go build
 
 ./non-streaming-tts \
-  --zipvoice-flow-matching-model sherpa-onnx-zipvoice-distill-zh-en-emilia/fm_decoder.onnx \
-  --zipvoice-text-model sherpa-onnx-zipvoice-distill-zh-en-emilia/text_encoder.onnx \
-  --zipvoice-data-dir sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data \
-  --zipvoice-pinyin-dict sherpa-onnx-zipvoice-distill-zh-en-emilia/pinyin.raw \
-  --zipvoice-tokens sherpa-onnx-zipvoice-distill-zh-en-emilia/tokens.txt \
-  --zipvoice-vocoder sherpa-onnx-zipvoice-distill-zh-en-emilia/vocos_24khz.onnx \
-  --prompt-audio sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav \
+  --zipvoice-encoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
+  --zipvoice-decoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
+  --zipvoice-data-dir sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data \
+  --zipvoice-lexicon sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt \
+  --zipvoice-tokens sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt \
+  --zipvoice-vocoder ./vocos_24khz.onnx \
+  --prompt-audio sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav \
   --zipvoice-num-steps 4 \
   --num-threads 4 \
   --output-filename=./test-zipvoice.wav \
-  --prompt-text "周日被我射熄火了，所以今天是周一。" \
-  "我是中国人民的儿子，我爱我的祖国。我得祖国是一个伟大的国家，拥有五千年的文明史。"
+  --prompt-text "那还是三十六年前, 一九八七年. 我呢考上了武汉大学的计算机系." \
+  "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中."
 

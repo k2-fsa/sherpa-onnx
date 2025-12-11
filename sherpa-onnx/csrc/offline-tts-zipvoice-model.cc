@@ -37,8 +37,8 @@ class OfflineTtsZipvoiceModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto text_buf = ReadFile(config.zipvoice.text_model);
-    auto fm_buf = ReadFile(config.zipvoice.flow_matching_model);
+    auto text_buf = ReadFile(config.zipvoice.encoder);
+    auto fm_buf = ReadFile(config.zipvoice.decoder);
     Init(text_buf.data(), text_buf.size(), fm_buf.data(), fm_buf.size());
   }
 
@@ -48,8 +48,8 @@ class OfflineTtsZipvoiceModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto text_buf = ReadFile(mgr, config.zipvoice.text_model);
-    auto fm_buf = ReadFile(mgr, config.zipvoice.flow_matching_model);
+    auto text_buf = ReadFile(mgr, config.zipvoice.encoder);
+    auto fm_buf = ReadFile(mgr, config.zipvoice.decoder);
     Init(text_buf.data(), text_buf.size(), fm_buf.data(), fm_buf.size());
   }
 
@@ -90,7 +90,7 @@ class OfflineTtsZipvoiceModel::Impl {
     text_inputs.push_back(std::move(prompt_feat_len_tensor));
     text_inputs.push_back(std::move(speed_tensor));
 
-    // forward text-encoder
+    // forward encoder
     auto text_out =
         text_sess_->Run({}, text_input_names_ptr_.data(), text_inputs.data(),
                         text_inputs.size(), text_output_names_ptr_.data(),
@@ -191,11 +191,11 @@ class OfflineTtsZipvoiceModel::Impl {
   }
 
  private:
-  void Init(void *text_model_data, size_t text_model_data_length,
-            void *fm_model_data, size_t fm_model_data_length) {
-    // Init text-encoder model
+  void Init(void *encoder_data, size_t encoder_data_length, void *fm_model_data,
+            size_t fm_model_data_length) {
+    // Init encoder model
     text_sess_ = std::make_unique<Ort::Session>(
-        env_, text_model_data, text_model_data_length, sess_opts_);
+        env_, encoder_data, encoder_data_length, sess_opts_);
     GetInputNames(text_sess_.get(), &text_input_names_, &text_input_names_ptr_);
     GetOutputNames(text_sess_.get(), &text_output_names_,
                    &text_output_names_ptr_);
@@ -231,7 +231,7 @@ class OfflineTtsZipvoiceModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
 
-      os << "---zipvoice text-encoder model---\n";
+      os << "---encoder---\n";
       Ort::ModelMetadata text_meta_data = text_sess_->GetModelMetadata();
       PrintModelMetadata(os, text_meta_data);
 
@@ -248,7 +248,7 @@ class OfflineTtsZipvoiceModel::Impl {
         ++i;
       }
 
-      os << "---zipvoice flow-matching model---\n";
+      os << "---decoder---\n";
       PrintModelMetadata(os, meta_data);
 
       os << "----------input names----------\n";
