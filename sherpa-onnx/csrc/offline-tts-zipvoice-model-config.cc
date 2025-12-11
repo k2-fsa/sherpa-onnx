@@ -18,9 +18,6 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
   po->Register("zipvoice-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
   po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
-  po->Register("zipvoice-pinyin-dict", &pinyin_dict,
-               "Path to the pinyin dictionary for cppinyin (i.e converting "
-               "Chinese into phones).");
   po->Register("zipvoice-text-model", &text_model,
                "Path to zipvoice text model");
   po->Register("zipvoice-flow-matching-model", &flow_matching_model,

@@ -1072,7 +1072,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   const char *flow_matching_model;
   const char *vocoder;
   const char *data_dir;
-  const char *pinyin_dict;
+  const char *lexicon;
   float feat_scale;
   float t_shift;
   float target_rms;

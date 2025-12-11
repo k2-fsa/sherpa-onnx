@@ -269,10 +269,10 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
       Module.lengthBytesUTF8(config.flowMatchingModel || '') + 1;
   const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
-  const pinyinDictLen = Module.lengthBytesUTF8(config.pinyinDict || '') + 1;
+  const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
 
   const n = tokensLen + textModelLen + flowMatchingModelLen + vocoderLen +
-      dataDirLen + pinyinDictLen;
+      dataDirLen + lexiconLen;
 
   const buffer = Module._malloc(n);
 
@@ -296,8 +296,8 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
   offset += dataDirLen;
 
-  Module.stringToUTF8(config.pinyinDict || '', buffer + offset, pinyinDictLen);
-  offset += pinyinDictLen;
+  Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
+  offset += lexiconLen;
 
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
@@ -316,7 +316,7 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   offset += dataDirLen;
 
   Module.setValue(ptr + 20, buffer + offset, 'i8*');
-  offset += pinyinDictLen;
+  offset += lexiconLen;
 
   Module.setValue(ptr + 24, config.featScale || 0.1, 'float');
   Module.setValue(ptr + 28, config.tShift || 0.5, 'float');
@@ -381,7 +381,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       flowMatchingModel: '',
       vocoder: '',
       dataDir: '',
-      pinyinDict: '',
+      lexicon: '',
       featScale: 0.1,
       tShift: 0.5,
       targetRMS: 0.1,

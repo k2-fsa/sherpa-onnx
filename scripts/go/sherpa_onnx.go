@@ -484,7 +484,7 @@ type OfflineModelConfig struct {
 	ZipformerCtc OfflineZipformerCtcModelConfig
 	Canary       OfflineCanaryModelConfig
 	WenetCtc     OfflineWenetCtcModelConfig
-	Omnilingual     OfflineOmnilingualAsrCtcModelConfig
+	Omnilingual  OfflineOmnilingualAsrCtcModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -964,7 +964,7 @@ type OfflineTtsZipvoiceModelConfig struct {
 	TextModel         string // Path to text encoder (e.g. text_encoder.onnx)
 	FlowMatchingModel string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
 	DataDir           string // Path to espeak-ng-data
-	PinyinDict        string // Path to pinyin.raw (needed for zh)
+	Lexicon           string // Path to lexicon.txt (needed for zh)
 	Vocoder           string // Path to vocoder (e.g. vocos_24khz.onnx)
 
 	FeatScale     float32 // Feature scale
@@ -1148,8 +1148,8 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.zipvoice.data_dir = C.CString(config.Model.Zipvoice.DataDir)
 	defer C.free(unsafe.Pointer(c.model.zipvoice.data_dir))
 
-	c.model.zipvoice.pinyin_dict = C.CString(config.Model.Zipvoice.PinyinDict)
-	defer C.free(unsafe.Pointer(c.model.zipvoice.pinyin_dict))
+	c.model.zipvoice.lexicon = C.CString(config.Model.Zipvoice.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.lexicon))
 
 	c.model.zipvoice.feat_scale = C.float(config.Model.Zipvoice.FeatScale)
 	c.model.zipvoice.t_shift = C.float(config.Model.Zipvoice.TShift)

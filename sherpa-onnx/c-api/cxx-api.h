@@ -432,7 +432,7 @@ struct OfflineTtsZipvoiceModelConfig {
   std::string flow_matching_model;
   std::string vocoder;
   std::string data_dir;
-  std::string pinyin_dict;
+  std::string lexicon;
 
   float feat_scale = 0.1;
   float t_shift = 0.5;
