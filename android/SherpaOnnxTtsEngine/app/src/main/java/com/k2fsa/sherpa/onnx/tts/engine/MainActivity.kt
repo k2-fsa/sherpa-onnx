@@ -101,7 +101,7 @@ class MainActivity : ComponentActivity() {
                                             TtsEngine.speed = it
                                             preferenceHelper.setSpeed(it)
                                         },
-                                        valueRange = 0.2F..3.0F,
+                                        valueRange = 0.2F..5.0F,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
