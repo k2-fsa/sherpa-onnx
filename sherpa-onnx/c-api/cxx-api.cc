@@ -419,7 +419,7 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
       config.model.zipvoice.flow_matching_model.c_str();
   c.model.zipvoice.vocoder = config.model.zipvoice.vocoder.c_str();
   c.model.zipvoice.data_dir = config.model.zipvoice.data_dir.c_str();
-  c.model.zipvoice.pinyin_dict = config.model.zipvoice.pinyin_dict.c_str();
+  c.model.zipvoice.lexicon = config.model.zipvoice.lexicon.c_str();
   c.model.zipvoice.feat_scale = config.model.zipvoice.feat_scale;
   c.model.zipvoice.t_shift = config.model.zipvoice.t_shift;
   c.model.zipvoice.target_rms = config.model.zipvoice.target_rms;

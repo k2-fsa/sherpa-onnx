@@ -703,9 +703,11 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
       r->durations = nullptr;
     }
 
-    if (!result.ys_log_probs.empty() && result.ys_log_probs.size() == r->count) {
+    if (!result.ys_log_probs.empty() &&
+        result.ys_log_probs.size() == r->count) {
       r->ys_log_probs = new float[r->count];
-      std::copy(result.ys_log_probs.begin(), result.ys_log_probs.end(), r->ys_log_probs);
+      std::copy(result.ys_log_probs.begin(), result.ys_log_probs.end(),
+                r->ys_log_probs);
     } else {
       r->ys_log_probs = nullptr;
     }
@@ -1248,8 +1250,8 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.zipvoice.vocoder, "");
   tts_config.model.zipvoice.data_dir =
       SHERPA_ONNX_OR(config->model.zipvoice.data_dir, "");
-  tts_config.model.zipvoice.pinyin_dict =
-      SHERPA_ONNX_OR(config->model.zipvoice.pinyin_dict, "");
+  tts_config.model.zipvoice.lexicon =
+      SHERPA_ONNX_OR(config->model.zipvoice.lexicon, "");
   tts_config.model.zipvoice.feat_scale =
       SHERPA_ONNX_OR(config->model.zipvoice.feat_scale, 0.1f);
   tts_config.model.zipvoice.t_shift =
