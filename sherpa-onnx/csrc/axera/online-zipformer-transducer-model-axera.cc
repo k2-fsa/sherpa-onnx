@@ -41,15 +41,9 @@ class OnlineZipformerTransducerModelAxera::Impl {
     FreeIO(&decoder_io_data_);
     FreeIO(&joiner_io_data_);
 
-    if (encoder_handle_) {
-      AX_ENGINE_DestroyHandle(encoder_handle_);
-    }
-    if (decoder_handle_) {
-      AX_ENGINE_DestroyHandle(decoder_handle_);
-    }
-    if (joiner_handle_) {
-      AX_ENGINE_DestroyHandle(joiner_handle_);
-    }
+    if (encoder_handle_) AX_ENGINE_DestroyHandle(encoder_handle_);
+    if (decoder_handle_) AX_ENGINE_DestroyHandle(decoder_handle_);
+    if (joiner_handle_) AX_ENGINE_DestroyHandle(joiner_handle_);
   }
 
   explicit Impl(const OnlineModelConfig &config) : config_(config) {
@@ -88,17 +82,14 @@ class OnlineZipformerTransducerModelAxera::Impl {
   }
 
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
-    if (!encoder_io_info_ || encoder_io_info_->nInputSize <= 1) {
-      return {};
-    }
+    if (!encoder_io_info_ || encoder_io_info_->nInputSize <= 1) return {};
 
     uint32_t num_states = encoder_io_info_->nInputSize - 1;
     std::vector<std::vector<uint8_t>> states(num_states);
 
     for (uint32_t i = 1; i < encoder_io_info_->nInputSize; ++i) {
       const auto &in_meta = encoder_io_info_->pInputs[i];
-      uint32_t bytes = in_meta.nSize;
-      states[i - 1].resize(bytes);
+      states[i - 1].resize(in_meta.nSize);
       std::fill(states[i - 1].begin(), states[i - 1].end(), 0);
     }
 
@@ -123,6 +114,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
           in0.nSize, features.size() * sizeof(float));
       SHERPA_ONNX_EXIT(-1);
     }
+
     std::memcpy(encoder_io_data_.pInputs[0].pVirAddr, features.data(), bytes0);
 
     uint32_t num_states = encoder_io_info_->nInputSize - 1;
@@ -145,7 +137,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
                   bytes);
     }
 
-    auto ret = AX_ENGINE_RunSync(encoder_handle_, &encoder_io_data_);
+    int ret = AX_ENGINE_RunSync(encoder_handle_, &encoder_io_data_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("AX_ENGINE_RunSync(encoder) failed, ret = %d", ret);
       SHERPA_ONNX_EXIT(-1);
@@ -158,11 +150,11 @@ class OnlineZipformerTransducerModelAxera::Impl {
 
     const auto &out0 = encoder_io_info_->pOutputs[0];
     auto &out0_buf = encoder_io_data_.pOutputs[0];
+
     size_t out0_elems = out0.nSize / sizeof(float);
     std::vector<float> encoder_out(out0_elems);
     std::memcpy(encoder_out.data(), out0_buf.pVirAddr, out0.nSize);
 
-    std::vector<std::vector<uint8_t>> next_states(num_states);
     uint32_t num_state_out = encoder_io_info_->nOutputSize - 1;
     if (num_state_out != num_states) {
       SHERPA_ONNX_LOGE(
@@ -171,6 +163,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    std::vector<std::vector<uint8_t>> next_states(num_states);
     for (uint32_t i = 0; i < num_states; ++i) {
       const auto &out_meta = encoder_io_info_->pOutputs[i + 1];
       auto &out_buf = encoder_io_data_.pOutputs[i + 1];
@@ -181,7 +174,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
     return {std::move(encoder_out), std::move(next_states)};
   }
 
-  std::vector<float> RunDecoder(std::vector<int64_t> decoder_input) {
+  std::vector<float> RunDecoder(std::vector<int32_t> decoder_input) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!decoder_io_info_ || decoder_io_info_->nInputSize != 1) {
@@ -191,17 +184,18 @@ class OnlineZipformerTransducerModelAxera::Impl {
 
     const auto &in0 = decoder_io_info_->pInputs[0];
     size_t bytes = in0.nSize;
-    if (bytes != decoder_input.size() * sizeof(int64_t)) {
+
+    if (bytes != decoder_input.size() * sizeof(int32_t)) {
       SHERPA_ONNX_LOGE(
           "Decoder input size mismatch. model expects %u bytes, got %zu bytes",
-          in0.nSize, decoder_input.size() * sizeof(int64_t));
+          in0.nSize, decoder_input.size() * sizeof(int32_t));
       SHERPA_ONNX_EXIT(-1);
     }
 
     std::memcpy(decoder_io_data_.pInputs[0].pVirAddr, decoder_input.data(),
                 bytes);
 
-    auto ret = AX_ENGINE_RunSync(decoder_handle_, &decoder_io_data_);
+    int ret = AX_ENGINE_RunSync(decoder_handle_, &decoder_io_data_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("AX_ENGINE_RunSync(decoder) failed, ret = %d", ret);
       SHERPA_ONNX_EXIT(-1);
@@ -214,6 +208,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
 
     const auto &out0 = decoder_io_info_->pOutputs[0];
     auto &out_buf = decoder_io_data_.pOutputs[0];
+
     size_t out_elems = out0.nSize / sizeof(float);
     std::vector<float> decoder_out(out_elems);
     std::memcpy(decoder_out.data(), out_buf.pVirAddr, out0.nSize);
@@ -232,17 +227,14 @@ class OnlineZipformerTransducerModelAxera::Impl {
 
     {
       const auto &in0 = joiner_io_info_->pInputs[0];
-      size_t bytes0 = in0.nSize;
-      std::memcpy(joiner_io_data_.pInputs[0].pVirAddr, encoder_out, bytes0);
+      std::memcpy(joiner_io_data_.pInputs[0].pVirAddr, encoder_out, in0.nSize);
     }
-
     {
       const auto &in1 = joiner_io_info_->pInputs[1];
-      size_t bytes1 = in1.nSize;
-      std::memcpy(joiner_io_data_.pInputs[1].pVirAddr, decoder_out, bytes1);
+      std::memcpy(joiner_io_data_.pInputs[1].pVirAddr, decoder_out, in1.nSize);
     }
 
-    auto ret = AX_ENGINE_RunSync(joiner_handle_, &joiner_io_data_);
+    int ret = AX_ENGINE_RunSync(joiner_handle_, &joiner_io_data_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("AX_ENGINE_RunSync(joiner) failed, ret = %d", ret);
       SHERPA_ONNX_EXIT(-1);
@@ -255,6 +247,7 @@ class OnlineZipformerTransducerModelAxera::Impl {
 
     const auto &out0 = joiner_io_info_->pOutputs[0];
     auto &out_buf = joiner_io_data_.pOutputs[0];
+
     size_t out_elems = out0.nSize / sizeof(float);
     std::vector<float> joiner_out(out_elems);
     std::memcpy(joiner_out.data(), out_buf.pVirAddr, out0.nSize);
@@ -289,13 +282,11 @@ class OnlineZipformerTransducerModelAxera::Impl {
     PrepareIO(encoder_io_info_, &encoder_io_data_, config_.debug);
 
     const auto &m = config_.zipformer_meta;
-
     encoder_dims_ = m.encoder_dims;
     attention_dims_ = m.attention_dims;
     num_encoder_layers_ = m.num_encoder_layers;
     cnn_module_kernels_ = m.cnn_module_kernels;
     left_context_len_ = m.left_context_len;
-
     T_ = m.T;
     decode_chunk_len_ = m.decode_chunk_len;
     context_size_ = m.context_size;
@@ -311,34 +302,6 @@ class OnlineZipformerTransducerModelAxera::Impl {
           "cnn_module_kernels, left_context_len, T, decode_chunk_len, "
           "context_size.");
       SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (config_.debug) {
-      auto print = [](const std::vector<int32_t> &v, const char *name) {
-        std::ostringstream os;
-        os << name << ": ";
-        for (auto i : v) {
-          os << i << " ";
-        }
-#if __OHOS__
-        SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
-#else
-        SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
-#endif
-      };
-
-      print(encoder_dims_, "encoder_dims");
-      print(attention_dims_, "attention_dims");
-      print(num_encoder_layers_, "num_encoder_layers");
-      print(cnn_module_kernels_, "cnn_module_kernels");
-      print(left_context_len_, "left_context_len");
-#if __OHOS__
-      SHERPA_ONNX_LOGE("T: %{public}d", T_);
-      SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
-#else
-      SHERPA_ONNX_LOGE("T: %d", T_);
-      SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
-#endif
     }
   }
 
@@ -367,10 +330,6 @@ class OnlineZipformerTransducerModelAxera::Impl {
           context_size_, shape_context_size);
       context_size_ = shape_context_size;
     }
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
-    }
   }
 
   void InitJoiner(void *model_data, size_t model_data_length) {
@@ -391,10 +350,6 @@ class OnlineZipformerTransducerModelAxera::Impl {
     }
 
     vocab_size_ = out0.pShape[1];
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("vocab_size: %d", vocab_size_);
-    }
   }
 
  private:
@@ -451,7 +406,7 @@ OnlineZipformerTransducerModelAxera::RunEncoder(
 }
 
 std::vector<float> OnlineZipformerTransducerModelAxera::RunDecoder(
-    std::vector<int64_t> decoder_input) const {
+    std::vector<int32_t> decoder_input) const {
   return impl_->RunDecoder(std::move(decoder_input));
 }
 

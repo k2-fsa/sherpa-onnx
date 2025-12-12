@@ -19,6 +19,7 @@ void OnlineModelConfig::Register(ParseOptions *po) {
   nemo_ctc.Register(po);
   t_one_ctc.Register(po);
   provider_config.Register(po);
+  zipformer_meta.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -132,6 +133,24 @@ bool OnlineModelConfig::Validate() const {
     }
   }
 
+  if (provider_config.provider == "axera") {
+    const bool using_transducer = !transducer.encoder.empty() &&
+                                  !transducer.decoder.empty() &&
+                                  !transducer.joiner.empty();
+
+    if (using_transducer) {
+      if (!zipformer_meta.Validate()) {
+        SHERPA_ONNX_LOGE(
+            "For axera transducer model, please provide complete zipformer "
+            "meta via --zipformer-* options: "
+            "encoder_dims, attention_dims, num_encoder_layers, "
+            "cnn_module_kernels, left_context_len, T, decode_chunk_len, "
+            "context_size.");
+        return false;
+      }
+    }
+  }
+
   if (!tokens_buf.empty() && FileExists(tokens)) {
     SHERPA_ONNX_LOGE(
         "you can not provide a tokens_buf and a tokens file: '%s', "
@@ -193,6 +212,7 @@ std::string OnlineModelConfig::ToString() const {
   os << "zipformer2_ctc=" << zipformer2_ctc.ToString() << ", ";
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
   os << "t_one_ctc=" << t_one_ctc.ToString() << ", ";
+  os << "zipformer_meta=" << zipformer_meta.ToString() << ", ";
   os << "provider_config=" << provider_config.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";

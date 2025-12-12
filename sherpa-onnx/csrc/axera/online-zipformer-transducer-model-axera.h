@@ -9,15 +9,9 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-model-config.h"
-#include "sherpa-onnx/csrc/online-transducer-model.h"
 
 namespace sherpa_onnx {
 
-// this is for zipformer v1 and v2, i.e., the folder
-// pruned_transducer_statelss7_streaming
-// and
-// zipformer
-// from icefall
 class OnlineZipformerTransducerModelAxera {
  public:
   ~OnlineZipformerTransducerModelAxera();
@@ -34,7 +28,7 @@ class OnlineZipformerTransducerModelAxera {
       std::vector<float> features,
       std::vector<std::vector<uint8_t>> states) const;
 
-  std::vector<float> RunDecoder(std::vector<int64_t> decoder_input) const;
+  std::vector<float> RunDecoder(std::vector<int32_t> decoder_input) const;
 
   std::vector<float> RunJoiner(const float *encoder_out,
                                const float *decoder_out) const;

@@ -41,6 +41,17 @@ void OnlineTransducerModifiedBeamSearchDecoderAxera::StripLeadingBlanks(
   r->num_trailing_blanks = hyp.num_trailing_blanks;
 }
 
+static std::vector<int32_t> TailContextToInt32(const std::vector<int64_t> &ys,
+                                               int32_t context_size) {
+  std::vector<int32_t> tokens;
+  tokens.reserve(context_size);
+  auto start = ys.begin() + (ys.size() - context_size);
+  for (auto it = start; it != ys.end(); ++it) {
+    tokens.push_back(static_cast<int32_t>(*it));
+  }
+  return tokens;
+}
+
 std::vector<std::vector<float>> GetDecoderOut(
     OnlineZipformerTransducerModelAxera *model, const Hypotheses &hyp_vec) {
   std::vector<std::vector<float>> ans;
@@ -49,10 +60,10 @@ std::vector<std::vector<float>> GetDecoderOut(
   int32_t context_size = model->ContextSize();
   for (const auto &p : hyp_vec) {
     const auto &hyp = p.second;
-    auto start = hyp.ys.begin() + (hyp.ys.size() - context_size);
-    auto end = hyp.ys.end();
-    auto tokens = std::vector<int64_t>(start, end);
-    auto decoder_out = model->RunDecoder(std::move(tokens));
+
+    auto tokens32 = TailContextToInt32(hyp.ys, context_size);
+
+    auto decoder_out = model->RunDecoder(std::move(tokens32));
     ans.push_back(std::move(decoder_out));
   }
 

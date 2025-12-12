@@ -37,7 +37,6 @@ void OnlineTransducerGreedySearchDecoderAxera::Decode(
     OnlineTransducerDecoderResultAxera *result) const {
   auto &r = result[0];
 
-  // 使用 Axera 版模型的 GetEncoderOutShape()
   auto shape = model_->GetEncoderOutShape();
   if (shape.size() < 3) {
     SHERPA_ONNX_LOGE("Encoder output rank is too small. Got rank = %zu",
@@ -51,12 +50,20 @@ void OnlineTransducerGreedySearchDecoderAxera::Decode(
   int32_t vocab_size = model_->VocabSize();
   int32_t context_size = model_->ContextSize();
 
-  std::vector<int64_t> decoder_input;
+  std::vector<int32_t> decoder_input;
   std::vector<float> decoder_out;
 
+  auto FillDecoderInput = [&](std::vector<int32_t> *out) {
+    out->clear();
+    out->reserve(context_size);
+    auto start = r.tokens.begin() + (r.tokens.size() - context_size);
+    for (auto it = start; it != r.tokens.end(); ++it) {
+      out->push_back(static_cast<int32_t>(*it));
+    }
+  };
+
   if (r.previous_decoder_out.empty()) {
-    decoder_input = {r.tokens.begin() + (r.tokens.size() - context_size),
-                     r.tokens.end()};
+    FillDecoderInput(&decoder_input);
     decoder_out = model_->RunDecoder(std::move(decoder_input));
   } else {
     decoder_out = std::move(r.previous_decoder_out);
@@ -67,9 +74,7 @@ void OnlineTransducerGreedySearchDecoderAxera::Decode(
     auto logit = model_->RunJoiner(p_encoder_out, decoder_out.data());
     p_encoder_out += encoder_out_dim;
 
-    bool emitted = false;
-    if (blank_penalty_ > 0.0) {
-      // 假设 blank id 始终为 0
+    if (blank_penalty_ > 0.0f) {
       logit[0] -= blank_penalty_;
     }
 
@@ -77,6 +82,7 @@ void OnlineTransducerGreedySearchDecoderAxera::Decode(
         logit.data(),
         std::max_element(logit.data(), logit.data() + vocab_size)));
 
+    bool emitted = false;
     // blank id is hardcoded to 0
     // also, it treats unk as blank
     if (y != 0 && y != unk_id_) {
@@ -89,8 +95,7 @@ void OnlineTransducerGreedySearchDecoderAxera::Decode(
     }
 
     if (emitted) {
-      decoder_input = {r.tokens.begin() + (r.tokens.size() - context_size),
-                       r.tokens.end()};
+      FillDecoderInput(&decoder_input);
       decoder_out = model_->RunDecoder(std::move(decoder_input));
     }
   }

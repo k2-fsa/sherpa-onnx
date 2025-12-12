@@ -22,6 +22,7 @@
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/vec-to-string.h"
 
 namespace sherpa_onnx {
 
@@ -71,6 +72,11 @@ void ParseOptions::Register(const std::string &name, double *ptr,
 }
 
 void ParseOptions::Register(const std::string &name, std::string *ptr,
+                            const std::string &doc) {
+  RegisterTmpl(name, ptr, doc);
+}
+
+void ParseOptions::Register(const std::string &name, std::vector<int32_t> *ptr,
                             const std::string &doc) {
   RegisterTmpl(name, ptr, doc);
 }
@@ -175,6 +181,16 @@ void ParseOptions::RegisterSpecific(const std::string &name,
       DocInfo(name, doc + " (string, default = \"" + *s + "\")", is_standard);
 }
 
+void ParseOptions::RegisterSpecific(const std::string &name,
+                                    const std::string &idx,
+                                    std::vector<int32_t> *v,
+                                    const std::string &doc, bool is_standard) {
+  int_vec_map_[idx] = v;
+  std::ostringstream ss;
+  ss << doc << " (int-vector, default = " << VecToString(*v) << ")";
+  doc_map_[idx] = DocInfo(name, ss.str(), is_standard);
+}
+
 void ParseOptions::DisableOption(const std::string &name) {
   if (argv_ != nullptr) {
     SHERPA_ONNX_LOGE("DisableOption must not be called after calling Read().");
@@ -192,6 +208,7 @@ void ParseOptions::DisableOption(const std::string &name) {
   float_map_.erase(name);
   double_map_.erase(name);
   string_map_.erase(name);
+  int_vec_map_.erase(name);
 }
 
 int32_t ParseOptions::NumArgs() const { return positional_args_.size(); }
@@ -432,6 +449,8 @@ void ParseOptions::PrintConfig(std::ostream &os) const {
       os << (*float_map_.at(key));
     } else if (double_map_.end() != double_map_.find(key)) {
       os << (*double_map_.at(key));
+    } else if (int_vec_map_.end() != int_vec_map_.find(key)) {
+      os << "'" << VecToString(*int_vec_map_.at(key)) << "'";
     } else if (string_map_.end() != string_map_.find(key)) {
       os << "'" << *string_map_.at(key) << "'";
     } else {
@@ -556,6 +575,15 @@ bool ParseOptions::SetOption(const std::string &key, const std::string &value,
     *(float_map_[key]) = ToFloat(value);
   } else if (double_map_.end() != double_map_.find(key)) {
     *(double_map_[key]) = ToDouble(value);
+
+  } else if (int_vec_map_.end() != int_vec_map_.find(key)) {
+    std::vector<int32_t> v;
+    if (!SplitStringToIntegers(value, ",", /*omit_empty_strings=*/true, &v)) {
+      SHERPA_ONNX_LOGE("Invalid int vector option \"%s\"", value.c_str());
+      exit(-1);
+    }
+    *(int_vec_map_[key]) = std::move(v);
+
   } else if (string_map_.end() != string_map_.find(key)) {
     if (!has_equal_sign) {
       SHERPA_ONNX_LOGE("Invalid option --%s (option format is --x=y).",
@@ -649,6 +677,9 @@ template void ParseOptions::RegisterTmpl(const std::string &name, double *ptr,
 template void ParseOptions::RegisterTmpl(const std::string &name,
                                          std::string *ptr,
                                          const std::string &doc);
+template void ParseOptions::RegisterTmpl(const std::string &name,
+                                         std::vector<int32_t> *ptr,
+                                         const std::string &doc);
 
 template void ParseOptions::RegisterStandard(const std::string &name, bool *ptr,
                                              const std::string &doc);
@@ -669,6 +700,9 @@ template void ParseOptions::RegisterStandard(const std::string &name,
                                              const std::string &doc);
 template void ParseOptions::RegisterStandard(const std::string &name,
                                              std::string *ptr,
+                                             const std::string &doc);
+template void ParseOptions::RegisterStandard(const std::string &name,
+                                             std::vector<int32_t> *ptr,
                                              const std::string &doc);
 
 template void ParseOptions::RegisterCommon(const std::string &name, bool *ptr,
@@ -692,6 +726,10 @@ template void ParseOptions::RegisterCommon(const std::string &name, double *ptr,
                                            bool is_standard);
 template void ParseOptions::RegisterCommon(const std::string &name,
                                            std::string *ptr,
+                                           const std::string &doc,
+                                           bool is_standard);
+template void ParseOptions::RegisterCommon(const std::string &name,
+                                           std::vector<int32_t> *ptr,
                                            const std::string &doc,
                                            bool is_standard);
 

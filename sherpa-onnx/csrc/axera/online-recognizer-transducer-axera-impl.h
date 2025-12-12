@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h
+// sherpa-onnx/csrc/axera/online-recognizer-transducer-axera-impl.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_RKNN_ONLINE_RECOGNIZER_TRANSDUCER_RKNN_IMPL_H_
-#define SHERPA_ONNX_CSRC_RKNN_ONLINE_RECOGNIZER_TRANSDUCER_RKNN_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_AXERA_ONLINE_RECOGNIZER_TRANSDUCER_AXERA_IMPL_H_
+#define SHERPA_ONNX_CSRC_AXERA_ONLINE_RECOGNIZER_TRANSDUCER_AXERA_IMPL_H_
 
 #include <algorithm>
 #include <memory>
@@ -267,4 +267,4 @@ class OnlineRecognizerTransducerAxeraImpl : public OnlineRecognizerImpl {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_RKNN_ONLINE_RECOGNIZER_TRANSDUCER_RKNN_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_AXERA_ONLINE_RECOGNIZER_TRANSDUCER_AXERA_IMPL_H_

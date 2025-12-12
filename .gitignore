@@ -165,3 +165,6 @@ build-riscv64-linux-gnu-spacemit/
 spacemit-toolchain*
 sherpa-onnx-qnn-*
 matcha-icefall-*
+ax650n_bsp_sdk-*
+aarch64-linux-gnu-g++
+aarch64-linux-gnu-gcc
