@@ -112,21 +112,14 @@ class TtsService : TextToSpeechService() {
         val text = request.charSequenceText.toString()
         // Map Android TTS speech rate (where 100 == normal) to engine speed (1.0 == normal)
         // Allow per-request override from external apps; fallback to engine default if absent.
-        val engineSpeed: Float = run {
-            val rate = try {
-                request.speechRate
-            } catch (e: Throwable) {
-                // Some devices might not expose it; fallback
-                -1
-            }
-            if (rate > 0) {
-                // Map 100 -> 1.0f
-                val mapped = rate / 100.0f
-                mapped.coerceIn(0.1f, 5.0f)
-            } else {
-                // Fallback to current engine/global setting
-                TtsEngine.speed
-            }
+        val rate = runCatching { request.speechRate }.getOrDefault(-1)
+        val engineSpeed = if (rate > 0) {
+            // Map 100 -> 1.0f
+            val mapped = rate / 100.0f
+            mapped.coerceIn(MIN_TTS_SPEED, MAX_TTS_SPEED)
+        } else {
+            // Fallback to current engine/global setting
+            TtsEngine.speed
         }
 
         val ret = onIsLanguageAvailable(language, country, variant)
@@ -134,7 +127,7 @@ class TtsService : TextToSpeechService() {
             callback.error()
             return
         }
-        Log.i(TAG, "text: $text, requestedRate: ${try { request.speechRate } catch (_: Throwable) { null }}, engineSpeed: $engineSpeed")
+        Log.i(TAG, "text: $text, engineSpeed: $engineSpeed")
         val tts = TtsEngine.tts!!
 
         // Note that AudioFormat.ENCODING_PCM_FLOAT requires API level >= 24
