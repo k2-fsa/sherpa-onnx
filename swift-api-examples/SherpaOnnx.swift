@@ -929,8 +929,8 @@ func sherpaOnnxOfflineTtsKittenModelConfig(
 
 func sherpaOnnxOfflineTtsZipvoiceModelConfig(
   tokens: String = "",
-  textModel: String = "",
-  flowMatchingModel: String = "",
+  encoder: String = "",
+  decoder: String = "",
   vocoder: String = "",
   dataDir: String = "",
   lexicon: String = "",
@@ -941,8 +941,8 @@ func sherpaOnnxOfflineTtsZipvoiceModelConfig(
 ) -> SherpaOnnxOfflineTtsZipvoiceModelConfig {
   return SherpaOnnxOfflineTtsZipvoiceModelConfig(
     tokens: toCPointer(tokens),
-    text_model: toCPointer(textModel),
-    flow_matching_model: toCPointer(flowMatchingModel),
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
     vocoder: toCPointer(vocoder),
     data_dir: toCPointer(dataDir),
     lexicon: toCPointer(lexicon),

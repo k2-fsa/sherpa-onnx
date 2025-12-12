@@ -960,12 +960,12 @@ type OfflineTtsKittenModelConfig struct {
 }
 
 type OfflineTtsZipvoiceModelConfig struct {
-	Tokens            string // Path to tokens.txt for ZipVoice
-	TextModel         string // Path to text encoder (e.g. text_encoder.onnx)
-	FlowMatchingModel string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
-	DataDir           string // Path to espeak-ng-data
-	Lexicon           string // Path to lexicon.txt (needed for zh)
-	Vocoder           string // Path to vocoder (e.g. vocos_24khz.onnx)
+	Tokens  string // Path to tokens.txt for ZipVoice
+	Encoder string // Path to text encoder (e.g. encoder.onnx)
+	Decoder string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
+	DataDir string // Path to espeak-ng-data
+	Lexicon string // Path to lexicon.txt (needed for zh)
+	Vocoder string // Path to vocoder (e.g. vocos_24khz.onnx)
 
 	FeatScale     float32 // Feature scale
 	TShift        float32 // t-shift (<1 shifts to smaller t)
@@ -1136,11 +1136,11 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.zipvoice.tokens = C.CString(config.Model.Zipvoice.Tokens)
 	defer C.free(unsafe.Pointer(c.model.zipvoice.tokens))
 
-	c.model.zipvoice.text_model = C.CString(config.Model.Zipvoice.TextModel)
-	defer C.free(unsafe.Pointer(c.model.zipvoice.text_model))
+	c.model.zipvoice.encoder = C.CString(config.Model.Zipvoice.Encoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.encoder))
 
-	c.model.zipvoice.flow_matching_model = C.CString(config.Model.Zipvoice.FlowMatchingModel)
-	defer C.free(unsafe.Pointer(c.model.zipvoice.flow_matching_model))
+	c.model.zipvoice.decoder = C.CString(config.Model.Zipvoice.Decoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.decoder))
 
 	c.model.zipvoice.vocoder = C.CString(config.Model.Zipvoice.Vocoder)
 	defer C.free(unsafe.Pointer(c.model.zipvoice.vocoder))

@@ -428,8 +428,8 @@ struct OfflineTtsKittenModelConfig {
 
 struct OfflineTtsZipvoiceModelConfig {
   std::string tokens;
-  std::string text_model;
-  std::string flow_matching_model;
+  std::string encoder;
+  std::string decoder;
   std::string vocoder;
   std::string data_dir;
   std::string lexicon;
