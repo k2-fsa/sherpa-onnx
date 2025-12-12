@@ -26,44 +26,9 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/vec-to-string.h"
 
 namespace sherpa_onnx {
-
-namespace {
-
-/// Helper for `OnlineRecognizerResult::AsJsonString()`
-template <typename T>
-std::string VecToString(const std::vector<T> &vec, int32_t precision = 6) {
-  std::ostringstream oss;
-  if (precision != 0) {
-    oss << std::fixed << std::setprecision(precision);
-  }
-  oss << "[";
-  std::string sep = "";
-  for (const auto &item : vec) {
-    oss << sep << item;
-    sep = ", ";
-  }
-  oss << "]";
-  return oss.str();
-}
-
-/// Helper for `OnlineRecognizerResult::AsJsonString()`
-template <>  // explicit specialization for T = std::string
-std::string VecToString<std::string>(const std::vector<std::string> &vec,
-                                     int32_t) {  // ignore 2nd arg
-  std::ostringstream oss;
-  oss << "[";
-  std::string sep = "";
-  for (const auto &item : vec) {
-    oss << sep << std::quoted(item);
-    sep = ", ";
-  }
-  oss << "]";
-  return oss.str();
-}
-
-}  // namespace
 
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;
