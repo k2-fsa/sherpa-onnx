@@ -62,7 +62,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   for (int32_t i = 0; i != max_len; ++i) {
     const float *p = logits.GetTensorData<float>();
 
-    // Compute log-softmax and find max token with confidence
+    // Compute log-softmax once for both max selection and storage
     float max_logit = *std::max_element(p, p + vocab_size);
     
     float sum_exp = 0.0f;
@@ -71,11 +71,15 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
     }
     float log_sum = max_logit + std::log(sum_exp);
     
+    // Compute log-softmax for all tokens and find max in single pass
+    std::vector<float> full_vocab_probs(vocab_size);
     int32_t max_token_id = 0;
     float max_log_prob = p[0] - log_sum;
+    full_vocab_probs[0] = max_log_prob;
     
     for (int32_t j = 1; j < vocab_size; ++j) {
       float log_prob = p[j] - log_sum;
+      full_vocab_probs[j] = log_prob;
       if (log_prob > max_log_prob) {
         max_log_prob = log_prob;
         max_token_id = j;
@@ -87,12 +91,6 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
     }
     tokens.push_back(max_token_id);
     token_log_probs.push_back(max_log_prob);
-    
-    // Store full vocabulary distribution (already log-softmaxed)
-    std::vector<float> full_vocab_probs(vocab_size);
-    for (int32_t j = 0; j < vocab_size; ++j) {
-      full_vocab_probs[j] = p[j] - log_sum;
-    }
     vocab_log_probs.push_back(std::move(full_vocab_probs));
 
     seq_len += 1;

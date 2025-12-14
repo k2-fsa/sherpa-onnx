@@ -98,7 +98,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
     // Start from decoder_input.size() + 1 for proper position tracking
     if (max_token_id != eos) {
-      int32_t tokens_generated = 0;
       for (int32_t i = decoder_input.size() + 1;
            i <= decoder_input.size() + num_tokens; ++i) {
         if (tokens.back() == eos) {
@@ -116,7 +115,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         tokens.push_back(next_token_id);
         token_log_probs.push_back(next_confidence);
         vocab_log_probs.push_back(std::move(next_full_vocab_probs));
-        tokens_generated++;
       }
     }
 
@@ -128,7 +126,16 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     }
 
     auto r = Convert(tokens, token_log_probs);
-    r.vocab_log_probs = std::move(vocab_log_probs);
+    // Filter vocab_log_probs to match filtered tokens (same indices as token_log_probs)
+    // tokens and vocab_log_probs are 1:1 aligned by index, so use idx directly
+    r.vocab_log_probs.reserve(r.tokens.size());
+    for (size_t idx = 0; idx < tokens.size(); ++idx) {
+      if (symbol_table_.Contains(tokens[idx])) {
+        if (idx < vocab_log_probs.size()) {
+          r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
+        }
+      }
+    }
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
@@ -152,7 +159,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       const std::vector<float> &token_log_probs) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(tokens.size());
-    r.token_log_probs = token_log_probs;
 
     std::string text;
     for (size_t idx = 0; idx < tokens.size(); ++idx) {
@@ -165,6 +171,10 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       const auto &s = symbol_table_[token_id];
       text += s;
       r.tokens.push_back(s);
+
+      if (idx < token_log_probs.size()) {
+        r.token_log_probs.push_back(token_log_probs[idx]);
+      }
     }
 
     r.text = std::move(text);
