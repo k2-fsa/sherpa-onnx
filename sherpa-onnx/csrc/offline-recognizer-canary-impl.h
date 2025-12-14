@@ -88,43 +88,47 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
     std::vector<int32_t> tokens = {max_token_id};
     std::vector<float> token_log_probs = {confidence};
+    std::vector<std::vector<float>> vocab_log_probs;
+    vocab_log_probs.push_back(std::move(full_vocab_probs));
 
     // Assume 30 tokens per second. It is to avoid the following for loop
     // running indefinitely.
     int32_t num_tokens =
         static_cast<int32_t>(num_feature_frames / 100.0 * 30) + 1;
 
-    if (max_token_id == eos) {
-      // First token is EOS, stop immediately
-    }
-
     // Start from decoder_input.size() + 1 for proper position tracking
-    int32_t tokens_generated = 0;
-    for (int32_t i = decoder_input.size() + 1;
-         i <= decoder_input.size() + num_tokens; ++i) {
-      if (tokens.back() == eos) {
-        break;
+    if (max_token_id != eos) {
+      int32_t tokens_generated = 0;
+      for (int32_t i = decoder_input.size() + 1;
+           i <= decoder_input.size() + num_tokens; ++i) {
+        if (tokens.back() == eos) {
+          break;
+        }
+
+        std::tie(logits, decoder_states) =
+            RunDecoder(tokens.back(), i, std::move(decoder_states),
+                       View(&enc_states), View(&enc_mask));
+
+        std::vector<float> next_full_vocab_probs;
+        auto [next_token_id, next_confidence] =
+            GetMaxTokenIdWithConfidence(&logits, &next_full_vocab_probs);
+
+        tokens.push_back(next_token_id);
+        token_log_probs.push_back(next_confidence);
+        vocab_log_probs.push_back(std::move(next_full_vocab_probs));
+        tokens_generated++;
       }
-
-      std::tie(logits, decoder_states) =
-          RunDecoder(tokens.back(), i, std::move(decoder_states),
-                     View(&enc_states), View(&enc_mask));
-
-      auto [next_token_id, next_confidence] =
-          GetMaxTokenIdWithConfidence(&logits);
-
-      tokens.push_back(next_token_id);
-      token_log_probs.push_back(next_confidence);
-      tokens_generated++;
     }
 
     // remove the last eos token and its confidence
     if (!tokens.empty() && tokens.back() == eos) {
       tokens.pop_back();
       token_log_probs.pop_back();
+      vocab_log_probs.pop_back();
     }
 
     auto r = Convert(tokens, token_log_probs);
+    r.vocab_log_probs = std::move(vocab_log_probs);
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));

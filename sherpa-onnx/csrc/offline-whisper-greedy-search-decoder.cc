@@ -15,35 +15,6 @@
 
 namespace sherpa_onnx {
 
-// This function calculates the log probability of a given token ID
-// from the full logits vector using the log-sum-exp trick for
-// numerical stability.
-static float CalculateLogProb(const float *logits, int32_t vocab_size,
-                              int32_t token_id) {
-  if (vocab_size <= 0) {
-    return -std::numeric_limits<float>::infinity();
-  }
-
-  // Log-sum-exp trick for numerical stability
-  float max_logit = -std::numeric_limits<float>::infinity();
-  for (int32_t i = 0; i < vocab_size; ++i) {
-    if (logits[i] > max_logit) {
-      max_logit = logits[i];
-    }
-  }
-
-  double sum_exp = 0.0;
-  for (int32_t i = 0; i < vocab_size; ++i) {
-    sum_exp += std::exp(logits[i] - max_logit);
-  }
-
-  // The log probability is: log(exp(logit) / sum(exp(all_logits)))
-  // Which simplifies to: logit - log(sum(exp(all_logits)))
-  // With log-sum-exp trick: logit - (max_logit + log(sum(exp(logit -
-  // max_logit))))
-  return logits[token_id] - (max_logit + std::log(sum_exp));
-}
-
 void OfflineWhisperGreedySearchDecoder::SetConfig(
     const OfflineWhisperModelConfig &config) {
   config_ = config;
@@ -147,24 +118,30 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       break;
     }
 
-    float log_prob =
-        CalculateLogProb(current_logits, vocab_size, current_token_id);
+    // Calculate log-softmax for the full vocabulary
+    std::vector<float> full_vocab_probs(vocab_size);
+    float max_logit = -std::numeric_limits<float>::infinity();
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      if (current_logits[j] > max_logit) {
+        max_logit = current_logits[j];
+      }
+    }
+    double sum_exp = 0.0;
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      sum_exp += std::exp(current_logits[j] - max_logit);
+    }
+    // Calculate log_sum once (optimization: avoid recalculating log() in loop)
+    float log_sum = max_logit + std::log(sum_exp);
+    // Compute each probability
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      full_vocab_probs[j] = current_logits[j] - log_sum;
+    }
+
+    // Extract log probability for the selected token
+    float log_prob = full_vocab_probs[current_token_id];
 
     predicted_tokens.push_back(current_token_id);
     predicted_log_probs.push_back(log_prob);
-
-    // Store full vocabulary distribution (already log-softmaxed by
-    // CalculateLogProb)
-    std::vector<float> full_vocab_probs(vocab_size);
-    float max_logit =
-        *std::max_element(current_logits, current_logits + vocab_size);
-    double sum_exp = 0.0;
-    for (int32_t i = 0; i < vocab_size; ++i) {
-      sum_exp += std::exp(current_logits[i] - max_logit);
-    }
-    for (int32_t i = 0; i < vocab_size; ++i) {
-      full_vocab_probs[i] = current_logits[i] - (max_logit + std::log(sum_exp));
-    }
     predicted_vocab_log_probs.push_back(std::move(full_vocab_probs));
 
     std::array<int64_t, 2> token_input_shape{1, 1};
