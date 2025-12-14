@@ -33,6 +33,11 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols, OnlineTransducerNeMoModel *model,
                       float blank_penalty, float temperature_scale,
                       OnlineStream *s) {
+  // Defensive: temperature must be > 0. Treat invalid values as "no scaling".
+  if (temperature_scale <= 0.0f) {
+    temperature_scale = 1.0f;
+  }
+
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
