@@ -199,23 +199,31 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     }
     float log_sum = max_logit + std::log(sum_exp);
 
-    // Store full distribution if requested
-    if (full_distribution != nullptr) {
-      full_distribution->resize(meta.vocab_size);
-      for (int32_t i = 0; i < meta.vocab_size; ++i) {
-        (*full_distribution)[i] = p_logits[i] - log_sum;
-      }
-    }
-
     // Find the max token and its log probability
+    // If full_distribution is requested, compute both in a single pass
     int32_t max_token_id = 0;
     float max_log_prob = p_logits[0] - log_sum;
 
-    for (int32_t i = 1; i < meta.vocab_size; ++i) {
-      float log_prob = p_logits[i] - log_sum;
-      if (log_prob > max_log_prob) {
-        max_log_prob = log_prob;
-        max_token_id = i;
+    if (full_distribution != nullptr) {
+      full_distribution->resize(meta.vocab_size);
+      full_distribution->at(0) = max_log_prob;
+
+      for (int32_t i = 1; i < meta.vocab_size; ++i) {
+        float log_prob = p_logits[i] - log_sum;
+        full_distribution->at(i) = log_prob;
+        if (log_prob > max_log_prob) {
+          max_log_prob = log_prob;
+          max_token_id = i;
+        }
+      }
+    } else {
+      // Only find max if full distribution not needed
+      for (int32_t i = 1; i < meta.vocab_size; ++i) {
+        float log_prob = p_logits[i] - log_sum;
+        if (log_prob > max_log_prob) {
+          max_log_prob = log_prob;
+          max_token_id = i;
+        }
       }
     }
 
@@ -313,7 +321,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   void PostInit() {
     auto &meta = model_->GetModelMetadata();
     config_.feat_config.feature_dim = meta.feat_dim;
-    
+
     config_.feat_config.nemo_normalize_type = meta.normalize_type;
 
     config_.feat_config.dither = 0;

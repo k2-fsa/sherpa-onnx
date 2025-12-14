@@ -119,13 +119,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
 
     // Calculate log-softmax for the full vocabulary
+    // Allocate vector for this token (moved into result, so new allocation needed)
     std::vector<float> full_vocab_probs(vocab_size);
-    float max_logit = -std::numeric_limits<float>::infinity();
-    for (int32_t j = 0; j < vocab_size; ++j) {
-      if (current_logits[j] > max_logit) {
-        max_logit = current_logits[j];
-      }
-    }
+    float max_logit = *std::max_element(current_logits, current_logits + vocab_size);
     double sum_exp = 0.0;
     for (int32_t j = 0; j < vocab_size; ++j) {
       sum_exp += std::exp(current_logits[j] - max_logit);
