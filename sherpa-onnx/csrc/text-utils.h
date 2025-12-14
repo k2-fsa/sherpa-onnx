@@ -147,7 +147,12 @@ std::string ToString(const std::wstring &s);
 
 bool EndsWith(const std::string &haystack, const std::string &needle);
 
+bool Contains(const std::string &haystack, const std::string &needle);
+
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size);
+
+std::string Join(const std::vector<std::string> &ss,
+                 const std::string &delim = "");
 
 // Converts a UTF-8 std::string to a UTF-32 std::u32string
 std::u32string Utf8ToUtf32(const std::string &str);
@@ -163,6 +168,8 @@ std::string ToUpperAscii(const std::string &str);
 // unchanged)
 std::string ToLowerAscii(const std::string &str);
 
+bool IsAlphaOrPunct(int ch);
+
 // Detect if a codepoint is a CJK character
 bool IsCJK(char32_t cp);
 
@@ -171,6 +178,18 @@ bool ContainsCJK(const std::string &text);
 bool ContainsCJK(const std::u32string &text);
 
 bool StringToBool(const std::string &s);
+
+// end is inclusive
+std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                    int32_t end);
+
+bool IsPunct(const std::string &s);
+
+#if defined(_WIN32)
+#define SHERPA_ONNX_TO_ORT_PATH(s) (ToWideString(s).c_str())
+#else
+#define SHERPA_ONNX_TO_ORT_PATH(s) ((s).c_str())
+#endif
 
 }  // namespace sherpa_onnx
 

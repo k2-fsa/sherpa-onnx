@@ -16,7 +16,6 @@ function createOfflineRecognizer() {
   let config = {
     modelConfig: modelConfig,
     hr: {
-      dictDir: './dict',
       lexicon: './lexicon.txt',
       ruleFsts: './replace.fst',
     },

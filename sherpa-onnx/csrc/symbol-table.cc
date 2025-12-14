@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
 
 #if __ANDROID_API__ >= 9
@@ -130,14 +131,14 @@ std::unordered_map<std::string, int32_t> ReadTokens(
     iss >> std::ws;
     if (!iss.eof()) {
       SHERPA_ONNX_LOGE("Error: %s", line.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
 #if 0
     if (token2id.count(sym)) {
       SHERPA_ONNX_LOGE("Duplicated token %s. Line %s. Existing ID: %d",
                        sym.c_str(), line.c_str(), token2id.at(sym));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 #endif
     if (id2token) {

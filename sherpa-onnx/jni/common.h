@@ -193,4 +193,8 @@ inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName,
   return true;
 }
 
+namespace sherpa_onnx {
+void PrependAdspLibraryPath(const std::string &new_path);
+}
+
 #endif  // SHERPA_ONNX_JNI_COMMON_H_

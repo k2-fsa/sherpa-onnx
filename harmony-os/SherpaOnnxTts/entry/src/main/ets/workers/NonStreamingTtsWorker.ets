@@ -96,7 +96,6 @@ function initTts(context: Context): OfflineTts {
   let ruleFars = '';
   let lexicon = '';
   let dataDir = '';
-  let dictDir = '';
   /*
     You can select an example below and change it according to match your
     selected tts model
@@ -131,7 +130,6 @@ function initTts(context: Context): OfflineTts {
   // modelDir = 'vits-zh-hf-fanchen-C';
   // modelName = 'vits-zh-hf-fanchen-C.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'dict';
 
   // Example 5:
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -151,7 +149,6 @@ function initTts(context: Context): OfflineTts {
   // modelDir = 'vits-melo-tts-zh_en';
   // modelName = 'model.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'dict';
   // ruleFsts = `date.fst,phone.fst,number.fst`;
 
   // Example 8
@@ -161,7 +158,6 @@ function initTts(context: Context): OfflineTts {
   // acousticModelName = 'model-steps-3.onnx';
   // vocoder = 'vocos-22khz-univ.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'dict';
   // ruleFsts = `date.fst,phone.fst,number.fst`;
 
   // Example 9
@@ -185,7 +181,6 @@ function initTts(context: Context): OfflineTts {
   // modelName = 'model.onnx';
   // voices = 'voices.bin'
   // dataDir = 'espeak-ng-data';
-  // dictDir = 'dict';
   // lexicon = 'lexicon-us-en.txt,lexicon-zh.txt';
   // ruleFsts = `date-zh.fst,phone-zh.fst,number-zh.fst`;
 
@@ -252,12 +247,6 @@ function initTts(context: Context): OfflineTts {
     dataDir = sandboxPath + '/' + modelDir + '/' + dataDir;
   }
 
-  if (dictDir != '') {
-    copyRawFileDirToSandbox(context, modelDir + '/' + dictDir)
-    let sandboxPath: string = context.getApplicationContext().filesDir;
-    dictDir = sandboxPath + '/' + modelDir + '/' + dictDir;
-  }
-
   const tokens = modelDir + '/tokens.txt';
 
   const config: OfflineTtsConfig = new OfflineTtsConfig();
@@ -271,14 +260,12 @@ function initTts(context: Context): OfflineTts {
     config.model.vits.lexicon = lexicon;
     config.model.vits.tokens = tokens;
     config.model.vits.dataDir = dataDir;
-    config.model.vits.dictDir = dictDir;
 
     config.model.matcha.acousticModel = acousticModelName;
     config.model.matcha.vocoder = vocoder;
     config.model.matcha.lexicon = lexicon;
     config.model.matcha.tokens = tokens;
     config.model.matcha.dataDir = dataDir;
-    config.model.matcha.dictDir = dictDir;
   }
 
   if (voices != '') {
@@ -291,7 +278,6 @@ function initTts(context: Context): OfflineTts {
     config.model.kokoro.voices = voices;
     config.model.kokoro.tokens = tokens;
     config.model.kokoro.dataDir = dataDir;
-    config.model.kokoro.dictDir = dictDir;
     config.model.kokoro.lexicon = lexicon;
   }
 

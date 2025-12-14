@@ -5,6 +5,8 @@
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -121,8 +123,7 @@ bool OfflineRecognizerConfig::Validate() const {
     }
   }
 
-  if (!hr.dict_dir.empty() && !hr.lexicon.empty() && !hr.rule_fsts.empty() &&
-      !hr.Validate()) {
+  if (!hr.lexicon.empty() && !hr.rule_fsts.empty() && !hr.Validate()) {
     return false;
   }
 
@@ -137,6 +138,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
+
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";

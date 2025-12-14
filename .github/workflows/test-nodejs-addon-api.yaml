@@ -78,7 +78,7 @@ jobs:
           key: ${{ matrix.os }}-release-shared
 
       - name: Build sherpa-onnx
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -110,7 +110,7 @@ jobs:
           ls -lh install/lib
 
       - name: Build sherpa-onnx
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache

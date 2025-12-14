@@ -30,6 +30,7 @@ namespace SherpaOnnx
             ZipformerCtc = new OfflineZipformerCtcModelConfig();
             Canary = new OfflineCanaryModelConfig();
             WenetCtc = new OfflineWenetCtcModelConfig();
+            Omnilingual = new OfflineOmnilingualAsrCtcModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -66,5 +67,6 @@ namespace SherpaOnnx
         public OfflineZipformerCtcModelConfig ZipformerCtc;
         public OfflineCanaryModelConfig Canary;
         public OfflineWenetCtcModelConfig WenetCtc;
+        public OfflineOmnilingualAsrCtcModelConfig Omnilingual;
     }
 }

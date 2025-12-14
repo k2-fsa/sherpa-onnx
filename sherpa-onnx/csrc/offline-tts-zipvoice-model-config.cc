@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
 
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -16,13 +17,10 @@ void OfflineTtsZipvoiceModelConfig::Register(ParseOptions *po) {
                "Path to tokens.txt for ZipVoice models");
   po->Register("zipvoice-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
-  po->Register("zipvoice-pinyin-dict", &pinyin_dict,
-               "Path to the pinyin dictionary for cppinyin (i.e converting "
-               "Chinese into phones).");
-  po->Register("zipvoice-text-model", &text_model,
-               "Path to zipvoice text model");
-  po->Register("zipvoice-flow-matching-model", &flow_matching_model,
-               "Path to zipvoice flow-matching model");
+  po->Register("zipvoice-lexicon", &lexicon, "Path to lexicon.txt for Chinese");
+  po->Register("zipvoice-encoder", &encoder, "Path to zipvoice text model");
+  po->Register("zipvoice-decoder", &decoder,
+               "Path to zipvoice flow-matching decoder model");
   po->Register("zipvoice-vocoder", &vocoder, "Path to zipvoice vocoder");
   po->Register("zipvoice-feat-scale", &feat_scale,
                "Feature scale for ZipVoice (default: 0.1)");
@@ -47,23 +45,23 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
     return false;
   }
 
-  if (text_model.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --zipvoice-text-model");
+  if (encoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --zipvoice-encoder");
     return false;
   }
-  if (!FileExists(text_model)) {
-    SHERPA_ONNX_LOGE("--zipvoice-text-model: '%s' does not exist",
-                     text_model.c_str());
+  if (!FileExists(encoder)) {
+    SHERPA_ONNX_LOGE("--zipvoice-encoder: '%s' does not exist",
+                     encoder.c_str());
     return false;
   }
 
-  if (flow_matching_model.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --zipvoice-flow-matching-model");
+  if (decoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --zipvoice-decoder");
     return false;
   }
-  if (!FileExists(flow_matching_model)) {
-    SHERPA_ONNX_LOGE("--zipvoice-flow-matching-model: '%s' does not exist",
-                     flow_matching_model.c_str());
+  if (!FileExists(decoder)) {
+    SHERPA_ONNX_LOGE("--zipvoice-decoder: '%s' does not exist",
+                     decoder.c_str());
     return false;
   }
 
@@ -93,12 +91,6 @@ bool OfflineTtsZipvoiceModelConfig::Validate() const {
         return false;
       }
     }
-  }
-
-  if (!pinyin_dict.empty() && !FileExists(pinyin_dict)) {
-    SHERPA_ONNX_LOGE("--zipvoice-pinyin-dict: '%s' does not exist",
-                     pinyin_dict.c_str());
-    return false;
   }
 
   if (feat_scale <= 0) {
@@ -133,11 +125,11 @@ std::string OfflineTtsZipvoiceModelConfig::ToString() const {
 
   os << "OfflineTtsZipvoiceModelConfig(";
   os << "tokens=\"" << tokens << "\", ";
-  os << "text_model=\"" << text_model << "\", ";
-  os << "flow_matching_model=\"" << flow_matching_model << "\", ";
+  os << "encoder=\"" << encoder << "\", ";
+  os << "decoder=\"" << decoder << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
-  os << "pinyin_dict=\"" << pinyin_dict << "\", ";
+  os << "lexicon=\"" << lexicon << "\", ";
   os << "feat_scale=" << feat_scale << ", ";
   os << "t_shift=" << t_shift << ", ";
   os << "target_rms=" << target_rms << ", ";

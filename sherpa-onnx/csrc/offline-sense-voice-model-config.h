@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
@@ -21,6 +22,8 @@ struct OfflineSenseVoiceModelConfig {
   // true to use inverse text normalization
   // false to not use inverse text normalization
   bool use_itn = false;
+
+  QnnConfig qnn_config;
 
   OfflineSenseVoiceModelConfig() = default;
   OfflineSenseVoiceModelConfig(const std::string &model,

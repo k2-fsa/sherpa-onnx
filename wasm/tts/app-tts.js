@@ -26,9 +26,21 @@ Module.locateFile = function(path, scriptDirectory = '') {
 Module.setStatus = function(status) {
   console.log(`status ${status}`);
   const statusElement = document.getElementById('status');
-  if (status == "Running...") {
+  if (status == 'Running...') {
     status = 'Model downloaded. Initializing text to speech model...'
   }
+
+  const downloadMatch = status.match(/Downloading data... \((\d+)\/(\d+)\)/);
+  if (downloadMatch) {
+    const downloaded = BigInt(downloadMatch[1]);
+    const total = BigInt(downloadMatch[2]);
+    const percent =
+        total === 0 ? 0.00 : Number((downloaded * 10000n) / total) / 100;
+    status = `Downloading data... ${percent.toFixed(2)}% (${downloadMatch[1]}/${
+        downloadMatch[2]})`;
+    console.log(`here ${status}`)
+  }
+
   statusElement.textContent = status;
   if (status === '') {
     statusElement.style.display = 'none';
@@ -57,7 +69,9 @@ Module.onRuntimeInitialized = function() {
   generateBtn.disabled = false;
 };
 
-speedInput.oninput = function() { speedValue.innerHTML = this.value; };
+speedInput.oninput = function() {
+  speedValue.innerHTML = this.value;
+};
 
 generateBtn.onclick = function() {
   let speakerId = speakerIdInput.value;
@@ -89,12 +103,12 @@ generateBtn.onclick = function() {
   console.log('text', text);
 
   let audio =
-      tts.generate({text : text, sid : speakerId, speed : speedInput.value});
+      tts.generate({text: text, sid: speakerId, speed: speedInput.value});
 
   console.log(audio.samples.length, audio.sampleRate);
 
   if (!audioCtx) {
-    audioCtx = new AudioContext({sampleRate : tts.sampleRate});
+    audioCtx = new AudioContext({sampleRate: tts.sampleRate});
   }
 
   const buffer = audioCtx.createBuffer(1, audio.samples.length, tts.sampleRate);
@@ -175,22 +189,22 @@ function toWav(floatSamples, sampleRate) {
 
   // http://soundfile.sapp.org/doc/WaveFormat/
   //                   F F I R
-  view.setUint32(0, 0x46464952, true);              // chunkID
-  view.setUint32(4, 36 + samples.length * 2, true); // chunkSize
+  view.setUint32(0, 0x46464952, true);               // chunkID
+  view.setUint32(4, 36 + samples.length * 2, true);  // chunkSize
   //                   E V A W
-  view.setUint32(8, 0x45564157, true); // format
-                                       //
+  view.setUint32(8, 0x45564157, true);  // format
+                                        //
   //                      t m f
-  view.setUint32(12, 0x20746d66, true);         // subchunk1ID
-  view.setUint32(16, 16, true);                 // subchunk1Size, 16 for PCM
-  view.setUint32(20, 1, true);                  // audioFormat, 1 for PCM
-  view.setUint16(22, 1, true);                  // numChannels: 1 channel
-  view.setUint32(24, sampleRate, true);         // sampleRate
-  view.setUint32(28, sampleRate * 2, true);     // byteRate
-  view.setUint16(32, 2, true);                  // blockAlign
-  view.setUint16(34, 16, true);                 // bitsPerSample
-  view.setUint32(36, 0x61746164, true);         // Subchunk2ID
-  view.setUint32(40, samples.length * 2, true); // subchunk2Size
+  view.setUint32(12, 0x20746d66, true);          // subchunk1ID
+  view.setUint32(16, 16, true);                  // subchunk1Size, 16 for PCM
+  view.setUint32(20, 1, true);                   // audioFormat, 1 for PCM
+  view.setUint16(22, 1, true);                   // numChannels: 1 channel
+  view.setUint32(24, sampleRate, true);          // sampleRate
+  view.setUint32(28, sampleRate * 2, true);      // byteRate
+  view.setUint16(32, 2, true);                   // blockAlign
+  view.setUint16(34, 16, true);                  // bitsPerSample
+  view.setUint32(36, 0x61746164, true);          // Subchunk2ID
+  view.setUint32(40, samples.length * 2, true);  // subchunk2Size
 
   let offset = 44;
   for (let i = 0; i < samples.length; ++i) {
@@ -198,5 +212,5 @@ function toWav(floatSamples, sampleRate) {
     offset += 2;
   }
 
-  return new Blob([ view ], {type : 'audio/wav'});
+  return new Blob([view], {type: 'audio/wav'});
 }

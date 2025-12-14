@@ -112,7 +112,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Free Disk Space (Ubuntu)
-        if: false
+        if: true
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
@@ -129,7 +129,7 @@ jobs:
           swap-storage: true
 
       - name: Check space
-        if: false
+        if: true
         shell: bash
         run: |
           df -h

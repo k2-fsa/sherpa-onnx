@@ -14,16 +14,12 @@ namespace sherpa_onnx {
 
 struct OfflineTtsZipvoiceModelConfig {
   std::string tokens;
-  std::string text_model;
-  std::string flow_matching_model;
+  std::string encoder;
+  std::string decoder;
   std::string vocoder;
 
-  // If data_dir is given, lexicon is ignored
-  // data_dir is for piper-phonemize, which uses espeak-ng
   std::string data_dir;
-
-  // Used for converting Chinese characters to pinyin
-  std::string pinyin_dict;
+  std::string lexicon;
 
   float feat_scale = 0.1;
   float t_shift = 0.5;
@@ -33,17 +29,17 @@ struct OfflineTtsZipvoiceModelConfig {
   OfflineTtsZipvoiceModelConfig() = default;
 
   OfflineTtsZipvoiceModelConfig(
-      const std::string &tokens, const std::string &text_model,
-      const std::string &flow_matching_model, const std::string &vocoder,
-      const std::string &data_dir, const std::string &pinyin_dict,
+      const std::string &tokens, const std::string &encoder,
+      const std::string &decoder, const std::string &vocoder,
+      const std::string &data_dir, const std::string &lexicon,
       float feat_scale = 0.1, float t_shift = 0.5, float target_rms = 0.1,
       float guidance_scale = 1.0)
       : tokens(tokens),
-        text_model(text_model),
-        flow_matching_model(flow_matching_model),
+        encoder(encoder),
+        decoder(decoder),
         vocoder(vocoder),
         data_dir(data_dir),
-        pinyin_dict(pinyin_dict),
+        lexicon(lexicon),
         feat_scale(feat_scale),
         t_shift(t_shift),
         target_rms(target_rms),

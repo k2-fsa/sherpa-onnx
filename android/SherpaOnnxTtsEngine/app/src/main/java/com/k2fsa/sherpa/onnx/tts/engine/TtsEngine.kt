@@ -51,7 +51,6 @@ object TtsEngine {
     private var ruleFars: String? = null
     private var lexicon: String? = null
     private var dataDir: String? = null
-    private var dictDir: String? = null
     private var assets: AssetManager? = null
     private var isKitten = false
 
@@ -78,7 +77,6 @@ object TtsEngine {
         ruleFars = null
         lexicon = null
         dataDir = null
-        dictDir = null
         lang = null
         lang2 = null
 
@@ -112,7 +110,6 @@ object TtsEngine {
         // modelDir = "vits-zh-hf-fanchen-C"
         // modelName = "vits-zh-hf-fanchen-C.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-zh-hf-fanchen-C/dict"
         // lang = "zho"
 
         // Example 5:
@@ -128,7 +125,6 @@ object TtsEngine {
         // modelDir = "vits-melo-tts-zh_en"
         // modelName = "model.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-melo-tts-zh_en/dict"
         // lang = "zho"
         // lang2 = "eng"
 
@@ -139,7 +135,6 @@ object TtsEngine {
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "matcha-icefall-zh-baker/dict"
         // lang = "zho"
 
         // Example 8
@@ -165,7 +160,6 @@ object TtsEngine {
         // modelName = "model.onnx"
         // voices = "voices.bin"
         // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
-        // dictDir = "kokoro-multi-lang-v1_0/dict"
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // lang = "eng"
         // lang2 = "zho"
@@ -182,6 +176,16 @@ object TtsEngine {
         // dataDir = "kitten-nano-en-v0_1-fp16/espeak-ng-data"
         // lang = "eng"
         // isKitten = true
+
+        // Example 12
+        // matcha-icefall-zh-en
+        // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/matcha-icefall-zh-en.html
+        // modelDir = "matcha-icefall-zh-en"
+        // acousticModelName = "model-steps-3.onnx"
+        // vocoder = "vocos-16khz-univ.onnx"
+        // dataDir = "matcha-icefall-zh-en/espeak-ng-data"
+        // lexicon = "lexicon.txt"
+        // lang = "zho"
     }
 
     fun createTts(context: Context) {
@@ -199,14 +203,6 @@ object TtsEngine {
             dataDir = "$newDir/$dataDir"
         }
 
-        if (dictDir != null) {
-            val newDir = copyDataDir(context, dictDir!!)
-            dictDir = "$newDir/$dictDir"
-            if (ruleFsts == null) {
-                ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
-            }
-        }
-
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!,
             modelName = modelName ?: "",
@@ -215,7 +211,7 @@ object TtsEngine {
             voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            dictDir = dictDir ?: "",
+            dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,

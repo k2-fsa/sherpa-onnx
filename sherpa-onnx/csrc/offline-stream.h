@@ -42,6 +42,9 @@ struct OfflineRecognitionResult {
   /// only)
   std::vector<float> durations;
 
+  /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
+  std::vector<float> ys_log_probs;
+
   std::vector<int32_t> words;
 
   std::string AsJsonString() const;
@@ -61,6 +64,9 @@ struct CEDTag {};
 // audio samples to features
 struct MoonshineTag {};
 
+// It is based on Wav2Vec, accepting raw audio samples as input
+struct OmnilingualAsrTag {};
+
 class OfflineStream {
  public:
   explicit OfflineStream(const FeatureExtractorConfig &config = {},
@@ -69,6 +75,7 @@ class OfflineStream {
   explicit OfflineStream(WhisperTag tag);
   explicit OfflineStream(CEDTag tag);
   explicit OfflineStream(MoonshineTag tag);
+  explicit OfflineStream(OmnilingualAsrTag tag);
   ~OfflineStream();
 
   /**

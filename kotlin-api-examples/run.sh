@@ -14,7 +14,6 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DBUILD_SHARED_LIBS=ON \
-    -DBUILD_SHARED_LIBS=ON \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     ..
@@ -24,7 +23,7 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
   popd
 fi
 
-export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD/../build/lib:$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 
 function testVersion() {
@@ -276,6 +275,7 @@ function testOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_asr.kt \
     FeatureConfig.kt \
+    QnnConfig.kt \
     HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
@@ -305,6 +305,7 @@ function testInverseTextNormalizationOfflineAsr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_itn_offline_asr.kt \
     FeatureConfig.kt \
+    QnnConfig.kt \
     HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
@@ -458,6 +459,7 @@ function testOfflineSenseVoiceWithHr() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_sense_voice_with_hr.kt \
     FeatureConfig.kt \
+    QnnConfig.kt \
     HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
@@ -479,6 +481,30 @@ function testOfflineNeMoCanary() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_nemo_canary.kt \
     FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+
+function testOfflineOmnilingualAsrCtc() {
+  if [ ! -f sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+    tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+    rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+  fi
+
+  out_filename=test_offline_omnilingual_asr_ctc.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_omnilingual_asr_ctc.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
     HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
@@ -500,6 +526,7 @@ function testOfflineWenetCtc() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_wenet_ctc.kt \
     FeatureConfig.kt \
+    QnnConfig.kt \
     HomophoneReplacerConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
@@ -512,6 +539,7 @@ function testOfflineWenetCtc() {
 
 testVersion
 
+testOfflineOmnilingualAsrCtc
 testOfflineWenetCtc
 testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr

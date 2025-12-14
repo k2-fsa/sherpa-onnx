@@ -21,6 +21,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/rknn/context-blocking-queue-rknn.h"
 #include "sherpa-onnx/csrc/rknn/macros.h"
 #include "sherpa-onnx/csrc/rknn/utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -61,6 +62,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
       auto buf = ReadFile(config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
+
+    PostInit();
   }
 
   template <typename Manager>
@@ -79,6 +82,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
       auto buf = ReadFile(mgr, config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
+
+    PostInit();
   }
 
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
@@ -170,19 +175,13 @@ class OnlineZipformerTransducerModelRknn::Impl {
       }
     }
 
-    rknn_context encoder_ctx = 0;
+    rknn_context encoder_ctx = encoder_ctx_queue_->Take();
 
-    // https://github.com/rockchip-linux/rknpu2/blob/master/runtime/RK3588/Linux/librknn_api/include/rknn_api.h#L444C1-L444C75
-    // rknn_dup_context(rknn_context* context_in, rknn_context* context_out);
-    auto ret = rknn_dup_context(&encoder_ctx_, &encoder_ctx);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the encoder ctx");
-
-    SetCoreMask(encoder_ctx, config_.num_threads);
-
-    ret = rknn_inputs_set(encoder_ctx, inputs.size(), inputs.data());
+    auto ret = rknn_inputs_set(encoder_ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set encoder inputs");
 
     ret = rknn_run(encoder_ctx, nullptr);
+
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run encoder");
 
     ret =
@@ -207,7 +206,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
       }
     }
 
-    rknn_destroy(encoder_ctx);
+    encoder_ctx_queue_->Put(encoder_ctx);
 
     return {std::move(encoder_out), std::move(next_states)};
   }
@@ -230,13 +229,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
     output.size = decoder_out.size() * sizeof(float);
     output.buf = decoder_out.data();
 
-    rknn_context decoder_ctx = 0;
-    auto ret = rknn_dup_context(&decoder_ctx_, &decoder_ctx);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the decoder ctx");
+    rknn_context decoder_ctx = decoder_ctx_queue_->Take();
 
-    SetCoreMask(decoder_ctx, config_.num_threads);
-
-    ret = rknn_inputs_set(decoder_ctx, 1, &input);
+    auto ret = rknn_inputs_set(decoder_ctx, 1, &input);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set decoder inputs");
 
     ret = rknn_run(decoder_ctx, nullptr);
@@ -245,7 +240,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
     ret = rknn_outputs_get(decoder_ctx, 1, &output, nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get decoder output");
 
-    rknn_destroy(decoder_ctx);
+    decoder_ctx_queue_->Put(decoder_ctx);
 
     return decoder_out;
   }
@@ -273,13 +268,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
     output.size = joiner_out.size() * sizeof(float);
     output.buf = joiner_out.data();
 
-    rknn_context joiner_ctx = 0;
-    auto ret = rknn_dup_context(&joiner_ctx_, &joiner_ctx);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the joiner ctx");
+    rknn_context joiner_ctx = joiner_ctx_queue_->Take();
 
-    SetCoreMask(joiner_ctx, config_.num_threads);
-
-    ret = rknn_inputs_set(joiner_ctx, inputs.size(), inputs.data());
+    auto ret = rknn_inputs_set(joiner_ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set joiner inputs");
 
     ret = rknn_run(joiner_ctx, nullptr);
@@ -288,7 +279,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
     ret = rknn_outputs_get(joiner_ctx, 1, &output, nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get joiner output");
 
-    rknn_destroy(joiner_ctx);
+    joiner_ctx_queue_->Put(joiner_ctx);
 
     return joiner_out;
   }
@@ -413,11 +404,24 @@ class OnlineZipformerTransducerModelRknn::Impl {
     }
   }
 
+  void PostInit() {
+    encoder_ctx_queue_ = std::make_unique<ContextBlockingQueueRknn>(
+        encoder_ctx_, config_.num_threads);
+    decoder_ctx_queue_ = std::make_unique<ContextBlockingQueueRknn>(
+        decoder_ctx_, config_.num_threads);
+    joiner_ctx_queue_ = std::make_unique<ContextBlockingQueueRknn>(
+        joiner_ctx_, config_.num_threads);
+  }
+
  private:
   OnlineModelConfig config_;
   rknn_context encoder_ctx_ = 0;
   rknn_context decoder_ctx_ = 0;
   rknn_context joiner_ctx_ = 0;
+
+  std::unique_ptr<ContextBlockingQueueRknn> encoder_ctx_queue_;
+  std::unique_ptr<ContextBlockingQueueRknn> decoder_ctx_queue_;
+  std::unique_ptr<ContextBlockingQueueRknn> joiner_ctx_queue_;
 
   std::vector<rknn_tensor_attr> encoder_input_attrs_;
   std::vector<rknn_tensor_attr> encoder_output_attrs_;
@@ -442,7 +446,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
 };
 
 OnlineZipformerTransducerModelRknn::~OnlineZipformerTransducerModelRknn() =
-    default;
+    default;  // NOLINT
 
 OnlineZipformerTransducerModelRknn::OnlineZipformerTransducerModelRknn(
     const OnlineModelConfig &config)

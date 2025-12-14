@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-13, ubuntu-latest, windows-latest, ubuntu-22.04-arm]
+        os: [macos-latest, macos-13, ubuntu-latest, windows-2022, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-          if [[ ${{ matrix.os }} == windows-latest ]]; then
+          if [[ ${{ matrix.os }} == windows-2022 ]]; then
             cmake --build . --target install --config Release -- -m:2
           else
             make -j2 install
@@ -92,7 +92,7 @@ jobs:
 
             rm -v ./lib/*.a
             ls -h ./lib
-          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+          elif [[ ${{ matrix.os }} == windows-2022 ]]; then
             cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
@@ -101,6 +101,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
@@ -139,6 +140,19 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test non-streaming decoding files with Omnilingual ASR
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-omnilingual-*
 
       - name: Test non-streaming TTS
         shell: bash

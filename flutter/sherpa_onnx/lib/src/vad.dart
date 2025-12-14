@@ -225,6 +225,10 @@ class VoiceActivityDetector {
   // The user has to invoke VoiceActivityDetector.free() to avoid memory leak.
   factory VoiceActivityDetector(
       {required VadModelConfig config, required double bufferSizeInSeconds}) {
+    if (SherpaOnnxBindings.createVoiceActivityDetector == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxVadModelConfig>();
 
     final sileroVadModelPtr = config.sileroVad.model.toNativeUtf8();
@@ -253,22 +257,18 @@ class VoiceActivityDetector {
 
     c.ref.debug = config.debug ? 1 : 0;
 
-    if (SherpaOnnxBindings.createVoiceActivityDetector == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
-
     final ptr = SherpaOnnxBindings.createVoiceActivityDetector
             ?.call(c, bufferSizeInSeconds) ??
         nullptr;
-
-    if (ptr == nullptr) {
-      throw Exception("Failed to create vad. Please check your config");
-    }
 
     calloc.free(providerPtr);
     calloc.free(tenVadModelPtr);
     calloc.free(sileroVadModelPtr);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create vad. Please check your config");
+    }
 
     return VoiceActivityDetector._(ptr: ptr, config: config);
   }

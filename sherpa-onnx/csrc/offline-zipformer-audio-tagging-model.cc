@@ -4,7 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h"
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"

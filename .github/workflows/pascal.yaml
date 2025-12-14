@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13, windows-latest, ubuntu-22.04-arm]
+        os: [ubuntu-latest, macos-latest, macos-13, windows-2022, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
           # brew install --cask lazarus
           #
       - name: Install Free pascal compiler (windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           choco install lazarus
@@ -106,7 +106,7 @@ jobs:
 
           ls -lh install/lib/
 
-          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+          if [[ ${{ matrix.os }} == 'windows-2022' ]]; then
             cp -v install/lib/*.dll ../pascal-api-examples/non-streaming-asr
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
             cp -v install/lib/*.dll ../pascal-api-examples/speaker-diarization
@@ -126,75 +126,6 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
-      - name:  Run Pascal test (Streaming ASR)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd streaming-asr
-
-          ./run-t-one-ctc.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-zipformer-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          ./run-nemo-transducer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
-
-          if [[ ${{ matrix.os }} != 'windows-latest' ]]; then
-            ./run-paraformer.sh
-            rm -rf sherpa-onnx-*
-            echo "---"
-
-            ./run-zipformer-ctc.sh
-            echo "---"
-
-            ./run-zipformer-ctc-hlg.sh
-            rm -rf sherpa-onnx-*
-            echo "---"
-          fi
-
-          ls -lh
-          popd
-
-      - name:  Run Pascal test (VAD test)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd vad
-          ./run-circular-buffer.sh
-          echo "---"
-
-          time ./run-remove-silence-ten-vad.sh
-          echo "---"
-
-          time ./run-remove-silence.sh
-          echo "---"
-
-          ls -lh
-
-          popd
-
-      - name:  Run Speech Enhancement test (GTCRN)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd speech-enhancement-gtcrn
-          ./run-gtcrn.sh
-          ls -lh
-
       - name:  Run Pascal test (Non Streaming ASR)
         shell: bash
         run: |
@@ -203,6 +134,14 @@ jobs:
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+
+          ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-omnilingual-asr-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
 
           ./run-nemo-canary.sh
           rm -rf sherpa-onnx-*
@@ -257,6 +196,75 @@ jobs:
 
           ls -lh
           popd
+
+      - name:  Run Pascal test (Streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd streaming-asr
+
+          ./run-t-one-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          if [[ ${{ matrix.os }} != 'windows-2022' ]]; then
+            ./run-paraformer.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+
+            ./run-zipformer-ctc.sh
+            echo "---"
+
+            ./run-zipformer-ctc-hlg.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+          fi
+
+          ls -lh
+          popd
+
+      - name:  Run Pascal test (VAD test)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd vad
+          ./run-circular-buffer.sh
+          echo "---"
+
+          time ./run-remove-silence-ten-vad.sh
+          echo "---"
+
+          time ./run-remove-silence.sh
+          echo "---"
+
+          ls -lh
+
+          popd
+
+      - name:  Run Speech Enhancement test (GTCRN)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd speech-enhancement-gtcrn
+          ./run-gtcrn.sh
+          ls -lh
 
       - name:  Run Pascal test (Speaker diarization)
         shell: bash

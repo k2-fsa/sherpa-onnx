@@ -7,7 +7,10 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <mutex>  // NOLINT
+#include <memory>
+#include <mutex>
+#include <utility>
+#include <vector>
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/circular-buffer.h"

@@ -131,5 +131,10 @@ std::vector<int32_t> TopkIndex(const std::vector<std::vector<T>> &vec,
   return TopkIndex(flatten.data(), flatten.size(), topk);
 }
 
+// For Paraformer
+std::vector<float> ComputeAcousticEmbedding(
+    const std::vector<float> &encoder_out, const std::vector<float> &alphas,
+    int32_t encoder_dim);
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

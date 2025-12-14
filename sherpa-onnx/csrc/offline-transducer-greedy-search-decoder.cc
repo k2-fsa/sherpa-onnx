@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
+#include <vector>
 
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/packed-sequence.h"
 #include "sherpa-onnx/csrc/slice.h"
@@ -52,16 +54,21 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
       if (blank_penalty_ > 0.0) {
         p_logit[0] -= blank_penalty_;  // assuming blank id is 0
       }
+
+      LogSoftmax(p_logit, vocab_size);
+
       auto y = static_cast<int32_t>(std::distance(
-          static_cast<const float *>(p_logit),
-          std::max_element(static_cast<const float *>(p_logit),
-                           static_cast<const float *>(p_logit) + vocab_size)));
+          p_logit, std::max_element(p_logit, p_logit + vocab_size)));
+
+      float log_prob = p_logit[y];
+
       p_logit += vocab_size;
       // blank id is hardcoded to 0
       // also, it treats unk as blank
       if (y != 0 && y != unk_id_) {
         ans[i].tokens.push_back(y);
         ans[i].timestamps.push_back(t);
+        ans[i].ys_log_probs.push_back(log_prob);
         emitted = true;
       }
     }

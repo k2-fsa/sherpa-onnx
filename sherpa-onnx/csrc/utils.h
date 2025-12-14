@@ -28,7 +28,7 @@ namespace sherpa_onnx {
  */
 bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
                     const SymbolTable &symbol_table,
-                    const ssentencepiece::Ssentencepiece *bpe_encoder_,
+                    const ssentencepiece::Ssentencepiece *bpe_encoder,
                     std::vector<std::vector<int32_t>> *hotwords_id,
                     std::vector<float> *boost_scores);
 

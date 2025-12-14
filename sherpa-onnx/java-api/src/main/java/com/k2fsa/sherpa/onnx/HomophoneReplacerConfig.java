@@ -3,7 +3,7 @@
 package com.k2fsa.sherpa.onnx;
 
 public class HomophoneReplacerConfig {
-    private final String dictDir;
+    private final String dictDir;  // unused
     private final String lexicon;
     private final String ruleFsts;
 

@@ -4,6 +4,10 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
+#include <stdlib.h>
+
+#include <memory>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/jni/common.h"
@@ -162,6 +166,23 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                             useInverseTextNormalization, sense_voice_config_cls,
                             sense_voice_config);
 
+  fid = env->GetFieldID(sense_voice_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  jobject qnn_config = env->GetObjectField(sense_voice_config, fid);
+  jclass qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.sense_voice.qnn_config.backend_lib, backendLib,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.sense_voice.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.sense_voice.qnn_config.system_lib, systemLib,
+      qnn_config_cls, qnn_config);
+
   // nemo
   fid = env->GetFieldID(
       model_config_cls, "nemo",
@@ -182,6 +203,24 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.zipformer_ctc.model, model,
                               zipformer_ctc_config_cls, zipformer_ctc_config);
 
+  fid = env->GetFieldID(zipformer_ctc_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+
+  qnn_config = env->GetObjectField(zipformer_ctc_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.backend_lib, backendLib,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.zipformer_ctc.qnn_config.system_lib, systemLib,
+      qnn_config_cls, qnn_config);
+
   // wenet ctc
   fid = env->GetFieldID(model_config_cls, "wenetCtc",
                         "Lcom/k2fsa/sherpa/onnx/OfflineWenetCtcModelConfig;");
@@ -190,6 +229,18 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.wenet_ctc.model, model,
                               wenet_ctc_config_cls, wenet_ctc_config);
+
+  // omnilingual asr ctc
+  fid = env->GetFieldID(
+      model_config_cls, "omnilingual",
+      "Lcom/k2fsa/sherpa/onnx/OfflineOmnilingualAsrCtcModelConfig;");
+  jobject omnilingual_ctc_config = env->GetObjectField(model_config, fid);
+  jclass omnilingual_ctc_config_cls =
+      env->GetObjectClass(omnilingual_ctc_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.omnilingual.model, model,
+                              omnilingual_ctc_config_cls,
+                              omnilingual_ctc_config);
 
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",
@@ -228,9 +279,6 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                         "Lcom/k2fsa/sherpa/onnx/HomophoneReplacerConfig;");
   jobject hr_config = env->GetObjectField(config, fid);
   jclass hr_config_cls = env->GetObjectClass(hr_config);
-
-  SHERPA_ONNX_JNI_READ_STRING(ans.hr.dict_dir, dictDir, hr_config_cls,
-                              hr_config);
 
   SHERPA_ONNX_JNI_READ_STRING(ans.hr.lexicon, lexicon, hr_config_cls,
                               hr_config);
@@ -449,4 +497,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->SetObjectArrayElement(obj_arr, 6, durations_arr);
 
   return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_prependAdspLibraryPath(
+    JNIEnv *env, jclass /*cls*/, jstring new_path) {
+  const char *p = env->GetStringUTFChars(new_path, nullptr);
+  sherpa_onnx::PrependAdspLibraryPath(p);
+
+  env->ReleaseStringUTFChars(new_path, p);
 }

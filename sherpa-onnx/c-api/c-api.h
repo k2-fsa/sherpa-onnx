@@ -150,7 +150,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineCtcFstDecoderConfig {
 } SherpaOnnxOnlineCtcFstDecoderConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxHomophoneReplacerConfig {
-  const char *dict_dir;
+  const char *dict_dir;  // unused
   const char *lexicon;
   const char *rule_fsts;
 } SherpaOnnxHomophoneReplacerConfig;
@@ -480,6 +480,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWenetCtcModelConfig {
   const char *model;
 } SherpaOnnxOfflineWenetCtcModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineOmnilingualAsrCtcModelConfig {
+  const char *model;
+} SherpaOnnxOfflineOmnilingualAsrCtcModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineTransducerModelConfig transducer;
   SherpaOnnxOfflineParaformerModelConfig paraformer;
@@ -506,6 +510,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineZipformerCtcModelConfig zipformer_ctc;
   SherpaOnnxOfflineCanaryModelConfig canary;
   SherpaOnnxOfflineWenetCtcModelConfig wenet_ctc;
+  SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
@@ -661,6 +666,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   // Pointer to continuous memory which holds durations (in seconds) for each
   // token It is NULL if the model does not support durations
   float *durations;
+
+  // Pointer to continuous memory which holds log probabilities (confidence)
+  // for each token. It is NULL if the model does not support probabilities.
+  // ys_log_probs[i] is the log probability for token i.
+  float *ys_log_probs;
 } SherpaOnnxOfflineRecognizerResult;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxVocabLogProbs {
@@ -1034,8 +1044,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
 
   float noise_scale;
   float noise_scale_w;
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
 } SherpaOnnxOfflineTtsVitsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
@@ -1046,8 +1056,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
   const char *data_dir;
 
   float noise_scale;
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
 } SherpaOnnxOfflineTtsMatchaModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
@@ -1056,8 +1066,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
   const char *tokens;
   const char *data_dir;
 
-  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
-  const char *dict_dir;
+  float length_scale;    // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;  // unused
   const char *lexicon;
   const char *lang;
 } SherpaOnnxOfflineTtsKokoroModelConfig;
@@ -1073,11 +1083,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKittenModelConfig {
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   const char *tokens;
-  const char *text_model;
-  const char *flow_matching_model;
+  const char *encoder;
+  const char *decoder;
   const char *vocoder;
   const char *data_dir;
-  const char *pinyin_dict;
+  const char *lexicon;
   float feat_scale;
   float t_shift;
   float target_rms;

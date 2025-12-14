@@ -15,9 +15,9 @@
 #include "kaldi-native-fbank/csrc/mel-computations.h"
 #include "kaldi-native-fbank/csrc/stft.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
-#include "sherpa-onnx/csrc/offline-tts-zipvoice-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -83,8 +83,16 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
 
     // we assume batch size is 1
-    std::vector<int64_t> tokens = text_token_ids[0].tokens;
-    std::vector<int64_t> prompt_tokens = prompt_token_ids[0].tokens;
+    std::vector<int64_t> tokens;
+    for (const auto &t : text_token_ids) {
+      tokens.insert(tokens.end(), t.tokens.begin(), t.tokens.end());
+    }
+
+    std::vector<int64_t> prompt_tokens;
+    for (const auto &t : prompt_token_ids) {
+      prompt_tokens.insert(prompt_tokens.end(), t.tokens.begin(),
+                           t.tokens.end());
+    }
 
     return Process(tokens, prompt_tokens, prompt_samples, sample_rate, speed,
                    num_steps);
@@ -93,28 +101,15 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
  private:
   template <typename Manager>
   void InitFrontend(Manager *mgr) {
-    const auto &meta_data = model_->GetMetaData();
-    frontend_ = std::make_unique<OfflineTtsZipvoiceFrontend>(
-        mgr, config_.model.zipvoice.tokens, config_.model.zipvoice.data_dir,
-        config_.model.zipvoice.pinyin_dict, meta_data, config_.model.debug);
+    frontend_ = std::make_unique<MatchaTtsLexicon>(
+        mgr, config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
+        config_.model.zipvoice.data_dir, config_.model.debug, true);
   }
 
   void InitFrontend() {
-    const auto &meta_data = model_->GetMetaData();
-
-    if (meta_data.use_pinyin && config_.model.zipvoice.pinyin_dict.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Please provide --zipvoice-pinyin-dict for converting Chinese into "
-          "pinyin.");
-      exit(-1);
-    }
-    if (meta_data.use_espeak && config_.model.zipvoice.data_dir.empty()) {
-      SHERPA_ONNX_LOGE("Please provide --zipvoice-data-dir for espeak-ng.");
-      exit(-1);
-    }
-    frontend_ = std::make_unique<OfflineTtsZipvoiceFrontend>(
-        config_.model.zipvoice.tokens, config_.model.zipvoice.data_dir,
-        config_.model.zipvoice.pinyin_dict, meta_data, config_.model.debug);
+    frontend_ = std::make_unique<MatchaTtsLexicon>(
+        config_.model.zipvoice.lexicon, config_.model.zipvoice.tokens,
+        config_.model.zipvoice.data_dir, config_.model.debug, true);
   }
 
   std::vector<int32_t> ComputeMelSpectrogram(

@@ -17,6 +17,10 @@ flutter pub get
 
 cd streaming_asr
 flutter create --platforms --org com.k2fsa.sherpa.onnx android ./
+
+# To add linux
+flutter config --enable-linux-desktop
+flutter create --platforms=linux .
 ```
 
 To run with android, first use

@@ -28,7 +28,7 @@ export class OfflineStream {
 }
 
 export class HomophoneReplacerConfig {
-  public dictDir: string = '';
+  public dictDir: string = '';  // unused
   public lexicon: string = '';
   public ruleFsts: string = '';
 }

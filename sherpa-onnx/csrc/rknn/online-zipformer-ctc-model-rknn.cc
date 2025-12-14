@@ -21,6 +21,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/rknn/context-blocking-queue-rknn.h"
 #include "sherpa-onnx/csrc/rknn/macros.h"
 #include "sherpa-onnx/csrc/rknn/utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -37,18 +38,18 @@ class OnlineZipformerCtcModelRknn::Impl {
   }
 
   explicit Impl(const OnlineModelConfig &config) : config_(config) {
-    {
-      auto buf = ReadFile(config.zipformer2_ctc.model);
-      Init(buf.data(), buf.size());
-    }
+    auto buf = ReadFile(config.zipformer2_ctc.model);
+    Init(buf.data(), buf.size());
+
+    PostInit();
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const OnlineModelConfig &config) : config_(config) {
-    {
-      auto buf = ReadFile(mgr, config.zipformer2_ctc.model);
-      Init(buf.data(), buf.size());
-    }
+    auto buf = ReadFile(mgr, config.zipformer2_ctc.model);
+    Init(buf.data(), buf.size());
+
+    PostInit();
   }
 
   std::vector<std::vector<uint8_t>> GetInitStates() const {
@@ -140,13 +141,9 @@ class OnlineZipformerCtcModelRknn::Impl {
       }
     }
 
-    rknn_context ctx = 0;
-    auto ret = rknn_dup_context(&ctx_, &ctx);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the ctx");
+    rknn_context ctx = ctx_queue_->Take();
 
-    SetCoreMask(ctx, config_.num_threads);
-
-    ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
+    auto ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
 
     ret = rknn_run(ctx, nullptr);
@@ -173,7 +170,7 @@ class OnlineZipformerCtcModelRknn::Impl {
       }
     }
 
-    rknn_destroy(ctx);
+    ctx_queue_->Put(ctx);
 
     return {std::move(out), std::move(next_states)};
   }
@@ -232,9 +229,15 @@ class OnlineZipformerCtcModelRknn::Impl {
     }
   }
 
+  void PostInit() {
+    ctx_queue_ =
+        std::make_unique<ContextBlockingQueueRknn>(ctx_, config_.num_threads);
+  }
+
  private:
   OnlineModelConfig config_;
   rknn_context ctx_ = 0;
+  std::unique_ptr<ContextBlockingQueueRknn> ctx_queue_;
 
   std::vector<rknn_tensor_attr> input_attrs_;
   std::vector<rknn_tensor_attr> output_attrs_;

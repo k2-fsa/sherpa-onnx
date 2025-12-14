@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest, macos-13, windows-latest]
+        os: [ubuntu-22.04, macos-latest, macos-13, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -97,7 +97,7 @@ jobs:
           cd build
           os=${{ matrix.os }}
 
-          if [[ $os == 'windows-latest' || $os == 'ubuntu-22.04' ]]; then
+          if [[ $os == 'windows-2022' || $os == 'ubuntu-22.04' ]]; then
             BUILD_SHARED_LIBS=ON
           else
             BUILD_SHARED_LIBS=OFF
@@ -173,7 +173,7 @@ jobs:
           ls -lh /tmp/linux-x64
 
       - name: Collect generating subtitles (windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -234,7 +234,7 @@ jobs:
           path: /tmp/macos-x64
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         with:
           name: windows-x64
           path: ./windows-x64

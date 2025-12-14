@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-ctc-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
@@ -22,10 +23,10 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
-                                        const SymbolTable &sym_table,
-                                        int32_t frame_shift_ms,
-                                        int32_t subsampling_factor) {
+OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                 const SymbolTable &sym_table,
+                                 int32_t frame_shift_ms,
+                                 int32_t subsampling_factor) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
@@ -161,11 +162,13 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     } else if (config_.decoding_method == "greedy_search") {
       if (!symbol_table_.Contains("<blk>") &&
           !symbol_table_.Contains("<eps>") &&
-          !symbol_table_.Contains("<blank>")) {
+          !symbol_table_.Contains("<blank>") &&
+          config_.model_config.omnilingual.model.empty()) {
+        // for omnilingual asr, its blank id is 0
         SHERPA_ONNX_LOGE(
             "We expect that tokens.txt contains "
             "the symbol <blk> or <eps> or <blank> and its ID.");
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       int32_t blank_id = 0;
@@ -188,23 +191,33 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(config_.feat_config);
+    if (config_.model_config.omnilingual.model.empty()) {
+      return std::make_unique<OfflineStream>(config_.feat_config);
+    } else {
+      return std::make_unique<OfflineStream>(OmnilingualAsrTag{});
+    }
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
-    if (!model_->SupportBatchProcessing() || (n == 1)) {
-      // If the model does not support batch process,
+    if (!model_->SupportBatchProcessing() || (n == 1) ||
+        !config_.model_config.omnilingual.model.empty()) {
+      // If the model does not support batch processing,
       // we process each stream independently.
+      //
+      // omnilingual asr is disabled for batch processing at present
       for (int32_t i = 0; i != n; ++i) {
         DecodeStream(ss[i]);
       }
       return;
     }
 
+    // Even if the omnilingual asr model can process batch input, the following
+    // code does not support batching raw audio samples.
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    int32_t feat_dim = config_.feat_config.feature_dim;
+    int32_t feat_dim = ss[0]->FeatureDim();
 
     std::vector<Ort::Value> features;
     features.reserve(n);
@@ -266,14 +279,17 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    int32_t feat_dim = config_.feat_config.feature_dim;
+    int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
 
     int32_t num_frames = f.size() / feat_dim;
 
     model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
 
-    std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
+    std::vector<int64_t> shape = {1, num_frames, feat_dim};
+    if (!config_.model_config.omnilingual.model.empty()) {
+      shape = {1, feat_dim};
+    }
 
     Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
                                             shape.data(), shape.size());
@@ -287,6 +303,10 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     auto t = model_->Forward(std::move(x), std::move(x_length));
     auto results = decoder_->Decode(std::move(t[0]), std::move(t[1]));
     int32_t frame_shift_ms = 10;
+
+    if (!config_.model_config.omnilingual.model.empty()) {
+      frame_shift_ms = 20;
+    }
 
     auto r = Convert(results[0], symbol_table_, frame_shift_ms,
                      model_->SubsamplingFactor());

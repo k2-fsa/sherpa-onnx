@@ -146,6 +146,27 @@ class OfflineWenetCtcModelConfig {
   final String model;
 }
 
+class OfflineOmnilingualAsrCtcModelConfig {
+  const OfflineOmnilingualAsrCtcModelConfig({this.model = ''});
+
+  factory OfflineOmnilingualAsrCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineOmnilingualAsrCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineOmnilingualAsrCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig(
       {this.encoder = '',
@@ -371,6 +392,7 @@ class OfflineModelConfig {
     this.zipformerCtc = const OfflineZipformerCtcModelConfig(),
     this.canary = const OfflineCanaryModelConfig(),
     this.wenetCtc = const OfflineWenetCtcModelConfig(),
+    this.omnilingual = const OfflineOmnilingualAsrCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -431,6 +453,10 @@ class OfflineModelConfig {
           ? OfflineWenetCtcModelConfig.fromJson(
               json['wenetCtc'] as Map<String, dynamic>)
           : const OfflineWenetCtcModelConfig(),
+      omnilingual: json['omnilingual'] != null
+          ? OfflineOmnilingualAsrCtcModelConfig.fromJson(
+              json['omnilingual'] as Map<String, dynamic>)
+          : const OfflineOmnilingualAsrCtcModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -444,7 +470,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -460,6 +486,7 @@ class OfflineModelConfig {
         'zipformerCtc': zipformerCtc.toJson(),
         'canary': canary.toJson(),
         'wenetCtc': wenetCtc.toJson(),
+        'omnilingual': omnilingual.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -482,6 +509,7 @@ class OfflineModelConfig {
   final OfflineZipformerCtcModelConfig zipformerCtc;
   final OfflineCanaryModelConfig canary;
   final OfflineWenetCtcModelConfig wenetCtc;
+  final OfflineOmnilingualAsrCtcModelConfig omnilingual;
 
   final String tokens;
   final int numThreads;
@@ -726,6 +754,7 @@ class OfflineRecognizer {
     c.ref.model.canary.usePnc = config.model.canary.usePnc ? 1 : 0;
 
     c.ref.model.wenetCtc.model = config.model.wenetCtc.model.toNativeUtf8();
+    c.ref.model.omnilingual.model = config.model.omnilingual.model.toNativeUtf8();
 
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
@@ -751,7 +780,6 @@ class OfflineRecognizer {
 
     c.ref.blankPenalty = config.blankPenalty;
 
-    c.ref.hr.dictDir = config.hr.dictDir.toNativeUtf8();
     c.ref.hr.lexicon = config.hr.lexicon.toNativeUtf8();
     c.ref.hr.ruleFsts = config.hr.ruleFsts.toNativeUtf8();
 
@@ -759,7 +787,6 @@ class OfflineRecognizer {
   }
 
   static void freeConfig(Pointer<SherpaOnnxOfflineRecognizerConfig> c) {
-    calloc.free(c.ref.hr.dictDir);
     calloc.free(c.ref.hr.lexicon);
     calloc.free(c.ref.hr.ruleFsts);
     calloc.free(c.ref.ruleFars);
@@ -773,6 +800,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.omnilingual.model);
     calloc.free(c.ref.model.wenetCtc.model);
     calloc.free(c.ref.model.canary.tgtLang);
     calloc.free(c.ref.model.canary.srcLang);

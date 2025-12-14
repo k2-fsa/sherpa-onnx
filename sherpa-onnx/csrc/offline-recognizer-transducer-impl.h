@@ -72,6 +72,9 @@ static OfflineRecognitionResult Convert(
     r.durations.push_back(d * frame_shift_s);
   }
 
+  // Copy token log probabilities (confidence scores)
+  r.ys_log_probs = src.ys_log_probs;
+
   return r;
 }
 

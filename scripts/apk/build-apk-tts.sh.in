@@ -84,11 +84,6 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s%"ruleFsts = null"%"ruleFars = \"$rule_fars\""% ./MainActivity.kt
 {% endif %}
 
-{% if tts_model.dict_dir %}
-  dict_dir={{ tts_model.dict_dir }}
-  sed -i.bak s%"dictDir = null"%"dictDir = \"$dict_dir\""% ./MainActivity.kt
-{% endif %}
-
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
   sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt
@@ -109,6 +104,10 @@ git diff
 popd
 
 if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
+if [[ $model_dir == matcha-icefall-zh-en ]]; then
   lang=zh_en
 fi
 

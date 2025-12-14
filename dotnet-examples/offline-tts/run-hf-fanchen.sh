@@ -11,7 +11,6 @@ dotnet run \
   --tokens=./vits-zh-hf-fanchen-C/tokens.txt \
   --lexicon=./vits-zh-hf-fanchen-C/lexicon.txt \
   --tts-rule-fsts=./vits-zh-hf-fanchen-C/phone.fst,./vits-zh-hf-fanchen-C/date.fst,./vits-zh-hf-fanchen-C/number.fst \
-  --dict-dir=./vits-zh-hf-fanchen-C/dict \
   --sid=100 \
   --debug=1 \
   --output-filename=./fanchen-100.wav \

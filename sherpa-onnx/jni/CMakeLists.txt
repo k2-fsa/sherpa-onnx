@@ -12,6 +12,7 @@ endif()
 
 set(sources
   audio-tagging.cc
+  common.cc
   jni.cc
   keyword-spotter.cc
   offline-punctuation.cc
@@ -46,6 +47,16 @@ add_library(sherpa-onnx-jni SHARED ${sources})
 
 target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_SHARED_LIBS=1)
 target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_MAIN_LIB=1)
+
+if(ANDROID OR (UNIX AND NOT APPLE))
+  set_target_properties(sherpa-onnx-jni PROPERTIES
+    LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols.lds"
+  )
+elseif(APPLE)
+  set_target_properties(sherpa-onnx-jni PROPERTIES
+    LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-symbols.exp"
+  )
+endif()
 
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)

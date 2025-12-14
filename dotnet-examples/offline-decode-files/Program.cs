@@ -87,6 +87,9 @@ class OfflineDecodeFiles
     [Option("wenet-ctc", Required = false, HelpText = "Path to model.onnx. Used only for Wenet CTC models")]
     public string WenetCtc { get; set; } = string.Empty;
 
+    [Option("omnilingual-asr-ctc", Required = false, HelpText = "Path to model.onnx. Used only for Omnilingual ASR CTC models")]
+    public string Omnilingual { get; set; } = string.Empty;
+
     [Option("sense-voice-model", Required = false, HelpText = "Path to model.onnx. Used only for SenseVoice CTC models")]
     public string SenseVoiceModel { get; set; } = string.Empty;
 
@@ -257,6 +260,10 @@ to download pre-trained Tdnn models.
     else if (!string.IsNullOrEmpty(options.WenetCtc))
     {
       config.ModelConfig.WenetCtc.Model = options.WenetCtc;
+    }
+    else if (!string.IsNullOrEmpty(options.Omnilingual))
+    {
+      config.ModelConfig.Omnilingual.Model = options.Omnilingual;
     }
     else if (!string.IsNullOrEmpty(options.WhisperEncoder))
     {

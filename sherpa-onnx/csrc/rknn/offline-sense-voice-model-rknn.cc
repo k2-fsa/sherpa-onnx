@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -19,6 +20,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/rknn/context-blocking-queue-rknn.h"
 #include "sherpa-onnx/csrc/rknn/macros.h"
 #include "sherpa-onnx/csrc/rknn/utils.h"
 
@@ -34,18 +36,18 @@ class OfflineSenseVoiceModelRknn::Impl {
   }
 
   explicit Impl(const OfflineModelConfig &config) : config_(config) {
-    {
-      auto buf = ReadFile(config_.sense_voice.model);
-      Init(buf.data(), buf.size());
-    }
+    auto buf = ReadFile(config_.sense_voice.model);
+    Init(buf.data(), buf.size());
+
+    PostInit();
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
-    {
-      auto buf = ReadFile(mgr, config_.sense_voice.model);
-      Init(buf.data(), buf.size());
-    }
+    auto buf = ReadFile(mgr, config_.sense_voice.model);
+    Init(buf.data(), buf.size());
+
+    PostInit();
   }
 
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const {
@@ -55,6 +57,9 @@ class OfflineSenseVoiceModelRknn::Impl {
   std::vector<float> Run(std::vector<float> features, int32_t language,
                          int32_t text_norm) {
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     std::vector<rknn_input> inputs(input_attrs_.size());
 
@@ -81,13 +86,9 @@ class OfflineSenseVoiceModelRknn::Impl {
     outputs[0].size = out.size() * sizeof(float);
     outputs[0].buf = reinterpret_cast<void *>(out.data());
 
-    rknn_context ctx = 0;
-    auto ret = rknn_dup_context(&ctx_, &ctx);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to duplicate the ctx");
+    rknn_context ctx = ctx_queue_->Take();
 
-    SetCoreMask(ctx, config_.num_threads);
-
-    ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
+    auto ret = rknn_inputs_set(ctx, inputs.size(), inputs.data());
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
 
     ret = rknn_run(ctx, nullptr);
@@ -96,7 +97,7 @@ class OfflineSenseVoiceModelRknn::Impl {
     ret = rknn_outputs_get(ctx, outputs.size(), outputs.data(), nullptr);
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get model output");
 
-    rknn_destroy(ctx);
+    ctx_queue_->Put(ctx);
 
     return out;
   }
@@ -163,6 +164,11 @@ class OfflineSenseVoiceModelRknn::Impl {
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
+
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
     int32_t out_num_frames =
         (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
 
@@ -195,10 +201,16 @@ class OfflineSenseVoiceModelRknn::Impl {
     return out;
   }
 
+  void PostInit() {
+    ctx_queue_ =
+        std::make_unique<ContextBlockingQueueRknn>(ctx_, config_.num_threads);
+  }
+
  private:
   OfflineModelConfig config_;
 
   rknn_context ctx_ = 0;
+  std::unique_ptr<ContextBlockingQueueRknn> ctx_queue_;
 
   std::vector<rknn_tensor_attr> input_attrs_;
   std::vector<rknn_tensor_attr> output_attrs_;

@@ -4,8 +4,9 @@
 
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -122,7 +123,17 @@ for a list of pre-trained models to download.
   }
 
   fprintf(stderr, "Creating recognizer ...\n");
+  const auto begin_init = std::chrono::steady_clock::now();
+
   sherpa_onnx::OfflineRecognizer recognizer(config);
+
+  const auto end_init = std::chrono::steady_clock::now();
+  float elapsed_seconds_init =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end_init -
+                                                            begin_init)
+          .count() /
+      1000.;
+  fprintf(stderr, "recognizer created in %.3f s\n", elapsed_seconds_init);
 
   fprintf(stderr, "Started\n");
   const auto begin = std::chrono::steady_clock::now();

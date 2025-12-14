@@ -8,10 +8,11 @@
 #include <fstream>
 #include <locale>
 #include <map>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -25,8 +26,8 @@
 #endif
 
 #include "espeak-ng/speak_lib.h"
-#include "phoneme_ids.hpp"
-#include "phonemize.hpp"
+#include "phoneme_ids.hpp"  // NOLINT
+#include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -92,7 +93,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
     iss >> std::ws;
     if (!iss.eof()) {
       SHERPA_ONNX_LOGE("Error when reading tokens: %s", line.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     s = conv.from_bytes(sym);
@@ -105,7 +106,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
       SHERPA_ONNX_LOGE("Error when reading tokens at Line %s. size: %d",
                        line.c_str(), static_cast<int32_t>(s.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     char32_t c = s[0];
@@ -113,7 +114,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
     if (token2id.count(c)) {
       SHERPA_ONNX_LOGE("Duplicated token %s. Line %s. Existing ID: %d",
                        sym.c_str(), line.c_str(), token2id.at(c));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     token2id.insert({c, id});
@@ -151,30 +152,53 @@ static std::vector<int64_t> PiperPhonemesToIdsVits(
   return ans;
 }
 
-static std::vector<int64_t> PiperPhonemesToIdsMatcha(
+static std::vector<std::vector<int64_t>> PiperPhonemesToIdsMatcha(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<piper::Phoneme> &phonemes, bool use_eos_bos) {
-  std::vector<int64_t> ans;
-  ans.reserve(phonemes.size());
+    const std::vector<piper::Phoneme> &phonemes, bool use_eos_bos,
+    int32_t max_token_len = 400) {
+  // We set max_token_len to 400 here to fix
+  // https://github.com/k2-fsa/sherpa-onnx/issues/2666
+  std::vector<std::vector<int64_t>> ans;
+  std::vector<int64_t> current;
 
   int32_t bos = token2id.at(U'^');
   int32_t eos = token2id.at(U'$');
 
   if (use_eos_bos) {
-    ans.push_back(bos);
+    current.push_back(bos);
   }
 
   for (auto p : phonemes) {
     if (token2id.count(p)) {
-      ans.push_back(token2id.at(p));
+      current.push_back(token2id.at(p));
     } else {
       SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
                        static_cast<uint32_t>(p));
     }
-  }
 
-  if (use_eos_bos) {
-    ans.push_back(eos);
+    if (current.size() > max_token_len + 1) {
+      if (use_eos_bos) {
+        current.push_back(eos);
+      }
+
+      ans.push_back(std::move(current));
+
+      if (use_eos_bos) {
+        current.push_back(bos);
+      }
+    }
+  }  // for (auto p : phonemes)
+
+  if (!current.empty()) {
+    if (use_eos_bos) {
+      if (current.size() > 1) {
+        current.push_back(eos);
+
+        ans.push_back(std::move(current));
+      }
+    } else {
+      ans.push_back(std::move(current));
+    }
   }
 
   return ans;
@@ -299,7 +323,7 @@ void InitEspeak(const std::string &data_dir) {
           "Failed to initialize espeak-ng with data dir: %s. Return code is: "
           "%d",
           data_dir.c_str(), result);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   });
 }
@@ -449,12 +473,13 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsMatcha(
 
   std::vector<TokenIDs> ans;
 
-  std::vector<int64_t> phoneme_ids;
-
   for (const auto &p : phonemes) {
-    phoneme_ids =
+    auto phoneme_ids =
         PiperPhonemesToIdsMatcha(token2id_, p, matcha_meta_data_.use_eos_bos);
-    ans.emplace_back(std::move(phoneme_ids));
+
+    for (auto &ids : phoneme_ids) {
+      ans.emplace_back(std::move(ids));
+    }
   }
 
   return ans;
@@ -517,7 +542,7 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsVits(
 
   } else {
     SHERPA_ONNX_LOGE("Unsupported model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   return ans;

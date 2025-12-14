@@ -48,7 +48,6 @@ python3 ./python-api-examples/offline-tts-play.py \
  --vits-lexicon=./sherpa-onnx-vits-zh-ll/lexicon.txt \
  --vits-tokens=./sherpa-onnx-vits-zh-ll/tokens.txt \
  --tts-rule-fsts=./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/number.fst \
- --vits-dict-dir=./sherpa-onnx-vits-zh-ll/dict \
  --sid=2 \
  --output-filename=./test-2.wav \
  "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月11号，拨打110或者18920240511。123456块钱。"
@@ -67,7 +66,6 @@ python3 ./python-api-examples/offline-tts-play.py \
  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
  --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
- --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
  --output-filename=./test-matcha.wav \
  "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 
@@ -121,7 +119,6 @@ python3 ./python-api-examples/offline-tts-play.py \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
   --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
-  --kokoro-dict-dir=./kokoro-multi-lang-v1_0/dict \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --num-threads=2 \
   --sid=18 \
@@ -205,13 +202,6 @@ def add_vits_args(parser):
         --vits-lexicon and --vits-tokens are ignored""",
     )
 
-    parser.add_argument(
-        "--vits-dict-dir",
-        type=str,
-        default="",
-        help="Path to the dict directory for models using jieba",
-    )
-
 
 def add_matcha_args(parser):
     parser.add_argument(
@@ -250,13 +240,6 @@ def add_matcha_args(parser):
         --matcha-lexicon and --matcha-tokens are ignored""",
     )
 
-    parser.add_argument(
-        "--matcha-dict-dir",
-        type=str,
-        default="",
-        help="Path to the dict directory for models using jieba",
-    )
-
 
 def add_kokoro_args(parser):
     parser.add_argument(
@@ -285,13 +268,6 @@ def add_kokoro_args(parser):
         type=str,
         default="",
         help="Path to the dict directory of espeak-ng.",
-    )
-
-    parser.add_argument(
-        "--kokoro-dict-dir",
-        type=str,
-        default="",
-        help="Path to the dict directory for models using jieba. Needed only by multilingual kokoro",
     )
 
     parser.add_argument(
@@ -528,7 +504,6 @@ def main():
                 model=args.vits_model,
                 lexicon=args.vits_lexicon,
                 data_dir=args.vits_data_dir,
-                dict_dir=args.vits_dict_dir,
                 tokens=args.vits_tokens,
             ),
             matcha=sherpa_onnx.OfflineTtsMatchaModelConfig(
@@ -537,14 +512,12 @@ def main():
                 lexicon=args.matcha_lexicon,
                 tokens=args.matcha_tokens,
                 data_dir=args.matcha_data_dir,
-                dict_dir=args.matcha_dict_dir,
             ),
             kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
                 model=args.kokoro_model,
                 voices=args.kokoro_voices,
                 tokens=args.kokoro_tokens,
                 data_dir=args.kokoro_data_dir,
-                dict_dir=args.kokoro_dict_dir,
                 lexicon=args.kokoro_lexicon,
             ),
             kitten=sherpa_onnx.OfflineTtsKittenModelConfig(

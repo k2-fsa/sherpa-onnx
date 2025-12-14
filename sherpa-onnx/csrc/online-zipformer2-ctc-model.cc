@@ -7,8 +7,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <memory>
 #include <numeric>
 #include <string>
+#include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"

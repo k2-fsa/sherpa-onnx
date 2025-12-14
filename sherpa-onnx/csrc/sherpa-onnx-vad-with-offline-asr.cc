@@ -4,8 +4,11 @@
 
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <algorithm>
+#include <chrono>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"

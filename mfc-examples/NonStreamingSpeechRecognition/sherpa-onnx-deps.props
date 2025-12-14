@@ -15,7 +15,6 @@
         sherpa-onnx-fst.lib;
         kaldi-native-fbank-core.lib;
         kissfft-float.lib;
-        cppinyin_core.lib;
         onnxruntime.lib;
         piper_phonemize.lib;
         espeak-ng.lib;

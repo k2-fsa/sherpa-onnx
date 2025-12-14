@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -39,7 +41,7 @@ bool OfflineTtsModelConfig::Validate() const {
     return matcha.Validate();
   }
 
-  if (!zipvoice.flow_matching_model.empty()) {
+  if (!zipvoice.decoder.empty()) {
     return zipvoice.Validate();
   }
 

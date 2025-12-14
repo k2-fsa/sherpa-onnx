@@ -4,13 +4,21 @@
 
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
 void OfflineZipformerCtcModelConfig::Register(ParseOptions *po) {
   po->Register("zipformer-ctc-model", &model, "Path to zipformer CTC model");
+
+  std::string prefix = "zipformer-ctc";
+  ParseOptions p(prefix, po);
+
+  qnn_config.Register(&p);
 }
 
 bool OfflineZipformerCtcModelConfig::Validate() const {
@@ -20,6 +28,10 @@ bool OfflineZipformerCtcModelConfig::Validate() const {
     return false;
   }
 
+  if (EndsWith(model, ".so") || EndsWith(model, ".bin")) {
+    return qnn_config.Validate();
+  }
+
   return true;
 }
 
@@ -27,7 +39,13 @@ std::string OfflineZipformerCtcModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineZipformerCtcModelConfig(";
-  os << "model=\"" << model << "\")";
+  os << "model=\"" << model << "\"";
+
+  if (!qnn_config.backend_lib.empty()) {
+    os << ", qnn_config=" << qnn_config.ToString() << ", ";
+  }
+
+  os << ")";
 
   return os.str();
 }

@@ -32,6 +32,9 @@ rm -rf sherpa-onnx-nemo-*
 
 cd ../offline-decode-files
 
+./run-omnilingual-asr-ctc.sh
+rm -rf sherpa-onnx-*
+
 ./run-wenet-ctc.sh
 rm -rf sherpa-onnx-*
 
@@ -71,8 +74,8 @@ rm -rf sherpa-onnx-*
 ./run-whisper.sh
 rm -rf sherpa-onnx-*
 
-./run-whisper-large-v3.sh
-rm -rf sherpa-onnx-*
+# ./run-whisper-large-v3.sh
+# rm -rf sherpa-onnx-*
 
 ./run-tdnn-yesno.sh
 rm -rf sherpa-onnx-*

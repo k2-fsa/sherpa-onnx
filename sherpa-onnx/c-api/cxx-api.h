@@ -67,7 +67,7 @@ struct OnlineCtcFstDecoderConfig {
 };
 
 struct HomophoneReplacerConfig {
-  std::string dict_dir;
+  std::string dict_dir;  // unused
   std::string lexicon;
   std::string rule_fsts;
 };
@@ -268,6 +268,10 @@ struct SHERPA_ONNX_API OfflineWenetCtcModelConfig {
   std::string model;
 };
 
+struct SHERPA_ONNX_API OfflineOmnilingualAsrCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -297,6 +301,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineCanaryModelConfig canary;
   OfflineWenetCtcModelConfig wenet_ctc;
+  OfflineOmnilingualAsrCtcModelConfig omnilingual;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
@@ -381,7 +386,7 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
 
   float noise_scale = 0.667;
   float noise_scale_w = 0.8;
@@ -394,7 +399,7 @@ struct OfflineTtsMatchaModelConfig {
   std::string lexicon;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
 
   float noise_scale = 0.667;
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
@@ -405,7 +410,7 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   std::string tokens;
   std::string data_dir;
-  std::string dict_dir;
+  std::string dict_dir;  // unused
   std::string lexicon;
   std::string lang;
 
@@ -421,11 +426,27 @@ struct OfflineTtsKittenModelConfig {
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
 
+struct OfflineTtsZipvoiceModelConfig {
+  std::string tokens;
+  std::string encoder;
+  std::string decoder;
+  std::string vocoder;
+  std::string data_dir;
+  std::string lexicon;
+
+  float feat_scale = 0.1;
+  float t_shift = 0.5;
+  float target_rms = 0.1;
+  float guidance_scale = 1.0;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
+  OfflineTtsZipvoiceModelConfig zipvoice;
+
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
@@ -717,6 +738,35 @@ class SHERPA_ONNX_API OfflinePunctuation
 
  private:
   explicit OfflinePunctuation(const SherpaOnnxOfflinePunctuation *p);
+};
+
+// ============================================================================
+// Online Punctuation
+// ============================================================================
+struct OnlinePunctuationModelConfig {
+  std::string cnn_bilstm;
+  std::string bpe_vocab;
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+};
+
+struct OnlinePunctuationConfig {
+  OnlinePunctuationModelConfig model;
+};
+
+class SHERPA_ONNX_API OnlinePunctuation
+    : public MoveOnly<OnlinePunctuation, SherpaOnnxOnlinePunctuation> {
+ public:
+  static OnlinePunctuation Create(const OnlinePunctuationConfig &config);
+
+  void Destroy(const SherpaOnnxOnlinePunctuation *p) const;
+
+  // Add punctuations to the input text and return it.
+  std::string AddPunctuation(const std::string &text) const;
+
+ private:
+  explicit OnlinePunctuation(const SherpaOnnxOnlinePunctuation *p);
 };
 
 // ============================================================================

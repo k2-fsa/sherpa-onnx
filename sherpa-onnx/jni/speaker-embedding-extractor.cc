@@ -3,6 +3,9 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
+#include <memory>
+#include <vector>
+
 #include "sherpa-onnx/jni/common.h"
 
 namespace sherpa_onnx {

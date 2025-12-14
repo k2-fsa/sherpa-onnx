@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
 
@@ -150,7 +150,7 @@ jobs:
           file: sherpa-onnx-*-win-x86*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.10.45
+          tag: v1.12.15
 
       - name: Release pre-compiled binaries and libs for Windows x86
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

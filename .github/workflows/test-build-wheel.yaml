@@ -80,7 +80,7 @@ jobs:
             python-version: "3.11"
           - os: windows-2022
             python-version: "3.12"
-          - os: windows-latest
+          - os: windows-2022
             python-version: "3.13"
 
     steps:

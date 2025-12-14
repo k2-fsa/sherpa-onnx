@@ -214,6 +214,27 @@ final class SherpaOnnxOfflineTtsKittenModelConfig extends Struct {
   external double lengthScale;
 }
 
+final class SherpaOnnxOfflineTtsZipVoiceModelConfig extends Struct {
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> vocoder;
+  external Pointer<Utf8> dataDir;
+  external Pointer<Utf8> lexicon;
+
+  @Float()
+  external double featScale;
+
+  @Float()
+  external double tShift;
+
+  @Float()
+  external double targetRms;
+
+  @Float()
+  external double guidanceScale;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -226,6 +247,7 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsMatchaModelConfig matcha;
   external SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
   external SherpaOnnxOfflineTtsKittenModelConfig kitten;
+  external SherpaOnnxOfflineTtsZipVoiceModelConfig zipvoice;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {
@@ -282,6 +304,10 @@ final class SherpaOnnxOfflineZipformerCtcModelConfig extends Struct {
 }
 
 final class SherpaOnnxOfflineWenetCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineOmnilingualAsrCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
@@ -365,6 +391,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineZipformerCtcModelConfig zipformerCtc;
   external SherpaOnnxOfflineCanaryModelConfig canary;
   external SherpaOnnxOfflineWenetCtcModelConfig wenetCtc;
+  external SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {

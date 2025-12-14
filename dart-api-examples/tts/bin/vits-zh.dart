@@ -13,11 +13,6 @@ void main(List<String> arguments) async {
     ..addOption('model', help: 'Path to the ONNX model')
     ..addOption('tokens', help: 'Path to tokens.txt')
     ..addOption('lexicon', help: 'Path to lexicon.txt')
-    ..addOption(
-      'dict-dir',
-      help: 'Path to jieba dict directory',
-      defaultsTo: '',
-    )
     ..addOption('rule-fsts', help: 'Path to rule fsts', defaultsTo: '')
     ..addOption('rule-fars', help: 'Path to rule fars', defaultsTo: '')
     ..addOption('text', help: 'Text to generate TTS for')
@@ -40,7 +35,6 @@ void main(List<String> arguments) async {
   final model = res['model'] as String;
   final lexicon = res['lexicon'] as String;
   final tokens = res['tokens'] as String;
-  final dictDir = res['dict-dir'] as String;
   final ruleFsts = res['rule-fsts'] as String;
   final ruleFars = res['rule-fars'] as String;
   final text = res['text'] as String;
@@ -56,7 +50,6 @@ void main(List<String> arguments) async {
     model: model,
     lexicon: lexicon,
     tokens: tokens,
-    dictDir: dictDir,
     lengthScale: 1 / speed,
   );
 

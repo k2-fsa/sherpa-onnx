@@ -24,7 +24,6 @@ go build
 ./streaming-decode-files \
   --zipformer2-ctc ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx \
   --tokens ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt \
-  --hr-dict-dir ./dict \
   --hr-lexicon ./lexicon.txt \
   --hr-rule-fsts ./replace.fst \
   ./test-hr.wav

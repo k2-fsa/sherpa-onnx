@@ -190,7 +190,6 @@ class MainActivity : AppCompatActivity() {
         var ruleFars: String?
         var lexicon: String?
         var dataDir: String?
-        var dictDir: String?
         var assets: AssetManager? = application.assets
         var isKitten = false
 
@@ -217,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         ruleFars = null
         lexicon = null
         dataDir = null
-        dictDir = null
 
         // Example 1:
         // modelDir = "vits-vctk"
@@ -243,7 +241,6 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "vits-zh-hf-fanchen-C"
         // modelName = "vits-zh-hf-fanchen-C.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-zh-hf-fanchen-C/dict"
 
         // Example 5:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -256,7 +253,6 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "vits-melo-tts-zh_en"
         // modelName = "model.onnx"
         // lexicon = "lexicon.txt"
-        // dictDir = "vits-melo-tts-zh_en/dict"
 
         // Example 7
         // matcha-icefall-zh-baker
@@ -265,7 +261,6 @@ class MainActivity : AppCompatActivity() {
         // acousticModelName = "model-steps-3.onnx"
         // vocoder = "vocos-22khz-univ.onnx"    // Vocoder should be downloaded separately; place in the **root directory of your resources folder**, not under modelDir.
         // lexicon = "lexicon.txt"
-        // dictDir = "matcha-icefall-zh-baker/dict"
 
         // Example 8
         // matcha-icefall-en_US-ljspeech
@@ -288,7 +283,6 @@ class MainActivity : AppCompatActivity() {
         // modelName = "model.onnx"
         // voices = "voices.bin"
         // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
-        // dictDir = "kokoro-multi-lang-v1_0/dict"
         // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
         // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
 
@@ -300,17 +294,18 @@ class MainActivity : AppCompatActivity() {
         // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
         // isKitten = true
 
+        // Example 12
+        // matcha-icefall-zh-en
+        // https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/matcha-icefall-zh-en.html
+        // modelDir = "matcha-icefall-zh-en"
+        // acousticModelName = "model-steps-3.onnx"
+        // vocoder = "vocos-16khz-univ.onnx"    // Vocoder should be downloaded separately; place in the **root directory of your resources folder**, not under modelDir.
+        // dataDir = "matcha-icefall-zh-en/espeak-ng-data"
+        // lexicon = "lexicon.txt"
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
-        }
-
-        if (dictDir != null) {
-            val newDir = copyDataDir(dictDir!!)
-            dictDir = "$newDir/$dictDir"
-            if (ruleFsts == null) {
-                ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
-            }
         }
 
         val config = getOfflineTtsConfig(
@@ -321,7 +316,7 @@ class MainActivity : AppCompatActivity() {
             voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            dictDir = dictDir ?: "",
+            dictDir = "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,

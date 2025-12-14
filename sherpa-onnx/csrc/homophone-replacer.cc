@@ -4,11 +4,14 @@
 
 #include "sherpa-onnx/csrc/homophone-replacer.h"
 
+#include <cctype>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <strstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -23,15 +26,15 @@
 
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/phrase-matcher.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
 void HomophoneReplacerConfig::Register(ParseOptions *po) {
   po->Register("hr-dict-dir", &dict_dir,
-               "The dict directory for jieba used by HomophoneReplacer");
+               "Not used. You don't need to provide a value for it");
 
   po->Register("hr-lexicon", &lexicon,
                "Path to lexicon.txt used by HomophoneReplacer.");
@@ -43,18 +46,9 @@ void HomophoneReplacerConfig::Register(ParseOptions *po) {
 
 bool HomophoneReplacerConfig::Validate() const {
   if (!dict_dir.empty()) {
-    std::vector<std::string> required_files = {
-        "jieba.dict.utf8", "hmm_model.utf8",  "user.dict.utf8",
-        "idf.utf8",        "stop_words.utf8",
-    };
-
-    for (const auto &f : required_files) {
-      if (!FileExists(dict_dir + "/" + f)) {
-        SHERPA_ONNX_LOGE("'%s/%s' does not exist. Please check kokoro-dict-dir",
-                         dict_dir.c_str(), f.c_str());
-        return false;
-      }
-    }
+    SHERPA_ONNX_LOGE(
+        "From sherpa-onnx v1.12.15, you don't need to provide dict_dir for "
+        "this model. Ignore it");
   }
 
   if (!lexicon.empty() && !FileExists(lexicon)) {
@@ -86,7 +80,6 @@ std::string HomophoneReplacerConfig::ToString() const {
   std::ostringstream os;
 
   os << "HomophoneReplacerConfig(";
-  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "rule_fsts=\"" << rule_fsts << "\")";
 
@@ -96,8 +89,6 @@ std::string HomophoneReplacerConfig::ToString() const {
 class HomophoneReplacer::Impl {
  public:
   explicit Impl(const HomophoneReplacerConfig &config) : config_(config) {
-    jieba_ = InitJieba(config.dict_dir);
-
     {
       std::ifstream is(config.lexicon);
       InitLexicon(is);
@@ -108,7 +99,7 @@ class HomophoneReplacer::Impl {
       SplitStringToVector(config.rule_fsts, ",", false, &files);
       replacer_list_.reserve(files.size());
       for (const auto &f : files) {
-        if (config.debug) {
+        if (config_.debug) {
           SHERPA_ONNX_LOGE("hr rule fst: %s", f.c_str());
         }
         replacer_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
@@ -118,7 +109,6 @@ class HomophoneReplacer::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const HomophoneReplacerConfig &config) : config_(config) {
-    jieba_ = InitJieba(config.dict_dir);
     {
       auto buf = ReadFile(mgr, config.lexicon);
 
@@ -131,7 +121,7 @@ class HomophoneReplacer::Impl {
       SplitStringToVector(config.rule_fsts, ",", false, &files);
       replacer_list_.reserve(files.size());
       for (const auto &f : files) {
-        if (config.debug) {
+        if (config_.debug) {
           SHERPA_ONNX_LOGE("hr rule fst: %s", f.c_str());
         }
         auto buf = ReadFile(mgr, f);
@@ -149,27 +139,36 @@ class HomophoneReplacer::Impl {
       return ans;
     }
 
-    bool is_hmm = true;
+    std::vector<std::string> words = SplitUtf8(text);
 
-    std::vector<std::string> words;
-    jieba_->Cut(text, words, is_hmm);
     if (config_.debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Input text: '%{public}s'", text.c_str());
+#else
       SHERPA_ONNX_LOGE("Input text: '%s'", text.c_str());
+#endif
       std::ostringstream os;
-      os << "After jieba: ";
+      os << "After splitting into UTF8: ";
       std::string sep;
       for (const auto &w : words) {
         os << sep << w;
         sep = "_";
       }
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     // convert words to pronunciations
     std::vector<std::string> current_words;
     std::vector<std::string> current_pronunciations;
 
-    for (const auto &w : words) {
+    PhraseMatcher matcher(&all_words_, words, config_.debug);
+
+    for (const std::string &w : matcher) {
       if (w.size() < 3 ||
           reinterpret_cast<const uint8_t *>(w.data())[0] < 128) {
         if (!current_words.empty()) {
@@ -178,6 +177,9 @@ class HomophoneReplacer::Impl {
           current_pronunciations.clear();
         }
         ans += w;
+        if (isalpha(w[0])) {
+          ans.push_back(' ');
+        }
         continue;
       }
 
@@ -188,7 +190,7 @@ class HomophoneReplacer::Impl {
 
       current_words.push_back(w);
       current_pronunciations.push_back(std::move(p));
-    }
+    }  // for (const std::string &w : matcher) {
 
     if (!current_words.empty()) {
       ans += ApplyImpl(current_words, current_pronunciations);
@@ -196,6 +198,10 @@ class HomophoneReplacer::Impl {
 
     if (config_.debug) {
       SHERPA_ONNX_LOGE("Output text: '%s'", ans.c_str());
+    }
+
+    if (!ans.empty() && ans.back() == ' ') {
+      ans.pop_back();
     }
 
     return ans;
@@ -276,13 +282,17 @@ class HomophoneReplacer::Impl {
 
       word2pron_.insert({std::move(word), std::move(pron)});
     }
+
+    for (const auto &[key, _] : word2pron_) {
+      all_words_.insert(key);
+    }
   }
 
  private:
   HomophoneReplacerConfig config_;
-  std::unique_ptr<cppjieba::Jieba> jieba_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> replacer_list_;
   std::unordered_map<std::string, std::string> word2pron_;
+  std::unordered_set<std::string> all_words_;
 };
 
 HomophoneReplacer::HomophoneReplacer(const HomophoneReplacerConfig &config)

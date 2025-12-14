@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         onnxruntime_version: ["1.17.1", "1.22.0"]
 
     steps:
@@ -97,7 +97,7 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - name: Release pre-compiled binaries and libs for linux x64
+      - name: Release pre-compiled binaries and libs for windows x64
         if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
@@ -106,9 +106,9 @@ jobs:
           file: sherpa-onnx-*cuda.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.13
+          tag: v1.12.15
 
-      - name: Release pre-compiled binaries and libs for linux x64
+      - name: Release pre-compiled binaries and libs for windows x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:

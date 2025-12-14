@@ -6,6 +6,7 @@
 #include "sherpa-onnx/csrc/online-rnn-lm.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,7 +50,7 @@ class OnlineRnnLM::Impl {
     // if LODR enabled, we need to update the LODR state
     if (lodr_fst_ != nullptr) {
       auto next_lodr_state = std::make_unique<LodrStateCost>(
-                            hyp->lodr_state->ForwardOneStep(hyp->ys.back()));
+          hyp->lodr_state->ForwardOneStep(hyp->ys.back()));
       // calculate the score of the latest token
       auto score = next_lodr_state->Score() - hyp->lodr_state->Score();
       hyp->lodr_state = std::move(next_lodr_state);
@@ -108,7 +109,8 @@ class OnlineRnnLM::Impl {
           // apply LODR to hyp score
           if (lodr_fst_ != nullptr) {
             // We scale LODR scale with LM scale to replicate Icefall code
-            lodr_fst_->ComputeScore(config_.lodr_scale*scale, &h, context_size);
+            lodr_fst_->ComputeScore(config_.lodr_scale * scale, &h,
+                                    context_size);
           }
 
           // update NN LM states in hyp
@@ -178,8 +180,8 @@ class OnlineRnnLM::Impl {
     ComputeInitStates();
 
     if (!config_.lodr_fst.empty()) {
-      lodr_fst_ = std::make_unique<LodrFst>(LodrFst(config_.lodr_fst,
-                                                    config_.lodr_backoff_id));
+      lodr_fst_ = std::make_unique<LodrFst>(
+          LodrFst(config_.lodr_fst, config_.lodr_backoff_id));
     }
   }
 

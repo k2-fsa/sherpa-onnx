@@ -24,3 +24,4 @@ dolphin-ctc-asr
 tts-kitten-en
 compute-speaker-embeddings
 decode-file-t-one-streaming
+omnilingual-asr-ctc

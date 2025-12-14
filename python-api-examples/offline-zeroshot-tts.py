@@ -10,21 +10,23 @@ Usage:
 
 Example (zipvoice)
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
-tar xf sherpa-onnx-zipvoice-distill-zh-en-emilia.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 
 python3 ./python-api-examples/offline-zeroshot-tts.py \
-  --zipvoice-flow-matching-model sherpa-onnx-zipvoice-distill-zh-en-emilia/fm_decoder.onnx \
-  --zipvoice-text-model sherpa-onnx-zipvoice-distill-zh-en-emilia/text_encoder.onnx \
-  --zipvoice-data-dir sherpa-onnx-zipvoice-distill-zh-en-emilia/espeak-ng-data \
-  --zipvoice-pinyin-dict sherpa-onnx-zipvoice-distill-zh-en-emilia/pinyin.raw \
-  --zipvoice-tokens sherpa-onnx-zipvoice-distill-zh-en-emilia/tokens.txt \
-  --zipvoice-vocoder sherpa-onnx-zipvoice-distill-zh-en-emilia/vocos_24khz.onnx \
-  --prompt-audio sherpa-onnx-zipvoice-distill-zh-en-emilia/prompt.wav \
+  --zipvoice-encoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
+  --zipvoice-decoder sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
+  --zipvoice-data-dir sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data \
+  --zipvoice-lexicon sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt \
+  --zipvoice-tokens sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt \
+  --zipvoice-vocoder vocos_24khz.onnx \
+  --prompt-audio sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav \
   --zipvoice-num-steps 4 \
   --num-threads 4 \
-  --prompt-text "周日被我射熄火了，所以今天是周一。" \
-  "我是中国人民的儿子，我爱我的祖国。我得祖国是一个伟大的国家，拥有五千年的文明史。"
+  --prompt-text "那还是三十六年前, 一九八七年. 我呢考上了武汉大学的计算机系." \
+  "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中."
 """
 
 import argparse
@@ -47,17 +49,17 @@ def add_zipvoice_args(parser):
     )
 
     parser.add_argument(
-        "--zipvoice-text-model",
+        "--zipvoice-encoder",
         type=str,
         default="",
-        help="Path to zipvoice text model.",
+        help="Path to zipvoice text encoder model.",
     )
 
     parser.add_argument(
-        "--zipvoice-flow-matching-model",
+        "--zipvoice-decoder",
         type=str,
         default="",
-        help="Path to zipvoice flow matching model.",
+        help="Path to zipvoice flow matching decoder model.",
     )
 
     parser.add_argument(
@@ -68,10 +70,10 @@ def add_zipvoice_args(parser):
     )
 
     parser.add_argument(
-        "--zipvoice-pinyin-dict",
+        "--zipvoice-lexicon",
         type=str,
         default="",
-        help="Path to the pinyin dictionary.",
+        help="Path to the lexicon.txt",
     )
 
     parser.add_argument(
@@ -233,10 +235,10 @@ def main():
         model=sherpa_onnx.OfflineTtsModelConfig(
             zipvoice=sherpa_onnx.OfflineTtsZipvoiceModelConfig(
                 tokens=args.zipvoice_tokens,
-                text_model=args.zipvoice_text_model,
-                flow_matching_model=args.zipvoice_flow_matching_model,
+                encoder=args.zipvoice_encoder,
+                decoder=args.zipvoice_decoder,
                 data_dir=args.zipvoice_data_dir,
-                pinyin_dict=args.zipvoice_pinyin_dict,
+                lexicon=args.zipvoice_lexicon,
                 vocoder=args.zipvoice_vocoder,
                 feat_scale=args.zipvoice_feat_scale,
                 t_shift=args.zipvoice_t_shift,
@@ -268,9 +270,7 @@ def main():
     end = time.time()
 
     if len(audio.samples) == 0:
-        print(
-            "Error in generating audios. Please read previous error messages."
-        )
+        print("Error in generating audios. Please read previous error messages.")
         return
 
     elapsed_seconds = end - start
@@ -287,9 +287,7 @@ def main():
     print(f"The text is '{args.text}'")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
-    print(
-        f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
-    )
+    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
 
 
 if __name__ == "__main__":

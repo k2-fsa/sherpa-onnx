@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-rnn-lm.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

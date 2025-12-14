@@ -19,7 +19,6 @@ dart run \
   --voices ./kokoro-multi-lang-v1_0/voices.bin \
   --tokens ./kokoro-multi-lang-v1_0/tokens.txt \
   --data-dir ./kokoro-multi-lang-v1_0/espeak-ng-data \
-  --dict-dir ./kokoro-multi-lang-v1_0/dict \
   --lexicon ./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --sid 45 \
   --speed 1.0 \

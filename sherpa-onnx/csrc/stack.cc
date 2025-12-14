@@ -8,7 +8,9 @@
 #include <functional>
 #include <numeric>
 #include <utility>
+#include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -26,9 +28,9 @@ static bool Compare(const std::vector<int64_t> &a,
 
 static void PrintShape(const std::vector<int64_t> &a) {
   for (auto i : a) {
-    fprintf(stderr, "%d ", static_cast<int32_t>(i));
+    SHERPA_ONNX_LOGE("%d ", static_cast<int32_t>(i));
   }
-  fprintf(stderr, "\n");
+  SHERPA_ONNX_LOGE("\n");
 }
 
 template <typename T /*=float*/>
@@ -41,12 +43,12 @@ Ort::Value Stack(OrtAllocator *allocator,
     auto s = values[i]->GetTensorTypeAndShapeInfo().GetShape();
     bool ret = Compare(v0_shape, s);
     if (!ret) {
-      fprintf(stderr, "Incorrect shape in Stack !\n");
+      SHERPA_ONNX_LOGE("Incorrect shape in Stack !\n");
 
-      fprintf(stderr, "Shape for tensor 0: ");
+      SHERPA_ONNX_LOGE("Shape for tensor 0: ");
       PrintShape(v0_shape);
 
-      fprintf(stderr, "Shape for tensor %d: ", i);
+      SHERPA_ONNX_LOGE("Shape for tensor %d: ", i);
       PrintShape(s);
 
       exit(-1);

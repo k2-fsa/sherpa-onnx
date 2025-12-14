@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
@@ -14,6 +15,7 @@ namespace sherpa_onnx {
 // https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/zipformer/export-onnx-ctc.py
 struct OfflineZipformerCtcModelConfig {
   std::string model;
+  QnnConfig qnn_config;
 
   OfflineZipformerCtcModelConfig() = default;
 

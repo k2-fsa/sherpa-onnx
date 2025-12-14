@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/jni/common.h"
@@ -213,9 +215,6 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config, bool *ok) {
   jobject hr_config = env->GetObjectField(config, fid);
   jclass hr_config_cls = env->GetObjectClass(hr_config);
 
-  SHERPA_ONNX_JNI_READ_STRING(ans.hr.dict_dir, dictDir, hr_config_cls,
-                              hr_config);
-
   SHERPA_ONNX_JNI_READ_STRING(ans.hr.lexicon, lexicon, hr_config_cls,
                               hr_config);
 
@@ -387,8 +386,9 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
   // [0]: text, jstring
   // [1]: tokens, array of jstring
   // [2]: timestamps, array of float
+  // [3]: ys_probs, array of float
   jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      3, env->FindClass("java/lang/Object"), nullptr);
+      4, env->FindClass("java/lang/Object"), nullptr);
 
   jstring text = env->NewStringUTF(result.text.c_str());
   env->SetObjectArrayElement(obj_arr, 0, text);
@@ -410,6 +410,11 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
                            result.timestamps.data());
 
   env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+
+  jfloatArray ys_probs_arr = env->NewFloatArray(result.ys_probs.size());
+  env->SetFloatArrayRegion(ys_probs_arr, 0, result.ys_probs.size(),
+                           result.ys_probs.data());
+  env->SetObjectArrayElement(obj_arr, 3, ys_probs_arr);
 
   return obj_arr;
 }

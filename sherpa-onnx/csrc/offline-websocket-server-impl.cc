@@ -5,6 +5,11 @@
 #include "sherpa-onnx/csrc/offline-websocket-server-impl.h"
 
 #include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -44,7 +49,7 @@ void OfflineWebsocketDecoderConfig::Validate() const {
 OfflineWebsocketDecoder::OfflineWebsocketDecoder(OfflineWebsocketServer *server)
     : config_(server->GetConfig().decoder_config),
       server_(server),
-      recognizer_(config_.recognizer_config) {}
+      recognizer_(config_.recognizer_config) {}  // NOLINT
 
 void OfflineWebsocketDecoder::Push(connection_hdl hdl, ConnectionDataPtr d) {
   std::lock_guard<std::mutex> lock(mutex_);

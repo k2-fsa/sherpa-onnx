@@ -16,8 +16,8 @@ void PybindHomophoneReplacer(py::module *m) {
       .def(py::init<>())
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, bool>(),
-           py::arg("dict_dir"), py::arg("lexicon"), py::arg("rule_fsts"),
-           py::arg("debug") = false)
+           py::arg("dict_dir") = "", py::arg("lexicon") = "",
+           py::arg("rule_fsts") = "", py::arg("debug") = false)
       .def_readwrite("dict_dir", &PyClass::dict_dir)
       .def_readwrite("lexicon", &PyClass::lexicon)
       .def_readwrite("rule_fsts", &PyClass::rule_fsts)

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-moonshine-model.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

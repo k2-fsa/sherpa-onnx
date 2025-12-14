@@ -39,11 +39,17 @@ target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 add_executable(wenet-ctc-cxx-api ./wenet-ctc-cxx-api.cc)
 target_link_libraries(wenet-ctc-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(omnilingual-asr-ctc-cxx-api ./omnilingual-asr-ctc-cxx-api.cc)
+target_link_libraries(omnilingual-asr-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
 target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
 
-add_executable(punctuation-cxx-api ./punctuation-cxx-api.cc)
-target_link_libraries(punctuation-cxx-api sherpa-onnx-cxx-api)
+add_executable(offline-punctuation-cxx-api ./offline-punctuation-cxx-api.cc)
+target_link_libraries(offline-punctuation-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(online-punctuation-cxx-api ./online-punctuation-cxx-api.cc)
+target_link_libraries(online-punctuation-cxx-api sherpa-onnx-cxx-api)
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   add_executable(sense-voice-simulate-streaming-microphone-cxx-api

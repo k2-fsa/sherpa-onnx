@@ -4,8 +4,13 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
-#include <regex>  // NOLINT
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <regex>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 

@@ -8,7 +8,7 @@ data class OfflineTtsVitsModelConfig(
     var lexicon: String = "",
     var tokens: String = "",
     var dataDir: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
     var noiseScale: Float = 0.667f,
     var noiseScaleW: Float = 0.8f,
     var lengthScale: Float = 1.0f,
@@ -20,7 +20,7 @@ data class OfflineTtsMatchaModelConfig(
     var lexicon: String = "",
     var tokens: String = "",
     var dataDir: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
     var noiseScale: Float = 1.0f,
     var lengthScale: Float = 1.0f,
 )
@@ -32,7 +32,7 @@ data class OfflineTtsKokoroModelConfig(
     var dataDir: String = "",
     var lexicon: String = "",
     var lang: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
     var lengthScale: Float = 1.0f,
 )
 
@@ -201,7 +201,7 @@ fun getOfflineTtsConfig(
     voices: String, // for Kokoro or kitten
     lexicon: String,
     dataDir: String,
-    dictDir: String,
+    dictDir: String, // unused
     ruleFsts: String,
     ruleFars: String,
     numThreads: Int? = null,
@@ -246,7 +246,6 @@ fun getOfflineTtsConfig(
             lexicon = "$modelDir/$lexicon",
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
-            dictDir = dictDir,
         )
     } else {
         OfflineTtsVitsModelConfig()
@@ -258,7 +257,6 @@ fun getOfflineTtsConfig(
             vocoder = vocoder,
             lexicon = "$modelDir/$lexicon",
             tokens = "$modelDir/tokens.txt",
-            dictDir = dictDir,
             dataDir = dataDir,
         )
     } else {
@@ -276,7 +274,6 @@ fun getOfflineTtsConfig(
                 "," in lexicon -> lexicon
                 else -> "$modelDir/$lexicon"
             },
-            dictDir = dictDir,
         )
     } else {
         OfflineTtsKokoroModelConfig()

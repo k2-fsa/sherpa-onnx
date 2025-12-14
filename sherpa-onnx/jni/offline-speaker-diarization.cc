@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 

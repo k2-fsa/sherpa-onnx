@@ -5,8 +5,10 @@
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
 #include <algorithm>
+#include <memory>
 #include <queue>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
