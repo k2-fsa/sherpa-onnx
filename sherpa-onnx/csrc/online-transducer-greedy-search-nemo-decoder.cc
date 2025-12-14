@@ -94,13 +94,6 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       LogSoftmax(p_logit, vocab_size);
       r.ys_probs.push_back(p_logit[y]);
 
-      // Export the per-token log scores
-      for (int32_t n = 0; n < vocab_size; ++n) {
-        p_logit[n] /= temperature_scale;
-      }
-      LogSoftmax(p_logit, vocab_size);
-      r.ys_probs.push_back(p_logit[y]);
-
       // Store full vocabulary distribution
       std::vector<float> full_vocab_probs(p_logit, p_logit + vocab_size);
       r.vocab_log_probs.push_back(std::move(full_vocab_probs));

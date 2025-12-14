@@ -40,7 +40,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
 
   std::vector<int32_t> tokens;
   std::vector<float> token_log_probs;
-  std::vector<std::vector<float>> vocab_log_probs;  // ADD THIS
+  std::vector<std::vector<float>> vocab_log_probs;
 
   std::array<int64_t, 2> token_shape = {1, 1};
   int64_t seq_len_shape = 1;
@@ -117,7 +117,7 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
   OfflineMoonshineDecoderResult ans;
   ans.tokens = std::move(tokens);
   ans.token_log_probs = std::move(token_log_probs);
-  ans.vocab_log_probs = std::move(vocab_log_probs);  // ADD THIS
+  ans.vocab_log_probs = std::move(vocab_log_probs);
 
   return {ans};
 }

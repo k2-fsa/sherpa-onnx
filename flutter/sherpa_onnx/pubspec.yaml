@@ -38,10 +38,10 @@ dependencies:
   # sherpa_onnx_macos:
   #   path: ../sherpa_onnx_macos
 
-  # Use local path for development, uncomment version for release
-  # sherpa_onnx_linux: ^1.12.19
-  sherpa_onnx_linux:
-    path: ../sherpa_onnx_linux
+  sherpa_onnx_linux: ^1.12.19
+  # Use local path for development, uncomment below for local development
+  # sherpa_onnx_linux:
+  #   path: ../sherpa_onnx_linux
 
   sherpa_onnx_windows: ^1.12.19
   # sherpa_onnx_windows:

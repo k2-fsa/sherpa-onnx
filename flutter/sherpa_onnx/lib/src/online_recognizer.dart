@@ -336,9 +336,9 @@ class OnlineRecognizerResult {
       timestamps: (json['timestamps'] as List)
           .map<double>((e) => (e as num).toDouble())
           .toList(),
-      ysProbs: (json['ys_probs'] as List)
-          .map<double>((e) => (e as num).toDouble())
-          .toList(),
+      ysProbs: (json['ys_probs'] as List?)
+          ?.map<double>((e) => (e as num).toDouble())
+          .toList() ?? const <double>[],
     );
   }
 

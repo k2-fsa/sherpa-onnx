@@ -45,12 +45,12 @@ class OnlineStream {
       return null;
     }
 
-    final ptr = getFunc(this.ptr);
-    if (ptr == nullptr) {
+    final vocabPtr = getFunc(this.ptr);
+    if (vocabPtr == nullptr) {
       return null;
     }
 
-    final vocabLogProbs = ptr.ref;
+    final vocabLogProbs = vocabPtr.ref;
     final numTokens = vocabLogProbs.numTokens;
     final vocabSize = vocabLogProbs.vocabSize;
 
@@ -68,7 +68,7 @@ class OnlineStream {
       result['token_$tokenIdx'] = tokenProbs;
     }
 
-    destroyFunc(ptr);
+    destroyFunc(vocabPtr);
     return result;
   }
 

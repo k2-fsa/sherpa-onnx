@@ -152,6 +152,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     OfflineRecognitionResult r;
     r.tokens.reserve(src.tokens.size());
     r.token_log_probs.reserve(src.token_log_probs.size());
+    r.vocab_log_probs = src.vocab_log_probs;
 
     std::string text;
     for (size_t idx = 0; idx < src.tokens.size(); ++idx) {
