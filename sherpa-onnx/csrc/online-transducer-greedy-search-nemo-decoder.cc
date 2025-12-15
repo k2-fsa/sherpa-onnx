@@ -94,6 +94,8 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
 
       // Export the per-token log scores
       // Copy logits before modifying to avoid issues with tensor data
+      // Note: p_logit already includes blank_penalty adjustment (applied at line 81)
+      // so vocab_log_probs will contain adjusted probabilities, not raw model outputs
       std::vector<float> logits_copy(p_logit, p_logit + vocab_size);
       for (int32_t n = 0; n < vocab_size; ++n) {
         logits_copy[n] /= temperature_scale;
@@ -101,7 +103,7 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       LogSoftmax(logits_copy.data(), vocab_size);
       r.ys_probs.push_back(logits_copy[y]);
 
-      // Store full vocabulary distribution
+      // Store full vocabulary distribution (includes blank penalty and temperature scaling)
       r.vocab_log_probs.push_back(std::move(logits_copy));
 
       decoder_input = BuildDecoderInput(y, model->Allocator());
