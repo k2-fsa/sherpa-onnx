@@ -93,15 +93,16 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       r.num_trailing_blanks = 0;
 
       // Export the per-token log scores
+      // Copy logits before modifying to avoid issues with tensor data
+      std::vector<float> logits_copy(p_logit, p_logit + vocab_size);
       for (int32_t n = 0; n < vocab_size; ++n) {
-        p_logit[n] /= temperature_scale;
+        logits_copy[n] /= temperature_scale;
       }
-      LogSoftmax(p_logit, vocab_size);
-      r.ys_probs.push_back(p_logit[y]);
+      LogSoftmax(logits_copy.data(), vocab_size);
+      r.ys_probs.push_back(logits_copy[y]);
 
       // Store full vocabulary distribution
-      std::vector<float> full_vocab_probs(p_logit, p_logit + vocab_size);
-      r.vocab_log_probs.push_back(std::move(full_vocab_probs));
+      r.vocab_log_probs.push_back(std::move(logits_copy));
 
       decoder_input = BuildDecoderInput(y, model->Allocator());
 
