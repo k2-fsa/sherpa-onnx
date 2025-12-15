@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <utility>
 #include <vector>
 
@@ -105,14 +104,19 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   int32_t n_text_ctx = model_->TextCtx();
 
+  // assume at most 6 tokens per second
+  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
+  num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
+
   std::vector<int32_t> predicted_tokens;
   // Log probabilities.
   std::vector<float> predicted_log_probs;
   std::vector<std::vector<float>> predicted_vocab_log_probs;
 
-  // assume at most 6 tokens per second
-  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
-  num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
+  // Reserve capacity to avoid reallocations
+  predicted_tokens.reserve(num_possible_tokens);
+  predicted_log_probs.reserve(num_possible_tokens);
+  predicted_vocab_log_probs.reserve(num_possible_tokens);
 
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
     if (current_token_id == model_->EOT()) {

@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 
 #include <algorithm>
+#include <cmath>
 #include <ios>
 #include <memory>
 #include <string>
@@ -179,8 +180,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
       // Filter vocab_log_probs in the same loop to maintain alignment
       if (!vocab_log_probs.empty() && idx < vocab_log_probs.size()) {
-        // Copy since vocab_log_probs is const reference (will be moved at call site)
-        r.vocab_log_probs.push_back(vocab_log_probs[idx]);
+        r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
       }
     }
 
@@ -199,12 +199,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     // Find max for numerical stability
     float max_logit = *std::max_element(p_logits, p_logits + meta.vocab_size);
 
-    // Compute log_softmax
-    float sum_exp = 0.0f;
+    // Compute log_softmax using double for intermediate precision
+    double sum_exp = 0.0;
     for (int32_t i = 0; i < meta.vocab_size; ++i) {
       sum_exp += std::exp(p_logits[i] - max_logit);
     }
-    float log_sum = max_logit + std::log(sum_exp);
+    float log_sum = max_logit + static_cast<float>(std::log(sum_exp));
 
     // Find the max token and its log probability
     // If full_distribution is requested, compute both in a single pass
