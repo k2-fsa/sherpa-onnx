@@ -96,6 +96,11 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     int32_t num_tokens =
         static_cast<int32_t>(num_feature_frames / 100.0 * 30) + 1;
 
+    // Reserve space to reduce reallocations
+    tokens.reserve(num_tokens + 1);
+    token_log_probs.reserve(num_tokens + 1);
+    vocab_log_probs.reserve(num_tokens + 1);
+
     // Start from decoder_input.size() + 1 for proper position tracking
     if (max_token_id != eos) {
       for (int32_t i = decoder_input.size() + 1;
@@ -125,17 +130,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       vocab_log_probs.pop_back();
     }
 
-    auto r = Convert(tokens, token_log_probs);
-    // Filter vocab_log_probs to match filtered tokens (same indices as token_log_probs)
-    // tokens and vocab_log_probs are 1:1 aligned by index, so use idx directly
-    r.vocab_log_probs.reserve(r.tokens.size());
-    for (size_t idx = 0; idx < tokens.size(); ++idx) {
-      if (symbol_table_.Contains(tokens[idx])) {
-        if (idx < vocab_log_probs.size()) {
-          r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
-        }
-      }
-    }
+    // Convert with vocab_log_probs - filtering happens in one place for alignment
+    // Move vocab_log_probs since they won't be used after this
+    auto r = Convert(tokens, token_log_probs, std::move(vocab_log_probs));
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
@@ -156,9 +153,13 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
  private:
   OfflineRecognitionResult Convert(
       const std::vector<int32_t> &tokens,
-      const std::vector<float> &token_log_probs) const {
+      const std::vector<float> &token_log_probs,
+      std::vector<std::vector<float>> vocab_log_probs = {}) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(tokens.size());
+    if (!vocab_log_probs.empty()) {
+      r.vocab_log_probs.reserve(tokens.size());
+    }
 
     std::string text;
     for (size_t idx = 0; idx < tokens.size(); ++idx) {
@@ -174,6 +175,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
       if (idx < token_log_probs.size()) {
         r.token_log_probs.push_back(token_log_probs[idx]);
+      }
+
+      // Filter vocab_log_probs in the same loop to maintain alignment
+      if (!vocab_log_probs.empty() && idx < vocab_log_probs.size()) {
+        // Copy since vocab_log_probs is const reference (will be moved at call site)
+        r.vocab_log_probs.push_back(vocab_log_probs[idx]);
       }
     }
 
@@ -238,6 +245,12 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     std::vector<float> f = s->GetFrames();
 
     if (f.empty()) {
+      return {};
+    }
+
+    // Validate feat_dim to prevent division by zero
+    if (feat_dim <= 0) {
+      SHERPA_ONNX_LOGE("Invalid feature dimension: %d", feat_dim);
       return {};
     }
 

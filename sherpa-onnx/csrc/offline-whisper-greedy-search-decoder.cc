@@ -99,6 +99,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   const float *current_logits = p_logits + (logits_shape[1] - 1) * vocab_size;
 
   auto max_iter = std::max_element(current_logits, current_logits + vocab_size);
+  float max_logit = *max_iter;
   int32_t current_token_id =
       static_cast<int32_t>(std::distance(current_logits, max_iter));
 
@@ -120,8 +121,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
     // Calculate log-softmax for the full vocabulary
     // Allocate vector for this token (moved into result, so new allocation needed)
+    // Reuse max_logit already found when determining current_token_id
     std::vector<float> full_vocab_probs(vocab_size);
-    float max_logit = *std::max_element(current_logits, current_logits + vocab_size);
     double sum_exp = 0.0;
     for (int32_t j = 0; j < vocab_size; ++j) {
       sum_exp += std::exp(current_logits[j] - max_logit);
@@ -167,6 +168,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
     auto next_max_iter =
         std::max_element(current_logits, current_logits + vocab_size);
+    max_logit = *next_max_iter;
     current_token_id =
         static_cast<int32_t>(std::distance(current_logits, next_max_iter));
   }
