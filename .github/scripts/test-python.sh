@@ -114,7 +114,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segm
 tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
 rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recognition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
 
@@ -127,7 +127,7 @@ log "test_clustering"
 pushd /tmp/
 mkdir test-cluster
 cd test-cluster
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recognition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
 git clone https://github.com/csukuangfj/sr-data
 popd
 
