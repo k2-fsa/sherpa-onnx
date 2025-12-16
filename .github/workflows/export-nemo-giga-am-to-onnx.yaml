@@ -142,7 +142,7 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run CTC v3
-        if: true
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -171,7 +171,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Run CTC v3 with punctuations
-        if: true
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -197,6 +197,35 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
           ls -lh *.tar.bz2
+
+      - name: Run Transducer v3
+        if: true
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt-v3.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt-v3.sh $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -330,7 +359,7 @@ jobs:
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
 
-      - name: Publish v3 to huggingface (CTC)
+      - name: Publish v3 to huggingface
         if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -346,8 +375,14 @@ jobs:
             names=(
              sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16
              sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16
+             sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16
             )
             for d in ${names[@]}; do
+              if [ ! -d $d ]; then
+                echo "$d does not exist - skip it"
+                continue;
+              fi
+
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface

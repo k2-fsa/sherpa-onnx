@@ -7,10 +7,11 @@ import torch
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
 """
+==========Input==========
 NodeArg(name='features', type='tensor(float)', shape=['batch_size', 64, 'seq_len'])
 NodeArg(name='feature_lengths', type='tensor(int64)', shape=['batch_size'])
------
-NodeArg(name='log_probs', type='tensor(float)', shape=['batch_size', 'seq_len', 34])
+==========Output==========
+NodeArg(name='log_probs', type='tensor(float)', shape=['batch_size', 'seq_len', 257])
 """
 
 
