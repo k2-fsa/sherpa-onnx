@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SherpaOnnx
 {
-    public class DenoisedAudio
+    public class DenoisedAudio : IDisposable
     {
         public DenoisedAudio(IntPtr p)
         {

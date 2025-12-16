@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SherpaOnnx
 {
-    public class OfflineTtsGeneratedAudio
+    public class OfflineTtsGeneratedAudio : IDisposable
     {
         public OfflineTtsGeneratedAudio(IntPtr p)
         {
