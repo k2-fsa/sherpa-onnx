@@ -142,7 +142,7 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run CTC v3
-        if: false
+        if: true
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -154,6 +154,7 @@ jobs:
           mkdir $d/test_wavs
           ls -lh scripts/nemo/GigaAM/v3_ctc.onnx
           rm scripts/nemo/GigaAM/v3_ctc.onnx
+          cp -v scripts/nemo/GigaAM/*.md $d/
           mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
           cp -v scripts/nemo/GigaAM/LICENSE $d/
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
@@ -171,7 +172,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Run CTC v3 with punctuations
-        if: false
+        if: true
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -182,6 +183,7 @@ jobs:
           mkdir $d
           mkdir $d/test_wavs
           rm scripts/nemo/GigaAM/v3_e2e_ctc.onnx
+          cp -v scripts/nemo/GigaAM/*.md $d/
           mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
           cp -v scripts/nemo/GigaAM/LICENSE $d/
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
@@ -199,7 +201,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Run Transducer v3
-        if: true
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -219,6 +221,35 @@ jobs:
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-rnnt-v3.sh $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Run Transducer v3 with punctuations
+        if: false
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt-v3-punct.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt-v3-punct.sh $d/
           cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
 
           ls -lh scripts/nemo/GigaAM/
@@ -376,6 +407,7 @@ jobs:
              sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16
              sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16
              sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16
+             sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16
             )
             for d in ${names[@]}; do
               if [ ! -d $d ]; then

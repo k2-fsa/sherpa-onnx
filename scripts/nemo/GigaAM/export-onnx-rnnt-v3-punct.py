@@ -33,7 +33,7 @@ NodeArg(name='c', type='tensor(float)', shape=[1, 1, 320])
 NodeArg(name='enc', type='tensor(float)', shape=[1, 768, 1])
 NodeArg(name='dec', type='tensor(float)', shape=[1, 320, 1])
 ==========Output==========
-NodeArg(name='joint', type='tensor(float)', shape=[1, 1, 1, 34])
+NodeArg(name='joint', type='tensor(float)', shape=[1, 1, 1, 1025])
 """
 
 
@@ -116,25 +116,23 @@ class DecoderWrapper(torch.nn.Module):
 'conv_kernel_size': 5, 'flash_attn': False, 'subs_kernel_size': 5,
 'subsampling': 'conv1d', 'conv_norm_type': 'layer_norm'},
 'head': {'_target_': 'gigaam.decoder.RNNTHead',
-'decoder': {'pred_hidden': 320, 'pred_rnn_layers': 1, 'num_classes': 34},
-'joint': {'enc_hidden': 768, 'pred_hidden': 320, 'joint_hidden': 320, 'num_classes': 34}},
+'decoder': {'pred_hidden': 320, 'pred_rnn_layers': 1, 'num_classes': 1025},
+'joint': {'enc_hidden': 768, 'pred_hidden': 320, 'joint_hidden': 320, 'num_classes': 1025}},
 'decoding': {'_target_': 'gigaam.decoding.RNNTGreedyDecoding',
-'vocabulary': [' ', 'а', 'б', 'в', 'г', 'д', 'е', 'ж', 'з', 'и', 'й', 'к', 'л', 'м', 'н',
-'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я']},
-'model_name': 'v3_rnnt', 'hashes': {'model': 'be62a7bc46de1311ec288d3bf8ee2818'}}
+'vocabulary': None, 'model_path': '/root/.cache/gigaam/v3_e2e_rnnt_tokenizer.model'}, 'model_name': 'v3_e2e_rnnt', 'hashes': {'model': '72e2a9b5c7caad963b2bbfd2f298c252', 'tokenizer': '3b3bf8370e882885d79731592fc99f98'}}
 """
 
 
 def main() -> None:
-    model_name = "v3_rnnt"
+    model_name = "v3_e2e_rnnt"
     model = gigaam.load_model(model_name)
 
-    # use characters
-    # space is 0
     # <blk> is the last token
+    sp = model.decoding.tokenizer.model
     with open("./tokens.txt", "w", encoding="utf-8") as f:
-        for i, s in enumerate(model.cfg["decoding"]["vocabulary"]):
-            f.write(f"{s} {i}\n")
+        for i in range(sp.vocab_size()):
+            f.write(f"{sp.id_to_piece(i)} {i}\n")
+
         f.write(f"<blk> {i+1}\n")
         print("Saved to tokens.txt")
 
