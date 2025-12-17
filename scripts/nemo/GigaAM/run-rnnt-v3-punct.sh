@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 set -ex
 
@@ -23,6 +24,6 @@ function download_files() {
 install_gigaam
 download_files
 
-python3 ./export-onnx-ctc-v2.py
+python3 ./export-onnx-rnnt-v3-punct.py
 ls -lh
-python3 ./test-onnx-ctc.py
+python3 ./test-onnx-rnnt.py
