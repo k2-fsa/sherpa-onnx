@@ -1,9 +1,6 @@
 name: export-sense-voice-to-onnx
 
 on:
-  push:
-    branches:
-      - export-nano
   workflow_dispatch:
 
 concurrency:
@@ -38,18 +35,22 @@ jobs:
         shell: bash
         run: |
           pip install \
-            torch==2.8.0+cpu -f https://download.pytorch.org/whl/torch \
-            torchaudio==2.8.0+cpu -f https://download.pytorch.org/whl/torchaudio \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
             onnx==1.17.0 \
             onnxruntime==1.17.1 \
             soundfile \
             kaldi-native-fbank \
             librosa
 
+          pip install  "numpy<2"
+
       - name: Download test_wavs
         shell: bash
         run: |
           sudo apt-get install -y -qq sox libsox-fmt-mp3
+
+          cd scripts/sense-voice
+
           curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/zh.mp3
           curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/en.mp3
           curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/ja.mp3
@@ -71,7 +72,10 @@ jobs:
           cd scripts/sense-voice
           curl -SL -O https://huggingface.co/csukuangfj/funasr-nano-with-ctc/resolve/main/model.pt
           curl -SL -O https://huggingface.co/csukuangfj/funasr-nano-with-ctc/resolve/main/tokens.txt
+          ls -lh
           ./export_onnx_nano.py
+
+          ls -lh
 
           d=sherpa-onnx-sense-voice-funasr-nano-2025-12-17
           d2=sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17
