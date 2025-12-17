@@ -1,3 +1,25 @@
+## 1.12.20
+
+* Refactor axcl examples. (#2867)
+* Update README to include Axera NPU (#2870)
+* Add CI for Axera NPU (#2872)
+* Refactor sense voice impl (#2873)
+* Refactor Paraformer Impl (#2874)
+* Remove unused lock file (#2875)
+* Load QNN context binary for faster startup (#2877)
+* Export models to Ascend 910B4 (#2878)
+* Optimize streaming output results when VAD does not detect human voice for a long time (#2876)
+* Build APKs for MatchaTTS Chinese+English (#2882)
+* Publish WASM spaces for MatchaTTS Chinese+English model (#2885)
+* Add script for testing zipvoice onnx models (#2887)
+* upload zipvoice onnx models (#2890)
+* Remove cppinyin from zipvoice (#2892)
+* Fix building errors (#2893)
+* Use a shorter name for Zipvoice models. (#2894)
+* Export GigaAM v3 to sherpa-onnx (#2901)
+* Fix typos in URL (#2905)
+* Support Fun-ASR-Nano-2512 (#2906)
+
 ## 1.12.19
 
 * Fix building without TTS for C API (#2838)
