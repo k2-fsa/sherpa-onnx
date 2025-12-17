@@ -45,6 +45,8 @@ struct OfflineSenseVoiceModelMetaData {
 
   std::vector<float> neg_mean;    // not used in rk npu and ascend npu
   std::vector<float> inv_stddev;  // not used in rk npu and ascend npu
+
+  bool is_funasr_nano = false;
 };
 
 }  // namespace sherpa_onnx

@@ -21,7 +21,8 @@ namespace sherpa_onnx {
 // defined in ../offline-recognizer-sense-voice-impl.h
 OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor);
+    int32_t frame_shift_ms, int32_t subsampling_factor,
+    bool is_funasr_nano /*= false*/);
 
 template <typename SenseVoiceModel>
 class OfflineRecognizerSenseVoiceTplImpl : public OfflineRecognizerImpl {
