@@ -24,14 +24,18 @@ namespace sherpa_onnx {
 
 OfflineRecognitionResult ConvertSenseVoiceResult(
     const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
-    int32_t frame_shift_ms, int32_t subsampling_factor) {
+    int32_t frame_shift_ms, int32_t subsampling_factor,
+    bool is_funasr_nano = false) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
 
   std::string text;
 
-  for (int32_t i = 4; i < src.tokens.size(); ++i) {
+  // Funasr NanO does not support emotion, event, language, etc.
+  int32_t start = is_funasr_nano ? 0 : 4;
+
+  for (int32_t i = start; i < src.tokens.size(); ++i) {
     auto sym = sym_table[src.tokens[i]];
     text.append(sym);
 
@@ -41,18 +45,20 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
 
-  for (int32_t i = 4; i < src.timestamps.size(); ++i) {
-    float time = frame_shift_s * (src.timestamps[i] - 4);
+  for (int32_t i = start; i < src.timestamps.size(); ++i) {
+    float time = frame_shift_s * (src.timestamps[i] - start);
     r.timestamps.push_back(time);
   }
 
   r.words = std::move(src.words);
 
-  // parse lang, emotion and event from tokens.
-  if (src.tokens.size() >= 3) {
-    r.lang = sym_table[src.tokens[0]];
-    r.emotion = sym_table[src.tokens[1]];
-    r.event = sym_table[src.tokens[2]];
+  if (!is_funasr_nano) {
+    // parse lang, emotion and event from tokens.
+    if (src.tokens.size() >= 3) {
+      r.lang = sym_table[src.tokens[0]];
+      r.emotion = sym_table[src.tokens[1]];
+      r.event = sym_table[src.tokens[2]];
+    }
   }
 
   return r;
@@ -75,7 +81,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    InitFeatConfig();
+    PostInit();
   }
 
   template <typename Manager>
@@ -95,7 +101,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    InitFeatConfig();
+    PostInit();
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
@@ -103,12 +109,21 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
+    const auto &meta_data = model_->GetModelMetadata();
+
+    if (meta_data.is_funasr_nano) {
+      for (int32_t i = 0; i < n; ++i) {
+        DecodeOneStreamFunAsrNano(ss[i]);
+      }
+
+      return;
+    }
+
     if (n == 1) {
       DecodeOneStream(ss[0]);
       return;
     }
 
-    const auto &meta_data = model_->GetModelMetadata();
     // 1. Apply LFR
     // 2. Apply CMVN
     //
@@ -229,6 +244,47 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
+  void DecodeOneStreamFunAsrNano(OfflineStream *s) const {
+    const auto &meta_data = model_->GetModelMetadata();
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    int32_t feat_dim = config_.feat_config.feature_dim * meta_data.window_size;
+    std::vector<float> f = s->GetFrames();
+    f = ApplyLFR(f);
+
+    int32_t num_frames = f.size() / feat_dim;
+    std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
+                                            shape.data(), shape.size());
+
+    Ort::Value logits{nullptr};
+    try {
+      logits = model_->Forward(std::move(x));
+    } catch (const Ort::Exception &ex) {
+      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
+                       ex.what());
+      return;
+    }
+
+    int64_t new_num_frames = logits.GetTensorTypeAndShapeInfo().GetShape()[1];
+    int64_t num_frame_shape = 1;
+    Ort::Value logits_length = Ort::Value::CreateTensor(
+        memory_info, &new_num_frames, 1, &num_frame_shape, 1);
+
+    auto results =
+        decoder_->Decode(std::move(logits), std::move(logits_length));
+
+    int32_t frame_shift_ms = 10;
+    int32_t subsampling_factor = meta_data.window_shift;
+    auto r = ConvertSenseVoiceResult(results[0], symbol_table_, frame_shift_ms,
+                                     subsampling_factor, true);
+
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    r.text = ApplyHomophoneReplacer(std::move(r.text));
+    s->SetResult(r);
+  }
+
   void DecodeOneStream(OfflineStream *s) const {
     const auto &meta_data = model_->GetModelMetadata();
 
@@ -299,6 +355,15 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     s->SetResult(r);
   }
 
+  void PostInit() {
+    InitFeatConfig();
+
+    const auto &meta_data = model_->GetModelMetadata();
+    if (meta_data.is_funasr_nano) {
+      symbol_table_.ApplyBase64Decode();
+    }
+  }
+
   void InitFeatConfig() {
     const auto &meta_data = model_->GetModelMetadata();
 
@@ -307,6 +372,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     config_.feat_config.high_freq = 0;
     config_.feat_config.snip_edges = true;
   }
+
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
     const auto &meta_data = model_->GetModelMetadata();
 

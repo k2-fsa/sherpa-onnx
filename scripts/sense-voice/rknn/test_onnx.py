@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+"""
+Note: This is for testing the onnx models that would be later used to export
+to RKNN
+"""
+
 import argparse
 from typing import Tuple
 
 import kaldi_native_fbank as knf
 import numpy as np
-import onnxruntime
 import onnxruntime as ort
 import soundfile as sf
 import torch

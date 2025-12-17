@@ -234,7 +234,14 @@ std::ostream &operator<<(std::ostream &os, const SymbolTable &symbol_table) {
 void SymbolTable::ApplyBase64Decode() {
   sym2id_.clear();
   for (auto &p : id2sym_) {
-    p.second = Base64Decode(p.second);
+    if (p.second == " ") {
+      // for FunASR nano models, there is an empty string in the tokens.txt,
+      // which is converted to " " while reading it in sherpa-onnx. We convert
+      // it back to "" here
+      p.second = "";
+    } else {
+      p.second = Base64Decode(p.second);
+    }
     sym2id_[p.second] = p.first;
   }
 }

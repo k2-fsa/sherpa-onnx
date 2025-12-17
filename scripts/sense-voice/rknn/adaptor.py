@@ -1,8 +1,7 @@
 import torch
 from torch import nn
-import torch.nn.functional as F
 
-from torch_model import PositionwiseFeedForward
+import torch_model
 
 
 class MultiHeadedAttention(nn.Module):
@@ -225,7 +224,7 @@ class Transformer(nn.Module):
                             llm_dim,
                             kwargs.get("attention_dropout_rate", 0.0),
                         ),
-                        PositionwiseFeedForward(
+                        torch_model.PositionwiseFeedForward(
                             llm_dim,
                             llm_dim // 4,
                             kwargs.get("dropout_rate", 0.0),
