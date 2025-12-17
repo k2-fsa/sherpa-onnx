@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         python-version: ["3.10"]
 
     steps:
@@ -28,6 +28,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get install -y -qq sox libsox-fmt-mp3
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install \
+            torch==2.8.0+cpu -f https://download.pytorch.org/whl/torch \
+            torchaudio==2.8.0+cpu -f https://download.pytorch.org/whl/torchaudio \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            soundfile \
+            kaldi-native-fbank \
+            librosa
 
       - name: Download test_wavs
         shell: bash
@@ -46,6 +63,7 @@ jobs:
           sox ja.mp3 -r 16k ja.wav
           sox ko.mp3 -r 16k ko.wav
           sox yue.mp3 -r 16k yue.wav
+
 
       - name: Run
         shell: bash
