@@ -1,6 +1,9 @@
 name: export-sense-voice-to-onnx
 
 on:
+  push:
+    branches:
+      - export-nano
   workflow_dispatch:
 
 concurrency:
@@ -48,9 +51,82 @@ jobs:
         shell: bash
         run: |
           cd scripts/sense-voice
+          curl -SL -O https://huggingface.co/csukuangfj/funasr-nano-with-ctc/resolve/main/model.pt
+          curl -SL -O https://huggingface.co/csukuangfj/funasr-nano-with-ctc/resolve/main/tokens.txt
+          ./export_onnx_nano.py
+
+          d=sherpa-onnx-sense-voice-funasr-nano-2025-12-17
+          d2=sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17
+          mkdir -p $d $d2
+
+          cp README-nano.md $d/README
+          cp README-nano.md $d2/README
+
+          mv model.onnx $d/
+          mv model.int8.onnx $d2/
+
+          for m in $d $d2; do
+            mkdir -p $m/test_wavs
+            cp -v *.wav $m/test_wavs
+            cp -v tokens.txt $m/
+
+            ls -lh $m
+
+            tar cjfv $m.tar.bz2 $m
+
+            ls -lh $m.tar.bz2
+            mv $m.tar.bz2 ../../
+            mv $m ../../
+          done
+
+      - name: Publish v3 to huggingface
+        if: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 5
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            names=(
+              sherpa-onnx-sense-voice-funasr-nano-2025-12-17
+              sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17
+            )
+            for d in ${names[@]}; do
+              if [ ! -d $d ]; then
+                echo "$d does not exist - skip it"
+                continue;
+              fi
+
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* ./huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              cd ..
+            done
+
+      - name: Run
+        shell: bash
+        if: false
+        run: |
+          cd scripts/sense-voice
           ./run.sh
 
       - name: Publish to huggingface
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
