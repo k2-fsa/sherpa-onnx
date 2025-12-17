@@ -206,6 +206,7 @@ class Transformer(nn.Module):
         **kwargs
     ):
         super().__init__()
+        assert downsample_rate == 1, downsample_rate
         self.k = downsample_rate
         self.encoder_dim = encoder_dim
         self.llm_dim = llm_dim
@@ -235,25 +236,11 @@ class Transformer(nn.Module):
                 ]
             )
 
-    def forward(self, x, ilens=None):
-        batch_size, seq_len, dim = x.size()
-        ilens = seq_len
-        print("ilens", ilens)
-        print("x", x.shape)
-        chunk_num = (seq_len - 1) // self.k + 1
-        pad_num = chunk_num * self.k - seq_len
-        x = F.pad(x, (0, 0, 0, pad_num, 0, 0), value=0.0)
-        seq_len = x.size(1)
-
-        x = x.contiguous()
-        x = x.view(batch_size, chunk_num, dim * self.k)
+    def forward(self, x):
         x = self.linear1(x)
         x = self.relu(x)
         x = self.linear2(x)
 
-        olens = None
-        olens = (ilens - 1) // self.k + 1
-        #  masks = (~make_pad_mask(olens)[:, None, :]).to(x.device)
         masks = None
 
         if self.blocks is not None:

@@ -7,13 +7,13 @@ from torch_model import CTC, SenseVoiceEncoderSmall
 
 
 class Nano(nn.Module):
-    def __init__(self):
+    def __init__(self, vocab_size: int = 60515):
         super().__init__()
         self.audio_encoder = SenseVoiceEncoderSmall()
         self.ctc_decoder = Transformer()
-        # blank is 60514
+        # blank is 60514, i.e., the last token id
         self.ctc = CTC(
-            odim=60515,
+            odim=vocab_size,
             encoder_output_size=self.audio_encoder.output_size,
         )
 
