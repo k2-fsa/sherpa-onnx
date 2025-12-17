@@ -237,7 +237,7 @@ void PrepareIO(AX_ENGINE_IO_INFO_T *io_info, AX_ENGINE_IO_T *io_data,
     const auto &output = io_info->pOutputs[i];
     auto &buffer = io_data->pOutputs[i];
     buffer.nSize = output.nSize;
-    auto ret = AX_SYS_MemAllocCached(
+    auto ret = AX_SYS_MemAlloc(
         reinterpret_cast<AX_U64 *>(&buffer.phyAddr), &buffer.pVirAddr,
         output.nSize, kCmnAlignSize,
         reinterpret_cast<const AX_S8 *>(kSherpaOnnxAxeraSessionName));

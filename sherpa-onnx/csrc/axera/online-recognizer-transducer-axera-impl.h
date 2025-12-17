@@ -12,14 +12,14 @@
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/online-recognizer-impl.h"
-#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/axera/online-stream-axera.h"
 #include "sherpa-onnx/csrc/axera/online-transducer-decoder-axera.h"
 #include "sherpa-onnx/csrc/axera/online-transducer-greedy-search-decoder-axera.h"
 #include "sherpa-onnx/csrc/axera/online-transducer-modified-beam-search-decoder-axera.h"
 #include "sherpa-onnx/csrc/axera/online-zipformer-transducer-model-axera.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/online-recognizer-impl.h"
+#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -150,7 +150,7 @@ class OnlineRecognizerTransducerAxeraImpl : public OnlineRecognizerImpl {
 
   std::unique_ptr<OnlineStream> CreateStream(
       const std::string &hotwords) const override {
-    SHERPA_ONNX_LOGE("Hotwords for RKNN is not supported now.");
+    SHERPA_ONNX_LOGE("Hotwords for AXERA is not supported now.");
     return CreateStream();
   }
 
