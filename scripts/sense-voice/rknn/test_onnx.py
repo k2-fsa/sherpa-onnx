@@ -132,7 +132,7 @@ def load_tokens(filename):
 def compute_feat(
     samples,
     sample_rate,
-    max_len: int,
+    max_len: int = -1,
     window_size: int = 7,  # lfr_m
     window_shift: int = 6,  # lfr_n
 ):
@@ -162,17 +162,19 @@ def compute_feat(
 
     print("features.shape", features.shape)
 
-    if features.shape[0] > max_len:
-        features = features[:max_len]
-    elif features.shape[0] < max_len:
-        features = np.pad(
-            features,
-            ((0, max_len - features.shape[0]), (0, 0)),
-            mode="constant",
-            constant_values=0,
-        )
+    if max_len > 0:
+        if features.shape[0] > max_len:
+            features = features[:max_len]
+        elif features.shape[0] < max_len:
+            features = np.pad(
+                features,
+                ((0, max_len - features.shape[0]), (0, 0)),
+                mode="constant",
+                constant_values=0,
+            )
 
     print("features.shape", features.shape)
+    features = np.ascontiguousarray(features)
 
     return features
 
