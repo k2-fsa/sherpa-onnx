@@ -81,8 +81,8 @@ jobs:
           d2=sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17
           mkdir -p $d $d2
 
-          cp README-nano.md $d/README
-          cp README-nano.md $d2/README
+          cp README-nano.md $d/README.md
+          cp README-nano.md $d2/README.md
 
           mv model.onnx $d/
           mv model.int8.onnx $d2/
