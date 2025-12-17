@@ -18,7 +18,7 @@ function install_gigaam() {
 
 function download_files() {
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/example.wav
-  curl -SL -O https://github.com/salute-developers/GigaAM/blob/main/LICENSE
+  curl -SL -O https://raw.githubusercontent.com/salute-developers/GigaAM/main/LICENSE
 }
 
 install_gigaam
