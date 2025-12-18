@@ -181,4 +181,6 @@ jobs:
         shell: bash
         run: |
           cd /tmp/files/sherpa-onnx-node
+          # https://docs.npmjs.com/trusted-publishers
+          npm ci
           npm publish --access public

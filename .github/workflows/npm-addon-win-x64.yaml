@@ -121,7 +121,6 @@ jobs:
         shell: bash
         run: |
           cd ./sherpa-onnx-node
-          npm install
+          # https://docs.npmjs.com/trusted-publishers
           npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
           npm publish --access public

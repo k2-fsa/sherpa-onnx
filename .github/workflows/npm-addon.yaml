@@ -89,6 +89,6 @@ jobs:
         shell: bash
         run: |
           cd ./sherpa-onnx-node
-          npm install
+          # https://docs.npmjs.com/trusted-publishers
           npm ci
           npm publish --access public
