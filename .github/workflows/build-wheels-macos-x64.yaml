@@ -150,7 +150,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
+        os: [macos-15-intel]
 
     steps:
       - uses: actions/checkout@v4
