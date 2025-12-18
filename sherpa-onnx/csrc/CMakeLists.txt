@@ -26,6 +26,7 @@ set(sources
   keyword-spotter.cc
   lodr-fst.cc
   math.cc
+  normal-data-generator.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc
