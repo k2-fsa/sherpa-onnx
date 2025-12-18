@@ -136,6 +136,5 @@ jobs:
               cd ./sherpa-onnx-node
               cp -v /shared/.npmrc ./
               # https://docs.npmjs.com/trusted-publishers
-              npm ci
               ls -lh
               npm publish --access public
