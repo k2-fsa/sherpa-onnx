@@ -3,6 +3,8 @@
 // Copyright      2025  Xiaomi Corporation
 
 // Written by ChatGPT
+#ifndef SHERPA_ONNX_CSRC_NORMAL_DATA_GENERATOR_H_
+#define SHERPA_ONNX_CSRC_NORMAL_DATA_GENERATOR_H_
 
 #include <cstddef>
 
@@ -10,7 +12,7 @@ namespace sherpa_onnx {
 
 class NormalDataGenerator {
  public:
-  NormalDataGenerator(float mean = 0.0f, float stddev = 1.0f);
+  explicit NormalDataGenerator(float mean = 0.0f, float stddev = 1.0f);
 
   // Fill pre-allocated memory
   void Fill(float *data, std::size_t size) const;
@@ -21,3 +23,4 @@ class NormalDataGenerator {
 };
 
 }  // namespace sherpa_onnx
+#endif  // SHERPA_ONNX_CSRC_NORMAL_DATA_GENERATOR_H_
