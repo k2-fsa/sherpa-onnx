@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest, macos-13, windows-2022]
+        os: [ubuntu-22.04, macos-latest, macos-15-intel, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -128,7 +128,7 @@ jobs:
         run: |
           cd lazarus-examples/generate_subtitles
           os=${{ matrix.os }}
-          if [[ $os == macos-13 ]]; then
+          if [[ $os == macos-15-intel ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
@@ -191,7 +191,7 @@ jobs:
           ls -lh windows-x64
 
       - name: Collect generating subtitles (macos)
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-latest'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -228,7 +228,7 @@ jobs:
           path: /tmp/macos-arm64
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-15-intel'
         with:
           name: macos-x64
           path: /tmp/macos-x64

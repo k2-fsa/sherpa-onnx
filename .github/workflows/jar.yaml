@@ -32,7 +32,7 @@ jobs:
           - os: macos-latest
             arch: "arm64"
 
-          - os: macos-13
+          - os: macos-15-intel
             arch: "x64"
 
           - os: windows-2022
@@ -108,7 +108,7 @@ jobs:
           rm -rf $src*
 
       - name: Download libs ${{ matrix.os }} ${{ matrix.arch }}
-        if: ${{ matrix.os == 'macos-13' && matrix.arch == 'x64' }}
+        if: ${{ matrix.os == 'macos-15-intel' && matrix.arch == 'x64' }}
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -179,7 +179,7 @@ jobs:
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
-          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+          elif [[ $os == "macos-15-intel" && $arch == "x64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             mv -v sherpa-onnx-native.jar sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
@@ -234,7 +234,7 @@ jobs:
             native_jar=sherpa-onnx-native-lib-linux-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "macos-latest" && $arch == "arm64" ]]; then
             native_jar=sherpa-onnx-native-lib-osx-aarch64-$SHERPA_ONNX_VERSION.jar
-          elif [[ $os == "macos-13" && $arch == "x64" ]]; then
+          elif [[ $os == "macos-15-intel" && $arch == "x64" ]]; then
             native_jar=sherpa-onnx-native-lib-osx-x64-$SHERPA_ONNX_VERSION.jar
           elif [[ $os == "windows-2022" && $arch == "x64" ]]; then
             native_jar=sherpa-onnx-native-lib-win-x64-$SHERPA_ONNX_VERSION.jar
