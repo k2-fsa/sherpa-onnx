@@ -43,6 +43,7 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org'
           architecture: 'x86'
+          node-version: '16'
 
       - name: Display node version
         shell: bash
