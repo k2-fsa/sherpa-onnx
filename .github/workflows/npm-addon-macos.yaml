@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-14]
+        os: [macos-15-intel, macos-14]
         python-version: ["3.8"]
 
     steps:
@@ -117,11 +117,8 @@ jobs:
 
       - name: Publish
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd ./sherpa-onnx-node
           npm install
           npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+          npm publish --access public

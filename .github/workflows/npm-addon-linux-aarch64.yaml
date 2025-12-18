@@ -132,12 +132,9 @@ jobs:
 
               ls -lh ./sherpa-onnx-node
 
-              export NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
-
               cd ./sherpa-onnx-node
               cp -v /shared/.npmrc ./
               npm install
               npm ci
               ls -lh
-              # see https://docs.npmjs.com/generating-provenance-statements
-              npm publish --provenance --access public
+              npm publish --access public

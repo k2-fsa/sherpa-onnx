@@ -179,10 +179,6 @@ jobs:
 
       - name: Publish
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
-          token: ${{ secrets.NPM_TOKEN2 }}
         run: |
           cd /tmp/files/sherpa-onnx-node
           npm publish --access public

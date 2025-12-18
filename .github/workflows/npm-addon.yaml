@@ -86,11 +86,8 @@ jobs:
 
       - name: Publish
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd ./sherpa-onnx-node
           npm install
           npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+          npm publish --access public
