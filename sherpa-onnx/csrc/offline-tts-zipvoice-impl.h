@@ -239,7 +239,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     // Scale prompt_samples
     std::vector<float> prompt_samples_scaled = prompt_samples;
-    double prompt_rms = 0.0f;
+    double prompt_rms = 0.0;
     double sum_sq = 0.0;
     // Compute RMS of prompt_samples
     for (float s : prompt_samples_scaled) {
