@@ -176,7 +176,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           config);
-    } else if (!config.model_config.zipformer_ctc.model.empty()) {
+    } else if (!config.model_config.zipformer_ctc.model.empty() ||
+               !config.model_config.zipformer_ctc.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcQnnImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -497,7 +499,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           mgr, config);
-    } else if (!config.model_config.zipformer_ctc.model.empty()) {
+    } else if (!config.model_config.zipformer_ctc.model.empty() ||
+               !config.model_config.zipformer_ctc.qnn_config.context_binary
+                    .empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcQnnImpl>(mgr,
                                                                     config);
     } else {

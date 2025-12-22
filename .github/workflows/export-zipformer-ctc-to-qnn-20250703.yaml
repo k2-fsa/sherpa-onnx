@@ -3,7 +3,7 @@ name: export-zipformer-ctc-to-qnn-20250703
 on:
   push:
     branches:
-      - qnn-zipformer-ctc-models
+      - zipformer-qnn-model-2
   workflow_dispatch:
 
 concurrency:
@@ -11,24 +11,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-qnn/generate_zipformer.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_zipformer.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
   export-zipformer-ctc-to-qnn-20250703:
+    needs: generate_build_matrix
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.input_in_seconds }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.model_name }} ${{ matrix.input_in_seconds }} ${{ matrix.soc }}
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        python-version: ["3.10"]
-        input_in_seconds: ["5", "8", "10", "13", "15", "18", "20", "23", "25", "28", "30"]
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
 
       - name: Display NDK HOME
         shell: bash
@@ -175,6 +201,7 @@ jobs:
           qnn-net-run --help
 
       - name: Run ${{ matrix.input_in_seconds }}
+        if: matrix.model_name == '20250703'
         shell: bash
         run: |
           source py310/bin/activate
@@ -185,6 +212,7 @@ jobs:
 
           export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
           export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
 
           mkdir tmp
 
@@ -244,7 +272,42 @@ jobs:
 
           readelf -lW model_libs/*/lib*.so
 
+          echo "Generate context binary"
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
           echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-zipformer-ctc-zh-2025-07-03-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../binary/
 
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
@@ -275,22 +338,181 @@ jobs:
           echo "----show---"
           ls -lh *.tar.bz2
 
-          mv *.tar.bz2 ../
+          mv *.tar.bz2 ../so
+
+      - name: Run ${{ matrix.input_in_seconds }}
+        if: matrix.model_name == '20251222'
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.33.0.250327/bin
+          source envsetup.sh
+          popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
+
+          mkdir tmp
+
+          cd tmp
+
+          t=${{ matrix.input_in_seconds }}
+          num_frames=$(($t*100))
+
+          echo "num_frames: $num_frames"
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/generate_test_data.py
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/test.py
+          chmod +x generate_test_data.py
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/0.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/1.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/8k.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-zh-2025-07-03-source-models/resolve/main/tokens.txt
+
+          ./generate_test_data.py --num-frames $num_frames --wav 0.wav
+          ./generate_test_data.py --num-frames $num_frames --wav 1.wav
+          ./generate_test_data.py --num-frames $num_frames --wav 8k.wav
+
+          echo -e "0.raw\n1.raw\n8k.raw" > input_list.txt
+
+          curl -SL -O https://huggingface.co/csukuangfj/2025-12-22/resolve/main/zipformer-ctc-models/model-$t-seconds.onnx
+
+          python3 ../scripts/pyannote/segmentation/show-onnx.py --filename ./model-$t-seconds.onnx
+
+
+          echo "export to qnn"
+          echo "----------$t----------"
+
+          qnn-onnx-converter \
+            --input_network model-$t-seconds.onnx \
+            --output_path ./model-$t-seconds-quantized \
+            --out_node log_probs \
+            --input_list ./input_list.txt \
+            --use_native_input_files  \
+            --input_dtype x float32 \
+            --act_bitwidth 16 \
+            --bias_bitwidth 32 \
+            --input_layout x NTF
+
+          ls -lh
+          mv model-$t-seconds-quantized model-$t-seconds-quantized.cpp
+          echo "----"
+          ls -lh
+
+          python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+            -c "model-$t-seconds-quantized.cpp" \
+            -b "model-$t-seconds-quantized.bin" \
+            -o model_libs > /dev/null 2>&1
+
+          ls -lh model_libs/*/
+
+          readelf -lW model_libs/*/lib*.so
+
+          echo "Generate context binary"
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-zipformer-ctc-zh-2025-12-22-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../binary/
+
+          echo "collect results"
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-zipformer-ctc-zh-2025-12-22-int8-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-zipformer-ctc-zh-2025-12-22-int8-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v model_libs/$p/lib*.so $d/libmodel.so
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+
+            echo "num_frames=$num_frames" > $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../so
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.input_in_seconds }}-seconds
+          name: ${{ matrix.model_name }}-${{ matrix.soc }}-${{ matrix.input_in_seconds }}-seconds
           path: ./tmp/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./binary/*.tar.bz2
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
           tag: asr-models-qnn
 
       - name: Release
@@ -298,6 +520,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./binary/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn
+          tag: asr-models-qnn-binary
