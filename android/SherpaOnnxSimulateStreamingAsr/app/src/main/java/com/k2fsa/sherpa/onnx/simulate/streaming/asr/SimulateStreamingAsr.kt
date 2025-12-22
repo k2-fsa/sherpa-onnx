@@ -147,9 +147,19 @@ object SimulateStreamingAsr {
                             config.modelConfig.senseVoice.qnnConfig.contextBinary,
                             context
                         )
-                } else if (config.modelConfig.zipformerCtc.model.isNotEmpty()) {
-                    config.modelConfig.zipformerCtc.model =
-                        copyAssetToInternalStorage(config.modelConfig.zipformerCtc.model, context)
+                } else if (config.modelConfig.zipformerCtc.model.isNotEmpty() ||
+                    assetExists(
+                        context.assets,
+                        path = config.modelConfig.zipformerCtc.qnnConfig.contextBinary
+                    )
+                ) {
+                    if (config.modelConfig.zipformerCtc.model.isNotEmpty()) {
+                        config.modelConfig.zipformerCtc.model =
+                            copyAssetToInternalStorage(
+                                config.modelConfig.zipformerCtc.model,
+                                context
+                            )
+                    }
 
                     config.modelConfig.zipformerCtc.qnnConfig.contextBinary =
                         copyAssetToInternalStorage(
