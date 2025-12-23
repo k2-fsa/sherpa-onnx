@@ -30,8 +30,10 @@ def main():
     )
     features = torch.from_numpy(features)
     encoder_out = model.encoder(features)
+    encoder_out.permute(0, 2, 1).numpy().tofile("predictor-in.raw")
 
     alpha = model.predictor(encoder_out)
+
     acoustic_embedding = get_acoustic_embedding(
         alpha[0].numpy(), encoder_out[0].numpy()
     )
@@ -57,15 +59,27 @@ def main():
     text = [id2token[i] for i in yseq]
     print(text)
 
-    qnn_encoder_out = np.fromfile("./encoder-output-zh.raw", dtype=np.float32).reshape(
+    qnn_encoder_out = np.fromfile("./encoder_out.raw", dtype=np.float32).reshape(
         1, -1, 512
     )
 
     qnn_encoder_out = torch.from_numpy(qnn_encoder_out)
 
-    alpha = model.predictor(qnn_encoder_out)
+    if False:
+        qnn_alpha = model.predictor(qnn_encoder_out)
+    else:
+        qnn_alpha = np.fromfile("./alphas.raw", dtype=np.float32).reshape(1, -1)
+        qnn_alpha = torch.from_numpy(qnn_alpha)
+    print("qnn_alpha", qnn_alpha.shape)
+
+    print("alpha", (alpha - qnn_alpha).max().abs())
+
+    print("alpha", alpha[0].tolist())
+    print("qnn_alpha", qnn_alpha[0].tolist())
+    #  print("qnn_alpha", qnn_alpha[0].tolist())
+
     acoustic_embedding = get_acoustic_embedding(
-        alpha[0].numpy(), qnn_encoder_out[0].numpy()
+        qnn_alpha[0].numpy(), qnn_encoder_out[0].numpy()
     )
     acoustic_embedding = torch.from_numpy(acoustic_embedding[None])
 

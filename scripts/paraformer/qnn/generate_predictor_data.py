@@ -50,16 +50,24 @@ def main():
 
         f = torch.from_numpy(f)
 
-        encoder_out = model.encoder(f).numpy()
+        encoder_out = model.encoder(f)
+
+        # NOTE(Fangjun): We have to transpose the data since QNN expects
+        # (N, C, T) for the predictor model
+        # Not sure why it has such a requirement.
+
+        encoder_out = encoder_out.transpose(1, 2).clone().numpy()
+
+        print("encoder_out", encoder_out.shape)
 
         name = Path(w).stem
 
-        s = f"encoder-output-{name}.raw"
+        s = f"predictor-input-{name}.raw"
         encoder_out.tofile(s)
         name_list.append(s)
         print(encoder_out.shape)
 
-    with open("encoder-output-list.txt", "w") as f:
+    with open("predictor-input-list.txt", "w") as f:
         for line in name_list:
             f.write(f"{line}\n")
 
