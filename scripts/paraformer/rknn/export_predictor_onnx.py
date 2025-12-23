@@ -6,25 +6,26 @@ import torch
 from export_encoder_onnx import load_model, get_args, get_num_input_frames
 from torch_model import CifPredictorV2
 
+
+def modified_predictor_forward(self: CifPredictorV2, hidden: torch.Tensor):
+    h = hidden
+    context = h.transpose(1, 2)
+    queries = self.pad(context)
+    output = torch.relu(self.cif_conv1d(queries))
+    output = output.transpose(1, 2)
+
+    output = self.cif_output(output)
+    alphas = torch.sigmoid(output)
+    alphas = torch.nn.functional.relu(
+        alphas * self.smooth_factor - self.noise_threshold
+    )
+
+    alphas = alphas.squeeze(-1)
+
+    return alphas
+
+
 if __name__ == "__main__":
-
-    def modified_predictor_forward(self: CifPredictorV2, hidden: torch.Tensor):
-        h = hidden
-        context = h.transpose(1, 2)
-        queries = self.pad(context)
-        output = torch.relu(self.cif_conv1d(queries))
-        output = output.transpose(1, 2)
-
-        output = self.cif_output(output)
-        alphas = torch.sigmoid(output)
-        alphas = torch.nn.functional.relu(
-            alphas * self.smooth_factor - self.noise_threshold
-        )
-
-        alphas = alphas.squeeze(-1)
-
-        return alphas
-
     CifPredictorV2.forward = modified_predictor_forward
 
 
