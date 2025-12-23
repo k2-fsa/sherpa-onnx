@@ -28,6 +28,12 @@ def get_args():
         default=1,
         help="1 to use float master. 0 to use int32 mask",
     )
+
+    parser.add_argument(
+        "--opset-version",
+        type=int,
+        default=14,
+    )
     return parser.parse_args()
 
 
@@ -51,7 +57,7 @@ def main():
     d = model.decoder(encoder_out, acoustic_embedding)
     print("d", d.shape)
 
-    opset_version = 14
+    opset_version = args.opset_version
     filename = f"decoder-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.decoder,

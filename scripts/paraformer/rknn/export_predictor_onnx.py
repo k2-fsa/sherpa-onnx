@@ -41,7 +41,7 @@ def main():
 
     x = torch.randn(1, num_input_frames, 512, dtype=torch.float32)
 
-    opset_version = 14
+    opset_version = args.opset_version
     filename = f"predictor-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.predictor,
