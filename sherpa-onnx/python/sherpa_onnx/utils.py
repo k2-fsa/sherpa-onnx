@@ -70,7 +70,9 @@ def text2token(
 
     phone_table = {}
     if tokens_type == "phone+ppinyin":
-        assert Path(lexicon).is_file(), f"File not exists, {lexicon}"
+        assert (
+            lexicon and Path(lexicon).is_file()
+        ), f"File not exists, {lexicon}"
         with open(lexicon, "r", encoding="utf-8") as f:
             for line in f:
                 toks = line.strip().split()
@@ -92,9 +94,9 @@ def text2token(
                 if initial == "" and final == "":
                     res.append(x)
                 else:
-                    if initial != "":
+                    if initial:
                         res.append(initial)
-                    if final != "":
+                    if final:
                         res.append(final)
             return res
         else:
@@ -114,6 +116,7 @@ def text2token(
         for text in texts:
             words = text.strip().split()
             text_list = []
+            skip_text = False
             for w in words:
                 if w in phone_table:
                     text_list += phone_table[w]
@@ -123,10 +126,12 @@ def text2token(
                             f"Word {w} not in lexicon and it is not a CJK character, "
                             f"skipping text: {text}."
                         )
-                        continue
+                        skip_text = True
+                        break
                     else:
                         text_list += to_pinyin(w, "ppinyin")
-            texts_list.append(text_list)
+            if not skip_text:
+                texts_list.append(text_list)
     else:
         assert (
             tokens_type == "cjkchar+bpe"
