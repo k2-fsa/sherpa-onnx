@@ -65,18 +65,8 @@ def main():
 
     qnn_encoder_out = torch.from_numpy(qnn_encoder_out)
 
-    if False:
-        qnn_alpha = model.predictor(qnn_encoder_out)
-    else:
-        qnn_alpha = np.fromfile("./alphas.raw", dtype=np.float32).reshape(1, -1)
-        qnn_alpha = torch.from_numpy(qnn_alpha)
-    print("qnn_alpha", qnn_alpha.shape)
-
-    print("alpha", (alpha - qnn_alpha).max().abs())
-
-    print("alpha", alpha[0].tolist())
-    print("qnn_alpha", qnn_alpha[0].tolist())
-    #  print("qnn_alpha", qnn_alpha[0].tolist())
+    qnn_alpha = np.fromfile("./alphas.raw", dtype=np.float32).reshape(1, -1)
+    qnn_alpha = torch.from_numpy(qnn_alpha)
 
     acoustic_embedding = get_acoustic_embedding(
         qnn_alpha[0].numpy(), qnn_encoder_out[0].numpy()
