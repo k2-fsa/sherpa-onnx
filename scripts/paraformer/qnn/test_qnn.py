@@ -5,9 +5,9 @@ import numpy as np
 import torch
 
 from export_encoder_onnx import load_model
-from torch_model import CifPredictorV2
 from export_predictor_onnx import modified_predictor_forward
 from test_onnx import get_acoustic_embedding
+from torch_model import CifPredictorV2
 
 CifPredictorV2.forward = modified_predictor_forward
 
