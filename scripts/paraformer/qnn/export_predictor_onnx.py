@@ -1,0 +1,1 @@
+../rknn/export_predictor_onnx.py
