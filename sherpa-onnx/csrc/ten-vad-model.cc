@@ -21,6 +21,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "Eigen/Dense"
 #include "kaldi-native-fbank/csrc/mel-computations.h"
 #include "kaldi-native-fbank/csrc/rfft.h"
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -314,9 +315,10 @@ class TenVadModel::Impl {
   }
 
   static void Scale(const float *samples, int32_t n, float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      out[i] = samples[i] * 32768;
-    }
+    Eigen::Map<const Eigen::ArrayXf> input(samples, n);
+    Eigen::Map<Eigen::ArrayXf> output(out, n);
+    constexpr float kScale = 32768.0f;
+    output = input * kScale;
   }
 
   void Preemphasis(const float *samples, int32_t n, float *out) {
@@ -333,9 +335,10 @@ class TenVadModel::Impl {
 
   static void ApplyWindow(const float *samples, const float *window, int32_t n,
                           float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      out[i] = samples[i] * window[i];
-    }
+    Eigen::Map<const Eigen::ArrayXf> samp_vec(samples, n);
+    Eigen::Map<const Eigen::ArrayXf> win_vec(window, n);
+    Eigen::Map<Eigen::ArrayXf> out_vec(out, n);
+    out_vec = samp_vec * win_vec;
   }
 
   static void ComputePowerSpectrum(const float *fft_bins, int32_t n,
@@ -351,16 +354,21 @@ class TenVadModel::Impl {
   }
 
   static void LogMel(const float *in, int32_t n, float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      // 20.79441541679836 is log(32768*32768)
-      out[i] = logf(in[i] + 1e-10f) - 20.79441541679836f;
-    }
+    Eigen::Map<const Eigen::ArrayXf> input(in, n);
+    Eigen::Map<Eigen::ArrayXf> output(out, n);
+    // 20.79441541679836 is log(32768*32768)
+    constexpr float kLogScale = 20.79441541679836f;
+    output = (input + 1e-10f).log() - kLogScale;
   }
 
   void ApplyNormalization(const float *in, float *out) const {
-    for (int32_t i = 0; i != static_cast<int32_t>(mean_.size()); ++i) {
-      out[i] = (in[i] - mean_[i]) * inv_stddev_[i];
-    }
+    int32_t dim = static_cast<int32_t>(mean_.size());
+
+    Eigen::Map<const Eigen::ArrayXf> input(in, dim);
+    Eigen::Map<Eigen::ArrayXf> output(out, dim);
+    Eigen::Map<const Eigen::ArrayXf> mean_vec(mean_.data(), dim);
+    Eigen::Map<const Eigen::ArrayXf> inv_stddev_vec(inv_stddev_.data(), dim);
+    output = (input - mean_vec) * inv_stddev_vec;
   }
 
   void ComputeFeatures(const float *samples, int32_t n) {

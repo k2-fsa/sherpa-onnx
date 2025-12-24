@@ -20,6 +20,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -85,19 +86,14 @@ class OfflineOmnilingualAsrCtcModel::Impl {
       return;
     }
 
-    double s = 0;
-    double sq = 0;
-    for (int32_t i = 0; i < feat_dim; ++i) {
-      s += features[i];
-      sq += features[i] * features[i];
-    }
+    // Map the single-row feature vector
+    Eigen::Map<Eigen::ArrayXf> x(features, feat_dim);
+    float mean = x.mean();
+    float var = (x.square().mean() - mean * mean);
+    var = std::max(var, 0.0f);
+    float inv_stddev = 1.0f / std::sqrt(var + 1e-5f);
 
-    double mean = s / feat_dim;
-    double inv_stddev = 1 / std::sqrt(sq / feat_dim - mean * mean + 1e-5);
-
-    for (int32_t i = 0; i < feat_dim; ++i) {
-      features[i] = (features[i] - mean) * inv_stddev;
-    }
+    x = (x - mean) * inv_stddev;
   }
 
  private:

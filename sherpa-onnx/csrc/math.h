@@ -147,5 +147,19 @@ std::vector<float> ComputeAcousticEmbedding(
 // Transpose a 2-D matrix in row-major
 std::vector<float> Transpose(const float *input, int32_t rows, int32_t cols);
 
+/* Compute mean and inverse stddev over rows.
+ *
+ * @param p  A pointer to a 2-d array of shape (num_rows, num_cols)
+ * @param num_rows Number of rows
+ * @param num_cols Number of columns
+ * @param mean On return, it contains p.mean(axis=0). You don't need to
+ *             pre-allocate space for it.
+ * @param inv_stddev On return, it contains 1/p.std(axis=0) You don't need to
+ *                   pre-allocate space for it.
+ */
+void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
+                          std::vector<float> *mean,
+                          std::vector<float> *inv_stddev);
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

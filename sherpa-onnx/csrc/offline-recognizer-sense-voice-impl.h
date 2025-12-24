@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
@@ -402,22 +403,18 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
 
   void ApplyCMVN(std::vector<float> *v) const {
     const auto &meta_data = model_->GetModelMetadata();
-
     const std::vector<float> &neg_mean = meta_data.neg_mean;
     const std::vector<float> &inv_stddev = meta_data.inv_stddev;
+    int32_t dim = static_cast<int32_t>(neg_mean.size());
+    int32_t num_frames = static_cast<int32_t>(v->size()) / dim;
+    Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+        mat(v->data(), num_frames, dim);
+    Eigen::Map<const Eigen::RowVectorXf> neg_mean_vec(neg_mean.data(), dim);
 
-    int32_t dim = neg_mean.size();
-    int32_t num_frames = v->size() / dim;
-
-    float *p = v->data();
-
-    for (int32_t i = 0; i != num_frames; ++i) {
-      for (int32_t k = 0; k != dim; ++k) {
-        p[k] = (p[k] + neg_mean[k]) * inv_stddev[k];
-      }
-
-      p += dim;
-    }
+    Eigen::Map<const Eigen::RowVectorXf> inv_stddev_vec(inv_stddev.data(), dim);
+    mat.array() = (mat.array().rowwise() + neg_mean_vec.array()).rowwise() *
+                  inv_stddev_vec.array();
   }
 
   SymbolTable symbol_table_;
