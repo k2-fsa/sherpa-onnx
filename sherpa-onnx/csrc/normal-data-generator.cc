@@ -2,8 +2,6 @@
 //
 // Copyright      2025  Xiaomi Corporation
 
-// Written by ChatGPT
-
 #include "sherpa-onnx/csrc/normal-data-generator.h"
 
 #include <random>

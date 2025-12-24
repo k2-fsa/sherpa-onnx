@@ -16,6 +16,7 @@
 #include "kaldi-native-fbank/csrc/stft.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
@@ -282,17 +283,14 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     int64_t C = mel_shape[2];
 
     const float *mel_data = mel.GetTensorData<float>();
-    std::vector<float> mel_permuted(C * T);
 
     float inv_feat_scale = 1 / feat_scale;
 
-    for (int64_t c = 0; c < C; ++c) {
-      for (int64_t t = 0; t < T; ++t) {
-        int64_t src_idx = t * C + c;  // src: [T, C] (row major)
-        int64_t dst_idx = c * T + t;  // dst: [C, T] (row major)
-        mel_permuted[dst_idx] = mel_data[src_idx] * inv_feat_scale;
-      }
-    }
+    // mel_permuted is (C, T)
+    std::vector<float> mel_permuted = Transpose(mel_data, T, C);
+
+    Scale(mel_permuted.data(), inv_feat_scale, mel_permuted.size(),
+          mel_permuted.data());
 
     std::array<int64_t, 3> new_shape = {1, C, T};
     Ort::Value mel_new = Ort::Value::CreateTensor<float>(
