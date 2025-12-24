@@ -47,6 +47,8 @@ def load_torch_model():
 @torch.no_grad()
 def main():
     model = load_torch_model()
+    num_params = sum(p.numel() for p in model.parameters())
+    print("num_params (M)", num_params, num_params / 1000000)
 
     samples, sample_rate = test_onnx.load_audio("./zh.wav")
     assert sample_rate == 16000, sample_rate

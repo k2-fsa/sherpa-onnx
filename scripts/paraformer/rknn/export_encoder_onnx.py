@@ -25,6 +25,12 @@ def get_args():
         how long the model can process.
         """,
     )
+
+    parser.add_argument(
+        "--opset-version",
+        type=int,
+        default=14,
+    )
     return parser.parse_args()
 
 
@@ -155,7 +161,7 @@ def main():
     x = torch.randn(1, num_input_frames, 560, dtype=torch.float32)
     pos_emb = torch.rand(1, x.shape[1], 560, dtype=torch.float32)
 
-    opset_version = 14
+    opset_version = args.opset_version
     filename = f"encoder-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.encoder,
