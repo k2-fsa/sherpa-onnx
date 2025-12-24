@@ -2,17 +2,17 @@
 
 if [ -z $t ]; then
   echo "Please run export t=num_input_seconds"
-  exit -1
+  exit 1
 fi
 
 if [ -z $soc ]; then
   echo "Please run export soc=SM8850, etc."
-  exit -1
+  exit 1
 fi
 
 if [ -z $QNN_SDK_ROOT ]; then
   echo "Please run setup QNN first"
-  exit -1
+  exit 1
 fi
 
 echo "Export to onnx with num_seconds $t"

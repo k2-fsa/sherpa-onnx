@@ -3,7 +3,7 @@ name: export-paraformer-to-qnn
 on:
   push:
     branches:
-      - export-paraformer-qnn
+      - export-paraformer-qnn-2
   workflow_dispatch:
 
 concurrency:

@@ -31,7 +31,6 @@ def main():
     print("predictor params (M)", predictor_params / 1024 / 1024)
     print("decoder params (M)", decoder_params / 1024 / 1024)
 
-    features = np.load
     features = np.fromfile("./encoder-input-zh.raw", dtype=np.float32).reshape(
         (1, -1, 560)
     )
