@@ -13,7 +13,7 @@ namespace sherpa_onnx {
 TEST(Transpose, Case1) {
   // 0 1 2
   // 3 4 5
-  std::array<float, 6> in = {0, 1, 2, 3, 4, 5};
+  std::vector<float> in = {0, 1, 2, 3, 4, 5};
   std::vector<float> out = Transpose(in.data(), 2, 3);
 
   // 0 3
@@ -27,7 +27,7 @@ TEST(Transpose, Case2) {
   // 0 1
   // 2 3
   // 4 5
-  std::array<float, 6> in = {0, 1, 2, 3, 4, 5};
+  std::vector<float> in = {0, 1, 2, 3, 4, 5};
   std::vector<float> out = Transpose(in.data(), 3, 2);
 
   // 0 2 4
