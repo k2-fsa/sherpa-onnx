@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -42,6 +43,16 @@ class OfflineParaformerModelQnn::Impl {
     std::vector<std::string> binary_filenames;
     SplitStringToVector(config_.paraformer.qnn_config.context_binary, ",",
                         false, &binary_filenames);
+    if (!binary_filenames.empty()) {
+      if (binary_filenames.size() != 3) {
+        SHERPA_ONNX_LOGE(
+            "There should be 3 files for Paraformer context binary. Actual: "
+            "%d. '%s'",
+            static_cast<int32_t>(binary_filenames.size()),
+            config_.paraformer.qnn_config.context_binary.c_str());
+        return;
+      }
+    }
 
     bool ok = InitEncoder(filenames[0],
                           binary_filenames.empty() ? "" : binary_filenames[0]);
@@ -55,11 +66,72 @@ class OfflineParaformerModelQnn::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) {}
 
-  std::vector<float> Run(std::vector<float> features) const { return {}; }
+  std::vector<float> Run(std::vector<float> features) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    std::vector<float> encoder_out = RunEncoder(std::move(features));
+    SHERPA_ONNX_LOGE("encoder_out: %d, %d, %d, %d", (int)encoder_out.size(),
+                     encoder_out_dim1_, encoder_out_dim2_,
+                     encoder_out_dim1_ * encoder_out_dim2_);
+    return {};
+  }
 
   int32_t VocabSize() const { return 0; }
 
  private:
+  std::vector<float> RunEncoder(std::vector<float> features) const {
+    features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
+
+    encoder_model_->SetInputTensorData("x", features.data(), features.size());
+    encoder_model_->Run();
+    return encoder_model_->GetOutputTensorData("encoder_out");
+  }
+
+  std::vector<float> ApplyLFR(std::vector<float> in) const {
+    int32_t lfr_window_size = 7;
+    int32_t lfr_window_shift = 6;
+    int32_t in_feat_dim = 80;
+
+    int32_t in_num_frames = in.size() / in_feat_dim;
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
+    int32_t out_num_frames =
+        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
+
+    if (out_num_frames > num_input_frames_) {
+      SHERPA_ONNX_LOGE(
+          "Number of input frames %d is too large. Truncate it to %d frames.",
+          out_num_frames, num_input_frames_);
+
+      SHERPA_ONNX_LOGE(
+          "Recognition result may be truncated/incomplete. Please select a "
+          "model accepting longer audios.");
+
+      out_num_frames = num_input_frames_;
+    }
+
+    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
+
+    std::vector<float> out(num_input_frames_ * out_feat_dim);
+
+    const float *p_in = in.data();
+    float *p_out = out.data();
+
+    for (int32_t i = 0; i != out_num_frames; ++i) {
+      std::copy(p_in, p_in + out_feat_dim, p_out);
+
+      p_out += out_feat_dim;
+      p_in += lfr_window_shift * in_feat_dim;
+    }
+
+    return out;
+  }
+
   bool InitEncoder(const std::string &lib_filename,
                    const std::string &context_binary) {
     encoder_backend_ = std::make_unique<QnnBackend>(
@@ -88,7 +160,13 @@ class OfflineParaformerModelQnn::Impl {
       }
 
       InitEncoderFromModelLib(lib_filename);
-      // CreateEncoderContextBinary();
+      CreateContextBinary(encoder_model_.get(), context_binary);
+    } else {
+      if (config_.debug) {
+        SHERPA_ONNX_LOGE("Init from encoder context binary '%s'",
+                         context_binary.c_str());
+      }
+      InitEncoderFromContextBinary(context_binary);
     }
 
     PostInitEncoder();
@@ -100,6 +178,40 @@ class OfflineParaformerModelQnn::Impl {
     encoder_backend_->InitContext();
     encoder_model_ = std::make_unique<QnnModel>(
         lib_filename, encoder_backend_.get(), config_.debug);
+  }
+
+  void CreateContextBinary(QnnModel *model, const std::string &context_binary) {
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Creating encoder context binary '%s'.",
+                       context_binary.c_str());
+    }
+
+    bool ok = model->SaveBinaryContext(context_binary);
+
+    if (!ok) {
+      SHERPA_ONNX_LOGE("Failed to save context binary to '%s'",
+                       context_binary.c_str());
+    }
+
+    if (config_.debug && ok) {
+      SHERPA_ONNX_LOGE("Saved context binary to '%s'.", context_binary.c_str());
+      SHERPA_ONNX_LOGE(
+          "It should be super fast the next time you init the system.");
+      SHERPA_ONNX_LOGE("Remember to also provide libQnnSystem.so.");
+    }
+  }
+
+  void InitEncoderFromContextBinary(const std::string &context_binary) {
+    if (config_.paraformer.qnn_config.system_lib.empty()) {
+      SHERPA_ONNX_LOGE(
+          "You should provide --paraformer.qnn-system-lib if you also provide "
+          "context binary");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    encoder_model_ = std::make_unique<QnnModel>(
+        context_binary, config_.paraformer.qnn_config.system_lib,
+        encoder_backend_.get(), BinaryContextTag{}, config_.debug);
   }
 
   void PostInitEncoder() { CheckEncoderModel(); }
@@ -131,6 +243,7 @@ class OfflineParaformerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    num_input_frames_ = x_shape[1];
     feat_dim_ = x_shape[2];
 
     if (!encoder_model_->HasTensor("encoder_out")) {
@@ -138,11 +251,17 @@ class OfflineParaformerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    expected_num_frames_ = x_shape[1];
+    std::vector<int32_t> encoder_out_shape =
+        encoder_model_->TensorShape("encoder_out");
+
+    encoder_out_dim1_ = encoder_out_shape[1];
+    encoder_out_dim2_ = encoder_out_shape[2];
 
     if (config_.debug) {
-      SHERPA_ONNX_LOGE("expected_num_frames_: %d", expected_num_frames_);
+      SHERPA_ONNX_LOGE("num_input_frames: %d", num_input_frames_);
       SHERPA_ONNX_LOGE("feat_dim: %d", feat_dim_);
+      SHERPA_ONNX_LOGE("encoder_out_dim1: %d", encoder_out_dim1_);
+      SHERPA_ONNX_LOGE("encoder_out_dim2: %d", encoder_out_dim2_);
     }
   }
 
@@ -152,8 +271,11 @@ class OfflineParaformerModelQnn::Impl {
 
   std::unique_ptr<QnnBackend> encoder_backend_;
   std::unique_ptr<QnnModel> encoder_model_;
-  int32_t expected_num_frames_ = 0;
+  int32_t num_input_frames_ = 0;
   int32_t feat_dim_ = 0;
+
+  int32_t encoder_out_dim1_ = 0;
+  int32_t encoder_out_dim2_ = 0;
 };
 
 OfflineParaformerModelQnn::~OfflineParaformerModelQnn() = default;
