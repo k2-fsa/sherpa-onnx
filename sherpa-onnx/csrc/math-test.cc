@@ -10,7 +10,7 @@
 
 namespace sherpa_onnx {
 
-TEST(Tranpose, Case1) {
+TEST(Transpose, Case1) {
   // 0 1 2
   // 3 4 5
   std::array<float, 6> in = {0, 1, 2, 3, 4, 5};
@@ -23,7 +23,7 @@ TEST(Tranpose, Case1) {
   EXPECT_EQ(out, expected_out);
 }
 
-TEST(Tranpose, Case2) {
+TEST(Transpose, Case2) {
   // 0 1
   // 2 3
   // 4 5

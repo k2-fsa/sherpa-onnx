@@ -57,7 +57,6 @@ std::vector<float> ComputeAcousticEmbedding(
 }
 
 std::vector<float> Transpose(const float *input, int32_t rows, int32_t cols) {
-  // Written by ChatGPT
   std::vector<float> output(cols * rows);
 
   Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,

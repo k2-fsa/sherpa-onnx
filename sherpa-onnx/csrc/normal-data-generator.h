@@ -2,7 +2,6 @@
 //
 // Copyright      2025  Xiaomi Corporation
 
-// Written by ChatGPT
 #ifndef SHERPA_ONNX_CSRC_NORMAL_DATA_GENERATOR_H_
 #define SHERPA_ONNX_CSRC_NORMAL_DATA_GENERATOR_H_
 
