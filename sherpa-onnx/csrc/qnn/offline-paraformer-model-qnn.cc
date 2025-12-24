@@ -97,7 +97,9 @@ class OfflineParaformerModelQnn::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) {
-    SHERPA_ONNX_LOGE("TODO(fangjun): To be implemented");
+    SHERPA_ONNX_LOGE(
+        "Please copy all files from assets to SD card and set assetManager to "
+        "null");
     SHERPA_ONNX_EXIT(-1);
   }
 
