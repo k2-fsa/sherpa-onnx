@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
-#include <mutex>  // NOLINT
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -88,6 +88,9 @@ class OfflineSenseVoiceModelQnn::Impl {
     std::lock_guard<std::mutex> lock(mutex_);
 
     features = ApplyLFR(std::move(features));
+    if (features.empty()) {
+      return {};
+    }
 
     int32_t num_frames = features.size() / feat_dim_;
 
@@ -207,6 +210,11 @@ class OfflineSenseVoiceModelQnn::Impl {
     int32_t in_feat_dim = 80;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
+
+    if (in_num_frames < lfr_window_size) {
+      return {};
+    }
+
     int32_t out_num_frames =
         (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
 
