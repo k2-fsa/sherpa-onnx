@@ -32,18 +32,20 @@ namespace sherpa_onnx {
 
 class OfflineParaformerModelQnn::Impl {
  public:
-  Impl(const OfflineModelConfig &config) : config_(config) {
+  explicit Impl(const OfflineModelConfig &config) : config_(config) {
     std::vector<std::string> filenames;
-    SplitStringToVector(config_.paraformer.model, ",", false, &filenames);
-    if (filenames.size() != 3) {
-      SHERPA_ONNX_LOGE("Invalid Paraformer QNN model '%s'",
-                       config_.paraformer.model.c_str());
-      SHERPA_ONNX_EXIT(-1);
+    SplitStringToVector(config_.paraformer.model, ",", true, &filenames);
+    if (!filenames.empty()) {
+      if (filenames.size() != 3) {
+        SHERPA_ONNX_LOGE("Invalid Paraformer QNN model '%s'",
+                         config_.paraformer.model.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     std::vector<std::string> binary_filenames;
-    SplitStringToVector(config_.paraformer.qnn_config.context_binary, ",",
-                        false, &binary_filenames);
+    SplitStringToVector(config_.paraformer.qnn_config.context_binary, ",", true,
+                        &binary_filenames);
     if (!binary_filenames.empty()) {
       if (binary_filenames.size() != 3) {
         SHERPA_ONNX_LOGE(
@@ -51,32 +53,45 @@ class OfflineParaformerModelQnn::Impl {
             "%d. '%s'",
             static_cast<int32_t>(binary_filenames.size()),
             config_.paraformer.qnn_config.context_binary.c_str());
-        return;
+        SHERPA_ONNX_EXIT(-1);
       }
     }
 
-    bool ok = InitEncoder(filenames[0],
+    if (filenames.empty() && binary_filenames.empty()) {
+      SHERPA_ONNX_LOGE(
+          "You need to provide either a model or a context binary for "
+          "Paraformer with QNN");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    bool ok = InitEncoder(filenames.empty() ? "" : filenames[0],
                           binary_filenames.empty() ? "" : binary_filenames[0]);
     if (!ok) {
-      SHERPA_ONNX_LOGE("Failed to init encoder with '%s'",
-                       filenames[0].c_str());
-      return;
+      SHERPA_ONNX_LOGE(
+          "Failed to init encoder with lib file '%s', context binary: '%s'",
+          filenames.empty() ? "" : filenames[0].c_str(),
+          binary_filenames.empty() ? "" : binary_filenames[0].c_str());
+      SHERPA_ONNX_EXIT(-1);
     }
 
-    ok = InitPredictor(filenames[1],
+    ok = InitPredictor(filenames.empty() ? "" : filenames[1],
                        binary_filenames.empty() ? "" : binary_filenames[1]);
     if (!ok) {
-      SHERPA_ONNX_LOGE("Failed to init predictor with '%s'",
-                       filenames[1].c_str());
+      SHERPA_ONNX_LOGE(
+          "Failed to init predictor with lib file '%s', context binary: '%s'",
+          filenames.empty() ? "" : filenames[1].c_str(),
+          binary_filenames.empty() ? "" : binary_filenames[1].c_str());
       return;
     }
 
-    ok = InitDecoder(filenames[2],
+    ok = InitDecoder(filenames.empty() ? "" : filenames[2],
                      binary_filenames.empty() ? "" : binary_filenames[2]);
     if (!ok) {
-      SHERPA_ONNX_LOGE("Failed to init decoder with '%s'",
-                       filenames[2].c_str());
-      return;
+      SHERPA_ONNX_LOGE(
+          "Failed to init decoder with lib file '%s', context binary: '%s'",
+          filenames.empty() ? "" : filenames[2].c_str(),
+          binary_filenames.empty() ? "" : binary_filenames[2].c_str());
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -208,7 +223,9 @@ class OfflineParaformerModelQnn::Impl {
     if (context_binary.empty()) {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
-            "Init from encoder model lib since context binary is not given");
+            "Init from encoder model lib '%s' since context binary is not "
+            "given.",
+            lib_filename.c_str());
       }
 
       InitEncoderFromModelLib(lib_filename);
@@ -216,18 +233,18 @@ class OfflineParaformerModelQnn::Impl {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
             "Skip generating encoder context binary since you don't provide a "
-            "path to "
-            "save it");
+            "path to save it");
       }
     } else if (!FileExists(context_binary)) {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
-            "Init encoder from model lib since context binary '%s' does not "
-            "exist",
-            context_binary.c_str());
+            "Init encoder from model lib '%s' since context binary '%s' does "
+            "not exist",
+            lib_filename.c_str(), context_binary.c_str());
       }
 
       InitEncoderFromModelLib(lib_filename);
+
       CreateContextBinary(encoder_model_.get(), context_binary);
     } else {
       if (config_.debug) {
@@ -250,7 +267,9 @@ class OfflineParaformerModelQnn::Impl {
     if (context_binary.empty()) {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
-            "Init from predictor model lib since context binary is not given");
+            "Init from predictor model lib '%s' since context binary is not "
+            "given.",
+            lib_filename.c_str());
       }
 
       InitPredictorFromModelLib(lib_filename);
@@ -258,16 +277,14 @@ class OfflineParaformerModelQnn::Impl {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
             "Skip generating predictor context binary since you don't provide "
-            "a "
-            "path to "
-            "save it");
+            "a path to save it");
       }
     } else if (!FileExists(context_binary)) {
       if (config_.debug) {
         SHERPA_ONNX_LOGE(
-            "Init predictor from model lib since context binary '%s' does not "
-            "exist",
-            context_binary.c_str());
+            "Init predictor from model lib '%s' since context binary '%s' does "
+            "not exist",
+            lib_filename.c_str(), context_binary.c_str());
       }
 
       InitPredictorFromModelLib(lib_filename);

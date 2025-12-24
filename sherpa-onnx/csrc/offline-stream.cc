@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Core"
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"

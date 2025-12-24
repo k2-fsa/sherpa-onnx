@@ -113,6 +113,41 @@ bool OfflineParaformerModelConfig::Validate() const {
     return true;
   }
 
+  if (model.empty() && !qnn_config.context_binary.empty()) {
+    // we require that the context_binary exists
+    if (!FileExists(qnn_config.context_binary)) {
+      SHERPA_ONNX_LOGE(
+          "Model is empty, but you provide a context binary that does not "
+          "exist");
+      return false;
+    }
+
+    std::vector<std::string> filenames;
+    SplitStringToVector(model, ",", false, &filenames);
+    if (filenames.size() != 3) {
+      SHERPA_ONNX_LOGE(
+          "For Paraformer with QNN, you should pass "
+          "/path/encoder.bin,/path/predictor.bin,/path/decoder.bin"
+          "Given '%s'",
+          model.c_str());
+      return false;
+    }
+
+    for (const auto &name : filenames) {
+      if (!FileExists(name)) {
+        SHERPA_ONNX_LOGE("Paraformer context binary '%s' does not exist",
+                         name.c_str());
+        return false;
+      }
+    }
+
+    if (!qnn_config.Validate()) {
+      return false;
+    }
+
+    return true;
+  }
+
   SHERPA_ONNX_LOGE(
       "Please pass *.onnx, *.om, *.rknn, or *.so models. Given '%s'",
       model.c_str());
@@ -123,11 +158,13 @@ std::string OfflineParaformerModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineParaformerModelConfig(";
-  os << "model=\"" << model << "\")";
+  os << "model=\"" << model << "\"";
 
   if (!qnn_config.backend_lib.empty()) {
-    os << "qnn_config=" << qnn_config.ToString() << ", ";
+    os << ", qnn_config=" << qnn_config.ToString();
   }
+
+  os << ")";
 
   return os.str();
 }
