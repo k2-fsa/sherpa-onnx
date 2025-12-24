@@ -26,7 +26,7 @@ def get_args():
         "--float-mask",
         type=int,
         default=1,
-        help="1 to use float master. 0 to use int32 mask",
+        help="1 to use float mask. 0 to use int32 mask",
     )
 
     parser.add_argument(
