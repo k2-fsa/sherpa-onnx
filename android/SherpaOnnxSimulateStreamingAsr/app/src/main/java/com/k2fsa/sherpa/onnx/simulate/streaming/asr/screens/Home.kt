@@ -163,7 +163,7 @@ fun HomeScreen() {
                                 offset += windowSize
                                 if (!isSpeechStarted && SimulateStreamingAsr.vad.isSpeechDetected()) {
                                     isSpeechStarted = true
-                                    // offset 0.25s
+                                    // offset 0.4s
                                     speechStartOffset = offset - 6400
                                     if(speechStartOffset < 0) {
                                         speechStartOffset = 0
