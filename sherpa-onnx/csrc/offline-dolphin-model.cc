@@ -19,6 +19,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -65,16 +66,15 @@ class OfflineDolphinModel::Impl {
 
   void NormalizeFeatures(float *features, int32_t num_frames,
                          int32_t feat_dim) const {
-    auto p = features;
-    const auto &mean = meta_data_.mean;
-    const auto &invstd = meta_data_.inv_stddev;
+    using RowMajorMat =
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    Eigen::Map<RowMajorMat> x(features, num_frames, feat_dim);
 
-    for (int32_t f = 0; f < num_frames; ++f) {
-      for (int32_t d = 0; d < feat_dim; ++d) {
-        p[d] = (p[d] - mean[d]) * invstd[d];
-      }
-      p += feat_dim;
-    }
+    Eigen::Map<const Eigen::RowVectorXf> mean(meta_data_.mean.data(), feat_dim);
+    Eigen::Map<const Eigen::RowVectorXf> inv_std(meta_data_.inv_stddev.data(),
+                                                 feat_dim);
+    x.array() =
+        (x.array().rowwise() - mean.array()).rowwise() * inv_std.array();
   }
 
   OrtAllocator *Allocator() { return allocator_; }

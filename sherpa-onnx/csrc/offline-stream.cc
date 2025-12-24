@@ -16,50 +16,11 @@
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
-
-/* Compute mean and inverse stddev over rows.
- *
- * @param p  A pointer to a 2-d array of shape (num_rows, num_cols)
- * @param num_rows Number of rows
- * @param num_cols Number of columns
- * @param mean On return, it contains p.mean(axis=0)
- * @param inv_stddev On return, it contains 1/p.std(axis=0)
- */
-static void ComputeMeanAndInvStd(const float *p, int32_t num_rows,
-                                 int32_t num_cols, std::vector<float> *mean,
-                                 std::vector<float> *inv_stddev) {
-  std::vector<float> sum(num_cols);
-  std::vector<float> sum_sq(num_cols);
-
-  for (int32_t i = 0; i != num_rows; ++i) {
-    for (int32_t c = 0; c != num_cols; ++c) {
-      auto t = p[c];
-      sum[c] += t;
-      sum_sq[c] += t * t;
-    }
-    p += num_cols;
-  }
-
-  mean->resize(num_cols);
-  inv_stddev->resize(num_cols);
-
-  for (int32_t i = 0; i != num_cols; ++i) {
-    auto t = sum[i] / num_rows;
-    (*mean)[i] = t;
-
-    float stddev = std::sqrt(sum_sq[i] / num_rows - t * t);
-
-    if (stddev != stddev) {
-      stddev = 0;
-    }
-
-    (*inv_stddev)[i] = 1.0f / (stddev + 1e-5f);
-  }
-}
 
 class OfflineStream::Impl {
  public:
@@ -305,17 +266,20 @@ class OfflineStream::Impl {
 
   static void NemoNormalizePerFeature(float *p, int32_t num_frames,
                                       int32_t feature_dim) {
-    std::vector<float> mean;
-    std::vector<float> inv_stddev;
+    using RowMajorMat =
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-    ComputeMeanAndInvStd(p, num_frames, feature_dim, &mean, &inv_stddev);
+    Eigen::Map<RowMajorMat> x(p, num_frames, feature_dim);
 
-    for (int32_t n = 0; n != num_frames; ++n) {
-      for (int32_t i = 0; i != feature_dim; ++i) {
-        p[i] = (p[i] - mean[i]) * inv_stddev[i];
-      }
-      p += feature_dim;
-    }
+    Eigen::RowVectorXf mean = x.colwise().mean();
+    Eigen::RowVectorXf var =
+        (x.array().square().colwise().mean() - mean.array().square())
+            .max(0.0f);  // avoid negative due to FP error
+
+    Eigen::RowVectorXf inv_std = (var.array().sqrt() + 1e-5f).inverse();
+
+    x.array() =
+        (x.array().rowwise() - mean.array()).rowwise() * inv_std.array();
   }
 
  private:
