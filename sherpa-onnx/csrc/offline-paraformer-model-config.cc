@@ -21,6 +21,11 @@ void OfflineParaformerModelConfig::Register(ParseOptions *po) {
       "/path/to/encoder.om,/path/to/predictor.om,/path/to/decoder.om"
       "If you use RK NPU, it is "
       "/path/to/encoder.rknn,/path/to/predictor.rknn,/path/to/decoder.rknn");
+
+  std::string prefix = "paraformer";
+  ParseOptions p(prefix, po);
+
+  qnn_config.Register(&p);
 }
 
 bool OfflineParaformerModelConfig::Validate() const {
@@ -46,6 +51,13 @@ bool OfflineParaformerModelConfig::Validate() const {
       return false;
     }
 
+    for (const auto &name : filenames) {
+      if (!FileExists(name)) {
+        SHERPA_ONNX_LOGE("Paraformer model '%s' does not exist", name.c_str());
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -63,11 +75,47 @@ bool OfflineParaformerModelConfig::Validate() const {
       return false;
     }
 
+    for (const auto &name : filenames) {
+      if (!FileExists(name)) {
+        SHERPA_ONNX_LOGE("Paraformer model '%s' does not exist", name.c_str());
+        return false;
+      }
+    }
+
     return true;
   }
 
-  SHERPA_ONNX_LOGE("Please pass *.onnx, *.om, or *.rknn models. Given '%s'",
-                   model.c_str());
+  if (EndsWith(model, ".so")) {
+    std::vector<std::string> filenames;
+    SplitStringToVector(model, ",", false, &filenames);
+    if (filenames.size() != 3 || !EndsWith(filenames[0], "encoder.so") ||
+        !EndsWith(filenames[1], "predictor.so") ||
+        !EndsWith(filenames[2], "decoder.so")) {
+      SHERPA_ONNX_LOGE(
+          "For QNN, you should pass "
+          "/path/libencoder.so,/path/libpredictor.so,/path/libdecoder.so. "
+          "Given '%s'",
+          model.c_str());
+      return false;
+    }
+
+    for (const auto &name : filenames) {
+      if (!FileExists(name)) {
+        SHERPA_ONNX_LOGE("Paraformer model '%s' does not exist", name.c_str());
+        return false;
+      }
+    }
+
+    if (!qnn_config.Validate()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  SHERPA_ONNX_LOGE(
+      "Please pass *.onnx, *.om, *.rknn, or *.so models. Given '%s'",
+      model.c_str());
   return false;
 }
 
@@ -76,6 +124,10 @@ std::string OfflineParaformerModelConfig::ToString() const {
 
   os << "OfflineParaformerModelConfig(";
   os << "model=\"" << model << "\")";
+
+  if (!qnn_config.backend_lib.empty()) {
+    os << "qnn_config=" << qnn_config.ToString() << ", ";
+  }
 
   return os.str();
 }
