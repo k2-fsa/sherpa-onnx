@@ -1,0 +1,94 @@
+name: export-medasr-ctc-to-onnx
+
+on:
+  push:
+    branches:
+      - export-medasr-onnx
+  workflow_dispatch:
+
+concurrency:
+  group: export-medasr-ctc-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-medasr-ctc-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export medasr ctc
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd scripts/medasr
+          ./run.sh
+
+      - name: Collect files
+        shell: bash
+        run: |
+          cd scripts/medasr
+          ls -lh
+
+      - name: Release
+        if: false
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface
+        if: false
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 5
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            names=(
+             sherpa-onnx-medasr-ctc-en-2025-12-25
+             sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+            )
+            for d in ${names[@]}; do
+              if [ ! -d $d ]; then
+                echo "$d does not exist - skip it"
+                continue;
+              fi
+
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* ./huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              cd ..
+            done
