@@ -37,14 +37,82 @@ jobs:
           cd scripts/medasr
           ./run.sh
 
-      - name: Collect files
+      - name: Download test data
         shell: bash
         run: |
           cd scripts/medasr
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-medasr-ctc-en-int8-2025-12-25/resolve/main/test_wavs/0.wav
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-medasr-ctc-en-int8-2025-12-25/resolve/main/test_wavs/transcript.txt
+
           ls -lh
 
+      - name: Test fp32
+        shell: bash
+        run: |
+          cd scripts/medasr
+
+          python3 test_onnx.py --model ./model.onnx --tokens ./tokens.txt --wav ./0.wav
+
+          cat transcript.txt
+
+      - name: Test int8
+        shell: bash
+        run: |
+          cd scripts/medasr
+
+          python3 test_onnx.py --model ./model.int8.onnx --tokens ./tokens.txt --wav ./0.wav
+
+          cat transcript.txt
+
+      - name: Collect fp32 files
+        shell: bash
+        run: |
+          cd scripts/medasr
+
+          d=sherpa-onnx-medasr-ctc-en-2025-12-25
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v model.onnx $d
+          cp -v README.md $d
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs/
+          cp -v transcript.txt $d/test_wavs/
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh *.tar.bz2
+
+          mv $d ../..
+          mv $d.tar.bz2 ../..
+
+      - name: Collect int8 files
+        shell: bash
+        run: |
+          cd scripts/medasr
+
+          d=sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v model.int8.onnx $d
+          cp -v README.md $d
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs/
+          cp -v transcript.txt $d/test_wavs/
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh *.tar.bz2
+
+          mv $d ../..
+          mv $d.tar.bz2 ../..
+
       - name: Release
-        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -55,7 +123,6 @@ jobs:
           tag: asr-models
 
       - name: Publish to huggingface
-        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

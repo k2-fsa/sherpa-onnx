@@ -13,7 +13,8 @@ pip install \
   onnxruntime==1.17.1 \
   librosa \
   onnxscript \
-  "numpy<2"
+  "numpy<2" \
+  kaldi-native-fbank
 
 ./export_onnx.py
 

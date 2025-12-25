@@ -97,8 +97,8 @@ def main():
             "logits_len": {0: "N"},
         },
         opset_version=14,
-        #  external_data=False,
-        #  dynamo=False,
+        external_data=False,
+        dynamo=False,
     )
 
     meta_data = {
