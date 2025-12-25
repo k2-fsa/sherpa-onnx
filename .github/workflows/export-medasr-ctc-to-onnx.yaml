@@ -3,7 +3,7 @@ name: export-medasr-ctc-to-onnx
 on:
   push:
     branches:
-      - cpp-medasr
+      - cpp-medasr-2
   workflow_dispatch:
 
 concurrency:

@@ -42,13 +42,13 @@ std::vector<int64_t> GetMask(Ort::Value length) {
 
   int64_t max_len = *std::max_element(p, p + batch_size);
 
-  std::vector<int64_t> ans(batch_size * max_len);
+  std::vector<int64_t> ans(batch_size * max_len, 0);
 
   int64_t *p_mask = ans.data();
 
   for (int32_t i = 0; i < batch_size; ++i) {
     auto len = p[i];
-    std::fill_n(p_mask, len, 1);
+    std::fill(p_mask, p_mask + len, 1);
 
     p_mask += max_len;
   }
