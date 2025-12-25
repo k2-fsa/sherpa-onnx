@@ -26,6 +26,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   canary.Register(po);
   omnilingual.Register(po);
   funasr_nano.Register(po);
+  medasr.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -163,6 +164,9 @@ bool OfflineModelConfig::Validate() const {
 
   if (!funasr_nano.encoder_adaptor.empty()) {
     return funasr_nano.Validate();
+    
+  if (!medasr.model.empty()) {
+    return medasr.Validate();
   }
 
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
@@ -196,6 +200,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "canary=" << canary.ToString() << ", ";
   os << "omnilingual=" << omnilingual.ToString() << ", ";
   os << "funasr_nano=" << funasr_nano.ToString() << ", ";
+  os << "medasr=" << medasr.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
