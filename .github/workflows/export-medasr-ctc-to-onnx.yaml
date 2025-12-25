@@ -3,7 +3,7 @@ name: export-medasr-ctc-to-onnx
 on:
   push:
     branches:
-      - export-medasr-onnx
+      - cpp-medasr-2
   workflow_dispatch:
 
 concurrency:
@@ -42,7 +42,9 @@ jobs:
         run: |
           cd scripts/medasr
 
-          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-medasr-ctc-en-int8-2025-12-25/resolve/main/test_wavs/0.wav
+          for i in $(seq 0 5); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-medasr-ctc-en-int8-2025-12-25/resolve/main/test_wavs/$i.wav
+          done
 
           curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-medasr-ctc-en-int8-2025-12-25/resolve/main/test_wavs/transcript.txt
 
@@ -53,7 +55,9 @@ jobs:
         run: |
           cd scripts/medasr
 
-          python3 test_onnx.py --model ./model.onnx --tokens ./tokens.txt --wav ./0.wav
+          for i in $(seq 0 5); do
+            python3 test_onnx.py --model ./model.onnx --tokens ./tokens.txt --wav ./$i.wav
+          done
 
           cat transcript.txt
 
@@ -62,7 +66,9 @@ jobs:
         run: |
           cd scripts/medasr
 
-          python3 test_onnx.py --model ./model.int8.onnx --tokens ./tokens.txt --wav ./0.wav
+          for i in $(seq 0 5); do
+            python3 test_onnx.py --model ./model.int8.onnx --tokens ./tokens.txt --wav ./$i.wav
+          done
 
           cat transcript.txt
 
