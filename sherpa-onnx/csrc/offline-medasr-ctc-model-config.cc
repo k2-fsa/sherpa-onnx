@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
 
+#include <sstream>
 #include <string>
 
 #include "sherpa-onnx/csrc/file-utils.h"

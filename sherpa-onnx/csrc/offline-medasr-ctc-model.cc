@@ -102,7 +102,7 @@ class OfflineMedAsrCtcModel::Impl {
 
   int32_t VocabSize() const { return vocab_size_; }
 
-  int32_t SubsamplingFactor() const { return 4; }
+  int32_t SubsamplingFactor() const { return subsampling_factor_; }
 
   OrtAllocator *Allocator() { return allocator_; }
 

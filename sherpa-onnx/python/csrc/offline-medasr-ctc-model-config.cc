@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-medasr-ctc-model-config.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
 
