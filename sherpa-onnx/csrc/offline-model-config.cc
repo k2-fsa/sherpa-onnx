@@ -25,6 +25,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   dolphin.Register(po);
   canary.Register(po);
   omnilingual.Register(po);
+  funasr_nano.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -93,9 +94,13 @@ bool OfflineModelConfig::Validate() const {
     }
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
-    return false;
+  // For FunASR-nano, tokens file is not required (tokenizer is loaded from directory)
+  // Check tokens file only if not using funasr_nano
+  if (funasr_nano.encoder_adaptor.empty()) {
+    if (!FileExists(tokens)) {
+      SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
+      return false;
+    }
   }
 
   if (!modeling_unit.empty() &&
@@ -156,6 +161,10 @@ bool OfflineModelConfig::Validate() const {
     return omnilingual.Validate();
   }
 
+  if (!funasr_nano.encoder_adaptor.empty()) {
+    return funasr_nano.Validate();
+  }
+
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
@@ -186,6 +195,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "dolphin=" << dolphin.ToString() << ", ";
   os << "canary=" << canary.ToString() << ", ";
   os << "omnilingual=" << omnilingual.ToString() << ", ";
+  os << "funasr_nano=" << funasr_nano.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
