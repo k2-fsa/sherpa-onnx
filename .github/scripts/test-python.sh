@@ -8,6 +8,17 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Google MedASR"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
+ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25/test_wavs
+
+python3 ./python-api-examples/offline-medasr-ctc-decode-files.py
+rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
 log "test omnilingual ASR"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
 tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2

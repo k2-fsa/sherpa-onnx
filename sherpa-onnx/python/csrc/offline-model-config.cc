@@ -11,6 +11,7 @@
 #include "sherpa-onnx/python/csrc/offline-canary-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-dolphin-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-fire-red-asr-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-medasr-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-omnilingual-asr-ctc-model-config.h"
@@ -38,6 +39,7 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineDolphinModelConfig(m);
   PybindOfflineCanaryModelConfig(m);
   PybindOfflineOmnilingualAsrCtcModelConfig(m);
+  PybindOfflineMedAsrCtcModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
@@ -54,9 +56,10 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineDolphinModelConfig &,
                     const OfflineCanaryModelConfig &,
                     const OfflineOmnilingualAsrCtcModelConfig &,
-                    const std::string &, const std::string &, int32_t, bool,
+                    const OfflineMedAsrCtcModelConfig &, const std::string &,
+                    const std::string &, int32_t, bool, const std::string &,
                     const std::string &, const std::string &,
-                    const std::string &, const std::string &>(),
+                    const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -70,6 +73,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("dolphin") = OfflineDolphinModelConfig(),
            py::arg("canary") = OfflineCanaryModelConfig(),
            py::arg("omnilingual") = OfflineOmnilingualAsrCtcModelConfig(),
+           py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
            py::arg("telespeech_ctc") = "", py::arg("tokens") = "",
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
@@ -87,6 +91,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("dolphin", &PyClass::dolphin)
       .def_readwrite("canary", &PyClass::canary)
       .def_readwrite("omnilingual", &PyClass::omnilingual)
+      .def_readwrite("medasr", &PyClass::medasr)
       .def_readwrite("telespeech_ctc", &PyClass::telespeech_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)

@@ -107,6 +107,7 @@ def main():
         "model_author": "google",
         "maintainer": "k2-fsa",
         "vocab_size": processor.tokenizer.vocab_size,
+        "subsampling_factor": 4,
         "url": "https://github.com/Google-Health/medasr",
         "license": "https://developers.google.com/health-ai-developer-foundations/terms",
     }

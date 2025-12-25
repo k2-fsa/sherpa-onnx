@@ -217,6 +217,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.tdnn.model.empty() ||
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
+      !config.model_config.medasr.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -547,6 +548,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.tdnn.model.empty() ||
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
+      !config.model_config.medasr.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
