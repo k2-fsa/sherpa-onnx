@@ -164,7 +164,8 @@ bool OfflineModelConfig::Validate() const {
 
   if (!funasr_nano.encoder_adaptor.empty()) {
     return funasr_nano.Validate();
-    
+  }
+
   if (!medasr.model.empty()) {
     return medasr.Validate();
   }
