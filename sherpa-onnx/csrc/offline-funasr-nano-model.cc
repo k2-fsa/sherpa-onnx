@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <dlfcn.h>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -121,134 +120,90 @@ static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
   return n;
 }
 
-// Helper template to convert std::string or const char* to const char*.
-template <typename T>
-static inline const char *ToCStr(const T &x) {
-  return x.c_str();
-}
-
-template <>
-inline const char *ToCStr<const char *>(const char *const &x) {
-  return x;
-}
-
-// Check if a tensor is stored on CUDA device.
-static inline bool TensorIsCuda(const Ort::Value &v) {
-  if (!v.IsTensor()) return false;
+static inline bool TensorIsCpu(const Ort::Value &v) {
+  if (!v.IsTensor()) return true;
   auto mi = v.GetTensorMemoryInfo();
-  auto name_obj = mi.GetAllocatorName();
-  const char *name = ToCStr(name_obj);
-  if (!name || !name[0]) return false;
-  return std::strstr(name, "Cuda") || std::strstr(name, "CUDA");
+  return mi.GetDeviceType() == OrtMemoryInfoDeviceType_CPU;
 }
 
-// Copy tensor data from GPU to CPU if needed.
-// Uses dynamic loading of CUDA functions to avoid compile-time dependencies.
-static inline void CopyRawToCpu(void *dst, const Ort::Value &src, size_t bytes,
-                                bool force_cpu = false) {
-  const void *p = src.GetTensorData<void>();
-  if (bytes == 0 || dst == p) return;
-
-  if (force_cpu || !TensorIsCuda(src)) {
-    std::memcpy(dst, p, bytes);
-    return;
-  }
-
-  typedef int (*cudaMemcpyFunc)(void *, const void *, size_t, int);
-  typedef int (*cudaDeviceSynchronizeFunc)();
-  typedef int (*cudaGetLastErrorFunc)();
-
-  static void *cuda_handle = nullptr;
-  static cudaMemcpyFunc cudaMemcpy_dyn = nullptr;
-  static cudaDeviceSynchronizeFunc cudaDeviceSynchronize_dyn = nullptr;
-  static cudaGetLastErrorFunc cudaGetLastError_dyn = nullptr;
-  static bool cuda_checked = false;
-
-  if (!cuda_checked) {
-    cuda_checked = true;
-    cuda_handle = dlopen("libcudart.so", RTLD_LAZY);
-    if (!cuda_handle) cuda_handle = dlopen("libcudart.so.12", RTLD_LAZY);
-    if (!cuda_handle) cuda_handle = dlopen("libcudart.so.11", RTLD_LAZY);
-    if (cuda_handle) {
-      cudaMemcpy_dyn = (cudaMemcpyFunc)dlsym(cuda_handle, "cudaMemcpy");
-      cudaDeviceSynchronize_dyn =
-          (cudaDeviceSynchronizeFunc)dlsym(cuda_handle, "cudaDeviceSynchronize");
-      cudaGetLastError_dyn =
-          (cudaGetLastErrorFunc)dlsym(cuda_handle, "cudaGetLastError");
-      if (!cudaMemcpy_dyn) {
-        dlclose(cuda_handle);
-        cuda_handle = nullptr;
-        cudaMemcpy_dyn = nullptr;
-        cudaDeviceSynchronize_dyn = nullptr;
-        cudaGetLastError_dyn = nullptr;
-      }
-    }
-  }
-
-  if (!cudaMemcpy_dyn) {
-    SHERPA_ONNX_LOGE("Tensor is on CUDA but libcudart/cudaMemcpy is unavailable");
+static inline void AssertTensorIsCpu(const Ort::Value &v, const char *what) {
+  if (!v.IsTensor()) return;
+  auto mi = v.GetTensorMemoryInfo();
+  if (mi.GetDeviceType() != OrtMemoryInfoDeviceType_CPU) {
+    SHERPA_ONNX_LOGE("%s: expected CPU tensor but got device_type=%d device_id=%d",
+                     what, (int)mi.GetDeviceType(), mi.GetDeviceId());
     SHERPA_ONNX_EXIT(-1);
   }
+}
 
-  if (cudaGetLastError_dyn) cudaGetLastError_dyn();
-  int err = cudaMemcpy_dyn(dst, p, bytes, 2);
-  if (err == 0) {
-    if (cudaDeviceSynchronize_dyn) cudaDeviceSynchronize_dyn();
-    return;
-  }
+static inline std::string ToLower(std::string s) {
+  std::transform(s.begin(), s.end(), s.begin(),
+                 [](unsigned char c) -> char {
+                   return static_cast<char>(std::tolower(c));
+                 });
+  return s;
+}
 
-  if (cudaGetLastError_dyn) cudaGetLastError_dyn();
-  SHERPA_ONNX_LOGE("cudaMemcpy(DeviceToHost) failed");
-  SHERPA_ONNX_EXIT(-1);
+static inline bool IsCudaProvider(const std::string &provider) {
+  auto p = ToLower(provider);
+  // Keep it conservative. We only enable IO binding policy below when we
+  // are on CUDA; other EPs keep the existing behavior.
+  return p == "cuda" || (p.size() > 4 && p.rfind("cuda", 0) == 0);
 }
 
 // Get the element type of a session input tensor.
-static inline ONNXTensorElementDataType GetSessionInputElemType(Ort::Session *sess, size_t input_index) {
+static inline ONNXTensorElementDataType GetSessionInputElemType(
+    Ort::Session *sess, size_t input_index) {
   auto ti = sess->GetInputTypeInfo(input_index);
   auto t  = ti.GetTensorTypeAndShapeInfo();
   return static_cast<ONNXTensorElementDataType>(t.GetElementType());
 }
 
 // Get the element type of a session output tensor.
-static inline ONNXTensorElementDataType GetSessionOutputElemType(Ort::Session *sess, size_t output_index) {
+static inline ONNXTensorElementDataType GetSessionOutputElemType(
+    Ort::Session *sess, size_t output_index) {
   auto ti = sess->GetOutputTypeInfo(output_index);
   auto t  = ti.GetTensorTypeAndShapeInfo();
   return static_cast<ONNXTensorElementDataType>(t.GetElementType());
 }
 
 template <typename T>
-static Ort::Value AllocTensor(OrtAllocator *alloc, const std::vector<int64_t> &shape) {
+static Ort::Value AllocTensor(OrtAllocator *alloc,
+                              const std::vector<int64_t> &shape) {
   return Ort::Value::CreateTensor<T>(alloc, shape.data(), shape.size());
 }
 
 template <>
 Ort::Value AllocTensor<uint16_t>(OrtAllocator *alloc,
-                                  const std::vector<int64_t> &shape) {
+                                 const std::vector<int64_t> &shape) {
   return Ort::Value::CreateTensor(alloc, shape.data(), shape.size(),
                                   ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 }
 
 // Convert tensor to float32, handling both float16 and float32 inputs.
-// If force_cpu is true, ensures the output tensor is allocated on CPU.
-static Ort::Value CastToFloat32(Ort::Value in, OrtAllocator *alloc,
-                                bool force_cpu = false) {
+// NOTE: This helper assumes the input tensor is on CPU memory.
+// The caller must ensure the tensor is on CPU (e.g., via IO Binding).
+static Ort::Value CastToFloat32(Ort::Value in, OrtAllocator *alloc) {
   if (!in.IsTensor()) return in;
   auto info = in.GetTensorTypeAndShapeInfo();
   auto shape = info.GetShape();
   size_t n = NumelFromShape(shape);
   if (n == 0) return in;
   auto et = static_cast<ONNXTensorElementDataType>(info.GetElementType());
+
+  AssertTensorIsCpu(in, "CastToFloat32");
+
   Ort::Value out = AllocTensor<float>(alloc, shape);
   float *dst = out.GetTensorMutableData<float>();
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-    CopyRawToCpu(dst, in, n * sizeof(float), force_cpu);
+    const float *src = in.GetTensorData<float>();
+    std::memcpy(dst, src, n * sizeof(float));
     return out;
   }
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
       et == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16) {
-    std::vector<uint16_t> tmp(n);
-    CopyRawToCpu(tmp.data(), in, n * sizeof(uint16_t), force_cpu);
-    for (size_t i = 0; i < n; ++i) dst[i] = HalfBitsToFloat(tmp[i]);
+    const uint16_t *src = in.GetTensorData<uint16_t>();
+    for (size_t i = 0; i < n; ++i) dst[i] = HalfBitsToFloat(src[i]);
     return out;
   }
   SHERPA_ONNX_LOGE("CastToFloat32: unsupported input elem_type=%d", (int)et);
@@ -256,6 +211,7 @@ static Ort::Value CastToFloat32(Ort::Value in, OrtAllocator *alloc,
 }
 
 // Convert tensor to float16, handling both float16 and float32 inputs.
+// NOTE: This helper assumes the input tensor is on CPU memory.
 static Ort::Value CastToFloat16(Ort::Value in, OrtAllocator *alloc) {
   if (!in.IsTensor()) return in;
   auto info = in.GetTensorTypeAndShapeInfo();
@@ -263,17 +219,20 @@ static Ort::Value CastToFloat16(Ort::Value in, OrtAllocator *alloc) {
   size_t n = NumelFromShape(shape);
   if (n == 0) return in;
   auto et = static_cast<ONNXTensorElementDataType>(info.GetElementType());
+
+  AssertTensorIsCpu(in, "CastToFloat16");
+
   Ort::Value out = AllocTensor<uint16_t>(alloc, shape);
   uint16_t *dst = out.GetTensorMutableData<uint16_t>();
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
       et == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16) {
-    CopyRawToCpu(dst, in, n * sizeof(uint16_t));
+    const uint16_t *src = in.GetTensorData<uint16_t>();
+    std::memcpy(dst, src, n * sizeof(uint16_t));
     return out;
   }
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-    std::vector<float> tmp(n);
-    CopyRawToCpu(tmp.data(), in, n * sizeof(float));
-    for (size_t i = 0; i < n; ++i) dst[i] = FloatToHalfBits(tmp[i]);
+    const float *src = in.GetTensorData<float>();
+    for (size_t i = 0; i < n; ++i) dst[i] = FloatToHalfBits(src[i]);
     return out;
   }
   SHERPA_ONNX_LOGE("CastToFloat16: unsupported input elem_type=%d", (int)et);
@@ -282,10 +241,10 @@ static Ort::Value CastToFloat16(Ort::Value in, OrtAllocator *alloc) {
 
 // Cast tensor to the expected element type (float16 or float32).
 // Returns the input unchanged if it already matches the expected type.
+// NOTE: This helper assumes the input tensor is on CPU memory.
 static Ort::Value CastFloatLikeForExpected(Ort::Value in,
                                            ONNXTensorElementDataType expected,
-                                           OrtAllocator *alloc,
-                                           bool force_cpu = false) {
+                                           OrtAllocator *alloc) {
   if (!in.IsTensor()) return in;
   auto info = in.GetTensorTypeAndShapeInfo();
   auto actual = static_cast<ONNXTensorElementDataType>(info.GetElementType());
@@ -294,7 +253,7 @@ static Ort::Value CastFloatLikeForExpected(Ort::Value in,
     return CastToFloat16(std::move(in), alloc);
   }
   if (expected == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-    return CastToFloat32(std::move(in), alloc, force_cpu);
+    return CastToFloat32(std::move(in), alloc);
   }
   SHERPA_ONNX_LOGE(
       "CastFloatLikeForExpected: unsupported expected elem_type=%d",
@@ -303,7 +262,7 @@ static Ort::Value CastFloatLikeForExpected(Ort::Value in,
 }
 
 static inline bool NeedsTypeConversion(Ort::Value &in,
-                                      ONNXTensorElementDataType expected) {
+                                       ONNXTensorElementDataType expected) {
   if (!in.IsTensor()) return false;
   auto info = in.GetTensorTypeAndShapeInfo();
   auto actual = static_cast<ONNXTensorElementDataType>(info.GetElementType());
@@ -312,6 +271,7 @@ static inline bool NeedsTypeConversion(Ort::Value &in,
 
 // Cast attention mask tensor to int64 if needed.
 // Supports int32 to int64 conversion.
+// NOTE: This helper assumes the input tensor is on CPU memory.
 static Ort::Value CastMaskToInt64IfNeeded(Ort::Value in, OrtAllocator *alloc) {
   if (!in.IsTensor()) return in;
   auto info = in.GetTensorTypeAndShapeInfo();
@@ -321,12 +281,13 @@ static Ort::Value CastMaskToInt64IfNeeded(Ort::Value in, OrtAllocator *alloc) {
   auto et = static_cast<ONNXTensorElementDataType>(info.GetElementType());
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) return in;
 
+  AssertTensorIsCpu(in, "CastMaskToInt64IfNeeded");
+
   if (et == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
-    std::vector<int32_t> tmp(n);
-    CopyRawToCpu(tmp.data(), in, n * sizeof(int32_t), false);
+    const int32_t *src = in.GetTensorData<int32_t>();
     Ort::Value out = AllocTensor<int64_t>(alloc, shape);
     int64_t *dst = out.GetTensorMutableData<int64_t>();
-    for (size_t i = 0; i < n; ++i) dst[i] = static_cast<int64_t>(tmp[i]);
+    for (size_t i = 0; i < n; ++i) dst[i] = static_cast<int64_t>(src[i]);
     return out;
   }
 
@@ -353,7 +314,7 @@ static size_t CalculateTensorBytes(const Ort::Value &tensor) {
   }
   SHERPA_ONNX_LOGE("CalculateTensorBytes: unsupported tensor type %d", (int)type);
   SHERPA_ONNX_EXIT(-1);
-  return 0; 
+  return 0;
 }
 
 }  // namespace
@@ -369,6 +330,8 @@ class OfflineFunASRNanoModel::Impl {
         sess_opts_llm_(GetSessionOptions(config)),
         sess_opts_embedding_(GetSessionOptions(config)),
         allocator_(),
+        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
+                                                 OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.funasr_nano;
     InitEncoderAdaptor(c.encoder_adaptor);
@@ -380,6 +343,17 @@ class OfflineFunASRNanoModel::Impl {
       has_embedding_model_ = true;
     } else {
       has_embedding_model_ = false;
+    }
+
+    // For FunASR-nano we do CPU-side sampling. When running on CUDA, we bind
+    // logits to CPU (so sampling can read it safely), while keeping KV cache
+    // on GPU to avoid large device<->host copies.
+    use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    if (use_cuda_iobinding_) {
+      // Use device 0 by default. SessionOptions() in sherpa-onnx usually
+      // configures the CUDA EP device; binding here only affects output memory.
+      cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
+          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
     }
   }
 
@@ -512,6 +486,8 @@ class OfflineFunASRNanoModel::Impl {
         sess_opts_llm_(GetSessionOptions(config)),
         sess_opts_embedding_(GetSessionOptions(config)),
         allocator_(),
+        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
+                                                 OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.funasr_nano;
     auto buf_encoder = ReadFile(mgr, c.encoder_adaptor);
@@ -528,6 +504,12 @@ class OfflineFunASRNanoModel::Impl {
     } else {
       has_embedding_model_ = false;
     }
+
+    use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    if (use_cuda_iobinding_) {
+      cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
+          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+    }
   }
 
   // Forward pass through encoder adaptor model.
@@ -535,23 +517,32 @@ class OfflineFunASRNanoModel::Impl {
   Ort::Value ForwardEncoderAdaptor(Ort::Value features) {
     if (NeedsTypeConversion(features, encoder_in_type_)) {
       features = CastFloatLikeForExpected(std::move(features), encoder_in_type_,
-                                         allocator_, is_cpu_provider_);
+                                          allocator_);
     }
+
+    // Encoder output is consumed by CPU-side code (embedding packing), so we
+    // bind it to CPU when running on CUDA to avoid returning a CUDA pointer.
+    if (use_cuda_iobinding_) {
+      Ort::IoBinding binding(*encoder_sess_);
+      binding.BindInput(encoder_input_names_ptr_[0], features);
+      binding.BindOutput(encoder_output_names_ptr_[0], cpu_mem_info_);
+      binding.SynchronizeInputs();
+      encoder_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      auto outs = binding.GetOutputValues();
+
+      if (outs.empty()) {
+        SHERPA_ONNX_LOGE("ForwardEncoderAdaptor: empty outputs");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      return std::move(outs[0]);
+    }
+
     std::array<Ort::Value, 1> inputs = {std::move(features)};
     auto outputs = encoder_sess_->Run(
         {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
         encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
-    auto out_info = outputs[0].GetTensorTypeAndShapeInfo();
-    auto out_et =
-        static_cast<ONNXTensorElementDataType>(out_info.GetElementType());
-    if (out_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16) {
-      return CastToFloat16(std::move(outputs[0]), allocator_);
-    }
-    if (out_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-      return CastToFloat32(std::move(outputs[0]), allocator_,
-                           is_cpu_provider_);
-    }
-    return CastToFloat32(std::move(outputs[0]), allocator_, is_cpu_provider_);
+    return std::move(outputs[0]);
   }
 
   Ort::Value ForwardLLM(Ort::Value, Ort::Value) {
@@ -572,8 +563,7 @@ class OfflineFunASRNanoModel::Impl {
     }
     if (NeedsTypeConversion(inputs_embeds, prefill_embeds_in_type_)) {
       inputs_embeds = CastFloatLikeForExpected(
-          std::move(inputs_embeds), prefill_embeds_in_type_, allocator_,
-          is_cpu_provider_);
+          std::move(inputs_embeds), prefill_embeds_in_type_, allocator_);
     }
     if (attention_mask.IsTensor()) {
       auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
@@ -584,14 +574,41 @@ class OfflineFunASRNanoModel::Impl {
             CastMaskToInt64IfNeeded(std::move(attention_mask), allocator_);
       }
     }
-    std::array<Ort::Value, 2> inputs = {std::move(inputs_embeds),
-                                       std::move(attention_mask)};
-    auto outputs = prefill_sess_->Run(
-        {}, prefill_input_names_ptr_.data(), inputs.data(), inputs.size(),
-        prefill_output_names_ptr_.data(), prefill_output_names_ptr_.size());
+
+    std::vector<Ort::Value> outputs;
+
+    if (use_cuda_iobinding_) {
+      // CPU-side sampling needs logits on CPU, while KV cache should remain on
+      // GPU to avoid large device<->host copies between decode steps.
+      Ort::IoBinding binding(*prefill_sess_);
+      binding.BindInput(prefill_input_names_ptr_[0], inputs_embeds);
+      binding.BindInput(prefill_input_names_ptr_[1], attention_mask);
+
+      binding.BindOutput(prefill_output_names_ptr_[0], cpu_mem_info_);
+      for (size_t i = 1; i < prefill_output_names_ptr_.size(); ++i) {
+        binding.BindOutput(prefill_output_names_ptr_[i], *cuda_mem_info_);
+      }
+
+      binding.SynchronizeInputs();
+      prefill_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      outputs = binding.GetOutputValues();
+    } else {
+      std::array<Ort::Value, 2> inputs = {std::move(inputs_embeds),
+                                          std::move(attention_mask)};
+      outputs = prefill_sess_->Run(
+          {}, prefill_input_names_ptr_.data(), inputs.data(), inputs.size(),
+          prefill_output_names_ptr_.data(), prefill_output_names_ptr_.size());
+    }
+
     // First output is logits, remaining outputs are past_key_values
+    if (outputs.empty()) {
+      SHERPA_ONNX_LOGE("ForwardLLMPrefill: empty outputs");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     Ort::Value logits = std::move(outputs[0]);
-    logits = CastToFloat32(std::move(logits), allocator_, is_cpu_provider_);
+
     std::vector<std::pair<Ort::Value, Ort::Value>> past_kv;
     int num_layers = static_cast<int>((outputs.size() - 1) / 2);
     past_kv.reserve(num_layers);
@@ -616,8 +633,7 @@ class OfflineFunASRNanoModel::Impl {
     }
     if (NeedsTypeConversion(inputs_embeds, decode_embeds_in_type_)) {
       inputs_embeds = CastFloatLikeForExpected(
-          std::move(inputs_embeds), decode_embeds_in_type_, allocator_,
-          is_cpu_provider_);
+          std::move(inputs_embeds), decode_embeds_in_type_, allocator_);
     }
     if (attention_mask.IsTensor()) {
       auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
@@ -628,6 +644,7 @@ class OfflineFunASRNanoModel::Impl {
             CastMaskToInt64IfNeeded(std::move(attention_mask), allocator_);
       }
     }
+
     // Build inputs: [inputs_embeds, attention_mask, past_key_0, past_value_0, ...]
     // NOTE: We create non-owning Ort::Value views that reference existing buffers.
     std::vector<Ort::Value> inputs;
@@ -654,6 +671,7 @@ class OfflineFunASRNanoModel::Impl {
           v_mem, const_cast<void *>(kv.second.GetTensorData<void>()), v_bytes,
           v_shape.data(), v_shape.size(), v_type));
     }
+
     // Build input names: [inputs_embeds, attention_mask, past_key_0, past_value_0, ...]
     std::vector<const char *> input_names_ptr;
     input_names_ptr.reserve(2 + 2 * past_key_values.size());
@@ -663,12 +681,39 @@ class OfflineFunASRNanoModel::Impl {
       input_names_ptr.push_back(decode_input_names_ptr_[2 + 2 * i]);
       input_names_ptr.push_back(decode_input_names_ptr_[2 + 2 * i + 1]);
     }
-    auto outputs = decode_sess_->Run(
-        {}, input_names_ptr.data(), inputs.data(), inputs.size(),
-        decode_output_names_ptr_.data(), decode_output_names_ptr_.size());
+
+    std::vector<Ort::Value> outputs;
+
+    if (use_cuda_iobinding_) {
+      // Bind logits to CPU for sampling; keep KV cache on GPU for next steps.
+      Ort::IoBinding binding(*decode_sess_);
+      for (size_t i = 0; i < inputs.size(); ++i) {
+        binding.BindInput(input_names_ptr[i], inputs[i]);
+      }
+
+      binding.BindOutput(decode_output_names_ptr_[0], cpu_mem_info_);
+      for (size_t i = 1; i < decode_output_names_ptr_.size(); ++i) {
+        binding.BindOutput(decode_output_names_ptr_[i], *cuda_mem_info_);
+      }
+
+      binding.SynchronizeInputs();
+      decode_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      outputs = binding.GetOutputValues();
+    } else {
+      outputs = decode_sess_->Run(
+          {}, input_names_ptr.data(), inputs.data(), inputs.size(),
+          decode_output_names_ptr_.data(), decode_output_names_ptr_.size());
+    }
+
     // First output is logits, remaining outputs are updated past_key_values
+    if (outputs.empty()) {
+      SHERPA_ONNX_LOGE("ForwardLLMDecode: empty outputs");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     Ort::Value logits = std::move(outputs[0]);
-    logits = CastToFloat32(std::move(logits), allocator_, is_cpu_provider_);
+
     std::vector<std::pair<Ort::Value, Ort::Value>> updated_past_kv;
     int num_layers = static_cast<int>((outputs.size() - 1) / 2);
     updated_past_kv.reserve(num_layers);
@@ -686,14 +731,29 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_LOGE("Embedding model is not loaded");
       SHERPA_ONNX_EXIT(-1);
     }
+
+    // Embedding output is consumed by CPU-side packing code; bind it to CPU
+    // when running on CUDA to avoid returning a CUDA pointer.
+    if (use_cuda_iobinding_) {
+      Ort::IoBinding binding(*embedding_sess_);
+      binding.BindInput(embedding_input_names_ptr_[0], input_ids);
+      binding.BindOutput(embedding_output_names_ptr_[0], cpu_mem_info_);
+      binding.SynchronizeInputs();
+      embedding_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      auto outs = binding.GetOutputValues();
+
+      if (outs.empty()) {
+        SHERPA_ONNX_LOGE("ForwardEmbedding: empty outputs");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      return std::move(outs[0]);
+    }
+
     std::array<Ort::Value, 1> inputs = {std::move(input_ids)};
     auto outputs = embedding_sess_->Run(
         {}, embedding_input_names_ptr_.data(), inputs.data(), inputs.size(),
         embedding_output_names_ptr_.data(), embedding_output_names_ptr_.size());
-    if (NeedsTypeConversion(outputs[0], ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT)) {
-      return CastToFloat32(std::move(outputs[0]), allocator_,
-                           is_cpu_provider_);
-    }
     return std::move(outputs[0]);
   }
 
@@ -841,6 +901,10 @@ class OfflineFunASRNanoModel::Impl {
   Ort::SessionOptions sess_opts_embedding_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
+  Ort::MemoryInfo cpu_mem_info_;
+  std::unique_ptr<Ort::MemoryInfo> cuda_mem_info_;
+  bool use_cuda_iobinding_ = false;
+
   std::unique_ptr<Ort::Session> encoder_sess_;
   std::unique_ptr<Ort::Session> prefill_sess_;
   std::unique_ptr<Ort::Session> decode_sess_;
@@ -884,7 +948,7 @@ class OfflineFunASRNanoModel::Impl {
       ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
   ONNXTensorElementDataType embedding_out_type_ =
       ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-      
+
   bool is_cpu_provider_ = false;
 };
 
