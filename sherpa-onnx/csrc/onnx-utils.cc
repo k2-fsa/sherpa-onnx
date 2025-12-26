@@ -190,6 +190,7 @@ Ort::Value View(Ort::Value *v) {
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
   auto memory_info = v->GetTensorMemoryInfo();
+
   switch (type_and_shape.GetElementType()) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
       return Ort::Value::CreateTensor(
