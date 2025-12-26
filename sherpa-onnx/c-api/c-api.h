@@ -490,6 +490,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *llm_decode;
   const char *embedding;
   const char *tokenizer;
+  const char *system_prompt;
   const char *user_prompt;
   int32_t max_new_tokens;
   float temperature;

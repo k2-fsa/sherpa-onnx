@@ -521,6 +521,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
       SHERPA_ONNX_OR(config->model_config.funasr_nano.embedding, "");
   recognizer_config.model_config.funasr_nano.tokenizer =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.tokenizer, "");
+  recognizer_config.model_config.funasr_nano.system_prompt =
+      SHERPA_ONNX_OR(config->model_config.funasr_nano.system_prompt,
+                     "You are a helpful assistant.");
   recognizer_config.model_config.funasr_nano.user_prompt =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.user_prompt,
                      "语音转写：");

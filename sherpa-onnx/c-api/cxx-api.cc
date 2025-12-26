@@ -282,6 +282,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.funasr_nano.embedding.c_str();
   c.model_config.funasr_nano.tokenizer =
       config.model_config.funasr_nano.tokenizer.c_str();
+  c.model_config.funasr_nano.system_prompt =
+      config.model_config.funasr_nano.system_prompt.c_str();
   c.model_config.funasr_nano.user_prompt =
       config.model_config.funasr_nano.user_prompt.c_str();
   c.model_config.funasr_nano.max_new_tokens =

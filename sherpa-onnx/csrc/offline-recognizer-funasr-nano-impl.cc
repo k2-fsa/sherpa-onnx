@@ -302,14 +302,13 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   const int32_t max_new_tokens =
       funasr_config.max_new_tokens > 0 ? funasr_config.max_new_tokens : 256;
   std::vector<std::pair<Ort::Value, Ort::Value>> past_key_values;
-  bool use_kv_cache = model_->UseKVCache();
   bool is_first_step = true;
   // Autoregressive generation loop
   for (int32_t step = 0; step < max_new_tokens; ++step) {
     if (valid_len >= max_seq_len) break;
     Ort::Value logits(nullptr);
     
-    if (use_kv_cache && is_first_step) {
+    if (is_first_step) {
       // First step: use prefill model with full context
       std::array<int64_t, 3> embeds_shape{1, context_len, hidden_size};
       Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor(
@@ -328,7 +327,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
                                            std::move(attention_mask_tensor));
       logits = std::move(tmp.first);
       past_key_values = std::move(tmp.second);
-    } else if (use_kv_cache) {
+    } else {
       // Subsequent steps: use decode model with KV cache
       int64_t last_token_id = generated_ids.back();
       std::vector<int64_t> one_id{last_token_id};
@@ -368,20 +367,6 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
                                           past_key_values);
       logits = std::move(tmp.first);
       past_key_values = std::move(tmp.second);
-    } else {
-      // Legacy mode: use single LLM model without KV cache
-      std::array<int64_t, 3> embeds_shape{1, max_seq_len, hidden_size};
-      Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor(
-          memory_info, inputs_embeds_fp16.data(),
-          static_cast<size_t>(max_seq_len) * hidden_size * sizeof(uint16_t),
-          embeds_shape.data(), embeds_shape.size(),
-          ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-      std::array<int64_t, 2> mask_shape{1, max_seq_len};
-      Ort::Value attention_mask_tensor = Ort::Value::CreateTensor(
-          memory_info, attention_mask.data(), attention_mask.size(),
-          mask_shape.data(), mask_shape.size());
-      logits = model_->ForwardLLM(std::move(inputs_embeds_tensor),
-                                  std::move(attention_mask_tensor));
     }
     // Extract logits for the last position
     auto log_info = logits.GetTensorTypeAndShapeInfo();
@@ -389,14 +374,8 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
     const bool log_fp16 =
         (log_info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-    int32_t last_idx;
     // In KV cache mode: prefill uses last position, decode uses position 0
-    // In legacy mode: use valid_len - 1
-    if (use_kv_cache) {
-      last_idx = is_first_step ? (context_len - 1) : 0;
-    } else {
-      last_idx = valid_len - 1;
-    }
+    int32_t last_idx = is_first_step ? (context_len - 1) : 0;
     const void *base = nullptr;
     if (log_fp16) {
       base = logits.GetTensorData<uint16_t>();
@@ -419,37 +398,10 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     generated_ids.push_back(next_id);
 
     // After sampling the first token from prefill, switch to decode mode
-    if (use_kv_cache && is_first_step) {
+    if (is_first_step) {
       is_first_step = false;
     }
-    if (!use_kv_cache) {
-      // Legacy mode: update inputs_embeds and attention_mask for next iteration
-      std::vector<int64_t> one_id{next_id};
-      std::array<int64_t, 2> one_shape{1, 1};
-      Ort::Value one_tensor = Ort::Value::CreateTensor(
-          memory_info, one_id.data(), one_id.size(), one_shape.data(),
-          one_shape.size());
-      Ort::Value next_embed =
-          model_->ForwardEmbedding(std::move(one_tensor));
-      auto ne_info = next_embed.GetTensorTypeAndShapeInfo();
-      bool ne_fp16 = (ne_info.GetElementType() ==
-                      ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-      uint16_t *dst =
-          inputs_embeds_fp16.data() +
-          static_cast<int64_t>(valid_len) * hidden_size;
-      if (ne_fp16) {
-        const uint16_t *src = next_embed.GetTensorData<uint16_t>();
-        std::copy(src, src + hidden_size, dst);
-      } else {
-        const float *src = next_embed.GetTensorData<float>();
-        for (int32_t d = 0; d < hidden_size; ++d)
-          dst[d] = Fp32ToFp16(src[d]);
-      }
-      attention_mask[valid_len] = 1;
-      valid_len += 1;
-    } else {
-      valid_len += 1;
-    }
+    valid_len += 1;
   }
   // Decode generated token IDs to text
   result.text = tokenizer_->Decode(generated_ids);

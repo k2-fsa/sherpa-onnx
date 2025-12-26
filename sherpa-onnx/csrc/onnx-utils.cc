@@ -189,8 +189,7 @@ Ort::Value View(Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+  auto memory_info = v->GetTensorMemoryInfo();
   switch (type_and_shape.GetElementType()) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
       return Ort::Value::CreateTensor(

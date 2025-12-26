@@ -7,9 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 #include <memory>
-#include <numeric>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -38,7 +36,7 @@ namespace {
 // float. Handles special cases: zero, subnormal, normal, infinity, and NaN.
 static inline float HalfBitsToFloat(uint16_t h) {
   const uint32_t sign = (static_cast<uint32_t>(h & 0x8000u)) << 16;
-  const uint32_t exp  = (h & 0x7C00u) >> 10;
+  const uint32_t exp = (h & 0x7C00u) >> 10;
   const uint32_t mant = (h & 0x03FFu);
   uint32_t fbits = 0;
   if (exp == 0) {
@@ -72,7 +70,7 @@ static inline uint16_t FloatToHalfBits(float f) {
   uint32_t x;
   std::memcpy(&x, &f, sizeof(x));
   const uint32_t sign = (x >> 16) & 0x8000u;
-  const int32_t  exp  = static_cast<int32_t>((x >> 23) & 0xFFu);
+  const int32_t exp = static_cast<int32_t>((x >> 23) & 0xFFu);
   const uint32_t mant = x & 0x007FFFFFu;
   if (exp == 255) {
     if (mant == 0) return static_cast<uint16_t>(sign | 0x7C00u);
@@ -94,7 +92,7 @@ static inline uint16_t FloatToHalfBits(float f) {
     return static_cast<uint16_t>(sign | (half_m & 0x03FFu));
   } else {
     uint16_t half_exp = static_cast<uint16_t>(new_exp << 10);
-    uint32_t half_m   = mant >> 13;
+    uint32_t half_m = mant >> 13;
     if (mant & 0x00001000u) {
       half_m += 1;
       if (half_m == 0x0400u) {
@@ -120,12 +118,6 @@ static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
   return n;
 }
 
-static inline bool TensorIsCpu(const Ort::Value &v) {
-  if (!v.IsTensor()) return true;
-  auto mi = v.GetTensorMemoryInfo();
-  return mi.GetDeviceType() == OrtMemoryInfoDeviceType_CPU;
-}
-
 static inline void AssertTensorIsCpu(const Ort::Value &v, const char *what) {
   if (!v.IsTensor()) return;
   auto mi = v.GetTensorMemoryInfo();
@@ -148,14 +140,14 @@ static inline bool IsCudaProvider(const std::string &provider) {
   auto p = ToLower(provider);
   // Keep it conservative. We only enable IO binding policy below when we
   // are on CUDA; other EPs keep the existing behavior.
-  return p == "cuda" || (p.size() > 4 && p.rfind("cuda", 0) == 0);
+  return p == "cuda" || (p.size() > 4 && p.find("cuda") == 0);
 }
 
 // Get the element type of a session input tensor.
 static inline ONNXTensorElementDataType GetSessionInputElemType(
     Ort::Session *sess, size_t input_index) {
   auto ti = sess->GetInputTypeInfo(input_index);
-  auto t  = ti.GetTensorTypeAndShapeInfo();
+  auto t = ti.GetTensorTypeAndShapeInfo();
   return static_cast<ONNXTensorElementDataType>(t.GetElementType());
 }
 
@@ -163,7 +155,7 @@ static inline ONNXTensorElementDataType GetSessionInputElemType(
 static inline ONNXTensorElementDataType GetSessionOutputElemType(
     Ort::Session *sess, size_t output_index) {
   auto ti = sess->GetOutputTypeInfo(output_index);
-  auto t  = ti.GetTensorTypeAndShapeInfo();
+  auto t = ti.GetTensorTypeAndShapeInfo();
   return static_cast<ONNXTensorElementDataType>(t.GetElementType());
 }
 
@@ -189,7 +181,7 @@ static Ort::Value CastToFloat32(Ort::Value in, OrtAllocator *alloc) {
   auto shape = info.GetShape();
   size_t n = NumelFromShape(shape);
   if (n == 0) return in;
-  auto et = static_cast<ONNXTensorElementDataType>(info.GetElementType());
+  auto et = info.GetElementType();
 
   AssertTensorIsCpu(in, "CastToFloat32");
 
@@ -243,8 +235,8 @@ static Ort::Value CastToFloat16(Ort::Value in, OrtAllocator *alloc) {
 // Returns the input unchanged if it already matches the expected type.
 // NOTE: This helper assumes the input tensor is on CPU memory.
 static Ort::Value CastFloatLikeForExpected(Ort::Value in,
-                                           ONNXTensorElementDataType expected,
-                                           OrtAllocator *alloc) {
+                                          ONNXTensorElementDataType expected,
+                                          OrtAllocator *alloc) {
   if (!in.IsTensor()) return in;
   auto info = in.GetTensorTypeAndShapeInfo();
   auto actual = static_cast<ONNXTensorElementDataType>(info.GetElementType());
@@ -296,25 +288,9 @@ static Ort::Value CastMaskToInt64IfNeeded(Ort::Value in, OrtAllocator *alloc) {
   return in;
 }
 
-// Calculate the byte size of a tensor based on its shape and element type.
-// Supports float16 and float32 types. Exits on unsupported types.
-static size_t CalculateTensorBytes(const Ort::Value &tensor) {
-  if (!tensor.IsTensor()) {
-    SHERPA_ONNX_LOGE("CalculateTensorBytes: input is not a tensor");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  auto info = tensor.GetTensorTypeAndShapeInfo();
-  auto shape = info.GetShape();
-  auto type = static_cast<ONNXTensorElementDataType>(info.GetElementType());
-  size_t n = NumelFromShape(shape);
-  if (type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16) {
-    return n * sizeof(uint16_t);
-  } else if (type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-    return n * sizeof(float);
-  }
-  SHERPA_ONNX_LOGE("CalculateTensorBytes: unsupported tensor type %d", (int)type);
-  SHERPA_ONNX_EXIT(-1);
-  return 0;
+// Create a non-owning tensor view that preserves the underlying memory info.
+static inline Ort::Value ViewConst(const Ort::Value &v) {
+  return View(const_cast<Ort::Value *>(&v));
 }
 
 }  // namespace
@@ -334,10 +310,21 @@ class OfflineFunASRNanoModel::Impl {
                                                  OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.funasr_nano;
+
+    if (c.encoder_adaptor.empty()) {
+      SHERPA_ONNX_LOGE("funasr_nano.encoder_adaptor is empty");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (c.llm_prefill.empty() || c.llm_decode.empty()) {
+      SHERPA_ONNX_LOGE(
+          "funasr_nano.llm_prefill/llm_decode are required for KV-cache mode");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     InitEncoderAdaptor(c.encoder_adaptor);
     InitLLMPrefill(c.llm_prefill);
     InitLLMDecode(c.llm_decode);
-    use_kv_cache_ = true;
+
     if (!c.embedding.empty()) {
       InitEmbedding(c.embedding);
       has_embedding_model_ = true;
@@ -345,7 +332,7 @@ class OfflineFunASRNanoModel::Impl {
       has_embedding_model_ = false;
     }
 
-    // For FunASR-nano we do CPU-side sampling. When running on CUDA, we bind
+    // FunASR-nano uses CPU-side sampling. When running on CUDA, we bind
     // logits to CPU (so sampling can read it safely), while keeping KV cache
     // on GPU to avoid large device<->host copies.
     use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
@@ -366,7 +353,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
                    &encoder_output_names_ptr_);
     encoder_in_type_ = GetSessionInputElemType(encoder_sess_.get(), 0);
-    encoder_out_type_ = GetSessionOutputElemType(encoder_sess_.get(), 0);
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -391,7 +377,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(prefill_sess_.get(), &prefill_output_names_,
                    &prefill_output_names_ptr_);
     prefill_embeds_in_type_ = GetSessionInputElemType(prefill_sess_.get(), 0);
-    prefill_out_type_ = GetSessionOutputElemType(prefill_sess_.get(), 0);
     Ort::ModelMetadata meta_data = prefill_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -407,7 +392,6 @@ class OfflineFunASRNanoModel::Impl {
     if (hidden_size_ == 0) {
       SHERPA_ONNX_READ_META_DATA(hidden_size_, "hidden_size");
     }
-    SHERPA_ONNX_READ_META_DATA(num_layers_, "num_layers");
   }
 
   void InitLLMDecodeFromMemory(void *model_data, size_t model_data_length) {
@@ -418,7 +402,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(decode_sess_.get(), &decode_output_names_,
                    &decode_output_names_ptr_);
     decode_embeds_in_type_ = GetSessionInputElemType(decode_sess_.get(), 0);
-    decode_out_type_ = GetSessionOutputElemType(decode_sess_.get(), 0);
     Ort::ModelMetadata meta_data = decode_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -443,14 +426,6 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_READ_META_DATA(decode_hidden_size, "hidden_size");
       hidden_size_ = decode_hidden_size;
     }
-    int32_t decode_num_layers = 0;
-    SHERPA_ONNX_READ_META_DATA(decode_num_layers, "num_layers");
-    if (num_layers_ > 0 && decode_num_layers != num_layers_) {
-      SHERPA_ONNX_LOGE(
-          "Decode model num_layers (%d) != prefill num_layers (%d)",
-          decode_num_layers, num_layers_);
-    }
-    if (num_layers_ == 0) num_layers_ = decode_num_layers;
   }
 
   void InitEmbeddingFromMemory(void *model_data, size_t model_data_length) {
@@ -460,8 +435,6 @@ class OfflineFunASRNanoModel::Impl {
                   &embedding_input_names_ptr_);
     GetOutputNames(embedding_sess_.get(), &embedding_output_names_,
                    &embedding_output_names_ptr_);
-    embedding_out_type_ =
-        GetSessionOutputElemType(embedding_sess_.get(), 0);
     Ort::ModelMetadata meta_data = embedding_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -490,13 +463,28 @@ class OfflineFunASRNanoModel::Impl {
                                                  OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.funasr_nano;
+
+    if (c.encoder_adaptor.empty()) {
+      SHERPA_ONNX_LOGE("funasr_nano.encoder_adaptor is empty");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (c.llm_prefill.empty() || c.llm_decode.empty()) {
+      SHERPA_ONNX_LOGE(
+          "funasr_nano.llm_prefill/llm_decode are required for KV-cache mode");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     auto buf_encoder = ReadFile(mgr, c.encoder_adaptor);
     InitEncoderAdaptorFromMemory(buf_encoder.data(), buf_encoder.size());
-    auto buf_prefill = ReadFile(mgr, c.llm_prefill);
-    InitLLMPrefillFromMemory(buf_prefill.data(), buf_prefill.size());
+
+    {
+      auto buf_prefill = ReadFile(mgr, c.llm_prefill);
+      InitLLMPrefillFromMemory(buf_prefill.data(), buf_prefill.size());
+    }
+
     auto buf_decode = ReadFile(mgr, c.llm_decode);
     InitLLMDecodeFromMemory(buf_decode.data(), buf_decode.size());
-    use_kv_cache_ = true;
+
     if (!c.embedding.empty()) {
       auto buf_embedding = ReadFile(mgr, c.embedding);
       InitEmbeddingFromMemory(buf_embedding.data(), buf_embedding.size());
@@ -545,22 +533,10 @@ class OfflineFunASRNanoModel::Impl {
     return std::move(outputs[0]);
   }
 
-  Ort::Value ForwardLLM(Ort::Value, Ort::Value) {
-    SHERPA_ONNX_LOGE(
-        "ForwardLLM is not supported for FunASR-nano. Use KV cache "
-        "prefill/decode.");
-    SHERPA_ONNX_EXIT(-1);
-  }
-
   // Forward pass through LLM prefill model with full context.
   // Returns logits and initial KV cache states for all layers.
   std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>
   ForwardLLMPrefill(Ort::Value inputs_embeds, Ort::Value attention_mask) {
-    if (!use_kv_cache_) {
-      SHERPA_ONNX_LOGE(
-          "ForwardLLMPrefill called but KV cache mode is not enabled.");
-      SHERPA_ONNX_EXIT(-1);
-    }
     if (NeedsTypeConversion(inputs_embeds, prefill_embeds_in_type_)) {
       inputs_embeds = CastFloatLikeForExpected(
           std::move(inputs_embeds), prefill_embeds_in_type_, allocator_);
@@ -609,6 +585,18 @@ class OfflineFunASRNanoModel::Impl {
 
     Ort::Value logits = std::move(outputs[0]);
 
+    if (!logits.IsTensor()) {
+      SHERPA_ONNX_LOGE("ForwardLLMPrefill: logits is not a tensor");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    AssertTensorIsCpu(logits, "ForwardLLMPrefill logits");
+
+    if ((outputs.size() - 1) % 2 != 0) {
+      SHERPA_ONNX_LOGE("ForwardLLMPrefill: invalid KV cache outputs size=%d",
+                       static_cast<int>(outputs.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     std::vector<std::pair<Ort::Value, Ort::Value>> past_kv;
     int num_layers = static_cast<int>((outputs.size() - 1) / 2);
     past_kv.reserve(num_layers);
@@ -626,11 +614,6 @@ class OfflineFunASRNanoModel::Impl {
   ForwardLLMDecode(Ort::Value inputs_embeds, Ort::Value attention_mask,
                    const std::vector<std::pair<Ort::Value, Ort::Value>>
                        &past_key_values) {
-    if (!use_kv_cache_) {
-      SHERPA_ONNX_LOGE(
-          "ForwardLLMDecode called but KV cache mode is not enabled.");
-      SHERPA_ONNX_EXIT(-1);
-    }
     if (NeedsTypeConversion(inputs_embeds, decode_embeds_in_type_)) {
       inputs_embeds = CastFloatLikeForExpected(
           std::move(inputs_embeds), decode_embeds_in_type_, allocator_);
@@ -652,24 +635,8 @@ class OfflineFunASRNanoModel::Impl {
     inputs.push_back(std::move(inputs_embeds));
     inputs.push_back(std::move(attention_mask));
     for (const auto &kv : past_key_values) {
-      auto k_info = kv.first.GetTensorTypeAndShapeInfo();
-      auto k_shape = k_info.GetShape();
-      auto k_type =
-          static_cast<ONNXTensorElementDataType>(k_info.GetElementType());
-      size_t k_bytes = CalculateTensorBytes(kv.first);
-      auto v_info = kv.second.GetTensorTypeAndShapeInfo();
-      auto v_shape = v_info.GetShape();
-      auto v_type =
-          static_cast<ONNXTensorElementDataType>(v_info.GetElementType());
-      size_t v_bytes = CalculateTensorBytes(kv.second);
-      auto k_mem = kv.first.GetTensorMemoryInfo();
-      auto v_mem = kv.second.GetTensorMemoryInfo();
-      inputs.push_back(Ort::Value::CreateTensor(
-          k_mem, const_cast<void *>(kv.first.GetTensorData<void>()), k_bytes,
-          k_shape.data(), k_shape.size(), k_type));
-      inputs.push_back(Ort::Value::CreateTensor(
-          v_mem, const_cast<void *>(kv.second.GetTensorData<void>()), v_bytes,
-          v_shape.data(), v_shape.size(), v_type));
+      inputs.push_back(ViewConst(kv.first));
+      inputs.push_back(ViewConst(kv.second));
     }
 
     // Build input names: [inputs_embeds, attention_mask, past_key_0, past_value_0, ...]
@@ -713,6 +680,18 @@ class OfflineFunASRNanoModel::Impl {
     }
 
     Ort::Value logits = std::move(outputs[0]);
+
+    if (!logits.IsTensor()) {
+      SHERPA_ONNX_LOGE("ForwardLLMDecode: logits is not a tensor");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    AssertTensorIsCpu(logits, "ForwardLLMDecode logits");
+
+    if ((outputs.size() - 1) % 2 != 0) {
+      SHERPA_ONNX_LOGE("ForwardLLMDecode: invalid KV cache outputs size=%d",
+                       static_cast<int>(outputs.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     std::vector<std::pair<Ort::Value, Ort::Value>> updated_past_kv;
     int num_layers = static_cast<int>((outputs.size() - 1) / 2);
@@ -763,7 +742,7 @@ class OfflineFunASRNanoModel::Impl {
   int32_t LfrWindowShift() const { return lfr_window_shift_; }
   OrtAllocator *Allocator() { return allocator_; }
   bool HasEmbeddingModel() const { return has_embedding_model_; }
-  bool UseKVCache() const { return use_kv_cache_; }
+  bool UseKVCache() const { return true; }
   ONNXTensorElementDataType GetPrefillInputType() const {
     return prefill_embeds_in_type_;
   }
@@ -781,7 +760,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
                    &encoder_output_names_ptr_);
     encoder_in_type_ = GetSessionInputElemType(encoder_sess_.get(), 0);
-    encoder_out_type_ = GetSessionOutputElemType(encoder_sess_.get(), 0);
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -806,7 +784,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(prefill_sess_.get(), &prefill_output_names_,
                    &prefill_output_names_ptr_);
     prefill_embeds_in_type_ = GetSessionInputElemType(prefill_sess_.get(), 0);
-    prefill_out_type_ = GetSessionOutputElemType(prefill_sess_.get(), 0);
     Ort::ModelMetadata meta_data = prefill_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -822,7 +799,6 @@ class OfflineFunASRNanoModel::Impl {
     if (hidden_size_ == 0) {
       SHERPA_ONNX_READ_META_DATA(hidden_size_, "hidden_size");
     }
-    SHERPA_ONNX_READ_META_DATA(num_layers_, "num_layers");
   }
 
   void InitLLMDecode(const std::string &model_path) {
@@ -833,7 +809,6 @@ class OfflineFunASRNanoModel::Impl {
     GetOutputNames(decode_sess_.get(), &decode_output_names_,
                    &decode_output_names_ptr_);
     decode_embeds_in_type_ = GetSessionInputElemType(decode_sess_.get(), 0);
-    decode_out_type_ = GetSessionOutputElemType(decode_sess_.get(), 0);
     Ort::ModelMetadata meta_data = decode_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -858,14 +833,6 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_READ_META_DATA(decode_hidden_size, "hidden_size");
       hidden_size_ = decode_hidden_size;
     }
-    int32_t decode_num_layers = 0;
-    SHERPA_ONNX_READ_META_DATA(decode_num_layers, "num_layers");
-    if (num_layers_ > 0 && decode_num_layers != num_layers_) {
-      SHERPA_ONNX_LOGE(
-          "Decode model num_layers (%d) != prefill num_layers (%d)",
-          decode_num_layers, num_layers_);
-    }
-    if (num_layers_ == 0) num_layers_ = decode_num_layers;
   }
 
   void InitEmbedding(const std::string &model_path) {
@@ -875,8 +842,6 @@ class OfflineFunASRNanoModel::Impl {
                   &embedding_input_names_ptr_);
     GetOutputNames(embedding_sess_.get(), &embedding_output_names_,
                    &embedding_output_names_ptr_);
-    embedding_out_type_ =
-        GetSessionOutputElemType(embedding_sess_.get(), 0);
     Ort::ModelMetadata meta_data = embedding_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
@@ -909,18 +874,22 @@ class OfflineFunASRNanoModel::Impl {
   std::unique_ptr<Ort::Session> prefill_sess_;
   std::unique_ptr<Ort::Session> decode_sess_;
   std::unique_ptr<Ort::Session> embedding_sess_;
+
   std::vector<std::string> encoder_input_names_;
   std::vector<const char *> encoder_input_names_ptr_;
   std::vector<std::string> encoder_output_names_;
   std::vector<const char *> encoder_output_names_ptr_;
+
   std::vector<std::string> prefill_input_names_;
   std::vector<const char *> prefill_input_names_ptr_;
   std::vector<std::string> prefill_output_names_;
   std::vector<const char *> prefill_output_names_ptr_;
+
   std::vector<std::string> decode_input_names_;
   std::vector<const char *> decode_input_names_ptr_;
   std::vector<std::string> decode_output_names_;
   std::vector<const char *> decode_output_names_ptr_;
+
   std::vector<std::string> embedding_input_names_;
   std::vector<const char *> embedding_input_names_ptr_;
   std::vector<std::string> embedding_output_names_;
@@ -928,25 +897,16 @@ class OfflineFunASRNanoModel::Impl {
 
   int32_t vocab_size_ = 0;
   int32_t hidden_size_ = 0;
-  int32_t num_layers_ = 0;
   int32_t lfr_window_size_ = 0;
   int32_t lfr_window_shift_ = 0;
+
   bool has_embedding_model_ = false;
-  bool use_kv_cache_ = true;
 
   ONNXTensorElementDataType encoder_in_type_ =
       ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-  ONNXTensorElementDataType encoder_out_type_ =
-      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
   ONNXTensorElementDataType prefill_embeds_in_type_ =
       ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-  ONNXTensorElementDataType prefill_out_type_ =
-      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
   ONNXTensorElementDataType decode_embeds_in_type_ =
-      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-  ONNXTensorElementDataType decode_out_type_ =
-      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-  ONNXTensorElementDataType embedding_out_type_ =
       ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
   bool is_cpu_provider_ = false;
@@ -964,12 +924,6 @@ OfflineFunASRNanoModel::~OfflineFunASRNanoModel() = default;
 
 Ort::Value OfflineFunASRNanoModel::ForwardEncoderAdaptor(Ort::Value features) {
   return impl_->ForwardEncoderAdaptor(std::move(features));
-}
-
-Ort::Value OfflineFunASRNanoModel::ForwardLLM(Ort::Value inputs_embeds,
-                                              Ort::Value attention_mask) {
-  return impl_->ForwardLLM(std::move(inputs_embeds),
-                           std::move(attention_mask));
 }
 
 std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>

@@ -26,14 +26,6 @@ class OfflineFunASRNanoModel {
    */
   Ort::Value ForwardEncoderAdaptor(Ort::Value features);
 
-  /** Run the LLM model (legacy mode, single model).
-   *
-   * @param inputs_embeds  A tensor of shape (N, T, hidden_size).
-   * @param attention_mask  A tensor of shape (N, T) containing attention mask.
-   * @return Return logits of shape (N, T, vocab_size)
-   */
-  Ort::Value ForwardLLM(Ort::Value inputs_embeds, Ort::Value attention_mask);
-
   /** Run the LLM prefill model (KV cache mode).
    *
    * @param inputs_embeds  A tensor of shape (N, T, hidden_size).
@@ -55,7 +47,7 @@ class OfflineFunASRNanoModel {
   ForwardLLMDecode(Ort::Value inputs_embeds, Ort::Value attention_mask,
                    const std::vector<std::pair<Ort::Value, Ort::Value>> &past_key_values);
 
-  /** Check if using KV cache mode (prefill + decode) or legacy mode (single model)
+  /** Check if using KV cache mode. Always returns true for FunASR-nano.
    */
   bool UseKVCache() const;
 
