@@ -151,20 +151,17 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
                                    const SymbolTable &sym_table) const {
     OfflineRecognitionResult r;
-
-    bool enable_timestamps = config_.model_config.whisper.enable_timestamps;
+    r.tokens.reserve(src.tokens.size());
 
     std::string text;
 
     // Since we always use no_timestamps mode, src.tokens contains only text tokens
-    for (size_t i = 0; i < src.tokens.size(); ++i) {
-      int32_t token_id = src.tokens[i];
-
-      if (!sym_table.Contains(token_id)) {
+    for (auto i : src.tokens) {
+      if (!sym_table.Contains(i)) {
         continue;
       }
 
-      std::string s = sym_table[token_id];
+      std::string s = sym_table[i];
       s = ApplyInverseTextNormalization(s);
       s = ApplyHomophoneReplacer(std::move(s));
 
@@ -176,7 +173,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.lang = src.lang;
 
     // Compute token-level and word-level timestamps using DTW if enabled
-    if (enable_timestamps && !src.attention_weights.empty() &&
+    if (config_.model_config.whisper.enable_timestamps &&
+        !src.attention_weights.empty() &&
         !r.tokens.empty()) {
       ComputeTimestamps(src, r);
     }
@@ -212,46 +210,42 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
         WhisperDTW::FrameIndicesToSeconds(token_frames);
 
     // Populate token-level timestamps
-    // token_times[0] is the anchor (no_timestamps), token_times[i+1] is for text token i
-    r.timestamps.clear();
-    r.timestamps.reserve(r.tokens.size());
-    for (size_t i = 0; i < r.tokens.size(); ++i) {
-      // Use anchor time (index 0) for first token, otherwise use token's own time
-      int32_t time_idx = static_cast<int32_t>(i);
-      if (time_idx < static_cast<int32_t>(token_times.size())) {
-        r.timestamps.push_back(token_times[time_idx]);
-      } else {
-        r.timestamps.push_back(r.timestamps.empty() ? 0.0f : r.timestamps.back());
-      }
-    }
+    size_t n = std::min(r.tokens.size(), token_times.size());
+    r.timestamps.assign(token_times.begin(), token_times.begin() + n);
+    float fill_value = r.timestamps.empty() ? 0.0f : r.timestamps.back();
+    r.timestamps.resize(r.tokens.size(), fill_value);
 
-    // Populate word-level timestamps
+    // Populate word-level results
+    r.word_texts.reserve(word_boundaries.size());
+    r.word_timestamps.reserve(word_boundaries.size());
+    r.word_durations.reserve(word_boundaries.size());
+
     for (const auto &wb : word_boundaries) {
-      OfflineRecognitionWordTiming wt;
-      wt.word = wb.word;
-      wt.probability = 0.0f;  // We don't have confidence from DTW
+      r.word_texts.push_back(wb.word);
 
       // Word start time
+      float start_time;
       if (wb.start_token >= 0 &&
           wb.start_token < static_cast<int32_t>(token_times.size())) {
-        wt.start = token_times[wb.start_token];
+        start_time = token_times[wb.start_token];
       } else {
-        wt.start = 0.0f;
+        start_time = 0.0f;
       }
+      r.word_timestamps.push_back(start_time);
 
       // Word end time (start of next token after last token in word)
+      float end_time;
       if (wb.end_token > 0 &&
           wb.end_token < static_cast<int32_t>(token_times.size())) {
-        wt.end = token_times[wb.end_token];
+        end_time = token_times[wb.end_token];
       } else if (wb.end_token > 0 && wb.end_token - 1 >= 0 &&
                  wb.end_token - 1 < static_cast<int32_t>(token_times.size())) {
         // Use last token's time + one frame duration
-        wt.end = token_times[wb.end_token - 1] + kWhisperSecondsPerToken;
+        end_time = token_times[wb.end_token - 1] + kWhisperSecondsPerToken;
       } else {
-        wt.end = wt.start + kWhisperSecondsPerToken;
+        end_time = start_time + kWhisperSecondsPerToken;
       }
-
-      r.word_timestamps.push_back(std::move(wt));
+      r.word_durations.push_back(end_time - start_time);
     }
   }
 

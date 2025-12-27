@@ -432,23 +432,29 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  // Word-level timestamps (Whisper only)
-  os << "\""
-     << "word_timestamps"
-     << "\""
-     << ": ";
-  os << "[";
+  // Word-level results (Whisper only)
+  os << "\"word_texts\": [";
   sep = "";
-  for (const auto &wt : word_timestamps) {
-    os << sep << "{";
-    os << "\"word\": " << std::quoted(wt.word) << ", ";
-    os << "\"start\": " << std::fixed << std::setprecision(3) << wt.start << ", ";
-    os << "\"end\": " << std::fixed << std::setprecision(3) << wt.end << ", ";
-    os << "\"probability\": " << std::fixed << std::setprecision(4) << wt.probability;
-    os << "}";
+  for (const auto &w : word_texts) {
+    os << sep << std::quoted(w);
     sep = ", ";
   }
+  os << "], ";
 
+  os << "\"word_timestamps\": [";
+  sep = "";
+  for (const auto &t : word_timestamps) {
+    os << sep << std::fixed << std::setprecision(3) << t;
+    sep = ", ";
+  }
+  os << "], ";
+
+  os << "\"word_durations\": [";
+  sep = "";
+  for (const auto &d : word_durations) {
+    os << sep << std::fixed << std::setprecision(3) << d;
+    sep = ", ";
+  }
   os << "]";
   os << "}";
 
