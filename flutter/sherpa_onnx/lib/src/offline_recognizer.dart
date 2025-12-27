@@ -597,6 +597,7 @@ class OfflineRecognizerResult {
   OfflineRecognizerResult(
       {required this.text,
       required this.tokens,
+      required this.tokenLogProbs,
       required this.timestamps,
       required this.lang,
       required this.emotion,
@@ -606,6 +607,10 @@ class OfflineRecognizerResult {
     return OfflineRecognizerResult(
       text: json['text'] as String? ?? '',
       tokens: (json['tokens'] as List?)?.map((e) => e as String).toList() ?? [],
+      tokenLogProbs: (json['token_log_probs'] as List?)
+              ?.map((e) => (e as num).toDouble())
+              .toList() ??
+          [],
       timestamps: (json['timestamps'] as List?)
               ?.map((e) => (e as num).toDouble())
               .toList() ??
@@ -618,12 +623,13 @@ class OfflineRecognizerResult {
 
   @override
   String toString() {
-    return 'OfflineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps, lang: $lang, emotion: $emotion, event: $event)';
+    return 'OfflineRecognizerResult(text: $text, tokens: $tokens, tokenLogProbs: $tokenLogProbs, timestamps: $timestamps, lang: $lang, emotion: $emotion, event: $event)';
   }
 
   Map<String, dynamic> toJson() => {
         'text': text,
         'tokens': tokens,
+        'tokenLogProbs': tokenLogProbs,
         'timestamps': timestamps,
         'lang': lang,
         'emotion': emotion,
@@ -632,6 +638,7 @@ class OfflineRecognizerResult {
 
   final String text;
   final List<String> tokens;
+  final List<double> tokenLogProbs;
   final List<double> timestamps;
   final String lang;
   final String emotion;
@@ -841,6 +848,7 @@ class OfflineRecognizer {
       return OfflineRecognizerResult(
           text: '',
           tokens: [],
+          tokenLogProbs: [],
           timestamps: [],
           lang: '',
           emotion: '',
@@ -854,6 +862,7 @@ class OfflineRecognizer {
     return OfflineRecognizerResult(
         text: parsedJson['text'],
         tokens: List<String>.from(parsedJson['tokens']),
+        tokenLogProbs: List<double>.from(parsedJson['token_log_probs'] ?? []),
         timestamps: List<double>.from(parsedJson['timestamps']),
         lang: parsedJson['lang'],
         emotion: parsedJson['emotion'],

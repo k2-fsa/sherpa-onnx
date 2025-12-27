@@ -18,8 +18,11 @@ class OnlineStream;
 class OnlineTransducerGreedySearchNeMoDecoder {
  public:
   OnlineTransducerGreedySearchNeMoDecoder(OnlineTransducerNeMoModel *model,
-                                          float blank_penalty)
-      : model_(model), blank_penalty_(blank_penalty) {}
+                                          float blank_penalty,
+                                          float temperature_scale)
+      : model_(model),
+        blank_penalty_(blank_penalty),
+        temperature_scale_(temperature_scale) {}
 
   // @param n number of elements in ss
   void Decode(Ort::Value encoder_out, OnlineStream **ss, int32_t n) const;
@@ -27,6 +30,7 @@ class OnlineTransducerGreedySearchNeMoDecoder {
  private:
   OnlineTransducerNeMoModel *model_;  // Not owned
   float blank_penalty_;
+  float temperature_scale_;
 };
 
 }  // namespace sherpa_onnx

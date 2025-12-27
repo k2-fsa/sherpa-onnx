@@ -27,6 +27,8 @@ static OfflineRecognitionResult Convert(
     const OfflineMoonshineDecoderResult &src, const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
+  r.token_log_probs = src.token_log_probs;
+  r.vocab_log_probs = src.vocab_log_probs;
 
   std::string text;
   for (auto i : src.tokens) {
