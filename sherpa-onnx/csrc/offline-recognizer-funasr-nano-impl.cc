@@ -14,68 +14,10 @@
 
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-namespace {
-
-// Convert IEEE 754 half-precision (16-bit) float to single-precision (32-bit)
-// float. Handles special cases: zero, subnormal, normal, infinity, and NaN.
-static inline float Fp16ToFp32(uint16_t h) {
-  const uint32_t s = (h >> 15) & 0x1;
-  const uint32_t e = (h >> 10) & 0x1F;
-  const uint32_t f = h & 0x3FF;
-  if (e == 0) {
-    if (f == 0) {
-      uint32_t bits = s << 31;
-      float out;
-      std::memcpy(&out, &bits, sizeof(out));
-      return out;
-    }
-    float mant = static_cast<float>(f) / 1024.0f;
-    float val = std::ldexp(mant, -14);
-    return s ? -val : val;
-  }
-  if (e == 31) {
-    uint32_t bits = (s << 31) | 0x7F800000u | (f << 13);
-    float out;
-    std::memcpy(&out, &bits, sizeof(out));
-    return out;
-  }
-  uint32_t bits = (s << 31) | ((e + (127 - 15)) << 23) | (f << 13);
-  float out;
-  std::memcpy(&out, &bits, sizeof(out));
-  return out;
-}
-
-// Convert IEEE 754 single-precision (32-bit) float to half-precision (16-bit)
-// float. Handles overflow (clamped to infinity), underflow (clamped to zero),
-// and normal values with proper rounding.
-static inline uint16_t Fp32ToFp16(float x) {
-  uint32_t bits;
-  std::memcpy(&bits, &x, sizeof(bits));
-  uint32_t sign = (bits >> 31) & 1;
-  int32_t exp = ((bits >> 23) & 0xFF) - 127;
-  uint32_t mant = bits & 0x7FFFFF;
-  if (exp > 15) {
-    return static_cast<uint16_t>((sign << 15) | (0x1F << 10));
-  }
-  if (exp < -14) {
-    if (exp < -24) {
-      return static_cast<uint16_t>(sign << 15);
-    }
-    mant |= 0x800000;
-    int shift = (-14 - exp);
-    uint16_t sub = static_cast<uint16_t>(mant >> (shift + 13));
-    return static_cast<uint16_t>((sign << 15) | sub);
-  }
-  uint16_t he = static_cast<uint16_t>(exp + 15);
-  uint16_t hm = static_cast<uint16_t>(mant >> 13);
-  return static_cast<uint16_t>((sign << 15) | (he << 10) | hm);
-}
-
-}  // namespace
 
 OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
     const OfflineRecognizerConfig &config)
@@ -177,7 +119,7 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenFromLogitsFp16OrFp32(
   if (is_fp16) {
     const uint16_t *p = reinterpret_cast<const uint16_t *>(logits);
     for (int32_t i = 0; i < vocab_size; ++i) {
-      float v = Fp16ToFp32(p[i]);
+      float v = HalfBitsToFloat(p[i]);
       if (std::isfinite(v) && v > best_val) {
         best_val = v;
         best = i;
@@ -207,11 +149,6 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     Ort::Value encoder_out, const std::string &system_prompt,
     const std::string &user_prompt) const {
   OfflineRecognitionResult result;
-  if (!model_->HasEmbeddingModel()) {
-    SHERPA_ONNX_LOGE("Embedding model is required but not provided.");
-    result.text = "";
-    return result;
-  }
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
   const auto &funasr_config = config_.model_config.funasr_nano;
@@ -249,7 +186,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   const bool te_fp16 = (te_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
   // Pre-allocate full inputs_embeds buffer to max_seq_len
   std::vector<uint16_t> inputs_embeds_fp16(
-      static_cast<size_t>(max_seq_len) * hidden_size, Fp32ToFp16(0.0f));
+      static_cast<size_t>(max_seq_len) * hidden_size, FloatToHalfBits(0.0f));
   std::vector<int64_t> attention_mask(static_cast<size_t>(max_seq_len), 0);
   // Copy text embeddings into inputs_embeds buffer
   if (te_fp16) {
@@ -260,7 +197,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     const float *p = text_embeds.GetTensorData<float>();
     for (int64_t i = 0; i < static_cast<int64_t>(context_len) * hidden_size;
          ++i) {
-      inputs_embeds_fp16[static_cast<size_t>(i)] = Fp32ToFp16(p[i]);
+      inputs_embeds_fp16[static_cast<size_t>(i)] = FloatToHalfBits(p[i]);
     }
   }
   // Inject audio embeddings into inputs_embeds at the position of audio tokens
@@ -283,7 +220,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       uint16_t *dst = inputs_embeds_fp16.data() +
                       static_cast<int64_t>(fbank_beg_idx + t) * hidden_size;
       for (int32_t d = 0; d < hidden_size; ++d) {
-        dst[d] = Fp32ToFp16(src[d]);
+        dst[d] = FloatToHalfBits(src[d]);
       }
     }
   } else {
@@ -347,7 +284,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       } else {
         const float *src = next_embed.GetTensorData<float>();
         for (int32_t d = 0; d < hidden_size; ++d) {
-          next_embed_fp16[d] = Fp32ToFp16(src[d]);
+          next_embed_fp16[d] = FloatToHalfBits(src[d]);
         }
       }
       std::array<int64_t, 3> embeds_shape{1, 1, hidden_size};

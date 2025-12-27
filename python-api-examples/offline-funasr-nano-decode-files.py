@@ -19,7 +19,6 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
-from typing import List
 
 try:
     import sherpa_onnx
@@ -65,8 +64,8 @@ def get_args():
     parser.add_argument(
         "--embedding",
         type=str,
-        default="",
-        help="Path to embedding.onnx (optional, recommended)",
+        required=True,
+        help="Path to embedding.onnx",
     )
 
     parser.add_argument(

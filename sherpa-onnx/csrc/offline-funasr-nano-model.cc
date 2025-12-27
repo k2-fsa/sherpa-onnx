@@ -32,81 +32,6 @@ namespace sherpa_onnx {
 
 namespace {
 
-// Convert IEEE 754 half-precision (16-bit) float to single-precision (32-bit)
-// float. Handles special cases: zero, subnormal, normal, infinity, and NaN.
-static inline float HalfBitsToFloat(uint16_t h) {
-  const uint32_t sign = (static_cast<uint32_t>(h & 0x8000u)) << 16;
-  const uint32_t exp = (h & 0x7C00u) >> 10;
-  const uint32_t mant = (h & 0x03FFu);
-  uint32_t fbits = 0;
-  if (exp == 0) {
-    if (mant == 0) {
-      fbits = sign;
-    } else {
-      uint32_t m = mant;
-      uint32_t e = 127 - 15 + 1;
-      while ((m & 0x0400u) == 0) {
-        m <<= 1;
-        --e;
-      }
-      m &= 0x03FFu;
-      fbits = sign | (e << 23) | (m << 13);
-    }
-  } else if (exp == 31) {
-    fbits = sign | 0x7F800000u | (mant << 13);
-  } else {
-    const uint32_t e = exp + (127 - 15);
-    fbits = sign | (e << 23) | (mant << 13);
-  }
-  float out;
-  std::memcpy(&out, &fbits, sizeof(out));
-  return out;
-}
-
-// Convert IEEE 754 single-precision (32-bit) float to half-precision (16-bit)
-// float. Handles overflow (clamped to infinity), underflow (clamped to zero),
-// and normal values with proper rounding.
-static inline uint16_t FloatToHalfBits(float f) {
-  uint32_t x;
-  std::memcpy(&x, &f, sizeof(x));
-  const uint32_t sign = (x >> 16) & 0x8000u;
-  const int32_t exp = static_cast<int32_t>((x >> 23) & 0xFFu);
-  const uint32_t mant = x & 0x007FFFFFu;
-  if (exp == 255) {
-    if (mant == 0) return static_cast<uint16_t>(sign | 0x7C00u);
-    return static_cast<uint16_t>(sign | 0x7C00u | (mant ? 0x1u : 0));
-  }
-  int32_t new_exp = exp - 127 + 15;
-  if (new_exp >= 31) {
-    return static_cast<uint16_t>(sign | 0x7C00u);
-  } else if (new_exp <= 0) {
-    if (new_exp < -10) {
-      return static_cast<uint16_t>(sign);
-    }
-    uint32_t m = mant | 0x00800000u;
-    int32_t shift = 14 - new_exp;
-    uint32_t half_m = m >> shift;
-    if ((m >> (shift - 1)) & 1u) {
-      half_m += 1;
-    }
-    return static_cast<uint16_t>(sign | (half_m & 0x03FFu));
-  } else {
-    uint16_t half_exp = static_cast<uint16_t>(new_exp << 10);
-    uint32_t half_m = mant >> 13;
-    if (mant & 0x00001000u) {
-      half_m += 1;
-      if (half_m == 0x0400u) {
-        half_m = 0;
-        half_exp = static_cast<uint16_t>((new_exp + 1) << 10);
-        if ((half_exp >> 10) >= 31) {
-          return static_cast<uint16_t>(sign | 0x7C00u);
-        }
-      }
-    }
-    return static_cast<uint16_t>(sign | half_exp | (half_m & 0x03FFu));
-  }
-}
-
 // Calculate the total number of elements from a tensor shape.
 static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
   if (shape.empty()) return 0;
@@ -324,13 +249,8 @@ class OfflineFunASRNanoModel::Impl {
     InitEncoderAdaptor(c.encoder_adaptor);
     InitLLMPrefill(c.llm_prefill);
     InitLLMDecode(c.llm_decode);
-
-    if (!c.embedding.empty()) {
-      InitEmbedding(c.embedding);
-      has_embedding_model_ = true;
-    } else {
-      has_embedding_model_ = false;
-    }
+    InitEmbedding(c.embedding);
+    has_embedding_model_ = true;
 
     // FunASR-nano uses CPU-side sampling. When running on CUDA, we bind
     // logits to CPU (so sampling can read it safely), while keeping KV cache
@@ -485,13 +405,9 @@ class OfflineFunASRNanoModel::Impl {
     auto buf_decode = ReadFile(mgr, c.llm_decode);
     InitLLMDecodeFromMemory(buf_decode.data(), buf_decode.size());
 
-    if (!c.embedding.empty()) {
-      auto buf_embedding = ReadFile(mgr, c.embedding);
-      InitEmbeddingFromMemory(buf_embedding.data(), buf_embedding.size());
-      has_embedding_model_ = true;
-    } else {
-      has_embedding_model_ = false;
-    }
+    auto buf_embedding = ReadFile(mgr, c.embedding);
+    InitEmbeddingFromMemory(buf_embedding.data(), buf_embedding.size());
+    has_embedding_model_ = true;
 
     use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
     if (use_cuda_iobinding_) {
@@ -706,11 +622,6 @@ class OfflineFunASRNanoModel::Impl {
   // Forward pass through embedding model.
   // Converts token IDs to embeddings.
   Ort::Value ForwardEmbedding(Ort::Value input_ids) {
-    if (!has_embedding_model_) {
-      SHERPA_ONNX_LOGE("Embedding model is not loaded");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
     // Embedding output is consumed by CPU-side packing code; bind it to CPU
     // when running on CUDA to avoid returning a CUDA pointer.
     if (use_cuda_iobinding_) {

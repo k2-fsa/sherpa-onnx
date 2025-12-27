@@ -19,7 +19,7 @@ struct OfflineFunASRNanoModelConfig {
   // Path to llm_decode.onnx (KV cache decode)
   std::string llm_decode;
 
-  // Path to embedding.onnx (optional, if not provided, will use PyTorch model)
+  // Path to embedding.onnx
   std::string embedding;
 
   // Path to tokenizer directory (e.g., Qwen3-0.6B)

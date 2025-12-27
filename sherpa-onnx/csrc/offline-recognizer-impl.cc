@@ -544,6 +544,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerSenseVoiceImpl>(mgr, config);
   }
 
+  if (!config.model_config.funasr_nano.encoder_adaptor.empty()) {
+    return std::make_unique<OfflineRecognizerFunASRNanoImpl>(mgr, config);
+  }
+
   if (!config.model_config.paraformer.model.empty()) {
     return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
   }

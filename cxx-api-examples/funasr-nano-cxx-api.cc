@@ -46,9 +46,9 @@ Required arguments:
   --funasr-nano-llm-prefill: Path to llm_prefill.onnx
   --funasr-nano-llm-decode: Path to llm_decode.onnx
   --funasr-nano-tokenizer: Path to tokenizer directory (e.g., Qwen3-0.6B)
+  --funasr-nano-embedding: Path to embedding.onnx
 
 Optional arguments:
-  --funasr-nano-embedding: Path to embedding.onnx (recommended)
   --funasr-nano-user-prompt: User prompt template (default: "语音转写：")
   --funasr-nano-max-new-tokens: Maximum tokens to generate (default: 512)
   --funasr-nano-temperature: Sampling temperature (default: 0.3)
@@ -66,7 +66,7 @@ Example:
     ./test.wav
 )usage";
 
-  if (argc < 5) {
+  if (argc < 6) {
     std::cerr << kUsageMessage << "\n";
     return -1;
   }
@@ -77,40 +77,52 @@ Example:
   config.model_config.provider = "cpu";
 
   // Parse command line arguments
+  const char kEncoderAdaptor[] = "--funasr-nano-encoder-adaptor=";
+  const char kLlmPrefill[] = "--funasr-nano-llm-prefill=";
+  const char kLlmDecode[] = "--funasr-nano-llm-decode=";
+  const char kEmbedding[] = "--funasr-nano-embedding=";
+  const char kTokenizer[] = "--funasr-nano-tokenizer=";
+  const char kUserPrompt[] = "--funasr-nano-user-prompt=";
+  const char kMaxNewTokens[] = "--funasr-nano-max-new-tokens=";
+  const char kTemperature[] = "--funasr-nano-temperature=";
+  const char kTopP[] = "--funasr-nano-top-p=";
+  const char kNumThreads[] = "--num-threads=";
+  const char kProvider[] = "--provider=";
+
   for (int32_t i = 1; i < argc; ++i) {
     std::string arg = argv[i];
-    if (arg.find("--funasr-nano-encoder-adaptor=") == 0) {
+    if (arg.find(kEncoderAdaptor) == 0) {
       config.model_config.funasr_nano.encoder_adaptor =
-          arg.substr(strlen("--funasr-nano-encoder-adaptor="));
-    } else if (arg.find("--funasr-nano-llm-prefill=") == 0) {
+          arg.substr(sizeof(kEncoderAdaptor) - 1);
+    } else if (arg.find(kLlmPrefill) == 0) {
       config.model_config.funasr_nano.llm_prefill =
-          arg.substr(strlen("--funasr-nano-llm-prefill="));
-    } else if (arg.find("--funasr-nano-llm-decode=") == 0) {
+          arg.substr(sizeof(kLlmPrefill) - 1);
+    } else if (arg.find(kLlmDecode) == 0) {
       config.model_config.funasr_nano.llm_decode =
-          arg.substr(strlen("--funasr-nano-llm-decode="));
-    } else if (arg.find("--funasr-nano-embedding=") == 0) {
+          arg.substr(sizeof(kLlmDecode) - 1);
+    } else if (arg.find(kEmbedding) == 0) {
       config.model_config.funasr_nano.embedding =
-          arg.substr(strlen("--funasr-nano-embedding="));
-    } else if (arg.find("--funasr-nano-tokenizer=") == 0) {
+          arg.substr(sizeof(kEmbedding) - 1);
+    } else if (arg.find(kTokenizer) == 0) {
       config.model_config.funasr_nano.tokenizer =
-          arg.substr(strlen("--funasr-nano-tokenizer="));
-    } else if (arg.find("--funasr-nano-user-prompt=") == 0) {
+          arg.substr(sizeof(kTokenizer) - 1);
+    } else if (arg.find(kUserPrompt) == 0) {
       config.model_config.funasr_nano.user_prompt =
-          arg.substr(strlen("--funasr-nano-user-prompt="));
-    } else if (arg.find("--funasr-nano-max-new-tokens=") == 0) {
+          arg.substr(sizeof(kUserPrompt) - 1);
+    } else if (arg.find(kMaxNewTokens) == 0) {
       config.model_config.funasr_nano.max_new_tokens =
-          std::stoi(arg.substr(strlen("--funasr-nano-max-new-tokens=")));
-    } else if (arg.find("--funasr-nano-temperature=") == 0) {
+          std::stoi(arg.substr(sizeof(kMaxNewTokens) - 1));
+    } else if (arg.find(kTemperature) == 0) {
       config.model_config.funasr_nano.temperature =
-          std::stof(arg.substr(strlen("--funasr-nano-temperature=")));
-    } else if (arg.find("--funasr-nano-top-p=") == 0) {
+          std::stof(arg.substr(sizeof(kTemperature) - 1));
+    } else if (arg.find(kTopP) == 0) {
       config.model_config.funasr_nano.top_p =
-          std::stof(arg.substr(strlen("--funasr-nano-top-p=")));
-    } else if (arg.find("--num-threads=") == 0) {
+          std::stof(arg.substr(sizeof(kTopP) - 1));
+    } else if (arg.find(kNumThreads) == 0) {
       config.model_config.num_threads =
-          std::stoi(arg.substr(strlen("--num-threads=")));
-    } else if (arg.find("--provider=") == 0) {
-      config.model_config.provider = arg.substr(strlen("--provider="));
+          std::stoi(arg.substr(sizeof(kNumThreads) - 1));
+    } else if (arg.find(kProvider) == 0) {
+      config.model_config.provider = arg.substr(sizeof(kProvider) - 1);
     } else if (arg[0] != '-') {
       // This should be the audio file
       std::string wave_filename = arg;

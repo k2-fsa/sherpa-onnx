@@ -103,11 +103,7 @@ See https://github.com/FunAudioLLM/Fun-ASR-Nano-2512
     --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
     --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
     --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
-    [--funasr-nano-embedding=/path/to/embedding.onnx] \
-    [--funasr-nano-user-prompt="语音转写："] \
-    [--funasr-nano-max-new-tokens=512] \
-    [--funasr-nano-temperature=0.3] \
-    [--funasr-nano-top-p=0.8] \
+    --funasr-nano-embedding=/path/to/embedding.onnx \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
 Note: It supports decoding multiple files in batches

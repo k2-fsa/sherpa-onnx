@@ -1,7 +1,7 @@
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
 
 #include <string>
-
+#include <sstream>
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -18,7 +18,7 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
                "Path to llm_decode.onnx for FunASR-nano (KV cache mode)");
 
   po->Register("funasr-nano-embedding", &embedding,
-               "Path to embedding.onnx for FunASR-nano (optional)");
+               "Path to embedding.onnx for FunASR-nano");
 
   po->Register("funasr-nano-tokenizer", &tokenizer,
                "Path to tokenizer directory (e.g., Qwen3-0.6B) for FunASR-nano");
@@ -55,22 +55,18 @@ bool OfflineFunASRNanoModelConfig::Validate() const {
   }
 
   // KV cache mode (prefill + decode) is required
-  bool use_kv_cache = !llm_prefill.empty() && !llm_decode.empty();
-
-  if (!use_kv_cache) {
+  if (llm_prefill.empty() || llm_decode.empty()) {
     SHERPA_ONNX_LOGE("Both --funasr-nano-llm-prefill and --funasr-nano-llm-decode are required");
     return false;
   }
 
-  if (use_kv_cache) {
-    if (!FileExists(llm_prefill)) {
-      SHERPA_ONNX_LOGE("--funasr-nano-llm-prefill: '%s' does not exist", llm_prefill.c_str());
-      return false;
-    }
-    if (!FileExists(llm_decode)) {
-      SHERPA_ONNX_LOGE("--funasr-nano-llm-decode: '%s' does not exist", llm_decode.c_str());
-      return false;
-    }
+  if (!FileExists(llm_prefill)) {
+    SHERPA_ONNX_LOGE("--funasr-nano-llm-prefill: '%s' does not exist", llm_prefill.c_str());
+    return false;
+  }
+  if (!FileExists(llm_decode)) {
+    SHERPA_ONNX_LOGE("--funasr-nano-llm-decode: '%s' does not exist", llm_decode.c_str());
+    return false;
   }
 
   if (tokenizer.empty()) {
@@ -84,7 +80,12 @@ bool OfflineFunASRNanoModelConfig::Validate() const {
     return false;
   }
 
-  if (!embedding.empty() && !FileExists(embedding)) {
+  if (embedding.empty()) {
+    SHERPA_ONNX_LOGE("--funasr-nano-embedding is required");
+    return false;
+  }
+
+  if (!FileExists(embedding)) {
     SHERPA_ONNX_LOGE("--funasr-nano-embedding: '%s' does not exist",
                      embedding.c_str());
     return false;

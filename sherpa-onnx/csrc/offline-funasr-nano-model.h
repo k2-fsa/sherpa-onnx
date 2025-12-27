@@ -51,7 +51,7 @@ class OfflineFunASRNanoModel {
    */
   bool UseKVCache() const;
 
-  /** Run the embedding model (optional).
+  /** Run the embedding model.
    *
    * @param input_ids  A tensor of shape (N, T) containing token IDs.
    * @return Return embeddings of shape (N, T, hidden_size)
