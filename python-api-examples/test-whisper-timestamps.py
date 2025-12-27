@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright      2025  Posit Software, PBC
 """
 Test Whisper timestamps functionality.
 

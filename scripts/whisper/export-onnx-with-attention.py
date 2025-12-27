@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright    2024  Xiaomi Corp.        (authors: Fangjun Kuang, Joe Cheng)
+# Copyright    2025  Posit Software, PBC
 # flake8: noqa
 
 """
