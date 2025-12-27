@@ -84,6 +84,26 @@ ALIGNMENT_HEADS = {
         (19, 11), (21, 4), (24, 1), (25, 6),
     ],
     "turbo": [(2, 4), (2, 11), (3, 3), (3, 6), (3, 11), (3, 14)],
+    # Distil-whisper models (alignment heads discovered empirically)
+    # distil-small.en has 4 decoder layers; head (3,2) has 0.985 diagonal score
+    "distil-small.en": [(3, 2)],
+    # distil-medium.en has 2 decoder layers; head (1,11) has 0.804 diagonal score
+    "distil-medium.en": [(1, 11)],
+    # distil-large-v2 has 2 decoder layers; head (1,12) has 0.806 diagonal score
+    "distil-large-v2": [(1, 12)],
+    # distil-large-v3 has 2 decoder layers; head (1,3) has 0.623 diagonal score
+    "distil-large-v3": [(1, 3)],
+    # distil-large-v3.5 has 2 decoder layers; head (1,3) has 0.483 diagonal score
+    "distil-large-v3.5": [(1, 3)],
+}
+
+# Models that require downloading from HuggingFace
+DISTIL_MODELS = {
+    "distil-small.en": "https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin",
+    "distil-medium.en": "https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin",
+    "distil-large-v2": "https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin",
+    "distil-large-v3": "https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin",
+    "distil-large-v3.5": "https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin",
 }
 
 
@@ -96,13 +116,40 @@ def get_args():
         choices=list(ALIGNMENT_HEADS.keys()),
         help="Whisper model name (must have known alignment heads)",
     )
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default=".",
-        help="Output directory for exported models",
-    )
     return parser.parse_args()
+
+
+def download_distil_model(name: str) -> str:
+    """Download a distil-whisper model from HuggingFace if needed.
+
+    Returns the path to the downloaded checkpoint file.
+    """
+    import urllib.request
+
+    if name not in DISTIL_MODELS:
+        raise ValueError(f"Unknown distil model: {name}")
+
+    url = DISTIL_MODELS[name]
+    # Create a local filename based on the model name
+    local_filename = f"{name.replace('.', '-')}-original-model.bin"
+
+    if os.path.exists(local_filename):
+        print(f"Using existing checkpoint: {local_filename}")
+        return local_filename
+
+    print(f"Downloading {name} from {url}...")
+    urllib.request.urlretrieve(url, local_filename)
+    print(f"Downloaded to: {local_filename}")
+    return local_filename
+
+
+def load_model(name: str):
+    """Load a Whisper model, handling distil models specially."""
+    if name in DISTIL_MODELS:
+        checkpoint_path = download_distil_model(name)
+        return whisper.load_model(checkpoint_path)
+    else:
+        return whisper.load_model(name)
 
 
 def get_alignment_heads(name: str) -> List[Tuple[int, int]]:
@@ -120,7 +167,7 @@ def get_alignment_heads(name: str) -> List[Tuple[int, int]]:
     )
 
 
-def convert_tokens(name: str, model, output_dir: str):
+def convert_tokens(name: str, model):
     """Convert and save tokens file."""
     whisper_dir = Path(whisper.__file__).parent
     multilingual = model.is_multilingual
@@ -139,7 +186,7 @@ def convert_tokens(name: str, model, output_dir: str):
             for token, rank in (line.split() for line in contents.splitlines() if line)
         }
 
-    output_path = os.path.join(output_dir, f"{name}-tokens.txt")
+    output_path = f"{name}-tokens.txt"
     with open(output_path, "w") as f:
         for t, i in tokens.items():
             f.write(f"{t} {i}\n")
@@ -389,17 +436,13 @@ class TextDecoderWithAttention(nn.Module):
 def main():
     args = get_args()
     name = args.model
-    output_dir = args.output_dir
-
-    os.makedirs(output_dir, exist_ok=True)
 
     print(f"Exporting {name} with cross-attention weights")
-    print(f"Output directory: {output_dir}")
 
     opset_version = 13
 
     # Load model
-    model = whisper.load_model(name)
+    model = load_model(name)
     print(f"Model dimensions: {model.dims}")
     print(f"Total parameters: {sum(p.numel() for p in model.parameters()):,}")
 
@@ -407,7 +450,7 @@ def main():
     alignment_heads = get_alignment_heads(name)
     print(f"Using {len(alignment_heads)} alignment heads: {alignment_heads}")
 
-    convert_tokens(name=name, model=model, output_dir=output_dir)
+    convert_tokens(name=name, model=model)
 
     tokenizer = whisper.tokenizer.get_tokenizer(
         model.is_multilingual, num_languages=model.num_languages
@@ -419,7 +462,13 @@ def main():
     audio = torch.rand(16000 * 2)
     audio = whisper.pad_or_trim(audio)
 
-    n_mels = 128 if name in ("large", "large-v3", "turbo") else 80
+    if name in ("distil-large-v3", "distil-large-v3.5"):
+        n_mels = 128
+    elif name in ("large", "large-v3", "turbo"):
+        n_mels = 128
+    else:
+        n_mels = 80
+
     mel = whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
     batch_size = 1
 
@@ -427,7 +476,7 @@ def main():
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
     n_layer_cross_k, n_layer_cross_v = encoder(mel)
 
-    encoder_filename = os.path.join(output_dir, f"{name}-encoder.onnx")
+    encoder_filename = f"{name}-encoder.onnx"
     torch.onnx.export(
         encoder,
         mel,
@@ -528,7 +577,7 @@ def main():
     offset = torch.tensor([tokens.shape[1]], dtype=torch.int64).to(mel.device)
     tokens_single = torch.tensor([[tokenizer.sot]] * n_audio).to(mel.device)
 
-    decoder_filename = os.path.join(output_dir, f"{name}-decoder.onnx")
+    decoder_filename = f"{name}-decoder.onnx"
     torch.onnx.export(
         decoder,
         (
@@ -579,7 +628,7 @@ def main():
     # Generate int8 quantized models
     print("Generating int8 quantized models...")
 
-    encoder_filename_int8 = os.path.join(output_dir, f"{name}-encoder.int8.onnx")
+    encoder_filename_int8 = f"{name}-encoder.int8.onnx"
     quantize_dynamic(
         model_input=encoder_filename,
         model_output=encoder_filename_int8,
@@ -587,7 +636,7 @@ def main():
         weight_type=QuantType.QInt8,
     )
 
-    decoder_filename_int8 = os.path.join(output_dir, f"{name}-decoder.int8.onnx")
+    decoder_filename_int8 = f"{name}-decoder.int8.onnx"
     quantize_dynamic(
         model_input=decoder_filename,
         model_output=decoder_filename_int8,
@@ -600,7 +649,7 @@ def main():
     print(f"  - {encoder_filename_int8}")
     print(f"  - {decoder_filename}")
     print(f"  - {decoder_filename_int8}")
-    print(f"  - {os.path.join(output_dir, f'{name}-tokens.txt')}")
+    print(f"  - {name}-tokens.txt")
     print(f"\nDecoder has 4 outputs including cross_attention_weights")
 
 
