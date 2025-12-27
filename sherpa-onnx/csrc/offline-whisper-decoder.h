@@ -18,9 +18,9 @@ struct OfflineWhisperDecoderResult {
   std::vector<int32_t> tokens;
   std::string lang;
 
-  /// Cross-attention weights for word-level timestamps (if enabled)
+  /// Cross-attention weights for token-level timestamps (if enabled)
   /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D
-  /// Empty if word timestamps are not enabled or model doesn't support it
+  /// Empty if timestamps are not enabled or model doesn't support it
   std::vector<float> attention_weights;
 
   /// Dimensions of attention weights

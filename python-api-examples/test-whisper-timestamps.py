@@ -2,7 +2,7 @@
 """
 Test Whisper timestamps functionality.
 
-This script tests word-level timestamps using cross-attention DTW alignment.
+This script tests token-level timestamps using cross-attention DTW alignment.
 Note: Requires models exported with attention outputs.
 
 Usage:
@@ -79,7 +79,7 @@ def test_without_timestamps(args, samples, sample_rate):
 
 
 def test_with_timestamps(args, samples, sample_rate):
-    """Test word-level timestamps using cross-attention DTW."""
+    """Test token-level timestamps using cross-attention DTW."""
     print("\n" + "=" * 60)
     print("Testing With Timestamps (cross-attention DTW)")
     print("=" * 60)
@@ -126,8 +126,8 @@ def test_with_timestamps(args, samples, sample_rate):
     for ts in result.timestamps:
         assert 0.0 <= ts <= 30.0, f"Timestamp out of range: {ts}"
 
-    # Note: Word-level timestamps can be derived from token-level data client-side.
-    # See plans/word-boundary-detection.md for the algorithm.
+    # Note: Word-level timestamps can be derived from token-level data client-side
+    # by grouping tokens that start with a space character into words.
 
     print("\nTest with timestamps PASSED!")
     return True

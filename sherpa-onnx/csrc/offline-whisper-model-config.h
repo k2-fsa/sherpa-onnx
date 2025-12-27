@@ -38,10 +38,8 @@ struct OfflineWhisperModelConfig {
   //   - 300 for multilingual models
   int32_t tail_paddings = -1;
 
-  // If true, use cross-attention weights and DTW to compute word-level
+  // If true, use cross-attention weights and DTW to compute token-level
   // timestamps. This requires ONNX models exported with attention outputs.
-  // When enabled, each token and word in the result will have timestamps,
-  // matching the output shape of Parakeet/transducer models.
   bool enable_timestamps = false;
 
   OfflineWhisperModelConfig() = default;
