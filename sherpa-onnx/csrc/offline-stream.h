@@ -46,16 +46,7 @@ struct OfflineRecognitionResult {
   std::vector<float> ys_log_probs;
 
   // Word IDs from FST decoding (CTC models with FST decoder only).
-  // Mutually exclusive with word_texts - only one will be populated.
   std::vector<int32_t> words;
-
-  // Word-level results from cross-attention alignment (Whisper only).
-  // Only populated when enable_timestamps=true.
-  // Mutually exclusive with words - only one will be populated.
-  // word_texts.size() == word_timestamps.size() == word_durations.size()
-  std::vector<std::string> word_texts;
-  std::vector<float> word_timestamps;
-  std::vector<float> word_durations;
 
   std::string AsJsonString() const;
 };
