@@ -46,10 +46,9 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
 
   po->Register(
       "whisper-enable-timestamps", &enable_timestamps,
-      "If true, use cross-attention weights and DTW to compute word-level "
+      "If true, use cross-attention weights and DTW to compute token-level "
       "timestamps. Requires ONNX models exported with attention outputs. "
-      "Output includes both token-level and word-level timestamps, matching "
-      "the shape of Parakeet/transducer models. Default: false.");
+      "Default: false.");
 }
 
 bool OfflineWhisperModelConfig::Validate() const {

@@ -18,7 +18,7 @@ struct DTWResult {
 };
 
 // Class for processing cross-attention weights and computing DTW alignment
-// for word-level timestamps in Whisper.
+// for token-level timestamps in Whisper.
 //
 // Based on OpenAI Whisper (whisper/timing.py) and whisper.cpp implementations.
 class WhisperDTW {

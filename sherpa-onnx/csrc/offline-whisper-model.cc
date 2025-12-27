@@ -499,7 +499,7 @@ class OfflineWhisperModel::Impl {
   int32_t is_multilingual_ = 0;
   std::vector<int64_t> sot_sequence_;
 
-  // For cross-attention word-level timestamps
+  // For cross-attention token-level timestamps
   bool has_attention_output_ = false;
   int32_t n_alignment_heads_ = 0;
 };

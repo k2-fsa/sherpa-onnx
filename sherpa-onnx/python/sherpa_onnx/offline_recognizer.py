@@ -1045,11 +1045,9 @@ class OfflineRecognizer(object):
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           enable_timestamps:
-            True to enable word-level timestamps using cross-attention alignment
+            True to enable token-level timestamps using cross-attention alignment
             and DTW. Requires ONNX models exported with attention outputs.
-            When enabled, result.timestamps will contain token-level start times
-            and result.word_timestamps will contain word-level start/end times,
-            matching the output shape of Parakeet/transducer models.
+            When enabled, result.timestamps will contain token-level start times.
             Defaults to False.
           rule_fsts:
             If not empty, it specifies fsts for inverse text normalization.

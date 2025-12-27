@@ -172,7 +172,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.text = text;
     r.lang = src.lang;
 
-    // Compute token-level and word-level timestamps using DTW if enabled
+    // Compute token-level timestamps using DTW if enabled
     if (config_.model_config.whisper.enable_timestamps &&
         !src.attention_weights.empty() &&
         !r.tokens.empty()) {
