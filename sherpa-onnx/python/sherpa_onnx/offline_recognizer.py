@@ -1002,6 +1002,7 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         tail_paddings: int = -1,
+        enable_timestamps: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
         hr_dict_dir: str = "",
@@ -1043,6 +1044,13 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          enable_timestamps:
+            True to enable word-level timestamps using cross-attention alignment
+            and DTW. Requires ONNX models exported with attention outputs.
+            When enabled, result.timestamps will contain token-level start times
+            and result.word_timestamps will contain word-level start/end times,
+            matching the output shape of Parakeet/transducer models.
+            Defaults to False.
           rule_fsts:
             If not empty, it specifies fsts for inverse text normalization.
             If there are multiple fsts, they are separated by a comma.
@@ -1058,6 +1066,7 @@ class OfflineRecognizer(object):
                 language=language,
                 task=task,
                 tail_paddings=tail_paddings,
+                enable_timestamps=enable_timestamps,
             ),
             tokens=tokens,
             num_threads=num_threads,

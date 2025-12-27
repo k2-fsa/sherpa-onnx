@@ -16,6 +16,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -150,15 +151,20 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
                                    const SymbolTable &sym_table) const {
     OfflineRecognitionResult r;
-    r.tokens.reserve(src.tokens.size());
+
+    bool enable_timestamps = config_.model_config.whisper.enable_timestamps;
 
     std::string text;
-    for (auto i : src.tokens) {
-      if (!sym_table.Contains(i)) {
+
+    // Since we always use no_timestamps mode, src.tokens contains only text tokens
+    for (size_t i = 0; i < src.tokens.size(); ++i) {
+      int32_t token_id = src.tokens[i];
+
+      if (!sym_table.Contains(token_id)) {
         continue;
       }
 
-      std::string s = sym_table[i];
+      std::string s = sym_table[token_id];
       s = ApplyInverseTextNormalization(s);
       s = ApplyHomophoneReplacer(std::move(s));
 
@@ -169,7 +175,84 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.text = text;
     r.lang = src.lang;
 
+    // Compute token-level and word-level timestamps using DTW if enabled
+    if (enable_timestamps && !src.attention_weights.empty() &&
+        !r.tokens.empty()) {
+      ComputeTimestamps(src, r);
+    }
+
     return r;
+  }
+
+  // Compute token-level and word-level timestamps using cross-attention DTW
+  void ComputeTimestamps(const OfflineWhisperDecoderResult &src,
+                         OfflineRecognitionResult &r) const {
+    // Compute word boundaries from tokens
+    auto word_boundaries = ComputeWordBoundaries(r.tokens);
+
+    // Compute DTW alignment
+    WhisperDTW dtw;
+
+    // Note: src.attention includes all tokens (initial + decoded)
+    // The first few are SOT sequence tokens which DTW will skip.
+    // Initial tokens are: [sot, lang, task, no_timestamps] for multilingual,
+    // or [sot, no_timestamps] for English-only models.
+    // We skip sot_sequence (without no_timestamps), keeping no_timestamps as
+    // the first token in DTW - it acts as a start anchor like in OpenAI's code.
+    int32_t sot_sequence_length =
+        static_cast<int32_t>(model_->GetInitialTokens().size());
+
+    std::vector<int32_t> token_frames = dtw.ComputeAlignment(
+        src.attention_weights.data(), src.attention_n_heads,
+        src.attention_n_tokens, src.attention_n_frames, src.num_audio_frames,
+        sot_sequence_length);
+
+    // Convert frame indices to timestamps
+    std::vector<float> token_times =
+        WhisperDTW::FrameIndicesToSeconds(token_frames);
+
+    // Populate token-level timestamps
+    // token_times[0] is the anchor (no_timestamps), token_times[i+1] is for text token i
+    r.timestamps.clear();
+    r.timestamps.reserve(r.tokens.size());
+    for (size_t i = 0; i < r.tokens.size(); ++i) {
+      // Use anchor time (index 0) for first token, otherwise use token's own time
+      int32_t time_idx = static_cast<int32_t>(i);
+      if (time_idx < static_cast<int32_t>(token_times.size())) {
+        r.timestamps.push_back(token_times[time_idx]);
+      } else {
+        r.timestamps.push_back(r.timestamps.empty() ? 0.0f : r.timestamps.back());
+      }
+    }
+
+    // Populate word-level timestamps
+    for (const auto &wb : word_boundaries) {
+      OfflineRecognitionWordTiming wt;
+      wt.word = wb.word;
+      wt.probability = 0.0f;  // We don't have confidence from DTW
+
+      // Word start time
+      if (wb.start_token >= 0 &&
+          wb.start_token < static_cast<int32_t>(token_times.size())) {
+        wt.start = token_times[wb.start_token];
+      } else {
+        wt.start = 0.0f;
+      }
+
+      // Word end time (start of next token after last token in word)
+      if (wb.end_token > 0 &&
+          wb.end_token < static_cast<int32_t>(token_times.size())) {
+        wt.end = token_times[wb.end_token];
+      } else if (wb.end_token > 0 && wb.end_token - 1 >= 0 &&
+                 wb.end_token - 1 < static_cast<int32_t>(token_times.size())) {
+        // Use last token's time + one frame duration
+        wt.end = token_times[wb.end_token - 1] + kWhisperSecondsPerToken;
+      } else {
+        wt.end = wt.start + kWhisperSecondsPerToken;
+      }
+
+      r.word_timestamps.push_back(std::move(wt));
+    }
   }
 
  private:

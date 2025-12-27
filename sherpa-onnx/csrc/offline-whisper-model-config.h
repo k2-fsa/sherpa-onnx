@@ -39,16 +39,24 @@ struct OfflineWhisperModelConfig {
   //   - 300 for multilingual models
   int32_t tail_paddings = -1;
 
+  // If true, use cross-attention weights and DTW to compute word-level
+  // timestamps. This requires ONNX models exported with attention outputs.
+  // When enabled, each token and word in the result will have timestamps,
+  // matching the output shape of Parakeet/transducer models.
+  bool enable_timestamps = false;
+
   OfflineWhisperModelConfig() = default;
   OfflineWhisperModelConfig(const std::string &encoder,
                             const std::string &decoder,
                             const std::string &language,
-                            const std::string &task, int32_t tail_paddings)
+                            const std::string &task, int32_t tail_paddings,
+                            bool enable_timestamps = false)
       : encoder(encoder),
         decoder(decoder),
         language(language),
         task(task),
-        tail_paddings(tail_paddings) {}
+        tail_paddings(tail_paddings),
+        enable_timestamps(enable_timestamps) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -60,6 +68,20 @@ struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
   std::string lang;
+
+  /// Cross-attention weights for word-level timestamps (if enabled)
+  /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D
+  /// Empty if word timestamps are not enabled or model doesn't support it
+  std::vector<float> attention_weights;
+
+  /// Dimensions of attention weights
+  int32_t attention_n_heads = 0;
+  int32_t attention_n_tokens = 0;
+  int32_t attention_n_frames = 0;
+
+  /// Number of actual audio feature frames (for clipping attention)
+  /// This is num_feature_frames / 2 (due to encoder downsampling)
+  int32_t num_audio_frames = 0;
 };
 
 // used by ascend/rknn/qnn/axera, etc.

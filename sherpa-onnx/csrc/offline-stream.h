@@ -16,6 +16,14 @@
 
 namespace sherpa_onnx {
 
+// Word-level timestamp information for Whisper models
+struct OfflineRecognitionWordTiming {
+  std::string word;   // The word text
+  float start;        // Start time in seconds
+  float end;          // End time in seconds
+  float probability;  // Confidence/probability (optional, may be 0)
+};
+
 struct OfflineRecognitionResult {
   // Recognition results.
   // For English, it consists of space separated words.
@@ -46,6 +54,10 @@ struct OfflineRecognitionResult {
   std::vector<float> ys_log_probs;
 
   std::vector<int32_t> words;
+
+  // Word-level timestamps from cross-attention alignment (Whisper only)
+  // Only populated when enable_timestamps=true
+  std::vector<OfflineRecognitionWordTiming> word_timestamps;
 
   std::string AsJsonString() const;
 };

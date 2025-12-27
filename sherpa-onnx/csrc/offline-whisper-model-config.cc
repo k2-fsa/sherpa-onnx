@@ -43,6 +43,13 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
       "Since we have removed the 30-second constraint, we need to add some "
       "tail padding frames "
       "so that whisper can detect the eot token. Leave it to -1 to use 1000.");
+
+  po->Register(
+      "whisper-enable-timestamps", &enable_timestamps,
+      "If true, use cross-attention weights and DTW to compute word-level "
+      "timestamps. Requires ONNX models exported with attention outputs. "
+      "Output includes both token-level and word-level timestamps, matching "
+      "the shape of Parakeet/transducer models. Default: false.");
 }
 
 bool OfflineWhisperModelConfig::Validate() const {
@@ -87,7 +94,8 @@ std::string OfflineWhisperModelConfig::ToString() const {
   os << "decoder=\"" << decoder << "\", ";
   os << "language=\"" << language << "\", ";
   os << "task=\"" << task << "\", ";
-  os << "tail_paddings=" << tail_paddings << ")";
+  os << "tail_paddings=" << tail_paddings << ", ";
+  os << "enable_timestamps=" << (enable_timestamps ? "true" : "false") << ")";
 
   return os.str();
 }

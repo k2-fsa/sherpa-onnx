@@ -59,7 +59,7 @@ class OfflineWhisperModel {
    *                              (n_text_layer, N, n_audio_ctx, n_text_state).
    * @param offset A int64 tensor of shape (N,)
    *
-   * @return Return a tuple containing 6 tensors:
+   * @return Return a tuple containing 7 tensors:
    *
    *  - logits A 3-D tensor of shape (N, num_words, vocab_size)
    *  - out_n_layer_self_k_cache Same shape as n_layer_self_k_cache
@@ -67,9 +67,12 @@ class OfflineWhisperModel {
    *  - out_n_layer_cross_k Same as n_layer_cross_k
    *  - out_n_layer_cross_v Same as n_layer_cross_v
    *  - out_offset Same as offset
+   *  - cross_attention_weights (if HasAttentionOutput()) A 4-D tensor of shape
+   *                            (N, n_alignment_heads, num_words, n_audio_ctx)
+   *                            Empty tensor if model doesn't have attention output
    */
   std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
-             Ort::Value>
+             Ort::Value, Ort::Value>
   ForwardDecoder(Ort::Value tokens, Ort::Value n_layer_self_k_cache,
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset) const;
@@ -94,6 +97,8 @@ class OfflineWhisperModel {
   OrtAllocator *Allocator() const;
 
   int32_t NoTimeStampsToken() const;
+  int32_t TimestampBegin() const;  // First timestamp token (0.00s)
+  int32_t TimestampEnd() const;    // Last timestamp token (30.00s)
   int32_t EOT() const;
   int32_t SOT() const;
   int32_t TextCtx() const;
@@ -101,6 +106,12 @@ class OfflineWhisperModel {
   int32_t FeatureDim() const;
   int32_t Translate() const;
   bool IsMultiLingual() const;
+
+  // Check if the decoder model has cross-attention weight outputs
+  bool HasAttentionOutput() const;
+
+  // Get number of alignment heads (0 if no attention output)
+  int32_t NumAlignmentHeads() const;
 
   static void NormalizeFeatures(float *features, int32_t num_frames,
                                 int32_t feat_dim);
