@@ -22,7 +22,25 @@ Args:
     to the range [-1, 1].
 )";
 
+static void PybindOfflineRecognitionWordTiming(py::module *m) {  // NOLINT
+  using PyClass = OfflineRecognitionWordTiming;
+  py::class_<PyClass>(*m, "OfflineRecognitionWordTiming")
+      .def_property_readonly("word",
+        [](const PyClass &self) -> py::str {
+          return py::str(PyUnicode_DecodeUTF8(self.word.c_str(),
+                                              self.word.size(), "ignore"));
+        })
+      .def_property_readonly("start",
+        [](const PyClass &self) { return self.start; })
+      .def_property_readonly("end",
+        [](const PyClass &self) { return self.end; })
+      .def_property_readonly("probability",
+        [](const PyClass &self) { return self.probability; });
+}
+
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
+  PybindOfflineRecognitionWordTiming(m);
+
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult")
       .def("__str__", &PyClass::AsJsonString)
@@ -47,7 +65,9 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("durations",
         [](const PyClass &self) { return self.durations; })
       .def_property_readonly("ys_log_probs",
-        [](const PyClass &self) { return self.ys_log_probs; });
+        [](const PyClass &self) { return self.ys_log_probs; })
+      .def_property_readonly("word_timestamps",
+        [](const PyClass &self) { return self.word_timestamps; });
 }
 
 void PybindOfflineStream(py::module *m) {
