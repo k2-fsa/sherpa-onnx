@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
@@ -412,19 +413,18 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   void ApplyCMVN(std::vector<float> *v) const {
     const std::vector<float> &neg_mean = model_.NegativeMean();
     const std::vector<float> &inv_stddev = model_.InverseStdDev();
+    int dim = static_cast<int>(neg_mean.size());
+    int num_frames = static_cast<int>(v->size()) / dim;
 
-    int32_t dim = neg_mean.size();
-    int32_t num_frames = v->size() / dim;
+    Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+        mat(v->data(), num_frames, dim);
 
-    float *p = v->data();
+    Eigen::Map<const Eigen::RowVectorXf> neg_mean_vec(neg_mean.data(), dim);
+    Eigen::Map<const Eigen::RowVectorXf> inv_stddev_vec(inv_stddev.data(), dim);
 
-    for (int32_t i = 0; i != num_frames; ++i) {
-      for (int32_t k = 0; k != dim; ++k) {
-        p[k] = (p[k] + neg_mean[k]) * inv_stddev[k];
-      }
-
-      p += dim;
-    }
+    mat.array() = (mat.array().rowwise() + neg_mean_vec.array()).rowwise() *
+                  inv_stddev_vec.array();
   }
 
   void PositionalEncoding(std::vector<float> *v, int32_t t_offset) const {

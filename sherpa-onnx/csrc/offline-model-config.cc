@@ -25,6 +25,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   dolphin.Register(po);
   canary.Register(po);
   omnilingual.Register(po);
+  medasr.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -156,6 +157,10 @@ bool OfflineModelConfig::Validate() const {
     return omnilingual.Validate();
   }
 
+  if (!medasr.model.empty()) {
+    return medasr.Validate();
+  }
+
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
@@ -186,6 +191,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "dolphin=" << dolphin.ToString() << ", ";
   os << "canary=" << canary.ToString() << ", ";
   os << "omnilingual=" << omnilingual.ToString() << ", ";
+  os << "medasr=" << medasr.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";

@@ -10,6 +10,7 @@ def text2token(
     tokens: str,
     tokens_type: str = "cjkchar",
     bpe_model: Optional[str] = None,
+    lexicon: Optional[str] = None,
     output_ids: bool = False,
 ) -> List[List[Union[str, int]]]:
     """
@@ -21,12 +22,15 @@ def text2token(
       tokens:
         The path of the tokens.txt.
       tokens_type:
-        The valid values are cjkchar, bpe, cjkchar+bpe, fpinyin, ppinyin.
+        The valid values are cjkchar, bpe, cjkchar+bpe, fpinyin, ppinyin, phone+ppinyin.
         fpinyin means full pinyin, each cjkchar has a pinyin(with tone).
         ppinyin means partial pinyin, it splits pinyin into initial and final,
+        phone means English phonemes in CMU dictionary format.
       bpe_model:
         The path of the bpe model. Only required when tokens_type is bpe or
         cjkchar+bpe.
+      lexicon:
+        The path of the lexicon.txt. Only required when tokens_type is phone+ppinyin.
       output_ids:
         True to output token ids otherwise tokens.
     Returns:
@@ -64,34 +68,75 @@ def text2token(
         sp = spm.SentencePieceProcessor()
         sp.load(bpe_model)
 
+    phone_table = {}
+    if tokens_type == "phone+ppinyin":
+        assert (
+            lexicon and Path(lexicon).is_file()
+        ), f"File not exists, {lexicon}"
+        with open(lexicon, "r", encoding="utf-8") as f:
+            for line in f:
+                toks = line.strip().split()
+                assert len(toks) >= 2, len(toks)
+                word = toks[0]
+                phones = toks[1:]
+                phone_table[word] = phones
+
     texts_list: List[List[str]] = []
+
+    def to_pinyin(txt: str, out_type: str) -> List[str]:
+        assert out_type in ["ppinyin", "fpinyin"], f"given {out_type}"
+        py = [x[0] for x in pinyin(txt)]
+        if "ppinyin" == out_type:
+            res = []
+            for x in py:
+                initial = to_initials(x, strict=False)
+                final = to_finals_tone(x, strict=False)
+                if initial == "" and final == "":
+                    res.append(x)
+                else:
+                    if initial:
+                        res.append(initial)
+                    if final:
+                        res.append(final)
+            return res
+        else:
+            return py
 
     if tokens_type == "cjkchar":
         texts_list = [list("".join(text.split())) for text in texts]
     elif tokens_type == "bpe":
         texts_list = sp.encode(texts, out_type=str)
-    elif "pinyin" in tokens_type:
+    elif tokens_type == "ppinyin" or tokens_type == "fpinyin":
         for txt in texts:
-            py = [x[0] for x in pinyin(txt)]
-            if "ppinyin" == tokens_type:
-                res = []
-                for x in py:
-                    initial = to_initials(x, strict=False)
-                    final = to_finals_tone(x, strict=False)
-                    if initial == "" and final == "":
-                        res.append(x)
+            texts_list.append(to_pinyin(txt, tokens_type))
+    elif tokens_type == "phone+ppinyin":
+        # CJK(China Japan Korea) unicode range is [U+4E00, U+9FFF], ref:
+        # https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
+        pattern = re.compile(r"^[\u4e00-\u9fff]+$")
+        for text in texts:
+            words = text.strip().split()
+            text_list = []
+            skip_text = False
+            for w in words:
+                if w in phone_table:
+                    text_list += phone_table[w]
+                else:
+                    if pattern.fullmatch(w) is None:
+                        print(
+                            f"Word {w} not in lexicon and it is not a CJK character, "
+                            f"skipping text: {text}."
+                        )
+                        skip_text = True
+                        break
                     else:
-                        if initial != "":
-                            res.append(initial)
-                        if final != "":
-                            res.append(final)
-                texts_list.append(res)
-            else:
-                texts_list.append(py)
+                        text_list += to_pinyin(w, "ppinyin")
+            if not skip_text:
+                texts_list.append(text_list)
     else:
         assert (
             tokens_type == "cjkchar+bpe"
-        ), f"Supported tokens_type are cjkchar, bpe, cjkchar+bpe, given {tokens_type}"
+        ), f"Supported tokens_type are cjkchar, bpe, cjkchar+bpe, ppinyin, fpinyin, phone+ppinyin given {tokens_type}"
+
         # CJK(China Japan Korea) unicode range is [U+4E00, U+9FFF], ref:
         # https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
         pattern = re.compile(r"([\u4e00-\u9fff])")

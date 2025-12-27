@@ -26,6 +26,7 @@ set(sources
   keyword-spotter.cc
   lodr-fst.cc
   math.cc
+  normal-data-generator.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
   offline-ctc-fst-decoder-config.cc
@@ -39,6 +40,8 @@ set(sources
   offline-fire-red-asr-model.cc
   offline-lm-config.cc
   offline-lm.cc
+  offline-medasr-ctc-model-config.cc
+  offline-medasr-ctc-model.cc
   offline-model-config.cc
   offline-moonshine-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
@@ -234,6 +237,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_QNN)
   list(APPEND sources
     ./qnn/offline-sense-voice-model-qnn.cc
+    ./qnn/offline-paraformer-model-qnn.cc
     ./qnn/offline-zipformer-ctc-model-qnn.cc
     ./qnn/qnn-backend.cc
     ./qnn/qnn-model.cc
@@ -769,6 +773,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     cat-test.cc
     circular-buffer-test.cc
     context-graph-test.cc
+    math-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
     regex-lang-test.cc
@@ -783,7 +788,6 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
-      offline-tts-zipvoice-frontend-test.cc
       piper-phonemize-test.cc
     )
   endif()

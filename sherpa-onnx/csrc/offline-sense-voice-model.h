@@ -39,6 +39,13 @@ class OfflineSenseVoiceModel {
   Ort::Value Forward(Ort::Value features, Ort::Value features_length,
                      Ort::Value language, Ort::Value text_norm) const;
 
+  /** For FunASR-Nano
+   *
+   * @param features A tensor of shape (1, T, C) with dtype float32
+   * @return Return logits of shape (1, T, C) with dtype float32
+   */
+  Ort::Value Forward(Ort::Value features) const;
+
   const OfflineSenseVoiceModelMetaData &GetModelMetadata() const;
 
   /** Return an allocator for allocating memory

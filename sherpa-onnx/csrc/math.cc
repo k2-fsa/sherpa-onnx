@@ -4,18 +4,23 @@
 #include "sherpa-onnx/csrc/math.h"
 
 #include <vector>
+
+#include "Eigen/Dense"
+
 namespace sherpa_onnx {
 
-static void ScaleAdd(const float *src, float scale, int32_t n, float *in_out) {
-  for (int32_t i = 0; i < n; ++i) {
-    in_out[i] += scale * src[i];
-  }
+void ScaleAdd(const float *src, float scale, int32_t n, float *in_out) {
+  Eigen::Map<const Eigen::ArrayXf> src_vec(src, n);
+  Eigen::Map<Eigen::ArrayXf> inout_vec(in_out, n);
+
+  inout_vec += scale * src_vec;
 }
 
-static void Scale(const float *src, float scale, int32_t n, float *out) {
-  for (int32_t i = 0; i < n; ++i) {
-    out[i] = scale * src[i];
-  }
+void Scale(const float *src, float scale, int32_t n, float *out) {
+  Eigen::Map<const Eigen::ArrayXf> src_vec(src, n);
+  Eigen::Map<Eigen::ArrayXf> out_vec(out, n);
+
+  out_vec = scale * src_vec;
 }
 
 // this if for Paraformer
@@ -52,6 +57,45 @@ std::vector<float> ComputeAcousticEmbedding(
   // TODO(fangjun): The last cur_emb is not used
 
   return ans;
+}
+
+std::vector<float> Transpose(const float *input, int32_t rows, int32_t cols) {
+  std::vector<float> output(cols * rows);
+
+  Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+                                 Eigen::RowMajor>>
+      in(input, rows, cols);
+
+  Eigen::Map<
+      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+      out(output.data(), cols, rows);
+
+  out.noalias() = in.transpose();
+
+  return output;
+}
+
+void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
+                          std::vector<float> *mean,
+                          std::vector<float> *inv_stddev) {
+  using RowMajorMat =
+      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+  Eigen::Map<const RowMajorMat> X(p, num_rows, num_cols);
+
+  Eigen::RowVectorXf mean_vec = X.colwise().mean();
+
+  Eigen::RowVectorXf mean_sq = X.array().square().colwise().mean();
+
+  Eigen::RowVectorXf var = mean_sq.array() - mean_vec.array().square();
+
+  Eigen::RowVectorXf stddev = var.array().max(0.0f).sqrt();
+
+  Eigen::RowVectorXf inv_std = (stddev.array() + 1e-5f).inverse();
+
+  mean->assign(mean_vec.data(), mean_vec.data() + num_cols);
+
+  inv_stddev->assign(inv_std.data(), inv_std.data() + num_cols);
 }
 
 }  // namespace sherpa_onnx

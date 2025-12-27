@@ -402,6 +402,38 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2023-03-28-int8",
+            idx=9023,
+            lang="zh",
+            short_name="5-seconds-paraformer_zh_2023_03_28_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2025-10-07-int8",
+            idx=9024,
+            lang="zh",
+            short_name="5-seconds-paraformer_zh_2025_10_07_int8",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

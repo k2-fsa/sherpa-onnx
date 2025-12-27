@@ -116,6 +116,93 @@ class TestText2Token(unittest.TestCase):
             [685, 736, 275, 178, 179, 921, 736],
         ], encoded_ids
 
+    def test_phone_ppinyin(self):
+        tokens = f"{d}/text2token/tokens_phone_ppinyin.txt"
+        lexicon = f"{d}/text2token/en.phone"
+
+        if not Path(tokens).is_file() or not Path(lexicon).is_file():
+            print(
+                f"No test data found, skipping test_phone_ppinyin().\n"
+                f"You can download the test data by: \n"
+                f"git clone https://github.com/pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
+            )
+            return
+
+        texts = ["世界人民 GOES TOGETHER", "中国 GOES WITH 美国"]
+        encoded_texts = sherpa_onnx.text2token(
+            texts,
+            tokens=tokens,
+            tokens_type="phone+ppinyin",
+            lexicon=lexicon,
+        )
+        assert encoded_texts == [
+            [
+                "sh",
+                "ì",
+                "j",
+                "iè",
+                "r",
+                "én",
+                "m",
+                "ín",
+                "G",
+                "OW1",
+                "Z",
+                "T",
+                "AH0",
+                "G",
+                "EH1",
+                "DH",
+                "ER0",
+            ],
+            [
+                "zh",
+                "ōng",
+                "g",
+                "uó",
+                "G",
+                "OW1",
+                "Z",
+                "W",
+                "IH1",
+                "DH",
+                "m",
+                "ěi",
+                "g",
+                "uó",
+            ],
+        ], encoded_texts
+
+        encoded_ids = sherpa_onnx.text2token(
+            texts,
+            tokens=tokens,
+            tokens_type="phone+ppinyin",
+            lexicon=lexicon,
+            output_ids=True,
+        )
+        assert encoded_ids == [
+            [
+                139,
+                203,
+                127,
+                107,
+                137,
+                200,
+                130,
+                207,
+                35,
+                50,
+                70,
+                59,
+                9,
+                35,
+                26,
+                24,
+                28,
+            ],
+            [182, 241, 87, 163, 35, 50, 70, 68, 38, 24, 130, 231, 87, 163],
+        ], encoded_ids
+
 
 if __name__ == "__main__":
     unittest.main()
