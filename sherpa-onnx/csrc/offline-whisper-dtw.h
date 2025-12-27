@@ -85,30 +85,6 @@ class WhisperDTW {
 constexpr float kWhisperTokensPerSecond = 50.0f;
 constexpr float kWhisperSecondsPerToken = 0.02f;
 
-// Word boundary information
-struct WhisperWordBoundary {
-  std::string word;       // The word text
-  int32_t start_token;    // Index of first token in this word
-  int32_t end_token;      // Index of last token in this word (exclusive)
-};
-
-// Compute word boundaries from decoded tokens.
-// Groups tokens into words based on space prefixes and CJK character detection.
-//
-// @param tokens Vector of decoded token strings
-// @return Vector of word boundaries
-std::vector<WhisperWordBoundary> ComputeWordBoundaries(
-    const std::vector<std::string> &tokens);
-
-// Check if a string starts with a space character
-bool StartsWithSpace(const std::string &s);
-
-// Check if a character is CJK (Chinese, Japanese, Korean)
-bool IsCJKCharacter(uint32_t codepoint);
-
-// Decode UTF-8 and get the first codepoint
-uint32_t GetFirstCodepoint(const std::string &s);
-
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_WHISPER_DTW_H_

@@ -182,12 +182,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     return r;
   }
 
-  // Compute token-level and word-level timestamps using cross-attention DTW
+  // Compute token-level timestamps using cross-attention DTW
   void ComputeTimestamps(const OfflineWhisperDecoderResult &src,
                          OfflineRecognitionResult &r) const {
-    // Compute word boundaries from tokens
-    auto word_boundaries = ComputeWordBoundaries(r.tokens);
-
     // Compute DTW alignment
     WhisperDTW dtw;
 
@@ -214,39 +211,6 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.timestamps.assign(token_times.begin(), token_times.begin() + n);
     float fill_value = r.timestamps.empty() ? 0.0f : r.timestamps.back();
     r.timestamps.resize(r.tokens.size(), fill_value);
-
-    // Populate word-level results
-    r.word_texts.reserve(word_boundaries.size());
-    r.word_timestamps.reserve(word_boundaries.size());
-    r.word_durations.reserve(word_boundaries.size());
-
-    for (const auto &wb : word_boundaries) {
-      r.word_texts.push_back(wb.word);
-
-      // Word start time
-      float start_time;
-      if (wb.start_token >= 0 &&
-          wb.start_token < static_cast<int32_t>(token_times.size())) {
-        start_time = token_times[wb.start_token];
-      } else {
-        start_time = 0.0f;
-      }
-      r.word_timestamps.push_back(start_time);
-
-      // Word end time (start of next token after last token in word)
-      float end_time;
-      if (wb.end_token > 0 &&
-          wb.end_token < static_cast<int32_t>(token_times.size())) {
-        end_time = token_times[wb.end_token];
-      } else if (wb.end_token > 0 && wb.end_token - 1 >= 0 &&
-                 wb.end_token - 1 < static_cast<int32_t>(token_times.size())) {
-        // Use last token's time + one frame duration
-        end_time = token_times[wb.end_token - 1] + kWhisperSecondsPerToken;
-      } else {
-        end_time = start_time + kWhisperSecondsPerToken;
-      }
-      r.word_durations.push_back(end_time - start_time);
-    }
   }
 
  private:

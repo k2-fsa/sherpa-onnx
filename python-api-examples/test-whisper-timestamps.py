@@ -72,10 +72,8 @@ def test_without_timestamps(args, samples, sample_rate):
     print(f"\nText: {result.text}")
     print(f"Tokens: {result.tokens}")
     print(f"Timestamps: {result.timestamps}")
-    print(f"Word timestamps: {len(result.word_timestamps)} words")
 
     assert len(result.timestamps) == 0, "Should have no timestamps"
-    assert len(result.word_timestamps) == 0, "Should have no word timestamps"
 
     print("\nTest without timestamps PASSED!")
 
@@ -128,65 +126,8 @@ def test_with_timestamps(args, samples, sample_rate):
     for ts in result.timestamps:
         assert 0.0 <= ts <= 30.0, f"Timestamp out of range: {ts}"
 
-    # Check word-level results
-    word_texts = result.word_texts
-    word_timestamps = result.word_timestamps
-    word_durations = result.word_durations
-    print(f"\nWord timestamps count: {len(word_texts)}")
-
-    if len(word_texts) == 0:
-        print("\nWARNING: No word timestamps returned.")
-        print("This could mean:")
-        print("  1. The decoder model doesn't have attention outputs")
-        print("  2. The model needs to be re-exported with attention outputs")
-        print("  3. There was an error during DTW alignment")
-        print("\nTo export a model with attention outputs, use:")
-        print("  python scripts/whisper/export-onnx-with-attention.py")
-        return False
-
-    # Verify all word arrays have the same length
-    assert len(word_texts) == len(word_timestamps) == len(word_durations), (
-        f"Word array length mismatch: texts={len(word_texts)}, "
-        f"timestamps={len(word_timestamps)}, durations={len(word_durations)}"
-    )
-
-    print("\n--- Word-Level Timestamps ---")
-    for i in range(len(word_texts)):
-        end_time = word_timestamps[i] + word_durations[i]
-        print(f"  [{word_timestamps[i]:.2f}s - {end_time:.2f}s] {repr(word_texts[i])}")
-
-    # Verify word timestamps
-    # 1. Check that duration is non-negative for each word
-    for i, duration in enumerate(word_durations):
-        assert duration >= 0, f"Word {i} has negative duration ({duration})"
-
-    # 2. Check that timestamps are non-negative
-    for i in range(len(word_texts)):
-        assert word_timestamps[i] >= 0.0, f"Word {i} has negative timestamp: {word_timestamps[i]}"
-        assert word_durations[i] >= 0.0, f"Word {i} has negative duration: {word_durations[i]}"
-
-    # 3. Check that timestamps are in reasonable range (0-30s for Whisper)
-    for i in range(len(word_texts)):
-        end_time = word_timestamps[i] + word_durations[i]
-        assert word_timestamps[i] <= 30.0, f"Word {i} timestamp out of range: {word_timestamps[i]}"
-        assert end_time <= 30.0, f"Word {i} end time out of range: {end_time}"
-
-    # 4. Check rough monotonicity (word starts should generally increase)
-    for i in range(1, len(word_texts)):
-        prev_start = word_timestamps[i - 1]
-        curr_start = word_timestamps[i]
-        # Allow words to start within 0.5s of previous word start
-        assert curr_start >= prev_start - 0.5, (
-            f"Word timestamps not monotonic: word {i-1} starts at {prev_start}, "
-            f"word {i} starts at {curr_start}"
-        )
-
-    # 5. Check that concatenated words roughly match the text
-    words_text = "".join(word_texts)
-    words_text_normalized = " ".join(words_text.split())
-    result_text_normalized = " ".join(result.text.split())
-    print(f"\nConcatenated words: {repr(words_text_normalized)}")
-    print(f"Original text: {repr(result_text_normalized)}")
+    # Note: Word-level timestamps can be derived from token-level data client-side.
+    # See plans/word-boundary-detection.md for the algorithm.
 
     print("\nTest with timestamps PASSED!")
     return True
