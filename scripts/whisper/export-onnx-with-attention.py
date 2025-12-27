@@ -12,19 +12,20 @@ with Dynamic Time Warping (DTW) to compute word-level timestamps.
 Based on the original export-onnx.py script.
 
 Usage:
-  python export-onnx-with-attention.py --model tiny
+  python export-onnx-with-attention.py --model tiny --output-dir ./whisper-tiny-attention
 
 The exported decoder will have 4 outputs instead of 3:
   - logits
   - out_n_layer_self_k_cache
   - out_n_layer_self_v_cache
-  - cross_attention_weights  (NEW: shape [n_heads, n_audio_ctx])
+  - cross_attention_weights  (NEW: shape [n_alignment_heads, n_audio_ctx])
 """
 
 import argparse
+import importlib.util
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import onnx
 import torch
@@ -34,20 +35,12 @@ from torch import Tensor, nn
 
 import whisper
 from whisper.model import (
-    AudioEncoder,
     MultiHeadAttention,
     ResidualAttentionBlock,
     TextDecoder,
 )
 
-torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
-
-# Disable SDPA (scaled dot product attention) for ONNX export compatibility
-# This is needed because SDPA isn't supported in older ONNX opsets
-torch.backends.cuda.enable_flash_sdp(False)
-torch.backends.cuda.enable_mem_efficient_sdp(False)
-torch.backends.cuda.enable_math_sdp(True)
+from export_onnx import add_meta_data, AudioEncoderTensorCache
 
 
 # Alignment heads for each model variant (from whisper.cpp)
@@ -100,15 +93,8 @@ def get_args():
         "--model",
         type=str,
         required=True,
-        # fmt: off
-        choices=[
-            "tiny", "tiny.en", "base", "base.en",
-            "small", "small.en", "medium", "medium.en",
-            "large-v1", "large-v2",
-            "large", "large-v3", "turbo",
-        ],
-        # fmt: on
-        help="Whisper model name",
+        choices=list(ALIGNMENT_HEADS.keys()),
+        help="Whisper model name (must have known alignment heads)",
     )
     parser.add_argument(
         "--output-dir",
@@ -119,73 +105,49 @@ def get_args():
     return parser.parse_args()
 
 
-def add_meta_data(filename: str, meta_data: Dict[str, Any]):
-    """Add meta data to an ONNX model. It is changed in-place."""
-    model = onnx.load(filename)
+def get_alignment_heads(name: str) -> List[Tuple[int, int]]:
+    """Get alignment heads for a model.
 
-    while len(model.metadata_props):
-        model.metadata_props.pop()
+    Raises:
+        ValueError: If no alignment heads are defined for the model.
+    """
+    if name in ALIGNMENT_HEADS:
+        return ALIGNMENT_HEADS[name]
 
-    for key, value in meta_data.items():
-        meta = model.metadata_props.add()
-        meta.key = key
-        meta.value = str(value)
-
-    if "large" in filename or "turbo" in filename:
-        external_filename = filename.split(".onnx")[0]
-        onnx.save(
-            model,
-            filename,
-            save_as_external_data=True,
-            all_tensors_to_one_file=True,
-            location=external_filename + ".weights",
-        )
-    else:
-        onnx.save(model, filename)
+    raise ValueError(
+        f"No alignment heads defined for model '{name}'. "
+        f"Supported models: {', '.join(sorted(ALIGNMENT_HEADS.keys()))}"
+    )
 
 
-def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
-    """Modified encoder forward that handles variable-length input."""
-    x = F.gelu(self.conv1(x))
-    x = F.gelu(self.conv2(x))
-    x = x.permute(0, 2, 1)
+def convert_tokens(name: str, model, output_dir: str):
+    """Convert and save tokens file."""
+    whisper_dir = Path(whisper.__file__).parent
+    multilingual = model.is_multilingual
+    tokenizer = (
+        whisper_dir
+        / "assets"
+        / (multilingual and "multilingual.tiktoken" or "gpt2.tiktoken")
+    )
+    if not tokenizer.is_file():
+        raise ValueError(f"Cannot find {tokenizer}")
 
-    assert (
-        x.shape[2] == self.positional_embedding.shape[1]
-    ), f"incorrect audio shape: {x.shape}, {self.positional_embedding.shape}"
-    assert (
-        x.shape[1] == self.positional_embedding.shape[0]
-    ), f"incorrect audio shape: {x.shape}, {self.positional_embedding.shape}"
-    x = (x + self.positional_embedding[: x.shape[1]]).to(x.dtype)
+    with open(tokenizer, "r") as f:
+        contents = f.read()
+        tokens = {
+            token: int(rank)
+            for token, rank in (line.split() for line in contents.splitlines() if line)
+        }
 
-    for block in self.blocks:
-        x = block(x)
-
-    x = self.ln_post(x)
-    return x
+    output_path = os.path.join(output_dir, f"{name}-tokens.txt")
+    with open(output_path, "w") as f:
+        for t, i in tokens.items():
+            f.write(f"{t} {i}\n")
 
 
-AudioEncoder.forward = modified_audio_encoder_forward
-
-
-class AudioEncoderTensorCache(nn.Module):
-    """Encoder wrapper that pre-computes cross-attention K/V tensors."""
-
-    def __init__(self, inAudioEncoder: AudioEncoder, inTextDecoder: TextDecoder):
-        super().__init__()
-        self.audioEncoder = inAudioEncoder
-        self.textDecoder = inTextDecoder
-
-    def forward(self, x: Tensor):
-        audio_features = self.audioEncoder(x)
-
-        n_layer_cross_k_list = []
-        n_layer_cross_v_list = []
-        for block in self.textDecoder.blocks:
-            n_layer_cross_k_list.append(block.cross_attn.key(audio_features))
-            n_layer_cross_v_list.append(block.cross_attn.value(audio_features))
-
-        return torch.stack(n_layer_cross_k_list), torch.stack(n_layer_cross_v_list)
+# =============================================================================
+# Attention-enabled decoder classes
+# =============================================================================
 
 
 class MultiHeadAttentionCrossWithWeights(nn.Module):
@@ -246,8 +208,8 @@ class MultiHeadAttentionCrossWithWeights(nn.Module):
         return out, alignment_weights
 
 
-class MultiHeadAttentionSelf(nn.Module):
-    """Self-attention with KV cache support."""
+class MultiHeadAttentionSelfManual(nn.Module):
+    """Self-attention with KV cache support and manual attention computation."""
 
     def __init__(self, inMultiHeadAttention: MultiHeadAttention):
         super().__init__()
@@ -278,9 +240,6 @@ class MultiHeadAttentionSelf(nn.Module):
 
         qk = (q * scale) @ (k_reshaped * scale).transpose(-1, -2)
         if mask is not None:
-            # Use mask[:n_ctx, :n_ctx] like the original whisper code
-            # This works because for autoregressive decoding with single token,
-            # mask[:1, :1] = [[0]] which broadcasts to add nothing
             qk = qk + mask[:n_ctx, :n_ctx]
         qk = qk.float()
 
@@ -301,7 +260,7 @@ class ResidualAttentionBlockWithWeights(nn.Module):
     ):
         super().__init__()
         self.originalBlock = inResidualAttentionBlock
-        self.attn = MultiHeadAttentionSelf(inResidualAttentionBlock.attn)
+        self.attn = MultiHeadAttentionSelfManual(inResidualAttentionBlock.attn)
         self.cross_attn = (
             MultiHeadAttentionCrossWithWeights(
                 inResidualAttentionBlock.cross_attn,
@@ -421,29 +380,9 @@ class TextDecoderWithAttention(nn.Module):
         return logits, n_layer_self_k_cache, n_layer_self_v_cache, cross_attention_weights
 
 
-def convert_tokens(name: str, model, output_dir: str):
-    """Convert and save tokens file."""
-    whisper_dir = Path(whisper.__file__).parent
-    multilingual = model.is_multilingual
-    tokenizer = (
-        whisper_dir
-        / "assets"
-        / (multilingual and "multilingual.tiktoken" or "gpt2.tiktoken")
-    )
-    if not tokenizer.is_file():
-        raise ValueError(f"Cannot find {tokenizer}")
-
-    with open(tokenizer, "r") as f:
-        contents = f.read()
-        tokens = {
-            token: int(rank)
-            for token, rank in (line.split() for line in contents.splitlines() if line)
-        }
-
-    output_path = os.path.join(output_dir, f"{name}-tokens.txt")
-    with open(output_path, "w") as f:
-        for t, i in tokens.items():
-            f.write(f"{t} {i}\n")
+# =============================================================================
+# Main export function
+# =============================================================================
 
 
 @torch.no_grad()
@@ -457,7 +396,7 @@ def main():
     print(f"Exporting {name} with cross-attention weights")
     print(f"Output directory: {output_dir}")
 
-    opset_version = 14
+    opset_version = 13
 
     # Load model
     model = whisper.load_model(name)
@@ -465,19 +404,7 @@ def main():
     print(f"Total parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # Get alignment heads for this model
-    if name not in ALIGNMENT_HEADS:
-        print(f"Warning: No alignment heads defined for {name}, using default")
-        # Default: use all heads from the second half of layers
-        n_layers = model.dims.n_text_layer
-        n_heads = model.dims.n_text_head
-        alignment_heads = [
-            (layer, head)
-            for layer in range(n_layers // 2, n_layers)
-            for head in range(n_heads)
-        ]
-    else:
-        alignment_heads = ALIGNMENT_HEADS[name]
-
+    alignment_heads = get_alignment_heads(name)
     print(f"Using {len(alignment_heads)} alignment heads: {alignment_heads}")
 
     convert_tokens(name=name, model=model, output_dir=output_dir)
@@ -544,7 +471,7 @@ def main():
         "sot_prev": tokenizer.sot_prev,
         "sot_lm": tokenizer.sot_lm,
         "no_timestamps": tokenizer.no_timestamps,
-        # New metadata for attention
+        # Attention-specific metadata
         "n_alignment_heads": len(alignment_heads),
         "alignment_heads": ",".join([f"{l}:{h}" for l, h in alignment_heads]),
     }
@@ -674,8 +601,16 @@ def main():
     print(f"  - {decoder_filename}")
     print(f"  - {decoder_filename_int8}")
     print(f"  - {os.path.join(output_dir, f'{name}-tokens.txt')}")
-    print(f"\nDecoder now has 4 outputs including cross_attention_weights")
+    print(f"\nDecoder has 4 outputs including cross_attention_weights")
 
 
 if __name__ == "__main__":
-    main()
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+    # To fix
+    # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
+    # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
+    from whisper.model import disable_sdpa
+
+    with disable_sdpa():
+        main()
