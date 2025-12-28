@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import os
 from collections import defaultdict
 from typing import Dict, List, Tuple
@@ -19,6 +20,20 @@ import numpy as np
 import torch
 import whisper
 from whisper.audio import load_audio, log_mel_spectrogram, pad_or_trim
+
+# Import load_model from the base export script.
+# We use importlib because the filename has a hyphen which isn't valid for
+# regular Python imports.
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_spec = importlib.util.spec_from_file_location(
+    "export_onnx", os.path.join(_script_dir, "export-onnx.py")
+)
+_export_onnx = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_export_onnx)
+
+load_model = _export_onnx.load_model
+
+del _script_dir, _spec, _export_onnx
 
 
 def get_args():
@@ -244,50 +259,9 @@ def analyze_attention_heads(
 def main():
     args = get_args()
 
-    # Check if model needs to be loaded from checkpoint
-    model_path = None
-    if args.model == "distil-small.en":
-        model_path = "distil-small-en-original-model.bin"
-        if not os.path.exists(model_path):
-            print(f"Downloading {args.model}...")
-            import urllib.request
-            url = "https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin"
-            urllib.request.urlretrieve(url, model_path)
-    elif args.model == "distil-medium.en":
-        model_path = "distil-medium-en-original-model.bin"
-        if not os.path.exists(model_path):
-            print(f"Downloading {args.model}...")
-            import urllib.request
-            url = "https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin"
-            urllib.request.urlretrieve(url, model_path)
-    elif args.model == "distil-large-v2":
-        model_path = "distil-large-v2-original-model.bin"
-        if not os.path.exists(model_path):
-            print(f"Downloading {args.model}...")
-            import urllib.request
-            url = "https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin"
-            urllib.request.urlretrieve(url, model_path)
-    elif args.model == "distil-large-v3":
-        model_path = "distil-large-v3-original-model.bin"
-        if not os.path.exists(model_path):
-            print(f"Downloading {args.model}...")
-            import urllib.request
-            url = "https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin"
-            urllib.request.urlretrieve(url, model_path)
-    elif args.model == "distil-large-v3.5":
-        model_path = "distil-large-v3.5-original-model.bin"
-        if not os.path.exists(model_path):
-            print(f"Downloading {args.model}...")
-            import urllib.request
-            url = "https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin"
-            urllib.request.urlretrieve(url, model_path)
-
     # Load model
     print(f"Loading model: {args.model}")
-    if model_path:
-        model = whisper.load_model(model_path)
-    else:
-        model = whisper.load_model(args.model)
+    model = load_model(args.model)
 
     print(f"Model dimensions: {model.dims}")
 

@@ -40,50 +40,31 @@ from whisper.model import (
     TextDecoder,
 )
 
-from export_onnx import add_meta_data, AudioEncoderTensorCache
+from export_onnx import add_meta_data, load_model, AudioEncoderTensorCache
 
 
-# Alignment heads for each model variant (from whisper.cpp)
-# Format: List of (layer_index, head_index) tuples
+# Sentinel value indicating alignment heads should be read from model metadata
+USE_MODEL_METADATA = True
+
+# Alignment heads for each model variant.
+# For official OpenAI models, we use USE_MODEL_METADATA to read from the model.
+# For distil-whisper models, we use empirically-determined heads since their
+# metadata includes all heads in certain layers rather than curated ones.
 ALIGNMENT_HEADS = {
-    "tiny.en": [(1, 0), (2, 0), (2, 5), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4)],
-    "tiny": [(2, 2), (3, 0), (3, 2), (3, 3), (3, 4), (3, 5)],
-    "base.en": [(3, 3), (4, 7), (5, 1), (5, 5), (5, 7)],
-    "base": [(3, 1), (4, 2), (4, 3), (4, 7), (5, 1), (5, 2), (5, 4), (5, 6)],
-    "small.en": [
-        (6, 6), (7, 0), (7, 3), (7, 8), (8, 2), (8, 5), (8, 7),
-        (9, 0), (9, 4), (9, 8), (9, 10), (10, 0), (10, 1), (10, 2),
-        (10, 3), (10, 6), (10, 11), (11, 2), (11, 4),
-    ],
-    "small": [
-        (5, 3), (5, 9), (8, 0), (8, 4), (8, 7), (8, 8),
-        (9, 0), (9, 7), (9, 9), (10, 5),
-    ],
-    "medium.en": [
-        (11, 4), (14, 1), (14, 12), (14, 14), (15, 4), (16, 0),
-        (16, 4), (16, 9), (17, 12), (17, 14), (18, 7), (18, 10),
-        (18, 15), (20, 0), (20, 3), (20, 9), (20, 14), (21, 12),
-    ],
-    "medium": [(13, 15), (15, 4), (15, 15), (16, 1), (20, 0), (23, 4)],
-    "large-v1": [
-        (9, 19), (11, 2), (11, 4), (11, 17), (22, 7), (22, 11),
-        (22, 17), (23, 2), (23, 15),
-    ],
-    "large-v2": [
-        (10, 12), (13, 17), (16, 11), (16, 12), (16, 13), (17, 15),
-        (17, 16), (18, 4), (18, 11), (18, 19), (19, 11), (21, 2),
-        (21, 3), (22, 3), (22, 9), (22, 12), (23, 5), (23, 7),
-        (23, 13), (25, 5), (26, 1), (26, 12), (27, 15),
-    ],
-    "large-v3": [
-        (7, 0), (10, 17), (12, 18), (13, 12), (16, 1), (17, 14),
-        (19, 11), (21, 4), (24, 1), (25, 6),
-    ],
-    "large": [  # Same as large-v3
-        (7, 0), (10, 17), (12, 18), (13, 12), (16, 1), (17, 14),
-        (19, 11), (21, 4), (24, 1), (25, 6),
-    ],
-    "turbo": [(2, 4), (2, 11), (3, 3), (3, 6), (3, 11), (3, 14)],
+    # Official OpenAI models - trust their metadata
+    "tiny.en": USE_MODEL_METADATA,
+    "tiny": USE_MODEL_METADATA,
+    "base.en": USE_MODEL_METADATA,
+    "base": USE_MODEL_METADATA,
+    "small.en": USE_MODEL_METADATA,
+    "small": USE_MODEL_METADATA,
+    "medium.en": USE_MODEL_METADATA,
+    "medium": USE_MODEL_METADATA,
+    "large-v1": USE_MODEL_METADATA,
+    "large-v2": USE_MODEL_METADATA,
+    "large-v3": USE_MODEL_METADATA,
+    "large": USE_MODEL_METADATA,
+    "turbo": USE_MODEL_METADATA,
     # Distil-whisper models (alignment heads discovered empirically)
     # distil-small.en has 4 decoder layers; head (3,2) has 0.985 diagonal score
     "distil-small.en": [(3, 2)],
@@ -97,16 +78,6 @@ ALIGNMENT_HEADS = {
     "distil-large-v3.5": [(1, 3)],
 }
 
-# Models that require downloading from HuggingFace
-DISTIL_MODELS = {
-    "distil-small.en": "https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin",
-    "distil-medium.en": "https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin",
-    "distil-large-v2": "https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin",
-    "distil-large-v3": "https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin",
-    "distil-large-v3.5": "https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin",
-}
-
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -119,52 +90,59 @@ def get_args():
     return parser.parse_args()
 
 
-def download_distil_model(name: str) -> str:
-    """Download a distil-whisper model from HuggingFace if needed.
+def extract_alignment_heads_from_model(model) -> List[Tuple[int, int]]:
+    """Extract alignment heads from model metadata.
 
-    Returns the path to the downloaded checkpoint file.
-    """
-    import urllib.request
+    Official OpenAI whisper models store alignment heads as a sparse boolean
+    tensor with shape (n_layers, n_heads) where True indicates an alignment head.
 
-    if name not in DISTIL_MODELS:
-        raise ValueError(f"Unknown distil model: {name}")
-
-    url = DISTIL_MODELS[name]
-    # Create a local filename based on the model name
-    local_filename = f"{name.replace('.', '-')}-original-model.bin"
-
-    if os.path.exists(local_filename):
-        print(f"Using existing checkpoint: {local_filename}")
-        return local_filename
-
-    print(f"Downloading {name} from {url}...")
-    urllib.request.urlretrieve(url, local_filename)
-    print(f"Downloaded to: {local_filename}")
-    return local_filename
-
-
-def load_model(name: str):
-    """Load a Whisper model, handling distil models specially."""
-    if name in DISTIL_MODELS:
-        checkpoint_path = download_distil_model(name)
-        return whisper.load_model(checkpoint_path)
-    else:
-        return whisper.load_model(name)
-
-
-def get_alignment_heads(name: str) -> List[Tuple[int, int]]:
-    """Get alignment heads for a model.
+    Returns:
+        List of (layer, head) tuples.
 
     Raises:
-        ValueError: If no alignment heads are defined for the model.
+        ValueError: If alignment heads cannot be extracted from model.
     """
-    if name in ALIGNMENT_HEADS:
-        return ALIGNMENT_HEADS[name]
+    if not hasattr(model, "alignment_heads") or model.alignment_heads is None:
+        raise ValueError("Model does not have alignment_heads metadata")
 
-    raise ValueError(
-        f"No alignment heads defined for model '{name}'. "
-        f"Supported models: {', '.join(sorted(ALIGNMENT_HEADS.keys()))}"
-    )
+    ah = model.alignment_heads
+    if not hasattr(ah, "indices"):
+        raise ValueError("Model alignment_heads is not a sparse tensor")
+
+    indices = ah.indices()
+    return list(zip(indices[0].tolist(), indices[1].tolist()))
+
+
+def get_alignment_heads(name: str, model) -> List[Tuple[int, int]]:
+    """Get alignment heads for a model.
+
+    If ALIGNMENT_HEADS[name] is USE_MODEL_METADATA, alignment heads are read
+    from the model's metadata. Otherwise, the explicit list is used.
+
+    Args:
+        name: Model name
+        model: Loaded whisper model
+
+    Returns:
+        List of (layer, head) tuples for alignment heads.
+
+    Raises:
+        ValueError: If no alignment heads can be determined for the model.
+    """
+    if name not in ALIGNMENT_HEADS:
+        raise ValueError(
+            f"No alignment heads defined for model '{name}'. "
+            f"Supported models: {', '.join(sorted(ALIGNMENT_HEADS.keys()))}"
+        )
+
+    heads = ALIGNMENT_HEADS[name]
+
+    if heads is USE_MODEL_METADATA:
+        print("Reading alignment heads from model metadata")
+        return extract_alignment_heads_from_model(model)
+    else:
+        print("Using alignment heads from ALIGNMENT_HEADS table")
+        return heads
 
 
 def convert_tokens(name: str, model):
@@ -447,7 +425,7 @@ def main():
     print(f"Total parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # Get alignment heads for this model
-    alignment_heads = get_alignment_heads(name)
+    alignment_heads = get_alignment_heads(name, model)
     print(f"Using {len(alignment_heads)} alignment heads: {alignment_heads}")
 
     convert_tokens(name=name, model=model)
