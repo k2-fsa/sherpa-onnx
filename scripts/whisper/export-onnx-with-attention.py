@@ -12,7 +12,7 @@ with Dynamic Time Warping (DTW) to compute word-level timestamps.
 Based on the original export-onnx.py script.
 
 Usage:
-  python export-onnx-with-attention.py --model tiny --output-dir ./whisper-tiny-attention
+  python export-onnx-with-attention.py --model tiny
 
 The exported decoder will have 4 outputs instead of 3:
   - logits
