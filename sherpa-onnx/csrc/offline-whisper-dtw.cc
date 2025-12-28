@@ -159,34 +159,6 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(const float *attention,
   return result;
 }
 
-void WhisperDTW::ProcessAttention(const float *attention, float *output,
-                                   int32_t n_heads, int32_t n_tokens,
-                                   int32_t n_frames) {
-  // Average across heads first
-  std::fill(output, output + n_tokens * n_frames, 0.0f);
-
-  for (int32_t h = 0; h < n_heads; ++h) {
-    const float *head_data = attention + h * n_tokens * n_frames;
-    for (int32_t i = 0; i < n_tokens * n_frames; ++i) {
-      output[i] += head_data[i];
-    }
-  }
-
-  float inv_n_heads = 1.0f / static_cast<float>(n_heads);
-  for (int32_t i = 0; i < n_tokens * n_frames; ++i) {
-    output[i] *= inv_n_heads;
-  }
-
-  // Apply softmax across frames (already done in model, but re-normalize)
-  ApplySoftmax(output, n_tokens, n_frames);
-
-  // Apply z-score normalization across tokens
-  ApplyZScoreNormalization(output, n_tokens, n_frames);
-
-  // Apply median filter
-  ApplyMedianFilter(output, n_tokens, n_frames, 7);
-}
-
 void WhisperDTW::ApplySoftmax(float *data, int32_t n_tokens, int32_t n_frames) {
   for (int32_t t = 0; t < n_tokens; ++t) {
     float *row = data + t * n_frames;

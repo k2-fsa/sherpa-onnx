@@ -293,6 +293,7 @@ std::vector<OfflineWhisperSegment> ParseTimestampTokens(
     if (token == eot) {
       // End of transcript - close any open segment
       if (in_segment && !current_segment.token_ids.empty()) {
+        current_segment.end_time = -1.0f;  // Use sentinel for EOT-closed segment
         segments.push_back(std::move(current_segment));
         current_segment = OfflineWhisperSegment();
       }
