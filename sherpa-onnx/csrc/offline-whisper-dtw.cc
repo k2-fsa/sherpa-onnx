@@ -16,40 +16,38 @@
 
 namespace sherpa_onnx {
 
-std::vector<int32_t> WhisperDTW::ComputeAlignment(const float *attention,
+TokenTimingResult WhisperDTW::ComputeTokenTimings(const float *attention,
                                                    int32_t n_heads,
                                                    int32_t n_tokens,
                                                    int32_t n_frames,
                                                    int32_t num_audio_frames,
-                                                   int32_t sot_sequence_length) {
-  if (n_heads <= 0 || n_tokens <= 0 || n_frames <= 0) {
-    return {};
+                                                   int32_t sot_sequence_length,
+                                                   int32_t num_text_tokens) {
+  TokenTimingResult result;
+
+  if (n_heads <= 0 || n_tokens <= 0 || n_frames <= 0 || num_text_tokens <= 0) {
+    return result;
   }
 
 #if DTW_DEBUG
-  fprintf(stderr, "\n========== DTW DEBUG ==========\n");
+  fprintf(stderr, "\n========== DTW TIMING DEBUG ==========\n");
   fprintf(stderr, "Input: n_heads=%d, n_tokens=%d, n_frames=%d\n",
           n_heads, n_tokens, n_frames);
-  fprintf(stderr, "num_audio_frames=%d, sot_sequence_length=%d\n",
-          num_audio_frames, sot_sequence_length);
+  fprintf(stderr, "num_audio_frames=%d, sot_sequence_length=%d, num_text_tokens=%d\n",
+          num_audio_frames, sot_sequence_length, num_text_tokens);
 #endif
 
   // Clip to actual audio frames (like OpenAI: weights[:, :, :num_frames//2])
   int32_t clipped_frames = std::min(n_frames, num_audio_frames);
   if (clipped_frames <= 0) {
-    clipped_frames = n_frames;  // Fallback if num_audio_frames not set
+    clipped_frames = n_frames;
   }
-
-#if DTW_DEBUG
-  fprintf(stderr, "Clipped frames: %d\n", clipped_frames);
-#endif
 
   // Process attention weights per-head, then average (like OpenAI)
   std::vector<float> processed(n_tokens * clipped_frames, 0.0f);
   std::vector<float> head_data(n_tokens * clipped_frames);
 
   for (int32_t h = 0; h < n_heads; ++h) {
-    // Copy and clip this head's data
     const float *src = attention + h * n_tokens * n_frames;
     for (int32_t t = 0; t < n_tokens; ++t) {
       for (int32_t f = 0; f < clipped_frames; ++f) {
@@ -57,52 +55,37 @@ std::vector<int32_t> WhisperDTW::ComputeAlignment(const float *attention,
       }
     }
 
-    // Apply softmax across frames (like OpenAI: .softmax(dim=-1))
     ApplySoftmax(head_data.data(), n_tokens, clipped_frames);
-
-    // Apply z-score normalization across tokens (like OpenAI: (weights - mean) / std)
     ApplyZScoreNormalization(head_data.data(), n_tokens, clipped_frames);
-
-    // Apply median filter (like OpenAI: median_filter(weights, medfilt_width))
     ApplyMedianFilter(head_data.data(), n_tokens, clipped_frames, 7);
 
-    // Accumulate for averaging
     for (int32_t i = 0; i < n_tokens * clipped_frames; ++i) {
       processed[i] += head_data[i];
     }
   }
 
-  // Average across heads (like OpenAI: matrix = weights.mean(axis=0))
   float inv_n_heads = 1.0f / static_cast<float>(n_heads);
   for (int32_t i = 0; i < n_tokens * clipped_frames; ++i) {
     processed[i] *= inv_n_heads;
   }
 
-  // Skip SOT sequence tokens and trailing EOT
-  // (like OpenAI: matrix = matrix[len(tokenizer.sot_sequence) : -1])
+  // Skip SOT sequence but INCLUDE EOT (like OpenAI: matrix[sot_len : -1] but
+  // they pass text_tokens + [eot] to DTW, so EOT is included)
+  // We need EOT to get the end time of the last text token.
   int32_t start_token = sot_sequence_length;
-  int32_t effective_tokens = n_tokens - sot_sequence_length - 1;  // -1 for EOT
+  int32_t dtw_tokens = n_tokens - sot_sequence_length;  // Include EOT
 
 #if DTW_DEBUG
-  fprintf(stderr, "After processing: effective_tokens=%d (skip first %d, last 1)\n",
-          effective_tokens, start_token);
-  // Print min/max of processed matrix
-  float pmin = processed[0], pmax = processed[0];
-  for (int32_t i = 0; i < n_tokens * clipped_frames; ++i) {
-    pmin = std::min(pmin, processed[i]);
-    pmax = std::max(pmax, processed[i]);
-  }
-  fprintf(stderr, "Processed matrix: min=%.6f, max=%.6f\n", pmin, pmax);
+  fprintf(stderr, "DTW tokens (including EOT): %d\n", dtw_tokens);
 #endif
 
-  if (effective_tokens <= 0) {
-    return {};
+  if (dtw_tokens <= 1) {
+    return result;
   }
 
   // Extract the relevant portion for DTW and negate
-  // (like OpenAI: text_indices, time_indices = dtw(-matrix))
-  std::vector<float> cost_matrix(effective_tokens * clipped_frames);
-  for (int32_t i = 0; i < effective_tokens; ++i) {
+  std::vector<float> cost_matrix(dtw_tokens * clipped_frames);
+  for (int32_t i = 0; i < dtw_tokens; ++i) {
     for (int32_t j = 0; j < clipped_frames; ++j) {
       cost_matrix[i * clipped_frames + j] =
           -processed[(start_token + i) * clipped_frames + j];
@@ -110,79 +93,70 @@ std::vector<int32_t> WhisperDTW::ComputeAlignment(const float *attention,
   }
 
   // Run DTW
-  DTWResult dtw_result = RunDTW(cost_matrix.data(), effective_tokens, clipped_frames);
+  DTWResult dtw_result = RunDTW(cost_matrix.data(), dtw_tokens, clipped_frames);
+
+  if (dtw_result.text_indices.empty()) {
+    return result;
+  }
+
+  // Extract jump times (where text_idx changes)
+  // Like OpenAI: jumps = np.pad(np.diff(text_indices), (1, 0), constant_values=1)
+  //              jump_times = time_indices[jumps] / TOKENS_PER_SECOND
+  std::vector<int32_t> jump_frame_indices;
+  jump_frame_indices.push_back(dtw_result.time_indices[0]);  // First is always a jump
+
+  for (size_t i = 1; i < dtw_result.text_indices.size(); ++i) {
+    if (dtw_result.text_indices[i] != dtw_result.text_indices[i - 1]) {
+      jump_frame_indices.push_back(dtw_result.time_indices[i]);
+    }
+  }
 
 #if DTW_DEBUG
-  fprintf(stderr, "DTW result: path_length=%zu\n", dtw_result.text_indices.size());
-  if (!dtw_result.text_indices.empty()) {
-    fprintf(stderr, "  text_indices[0..9]: ");
-    for (size_t i = 0; i < std::min(size_t(10), dtw_result.text_indices.size()); ++i) {
-      fprintf(stderr, "%d ", dtw_result.text_indices[i]);
-    }
-    fprintf(stderr, "\n  time_indices[0..9]: ");
-    for (size_t i = 0; i < std::min(size_t(10), dtw_result.time_indices.size()); ++i) {
-      fprintf(stderr, "%d ", dtw_result.time_indices[i]);
-    }
-    fprintf(stderr, "\n");
+  fprintf(stderr, "jump_frame_indices count: %zu\n", jump_frame_indices.size());
+  fprintf(stderr, "jump_times (first 10): ");
+  for (size_t i = 0; i < std::min(size_t(10), jump_frame_indices.size()); ++i) {
+    fprintf(stderr, "%.2f ", jump_frame_indices[i] * kWhisperSecondsPerToken);
   }
+  fprintf(stderr, "\n");
 #endif
 
-  // Use "jumps" method to extract times (like OpenAI)
-  // jumps = np.pad(np.diff(text_indices), (1, 0), constant_values=1).astype(bool)
-  // jump_times = time_indices[jumps] / TOKENS_PER_SECOND
-  std::vector<int32_t> token_frames(effective_tokens, 0);
+  // Now extract start_times and durations for text tokens only (not EOT)
+  // Like OpenAI: start_times = jump_times[word_boundaries[:-1]]
+  //              end_times = jump_times[word_boundaries[1:]]
+  // For tokens (each token is one "word"): boundaries = [0, 1, 2, ..., N]
+  // So: start_times[i] = jump_times[i], end_times[i] = jump_times[i+1]
+  result.start_times.reserve(num_text_tokens);
+  result.durations.reserve(num_text_tokens);
 
-  if (!dtw_result.text_indices.empty()) {
-    // Find jumps (where text_idx changes)
-    std::vector<int32_t> jump_indices;
-    jump_indices.push_back(0);  // First point is always a jump
+  for (int32_t i = 0; i < num_text_tokens; ++i) {
+    if (i < static_cast<int32_t>(jump_frame_indices.size())) {
+      float start = static_cast<float>(jump_frame_indices[i]) * kWhisperSecondsPerToken;
+      result.start_times.push_back(start);
 
-    for (size_t i = 1; i < dtw_result.text_indices.size(); ++i) {
-      if (dtw_result.text_indices[i] != dtw_result.text_indices[i - 1]) {
-        jump_indices.push_back(static_cast<int32_t>(i));
+      // Duration = end_time - start_time = jump_times[i+1] - jump_times[i]
+      if (i + 1 < static_cast<int32_t>(jump_frame_indices.size())) {
+        float end = static_cast<float>(jump_frame_indices[i + 1]) * kWhisperSecondsPerToken;
+        result.durations.push_back(end - start);
+      } else {
+        // Last token: duration to end of audio
+        float audio_end = static_cast<float>(clipped_frames) * kWhisperSecondsPerToken;
+        result.durations.push_back(std::max(0.0f, audio_end - start));
       }
-    }
-
-    // Extract jump times
-    std::vector<int32_t> jump_times;
-    for (int32_t idx : jump_indices) {
-      if (idx >= 0 && idx < static_cast<int32_t>(dtw_result.time_indices.size())) {
-        jump_times.push_back(dtw_result.time_indices[idx]);
-      }
-    }
-
-#if DTW_DEBUG
-    fprintf(stderr, "Jump times (first 10): ");
-    for (size_t i = 0; i < std::min(size_t(10), jump_times.size()); ++i) {
-      fprintf(stderr, "%.2f ", jump_times[i] * 0.02f);
-    }
-    fprintf(stderr, "\nTotal jump times: %zu\n", jump_times.size());
-#endif
-
-    // Map jump times to tokens
-    // Each token's start time is the corresponding jump time
-    for (size_t i = 0; i < jump_times.size() && i < static_cast<size_t>(effective_tokens); ++i) {
-      token_frames[i] = jump_times[i];
+    } else {
+      // Fallback: use last known time
+      float last_time = result.start_times.empty() ? 0.0f : result.start_times.back();
+      result.start_times.push_back(last_time);
+      result.durations.push_back(0.0f);
     }
   }
 
 #if DTW_DEBUG
-  fprintf(stderr, "========== END DTW DEBUG ==========\n\n");
+  fprintf(stderr, "Result: %zu start_times, %zu durations\n",
+          result.start_times.size(), result.durations.size());
+  fprintf(stderr, "========== END DTW TIMING DEBUG ==========\n\n");
 #endif
 
-  return token_frames;
-}
-
-std::vector<float> WhisperDTW::FrameIndicesToSeconds(
-    const std::vector<int32_t> &frame_indices) {
-  std::vector<float> timestamps;
-  timestamps.reserve(frame_indices.size());
-
-  for (int32_t frame : frame_indices) {
-    timestamps.push_back(static_cast<float>(frame) * kWhisperSecondsPerToken);
-  }
-
-  return timestamps;
+  return result;
 }
 
 void WhisperDTW::ProcessAttention(const float *attention, float *output,

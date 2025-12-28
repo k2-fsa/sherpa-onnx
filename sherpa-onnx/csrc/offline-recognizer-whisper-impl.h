@@ -155,8 +155,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     std::string text;
 
-    // Since we always use no_timestamps mode, src.tokens contains only text tokens
+    // Get timestamp begin token ID to filter out timestamp tokens
+    int32_t timestamp_begin = model_->TimestampBegin();
+    bool enable_segment_timestamps =
+        config_.model_config.whisper.enable_segment_timestamps;
+
+    // Build text, skipping timestamp tokens if in segment timestamp mode
     for (auto i : src.tokens) {
+      // Skip timestamp tokens (they are >= timestamp_begin)
+      if (enable_segment_timestamps && i >= timestamp_begin) {
+        continue;
+      }
+
       if (!sym_table.Contains(i)) {
         continue;
       }
@@ -172,6 +182,30 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.text = text;
     r.lang = src.lang;
 
+    // Convert segments from segment timestamp mode to parallel vectors
+    if (enable_segment_timestamps && !src.segments.empty()) {
+      r.segment_timestamps.reserve(src.segments.size());
+      r.segment_durations.reserve(src.segments.size());
+      r.segment_texts.reserve(src.segments.size());
+
+      for (const auto &seg : src.segments) {
+        r.segment_timestamps.push_back(seg.start_time);
+        r.segment_durations.push_back(seg.end_time - seg.start_time);
+
+        // Convert token IDs to text
+        std::string seg_text;
+        for (int32_t tok_id : seg.token_ids) {
+          if (sym_table.Contains(tok_id)) {
+            std::string s = sym_table[tok_id];
+            s = ApplyInverseTextNormalization(s);
+            s = ApplyHomophoneReplacer(std::move(s));
+            seg_text += s;
+          }
+        }
+        r.segment_texts.push_back(std::move(seg_text));
+      }
+    }
+
     // Compute token-level timestamps using DTW if enabled
     if (config_.model_config.whisper.enable_timestamps &&
         !src.attention_weights.empty() &&
@@ -185,32 +219,49 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   // Compute token-level timestamps using cross-attention DTW
   void ComputeTimestamps(const OfflineWhisperDecoderResult &src,
                          OfflineRecognitionResult &r) const {
-    // Compute DTW alignment
     WhisperDTW dtw;
 
     // Note: src.attention includes all tokens (initial + decoded)
     // The first few are SOT sequence tokens which DTW will skip.
     // Initial tokens are: [sot, lang, task, no_timestamps] for multilingual,
     // or [sot, no_timestamps] for English-only models.
-    // We skip sot_sequence (without no_timestamps), keeping no_timestamps as
-    // the first token in DTW - it acts as a start anchor like in OpenAI's code.
     int32_t sot_sequence_length =
         static_cast<int32_t>(model_->GetInitialTokens().size());
 
-    std::vector<int32_t> token_frames = dtw.ComputeAlignment(
+    // Use ComputeTokenTimings which extracts both start times and durations
+    // directly from the DTW jump_times, following OpenAI's approach:
+    //   start_times[i] = jump_times[i]
+    //   end_times[i] = jump_times[i+1]
+    //   durations[i] = end_times[i] - start_times[i]
+    TokenTimingResult timing = dtw.ComputeTokenTimings(
         src.attention_weights.data(), src.attention_n_heads,
         src.attention_n_tokens, src.attention_n_frames, src.num_audio_frames,
-        sot_sequence_length);
+        sot_sequence_length, static_cast<int32_t>(r.tokens.size()));
 
-    // Convert frame indices to timestamps
-    std::vector<float> token_times =
-        WhisperDTW::FrameIndicesToSeconds(token_frames);
+    // Populate timestamps and durations
+    r.timestamps = std::move(timing.start_times);
+    r.durations = std::move(timing.durations);
 
-    // Populate token-level timestamps
-    size_t n = std::min(r.tokens.size(), token_times.size());
-    r.timestamps.assign(token_times.begin(), token_times.begin() + n);
-    float fill_value = r.timestamps.empty() ? 0.0f : r.timestamps.back();
-    r.timestamps.resize(r.tokens.size(), fill_value);
+    // Ensure vectors match token count
+    float fill_time = r.timestamps.empty() ? 0.0f : r.timestamps.back();
+    r.timestamps.resize(r.tokens.size(), fill_time);
+    r.durations.resize(r.tokens.size(), 0.0f);
+
+    // Clamp token end times to segment boundaries (like OpenAI timing.py)
+    // If a token ends more than 0.5s after segment end, truncate it.
+    // This prevents DTW-derived timings from extending past segment bounds.
+    if (!src.segments.empty() && !r.timestamps.empty()) {
+      float segment_end = src.segments.back().end_time;
+      if (segment_end > 0) {
+        for (size_t i = 0; i < r.timestamps.size(); ++i) {
+          float token_end = r.timestamps[i] + r.durations[i];
+          // Like OpenAI: if token_end > segment_end + 0.5, clamp it
+          if (token_end > segment_end + 0.5f) {
+            r.durations[i] = std::max(0.0f, segment_end - r.timestamps[i]);
+          }
+        }
+      }
+    }
   }
 
  private:

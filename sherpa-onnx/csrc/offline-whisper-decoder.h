@@ -13,6 +13,13 @@
 
 namespace sherpa_onnx {
 
+// Represents a segment with start/end timestamps from timestamp tokens
+struct OfflineWhisperSegment {
+  float start_time = 0.0f;
+  float end_time = 0.0f;
+  std::vector<int32_t> token_ids;  // Text token IDs in this segment
+};
+
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
@@ -31,6 +38,9 @@ struct OfflineWhisperDecoderResult {
   /// Number of actual audio feature frames (for clipping attention)
   /// This is num_feature_frames / 2 (due to encoder downsampling)
   int32_t num_audio_frames = 0;
+
+  /// Segments with timestamps (when using timestamp token mode)
+  std::vector<OfflineWhisperSegment> segments;
 };
 
 class OfflineWhisperDecoder {

@@ -79,10 +79,13 @@ def test_without_timestamps(args, samples, sample_rate):
     print("\nTest without timestamps PASSED!")
 
 
-def test_with_timestamps(args, samples, sample_rate):
+def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=False):
     """Test token-level timestamps using cross-attention DTW."""
     print("\n" + "=" * 60)
-    print("Testing With Timestamps (cross-attention DTW)")
+    if enable_segment_timestamps:
+        print("Testing With Both Token and Segment Timestamps")
+    else:
+        print("Testing With Token Timestamps (cross-attention DTW)")
     print("=" * 60)
 
     recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
@@ -90,6 +93,7 @@ def test_with_timestamps(args, samples, sample_rate):
         decoder=args.decoder,
         tokens=args.tokens,
         enable_timestamps=True,
+        enable_segment_timestamps=enable_segment_timestamps,
     )
 
     stream = recognizer.create_stream()
@@ -109,12 +113,16 @@ def test_with_timestamps(args, samples, sample_rate):
 
     print("\n--- Token-Level Timestamps ---")
     timestamps = result.timestamps
+    durations = result.durations
     tokens = result.tokens
-    for i, (token, ts) in enumerate(zip(tokens, timestamps)):
-        # End time is start of next token, or last timestamp for final token
-        end_ts = timestamps[i + 1] if i + 1 < len(timestamps) else ts
-        duration = end_ts - ts
-        print(f"  [{ts:.2f}s - {end_ts:.2f}s] ({duration:.2f}s): {repr(token)}")
+
+    assert len(durations) == len(tokens), (
+        f"Durations count ({len(durations)}) != tokens count ({len(tokens)})"
+    )
+
+    for i, (token, ts, dur) in enumerate(zip(tokens, timestamps, durations)):
+        end_ts = ts + dur
+        print(f"  [{ts:.2f}s - {end_ts:.2f}s] ({dur:.2f}s): {repr(token)}")
 
     # Check monotonicity
     for i in range(1, len(result.timestamps)):
@@ -130,6 +138,24 @@ def test_with_timestamps(args, samples, sample_rate):
     # Note: Word-level timestamps can be derived from token-level data client-side
     # by grouping tokens that start with a space character into words.
 
+    # Check segment timestamps if enabled
+    if enable_segment_timestamps:
+        print("\n--- Segment-Level Timestamps ---")
+        seg_timestamps = result.segment_timestamps
+        seg_durations = result.segment_durations
+        seg_texts = result.segment_texts
+
+        assert len(seg_timestamps) == len(seg_durations) == len(seg_texts), (
+            f"Segment vectors have different lengths: "
+            f"timestamps={len(seg_timestamps)}, durations={len(seg_durations)}, "
+            f"texts={len(seg_texts)}"
+        )
+
+        for i, (ts, dur, text) in enumerate(zip(seg_timestamps, seg_durations, seg_texts)):
+            end_ts = ts + dur
+            print(f"  Segment {i}: [{ts:.2f}s - {end_ts:.2f}s] ({dur:.2f}s)")
+            print(f"    Text: {repr(text)}")
+
     print("\nTest with timestamps PASSED!")
     return True
 
@@ -143,7 +169,12 @@ def main():
     parser.add_argument(
         "--enable-timestamps",
         action="store_true",
-        help="Enable timestamps (requires attention-enabled model)",
+        help="Enable token-level timestamps (requires attention-enabled model)",
+    )
+    parser.add_argument(
+        "--enable-segment-timestamps",
+        action="store_true",
+        help="Enable segment-level timestamps using timestamp tokens",
     )
     args = parser.parse_args()
 
@@ -157,7 +188,10 @@ def main():
 
     # Test with timestamps if requested
     if args.enable_timestamps:
-        test_with_timestamps(args, samples, sample_rate)
+        test_with_timestamps(
+            args, samples, sample_rate,
+            enable_segment_timestamps=args.enable_segment_timestamps
+        )
 
     print("\n" + "=" * 60)
     print("All tests passed!")

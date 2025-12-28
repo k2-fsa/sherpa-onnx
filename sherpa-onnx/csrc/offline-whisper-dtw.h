@@ -17,35 +17,41 @@ struct DTWResult {
   std::vector<int32_t> time_indices;  // Frame index at each alignment point
 };
 
+// Token timing result from DTW
+struct TokenTimingResult {
+  std::vector<float> start_times;   // Start time in seconds for each token
+  std::vector<float> durations;     // Duration in seconds for each token
+};
+
 // Class for processing cross-attention weights and computing DTW alignment
 // for token-level timestamps in Whisper.
 //
 // Based on OpenAI Whisper (whisper/timing.py) and whisper.cpp implementations.
 class WhisperDTW {
  public:
-  // Compute alignment from raw cross-attention weights.
+  // Compute token timings (start times and durations) from raw cross-attention.
+  // This follows OpenAI's approach of extracting both start and end times
+  // directly from DTW jump_times, where:
+  //   start_times[i] = jump_times[i]
+  //   end_times[i] = jump_times[i+1]
+  //   durations[i] = end_times[i] - start_times[i]
   //
   // @param attention Raw attention weights from decoder.
   //                  Shape: (n_heads, n_tokens, n_audio_frames)
   // @param n_heads Number of alignment heads
-  // @param n_tokens Number of text tokens
+  // @param n_tokens Number of text tokens (including SOT sequence and EOT)
   // @param n_frames Number of audio frames (full context, e.g., 1500)
   // @param num_audio_frames Actual audio frames to use (for clipping)
   // @param sot_sequence_length Number of special tokens at start (to skip)
+  // @param num_text_tokens Number of actual text tokens to return timings for
+  //                        (excluding SOT sequence and EOT)
   //
-  // @return Frame index for each text token (excluding SOT sequence)
-  std::vector<int32_t> ComputeAlignment(const float *attention, int32_t n_heads,
+  // @return TokenTimingResult with start_times and durations for each token
+  TokenTimingResult ComputeTokenTimings(const float *attention, int32_t n_heads,
                                         int32_t n_tokens, int32_t n_frames,
                                         int32_t num_audio_frames,
-                                        int32_t sot_sequence_length = 3);
-
-  // Get timestamps in seconds for each token.
-  // Each audio frame represents 20ms (TOKENS_PER_SECOND = 50).
-  //
-  // @param frame_indices Frame index for each token
-  // @return Timestamp in seconds for each token
-  static std::vector<float> FrameIndicesToSeconds(
-      const std::vector<int32_t> &frame_indices);
+                                        int32_t sot_sequence_length,
+                                        int32_t num_text_tokens);
 
  private:
   // Process attention weights:
