@@ -54,17 +54,6 @@ class WhisperDTW {
                                         int32_t num_text_tokens);
 
  private:
-  // Process attention weights:
-  // 1. Average across heads
-  // 2. Apply softmax normalization (across frames)
-  // 3. Apply z-score normalization (across tokens)
-  // 4. Apply median filter (across frames)
-  //
-  // @param attention Input attention weights (n_heads, n_tokens, n_frames)
-  // @param output Output processed matrix (n_tokens, n_frames)
-  void ProcessAttention(const float *attention, float *output, int32_t n_heads,
-                        int32_t n_tokens, int32_t n_frames);
-
   // Apply softmax normalization across the last dimension (frames)
   void ApplySoftmax(float *data, int32_t n_tokens, int32_t n_frames);
 

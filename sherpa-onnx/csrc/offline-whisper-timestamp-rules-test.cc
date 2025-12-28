@@ -352,13 +352,11 @@ TEST_F(ParseTimestampTokensTest, EotClosesOpenSegment) {
 
   ASSERT_EQ(segments.size(), 1);
   EXPECT_FLOAT_EQ(segments[0].start_time, 0.0f);
-  // EOT closes the segment - end_time should be set from segment push logic
-  // Looking at the code, EOT triggers a push with current end_time (not set)
-  // Actually, it pushes the segment as-is without setting end_time
-  // The segment has end_time = 0 (default) but the code doesn't modify it
-  // Hmm, let me re-check the implementation...
-  // Actually for EOT case, it just pushes current_segment without setting end_time
-  // So end_time would be uninitialized/default (0.0f)
+  // EOT closes the segment without a closing timestamp, so end_time is sentinel
+  EXPECT_FLOAT_EQ(segments[0].end_time, -1.0f);
+  ASSERT_EQ(segments[0].token_ids.size(), 2);
+  EXPECT_EQ(segments[0].token_ids[0], 100);
+  EXPECT_EQ(segments[0].token_ids[1], 200);
 }
 
 TEST_F(ParseTimestampTokensTest, EmptySegmentSkipped) {
@@ -387,6 +385,34 @@ TEST_F(ParseTimestampTokensTest, IncompleteSegmentGetsSentinel) {
   EXPECT_FLOAT_EQ(segments[0].start_time, 0.0f);
   EXPECT_FLOAT_EQ(segments[0].end_time, -1.0f);  // Sentinel for incomplete
   ASSERT_EQ(segments[0].token_ids.size(), 2);
+}
+
+TEST_F(ParseTimestampTokensTest, SentinelConsistencyBetweenEotAndIncomplete) {
+  // Verify that both EOT-closed and incomplete segments use the same sentinel
+  // This ensures consistent handling by downstream code
+
+  // Case 1: EOT-closed segment (no closing timestamp before EOT)
+  int32_t ts_1_00 = kTimestampBegin + 50;
+  std::vector<int32_t> tokens_eot = {ts_1_00, 100, kEot};
+  auto segments_eot = ParseTimestampTokens(tokens_eot, kTimestampBegin, kEot);
+
+  // Case 2: Incomplete segment (tokens end without closing timestamp or EOT)
+  std::vector<int32_t> tokens_incomplete = {ts_1_00, 100};
+  auto segments_incomplete =
+      ParseTimestampTokens(tokens_incomplete, kTimestampBegin, kEot);
+
+  ASSERT_EQ(segments_eot.size(), 1);
+  ASSERT_EQ(segments_incomplete.size(), 1);
+
+  // Both should have the same start_time
+  EXPECT_FLOAT_EQ(segments_eot[0].start_time, 1.0f);
+  EXPECT_FLOAT_EQ(segments_incomplete[0].start_time, 1.0f);
+
+  // Both should use the same sentinel value for end_time
+  EXPECT_FLOAT_EQ(segments_eot[0].end_time, -1.0f);
+  EXPECT_FLOAT_EQ(segments_incomplete[0].end_time, -1.0f);
+  EXPECT_FLOAT_EQ(segments_eot[0].end_time, segments_incomplete[0].end_time)
+      << "EOT-closed and incomplete segments must use the same sentinel";
 }
 
 TEST_F(ParseTimestampTokensTest, NoSegmentsFromEmptyInput) {
