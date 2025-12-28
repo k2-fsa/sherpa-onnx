@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -12,128 +13,272 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
+constexpr float kNegInf = -std::numeric_limits<float>::infinity();
+
+// =============================================================================
+// Step 1: State Determination
+// =============================================================================
+
+// Mutually exclusive decoding states
+// The expected token pattern is:
+//   <|0.00|> text text <|6.60|><|6.60|> text text <|12.00|> EOT
+enum class TimestampDecodingState {
+  START,            // num_sampled == 0: first token must be timestamp
+  AFTER_OPENING_TS, // last=TS, penult=TS: after opening or double TS, force text
+  SEGMENT_CLOSING,  // last=TS, penult=text: segment just closed, force TS/EOT
+  IN_TEXT           // last=text: in text, probability rule may apply
+};
+
+// Raw information extracted from the token sequence
+struct TokenSequenceInfo {
+  int32_t num_sampled;             // tokens sampled so far (excluding SOT sequence)
+  bool last_was_timestamp;         // was the last token a timestamp?
+  bool penultimate_was_timestamp;  // was the second-to-last token a timestamp?
+  int32_t last_ts;                 // last timestamp token ID (-1 if none)
+};
+
+// Extract information from the token sequence
+TokenSequenceInfo ExtractTokenSequenceInfo(const std::vector<int64_t> &tokens,
+                                           int32_t sample_begin,
+                                           int32_t timestamp_begin) {
+  TokenSequenceInfo info;
+  info.num_sampled = static_cast<int32_t>(tokens.size()) - sample_begin;
+  info.last_was_timestamp =
+      info.num_sampled >= 1 && tokens.back() >= timestamp_begin;
+  // IMPORTANT: penultimate defaults to TRUE when len < 2
+  // This matches OpenAI's behavior and ensures text follows the first timestamp
+  info.penultimate_was_timestamp =
+      info.num_sampled < 2 || tokens[tokens.size() - 2] >= timestamp_begin;
+
+  info.last_ts = -1;
+  // Find the last timestamp in the sequence (for monotonicity)
+  for (int32_t i = sample_begin; i < static_cast<int32_t>(tokens.size()); ++i) {
+    if (tokens[i] >= timestamp_begin) {
+      info.last_ts = static_cast<int32_t>(tokens[i]);
+    }
+  }
+
+  return info;
+}
+
+// Map raw token info to a mutually exclusive state
+TimestampDecodingState DetermineDecodingState(const TokenSequenceInfo &info) {
+  if (info.num_sampled == 0) {
+    return TimestampDecodingState::START;
+  }
+  if (info.last_was_timestamp && info.penultimate_was_timestamp) {
+    return TimestampDecodingState::AFTER_OPENING_TS;
+  }
+  if (info.last_was_timestamp && !info.penultimate_was_timestamp) {
+    return TimestampDecodingState::SEGMENT_CLOSING;
+  }
+  return TimestampDecodingState::IN_TEXT;
+}
+
+// =============================================================================
+// Step 2: Decision Making
+// =============================================================================
+
+// What actions to take based on the current state
+struct TimestampDecision {
+  bool suppress_text;           // suppress text tokens
+  bool suppress_timestamps;     // suppress timestamp tokens
+  bool suppress_eot;            // suppress EOT token
+  int32_t min_timestamp;        // minimum allowed timestamp (-1 = no constraint)
+  int32_t max_timestamp;        // maximum allowed timestamp (-1 = no constraint)
+  bool check_probability_rule;  // apply probability rule after other suppressions
+};
+
+// Map state to actions - each case must set ALL variables
+TimestampDecision DecideTimestampAction(TimestampDecodingState state,
+                                        const TokenSequenceInfo &info,
+                                        int32_t timestamp_begin,
+                                        int32_t max_initial_timestamp_index) {
+  // Declare all decision variables - must be set by every case
+  bool suppress_text;
+  bool suppress_timestamps;
+  bool suppress_eot;
+  int32_t max_timestamp;
+  bool check_probability_rule;
+
+  // Compute monotonicity constraint (cross-cutting concern, used by all cases)
+  int32_t min_timestamp = -1;
+  if (info.last_ts >= 0) {
+    if (state == TimestampDecodingState::SEGMENT_CLOSING) {
+      // Same timestamp allowed for next segment opening
+      min_timestamp = info.last_ts;
+    } else {
+      // Strictly increasing timestamps
+      min_timestamp = info.last_ts + 1;
+    }
+  }
+
+  switch (state) {
+    case TimestampDecodingState::START:
+      // First token must be a timestamp
+      suppress_text = true;
+      suppress_timestamps = false;
+      suppress_eot = true;
+      max_timestamp = (max_initial_timestamp_index >= 0)
+                          ? timestamp_begin + max_initial_timestamp_index
+                          : -1;
+      check_probability_rule = false;
+      break;
+
+    case TimestampDecodingState::AFTER_OPENING_TS:
+      // After opening timestamp (or double timestamp), force text
+      suppress_text = false;
+      suppress_timestamps = true;
+      suppress_eot = false;
+      max_timestamp = -1;
+      check_probability_rule = false;
+      break;
+
+    case TimestampDecodingState::SEGMENT_CLOSING:
+      // Segment just closed, force timestamp or EOT
+      suppress_text = true;
+      suppress_timestamps = false;
+      suppress_eot = false;  // EOT allowed to end transcript
+      max_timestamp = -1;
+      check_probability_rule = false;
+      break;
+
+    case TimestampDecodingState::IN_TEXT:
+      // In text, probability rule may force timestamp
+      suppress_text = false;
+      suppress_timestamps = false;
+      suppress_eot = false;
+      max_timestamp = -1;
+      check_probability_rule = true;
+      break;
+  }
+
+  return TimestampDecision{suppress_text,           suppress_timestamps,
+                           suppress_eot,            min_timestamp,
+                           max_timestamp,           check_probability_rule};
+}
+
+// =============================================================================
+// Step 3: Execution
+// =============================================================================
+
+// Apply the suppression decisions to the logits
+void ApplyTimestampDecision(float *logits, int32_t vocab_size,
+                            const TimestampDecision &decision,
+                            int32_t timestamp_begin, int32_t eot) {
+  // Suppress text tokens if needed
+  if (decision.suppress_text) {
+    if (decision.suppress_eot) {
+      // Suppress all text tokens including EOT
+      std::fill(logits, logits + timestamp_begin, kNegInf);
+    } else {
+      // Suppress text tokens but preserve EOT
+      std::fill(logits, logits + eot, kNegInf);
+      std::fill(logits + eot + 1, logits + timestamp_begin, kNegInf);
+    }
+  }
+
+  // Suppress timestamp tokens if needed
+  if (decision.suppress_timestamps) {
+    std::fill(logits + timestamp_begin, logits + vocab_size, kNegInf);
+  }
+
+  // Apply monotonicity constraint (suppress timestamps below minimum)
+  if (decision.min_timestamp >= 0) {
+    std::fill(logits + timestamp_begin, logits + decision.min_timestamp,
+              kNegInf);
+  }
+
+  // Apply max_initial constraint (suppress timestamps above maximum)
+  if (decision.max_timestamp >= 0) {
+    std::fill(logits + decision.max_timestamp + 1, logits + vocab_size,
+              kNegInf);
+  }
+}
+
+// Apply the probability rule: if timestamp probability > max text probability,
+// force timestamp. This is the "sum rule" from OpenAI's implementation.
+void ApplyProbabilityRule(float *logits, int32_t vocab_size,
+                          int32_t timestamp_begin) {
+  // Compute logsumexp of timestamp logits
+  float max_ts_logit = *std::max_element(logits + timestamp_begin,
+                                         logits + vocab_size);
+  if (max_ts_logit == kNegInf) {
+    return;  // All timestamps suppressed, nothing to do
+  }
+
+  float ts_logsum = 0.0f;
+  for (int32_t i = timestamp_begin; i < vocab_size; ++i) {
+    if (logits[i] > kNegInf) {
+      ts_logsum += std::exp(logits[i] - max_ts_logit);
+    }
+  }
+  ts_logsum = max_ts_logit + std::log(ts_logsum);
+
+  // Find max text logit (including EOT - matches OpenAI behavior)
+  float max_text_logit = *std::max_element(logits, logits + timestamp_begin);
+
+  // If timestamp logsumexp > max text logit, force timestamp
+  if (ts_logsum > max_text_logit) {
+    std::fill(logits, logits + timestamp_begin, kNegInf);
+  }
+}
+
+}  // namespace
+
+// =============================================================================
+// Public API
+// =============================================================================
+
 void ApplyTimestampRules(float *logits, int32_t vocab_size,
                          const std::vector<int64_t> &tokens,
                          int32_t sample_begin, int32_t timestamp_begin,
                          int32_t no_timestamps, int32_t eot,
                          int32_t max_initial_timestamp_index) {
-  constexpr float kNegInf = -std::numeric_limits<float>::infinity();
+  // Validate parameters
+  assert(logits != nullptr && "logits must not be null");
+  assert(vocab_size > 0 && "vocab_size must be positive");
+  assert(sample_begin >= 0 && "sample_begin must be non-negative");
+  assert(sample_begin <= static_cast<int32_t>(tokens.size()) &&
+         "sample_begin must not exceed tokens size");
+  assert(timestamp_begin > 0 && "timestamp_begin must be positive");
+  assert(timestamp_begin < vocab_size &&
+         "timestamp_begin must be less than vocab_size");
+  assert(eot >= 0 && eot < timestamp_begin &&
+         "eot must be in range [0, timestamp_begin)");
+  assert(no_timestamps >= 0 && no_timestamps < vocab_size &&
+         "no_timestamps must be in range [0, vocab_size)");
 
-  // 1. Always suppress no_timestamps token
+  // Always suppress no_timestamps token
   logits[no_timestamps] = kNegInf;
 
-  // Number of tokens sampled so far (excluding initial SOT sequence)
-  int32_t num_sampled = static_cast<int32_t>(tokens.size()) - sample_begin;
+  // Step 1: Extract token info and determine state
+  TokenSequenceInfo info =
+      ExtractTokenSequenceInfo(tokens, sample_begin, timestamp_begin);
+  TimestampDecodingState state = DetermineDecodingState(info);
 
-  // 2. Determine state: was last token a timestamp? penultimate?
-  // IMPORTANT: penultimate_was_timestamp defaults to TRUE when len < 2
-  // This matches OpenAI's behavior and ensures text follows the first timestamp
-  bool last_was_timestamp = false;
-  bool penultimate_was_timestamp = (num_sampled < 2);  // Default true if not enough tokens
-  int32_t last_timestamp_id = -1;
+  // Step 2: Map state to actions
+  TimestampDecision decision =
+      DecideTimestampAction(state, info, timestamp_begin,
+                            max_initial_timestamp_index);
 
-  if (num_sampled >= 1) {
-    int64_t last_token = tokens.back();
-    last_was_timestamp = (last_token >= timestamp_begin);
-    if (last_was_timestamp) {
-      last_timestamp_id = static_cast<int32_t>(last_token);
-    }
-  }
-  if (num_sampled >= 2) {
-    int64_t penult_token = tokens[tokens.size() - 2];
-    penultimate_was_timestamp = (penult_token >= timestamp_begin);
-  }
+  // Step 3: Execute the decisions
+  ApplyTimestampDecision(logits, vocab_size, decision, timestamp_begin, eot);
 
-  // 3. Timestamp pairing rules (matches OpenAI's logic)
-  // Pattern: <|0.00|> text text <|6.60|><|6.60|> text text <|12.00|> EOT
-  //
-  // - After first timestamp: penultimate defaults to true, so text is forced
-  // - After text then timestamp: penultimate=false, so next must be timestamp/EOT
-  // - After two timestamps: penultimate=true, so text is forced
-  if (last_was_timestamp) {
-    if (penultimate_was_timestamp) {
-      // After two consecutive timestamps (or after first timestamp), force text
-      std::fill(logits + timestamp_begin, logits + vocab_size, kNegInf);
-    } else {
-      // After single timestamp following text, suppress text tokens
-      // Only allow timestamps (for next segment) or EOT
-      std::fill(logits, logits + eot, kNegInf);
-      // EOT is allowed (index eot is not suppressed)
-      std::fill(logits + eot + 1, logits + timestamp_begin, kNegInf);
-    }
-  }
-
-  // 4. Monotonicity: timestamps must not decrease
-  // Find the last timestamp in the sequence
-  int32_t last_ts = -1;
-  for (int32_t i = sample_begin; i < static_cast<int32_t>(tokens.size()); ++i) {
-    if (tokens[i] >= timestamp_begin) {
-      last_ts = static_cast<int32_t>(tokens[i]);
-    }
-  }
-  if (last_ts >= 0) {
-    // Suppress timestamps before the last one.
-    // Also force each segment to have nonzero length to prevent infinite looping:
-    // - After text+timestamp (segment just closed): allow same timestamp
-    //   because it could be the opening timestamp of the next segment
-    // - Otherwise: force strictly increasing (use last_ts + 1)
-    int32_t suppress_up_to;
-    if (last_was_timestamp && !penultimate_was_timestamp) {
-      // Segment just closed - next segment can start at the same time
-      suppress_up_to = last_ts;
-    } else {
-      // Force strictly increasing timestamps
-      suppress_up_to = last_ts + 1;
-    }
-    std::fill(logits + timestamp_begin, logits + suppress_up_to, kNegInf);
-  }
-
-  // 5. First sampled token must be a timestamp
-  if (num_sampled == 0) {
-    // Suppress all text tokens
-    std::fill(logits, logits + timestamp_begin, kNegInf);
-    // Apply max_initial_timestamp constraint
-    if (max_initial_timestamp_index >= 0) {
-      int32_t max_ts = timestamp_begin + max_initial_timestamp_index;
-      std::fill(logits + max_ts + 1, logits + vocab_size, kNegInf);
-    }
-  }
-
-  // 6. Probability rule: if timestamp probability > max text probability,
-  //    force timestamp. This is the "sum rule" from OpenAI's implementation.
-  if (!last_was_timestamp && num_sampled > 0) {
-    // Compute logsumexp of timestamp logits
-    float max_ts_logit = kNegInf;
-    for (int32_t i = timestamp_begin; i < vocab_size; ++i) {
-      if (logits[i] > max_ts_logit) {
-        max_ts_logit = logits[i];
-      }
-    }
-
-    float ts_logsum = 0.0f;
-    if (max_ts_logit > kNegInf) {
-      for (int32_t i = timestamp_begin; i < vocab_size; ++i) {
-        if (logits[i] > kNegInf) {
-          ts_logsum += std::exp(logits[i] - max_ts_logit);
-        }
-      }
-      ts_logsum = max_ts_logit + std::log(ts_logsum);
-    } else {
-      ts_logsum = kNegInf;
-    }
-
-    // Find max text logit (including EOT - matches OpenAI behavior)
-    float max_text_logit = *std::max_element(logits, logits + timestamp_begin);
-
-    // If timestamp logsumexp > max text logit, force timestamp
-    if (ts_logsum > max_text_logit) {
-      std::fill(logits, logits + timestamp_begin, kNegInf);
-    }
+  if (decision.check_probability_rule) {
+    ApplyProbabilityRule(logits, vocab_size, timestamp_begin);
   }
 }
 
 std::vector<OfflineWhisperSegment> ParseTimestampTokens(
     const std::vector<int32_t> &tokens, int32_t timestamp_begin, int32_t eot) {
+  // Validate parameters
+  assert(timestamp_begin > 0 && "timestamp_begin must be positive");
+  assert(eot >= 0 && eot < timestamp_begin &&
+         "eot must be in range [0, timestamp_begin)");
+
   std::vector<OfflineWhisperSegment> segments;
 
   // Each timestamp token represents 0.02 seconds (20ms)
