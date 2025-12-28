@@ -428,6 +428,12 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.whisper.tail_paddings =
       SHERPA_ONNX_OR(config->model_config.whisper.tail_paddings, -1);
 
+  recognizer_config.model_config.whisper.enable_timestamps =
+      config->model_config.whisper.enable_timestamps;
+
+  recognizer_config.model_config.whisper.enable_segment_timestamps =
+      config->model_config.whisper.enable_segment_timestamps;
+
   recognizer_config.model_config.tdnn.model =
       SHERPA_ONNX_OR(config->model_config.tdnn.model, "");
 
@@ -746,6 +752,48 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     r->ys_log_probs = nullptr;
   }
 
+  // Copy segment-level timestamps (from Whisper with segment timestamps)
+  auto segment_count = result.segment_texts.size();
+  if (segment_count > 0 &&
+      result.segment_timestamps.size() == segment_count &&
+      result.segment_durations.size() == segment_count) {
+    r->segment_count = segment_count;
+
+    // Copy segment timestamps
+    r->segment_timestamps = new float[segment_count];
+    std::copy(result.segment_timestamps.begin(), result.segment_timestamps.end(),
+              r->segment_timestamps);
+
+    // Copy segment durations
+    r->segment_durations = new float[segment_count];
+    std::copy(result.segment_durations.begin(), result.segment_durations.end(),
+              r->segment_durations);
+
+    // Copy segment texts (similar to tokens)
+    size_t total_length = 0;
+    for (const auto &seg_text : result.segment_texts) {
+      total_length += seg_text.size() + 1;  // +1 for null terminator
+    }
+
+    char *segment_texts = new char[total_length]{};
+    char **segment_texts_temp = new char *[segment_count];
+    int32_t pos = 0;
+    for (int32_t i = 0; i < segment_count; ++i) {
+      segment_texts_temp[i] = segment_texts + pos;
+      memcpy(segment_texts + pos, result.segment_texts[i].c_str(),
+             result.segment_texts[i].size());
+      pos += result.segment_texts[i].size() + 1;
+    }
+    r->segment_texts = segment_texts;
+    r->segment_texts_arr = segment_texts_temp;
+  } else {
+    r->segment_count = 0;
+    r->segment_timestamps = nullptr;
+    r->segment_durations = nullptr;
+    r->segment_texts = nullptr;
+    r->segment_texts_arr = nullptr;
+  }
+
   return r;
 }
 
@@ -762,6 +810,10 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
     delete[] r->lang;
     delete[] r->emotion;
     delete[] r->event;
+    delete[] r->segment_timestamps;
+    delete[] r->segment_durations;
+    delete[] r->segment_texts;
+    delete[] r->segment_texts_arr;
     delete r;
   }
 }
