@@ -431,6 +431,17 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWhisperModelConfig {
   const char *language;
   const char *task;
   int32_t tail_paddings;
+
+  // If non-zero, use cross-attention weights and DTW to compute token-level
+  // timestamps. This requires ONNX models exported with attention outputs.
+  int32_t enable_timestamps;
+
+  // If non-zero, use Whisper's native timestamp token mode to produce
+  // segment-level timestamps. The decoder outputs timestamp tokens like
+  // <|0.00|> interleaved with text, creating segments with start/end times.
+  // Does not require attention outputs. Can be combined with enable_timestamps
+  // for both segment-level and token-level timestamps.
+  int32_t enable_segment_timestamps;
 } SherpaOnnxOfflineWhisperModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineCanaryModelConfig {
@@ -690,6 +701,25 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   // for each token. It is NULL if the model does not support probabilities.
   // ys_log_probs[i] is the log probability for token i.
   float *ys_log_probs;
+
+  // Segment-level timestamps (from Whisper with segment timestamps enabled).
+  // These are parallel arrays: segment_count entries in each.
+  // NULL if the model does not produce segment-level timestamps.
+
+  // Start time (in seconds) of each segment
+  float *segment_timestamps;
+
+  // Duration (in seconds) of each segment
+  float *segment_durations;
+
+  // Pointer to continuous memory which holds segment texts separated by \0
+  const char *segment_texts;
+
+  // A pointer array containing the address of each segment text
+  const char *const *segment_texts_arr;
+
+  // Number of segments
+  int32_t segment_count;
 } SherpaOnnxOfflineRecognizerResult;
 
 /// Get the result of the offline stream.
