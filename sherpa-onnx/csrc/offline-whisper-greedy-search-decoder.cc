@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -78,10 +79,28 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
   }
 
-  // Always add no_timestamps token. When enable_timestamps is true, we compute
-  // timestamps via DTW on cross-attention weights, not via timestamp tokens.
-  // Using no_timestamps mode gives cleaner attention patterns for DTW alignment.
-  initial_tokens.push_back(model_->NoTimeStampsToken());
+  // Add no_timestamps token only when NOT using segment timestamp mode.
+  // When enable_segment_timestamps=true, we let the decoder output timestamp
+  // tokens. When enable_timestamps=true (DTW mode), we also skip no_timestamps
+  // for cleaner attention patterns, but timestamp token decoding is not active.
+  if (!config_.enable_segment_timestamps && !config_.enable_timestamps) {
+    initial_tokens.push_back(model_->NoTimeStampsToken());
+  }
+
+  // Track if we're using segment timestamp mode
+  bool enable_segment_timestamps = config_.enable_segment_timestamps;
+
+  // Get token IDs for timestamp rules
+  int32_t timestamp_begin = model_->TimestampBegin();
+  int32_t no_timestamps = model_->NoTimeStampsToken();
+  int32_t eot = model_->EOT();
+
+  // Max initial timestamp: 50 = 1.0 second (each timestamp is 0.02s)
+  constexpr int32_t kMaxInitialTimestampIndex = 50;
+
+  // Maintain running list of all tokens for timestamp rules
+  std::vector<int64_t> all_tokens = initial_tokens;
+  int32_t sample_begin = static_cast<int32_t>(initial_tokens.size());
 
   int32_t batch_size = 1;
   std::array<int64_t, 2> token_shape{
@@ -119,8 +138,19 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
     const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
 
-    auto max_it = std::max_element(p_start, p_start + vocab_size);
-    max_token_id = static_cast<int32_t>(std::distance(p_start, max_it));
+    if (enable_segment_timestamps) {
+      // Make a copy of logits for applying timestamp rules
+      std::vector<float> logits_copy(p_start, p_start + vocab_size);
+      ApplyTimestampRules(logits_copy.data(), vocab_size, all_tokens,
+                          sample_begin, timestamp_begin, no_timestamps, eot,
+                          kMaxInitialTimestampIndex);
+      auto max_it =
+          std::max_element(logits_copy.begin(), logits_copy.end());
+      max_token_id = static_cast<int32_t>(std::distance(logits_copy.begin(), max_it));
+    } else {
+      auto max_it = std::max_element(p_start, p_start + vocab_size);
+      max_token_id = static_cast<int32_t>(std::distance(p_start, max_it));
+    }
   }
 
   std::vector<int32_t> predicted_tokens;
@@ -161,11 +191,12 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
-    if (max_token_id == model_->EOT()) {
+    if (max_token_id == eot) {
       break;
     }
 
     predicted_tokens.push_back(max_token_id);
+    all_tokens.push_back(max_token_id);
 
     std::array<int64_t, 2> token_shape{1, 1};
     Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
@@ -208,8 +239,21 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
 
-    auto max_it = std::max_element(p_logits, p_logits + vocab_size);
-    max_token_id = static_cast<int32_t>(std::distance(p_logits, max_it));
+    if (enable_segment_timestamps) {
+      // Make a copy of logits for applying timestamp rules
+      std::vector<float> logits_copy(p_logits, p_logits + vocab_size);
+      // After first token, don't apply max_initial_timestamp constraint
+      ApplyTimestampRules(logits_copy.data(), vocab_size, all_tokens,
+                          sample_begin, timestamp_begin, no_timestamps, eot,
+                          -1);  // -1 = no max_initial constraint
+      auto max_it =
+          std::max_element(logits_copy.begin(), logits_copy.end());
+      max_token_id = static_cast<int32_t>(std::distance(logits_copy.begin(), max_it));
+
+    } else {
+      auto max_it = std::max_element(p_logits, p_logits + vocab_size);
+      max_token_id = static_cast<int32_t>(std::distance(p_logits, max_it));
+    }
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);
@@ -222,6 +266,11 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   }
 
   ans[0].tokens = std::move(predicted_tokens);
+
+  // Parse timestamp tokens into segments if using segment timestamp mode
+  if (enable_segment_timestamps) {
+    ans[0].segments = ParseTimestampTokens(ans[0].tokens, timestamp_begin, eot);
+  }
 
   // Add accumulated attention weights if available
   if (collect_attention && !all_attention_weights.empty()) {

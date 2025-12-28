@@ -439,6 +439,36 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     sep = ", ";
   }
   os << "]";
+
+  // Add segment-level data if present (from Whisper timestamp token mode)
+  if (!segment_timestamps.empty()) {
+    os << ", ";
+
+    os << "\"segment_timestamps\": [";
+    sep = "";
+    for (auto t : segment_timestamps) {
+      os << sep << std::fixed << std::setprecision(2) << t;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"segment_durations\": [";
+    sep = "";
+    for (auto d : segment_durations) {
+      os << sep << std::fixed << std::setprecision(2) << d;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"segment_texts\": [";
+    sep = "";
+    for (const auto &t : segment_texts) {
+      os << sep << std::quoted(t);
+      sep = ", ";
+    }
+    os << "]";
+  }
+
   os << "}";
 
   return os.str();
