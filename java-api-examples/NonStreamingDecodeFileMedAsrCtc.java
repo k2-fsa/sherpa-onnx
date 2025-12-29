@@ -1,32 +1,29 @@
 // Copyright 2025 Xiaomi Corporation
 
-// This file shows how to use an offline Omnilingual ASR CTC model,
-// i.e., non-streaming Omnilingual ASR CTC model,
+// This file shows how to use an offline Google MedASR CTC model,
+// i.e., non-streaming MedASR CTC model,
 // to decode files.
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingDecodeFileOmnilingualAsrCtc {
+public class NonStreamingDecodeFileMedAsrCtc {
   public static void main(String[] args) {
     // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/omnilingual-asr/index.html
+    // https://k2-fsa.github.io/sherpa/onnx/medasr/index.html
     // to download model files
-    String model =
-        "sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/model.int8.onnx";
+    String model = "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/model.int8.onnx";
 
-    String tokens =
-        "sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/tokens.txt";
+    String tokens = "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/tokens.txt";
 
-    String waveFilename =
-        "./sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/test_wavs/en.wav";
+    String waveFilename = "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/test_wavs/0.wav";
 
     WaveReader reader = new WaveReader(waveFilename);
 
-    OfflineOmnilingualAsrCtcModelConfig omnilingual =
-        OfflineOmnilingualAsrCtcModelConfig.builder().setModel(model).build();
+    OfflineMedAsrCtcModelConfig medasr =
+        OfflineMedAsrCtcModelConfig.builder().setModel(model).build();
 
     OfflineModelConfig modelConfig =
         OfflineModelConfig.builder()
-            .setOmnilingual(omnilingual)
+            .setMedAsr(medasr)
             .setTokens(tokens)
             .setNumThreads(1)
             .setDebug(true)
