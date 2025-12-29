@@ -74,6 +74,10 @@ popd
 
 pushd non-streaming-asr
 
+echo '----------MedASR CTC----------'
+./run-medasr-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Omnilingual ASR CTC----------'
 ./run-omnilingual-asr-ctc.sh
 rm -rf sherpa-onnx-*
