@@ -497,6 +497,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   float top_p;
   int32_t seed;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
+  const char *model;
+} SherpaOnnxOfflineMedAsrCtcModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineTransducerModelConfig transducer;
@@ -526,6 +529,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineWenetCtcModelConfig wenet_ctc;
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
   SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
+  SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

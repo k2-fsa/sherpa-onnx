@@ -272,6 +272,10 @@ struct SHERPA_ONNX_API OfflineOmnilingualAsrCtcModelConfig {
   std::string model;
 };
 
+struct SHERPA_ONNX_API OfflineMedAsrCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
@@ -317,6 +321,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineWenetCtcModelConfig wenet_ctc;
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineFunASRNanoModelConfig funasr_nano;
+  OfflineMedAsrCtcModelConfig medasr;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {

@@ -294,6 +294,7 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.funasr_nano.top_p;
   c.model_config.funasr_nano.seed =
       config.model_config.funasr_nano.seed;
+  c.model_config.medasr.model = config.model_config.medasr.model.c_str();
 
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;

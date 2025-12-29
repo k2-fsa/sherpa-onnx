@@ -423,6 +423,10 @@ type OfflineOmnilingualAsrCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineMedAsrCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -485,6 +489,7 @@ type OfflineModelConfig struct {
 	Canary       OfflineCanaryModelConfig
 	WenetCtc     OfflineWenetCtcModelConfig
 	Omnilingual  OfflineOmnilingualAsrCtcModelConfig
+	MedAsr       OfflineMedAsrCtcModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -589,6 +594,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.wenet_ctc.model = C.CString(config.ModelConfig.WenetCtc.Model)
 
 	c.model_config.omnilingual.model = C.CString(config.ModelConfig.Omnilingual.Model)
+	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -740,6 +746,11 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 	if c.model_config.wenet_ctc.model != nil {
 		C.free(unsafe.Pointer(c.model_config.wenet_ctc.model))
 		c.model_config.wenet_ctc.model = nil
+	}
+
+	if c.model_config.medasr.model != nil {
+		C.free(unsafe.Pointer(c.model_config.medasr.model))
+		c.model_config.medasr.model = nil
 	}
 
 	if c.model_config.omnilingual.model != nil {

@@ -42,6 +42,9 @@ target_link_libraries(wenet-ctc-cxx-api sherpa-onnx-cxx-api)
 add_executable(omnilingual-asr-ctc-cxx-api ./omnilingual-asr-ctc-cxx-api.cc)
 target_link_libraries(omnilingual-asr-ctc-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(medasr-ctc-cxx-api ./medasr-ctc-cxx-api.cc)
+target_link_libraries(medasr-ctc-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
 target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
 
