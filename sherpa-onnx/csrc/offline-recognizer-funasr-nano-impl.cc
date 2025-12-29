@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.cc
+//
+// Copyright (c)  2025  zengyw
 
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 
@@ -51,7 +53,7 @@ OfflineRecognizerFunASRNanoImpl::CreateStream() const {
 // Sets normalization, window type, and disables edge snipping and dithering
 // to match the model's expected input format.
 void OfflineRecognizerFunASRNanoImpl::InitFeatConfig() {
-  config_.feat_config.normalize_samples = true;
+  config_.feat_config.normalize_samples = false;
   config_.feat_config.window_type = "hamming";
   config_.feat_config.snip_edges = false;
   config_.feat_config.dither = 0.0f;
@@ -163,9 +165,15 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   int32_t context_len = static_cast<int32_t>(source_ids.size());
   const int32_t max_seq_len = 2048;
   if (context_len > max_seq_len) {
+    SHERPA_ONNX_LOGE(
+        "Input sequence length (%d) exceeds maximum sequence length (%d). "
+        "Truncating to %d tokens. Recognition result may be incomplete due to "
+        "truncated input.",
+        context_len, max_seq_len, max_seq_len);
     source_ids.resize(max_seq_len);
     context_len = max_seq_len;
   }
+
   // Get text embeddings for the prompt tokens
   std::vector<int64_t> input_ids = source_ids;
   std::array<int64_t, 2> ids_shape{1, context_len};
@@ -236,8 +244,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   generated_ids.reserve(funasr_config.max_new_tokens);
   const int64_t eos_id = tokenizer_->GetEosTokenId();
   const int64_t im_end_id = tokenizer_->GetImEndTokenId();
-  const int32_t max_new_tokens =
-      funasr_config.max_new_tokens > 0 ? funasr_config.max_new_tokens : 256;
+  const int32_t max_new_tokens = funasr_config.max_new_tokens;
   std::vector<std::pair<Ort::Value, Ort::Value>> past_key_values;
   bool is_first_step = true;
   // Autoregressive generation loop

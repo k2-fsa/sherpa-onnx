@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/funasr-nano-tokenizer.cc
+//
+// Copyright (c)  2025  zengyw
 
 #include "sherpa-onnx/csrc/funasr-nano-tokenizer.h"
 
@@ -785,7 +787,7 @@ static inline std::string MakeMergeKey(const std::string &a,
 }  // namespace
 
 // Parse tokenizer.json added_tokens: extract objects with {id, content, ...}
-bool ParseAddedTokensFromTokenizerJson(
+static bool ParseAddedTokensFromTokenizerJson(
     const std::string &blob, std::vector<FunASRNanoTokenizer::AddedToken> *out) {
   if (!out) return false;
   out->clear();
@@ -871,7 +873,7 @@ void BuildAddedTokensTrie(
   }
 }
 
-void MergeVocabAndAddedTokens(
+static void MergeVocabAndAddedTokens(
     std::unordered_map<std::string, int32_t> *vocab,
     const std::vector<FunASRNanoTokenizer::AddedToken> &added,
     std::unordered_set<std::string> *added_contents) {

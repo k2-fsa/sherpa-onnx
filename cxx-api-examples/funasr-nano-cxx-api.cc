@@ -1,5 +1,7 @@
 // cxx-api-examples/funasr-nano-cxx-api.cc
 //
+// Copyright (c)  2025  zengyw
+//
 // This file demonstrates how to use FunASR-nano with sherpa-onnx's C++ API.
 //
 // clang-format off
@@ -136,10 +138,8 @@ Example:
                 << config.model_config.funasr_nano.llm_decode << "\n";
       std::cout << "  tokenizer: " << config.model_config.funasr_nano.tokenizer
                 << "\n";
-      if (!config.model_config.funasr_nano.embedding.empty()) {
-        std::cout << "  embedding: "
-                  << config.model_config.funasr_nano.embedding << "\n";
-      }
+      std::cout << "  embedding: "
+                << config.model_config.funasr_nano.embedding << "\n";
 
       const auto begin_init = std::chrono::steady_clock::now();
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+#
+# Copyright (c)  2025  zengyw
+#
 """
 Decode audio files using FunASR-nano models with sherpa-onnx Python API.
 
@@ -19,6 +22,8 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
+
+import soundfile as sf
 
 try:
     import sherpa_onnx
@@ -144,46 +149,35 @@ def get_args():
 
 
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
-    """Create an offline recognizer for FunASR-nano models."""
-    config = sherpa_onnx.OfflineRecognizerConfig(
-        feat_config=sherpa_onnx.FeatureExtractorConfig(
-            sampling_rate=16000,
-            feature_dim=80,
-        ),
-        model_config=sherpa_onnx.OfflineModelConfig(
-            funasr_nano=sherpa_onnx.OfflineFunASRNanoModelConfig(
-                encoder_adaptor=args.encoder_adaptor,
-                llm_prefill=args.llm_prefill,
-                llm_decode=args.llm_decode,
-                embedding=args.embedding,
-                tokenizer=args.tokenizer,
-                system_prompt=args.system_prompt,
-                user_prompt=args.user_prompt,
-                max_new_tokens=args.max_new_tokens,
-                temperature=args.temperature,
-                top_p=args.top_p,
-                seed=args.seed,
-            ),
-            num_threads=args.num_threads,
-            debug=args.debug,
-            provider=args.provider,
-        ),
-        decoding_method="greedy_search",
+    return sherpa_onnx.OfflineRecognizer.from_funasr_nano(
+        encoder_adaptor=args.encoder_adaptor,
+        llm_prefill=args.llm_prefill,
+        llm_decode=args.llm_decode,
+        embedding=args.embedding,
+        tokenizer=args.tokenizer,
+        num_threads=args.num_threads,
+        provider=args.provider,
+        debug=args.debug,
+        system_prompt=args.system_prompt,
+        user_prompt=args.user_prompt,
+        max_new_tokens=args.max_new_tokens,
+        temperature=args.temperature,
+        top_p=args.top_p,
+        seed=args.seed,
     )
-
-    recognizer = sherpa_onnx.OfflineRecognizer(config)
-    return recognizer
 
 
 def decode_file(
     recognizer: sherpa_onnx.OfflineRecognizer,
     filename: str,
-) -> sherpa_onnx.OfflineRecognitionResult:
+):
     """Decode a single audio file."""
-    wave = sherpa_onnx.read_wave(filename)
+    audio, sample_rate = sf.read(filename, dtype="float32", always_2d=True)
+    audio = audio[:, 0]  # only use the first channel
+
     stream = recognizer.create_stream()
-    stream.accept_waveform(wave.sample_rate, wave.samples)
-    recognizer.decode(stream)
+    stream.accept_waveform(sample_rate, audio)
+    recognizer.decode_stream(stream)
     result = stream.result
     return result
 

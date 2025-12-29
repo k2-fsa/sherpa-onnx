@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h
+//
+// Copyright (c)  2025  zengyw
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_FUNASR_NANO_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_FUNASR_NANO_IMPL_H_

@@ -14,6 +14,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineCtcFstDecoderConfig,
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,
+    OfflineFunASRNanoModelConfig,
     OfflineLMConfig,
     OfflineModelConfig,
     OfflineMoonshineModelConfig,

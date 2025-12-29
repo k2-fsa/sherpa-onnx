@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/offline-funasr-nano-model.cc
+//
+// Copyright (c)  2025  zengyw
 
 #include "sherpa-onnx/csrc/offline-funasr-nano-model.h"
 
@@ -66,6 +68,12 @@ static inline bool IsCudaProvider(const std::string &provider) {
   // Keep it conservative. We only enable IO binding policy below when we
   // are on CUDA; other EPs keep the existing behavior.
   return p == "cuda" || (p.size() > 4 && p.find("cuda") == 0);
+}
+
+// Check if a tensor element type is FP16-IO (float16 or uint16).
+static inline bool IsFloat16IO(ONNXTensorElementDataType t) {
+  return t == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
+         t == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16;
 }
 
 // Get the element type of a session input tensor.
@@ -261,6 +269,22 @@ class OfflineFunASRNanoModel::Impl {
       // configures the CUDA EP device; binding here only affects output memory.
       cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
           "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+
+      // Check if prefill/decode models have FP16-IO, which is not supported on CUDA yet.
+      ONNXTensorElementDataType prefill_in_type = prefill_embeds_in_type_;
+      ONNXTensorElementDataType prefill_out_type =
+          GetSessionOutputElemType(prefill_sess_.get(), 0);
+      ONNXTensorElementDataType decode_in_type = decode_embeds_in_type_;
+      ONNXTensorElementDataType decode_out_type =
+          GetSessionOutputElemType(decode_sess_.get(), 0);
+
+      if (IsFloat16IO(prefill_in_type) || IsFloat16IO(prefill_out_type) ||
+          IsFloat16IO(decode_in_type) || IsFloat16IO(decode_out_type)) {
+        SHERPA_ONNX_LOGE(
+            "fp16-IO LLM models are not supported on CUDA yet. Please use "
+            "fp32/int8 models.");
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
   }
 
@@ -413,6 +437,22 @@ class OfflineFunASRNanoModel::Impl {
     if (use_cuda_iobinding_) {
       cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
           "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+
+      // Check if prefill/decode models have FP16-IO, which is not supported on CUDA yet.
+      ONNXTensorElementDataType prefill_in_type = prefill_embeds_in_type_;
+      ONNXTensorElementDataType prefill_out_type =
+          GetSessionOutputElemType(prefill_sess_.get(), 0);
+      ONNXTensorElementDataType decode_in_type = decode_embeds_in_type_;
+      ONNXTensorElementDataType decode_out_type =
+          GetSessionOutputElemType(decode_sess_.get(), 0);
+
+      if (IsFloat16IO(prefill_in_type) || IsFloat16IO(prefill_out_type) ||
+          IsFloat16IO(decode_in_type) || IsFloat16IO(decode_out_type)) {
+        SHERPA_ONNX_LOGE(
+            "fp16-IO LLM models are not supported on CUDA yet. Please use "
+            "fp32/int8 models.");
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
   }
 

@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/offline-funasr-nano-model-config.h
+//
+// Copyright (c)  2025  zengyw
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_FUNASR_NANO_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_FUNASR_NANO_MODEL_CONFIG_H_

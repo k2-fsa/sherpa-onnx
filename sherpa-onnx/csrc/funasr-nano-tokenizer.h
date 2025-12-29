@@ -1,11 +1,12 @@
 // sherpa-onnx/csrc/funasr-nano-tokenizer.h
 //
+// Copyright (c)  2025  zengyw
+//
 // A self-contained Qwen3 ByteLevel-BPE tokenizer implementation.
 // - No dependency on tokenizers-cpp / HF tokenizers
 // - Loads vocab.json + merges.txt + tokenizer.json(added_tokens)
 // - Supports AddedTokens via Trie longest-match
 // - ByteLevel bytes_to_unicode encode/decode
-// Author: zengyongwang
 
 #ifndef SHERPA_ONNX_CSRC_FUNASR_NANO_TOKENIZER_H_
 #define SHERPA_ONNX_CSRC_FUNASR_NANO_TOKENIZER_H_
@@ -87,7 +88,7 @@ class FunASRNanoTokenizer {
   std::unordered_map<std::string, int32_t> token2id_;
   std::vector<std::string> id2token_;
 
-  // merges ranks: "left\t right" -> rank
+  // merges ranks: "left\tright" -> rank
   std::unordered_map<std::string, int32_t> merges_rank_;
 
   // BPE cache: bytelevel_word -> list of merged tokens
