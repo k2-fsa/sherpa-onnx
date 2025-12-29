@@ -430,14 +430,6 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << sep << w;
     sep = ", ";
   }
-  os << "], ";
-
-  os << "\"words\": [";
-  sep = "";
-  for (const auto &w : words) {
-    os << sep << w;
-    sep = ", ";
-  }
   os << "]";
 
   // Add segment-level data if present (from Whisper timestamp token mode)
