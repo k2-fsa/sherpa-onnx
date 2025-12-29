@@ -13,6 +13,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
+const val MIN_TTS_SPEED = 0.1f
+const val MAX_TTS_SPEED = 5.0f
+
 object TtsEngine {
     var tts: OfflineTts? = null
 
