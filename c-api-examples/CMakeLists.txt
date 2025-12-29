@@ -86,6 +86,9 @@ target_link_libraries(wenet-ctc-c-api sherpa-onnx-c-api)
 add_executable(omnilingual-asr-ctc-c-api omnilingual-asr-ctc-c-api.c)
 target_link_libraries(omnilingual-asr-ctc-c-api sherpa-onnx-c-api)
 
+add_executable(medasr-ctc-c-api medasr-ctc-c-api.c)
+target_link_libraries(medasr-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
 

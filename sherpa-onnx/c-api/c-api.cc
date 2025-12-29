@@ -511,6 +511,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.omnilingual.model =
       SHERPA_ONNX_OR(config->model_config.omnilingual.model, "");
 
+  recognizer_config.model_config.medasr.model =
+      SHERPA_ONNX_OR(config->model_config.medasr.model, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =
