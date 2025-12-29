@@ -203,6 +203,22 @@ rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
 node ./test-offline-zipformer-ctc.js
 ```
 
+## ./test-offline-medasr-ctc.js
+
+[./test-offline-medasr-ctc.js](./test-offline-medasr-ctc.js) demonstrates
+how to decode a file with a Google MedASR CTC model. In the code we use
+[sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+
+node ./test-offline-medasr-ctc.js
+```
+
 ## ./test-offline-omnilingual-asr-ctc.js
 
 [./test-offline-omnilingual-asr-ctc.js](./test-offline-omnilingual-asr-ctc.js) demonstrates

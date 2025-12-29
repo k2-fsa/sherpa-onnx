@@ -59,6 +59,10 @@ function freeConfig(config, Module) {
     freeConfig(config.omnilingual, Module)
   }
 
+  if ('medasr' in config) {
+    freeConfig(config.medasr, Module)
+  }
+
   if ('moonshine' in config) {
     freeConfig(config.moonshine, Module)
   }
@@ -776,6 +780,23 @@ function initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineMedAsrCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
@@ -1052,6 +1073,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('medasr' in config)) {
+    config.medasr = {
+      model: '',
+    };
+  }
+
   if (!('whisper' in config)) {
     config.whisper = {
       encoder: '',
@@ -1139,10 +1166,13 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const omnilingual = initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(
       config.omnilingual, Module);
 
+  const medasr =
+      initSherpaOnnxOfflineMedAsrCtcModelConfig(config.medasr, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
-      omnilingual.len;
+      omnilingual.len + medasr.len;
 
   const ptr = Module._malloc(len);
 
@@ -1256,12 +1286,15 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(omnilingual.ptr, omnilingual.len, ptr + offset);
   offset += omnilingual.len;
 
+  Module._CopyHeap(medasr.ptr, medasr.len, ptr + offset);
+  offset += medasr.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
         paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
         senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr,
         dolphin: dolphin, zipformerCtc: zipformerCtc, canary: canary,
-        wenetCtc: wenetCtc, omnilingual: omnilingual
+        wenetCtc: wenetCtc, omnilingual: omnilingual, medasr: medasr
   }
 }
 
