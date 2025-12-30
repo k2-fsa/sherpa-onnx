@@ -97,6 +97,11 @@ struct OfflineWhisperDecoderResult {
   /// This is num_feature_frames / 2 (due to encoder downsampling)
   int32_t num_audio_frames = 0;
 
+  /// Indices of timestamp tokens in the attention weights (0-based, relative
+  /// to the start of the attention sequence which includes initial tokens).
+  /// Used to filter out timestamp tokens before DTW alignment.
+  std::vector<int32_t> timestamp_token_indices;
+
   /// Segments with timestamps (when using timestamp token mode)
   std::vector<OfflineWhisperSegment> segments;
 };

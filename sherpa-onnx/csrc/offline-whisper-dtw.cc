@@ -16,13 +16,11 @@
 
 namespace sherpa_onnx {
 
-TokenTimingResult WhisperDTW::ComputeTokenTimings(const float *attention,
-                                                   int32_t n_heads,
-                                                   int32_t n_tokens,
-                                                   int32_t n_frames,
-                                                   int32_t num_audio_frames,
-                                                   int32_t sot_sequence_length,
-                                                   int32_t num_text_tokens) {
+TokenTimingResult WhisperDTW::ComputeTokenTimings(
+    const float *attention, int32_t n_heads, int32_t n_tokens, int32_t n_frames,
+    int32_t num_audio_frames, int32_t sot_sequence_length,
+    int32_t num_text_tokens,
+    const std::vector<int32_t> &timestamp_token_indices) {
   TokenTimingResult result;
 
   if (n_heads <= 0 || n_tokens <= 0 || n_frames <= 0 || num_text_tokens <= 0) {
@@ -35,6 +33,8 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(const float *attention,
           n_heads, n_tokens, n_frames);
   fprintf(stderr, "num_audio_frames=%d, sot_sequence_length=%d, num_text_tokens=%d\n",
           num_audio_frames, sot_sequence_length, num_text_tokens);
+  fprintf(stderr, "timestamp_token_indices count: %zu\n",
+          timestamp_token_indices.size());
 #endif
 
   // Clip to actual audio frames (like OpenAI: weights[:, :, :num_frames//2])
@@ -69,26 +69,56 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(const float *attention,
     processed[i] *= inv_n_heads;
   }
 
-  // Skip SOT sequence but INCLUDE EOT (like OpenAI: matrix[sot_len : -1] but
-  // they pass text_tokens + [eot] to DTW, so EOT is included)
-  // We need EOT to get the end time of the last text token.
+  // Build a set of timestamp token indices for quick lookup
+  // BUT: keep the first timestamp token as an anchor (like no_timestamps)
+  // The first timestamp token (e.g., <|0.00|>) serves the same role as
+  // no_timestamps in OpenAI's alignment - it's the anchor at time=0.
+  std::vector<bool> is_timestamp_token(n_tokens, false);
+  bool found_first_timestamp = false;
+  for (int32_t idx : timestamp_token_indices) {
+    if (idx >= 0 && idx < n_tokens) {
+      // Keep the first timestamp token (it's the anchor), filter the rest
+      if (!found_first_timestamp && idx >= sot_sequence_length) {
+        found_first_timestamp = true;
+        // Don't mark as timestamp - keep it in the DTW matrix
+      } else {
+        is_timestamp_token[idx] = true;
+      }
+    }
+  }
+
+  // Skip SOT sequence and filter out timestamp tokens (except first one)
+  // Like OpenAI: we skip sot_sequence_length tokens at the start
+  // Additionally, we now filter out timestamp tokens from the middle
   int32_t start_token = sot_sequence_length;
-  int32_t dtw_tokens = n_tokens - sot_sequence_length;  // Include EOT
+
+  // Build filtered token list (indices into original processed array)
+  // and mapping from filtered index back to original index
+  std::vector<int32_t> filtered_to_original;
+  for (int32_t i = start_token; i < n_tokens; ++i) {
+    if (!is_timestamp_token[i]) {
+      filtered_to_original.push_back(i);
+    }
+  }
+
+  int32_t dtw_tokens = static_cast<int32_t>(filtered_to_original.size());
 
 #if DTW_DEBUG
-  fprintf(stderr, "DTW tokens (including EOT): %d\n", dtw_tokens);
+  fprintf(stderr, "DTW tokens after filtering: %d (filtered out %zu timestamp tokens)\n",
+          dtw_tokens, timestamp_token_indices.size());
 #endif
 
   if (dtw_tokens <= 1) {
     return result;
   }
 
-  // Extract the relevant portion for DTW and negate
+  // Extract the filtered portion for DTW and negate
   std::vector<float> cost_matrix(dtw_tokens * clipped_frames);
   for (int32_t i = 0; i < dtw_tokens; ++i) {
+    int32_t orig_idx = filtered_to_original[i];
     for (int32_t j = 0; j < clipped_frames; ++j) {
       cost_matrix[i * clipped_frames + j] =
-          -processed[(start_token + i) * clipped_frames + j];
+          -processed[orig_idx * clipped_frames + j];
     }
   }
 

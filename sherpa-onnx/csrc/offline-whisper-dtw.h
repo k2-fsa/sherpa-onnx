@@ -45,13 +45,15 @@ class WhisperDTW {
   // @param sot_sequence_length Number of special tokens at start (to skip)
   // @param num_text_tokens Number of actual text tokens to return timings for
   //                        (excluding SOT sequence and EOT)
+  // @param timestamp_token_indices Indices of timestamp tokens to filter out
+  //                                (0-based, relative to attention sequence)
   //
   // @return TokenTimingResult with start_times and durations for each token
-  TokenTimingResult ComputeTokenTimings(const float *attention, int32_t n_heads,
-                                        int32_t n_tokens, int32_t n_frames,
-                                        int32_t num_audio_frames,
-                                        int32_t sot_sequence_length,
-                                        int32_t num_text_tokens);
+  TokenTimingResult ComputeTokenTimings(
+      const float *attention, int32_t n_heads, int32_t n_tokens,
+      int32_t n_frames, int32_t num_audio_frames, int32_t sot_sequence_length,
+      int32_t num_text_tokens,
+      const std::vector<int32_t> &timestamp_token_indices = {});
 
  private:
   // Apply softmax normalization across the last dimension (frames)
