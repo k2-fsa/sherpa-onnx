@@ -29,6 +29,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -705,7 +706,7 @@ class OfflineFunASRNanoModel::Impl {
  private:
   void InitEncoderAdaptor(const std::string &model_path) {
     encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_encoder_);
+        env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_encoder_);
     GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                   &encoder_input_names_ptr_);
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
@@ -729,7 +730,7 @@ class OfflineFunASRNanoModel::Impl {
 
   void InitLLMPrefill(const std::string &model_path) {
     prefill_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_llm_);
+        env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_llm_);
     GetInputNames(prefill_sess_.get(), &prefill_input_names_,
                   &prefill_input_names_ptr_);
     GetOutputNames(prefill_sess_.get(), &prefill_output_names_,
@@ -754,7 +755,7 @@ class OfflineFunASRNanoModel::Impl {
 
   void InitLLMDecode(const std::string &model_path) {
     decode_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_llm_);
+        env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_llm_);
     GetInputNames(decode_sess_.get(), &decode_input_names_,
                   &decode_input_names_ptr_);
     GetOutputNames(decode_sess_.get(), &decode_output_names_,
@@ -788,7 +789,7 @@ class OfflineFunASRNanoModel::Impl {
 
   void InitEmbedding(const std::string &model_path) {
     embedding_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_embedding_);
+        env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_embedding_);
     GetInputNames(embedding_sess_.get(), &embedding_input_names_,
                   &embedding_input_names_ptr_);
     GetOutputNames(embedding_sess_.get(), &embedding_output_names_,
