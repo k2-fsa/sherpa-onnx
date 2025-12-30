@@ -120,7 +120,7 @@ def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=F
         f"Durations count ({len(durations)}) != tokens count ({len(tokens)})"
     )
 
-    for i, (token, ts, dur) in enumerate(zip(tokens, timestamps, durations)):
+    for token, ts, dur in zip(tokens, timestamps, durations):
         end_ts = ts + dur
         print(f"  [{ts:.2f}s - {end_ts:.2f}s] ({dur:.2f}s): {repr(token)}")
 
@@ -151,7 +151,9 @@ def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=F
             f"texts={len(seg_texts)}"
         )
 
-        for i, (ts, dur, text) in enumerate(zip(seg_timestamps, seg_durations, seg_texts)):
+        for i, (ts, dur, text) in enumerate(
+            zip(seg_timestamps, seg_durations, seg_texts)
+        ):
             end_ts = ts + dur
             print(f"  Segment {i}: [{ts:.2f}s - {end_ts:.2f}s] ({dur:.2f}s)")
             print(f"    Text: {repr(text)}")
@@ -189,8 +191,10 @@ def main():
     # Test with timestamps if requested
     if args.enable_timestamps:
         test_with_timestamps(
-            args, samples, sample_rate,
-            enable_segment_timestamps=args.enable_segment_timestamps
+            args,
+            samples,
+            sample_rate,
+            enable_segment_timestamps=args.enable_segment_timestamps,
         )
 
     print("\n" + "=" * 60)

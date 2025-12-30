@@ -79,11 +79,13 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
   }
 
-  // Add no_timestamps token only when NOT using segment timestamp mode.
+  // Add no_timestamps token when NOT using segment timestamp mode.
   // When enable_segment_timestamps=true, we let the decoder output timestamp
-  // tokens. When enable_timestamps=true (DTW mode), we also skip no_timestamps
-  // for cleaner attention patterns, but timestamp token decoding is not active.
-  if (!config_.enable_segment_timestamps && !config_.enable_timestamps) {
+  // tokens (like <|0.00|>) which serve as alignment anchors.
+  // When enable_timestamps=true (DTW mode), we MUST include no_timestamps
+  // because OpenAI's alignment (timing.py) uses it as an anchor token at the
+  // start of the DTW matrix. Without it, the first text token is misaligned.
+  if (!config_.enable_segment_timestamps) {
     initial_tokens.push_back(model_->NoTimeStampsToken());
   }
 
