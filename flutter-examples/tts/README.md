@@ -10,6 +10,8 @@ It works on the following platforms:
   - macOS (both arm64 and x86_64 are supported)
   - Windows
 
+Pre-built APPs for this folder can be found at <https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#text-to-speech-tts-speech-synthesis>
+
 Screenshots are given below:
 
 |Android|iOS|Linux|macOS|Windows|

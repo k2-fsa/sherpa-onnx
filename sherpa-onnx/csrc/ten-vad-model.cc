@@ -21,6 +21,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "Eigen/Dense"
 #include "kaldi-native-fbank/csrc/mel-computations.h"
 #include "kaldi-native-fbank/csrc/rfft.h"
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -56,6 +57,38 @@ class TenVadModel::Impl {
     Init(buf.data(), buf.size());
   }
 
+  float Run(const float *samples, int32_t n) {
+    ComputeFeatures(samples, n);
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 3> x_shape = {1, 3, 41};
+
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, last_features_.data(),
+                                            last_features_.size(),
+                                            x_shape.data(), x_shape.size());
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(input_names_.size());
+
+    inputs.push_back(std::move(x));
+    for (auto &s : states_) {
+      inputs.push_back(std::move(s));
+    }
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    for (int32_t i = 1; i != static_cast<int32_t>(output_names_.size()); ++i) {
+      states_[i - 1] = std::move(out[i]);
+    }
+
+    float prob = out[0].GetTensorData<float>()[0];
+
+    return prob;
+  }
   void Reset() {
     triggered_ = false;
     current_sample_ = 0;
@@ -282,9 +315,10 @@ class TenVadModel::Impl {
   }
 
   static void Scale(const float *samples, int32_t n, float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      out[i] = samples[i] * 32768;
-    }
+    Eigen::Map<const Eigen::ArrayXf> input(samples, n);
+    Eigen::Map<Eigen::ArrayXf> output(out, n);
+    constexpr float kScale = 32768.0f;
+    output = input * kScale;
   }
 
   void Preemphasis(const float *samples, int32_t n, float *out) {
@@ -301,9 +335,10 @@ class TenVadModel::Impl {
 
   static void ApplyWindow(const float *samples, const float *window, int32_t n,
                           float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      out[i] = samples[i] * window[i];
-    }
+    Eigen::Map<const Eigen::ArrayXf> samp_vec(samples, n);
+    Eigen::Map<const Eigen::ArrayXf> win_vec(window, n);
+    Eigen::Map<Eigen::ArrayXf> out_vec(out, n);
+    out_vec = samp_vec * win_vec;
   }
 
   static void ComputePowerSpectrum(const float *fft_bins, int32_t n,
@@ -319,16 +354,21 @@ class TenVadModel::Impl {
   }
 
   static void LogMel(const float *in, int32_t n, float *out) {
-    for (int32_t i = 0; i != n; ++i) {
-      // 20.79441541679836 is log(32768*32768)
-      out[i] = logf(in[i] + 1e-10f) - 20.79441541679836f;
-    }
+    Eigen::Map<const Eigen::ArrayXf> input(in, n);
+    Eigen::Map<Eigen::ArrayXf> output(out, n);
+    // 20.79441541679836 is log(32768*32768)
+    constexpr float kLogScale = 20.79441541679836f;
+    output = (input + 1e-10f).log() - kLogScale;
   }
 
   void ApplyNormalization(const float *in, float *out) const {
-    for (int32_t i = 0; i != static_cast<int32_t>(mean_.size()); ++i) {
-      out[i] = (in[i] - mean_[i]) * inv_stddev_[i];
-    }
+    int32_t dim = static_cast<int32_t>(mean_.size());
+
+    Eigen::Map<const Eigen::ArrayXf> input(in, dim);
+    Eigen::Map<Eigen::ArrayXf> output(out, dim);
+    Eigen::Map<const Eigen::ArrayXf> mean_vec(mean_.data(), dim);
+    Eigen::Map<const Eigen::ArrayXf> inv_stddev_vec(inv_stddev_.data(), dim);
+    output = (input - mean_vec) * inv_stddev_vec;
   }
 
   void ComputeFeatures(const float *samples, int32_t n) {
@@ -361,39 +401,6 @@ class TenVadModel::Impl {
                  2 * features_.size() * sizeof(float));
     std::copy(features_.begin(), features_.end(),
               last_features_.begin() + 2 * features_.size());
-  }
-
-  float Run(const float *samples, int32_t n) {
-    ComputeFeatures(samples, n);
-
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-    std::array<int64_t, 3> x_shape = {1, 3, 41};
-
-    Ort::Value x = Ort::Value::CreateTensor(memory_info, last_features_.data(),
-                                            last_features_.size(),
-                                            x_shape.data(), x_shape.size());
-
-    std::vector<Ort::Value> inputs;
-    inputs.reserve(input_names_.size());
-
-    inputs.push_back(std::move(x));
-    for (auto &s : states_) {
-      inputs.push_back(std::move(s));
-    }
-
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
-
-    for (int32_t i = 1; i != static_cast<int32_t>(output_names_.size()); ++i) {
-      states_[i - 1] = std::move(out[i]);
-    }
-
-    float prob = out[0].GetTensorData<float>()[0];
-
-    return prob;
   }
 
  private:
@@ -467,6 +474,10 @@ void TenVadModel::SetMinSilenceDuration(float s) {
 
 void TenVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+float TenVadModel::Compute(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

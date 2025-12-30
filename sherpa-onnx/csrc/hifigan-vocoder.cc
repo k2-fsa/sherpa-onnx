@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/hifigan-vocoder.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

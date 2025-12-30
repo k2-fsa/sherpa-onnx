@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
@@ -22,8 +23,8 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(
-    const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
+OfflineRecognitionResult Convert(const OfflineParaformerDecoderResult &src,
+                                 const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps = src.timestamps;
@@ -94,7 +95,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();
@@ -114,7 +115,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     InitFeatConfig();
@@ -242,19 +243,18 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   void ApplyCMVN(std::vector<float> *v) const {
     const std::vector<float> &neg_mean = model_->NegativeMean();
     const std::vector<float> &inv_stddev = model_->InverseStdDev();
+    int32_t dim = static_cast<int32_t>(neg_mean.size());
+    int32_t num_frames = static_cast<int32_t>(v->size()) / dim;
 
-    int32_t dim = neg_mean.size();
-    int32_t num_frames = v->size() / dim;
+    Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+        mat(v->data(), num_frames, dim);
 
-    float *p = v->data();
+    Eigen::Map<const Eigen::RowVectorXf> neg_mean_vec(neg_mean.data(), dim);
+    Eigen::Map<const Eigen::RowVectorXf> inv_stddev_vec(inv_stddev.data(), dim);
 
-    for (int32_t i = 0; i != num_frames; ++i) {
-      for (int32_t k = 0; k != dim; ++k) {
-        p[k] = (p[k] + neg_mean[k]) * inv_stddev[k];
-      }
-
-      p += dim;
-    }
+    mat.array() = (mat.array().rowwise() + neg_mean_vec.array()).rowwise() *
+                  inv_stddev_vec.array();
   }
 
   OfflineRecognizerConfig config_;

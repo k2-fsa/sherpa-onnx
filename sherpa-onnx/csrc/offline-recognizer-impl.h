@@ -51,7 +51,7 @@ class OfflineRecognizerImpl {
 
   std::string ApplyHomophoneReplacer(std::string text) const;
 
- private:
+ protected:
   OfflineRecognizerConfig config_;
   // for inverse text normalization. Used only if
   // config.rule_fsts is not empty or

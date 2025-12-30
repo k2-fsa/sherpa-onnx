@@ -5,8 +5,10 @@
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
 #include <algorithm>
+#include <memory>
 #include <queue>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -39,6 +41,10 @@ class VoiceActivityDetector::Impl {
         config_(config),
         buffer_(buffer_size_in_seconds * config.sample_rate) {
     Init();
+  }
+
+  float Compute(const float *samples, int32_t n) {
+    return model_->Compute(samples, n);
   }
 
   void AcceptWaveform(const float *samples, int32_t n) {
@@ -254,6 +260,10 @@ SpeechSegment VoiceActivityDetector::CurrentSpeechSegment() const {
 
 const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
+}
+
+float VoiceActivityDetector::Compute(const float *samples, int32_t n) {
+  return impl_->Compute(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

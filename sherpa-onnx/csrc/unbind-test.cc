@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/unbind.h"
 
+#include <vector>
+
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"

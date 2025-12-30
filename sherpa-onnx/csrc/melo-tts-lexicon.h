@@ -18,15 +18,6 @@ class MeloTtsLexicon : public OfflineTtsFrontend {
  public:
   ~MeloTtsLexicon() override;
   MeloTtsLexicon(const std::string &lexicon, const std::string &tokens,
-                 const std::string &dict_dir,
-                 const OfflineTtsVitsModelMetaData &meta_data, bool debug);
-
-  MeloTtsLexicon(const std::string &lexicon, const std::string &tokens,
-                 const OfflineTtsVitsModelMetaData &meta_data, bool debug);
-
-  template <typename Manager>
-  MeloTtsLexicon(Manager *mgr, const std::string &lexicon,
-                 const std::string &tokens, const std::string &dict_dir,
                  const OfflineTtsVitsModelMetaData &meta_data, bool debug);
 
   template <typename Manager>

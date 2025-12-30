@@ -8,7 +8,7 @@ data class OfflineTtsVitsModelConfig(
     var lexicon: String = "",
     var tokens: String = "",
     var dataDir: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
     var noiseScale: Float = 0.667f,
     var noiseScaleW: Float = 0.8f,
     var lengthScale: Float = 1.0f,
@@ -20,7 +20,7 @@ data class OfflineTtsMatchaModelConfig(
     var lexicon: String = "",
     var tokens: String = "",
     var dataDir: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
     var noiseScale: Float = 1.0f,
     var lengthScale: Float = 1.0f,
 )
@@ -32,7 +32,15 @@ data class OfflineTtsKokoroModelConfig(
     var dataDir: String = "",
     var lexicon: String = "",
     var lang: String = "",
-    var dictDir: String = "",
+    var dictDir: String = "", // unused
+    var lengthScale: Float = 1.0f,
+)
+
+data class OfflineTtsKittenModelConfig(
+    var model: String = "",
+    var voices: String = "",
+    var tokens: String = "",
+    var dataDir: String = "",
     var lengthScale: Float = 1.0f,
 )
 
@@ -40,6 +48,7 @@ data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
+    var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -189,13 +198,14 @@ fun getOfflineTtsConfig(
     modelName: String, // for VITS
     acousticModelName: String, // for Matcha
     vocoder: String, // for Matcha
-    voices: String, // for Kokoro
+    voices: String, // for Kokoro or kitten
     lexicon: String,
     dataDir: String,
-    dictDir: String,
+    dictDir: String, // unused
     ruleFsts: String,
     ruleFars: String,
-    numThreads: Int? = null
+    numThreads: Int? = null,
+    isKitten: Boolean = false
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -203,13 +213,16 @@ fun getOfflineTtsConfig(
     // For Kokoro TTS, please set
     // modelName, voices
 
+    // For Kitten TTS, please set
+    // modelName, voices, isKitten
+
     // For VITS, please set
     // modelName
 
     val numberOfThreads = if (numThreads != null) {
         numThreads
     } else if (voices.isNotEmpty()) {
-        // for Kokoro TTS models, we use more threads
+        // for Kokoro and Kitten TTS models, we use more threads
         4
     } else {
         2
@@ -233,7 +246,6 @@ fun getOfflineTtsConfig(
             lexicon = "$modelDir/$lexicon",
             tokens = "$modelDir/tokens.txt",
             dataDir = dataDir,
-            dictDir = dictDir,
         )
     } else {
         OfflineTtsVitsModelConfig()
@@ -245,14 +257,13 @@ fun getOfflineTtsConfig(
             vocoder = vocoder,
             lexicon = "$modelDir/$lexicon",
             tokens = "$modelDir/tokens.txt",
-            dictDir = dictDir,
             dataDir = dataDir,
         )
     } else {
         OfflineTtsMatchaModelConfig()
     }
 
-    val kokoro = if (voices.isNotEmpty()) {
+    val kokoro = if (voices.isNotEmpty() && !isKitten) {
         OfflineTtsKokoroModelConfig(
             model = "$modelDir/$modelName",
             voices = "$modelDir/$voices",
@@ -263,10 +274,20 @@ fun getOfflineTtsConfig(
                 "," in lexicon -> lexicon
                 else -> "$modelDir/$lexicon"
             },
-            dictDir = dictDir,
         )
     } else {
         OfflineTtsKokoroModelConfig()
+    }
+
+    val kitten = if (isKitten) {
+        OfflineTtsKittenModelConfig(
+            model = "$modelDir/$modelName",
+            voices = "$modelDir/$voices",
+            tokens = "$modelDir/tokens.txt",
+            dataDir = dataDir,
+        )
+    } else {
+        OfflineTtsKittenModelConfig()
     }
 
     return OfflineTtsConfig(
@@ -274,6 +295,7 @@ fun getOfflineTtsConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
+            kitten = kitten,
             numThreads = numberOfThreads,
             debug = true,
             provider = "cpu",

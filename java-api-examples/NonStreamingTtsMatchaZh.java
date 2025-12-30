@@ -13,7 +13,6 @@ public class NonStreamingTtsMatchaZh {
     String vocoder = "./vocos-22khz-univ.onnx";
     String tokens = "./matcha-icefall-zh-baker/tokens.txt";
     String lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
-    String dictDir = "./matcha-icefall-zh-baker/dict";
     String ruleFsts =
         "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst";
     String text =
@@ -28,7 +27,6 @@ public class NonStreamingTtsMatchaZh {
             .setVocoder(vocoder)
             .setTokens(tokens)
             .setLexicon(lexicon)
-            .setDictDir(dictDir)
             .build();
 
     OfflineTtsModelConfig modelConfig =
@@ -56,7 +54,7 @@ public class NonStreamingTtsMatchaZh {
     String waveFilename = "tts-matcha-zh.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
-    System.out.printf("-- audio duration: %.3f seconds\n", timeElapsedSeconds);
+    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
     System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
     System.out.printf("-- text: %s\n", text);
     System.out.printf("-- Saved to %s\n", waveFilename);

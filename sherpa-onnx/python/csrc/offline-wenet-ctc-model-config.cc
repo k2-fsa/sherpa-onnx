@@ -1,4 +1,4 @@
-// sherpa-onnx/python/csrc/offline-wenet-model-config.cc
+// sherpa-onnx/python/csrc/offline-wenet-ctc-model-config.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 

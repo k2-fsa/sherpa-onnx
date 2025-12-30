@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/fast-clustering.h"
 
+#include <iostream>
 #include <vector>
 
 #include "gtest/gtest.h"

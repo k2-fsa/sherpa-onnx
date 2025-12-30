@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 
+#include <memory>
 #include <string>
 
 #if __ANDROID_API__ >= 9

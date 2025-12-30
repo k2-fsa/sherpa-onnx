@@ -102,8 +102,6 @@ func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
   let tokens = getResource("tokens", "txt")
   let lexicon = getResource("lexicon", "txt")
 
-  let dictDir = resourceURL(to: "dict")
-
   let numFst = getResource("number", "fst")
   let dateFst = getResource("date", "fst")
   let phoneFst = getResource("phone", "fst")
@@ -114,8 +112,7 @@ func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
     dataDir: "",
     noiseScale: 0.667,
     noiseScaleW: 0.8,
-    lengthScale: 1.0,
-    dictDir: dictDir
+    lengthScale: 1.0
   )
 
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
@@ -136,8 +133,6 @@ func getTtsFor_matcha_icefall_zh_baker() -> SherpaOnnxOfflineTtsWrapper {
   let tokens = getResource("tokens", "txt")
   let lexicon = getResource("lexicon", "txt")
 
-  let dictDir = resourceURL(to: "dict")
-
   let numFst = getResource("number", "fst")
   let dateFst = getResource("date", "fst")
   let phoneFst = getResource("phone", "fst")
@@ -147,8 +142,7 @@ func getTtsFor_matcha_icefall_zh_baker() -> SherpaOnnxOfflineTtsWrapper {
     acousticModel: acousticModel,
     vocoder: vocoder,
     lexicon: lexicon,
-    tokens: tokens,
-    dictDir: dictDir
+    tokens: tokens
   )
 
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha)
@@ -195,7 +189,6 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
 
   // in this case, we don't need lexicon.txt
   let dataDir = resourceURL(to: "espeak-ng-data")
-  let dictDir = resourceURL(to: "dict")
 
   let numFst = getResource("number-zh", "fst")
   let dateFst = getResource("date-zh", "fst")
@@ -204,7 +197,7 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
 
   let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
     model: model, voices: voices, tokens: tokens, dataDir: dataDir,
-    dictDir: dictDir, lexicon: lexicon)
+    lexicon: lexicon)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro)
   var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 

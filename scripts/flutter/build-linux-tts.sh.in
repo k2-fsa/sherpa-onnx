@@ -62,11 +62,6 @@ sed -i.bak s/"modelName = ''"/"modelName = \"$model_name\""/ ./model.dart
   sed -i.bak "s|ruleFars = ''|ruleFars = \"$rule_fars\"|" ./model.dart
 {% endif %}
 
-{% if tts_model.dict_dir %}
-  dict_dir={{ tts_model.dict_dir }}
-  sed -i.bak "s|dictDir = ''|dictDir = \"$dict_dir\"|" ./model.dart
-{% endif %}
-
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
   sed -i.bak "s|dataDir = ''|dataDir = \"$data_dir\"|" ./model.dart

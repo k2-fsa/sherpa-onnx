@@ -5,16 +5,18 @@
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
 #include <algorithm>
+#include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
-using FloatMatrix =
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using FloatMatrix = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+                                  Eigen::RowMajor>;  // NOLINT
 
 class SpeakerEmbeddingManager::Impl {
  public:

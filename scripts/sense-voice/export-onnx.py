@@ -7,6 +7,8 @@ https://hf-mirror.com/yuekai/model_repo_sense_voice_small/blob/main/export_onnx.
 as a reference while writing this file.
 
 Thanks to https://github.com/yuekaizhang for making the file public.
+
+You should install FunASR before you run this file.
 """
 
 import os
@@ -118,8 +120,13 @@ def display_params(params):
     os.system(f"cat {params['config']}")
 
 
+@torch.no_grad()
 def main():
-    model, params = SenseVoiceSmall.from_pretrained(model="iic/SenseVoiceSmall", device="cpu")
+    model, params = SenseVoiceSmall.from_pretrained(
+        model="iic/SenseVoiceSmall", device="cpu"
+    )
+    model.eval()
+
     display_params(params)
 
     generate_tokens(params)

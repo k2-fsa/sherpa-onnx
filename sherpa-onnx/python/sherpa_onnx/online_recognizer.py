@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import (
     CudaConfig,
     EndpointConfig,
     FeatureExtractorConfig,
@@ -13,11 +13,12 @@ from _sherpa_onnx import (
     OnlineNeMoCtcModelConfig,
     OnlineParaformerModelConfig,
 )
-from _sherpa_onnx import OnlineRecognizer as _Recognizer
-from _sherpa_onnx import (
+from sherpa_onnx.lib._sherpa_onnx import OnlineRecognizer as _Recognizer
+from sherpa_onnx.lib._sherpa_onnx import (
     OnlineRecognizerConfig,
     OnlineRecognizerResult,
     OnlineStream,
+    OnlineToneCtcModelConfig,
     OnlineTransducerModelConfig,
     OnlineWenetCtcModelConfig,
     OnlineZipformer2CtcModelConfig,
@@ -587,6 +588,132 @@ class OnlineRecognizer(object):
             model_config=model_config,
             endpoint_config=endpoint_config,
             ctc_fst_decoder_config=ctc_fst_decoder_config,
+            enable_endpoint=enable_endpoint_detection,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
+        )
+
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_t_one_ctc(
+        cls,
+        tokens: str,
+        model: str,
+        num_threads: int = 2,
+        sample_rate: float = 8000,
+        feature_dim: int = 80,
+        enable_endpoint_detection: bool = False,
+        rule1_min_trailing_silence: float = 2.4,
+        rule2_min_trailing_silence: float = 1.2,
+        rule3_min_utterance_length: float = 20.0,
+        decoding_method: str = "greedy_search",
+        provider: str = "cpu",
+        debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        device: int = 0,
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
+    ):
+        """
+        Please refer to
+        `<https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models>`_
+        to download pre-trained models.
+
+        Args:
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          model:
+            Path to ``model.onnx``.
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          enable_endpoint_detection:
+            True to enable endpoint detection. False to disable endpoint
+            detection.
+          rule1_min_trailing_silence:
+            Used only when enable_endpoint_detection is True. If the duration
+            of trailing silence in seconds is larger than this value, we assume
+            an endpoint is detected.
+          rule2_min_trailing_silence:
+            Used only when enable_endpoint_detection is True. If we have decoded
+            something that is nonsilence and if the duration of trailing silence
+            in seconds is larger than this value, we assume an endpoint is
+            detected.
+          rule3_min_utterance_length:
+            Used only when enable_endpoint_detection is True. If the utterance
+            length in seconds is larger than this value, we assume an endpoint
+            is detected.
+          decoding_method:
+            The only valid value is greedy_search.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          debug:
+            True to show meta data in the model.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          device:
+            onnxruntime cuda device index.
+        """
+        self = cls.__new__(cls)
+        _assert_file_exists(tokens)
+        _assert_file_exists(model)
+
+        assert num_threads > 0, num_threads
+
+        t_one_ctc_config = OnlineToneCtcModelConfig(
+            model=model,
+        )
+
+        provider_config = ProviderConfig(
+            provider=provider,
+            device=device,
+        )
+
+        model_config = OnlineModelConfig(
+            t_one_ctc=t_one_ctc_config,
+            tokens=tokens,
+            num_threads=num_threads,
+            provider_config=provider_config,
+            debug=debug,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        endpoint_config = EndpointConfig(
+            rule1_min_trailing_silence=rule1_min_trailing_silence,
+            rule2_min_trailing_silence=rule2_min_trailing_silence,
+            rule3_min_utterance_length=rule3_min_utterance_length,
+        )
+
+        recognizer_config = OnlineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,

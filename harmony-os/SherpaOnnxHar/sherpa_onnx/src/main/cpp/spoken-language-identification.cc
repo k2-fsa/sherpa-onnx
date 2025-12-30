@@ -3,6 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include <sstream>
+#include <string>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT

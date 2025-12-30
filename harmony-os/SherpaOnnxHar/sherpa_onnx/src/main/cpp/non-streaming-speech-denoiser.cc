@@ -1,6 +1,8 @@
 // scripts/node-addon-api/src/non-streaming-speech-denoiser.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
+#include <algorithm>
+#include <memory>
 #include <sstream>
 
 #include "macros.h"  // NOLINT

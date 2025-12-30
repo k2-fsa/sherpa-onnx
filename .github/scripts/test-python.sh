@@ -8,6 +8,37 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Google MedASR"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
+ls -lh sherpa-onnx-medasr-ctc-en-int8-2025-12-25/test_wavs
+
+python3 ./python-api-examples/offline-medasr-ctc-decode-files.py
+rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
+log "test omnilingual ASR"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+ls -lh sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+
+python3 ./python-api-examples/offline-omnilingual-asr-ctc-decode-files.py
+
+rm -rf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+
+log "test T-one"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+tar xvf sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+
+python3 ./python-api-examples/online-t-one-ctc-decode-files.py
+
+rm -rf sherpa-onnx-streaming-t-one-russian-2025-09-08
+
 log "test nemo canary"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
 tar xvf sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
@@ -328,6 +359,25 @@ log "Offline TTS test"
 # test waves are saved in ./tts
 mkdir ./tts
 
+log "test kitten tts"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+python3 ./python-api-examples/offline-tts.py \
+  --debug=1 \
+  --kitten-model=./kitten-nano-en-v0_1-fp16/model.fp16.onnx \
+  --kitten-voices=./kitten-nano-en-v0_1-fp16/voices.bin \
+  --kitten-tokens=./kitten-nano-en-v0_1-fp16/tokens.txt \
+  --kitten-data-dir=./kitten-nano-en-v0_1-fp16/espeak-ng-data \
+  --num-threads=2 \
+  --sid=0 \
+  --output-filename="./tts/kitten-0.wav" \
+  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+
+rm -rf kitten-nano-en-v0_1-fp16
+
 log "kokoro-multi-lang-v1_0 test"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
@@ -340,7 +390,6 @@ python3 ./python-api-examples/offline-tts.py \
   --kokoro-voices=./kokoro-multi-lang-v1_0/voices.bin \
   --kokoro-tokens=./kokoro-multi-lang-v1_0/tokens.txt \
   --kokoro-data-dir=./kokoro-multi-lang-v1_0/espeak-ng-data \
-  --kokoro-dict-dir=./kokoro-multi-lang-v1_0/dict \
   --kokoro-lexicon=./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt \
   --num-threads=2 \
   --sid=18 \
@@ -402,7 +451,6 @@ python3 ./python-api-examples/offline-tts.py \
  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
  --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
- --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
  --output-filename=./tts/test-matcha-baker-zh.wav \
  "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 

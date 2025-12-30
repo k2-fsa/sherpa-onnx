@@ -3,6 +3,9 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include <stdio.h>
 
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"

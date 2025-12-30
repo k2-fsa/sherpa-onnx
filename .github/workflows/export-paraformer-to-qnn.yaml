@@ -1,0 +1,457 @@
+name: export-paraformer-to-qnn
+
+on:
+  push:
+    branches:
+      - export-paraformer-qnn-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-paraformer-to-qnn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-qnn/generate_paraformer.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_paraformer.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  export-paraformer-to-qnn:
+    needs: generate_build_matrix
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.framework }} ${{ matrix.input_in_seconds }} ${{ matrix.soc }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
+
+      - name: Create Python virtual environment
+        shell: bash
+        run: |
+          python3 -m venv py310
+          which python3
+          source py310/bin/activate
+          which python3
+
+      - name: Show ndk-build help
+        shell: bash
+        run: |
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          ndk-build --help
+
+      - name: Download toolkit
+        shell: bash
+        run: |
+          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          ls -lh v2.40.0.251030.zip
+
+      - name: Unzip toolkit
+        shell: bash
+        run: |
+          unzip v2.40.0.251030.zip
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh
+
+          echo "---ls -lh qairt---"
+
+          ls -lh qairt
+
+          echo "---"
+
+      - name: Install linux dependencies
+        shell: bash
+        run: |
+          ls -lh
+
+          echo "---"
+
+          ls -lh qairt
+
+          cd qairt/2.40.0.251030/bin
+          source envsetup.sh
+
+          yes | sudo ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          cd qairt/2.40.0.251030/bin
+          source envsetup.sh
+
+          python3 -m pip install \
+            mock \
+            numpy \
+            opencv-python \
+            optuna \
+            packaging \
+            pandas \
+            paramiko \
+            pathlib2 \
+            pillow \
+            plotly \
+            protobuf \
+            psutil \
+            pydantic \
+            pytest \
+            pyyaml \
+            rich \
+            scikit-optimize \
+            scipy \
+            six \
+            tabulate \
+            typing-extensions \
+            xlsxwriter
+
+          python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true
+
+          which python3
+
+      - name: Install onnx dependencies
+        shell: bash
+        run: |
+          source py310/bin/activate
+          python3 -m pip install --upgrade \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+            kaldi_native_fbank \
+            pip \
+            "numpy<2" \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            soundfile \
+            librosa \
+            onnxsim \
+            sentencepiece \
+            pyyaml
+
+          which python3
+
+      - name: Show qnn-onnx-converter help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-onnx-converter --help
+
+      - name: Show qnn-model-lib-generator help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-model-lib-generator --help
+
+      - name: Show qnn-net-run help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-net-run --help
+
+      - name: Run Paraformer from FunAsr
+        if: matrix.framework == 'FunASR'
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+
+          export t=${{ matrix.input_in_seconds }}
+          export soc=${{ matrix.soc }}
+
+          dir=$PWD
+
+          cd scripts/paraformer/qnn
+
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/am.mvn
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/config.yaml
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/tokens.txt
+
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/model.pt
+          mv model.pt model_state_dict.pt
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/0.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/1.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/2.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/3-sichuan.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/4-tianjin.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/5-henan.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/6-zh-en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/8k.wav
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/README.md
+
+
+          ./convert_decoder.sh
+
+          ./convert_predictor.sh
+
+          ./convert_encoder.sh
+
+          ls -lh model_libs/*/lib*.so
+
+          ls -lh binary
+
+          readelf -lW model_libs/*/lib*.so
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-paraformer-zh-2023-03-28-int8
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v binary/encoder.bin $d/
+          cp -v binary/predictor.bin $d/
+          cp -v binary/decoder.bin $d/
+
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          mv *.tar.bz2 ../../../binary/
+
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+
+              d=sherpa-onnx-qnn-$t-seconds-paraformer-zh-2023-03-28-int8-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-paraformer-zh-2023-03-28-int8-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v README.md $d
+
+            cp -v model_libs/$p/libencoder*.so $d/libencoder.so
+            cp -v model_libs/$p/libpredictor*.so $d/libpredictor.so
+            cp -v model_libs/$p/libdecoder*.so $d/libdecoder.so
+
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../../so/
+
+
+      - name: Run Paraformer from WSChuan-ASR
+        if: matrix.framework == 'WSChuan-ASR'
+        shell: bash
+        run: |
+          dir=$PWD
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+          export t=${{ matrix.input_in_seconds }}
+          export soc=${{ matrix.soc }}
+
+          cd scripts/paraformer/qnn
+
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/tokens.json
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/model_state_dict.pt
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/tokens.txt
+
+
+          for i in $(seq 1 16); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/test_wavs/$i.wav
+          done
+
+          rm -f README.md || true
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/README.md
+
+          ./convert_decoder.sh
+
+          ./convert_predictor.sh
+
+          ./convert_encoder.sh
+
+          ls -lh model_libs/*/lib*.so
+
+          ls -lh binary
+
+          readelf -lW model_libs/*/lib*.so
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-paraformer-zh-2025-10-07-int8
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v binary/encoder.bin $d/
+          cp -v binary/predictor.bin $d/
+          cp -v binary/decoder.bin $d/
+
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          mv *.tar.bz2 ../../../binary/
+
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+
+              d=sherpa-onnx-qnn-$t-seconds-paraformer-zh-2025-10-07-int8-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-paraformer-zh-2025-10-07-int8-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v README.md $d
+
+            cp -v model_libs/$p/libencoder*.so $d/libencoder.so
+            cp -v model_libs/$p/libpredictor*.so $d/libpredictor.so
+            cp -v model_libs/$p/libdecoder*.so $d/libdecoder.so
+
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../../so/
+
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.framework }}-${{ matrix.soc }}-${{ matrix.input_in_seconds }}-seconds
+          path: ./scripts/paraformer/qnn/my-config*/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-binary

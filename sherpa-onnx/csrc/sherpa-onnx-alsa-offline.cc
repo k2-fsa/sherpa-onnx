@@ -8,9 +8,12 @@
 
 #include <algorithm>
 #include <cctype>  // std::tolower
-#include <chrono>  // NOLINT
-#include <mutex>   // NOLINT
-#include <thread>  // NOLINT
+#include <chrono>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/macros.h"

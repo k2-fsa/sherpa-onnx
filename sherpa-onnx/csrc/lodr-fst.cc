@@ -5,13 +5,18 @@
 //
 // Copyright (c)  2025 Tilde SIA (Askars Salimbajevs)
 
+#include "sherpa-onnx/csrc/lodr-fst.h"
+
 #include <algorithm>
+#include <limits>
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/lodr-fst.h"
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
+#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -21,8 +26,8 @@ int32_t LodrFst::FindBackoffId() {
 
   for (int32_t state = 0; state < fst_->NumStates(); ++state) {
     fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
-    for ( ; !arc_iter.Done(); arc_iter.Next()) {
-      const auto& arc = arc_iter.Value();
+    for (; !arc_iter.Done(); arc_iter.Next()) {
+      const auto &arc = arc_iter.Value();
       if (arc.olabel == 0) {  // Check if the output label is epsilon (0)
         return arc.ilabel;    // Return the input label
       }
@@ -35,7 +40,7 @@ int32_t LodrFst::FindBackoffId() {
 LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id)
     : backoff_id_(backoff_id) {
   fst_ = std::unique_ptr<fst::StdConstFst>(
-    CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
+      CastOrConvertToConstFst(fst::StdVectorFst::Read(fst_path)));
 
   if (backoff_id < 0) {
     // backoff_id_ is not provided, find it automatically
@@ -49,7 +54,7 @@ LodrFst::LodrFst(const std::string &fst_path, int32_t backoff_id)
 }
 
 std::vector<std::tuple<int32_t, float>> LodrFst::ProcessBackoffArcs(
-  int32_t state, float cost) {
+    int32_t state, float cost) {
   std::vector<std::tuple<int32_t, float>> ans;
   auto next = GetNextStatesCostsNoBackoff(state, backoff_id_);
   if (!next.has_value()) {
@@ -63,7 +68,7 @@ std::vector<std::tuple<int32_t, float>> LodrFst::ProcessBackoffArcs(
 }
 
 std::optional<std::tuple<int32_t, float>> LodrFst::GetNextStatesCostsNoBackoff(
-  int32_t state, int32_t label) {
+    int32_t state, int32_t label) {
   fst::ArcIterator<fst::StdConstFst> arc_iter(*fst_, state);
   int32_t num_arcs = fst_->NumArcs(state);
 
@@ -84,12 +89,12 @@ std::optional<std::tuple<int32_t, float>> LodrFst::GetNextStatesCostsNoBackoff(
 }
 
 std::pair<std::vector<int32_t>, std::vector<float>> LodrFst::GetNextStateCosts(
-  int32_t state, int32_t label) {
+    int32_t state, int32_t label) {
   std::vector<int32_t> states = {state};
   std::vector<float> costs = {0};
 
   auto extra_states_costs = ProcessBackoffArcs(state, 0);
-  for (const auto& [s, c] : extra_states_costs) {
+  for (const auto &[s, c] : extra_states_costs) {
     states.push_back(s);
     costs.push_back(c);
   }
@@ -140,7 +145,7 @@ float LodrFst::GetFinalCost(int32_t state) {
 }
 
 LodrStateCost::LodrStateCost(
-    LodrFst* fst, const std::unordered_map<int32_t, float> &state_cost)
+    LodrFst *fst, const std::unordered_map<int32_t, float> &state_cost)
     : fst_(fst) {
   if (state_cost.empty()) {
     state_cost_[0] = 0.0;
@@ -151,7 +156,7 @@ LodrStateCost::LodrStateCost(
 
 LodrStateCost LodrStateCost::ForwardOneStep(int32_t label) {
   std::unordered_map<int32_t, float> state_cost;
-  for (const auto& [s, c] : state_cost_) {
+  for (const auto &[s, c] : state_cost_) {
     auto [next_states, next_costs] = fst_->GetNextStateCosts(s, label);
     for (size_t i = 0; i < next_states.size(); ++i) {
       int32_t ns = next_states[i];
@@ -169,10 +174,9 @@ float LodrStateCost::Score() const {
   if (state_cost_.empty()) {
     return -std::numeric_limits<float>::infinity();
   }
-  auto min_cost = std::min_element(state_cost_.begin(), state_cost_.end(),
-                                   [](const auto& a, const auto& b) {
-                                     return a.second < b.second;
-                                   });
+  auto min_cost = std::min_element(
+      state_cost_.begin(), state_cost_.end(),
+      [](const auto &a, const auto &b) { return a.second < b.second; });
   return -min_cost->second;
 }
 
@@ -180,12 +184,10 @@ float LodrStateCost::FinalScore() const {
   if (state_cost_.empty()) {
     return -std::numeric_limits<float>::infinity();
   }
-  auto min_cost = std::min_element(state_cost_.begin(), state_cost_.end(),
-                                   [](const auto& a, const auto& b) {
-                                     return a.second < b.second;
-                                   });
-  return -(min_cost->second +
-           fst_->GetFinalCost(min_cost->first));
+  auto min_cost = std::min_element(
+      state_cost_.begin(), state_cost_.end(),
+      [](const auto &a, const auto &b) { return a.second < b.second; });
+  return -(min_cost->second + fst_->GetFinalCost(min_cost->first));
 }
 
 }  // namespace sherpa_onnx

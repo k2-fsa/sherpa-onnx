@@ -7,9 +7,12 @@
 #include <fstream>
 #include <regex>  // NOLINT
 #include <sstream>
+#include <string>
 #include <strstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -18,11 +21,10 @@
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
-
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/jieba.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/phrase-matcher.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -31,23 +33,6 @@ namespace sherpa_onnx {
 class MeloTtsLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
-
-    {
-      std::ifstream is(tokens);
-      InitTokens(is);
-    }
-
-    {
-      std::ifstream is(lexicon);
-      InitLexicon(is);
-    }
-  }
-
-  Impl(const std::string &lexicon, const std::string &tokens,
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
     {
@@ -57,28 +42,6 @@ class MeloTtsLexicon::Impl {
 
     {
       std::ifstream is(lexicon);
-      InitLexicon(is);
-    }
-  }
-
-  template <typename Manager>
-  Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
-    jieba_ = InitJieba(dict_dir);
-
-    {
-      auto buf = ReadFile(mgr, tokens);
-
-      std::istrstream is(buf.data(), buf.size());
-      InitTokens(is);
-    }
-
-    {
-      auto buf = ReadFile(mgr, lexicon);
-
-      std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
   }
@@ -118,57 +81,64 @@ class MeloTtsLexicon::Impl {
     std::regex punct_re4("！");
     s = std::regex_replace(s, punct_re4, "!");
 
-    std::vector<std::string> words;
-    if (jieba_) {
-      bool is_hmm = true;
-      jieba_->Cut(text, words, is_hmm);
+    std::vector<std::string> words = SplitUtf8(text);
 
-      if (debug_) {
-        std::ostringstream os;
-        std::string sep = "";
-        for (const auto &w : words) {
-          os << sep << w;
-          sep = "_";
-        }
+    if (debug_) {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("input text: %{public}s", text.c_str());
-        SHERPA_ONNX_LOGE("after replacing punctuations: %{public}s", s.c_str());
-
-        SHERPA_ONNX_LOGE("after jieba processing: %{public}s",
-                         os.str().c_str());
+      SHERPA_ONNX_LOGE("input text:\n%{public}s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s", s.c_str());
 #else
-        SHERPA_ONNX_LOGE("input text: %s", text.c_str());
-        SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
-
-        SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+      SHERPA_ONNX_LOGE("input text:\n%s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", s.c_str());
 #endif
-      }
-    } else {
-      words = SplitUtf8(text);
 
-      if (debug_) {
-        fprintf(stderr, "Input text in string (lowercase): %s\n", text.c_str());
-        fprintf(stderr, "Input text in bytes (lowercase):");
-        for (int8_t c : text) {
-          fprintf(stderr, " %02x", c);
-        }
-        fprintf(stderr, "\n");
-        fprintf(stderr, "After splitting to words:");
-        for (const auto &w : words) {
-          fprintf(stderr, " %s", w.c_str());
-        }
-        fprintf(stderr, "\n");
+      std::ostringstream os;
+      std::string sep = "";
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
       }
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%{public}s",
+                       os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after splitting into UTF8:\n%s", os.str().c_str());
+#endif
     }
 
     std::vector<TokenIDs> ans;
     TokenIDs this_sentence;
 
-    for (const auto &w : words) {
+    PhraseMatcher matcher(&all_words_, words, debug_);
+
+    for (const std::string &w : matcher) {
       auto ids = ConvertWordToIds(w);
       if (ids.tokens.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+#else
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+#endif
         continue;
+      }
+
+      if (debug_) {
+        std::ostringstream os;
+        os << w << ": ";
+        for (auto i : ids.tokens) {
+          os << id2token_.at(i) << " ";
+        }
+
+        for (auto i : ids.tones) {
+          os << i << " ";
+        }
+        os << "\n";
+#if __OHOS__
+        SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
       }
 
       this_sentence.tokens.insert(this_sentence.tokens.end(),
@@ -181,7 +151,7 @@ class MeloTtsLexicon::Impl {
         ans.push_back(std::move(this_sentence));
         this_sentence = {};
       }
-    }  // for (const auto &w : words)
+    }  // for (const std::string &w : matcher)
 
     if (!this_sentence.tokens.empty()) {
       ans.push_back(std::move(this_sentence));
@@ -233,6 +203,13 @@ class MeloTtsLexicon::Impl {
 
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);
+
+    if (debug_) {
+      for (const auto &p : token2id_) {
+        id2token_[p.second] = p.first;
+      }
+    }
+
     token2id_[" "] = token2id_["_"];
 
     std::vector<std::pair<std::string, std::string>> puncts = {
@@ -323,18 +300,23 @@ class MeloTtsLexicon::Impl {
     // For Chinese+English MeloTTS
     word2ids_["呣"] = word2ids_["母"];
     word2ids_["嗯"] = word2ids_["恩"];
+
+    for (const auto &[key, _] : word2ids_) {
+      all_words_.insert(key);
+    }
   }
 
  private:
   // lexicon.txt is saved in word2ids_
   std::unordered_map<std::string, TokenIDs> word2ids_;
+  std::unordered_set<std::string> all_words_;
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
+  std::unordered_map<int32_t, std::string> id2token_;
 
   OfflineTtsVitsModelMetaData meta_data_;
 
-  std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
 
@@ -342,26 +324,9 @@ MeloTtsLexicon::~MeloTtsLexicon() = default;
 
 MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
                                const std::string &tokens,
-                               const std::string &dict_dir,
-                               const OfflineTtsVitsModelMetaData &meta_data,
-                               bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
-
-MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
-                               const std::string &tokens,
                                const OfflineTtsVitsModelMetaData &meta_data,
                                bool debug)
     : impl_(std::make_unique<Impl>(lexicon, tokens, meta_data, debug)) {}
-
-template <typename Manager>
-MeloTtsLexicon::MeloTtsLexicon(Manager *mgr, const std::string &lexicon,
-                               const std::string &tokens,
-                               const std::string &dict_dir,
-                               const OfflineTtsVitsModelMetaData &meta_data,
-                               bool debug)
-    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
 
 template <typename Manager>
 MeloTtsLexicon::MeloTtsLexicon(Manager *mgr, const std::string &lexicon,
@@ -378,20 +343,10 @@ std::vector<TokenIDs> MeloTtsLexicon::ConvertTextToTokenIds(
 #if __ANDROID_API__ >= 9
 template MeloTtsLexicon::MeloTtsLexicon(
     AAssetManager *mgr, const std::string &lexicon, const std::string &tokens,
-    const std::string &dict_dir, const OfflineTtsVitsModelMetaData &meta_data,
-    bool debug);
-
-template MeloTtsLexicon::MeloTtsLexicon(
-    AAssetManager *mgr, const std::string &lexicon, const std::string &tokens,
     const OfflineTtsVitsModelMetaData &meta_data, bool debug);
 #endif
 
 #if __OHOS__
-template MeloTtsLexicon::MeloTtsLexicon(
-    NativeResourceManager *mgr, const std::string &lexicon,
-    const std::string &tokens, const std::string &dict_dir,
-    const OfflineTtsVitsModelMetaData &meta_data, bool debug);
-
 template MeloTtsLexicon::MeloTtsLexicon(
     NativeResourceManager *mgr, const std::string &lexicon,
     const std::string &tokens, const OfflineTtsVitsModelMetaData &meta_data,

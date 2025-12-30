@@ -19,11 +19,6 @@ void main(List<String> arguments) async {
       defaultsTo: '',
     )
     ..addOption(
-      'dict-dir',
-      help: 'Path to dict directory',
-      defaultsTo: '',
-    )
-    ..addOption(
       'lexicon',
       help: 'Path to lexicon files',
       defaultsTo: '',
@@ -43,7 +38,6 @@ void main(List<String> arguments) async {
       res['voices'] == null ||
       res['tokens'] == null ||
       res['data-dir'] == null ||
-      res['dict-dir'] == null ||
       res['lexicon'] == null ||
       res['output-wav'] == null ||
       res['text'] == null) {
@@ -54,7 +48,6 @@ void main(List<String> arguments) async {
   final voices = res['voices'] as String;
   final tokens = res['tokens'] as String;
   final dataDir = res['data-dir'] as String;
-  final dictDir = res['dict-dir'] as String;
   final lexicon = res['lexicon'] as String;
   final ruleFsts = res['rule-fsts'] as String;
   final ruleFars = res['rule-fars'] as String;
@@ -73,7 +66,6 @@ void main(List<String> arguments) async {
     tokens: tokens,
     dataDir: dataDir,
     lengthScale: 1 / speed,
-    dictDir: dictDir,
     lexicon: lexicon,
   );
 

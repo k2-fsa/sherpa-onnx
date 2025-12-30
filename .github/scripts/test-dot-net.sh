@@ -8,6 +8,16 @@ cd ./version-test
 ./run.sh
 ls -lh
 
+cd ../offline-audio-tagging
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-*
+
+cd ../kitten-tts
+./run-kitten.sh
+ls -lh
+rm -rf kitten-nano-en-v0_1-fp16
+
 cd ../vad-non-streaming-asr-paraformer
 ./run-ten-vad.sh
 rm -fv *.onnx
@@ -21,6 +31,15 @@ ls -lh
 rm -rf sherpa-onnx-nemo-*
 
 cd ../offline-decode-files
+
+./run-medasr-ctc.sh
+rm -rf sherpa-onnx-*
+
+./run-omnilingual-asr-ctc.sh
+rm -rf sherpa-onnx-*
+
+./run-wenet-ctc.sh
+rm -rf sherpa-onnx-*
 
 ./run-zipformer-ctc.sh
 rm -rf sherpa-onnx-*
@@ -58,8 +77,8 @@ rm -rf sherpa-onnx-*
 ./run-whisper.sh
 rm -rf sherpa-onnx-*
 
-./run-whisper-large-v3.sh
-rm -rf sherpa-onnx-*
+# ./run-whisper-large-v3.sh
+# rm -rf sherpa-onnx-*
 
 ./run-tdnn-yesno.sh
 rm -rf sherpa-onnx-*
@@ -103,6 +122,9 @@ cd ../keyword-spotting-from-files
 ./run.sh
 
 cd ../online-decode-files
+./run-t-one-ctc.sh
+rm -rf sherpa-onnx-*
+
 ./run-transducer-itn.sh
 rm -rf sherpa-onnx-*
 

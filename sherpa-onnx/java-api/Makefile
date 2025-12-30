@@ -6,7 +6,8 @@ out_jar := $(out_dir)/sherpa-onnx.jar
 
 package_dir := com/k2fsa/sherpa/onnx
 
-java_files := LibraryLoader.java
+java_files := LibraryUtils.java
+java_files += LibraryLoader.java
 
 java_files += VersionInfo.java
 java_files += WaveReader.java
@@ -14,10 +15,12 @@ java_files += WaveWriter.java
 java_files += EndpointRule.java
 java_files += EndpointConfig.java
 java_files += FeatureConfig.java
+java_files += QnnConfig.java
 java_files += HomophoneReplacerConfig.java
 java_files += OnlineLMConfig.java
 java_files += OnlineParaformerModelConfig.java
 java_files += OnlineZipformer2CtcModelConfig.java
+java_files += OnlineToneCtcModelConfig.java
 java_files += OnlineNeMoCtcModelConfig.java
 java_files += OnlineTransducerModelConfig.java
 java_files += OnlineModelConfig.java
@@ -34,6 +37,9 @@ java_files += OfflineFireRedAsrModelConfig.java
 java_files += OfflineMoonshineModelConfig.java
 java_files += OfflineNemoEncDecCtcModelConfig.java
 java_files += OfflineZipformerCtcModelConfig.java
+java_files += OfflineWenetCtcModelConfig.java
+java_files += OfflineOmnilingualAsrCtcModelConfig.java
+java_files += OfflineMedAsrCtcModelConfig.java
 java_files += OfflineCanaryModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java
 java_files += OfflineDolphinModelConfig.java
@@ -43,6 +49,7 @@ java_files += OfflineRecognizerResult.java
 java_files += OfflineStream.java
 java_files += OfflineRecognizer.java
 
+java_files += OfflineTtsKittenModelConfig.java
 java_files += OfflineTtsKokoroModelConfig.java
 java_files += OfflineTtsMatchaModelConfig.java
 java_files += OfflineTtsVitsModelConfig.java
@@ -100,24 +107,35 @@ java_files += OfflineSpeechDenoiser.java
 
 class_files := $(java_files:%.java=%.class)
 
-java_files := $(addprefix src/$(package_dir)/,$(java_files))
+java_files := $(addprefix src/main/java/$(package_dir)/,$(java_files))
 class_files := $(addprefix $(out_dir)/$(package_dir)/,$(class_files))
 
 $(info -- java files $(java_files))
 $(info --)
 $(info -- class files $(class_files))
 
-.phony: all clean
+.PHONY: all clean native
 
 all: $(out_jar)
 
+# macos x86_x64 -> osx-x64
+# macos arm64 -> osx-aarch64
+# linux x86_x64 -> linux-x64
+# linux arm64 -> linux-aarch64
+# windows x86_x64 -> win-x64
+# windows arm64 -> win-aarch64
+# windows x86 -> win-x86
+native:
+	jar cfvm ./sherpa-onnx-native.jar MANIFEST.MF -C ./resources .
+
 $(out_jar): $(class_files)
 	# jar --create --verbose --file $(out_jar) -C $(out_dir) ./
-	jar cvf $(out_jar) -C $(out_dir) ./
+	# jar cvf $(out_jar) -C $(out_dir) ./
+	jar cfvm $@ MANIFEST.MF -C $(out_dir) .
 
 clean:
 	$(RM) -rfv $(out_dir)
 
-$(class_files): $(out_dir)/$(package_dir)/%.class: src/$(package_dir)/%.java
+$(class_files): $(out_dir)/$(package_dir)/%.class: src/main/java/$(package_dir)/%.java
 	mkdir -p build
-	javac -d $(out_dir) -cp $(out_dir) $<
+	javac --release 8 -Xlint:-options -d $(out_dir) -cp $(out_dir) $<

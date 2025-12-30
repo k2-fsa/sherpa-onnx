@@ -39,6 +39,19 @@ from pathlib import Path
 
 import sherpa_onnx
 import soundfile as sf
+import librosa
+
+
+def resample_audio(audio, sample_rate, target_sample_rate):
+    """
+    Resample audio to target sample rate using librosa
+    """
+    if sample_rate != target_sample_rate:
+        print(f"Resampling audio from {sample_rate}Hz to {target_sample_rate}Hz...")
+        audio = librosa.resample(audio, orig_sr=sample_rate, target_sr=target_sample_rate)
+        print(f"Resampling completed. New audio shape: {audio.shape}")
+        return audio, target_sample_rate
+    return audio, sample_rate
 
 
 def init_speaker_diarization(num_speakers: int = -1, cluster_threshold: float = 0.5):
@@ -97,6 +110,11 @@ def main():
     # Since we know there are 4 speakers in the above test wave file, we use
     # num_speakers 4 here
     sd = init_speaker_diarization(num_speakers=4)
+    
+    # Resample audio to match the expected sample rate
+    target_sample_rate = sd.sample_rate
+    audio, sample_rate = resample_audio(audio, sample_rate, target_sample_rate)
+    
     if sample_rate != sd.sample_rate:
         raise RuntimeError(
             f"Expected samples rate: {sd.sample_rate}, given: {sample_rate}"

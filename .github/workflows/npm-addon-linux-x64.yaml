@@ -41,6 +41,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Display node version
@@ -123,11 +124,7 @@ jobs:
 
       - name: Publish
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd ./sherpa-onnx-node
-          npm install
-          npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+          # https://docs.npmjs.com/trusted-publishers
+          npm publish --access public

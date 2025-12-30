@@ -4,16 +4,19 @@
 
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/timer.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 typedef struct {
@@ -94,7 +97,10 @@ for a list of pre-trained models to download.
     return -1;
   }
 
+  printf("Start to create recognizer\n");
+  sherpa_onnx::Timer timer;
   sherpa_onnx::OnlineRecognizer recognizer(config);
+  printf("Recognizer created in %.5f s\n", timer.Elapsed());
 
   std::vector<Stream> ss;
 
@@ -117,6 +123,11 @@ for a list of pre-trained models to download.
     const float duration = samples.size() / static_cast<float>(sampling_rate);
 
     auto s = recognizer.CreateStream();
+
+    std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
+    s->AcceptWaveform(sampling_rate, left_paddings.data(),
+                      left_paddings.size());
+
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
     std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));

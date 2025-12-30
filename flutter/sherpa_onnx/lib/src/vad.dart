@@ -153,8 +153,18 @@ class CircularBuffer {
   /// to avoid memory leak.
   factory CircularBuffer({required int capacity}) {
     assert(capacity > 0, 'capacity is $capacity');
+
+    if (SherpaOnnxBindings.createCircularBuffer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final p =
         SherpaOnnxBindings.createCircularBuffer?.call(capacity) ?? nullptr;
+
+    if (p == nullptr) {
+      throw Exception(
+          "Failed to create circular buffer. Please check your config");
+    }
 
     return CircularBuffer._(ptr: p);
   }
@@ -215,6 +225,10 @@ class VoiceActivityDetector {
   // The user has to invoke VoiceActivityDetector.free() to avoid memory leak.
   factory VoiceActivityDetector(
       {required VadModelConfig config, required double bufferSizeInSeconds}) {
+    if (SherpaOnnxBindings.createVoiceActivityDetector == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxVadModelConfig>();
 
     final sileroVadModelPtr = config.sileroVad.model.toNativeUtf8();
@@ -251,6 +265,10 @@ class VoiceActivityDetector {
     calloc.free(tenVadModelPtr);
     calloc.free(sileroVadModelPtr);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create vad. Please check your config");
+    }
 
     return VoiceActivityDetector._(ptr: ptr, config: config);
   }

@@ -6,6 +6,7 @@
 #include "sherpa-onnx/csrc/online-lm.h"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 #include <vector>
 

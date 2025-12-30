@@ -11,16 +11,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-nodejs-addon-api.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/**'
-
   workflow_dispatch:
 
 concurrency:
@@ -37,9 +27,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
         node-version: ["16", "22"]
-        python-version: ["3.8"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +78,7 @@ jobs:
           key: ${{ matrix.os }}-release-shared
 
       - name: Build sherpa-onnx
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -120,7 +110,7 @@ jobs:
           ls -lh install/lib
 
       - name: Build sherpa-onnx
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache

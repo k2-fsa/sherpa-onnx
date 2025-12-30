@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - flutter
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -18,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         total: ["3"]
         index: ["0", "1", "2"]
 
@@ -39,10 +41,11 @@ jobs:
           python3 -m pip install --upgrade pip jinja2
 
       - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v3
+        uses: flutter-actions/setup-flutter@v4
         with:
           channel: stable
-          version: latest
+          version: 3.24.3
+          cache: true
 
       - name: Display PWD
         shell: bash
@@ -122,7 +125,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         total: ["20"]
         index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 

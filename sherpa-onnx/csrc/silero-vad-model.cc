@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
+#include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -69,6 +71,14 @@ class SileroVadModel::Impl {
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
 
+  float Run(const float *samples, int32_t n) {
+    if (is_v5_) {
+      return RunV5(samples, n);
+    } else {
+      return RunV4(samples, n);
+    }
+  }
+
   void Reset() {
     if (is_v5_) {
       ResetV5();
@@ -122,7 +132,13 @@ class SileroVadModel::Impl {
       return false;
     }
 
-    if ((prob > threshold - 0.15) && triggered_) {
+    float neg_threshold;
+    if (config_.silero_vad.neg_threshold < 0) {
+        neg_threshold = std::max(threshold - 0.15f, 0.01f);
+    } else {
+        neg_threshold = std::max(config_.silero_vad.neg_threshold, 0.01f);
+    }
+    if ((prob > neg_threshold) && triggered_) {
       // speaking
       return true;
     }
@@ -361,14 +377,6 @@ class SileroVadModel::Impl {
     }
   }
 
-  float Run(const float *samples, int32_t n) {
-    if (is_v5_) {
-      return RunV5(samples, n);
-    } else {
-      return RunV4(samples, n);
-    }
-  }
-
   float RunV5(const float *samples, int32_t n) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -494,6 +502,10 @@ void SileroVadModel::SetMinSilenceDuration(float s) {
 
 void SileroVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+float SileroVadModel::Compute(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

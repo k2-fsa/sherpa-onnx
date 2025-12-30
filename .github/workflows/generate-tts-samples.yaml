@@ -1,0 +1,117 @@
+name: generate-tts-samples
+
+on:
+  push:
+    branches:
+      - tts-samples-2
+
+  workflow_dispatch:
+
+concurrency:
+  group: generate-tts-samples-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_tts_samples:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" sherpa-onnx soundfile
+
+      - name: kitten
+        if: true
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          cd scripts/kitten-tts
+          pwd=$PWD
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          mkdir -p ./hf/kitten/v0.1-nano/mp3
+          mkdir -p ./hf/kitten/v0.2-nano/mp3
+          mkdir -p ./hf/kitten/v0.1-mini/mp3
+
+          for v in 1 2; do
+            pushd nano_v0_$v
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_$v-fp16.tar.bz2
+            tar xf kitten-nano-en-v0_$v-fp16.tar.bz2
+            rm kitten-nano-en-v0_$v-fp16.tar.bz2
+
+            ln -s ../hf .
+            python3 ./generate_samples.py
+            rm -rf kitten-nano-en-v0_$v-fp16
+            popd
+          done
+
+          for v in 1; do
+            pushd mini_v0_$v
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-mini-en-v0_$v-fp16.tar.bz2
+            tar xf kitten-mini-en-v0_$v-fp16.tar.bz2
+            rm kitten-mini-en-v0_$v-fp16.tar.bz2
+
+            ln -s ../hf .
+            python3 ./generate_samples.py
+            rm -rf kitten-mini-en-v0_$v-fp16
+            popd
+          done
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add kitten tts samples'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
+          rm -rf hf
+
+      - name: matcha en (ljspeech)
+        if: false
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          cd scripts/matcha-tts/en/
+          pwd=$PWD
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+
+          mkdir -p ./hf/matcha/icefall-en-ljspeech/mp3
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+          tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+          rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+
+          python3 ./generate_samples.py
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add matcha tts en (ljspeech) samples'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
+
+          rm -rf hf

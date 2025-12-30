@@ -1,0 +1,135 @@
+name: upload-zipvoice-models
+
+on:
+  push:
+    branches:
+      - upload-zipvoice-onnx-models
+  workflow_dispatch:
+
+concurrency:
+  group: upload-zipvoice-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-zipvoice-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: upload zipvoice models
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: git config
+        shell: bash
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip pypinyin
+
+      - name: sherpa-onnx-zipvoice-distill-zh-en-emilia-int8
+        shell: bash
+        run: |
+          echo "Generate lexicon.txt"
+
+          python3 ./scripts/zipvoice/zh-en/generate_lexicon.py
+
+          d=sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          mkdir $d
+
+          cp lexicon.txt $d
+
+          pushd $d
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/prompt.txt
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/news-female.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/news-female-2.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/leijun-1.wav
+
+
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/fm_decoder_int8.onnx
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/text_encoder_int8.onnx
+
+          mv fm_decoder_int8.onnx decoder.int8.onnx
+          mv text_encoder_int8.onnx encoder.int8.onnx
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/tokens.txt
+          mkdir test_wavs
+          mv *.wav test_wavs
+
+          mv prompt.txt test_wavs
+
+          ls -lh
+          popd
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+          ls -lh $d.tar.bz2
+
+      - name: sherpa-onnx-zipvoice-distill-zh-en-emilia-fp32
+        shell: bash
+        run: |
+          echo "Generate lexicon.txt"
+
+          python3 ./scripts/zipvoice/zh-en/generate_lexicon.py
+
+          d=sherpa-onnx-zipvoice-distill-fp32-zh-en-emilia
+          mkdir $d
+
+          cp lexicon.txt $d
+
+          pushd $d
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/prompt.txt
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/news-female.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/news-female-2.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/leijun-1.wav
+
+
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/fm_decoder.onnx
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/text_encoder.onnx
+
+          mv fm_decoder.onnx decoder.onnx
+          mv text_encoder.onnx encoder.onnx
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+
+          curl -SL -O https://huggingface.co/k2-fsa/ZipVoice/resolve/main/zipvoice_distill/tokens.txt
+          mkdir test_wavs
+          mv *.wav test_wavs
+
+          mv prompt.txt test_wavs
+
+          ls -lh
+          popd
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+          ls -lh $d.tar.bz2
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models

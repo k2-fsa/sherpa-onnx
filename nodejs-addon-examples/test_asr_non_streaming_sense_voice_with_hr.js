@@ -38,7 +38,6 @@ const config = {
   'hr': {
     // Please download files from
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/hr-files
-    'dictDir': './dict',
     'lexicon': './lexicon.txt',
     'ruleFsts': './replace.fst',
   }
@@ -54,7 +53,7 @@ const wave = sherpa_onnx.readWave(waveFilename);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
 recognizer.decode(stream);
-result = recognizer.getResult(stream)
+const result = recognizer.getResult(stream);
 let stop = Date.now();
 console.log('Done')
 

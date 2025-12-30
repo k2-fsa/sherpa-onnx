@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdint>
 #include <fstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -342,6 +343,10 @@ std::vector<float> ReadWave(const std::string &filename, int32_t *sampling_rate,
 std::vector<float> ReadWave(std::istream &is, int32_t *sampling_rate,
                             bool *is_ok) {
   auto samples = ReadWaveImpl(is, sampling_rate, is_ok);
+
+  if (!*is_ok || samples.empty()) {
+    return {};
+  }
 
   if (samples.size() > 1) {
     SHERPA_ONNX_LOGE(

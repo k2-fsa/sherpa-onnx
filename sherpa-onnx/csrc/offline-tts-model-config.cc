@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -12,6 +14,8 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   vits.Register(po);
   matcha.Register(po);
   kokoro.Register(po);
+  zipvoice.Register(po);
+  kitten.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -37,7 +41,21 @@ bool OfflineTtsModelConfig::Validate() const {
     return matcha.Validate();
   }
 
-  return kokoro.Validate();
+  if (!zipvoice.decoder.empty()) {
+    return zipvoice.Validate();
+  }
+
+  if (!kokoro.model.empty()) {
+    return kokoro.Validate();
+  }
+
+  if (!kitten.model.empty()) {
+    return kitten.Validate();
+  }
+
+  SHERPA_ONNX_LOGE("Please provide exactly one tts model.");
+
+  return false;
 }
 
 std::string OfflineTtsModelConfig::ToString() const {
@@ -47,6 +65,8 @@ std::string OfflineTtsModelConfig::ToString() const {
   os << "vits=" << vits.ToString() << ", ";
   os << "matcha=" << matcha.ToString() << ", ";
   os << "kokoro=" << kokoro.ToString() << ", ";
+  os << "zipvoice=" << zipvoice.ToString() << ", ";
+  os << "kitten=" << kitten.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";

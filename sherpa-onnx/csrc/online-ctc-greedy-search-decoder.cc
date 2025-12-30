@@ -28,6 +28,13 @@ void OnlineCtcGreedySearchDecoder::Decode(
     auto &r = (*results)[b];
 
     int32_t prev_id = -1;
+    if (!r.tokens.empty()) {
+      if (r.num_trailing_blanks > 0) {
+        prev_id = blank_id_;
+      } else {
+        prev_id = r.tokens.back();
+      }
+    }
 
     for (int32_t t = 0; t != num_frames; ++t, p += vocab_size) {
       int32_t y = static_cast<int32_t>(std::distance(

@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-nemo-model.h"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -163,6 +164,7 @@ class OfflineTransducerNeMoModel::Impl {
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
   bool IsGigaAM() const { return is_giga_am_; }
+  bool IsTDT() const { return is_tdt_; }
 
   int32_t FeatureDim() const { return feat_dim_; }
 
@@ -208,6 +210,12 @@ class OfflineTransducerNeMoModel::Impl {
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
     }
+
+    std::string url;
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(url, "url");
+    if (url.find("tdt") != std::string::npos) {
+      is_tdt_ = 1;
+    }
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
@@ -230,6 +238,26 @@ class OfflineTransducerNeMoModel::Impl {
 
     GetOutputNames(joiner_sess_.get(), &joiner_output_names_,
                    &joiner_output_names_ptr_);
+
+    auto shape = joiner_sess_->GetOutputTypeInfo(0)
+                     .GetTensorTypeAndShapeInfo()
+                     .GetShape();
+    int32_t output_size = shape.back();
+    if (is_tdt_) {
+      if (vocab_size_ == output_size) {
+        SHERPA_ONNX_LOGE("It is not a TDT model!");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (config_.debug) {
+        SHERPA_ONNX_LOGE("TDT model. vocab_size: %d, num_durations: %d",
+                         vocab_size_, output_size - vocab_size_);
+      }
+    } else if (vocab_size_ != output_size) {
+      SHERPA_ONNX_LOGE("vocab_size: %d != output_size: %d", vocab_size_,
+                       output_size);
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
  private:
@@ -266,6 +294,7 @@ class OfflineTransducerNeMoModel::Impl {
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
   int32_t is_giga_am_ = 0;
+  int32_t is_tdt_ = 0;
 
   // giga am uses 64
   // parakeet-tdt-0.6b-v2 uses 128
@@ -324,6 +353,8 @@ std::string OfflineTransducerNeMoModel::FeatureNormalizationMethod() const {
 }
 
 bool OfflineTransducerNeMoModel::IsGigaAM() const { return impl_->IsGigaAM(); }
+
+bool OfflineTransducerNeMoModel::IsTDT() const { return impl_->IsTDT(); }
 
 int32_t OfflineTransducerNeMoModel::FeatureDim() const {
   return impl_->FeatureDim();

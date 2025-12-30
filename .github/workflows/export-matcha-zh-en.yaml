@@ -1,0 +1,163 @@
+name: export-matcha-zh-en-to-onnx
+
+on:
+  push:
+    branches:
+      - matcha-zh-en
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-matcha-zh-en-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-matcha-zh-en-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export matcha zh-en ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" pypinyin soundfile \
+            sherpa-onnx -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
+
+      - name: Generate samples
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          cd scripts/matcha-tts/zh-en
+
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-en.tar.bz2
+          tar xvf matcha-icefall-zh-en.tar.bz2
+          rm matcha-icefall-zh-en.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-16khz-univ.onnx
+
+          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          mkdir -p ./hf/matcha/icefall-zh-en/mp3
+
+          ./generate_samples.py
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add samples for matcha tts zh en'
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+          popd
+          rm -rf hf
+
+          ls -lh
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/matcha-tts/zh-en
+          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/model-steps-3.onnx
+          curl -SL -O https://modelscope.cn/models/dengcunqin/matcha_tts_zh_en_20251010/resolve/master/vocab_tts.txt
+
+          ./generate_tokens.py
+          ./generate_lexicon.py
+
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
+      - name: Collect results ${{ matrix.version }}
+        shell: bash
+        run: |
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+
+          src=scripts/matcha-tts/zh-en
+          dst=matcha-icefall-zh-en
+
+          mkdir $dst
+
+          cp -a espeak-ng-data $dst/
+
+          cp -v $src/tokens.txt $dst
+          cp -v $src/lexicon.txt $dst
+          cp -v $src/model-steps-3.onnx $dst
+          cp -v $src/README.md $dst
+          cp -v $src/*.fst $dst
+
+          tar cjfv $dst.tar.bz2 $dst
+
+          ls -lh $dst.tar.bz2
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-icefall-zh-en huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict" af_dict ar_dict da_dict en_dict fa_dict hu_dict ia_dict it_dict lb_dict phondata ta_dict ur_dict yue_dict
+
+            cp -a ../matcha-icefall-zh-en/* ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-icefall-zh-en main || true
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: tts-models

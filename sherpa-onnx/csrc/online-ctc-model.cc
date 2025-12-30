@@ -20,6 +20,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-nemo-ctc-model.h"
+#include "sherpa-onnx/csrc/online-t-one-ctc-model.h"
 #include "sherpa-onnx/csrc/online-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/online-zipformer2-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -34,9 +35,11 @@ std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
     return std::make_unique<OnlineZipformer2CtcModel>(config);
   } else if (!config.nemo_ctc.model.empty()) {
     return std::make_unique<OnlineNeMoCtcModel>(config);
+  } else if (!config.t_one_ctc.model.empty()) {
+    return std::make_unique<OnlineToneCtcModel>(config);
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 
@@ -49,9 +52,11 @@ std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
     return std::make_unique<OnlineZipformer2CtcModel>(mgr, config);
   } else if (!config.nemo_ctc.model.empty()) {
     return std::make_unique<OnlineNeMoCtcModel>(mgr, config);
+  } else if (!config.t_one_ctc.model.empty()) {
+    return std::make_unique<OnlineToneCtcModel>(mgr, config);
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 

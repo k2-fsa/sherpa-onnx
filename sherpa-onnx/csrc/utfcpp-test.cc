@@ -3,7 +3,9 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include <cctype>
+#include <iostream>
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/text-utils.h"

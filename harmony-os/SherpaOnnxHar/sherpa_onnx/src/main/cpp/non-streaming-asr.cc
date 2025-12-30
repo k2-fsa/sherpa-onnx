@@ -1,6 +1,7 @@
 // scripts/node-addon-api/src/non-streaming-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <memory>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
@@ -55,6 +56,54 @@ GetOfflineZipformerCtcModelConfig(Napi::Object obj) {
   }
 
   Napi::Object o = obj.Get("zipformerCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
+static SherpaOnnxOfflineWenetCtcModelConfig GetOfflineWenetCtcModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineWenetCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("wenetCtc") || !obj.Get("wenetCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("wenetCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
+static SherpaOnnxOfflineOmnilingualAsrCtcModelConfig
+GetOfflineOmnilingualAsrCtcModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineOmnilingualAsrCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("omnilingual") || !obj.Get("omnilingual").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("omnilingual").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
+static SherpaOnnxOfflineMedAsrCtcModelConfig GetOfflineMedAsrCtcModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineMedAsrCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("medasr") || !obj.Get("medasr").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("medasr").As<Napi::Object>();
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
 
@@ -225,6 +274,9 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.dolphin = GetOfflineDolphinModelConfig(o);
   c.zipformer_ctc = GetOfflineZipformerCtcModelConfig(o);
   c.canary = GetOfflineCanaryModelConfig(o);
+  c.wenet_ctc = GetOfflineWenetCtcModelConfig(o);
+  c.omnilingual = GetOfflineOmnilingualAsrCtcModelConfig(o);
+  c.medasr = GetOfflineMedAsrCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -317,6 +369,10 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.src_lang);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.canary.tgt_lang);
 
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.wenet_ctc.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.omnilingual.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.medasr.model);
+
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.model_type);
@@ -330,7 +386,6 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.hotwords_file);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
   SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
-  SHERPA_ONNX_DELETE_C_STR(c.hr.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.hr.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.hr.rule_fsts);
 }

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/packed-sequence.h"
 
+#include <cstdio>
 #include <numeric>
 
 #include "gtest/gtest.h"

@@ -3,7 +3,8 @@
 // Copyright (c)  2022-2024  Xiaomi Corporation
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
+#include <string>
 
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 #include "sherpa-onnx/csrc/parse-options.h"

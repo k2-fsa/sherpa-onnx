@@ -1,0 +1,102 @@
+name: wasm-simd-hf-space-tts
+
+on:
+  push:
+    branches:
+      - wasm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-tts${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-tts:
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["4"]
+        index: ["0", "1", "2", "3"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.53
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/wasm
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-tts.py --total $total --index $index
+
+          chmod +x run-tts.sh
+          mv -v ./run-tts.sh ../..
+
+      - name: Show build scripts
+        shell: bash
+        run: |
+          cat ./run-tts.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: run-tts-${{ matrix.index }}
+          path: ./run-tts.sh
+
+      - name: Build sherpa-onnx for WebAssembly
+        shell: bash
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          ./run-tts.sh
+
+      - name: Release
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.12.19
+
+      - name: Upload wasm files
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-simd-tts-${{ matrix.index }}
+          path: ./sherpa-onnx-wasm-simd-*.tar.bz2

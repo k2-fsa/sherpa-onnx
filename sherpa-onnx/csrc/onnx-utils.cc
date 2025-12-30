@@ -5,12 +5,15 @@
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <functional>
 #include <memory>
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
@@ -155,10 +158,30 @@ Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v) {
       std::copy(start, end, dst);
       return ans;
     }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16: {
+      Ort::Value ans =
+          Ort::Value::CreateTensor(allocator, shape.data(), shape.size(),
+                                   ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+      const auto *start = v->GetTensorData<uint16_t>();
+      const auto *end = start + type_and_shape.GetElementCount();
+      auto *dst = ans.GetTensorMutableData<uint16_t>();
+      std::copy(start, end, dst);
+      return ans;
+    }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16: {
+      Ort::Value ans = Ort::Value::CreateTensor<uint16_t>(
+          allocator, shape.data(), shape.size());
+      const auto *start = v->GetTensorData<uint16_t>();
+      const auto *end = start + type_and_shape.GetElementCount();
+      auto *dst = ans.GetTensorMutableData<uint16_t>();
+      std::copy(start, end, dst);
+      return ans;
+    }
+
     default:
-      fprintf(stderr, "Unsupported type: %d\n",
-              static_cast<int32_t>(type_and_shape.GetElementType()));
-      exit(-1);
+      SHERPA_ONNX_LOGE("Unsupported type: %d\n",
+                       static_cast<int32_t>(type_and_shape.GetElementType()));
+      SHERPA_ONNX_EXIT(-1);
       // unreachable code
       return Ort::Value{nullptr};
   }
@@ -168,8 +191,8 @@ Ort::Value View(Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+  auto memory_info = v->GetTensorMemoryInfo();
+
   switch (type_and_shape.GetElementType()) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
       return Ort::Value::CreateTensor(
@@ -183,14 +206,23 @@ Ort::Value View(Ort::Value *v) {
       return Ort::Value::CreateTensor(
           memory_info, v->GetTensorMutableData<float>(),
           type_and_shape.GetElementCount(), shape.data(), shape.size());
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
+      return Ort::Value::CreateTensor(
+          memory_info, v->GetTensorMutableData<uint16_t>(),
+          type_and_shape.GetElementCount() * sizeof(uint16_t), shape.data(),
+          shape.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
+      return Ort::Value::CreateTensor(
+          memory_info, v->GetTensorMutableData<uint16_t>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
       return Ort::Value::CreateTensor(
           memory_info, v->GetTensorMutableData<bool>(),
           type_and_shape.GetElementCount(), shape.data(), shape.size());
     default:
-      fprintf(stderr, "Unsupported type: %d\n",
-              static_cast<int32_t>(type_and_shape.GetElementType()));
-      exit(-1);
+      SHERPA_ONNX_LOGE("Unsupported type: %d\n",
+                       static_cast<int32_t>(type_and_shape.GetElementType()));
+      SHERPA_ONNX_EXIT(-1);
       // unreachable code
       return Ort::Value{nullptr};
   }
@@ -229,7 +261,7 @@ void PrintShape(const Ort::Value *v) {
     os << i << ", ";
   }
   os << "\n";
-  fprintf(stderr, "%s", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s", os.str().c_str());
 }
 
 template <typename T /*= float*/>
@@ -241,7 +273,7 @@ void Print1D(const Ort::Value *v) {
     os << d[i] << " ";
   }
   os << "\n";
-  fprintf(stderr, "%s\n", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 }
 
 template void Print1D<int64_t>(const Ort::Value *v);
@@ -260,7 +292,7 @@ void Print2D(const Ort::Value *v) {
     }
     os << "\n";
   }
-  fprintf(stderr, "%s\n", os.str().c_str());
+  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 }
 
 template void Print2D<int64_t>(const Ort::Value *v);
@@ -271,15 +303,15 @@ void Print3D(const Ort::Value *v) {
   const float *d = v->GetTensorData<float>();
 
   for (int32_t p = 0; p != static_cast<int32_t>(shape[0]); ++p) {
-    fprintf(stderr, "---plane %d---\n", p);
+    SHERPA_ONNX_LOGE("---plane %d---\n", p);
     for (int32_t r = 0; r != static_cast<int32_t>(shape[1]); ++r) {
       for (int32_t c = 0; c != static_cast<int32_t>(shape[2]); ++c, ++d) {
-        fprintf(stderr, "%.3f ", *d);
+        SHERPA_ONNX_LOGE("%.3f ", *d);
       }
-      fprintf(stderr, "\n");
+      SHERPA_ONNX_LOGE("\n");
     }
   }
-  fprintf(stderr, "\n");
+  SHERPA_ONNX_LOGE("\n");
 }
 
 void Print4D(const Ort::Value *v) {
@@ -287,19 +319,19 @@ void Print4D(const Ort::Value *v) {
   const float *d = v->GetTensorData<float>();
 
   for (int32_t p = 0; p != static_cast<int32_t>(shape[0]); ++p) {
-    fprintf(stderr, "---plane %d---\n", p);
+    SHERPA_ONNX_LOGE("---plane %d---\n", p);
     for (int32_t q = 0; q != static_cast<int32_t>(shape[1]); ++q) {
-      fprintf(stderr, "---subplane %d---\n", q);
+      SHERPA_ONNX_LOGE("---subplane %d---\n", q);
       for (int32_t r = 0; r != static_cast<int32_t>(shape[2]); ++r) {
         for (int32_t c = 0; c != static_cast<int32_t>(shape[3]); ++c, ++d) {
-          fprintf(stderr, "%.3f ", *d);
+          SHERPA_ONNX_LOGE("%.3f ", *d);
         }
-        fprintf(stderr, "\n");
+        SHERPA_ONNX_LOGE("\n");
       }
-      fprintf(stderr, "\n");
+      SHERPA_ONNX_LOGE("\n");
     }
   }
-  fprintf(stderr, "\n");
+  SHERPA_ONNX_LOGE("\n");
 }
 
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
@@ -391,6 +423,81 @@ std::string LookupCustomModelMetaData(const Ort::ModelMetadata &meta_data,
   allocator->Free(allocator, v);
   return ans;
 #endif
+}
+
+// Convert IEEE 754 half-precision (16-bit) float to single-precision (32-bit)
+// float. Handles special cases: zero, subnormal, normal, infinity, and NaN.
+float HalfBitsToFloat(uint16_t h) {
+  const uint32_t sign = (static_cast<uint32_t>(h & 0x8000u)) << 16;
+  const uint32_t exp = (h & 0x7C00u) >> 10;
+  const uint32_t mant = (h & 0x03FFu);
+  uint32_t fbits = 0;
+  if (exp == 0) {
+    if (mant == 0) {
+      fbits = sign;
+    } else {
+      uint32_t m = mant;
+      uint32_t e = 127 - 15 + 1;
+      while ((m & 0x0400u) == 0) {
+        m <<= 1;
+        --e;
+      }
+      m &= 0x03FFu;
+      fbits = sign | (e << 23) | (m << 13);
+    }
+  } else if (exp == 31) {
+    fbits = sign | 0x7F800000u | (mant << 13);
+  } else {
+    const uint32_t e = exp + (127 - 15);
+    fbits = sign | (e << 23) | (mant << 13);
+  }
+  float out;
+  std::memcpy(&out, &fbits, sizeof(out));
+  return out;
+}
+
+// Convert IEEE 754 single-precision (32-bit) float to half-precision (16-bit)
+// float. Handles overflow (clamped to infinity), underflow (clamped to zero),
+// and normal values with proper rounding.
+uint16_t FloatToHalfBits(float f) {
+  uint32_t x;
+  std::memcpy(&x, &f, sizeof(x));
+  const uint32_t sign = (x >> 16) & 0x8000u;
+  const int32_t exp = static_cast<int32_t>((x >> 23) & 0xFFu);
+  const uint32_t mant = x & 0x007FFFFFu;
+  if (exp == 255) {
+    if (mant == 0) return static_cast<uint16_t>(sign | 0x7C00u);
+    return static_cast<uint16_t>(sign | 0x7C00u | (mant ? 0x1u : 0));
+  }
+  int32_t new_exp = exp - 127 + 15;
+  if (new_exp >= 31) {
+    return static_cast<uint16_t>(sign | 0x7C00u);
+  } else if (new_exp <= 0) {
+    if (new_exp < -10) {
+      return static_cast<uint16_t>(sign);
+    }
+    uint32_t m = mant | 0x00800000u;
+    int32_t shift = 14 - new_exp;
+    uint32_t half_m = m >> shift;
+    if ((m >> (shift - 1)) & 1u) {
+      half_m += 1;
+    }
+    return static_cast<uint16_t>(sign | (half_m & 0x03FFu));
+  } else {
+    uint16_t half_exp = static_cast<uint16_t>(new_exp << 10);
+    uint32_t half_m = mant >> 13;
+    if (mant & 0x00001000u) {
+      half_m += 1;
+      if (half_m == 0x0400u) {
+        half_m = 0;
+        half_exp = static_cast<uint16_t>((new_exp + 1) << 10);
+        if ((half_exp >> 10) >= 31) {
+          return static_cast<uint16_t>(sign | 0x7C00u);
+        }
+      }
+    }
+    return static_cast<uint16_t>(sign | half_exp | (half_m & 0x03FFu));
+  }
 }
 
 }  // namespace sherpa_onnx

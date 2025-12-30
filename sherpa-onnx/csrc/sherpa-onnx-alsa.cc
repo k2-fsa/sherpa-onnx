@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cctype>  // std::tolower
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/display.h"

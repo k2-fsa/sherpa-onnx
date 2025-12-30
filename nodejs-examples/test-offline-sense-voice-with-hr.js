@@ -6,17 +6,17 @@ function createOfflineRecognizer() {
   let modelConfig = {
     senseVoice: {
       model:
-          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx',
+          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx',
       language: '',
       useInverseTextNormalization: 1,
     },
-    tokens: './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt',
+    tokens:
+        './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt',
   };
 
   let config = {
     modelConfig: modelConfig,
     hr: {
-      dictDir: './dict',
       lexicon: './lexicon.txt',
       ruleFsts: './replace.fst',
     },

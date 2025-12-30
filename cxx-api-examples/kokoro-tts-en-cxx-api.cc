@@ -1,4 +1,4 @@
-// cxx-api-examples/kokoro-tts-en-cxx-api.c
+// cxx-api-examples/kokoro-tts-en-cxx-api.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
@@ -18,6 +18,8 @@ rm kokoro-en-v0_19.tar.bz2
  */
 // clang-format on
 
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
@@ -66,7 +68,7 @@ int32_t main(int32_t argc, char *argv[]) {
   WriteWave(filename, {audio.samples, audio.sample_rate});
 
   fprintf(stderr, "Input text is: %s\n", text.c_str());
-  fprintf(stderr, "Speaker ID is is: %d\n", sid);
+  fprintf(stderr, "Speaker ID is: %d\n", sid);
   fprintf(stderr, "Saved to: %s\n", filename.c_str());
 
   return 0;

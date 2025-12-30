@@ -15,7 +15,6 @@ public class NonStreamingTtsPiperEn {
     String model = "./vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx";
     String tokens = "./vits-zh-hf-fanchen-C/tokens.txt";
     String lexicon = "./vits-zh-hf-fanchen-C/lexicon.txt";
-    String dictDir = "./vits-zh-hf-fanchen-C/dict";
     String ruleFsts =
         "./vits-zh-hf-fanchen-C/phone.fst,./vits-zh-hf-fanchen-C/date.fst,./vits-zh-hf-fanchen-C/number.fst";
     String text = "有问题，请拨打110或者手机18601239876。我们的价值观是真诚热爱！";
@@ -25,7 +24,6 @@ public class NonStreamingTtsPiperEn {
             .setModel(model)
             .setTokens(tokens)
             .setLexicon(lexicon)
-            .setDictDir(dictDir)
             .build();
 
     OfflineTtsModelConfig modelConfig =
@@ -54,7 +52,7 @@ public class NonStreamingTtsPiperEn {
     String waveFilename = "tts-vits-zh.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
-    System.out.printf("-- audio duration: %.3f seconds\n", timeElapsedSeconds);
+    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
     System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
     System.out.printf("-- text: %s\n", text);
     System.out.printf("-- Saved to %s\n", waveFilename);

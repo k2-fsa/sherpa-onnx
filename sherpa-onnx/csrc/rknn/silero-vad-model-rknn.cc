@@ -175,6 +175,77 @@ class SileroVadModelRknn::Impl {
     config_.silero_vad.threshold = threshold;
   }
 
+  float Run(const float *samples, int32_t n) {
+    std::vector<rknn_input> inputs(input_attrs_.size());
+
+    for (int32_t i = 0; i < static_cast<int32_t>(inputs.size()); ++i) {
+      auto &input = inputs[i];
+      auto &attr = input_attrs_[i];
+      input.index = attr.index;
+
+      if (attr.type == RKNN_TENSOR_FLOAT16) {
+        input.type = RKNN_TENSOR_FLOAT32;
+      } else if (attr.type == RKNN_TENSOR_INT64) {
+        input.type = RKNN_TENSOR_INT64;
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
+                         get_type_string(attr.type));
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      input.fmt = attr.fmt;
+      if (i == 0) {
+        input.buf = reinterpret_cast<void *>(const_cast<float *>(samples));
+        input.size = n * sizeof(float);
+      } else {
+        input.buf = reinterpret_cast<void *>(states_[i - 1].data());
+        input.size = states_[i - 1].size() * sizeof(float);
+      }
+    }
+
+    std::vector<float> out(output_attrs_[0].n_elems);
+
+    auto &next_states = states_;
+
+    std::vector<rknn_output> outputs(output_attrs_.size());
+
+    for (int32_t i = 0; i < outputs.size(); ++i) {
+      auto &output = outputs[i];
+      auto &attr = output_attrs_[i];
+      output.index = attr.index;
+      output.is_prealloc = 1;
+
+      if (attr.type == RKNN_TENSOR_FLOAT16) {
+        output.want_float = 1;
+      } else if (attr.type == RKNN_TENSOR_INT64) {
+        output.want_float = 0;
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
+                         get_type_string(attr.type));
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (i == 0) {
+        output.size = out.size() * sizeof(float);
+        output.buf = reinterpret_cast<void *>(out.data());
+      } else {
+        output.size = next_states[i - 1].size() * sizeof(float);
+        output.buf = reinterpret_cast<void *>(next_states[i - 1].data());
+      }
+    }
+
+    auto ret = rknn_inputs_set(ctx_, inputs.size(), inputs.data());
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
+
+    ret = rknn_run(ctx_, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run the model");
+
+    ret = rknn_outputs_get(ctx_, outputs.size(), outputs.data(), nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get model output");
+
+    return out[0];
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     InitContext(model_data, model_data_length, config_.debug, &ctx_);
@@ -267,77 +338,6 @@ class SileroVadModelRknn::Impl {
     Reset();
   }
 
-  float Run(const float *samples, int32_t n) {
-    std::vector<rknn_input> inputs(input_attrs_.size());
-
-    for (int32_t i = 0; i < static_cast<int32_t>(inputs.size()); ++i) {
-      auto &input = inputs[i];
-      auto &attr = input_attrs_[i];
-      input.index = attr.index;
-
-      if (attr.type == RKNN_TENSOR_FLOAT16) {
-        input.type = RKNN_TENSOR_FLOAT32;
-      } else if (attr.type == RKNN_TENSOR_INT64) {
-        input.type = RKNN_TENSOR_INT64;
-      } else {
-        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
-                         get_type_string(attr.type));
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      input.fmt = attr.fmt;
-      if (i == 0) {
-        input.buf = reinterpret_cast<void *>(const_cast<float *>(samples));
-        input.size = n * sizeof(float);
-      } else {
-        input.buf = reinterpret_cast<void *>(states_[i - 1].data());
-        input.size = states_[i - 1].size() * sizeof(float);
-      }
-    }
-
-    std::vector<float> out(output_attrs_[0].n_elems);
-
-    auto &next_states = states_;
-
-    std::vector<rknn_output> outputs(output_attrs_.size());
-
-    for (int32_t i = 0; i < outputs.size(); ++i) {
-      auto &output = outputs[i];
-      auto &attr = output_attrs_[i];
-      output.index = attr.index;
-      output.is_prealloc = 1;
-
-      if (attr.type == RKNN_TENSOR_FLOAT16) {
-        output.want_float = 1;
-      } else if (attr.type == RKNN_TENSOR_INT64) {
-        output.want_float = 0;
-      } else {
-        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
-                         get_type_string(attr.type));
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      if (i == 0) {
-        output.size = out.size() * sizeof(float);
-        output.buf = reinterpret_cast<void *>(out.data());
-      } else {
-        output.size = next_states[i - 1].size() * sizeof(float);
-        output.buf = reinterpret_cast<void *>(next_states[i - 1].data());
-      }
-    }
-
-    auto ret = rknn_inputs_set(ctx_, inputs.size(), inputs.data());
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set inputs");
-
-    ret = rknn_run(ctx_, nullptr);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run the model");
-
-    ret = rknn_outputs_get(ctx_, outputs.size(), outputs.data(), nullptr);
-    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get model output");
-
-    return out[0];
-  }
-
  private:
   VadModelConfig config_;
   rknn_context ctx_ = 0;
@@ -393,6 +393,10 @@ void SileroVadModelRknn::SetMinSilenceDuration(float s) {
 
 void SileroVadModelRknn::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+float SileroVadModelRknn::Compute(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

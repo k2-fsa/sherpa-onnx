@@ -32,6 +32,7 @@ class SileroVadModelRknn : public VadModel {
    * @return Return true if speech is detected. Return false otherwise.
    */
   bool IsSpeech(const float *samples, int32_t n) override;
+  float Compute(const float *samples, int32_t n) override;
 
   // For silero vad V4, it is WindowShift().
   int32_t WindowSize() const override;

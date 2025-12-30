@@ -7,11 +7,24 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
 struct OfflineParaformerModelConfig {
+  // for ascend npu,
+  // model is "/path/to/encoder.om,/path/to/predictor.om,/path/to/decoder.om"
+  //
+  // for rknn,
+  // model is
+  // "/path/to/encoder.rknn,/path/to/predictor.rknn,/path/to/decoder.rknn"
+  //
+  // for qnn with shared libs, model is
+  // model is
+  // "/path/to/libencoder.so,/path/to/libpredictor.so,/path/to/libdecoder.so"
   std::string model;
+
+  QnnConfig qnn_config;
 
   OfflineParaformerModelConfig() = default;
   explicit OfflineParaformerModelConfig(const std::string &model)

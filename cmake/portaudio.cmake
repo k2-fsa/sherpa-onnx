@@ -29,6 +29,7 @@ function(download_portaudio)
   # Always use static build
   set(PA_BUILD_SHARED OFF CACHE BOOL "" FORCE)
   set(PA_BUILD_STATIC ON CACHE BOOL "" FORCE)
+  set(PA_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
 
   FetchContent_Declare(portaudio
     URL
@@ -50,6 +51,15 @@ function(download_portaudio)
   endif()
 
   add_subdirectory(${portaudio_SOURCE_DIR} ${portaudio_BINARY_DIR} EXCLUDE_FROM_ALL)
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+    if(PA_USE_ALSA)
+      message(STATUS "portaudio with ALSA")
+    else()
+      message(STATUS "portaudio without ALSA")
+    endif()
+  endif()
+
+  set_target_properties(pa_devs PROPERTIES OUTPUT_NAME "sherpa-onnx-pa-devs")
 
   set_target_properties(portaudio_static PROPERTIES OUTPUT_NAME "sherpa-onnx-portaudio_static")
   if(NOT WIN32)
@@ -61,6 +71,11 @@ function(download_portaudio)
       portaudio_static
     DESTINATION lib)
   endif()
+
+  install(TARGETS
+    pa_devs
+  DESTINATION bin)
+  add_custom_target(build_pa_devs ALL DEPENDS pa_devs)
 
 endfunction()
 

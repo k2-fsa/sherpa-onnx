@@ -9,8 +9,11 @@
 #include "sherpa-onnx/csrc/offline-canary-model-config.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
+#include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
+#include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
+#include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
@@ -34,6 +37,9 @@ struct OfflineModelConfig {
   OfflineMoonshineModelConfig moonshine;
   OfflineDolphinModelConfig dolphin;
   OfflineCanaryModelConfig canary;
+  OfflineOmnilingualAsrCtcModelConfig omnilingual;
+  OfflineFunASRNanoModelConfig funasr_nano;
+  OfflineMedAsrCtcModelConfig medasr;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -68,6 +74,9 @@ struct OfflineModelConfig {
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
                      const OfflineCanaryModelConfig &canary,
+                     const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
+                     const OfflineFunASRNanoModelConfig &funasr_nano,
+                     const OfflineMedAsrCtcModelConfig &medasr,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
@@ -85,6 +94,9 @@ struct OfflineModelConfig {
         moonshine(moonshine),
         dolphin(dolphin),
         canary(canary),
+        omnilingual(omnilingual),
+        funasr_nano(funasr_nano),
+        medasr(medasr),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),

@@ -11,16 +11,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
       - 'sherpa-onnx/java-api/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/run-java-test.yaml'
-      - 'cmake/**'
-      - 'java-api-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'sherpa-onnx/java-api/**'
+
   workflow_dispatch:
 
 concurrency:
@@ -116,6 +107,35 @@ jobs:
         run: |
           cd ./java-api-examples
           ./run-version-test.sh
+
+      - name:  Run java test (MedASR CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-medasr-ctc.sh
+          rm -rf sherpa-onnx-medasr-*
+
+
+      - name:  Run java test (Omnilingual ASR CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-omnilingual-asr-ctc.sh
+          rm -rf sherpa-onnx-omnilingual-*
+
+      - name:  Run java test (WeNet CTC)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-wenet-ctc.sh
+          rm -rf sherpa-onnx-wenet*
+
+      - name:  Run java test (Streaming T-one)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-streaming-decode-file-tone-ctc.sh
+          rm -rf sherpa-onnx-streaming-t-one-*
 
       - name:  Run java test (Nemo Canary)
         shell: bash
@@ -309,12 +329,14 @@ jobs:
         run: |
           cd ./java-api-examples
 
+          ./run-non-streaming-tts-kitten-en.sh
           ./run-non-streaming-tts-kokoro-zh-en.sh
           ./run-non-streaming-tts-kokoro-en.sh
           ./run-non-streaming-tts-matcha-zh.sh
           ./run-non-streaming-tts-matcha-en.sh
           ls -lh
 
+          rm -rf kitten-nano-en-*
           rm -rf kokoro-multi-*
           rm -rf kokoro-en-*
 

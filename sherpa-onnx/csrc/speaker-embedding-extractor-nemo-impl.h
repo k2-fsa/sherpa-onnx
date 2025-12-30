@@ -130,7 +130,8 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
 
     auto EX = m.colwise().mean();
     auto EX2 = m.array().pow(2).colwise().sum() / num_frames;
-    auto variance = EX2 - EX.array().pow(2);
+    auto variance = (EX2 - EX.array().pow(2)).max(1e-5);
+
     auto stddev = variance.array().sqrt();
 
     m = (m.rowwise() - EX).array().rowwise() / (stddev.array() + 1e-5);

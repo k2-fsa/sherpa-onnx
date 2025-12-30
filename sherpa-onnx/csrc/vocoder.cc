@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/vocoder.h"
 
+#include <memory>
+#include <vector>
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -65,7 +68,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type == "hifigan") {
     return ModelType::kHifigan;
-  } else if (model_type == "vocos") {
+  } else if (model_type == "vocos" || model_type == "matcha-tts vocos") {
     return ModelType::kVocoos;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
@@ -74,7 +77,15 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 }
 
 std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
-  auto buffer = ReadFile(config.matcha.vocoder);
+  std::vector<char> buffer;
+  if (!config.matcha.vocoder.empty()) {
+    buffer = ReadFile(config.matcha.vocoder);
+  } else if (!config.zipvoice.vocoder.empty()) {
+    buffer = ReadFile(config.zipvoice.vocoder);
+  } else {
+    SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
+    SHERPA_ONNX_EXIT(-1);
+  }
   auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {
@@ -94,7 +105,19 @@ std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
 template <typename Manager>
 std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
                                          const OfflineTtsModelConfig &config) {
-  auto buffer = ReadFile(mgr, config.matcha.vocoder);
+  std::vector<char> buffer;
+  if (!config.matcha.vocoder.empty()) {
+    SHERPA_ONNX_LOGE("Using matcha vocoder: %s", config.matcha.vocoder.c_str());
+    buffer = ReadFile(mgr, config.matcha.vocoder);
+  } else if (!config.zipvoice.vocoder.empty()) {
+    SHERPA_ONNX_LOGE("Using zipvoice vocoder: %s",
+                     config.zipvoice.vocoder.c_str());
+    buffer = ReadFile(mgr, config.zipvoice.vocoder);
+  } else {
+    SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
+    return nullptr;
+  }
+
   auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {

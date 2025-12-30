@@ -44,12 +44,6 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$
 tar xvf ${model_name}.tar.bz2
 
 {% if model.use_hr %}
-  if [ ! -d dict ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
-    tar xvf dict.tar.bz2
-    rm dict.tar.bz2
-  fi
-
   if [ ! -f lexicon.txt ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
   fi
@@ -70,8 +64,12 @@ popd
 # Now we are at the project root directory
 
 git checkout .
+
+pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr/screens
+sed -i.bak s/"asrModelType = 15/asrModelType = $type/" ./Home.kt
+popd
+
 pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr
-sed -i.bak s/"asrModelType = 15/asrModelType = $type/" ./SimulateStreamingAsr.kt
 
 {% if model.use_hr %}
   sed -i.bak s/"useHr = false/useHr = true/" ./SimulateStreamingAsr.kt
@@ -112,7 +110,6 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 done
 
 rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/$model_name
-rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/dict
 rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/lexicon.txt
 rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/replace.fst
 

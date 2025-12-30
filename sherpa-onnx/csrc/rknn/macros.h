@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/macros.h
+// sherpa-onnx/csrc/rknn/macros.h
 //
 // Copyright      2025  Xiaomi Corporation
 

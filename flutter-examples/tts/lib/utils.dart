@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 Future<String> generateWaveFilename([String suffix = '']) async {
-  final Directory directory = await getApplicationDocumentsDirectory();
+  final Directory directory = await getApplicationSupportDirectory();
   DateTime now = DateTime.now();
   final filename =
       '${now.year.toString()}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}$suffix.wav';
@@ -38,7 +38,7 @@ Future<void> copyAllAssetFiles() async {
 // Copy the asset file from src to dst.
 // If dst already exists, then just skip the copy
 Future<String> copyAssetFile(String src, [String? dst]) async {
-  final Directory directory = await getApplicationDocumentsDirectory();
+  final Directory directory = await getApplicationSupportDirectory();
   if (dst == null) {
     dst = p.basename(src);
   }

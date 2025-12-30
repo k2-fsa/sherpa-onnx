@@ -1,6 +1,9 @@
 name: export-nemo-giga-am-to-onnx
 
 on:
+  push:
+    branches:
+      - export-giga-am-v3
   workflow_dispatch:
 
 concurrency:
@@ -27,6 +30,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run CTC
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -53,6 +57,7 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run Transducer
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -82,6 +87,7 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run CTC v2
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -107,6 +113,7 @@ jobs:
           tar cjvf ${d}.tar.bz2 $d
 
       - name: Run Transducer v2
+        if: false
         shell: bash
         run: |
           pushd scripts/nemo/GigaAM
@@ -126,6 +133,123 @@ jobs:
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-rnnt-v2.sh $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Run CTC v3
+        if: true
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-ctc-v3.sh
+          popd
+
+          d=sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+          ls -lh scripts/nemo/GigaAM/v3_ctc.onnx
+          rm scripts/nemo/GigaAM/v3_ctc.onnx
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-ctc-v3.sh $d/
+          mv -v scripts/nemo/GigaAM/*-ctc-v3.py $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-ctc.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: Run CTC v3 with punctuations
+        if: true
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-ctc-v3-punct.sh
+          popd
+
+          d=sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+          rm scripts/nemo/GigaAM/v3_e2e_ctc.onnx
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-ctc-v3-punct.sh $d/
+          mv -v scripts/nemo/GigaAM/*-ctc-v3-punct.py $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-ctc.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: Run Transducer v3
+        if: false
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt-v3.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt-v3.sh $d/
+          cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Run Transducer v3 with punctuations
+        if: false
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt-v3-punct.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/LICENSE $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt-v3-punct.sh $d/
           cp -v scripts/nemo/GigaAM/test-onnx-rnnt.py $d/
 
           ls -lh scripts/nemo/GigaAM/
@@ -155,6 +279,7 @@ jobs:
           tag: asr-models
 
       - name: Publish to huggingface (CTC)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -182,6 +307,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
 
       - name: Publish to huggingface (Transducer)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -209,6 +335,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
 
       - name: Publish v2 to huggingface (CTC)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -236,6 +363,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
 
       - name: Publish v2 to huggingface (Transducer)
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -261,3 +389,44 @@ jobs:
             git status
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+
+      - name: Publish v3 to huggingface
+        if: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 5
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            names=(
+             sherpa-onnx-nemo-ctc-giga-am-v3-russian-2025-12-16
+             sherpa-onnx-nemo-ctc-punct-giga-am-v3-russian-2025-12-16
+             sherpa-onnx-nemo-transducer-giga-am-v3-russian-2025-12-16
+             sherpa-onnx-nemo-transducer-punct-giga-am-v3-russian-2025-12-16
+            )
+            for d in ${names[@]}; do
+              if [ ! -d $d ]; then
+                echo "$d does not exist - skip it"
+                continue;
+              fi
+
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              cp -av $d/* ./huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "add models"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              cd ..
+            done

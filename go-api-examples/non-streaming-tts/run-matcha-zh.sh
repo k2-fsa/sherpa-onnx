@@ -23,7 +23,6 @@ go build
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
-  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
   --debug=1 \
   --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --output-filename=./test-matcha-zh.wav \

@@ -19,4 +19,10 @@ speech-enhancement-gtcrn
 decode-file-sense-voice-with-hr
 test-version
 zipformer-ctc-asr
+wenet-ctc-asr
 dolphin-ctc-asr
+tts-kitten-en
+compute-speaker-embeddings
+decode-file-t-one-streaming
+omnilingual-asr-ctc
+medasr-ctc

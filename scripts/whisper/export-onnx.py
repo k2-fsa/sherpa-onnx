@@ -49,7 +49,8 @@ def get_args():
             "large-v1", "large-v2",
             "large", "large-v3", "turbo", # these three have feature dim 128
             "distil-medium.en", "distil-small.en", "distil-large-v2",
-            # "distil-large-v3", # distil-large-v3 is not supported!
+            "distil-large-v3",
+            "distil-large-v3.5",
             # for fine-tuned models from icefall
             "medium-aishell",
             ],
@@ -348,6 +349,32 @@ def main():
             """
             )
         model = whisper.load_model(filename)
+    elif name == "distil-large-v3":
+        filename = "./distil-large-v3-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v3-openai
+                to download model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
+            """
+            )
+        model = whisper.load_model(filename)
+    elif name == "distil-large-v3.5":
+        filename = "./distil-large-v3.5-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v3.5-openai/
+                to download model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
+            """
+            )
+        model = whisper.load_model(filename)
     elif name == "distil-small.en":
         filename = "./distil-small-en-original-model.bin"
         if not Path(filename).is_file():
@@ -405,10 +432,17 @@ def main():
     audio = whisper.pad_or_trim(audio)
     assert audio.shape == (16000 * 30,), audio.shape
 
-    if args.model in ("large", "large-v3", "turbo"):
+    if args.model in ("distil-large-v3", "distil-large-v3.5"):
+        n_mels = 128
+    elif args.model in (
+        "large",
+        "large-v3",
+        "turbo",
+    ):
         n_mels = 128
     else:
         n_mels = 80
+
     mel = (
         whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
     )

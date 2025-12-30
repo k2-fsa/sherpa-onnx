@@ -10,7 +10,6 @@ function createOfflineTts() {
         model: './sherpa-onnx-vits-zh-ll/model.onnx',
         tokens: './sherpa-onnx-vits-zh-ll/tokens.txt',
         lexicon: './sherpa-onnx-vits-zh-ll/lexicon.txt',
-        dictDir: './sherpa-onnx-vits-zh-ll/dict',
       },
       debug: true,
       numThreads: 1,

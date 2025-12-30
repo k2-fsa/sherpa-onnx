@@ -10,8 +10,11 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -85,6 +88,11 @@ std::vector<int32_t> ConvertTokensToIds(
   ids.reserve(tokens.size());
   for (const auto &s : tokens) {
     if (!token2id.count(s)) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Unknown token: %{public}s", s.c_str());
+#else
+      SHERPA_ONNX_LOGE("Unknown token: %s", s.c_str());
+#endif
       return {};
     }
     int32_t id = token2id.at(s);
@@ -145,7 +153,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIds(
       return ConvertTextToTokenIdsNotChinese(text);
     default:
       SHERPA_ONNX_LOGE("Unknown language: %d", static_cast<int32_t>(language_));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
   }
 
   return {};
@@ -166,7 +174,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
     os << "Input text in bytes:";
     for (uint8_t c : text) {
       os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
-         << c;
+         << static_cast<int32_t>(c);
     }
     os << "\n";
     os << "After splitting to words:";
@@ -184,11 +192,6 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
 
   std::vector<TokenIDs> ans;
   std::vector<int64_t> this_sentence;
-
-  int32_t blank = -1;
-  if (token2id_.count(" ")) {
-    blank = token2id_.at(" ");
-  }
 
   int32_t sil = -1;
   int32_t eos = -1;
@@ -244,9 +247,6 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
     const auto &token_ids = word2ids_.at(w);
     this_sentence.insert(this_sentence.end(), token_ids.begin(),
                          token_ids.end());
-    if (blank != -1) {
-      this_sentence.push_back(blank);
-    }
   }
 
   if (sil != -1) {
@@ -256,7 +256,10 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
   if (eos != -1) {
     this_sentence.push_back(eos);
   }
-  ans.emplace_back(std::move(this_sentence));
+
+  if (!this_sentence.empty()) {
+    ans.emplace_back(std::move(this_sentence));
+  }
 
   return ans;
 }
@@ -275,7 +278,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
     os << "Input text in bytes:";
     for (uint8_t c : text) {
       os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
-         << c;
+         << static_cast<int32_t>(c);
     }
     os << "\n";
     os << "After splitting to words:";
@@ -346,8 +349,12 @@ void Lexicon::InitLanguage(const std::string &_lang) {
   } else if (!lang.empty()) {
     language_ = Language::kNotChinese;
   } else {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("Unknown language: %{public}s", _lang.c_str());
+#else
     SHERPA_ONNX_LOGE("Unknown language: %s", _lang.c_str());
-    exit(-1);
+#endif
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 

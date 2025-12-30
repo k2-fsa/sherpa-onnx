@@ -80,11 +80,13 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 #if SHERPA_ONNX_ENABLE_TTS == 1
   PybindOfflineTts(&m);
 #else
-  /* Define "empty" TTS sybmbols */
+  /* Define "empty" TTS symbols */
+  m.attr("OfflineTtsKittenModelConfig") = py::none();
   m.attr("OfflineTtsKokoroModelConfig") = py::none();
   m.attr("OfflineTtsMatchaModelConfig") = py::none();
   m.attr("OfflineTtsModelConfig") = py::none();
   m.attr("OfflineTtsVitsModelConfig") = py::none();
+  m.attr("OfflineTtsZipvoiceModelConfig") = py::none();
   m.attr("GeneratedAudio") = py::none();
   m.attr("OfflineTtsConfig") = py::none();
   m.attr("OfflineTts") = py::none();
@@ -99,7 +101,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOfflineSpeakerDiarizationResult(&m);
   PybindOfflineSpeakerDiarization(&m);
 #else
-  /* Define "empty" diarization sybmbols */
+  /* Define "empty" diarization symbols */
   m.attr("FastClusteringConfig") = py::none();
   m.attr("FastClustering") = py::none();
   m.attr("OfflineSpeakerDiarizationSegment") = py::none();

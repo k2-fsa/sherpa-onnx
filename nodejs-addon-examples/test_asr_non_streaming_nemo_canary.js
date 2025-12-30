@@ -37,7 +37,7 @@ const wave = sherpa_onnx.readWave(waveFilename);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
 recognizer.decode(stream);
-let result = recognizer.getResult(stream)
+let result = recognizer.getResult(stream);
 let stop = Date.now();
 console.log('Done')
 

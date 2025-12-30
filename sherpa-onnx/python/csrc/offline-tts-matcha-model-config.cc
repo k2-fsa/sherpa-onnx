@@ -18,8 +18,8 @@ void PybindOfflineTtsMatchaModelConfig(py::module *m) {
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, const std::string &,
                     const std::string &, const std::string &, float, float>(),
-           py::arg("acoustic_model"), py::arg("vocoder"), py::arg("lexicon"),
-           py::arg("tokens"), py::arg("data_dir") = "",
+           py::arg("acoustic_model"), py::arg("vocoder"),
+           py::arg("lexicon") = "", py::arg("tokens"), py::arg("data_dir") = "",
            py::arg("dict_dir") = "", py::arg("noise_scale") = 1.0,
            py::arg("length_scale") = 1.0)
       .def_readwrite("acoustic_model", &PyClass::acoustic_model)

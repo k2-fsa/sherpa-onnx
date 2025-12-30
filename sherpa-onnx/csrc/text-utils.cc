@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -708,6 +709,14 @@ bool EndsWith(const std::string &haystack, const std::string &needle) {
   return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
 }
 
+bool Contains(const std::string &haystack, const std::string &needle) {
+  if (needle.size() > haystack.size()) {
+    return false;
+  }
+
+  return haystack.find(needle) != std::string::npos;
+}
+
 std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
   std::vector<std::string> ans;
   if (chunk_size < 1 || chunk_size > s.size()) {
@@ -722,6 +731,102 @@ std::vector<std::string> SplitString(const std::string &s, int32_t chunk_size) {
     }
   }
   return ans;
+}
+
+std::string Join(const std::vector<std::string> &ss, const std::string &delim) {
+  std::ostringstream oss;
+  if (!ss.empty()) {
+    oss << ss[0];
+    for (size_t i = 1; i < ss.size(); ++i) {
+      oss << delim << ss[i];
+    }
+  }
+  return oss.str();
+}
+
+std::u32string Utf8ToUtf32(const std::string &str) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+  return conv.from_bytes(str);
+}
+
+std::string Utf32ToUtf8(const std::u32string &str) {
+  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+  return conv.to_bytes(str);
+}
+
+// Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
+// unchanged)
+std::string ToUpperAscii(const std::string &str) {
+  std::string out = str;
+  for (char &c : out) {
+    unsigned char uc = static_cast<unsigned char>(c);
+    if (uc >= 'a' && uc <= 'z') {
+      c = static_cast<char>(uc - 'a' + 'A');
+    }
+  }
+  return out;
+}
+
+// Helper: Convert ASCII chars in a std::string to lowercase (leaves non-ASCII
+// unchanged)
+std::string ToLowerAscii(const std::string &str) {
+  std::string out = str;
+  for (char &c : out) {
+    unsigned char uc = static_cast<unsigned char>(c);
+    if (uc >= 'A' && uc <= 'Z') {
+      c = static_cast<char>(uc - 'A' + 'a');
+    }
+  }
+  return out;
+}
+
+// Detect if a codepoint is a CJK character
+bool IsCJK(char32_t cp) {
+  return (cp >= 0x1100 && cp <= 0x11FF) || (cp >= 0x2E80 && cp <= 0xA4CF) ||
+         (cp >= 0xA840 && cp <= 0xD7AF) || (cp >= 0xF900 && cp <= 0xFAFF) ||
+         (cp >= 0xFE30 && cp <= 0xFE4F) || (cp >= 0xFF65 && cp <= 0xFFDC) ||
+         (cp >= 0x20000 && cp <= 0x2FFFF);
+}
+
+bool ContainsCJK(const std::string &text) {
+  std::u32string utf32_text = Utf8ToUtf32(text);
+  return ContainsCJK(utf32_text);
+}
+
+bool ContainsCJK(const std::u32string &text) {
+  for (char32_t cp : text) {
+    if (IsCJK(cp)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string GetWord(const std::vector<std::string> &words, int32_t start,
+                    int32_t end) {
+  std::string ans;
+
+  int32_t ws = words.size();
+
+  if (start >= ws || end >= ws || start < 0 || end < 0) {
+    return ans;
+  }
+
+  for (int32_t i = start; i <= end; ++i) {
+    ans += words[i];
+  }
+
+  return ans;
+}
+
+bool IsAlphaOrPunct(int ch) { return std::isalpha(ch) || std::ispunct(ch); }
+
+bool IsPunct(const std::string &s) {
+  static const std::unordered_set<std::string> puncts = {
+      ",",  ".",  "!",  "?", ":", "\"", "'", "，",
+      "。", "！", "？", "“", "”", "‘",  "’",
+  };
+  return puncts.count(s);
 }
 
 }  // namespace sherpa_onnx

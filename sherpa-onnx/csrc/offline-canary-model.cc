@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-canary-model-meta-data.h"
 

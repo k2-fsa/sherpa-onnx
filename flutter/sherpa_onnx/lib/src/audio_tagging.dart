@@ -150,6 +150,10 @@ class AudioTagging {
     final labelsPtr = config.labels.toNativeUtf8();
     c.ref.labels = labelsPtr;
 
+    if (SherpaOnnxBindings.sherpaOnnxCreateAudioTagging == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateAudioTagging?.call(c) ?? nullptr;
 
@@ -158,6 +162,11 @@ class AudioTagging {
     calloc.free(cedPtr);
     calloc.free(zipformerPtr);
     calloc.free(c);
+
+    if (ptr == nullptr) {
+      throw Exception(
+          "Failed to create audio tagging. Please check your config");
+    }
 
     return AudioTagging._(ptr: ptr, config: config);
   }

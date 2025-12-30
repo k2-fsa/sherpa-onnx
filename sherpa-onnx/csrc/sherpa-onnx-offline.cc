@@ -4,8 +4,9 @@
 
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -93,6 +94,18 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/ind
     ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
     ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav
 
+(7) FunASR-nano models
+
+See https://github.com/FunAudioLLM/Fun-ASR-Nano-2512
+
+  ./bin/sherpa-onnx-offline \
+    --funasr-nano-encoder-adaptor=/path/to/encoder_adaptor.onnx \
+    --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
+    --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
+    --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
+    --funasr-nano-embedding=/path/to/embedding.onnx \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
 Note: It supports decoding multiple files in batches
 
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
@@ -122,7 +135,17 @@ for a list of pre-trained models to download.
   }
 
   fprintf(stderr, "Creating recognizer ...\n");
+  const auto begin_init = std::chrono::steady_clock::now();
+
   sherpa_onnx::OfflineRecognizer recognizer(config);
+
+  const auto end_init = std::chrono::steady_clock::now();
+  float elapsed_seconds_init =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end_init -
+                                                            begin_init)
+          .count() /
+      1000.;
+  fprintf(stderr, "recognizer created in %.3f s\n", elapsed_seconds_init);
 
   fprintf(stderr, "Started\n");
   const auto begin = std::chrono::steady_clock::now();

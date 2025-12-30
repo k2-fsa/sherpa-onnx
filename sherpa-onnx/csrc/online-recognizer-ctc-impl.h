@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_CTC_IMPL_H_
 
 #include <algorithm>
+#include <cassert>
 #include <ios>
 #include <memory>
 #include <sstream>
@@ -78,25 +79,9 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(config),
         config_(config),
         model_(OnlineCtcModel::Create(config.model_config)),
+        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    if (!config.model_config.tokens_buf.empty()) {
-      sym_ = SymbolTable(config.model_config.tokens_buf, false);
-    } else {
-      /// assuming tokens_buf and tokens are guaranteed not being both empty
-      sym_ = SymbolTable(config.model_config.tokens, true);
-    }
-
-    if (!config.model_config.wenet_ctc.model.empty()) {
-      // WeNet CTC models assume input samples are in the range
-      // [-32768, 32767], so we set normalize_samples to false
-      config_.feat_config.normalize_samples = false;
-    }
-
-    if (model_->UseWhisperFeature()) {
-      config_.feat_config.is_whisper = true;
-    }
-
-    InitDecoder();
+    PostInit();
   }
 
   template <typename Manager>
@@ -107,17 +92,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
         model_(OnlineCtcModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    if (!config.model_config.wenet_ctc.model.empty()) {
-      // WeNet CTC models assume input samples are in the range
-      // [-32768, 32767], so we set normalize_samples to false
-      config_.feat_config.normalize_samples = false;
-    }
-
-    if (model_->UseWhisperFeature()) {
-      config_.feat_config.is_whisper = true;
-    }
-
-    InitDecoder();
+    PostInit();
   }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
@@ -211,6 +186,14 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
+    if (!config_.model_config.t_one_ctc.model.empty()) {
+      // each input frame is of 300ms long, which produces 10 output frames.
+      // so frame_shift_ms is 300/10 = 30ms
+      //
+      frame_shift_ms = 30;
+      subsampling_factor = 1;
+    }
+
     auto r =
         ConvertCtc(decoder_result, sym_, frame_shift_ms, subsampling_factor,
                    s->GetCurrentSegment(), s->GetNumFramesSinceStart());
@@ -258,6 +241,31 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  void PostInit() {
+    if (!config_.model_config.tokens_buf.empty()) {
+      /// assuming tokens_buf and tokens are guaranteed not being both empty
+      sym_ = SymbolTable(config_.model_config.tokens_buf, false);
+    }
+
+    if (!config_.model_config.wenet_ctc.model.empty()) {
+      // WeNet CTC models assume input samples are in the range
+      // [-32768, 32767], so we set normalize_samples to false
+      config_.feat_config.normalize_samples = false;
+    }
+
+    if (!config_.model_config.t_one_ctc.model.empty()) {
+      config_.feat_config.is_t_one = true;
+      config_.feat_config.frame_length_ms = 300;
+      config_.feat_config.frame_shift_ms = 300;
+      config_.feat_config.sampling_rate = 8000;
+    }
+
+    if (model_->UseWhisperFeature()) {
+      config_.feat_config.is_whisper = true;
+    }
+
+    InitDecoder();
+  }
   void InitDecoder() {
     if (!sym_.Contains("<blk>") && !sym_.Contains("<eps>") &&
         !sym_.Contains("<blank>")) {

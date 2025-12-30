@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-model.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

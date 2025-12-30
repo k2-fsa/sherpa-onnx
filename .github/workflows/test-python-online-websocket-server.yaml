@@ -9,14 +9,7 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-python-online-websocket-server.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/python/**'
+
   workflow_dispatch:
 
 concurrency:
@@ -33,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-22.04, windows-latest, macos-latest, macos-14]
+        os: [ubuntu-latest, ubuntu-22.04, windows-2022, macos-latest, macos-14]
         python-version: ["3.10"]
         model_type: ["transducer", "paraformer", "zipformer2-ctc"]
 

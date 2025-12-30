@@ -23,7 +23,7 @@
 
 namespace sherpa_onnx {
 
-class Hypothesis;
+struct Hypothesis;
 
 class LodrFst {
  public:

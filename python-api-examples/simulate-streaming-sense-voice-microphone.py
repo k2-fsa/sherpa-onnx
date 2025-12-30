@@ -79,13 +79,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "--hr-dict-dir",
-        type=str,
-        default="",
-        help="If not empty, it is the jieba dict directory for homophone replacer",
-    )
-
-    parser.add_argument(
         "--hr-lexicon",
         type=str,
         default="",
@@ -118,7 +111,6 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         num_threads=args.num_threads,
         use_itn=False,
         debug=False,
-        hr_dict_dir=args.hr_dict_dir,
         hr_rule_fsts=args.hr_rule_fsts,
         hr_lexicon=args.hr_lexicon,
     )

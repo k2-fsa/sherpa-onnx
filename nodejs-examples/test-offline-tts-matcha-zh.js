@@ -8,7 +8,6 @@ function createOfflineTts() {
     vocoder: './vocos-22khz-univ.onnx',
     lexicon: './matcha-icefall-zh-baker/lexicon.txt',
     tokens: './matcha-icefall-zh-baker/tokens.txt',
-    dictDir: './matcha-icefall-zh-baker/dict',
     noiseScale: 0.667,
     lengthScale: 1.0,
   };

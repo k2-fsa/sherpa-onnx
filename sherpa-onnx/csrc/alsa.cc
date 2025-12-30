@@ -7,6 +7,9 @@
 #include "sherpa-onnx/csrc/alsa.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <memory>
+#include <vector>
 
 #include "alsa/asoundlib.h"
 

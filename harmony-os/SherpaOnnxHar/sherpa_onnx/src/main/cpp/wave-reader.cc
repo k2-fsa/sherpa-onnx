@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <string>
 
 #include "napi.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"

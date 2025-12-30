@@ -8,6 +8,7 @@
 #include <cassert>
 #include <numeric>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/slice.h"
 #include "sherpa-onnx/csrc/transpose.h"

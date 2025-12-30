@@ -10,6 +10,54 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------non-streaming ASR Google MedASR CTC----------"
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+
+node ./test_asr_non_streaming_medasr_ctc.js
+
+rm -rf sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+
+echo "----------non-streaming ASR Omnilingual ASR CTC----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+tar xvf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
+
+node ./test_asr_non_streaming_omnilingual_asr_ctc.js
+
+rm -rf sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+
+echo "----------non-streaming ASR WeNet CTC----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
+tar xvf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
+rm sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
+
+node ./test_asr_non_streaming_wenet_ctc.js
+rm -rf sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10
+
+echo "----------streaming ASR T-one CTC----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+tar xvf sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+rm sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2
+
+node ./test_asr_streaming_t_one_ctc.js
+
+rm -rf sherpa-onnx-streaming-t-one-russian-2025-09-08
+
+echo "----------KittenTTS----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test_tts_non_streaming_kitten_en.js
+
+rm -rf kitten-nano-en-v0_1-fp16
+
 echo "----------non-streaming ASR NeMo Canary----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
@@ -236,8 +284,16 @@ if [[ $arch != "ia32" && $platform != "win32" && $node_version != 21 ]]; then
   tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
   rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
-  node ./test_punctuation.js
+  node ./test_offline_punctuation.js
   rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+  tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+  rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+  node ./test_online_punctuation.js
+  rm -rf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 fi
 
 echo "----------audio tagging----------"

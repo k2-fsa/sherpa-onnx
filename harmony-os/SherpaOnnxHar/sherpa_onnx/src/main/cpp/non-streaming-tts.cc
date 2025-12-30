@@ -3,7 +3,10 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "macros.h"  // NOLINT
 #include "napi.h"    // NOLINT
@@ -26,7 +29,6 @@ static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale_w, noiseScaleW);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
 
   return c;
 }
@@ -48,7 +50,6 @@ static SherpaOnnxOfflineTtsMatchaModelConfig GetOfflineTtsMatchaModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
 
   return c;
 }
@@ -68,9 +69,27 @@ static SherpaOnnxOfflineTtsKokoroModelConfig GetOfflineTtsKokoroModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
   SHERPA_ONNX_ASSIGN_ATTR_STR(lang, lang);
+
+  return c;
+}
+
+static SherpaOnnxOfflineTtsKittenModelConfig GetOfflineTtsKittenModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineTtsKittenModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("kitten") || !obj.Get("kitten").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("kitten").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(voices, voices);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
 
   return c;
 }
@@ -89,6 +108,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   c.vits = GetOfflineTtsVitsModelConfig(o);
   c.matcha = GetOfflineTtsMatchaModelConfig(o);
   c.kokoro = GetOfflineTtsKokoroModelConfig(o);
+  c.kitten = GetOfflineTtsKittenModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -163,20 +183,22 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);
-  SHERPA_ONNX_DELETE_C_STR(c.model.vits.dict_dir);
 
   SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model);
   SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);
   SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.dict_dir);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);
 
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.dict_dir);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);
   SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);
 

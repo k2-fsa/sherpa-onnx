@@ -4,6 +4,7 @@
 #include <chrono>  // NOLINT
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"

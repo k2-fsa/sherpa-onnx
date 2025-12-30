@@ -22,7 +22,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04-arm]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
-        manylinux: [manylinux2014] #, manylinux_2_28]
+        # manylinux: [manylinux2014] #, manylinux_2_28]
+        manylinux: [manylinux_2_28] #, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
@@ -46,12 +47,22 @@ jobs:
             echo "PWD"
             ls -lh /project/alsa-lib/src/.libs
 
-          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=1 SHERPA_ONNX_ENABLE_GPU=ON
+          CIBW_ENVIRONMENT: >
+            CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH
+            C_INCLUDE_PATH=/project/alsa-lib/include:$C_INCLUDE_PATH
+            SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs
+            LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH
+            SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+            SHERPA_ONNX_ENABLE_ALSA=1
+            SHERPA_ONNX_ENABLE_GPU=ON
+            SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON -DALSA_INCLUDE_DIR=/project/alsa-lib/include -DALSA_LIBRARY=/project/alsa-lib/src/.libs/libasound.so"
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
           CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
+          #  Don't repair Linux wheels
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
 

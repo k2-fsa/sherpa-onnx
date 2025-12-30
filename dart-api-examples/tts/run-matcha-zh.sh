@@ -23,7 +23,6 @@ dart run \
   --vocoder ./vocos-22khz-univ.onnx \
   --lexicon ./matcha-icefall-zh-baker/lexicon.txt \
   --tokens ./matcha-icefall-zh-baker/tokens.txt \
-  --dict-dir ./matcha-icefall-zh-baker/dict \
   --rule-fsts ./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
   --sid 0 \
   --speed 1.0 \
@@ -36,7 +35,6 @@ dart run \
   --vocoder ./vocos-22khz-univ.onnx \
   --lexicon ./matcha-icefall-zh-baker/lexicon.txt \
   --tokens ./matcha-icefall-zh-baker/tokens.txt \
-  --dict-dir ./matcha-icefall-zh-baker/dict \
   --sid 0 \
   --speed 1.0 \
   --output-wav matcha-zh-2.wav \

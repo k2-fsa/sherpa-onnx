@@ -28,7 +28,7 @@ export class OfflineStream {
 }
 
 export class HomophoneReplacerConfig {
-  public dictDir: string = '';
+  public dictDir: string = '';  // unused
   public lexicon: string = '';
   public ruleFsts: string = '';
 }
@@ -57,6 +57,10 @@ export class OfflineDolphinModelConfig {
 }
 
 export class OfflineZipformerCtcModelConfig {
+  public model: string = '';
+}
+
+export class OfflineWenetCtcModelConfig {
   public model: string = '';
 }
 
@@ -112,6 +116,7 @@ export class OfflineModelConfig {
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
   public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
   public canary: OfflineCanaryModelConfig = new OfflineCanaryModelConfig();
+  public wenetCtc: OfflineWenetCtcModelConfig = new OfflineWenetCtcModelConfig();
 }
 
 export class OfflineLMConfig {

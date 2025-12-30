@@ -10,4 +10,7 @@ telespeech_ctc
 moonshine
 dolphin_ctc
 zipformer_ctc
+wenet_ctc
 nemo_canary
+omnilingual_asr_ctc
+medasr_ctc

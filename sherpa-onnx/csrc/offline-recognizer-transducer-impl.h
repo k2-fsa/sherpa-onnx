@@ -36,6 +36,7 @@ static OfflineRecognitionResult Convert(
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
+  r.durations.reserve(src.durations.size());
 
   std::string text;
   for (auto i : src.tokens) {
@@ -65,6 +66,14 @@ static OfflineRecognitionResult Convert(
     float time = frame_shift_s * t;
     r.timestamps.push_back(time);
   }
+
+  // Copy durations (if present)
+  for (auto d : src.durations) {
+    r.durations.push_back(d * frame_shift_s);
+  }
+
+  // Copy token log probabilities (confidence scores)
+  r.ys_log_probs = src.ys_log_probs;
 
   return r;
 }

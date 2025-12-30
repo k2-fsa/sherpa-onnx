@@ -28,6 +28,8 @@ class VoiceActivityDetector {
   ~VoiceActivityDetector();
 
   void AcceptWaveform(const float *samples, int32_t n);
+  float Compute(const float *samples, int32_t n);
+
   bool Empty() const;
   void Pop();
   void Clear();

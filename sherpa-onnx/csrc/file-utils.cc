@@ -8,6 +8,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -25,13 +26,38 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
-  std::ifstream input(filename, std::ios::binary);
-  std::vector<char> buffer(std::istreambuf_iterator<char>(input), {});
+  std::ifstream file(filename, std::ios::binary | std::ios::ate);
+  if (!file.is_open()) {
+    return {};
+  }
+
+  std::streamsize size = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  std::vector<char> buffer(size);
+  if (!file.read(buffer.data(), size)) {
+    return {};
+  }
+
   return buffer;
 }
 
 #if __ANDROID_API__ >= 9
 std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
+  if (!filename.empty() && filename[0] == '/') {
+    SHERPA_ONNX_LOGE(
+        "You are using an absolute path '%s', but assetManager is NOT set to "
+        "null.",
+        filename.c_str());
+
+    SHERPA_ONNX_LOGE(
+        "Please set assetManager to null when you load model files from the SD "
+        "card");
+
+    SHERPA_ONNX_LOGE(
+        "See also https://github.com/k2-fsa/sherpa-onnx/issues/2562");
+  }
+
   AAsset *asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER);
   if (!asset) {
     __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",

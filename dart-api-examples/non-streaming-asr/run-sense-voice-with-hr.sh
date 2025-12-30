@@ -25,7 +25,6 @@ dart run \
   --model ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx \
   --tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
   --use-itn true \
-  --hr-dict-dir ./dict \
   --hr-lexicon ./lexicon.txt \
   --hr-rule-fsts ./replace.fst \
   --input-wav ./test-hr.wav

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/silero-vad-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -41,6 +43,12 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
       "512, 1024, 1536 samples for 16000 sample rate and 256, 512, 768 samples "
       "for 8000 sample rate. Values other than these may affect model "
       "performance!");
+
+  po->Register(
+    "silero-vad-neg-threshold", &neg_threshold,
+    "Negative threshold (noise threshold). If < 0, defaults to "
+    "(threshold - 0.15) with lower bound 0.01."
+  );
 }
 
 bool SileroVadModelConfig::Validate() const {
@@ -108,7 +116,8 @@ std::string SileroVadModelConfig::ToString() const {
   os << "min_silence_duration=" << min_silence_duration << ", ";
   os << "min_speech_duration=" << min_speech_duration << ", ";
   os << "max_speech_duration=" << max_speech_duration << ", ";
-  os << "window_size=" << window_size << ")";
+  os << "window_size=" << window_size << ", ";
+  os << "neg_threshold=" << neg_threshold << ")";
 
   return os.str();
 }

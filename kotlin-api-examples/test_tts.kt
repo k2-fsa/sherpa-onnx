@@ -5,6 +5,7 @@ fun main() {
   testMatcha()
   testKokoroEn()
   testKokoroZhEn()
+  testKittenEn()
 }
 
 fun testKokoroZhEn() {
@@ -16,7 +17,6 @@ fun testKokoroZhEn() {
         voices="./kokoro-multi-lang-v1_0/voices.bin",
         tokens="./kokoro-multi-lang-v1_0/tokens.txt",
         dataDir="./kokoro-multi-lang-v1_0/espeak-ng-data",
-        dictDir="./kokoro-multi-lang-v1_0/dict",
         lexicon="./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt",
       ),
       numThreads=2,
@@ -61,7 +61,6 @@ fun testMatcha() {
         vocoder="./vocos-22khz-univ.onnx",
         tokens="./matcha-icefall-zh-baker/tokens.txt",
         lexicon="./matcha-icefall-zh-baker/lexicon.txt",
-        dictDir="./matcha-icefall-zh-baker/dict",
       ),
       numThreads=1,
       debug=true,
@@ -94,6 +93,27 @@ fun testVits() {
   audio.save(filename="test-en.wav")
   tts.release()
   println("Saved to test-en.wav")
+}
+
+fun testKittenEn() {
+  // see https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+  var config = OfflineTtsConfig(
+    model=OfflineTtsModelConfig(
+      kitten=OfflineTtsKittenModelConfig(
+        model="./kitten-nano-en-v0_1-fp16/model.fp16.onnx",
+        voices="./kitten-nano-en-v0_1-fp16/voices.bin",
+        tokens="./kitten-nano-en-v0_1-fp16/tokens.txt",
+        dataDir="./kitten-nano-en-v0_1-fp16/espeak-ng-data",
+      ),
+      numThreads=2,
+      debug=true,
+    ),
+  )
+  val tts = OfflineTts(config=config)
+  val audio = tts.generateWithCallback(text="How are you doing today?", sid=7, callback=::callback)
+  audio.save(filename="test-kitten-en.wav")
+  tts.release()
+  println("Saved to test-kitten-en.wav")
 }
 
 /*

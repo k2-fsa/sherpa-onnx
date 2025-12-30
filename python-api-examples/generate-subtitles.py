@@ -99,9 +99,20 @@ Please replace --silero-vad-model with --ten-vad-model below to use ten-vad.
 
 ./python-api-examples/generate-subtitles.py  \
   --silero-vad-model=/path/to/silero_vad.onnx \
-  --wenet-ctc=./sherpa-onnx-zh-wenet-wenetspeech/model.onnx \
-  --tokens=./sherpa-onnx-zh-wenet-wenetspeech/tokens.txt \
+  --wenet-ctc=./sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx \
+  --tokens=./sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/tokens.txt \
   --num-threads=2 \
+  /path/to/test.mp4
+
+(8) For NeMo Parakeet TDT models
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=./silero_vad.onnx \
+  --encoder ./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/encoder.int8.onnx \
+  --decoder ./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/decoder.int8.onnx \
+  --joiner ./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/joiner.int8.onnx \
+  --tokens ./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tokens.txt \
+  --model-type nemo_transducer \
   /path/to/test.mp4
 
 Please refer to
@@ -164,6 +175,13 @@ def get_args():
         default="",
         type=str,
         help="Path to the transducer joiner model",
+    )
+
+    parser.add_argument(
+        "--model-type",
+        default="",
+        type=str,
+        help="If using NeMo transducer models, please set it to nemo_transducer",
     )
 
     parser.add_argument(
@@ -356,6 +374,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             decoder=args.decoder,
             joiner=args.joiner,
             tokens=args.tokens,
+            model_type=args.model_type,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
@@ -640,6 +659,8 @@ def main():
 
         for seg, stream in zip(segments, streams):
             seg.text = stream.result.text
+            if seg.text in (".", "The."):
+                continue
             segment_list.append(seg)
 
     end_t = dt.datetime.now()

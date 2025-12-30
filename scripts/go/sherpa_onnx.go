@@ -77,6 +77,14 @@ type OnlineZipformer2CtcModelConfig struct {
 	Model string // Path to the onnx model
 }
 
+type OnlineNemoCtcModelConfig struct {
+	Model string // Path to the onnx model
+}
+
+type OnlineToneCtcModelConfig struct {
+	Model string // Path to the onnx model
+}
+
 // Configuration for online/streaming models
 //
 // Please refer to
@@ -87,6 +95,8 @@ type OnlineModelConfig struct {
 	Transducer    OnlineTransducerModelConfig
 	Paraformer    OnlineParaformerModelConfig
 	Zipformer2Ctc OnlineZipformer2CtcModelConfig
+	NemoCtc       OnlineNemoCtcModelConfig
+	ToneCtc       OnlineToneCtcModelConfig
 	Tokens        string // Path to tokens.txt
 	NumThreads    int    // Number of threads to use for neural network computation
 	Provider      string // Optional. Valid values are: cpu, cuda, coreml
@@ -114,7 +124,7 @@ type OnlineCtcFstDecoderConfig struct {
 }
 
 type HomophoneReplacerConfig struct {
-	DictDir  string
+	DictDir  string // unused
 	Lexicon  string
 	RuleFsts string
 }
@@ -197,6 +207,12 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.model_config.zipformer2_ctc.model = C.CString(config.ModelConfig.Zipformer2Ctc.Model)
 	defer C.free(unsafe.Pointer(c.model_config.zipformer2_ctc.model))
 
+	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
+
+	c.model_config.t_one_ctc.model = C.CString(config.ModelConfig.ToneCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.t_one_ctc.model))
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))
 
@@ -250,9 +266,6 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.ctc_fst_decoder_config.graph = C.CString(config.CtcFstDecoderConfig.Graph)
 	defer C.free(unsafe.Pointer(c.ctc_fst_decoder_config.graph))
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
-
-	c.hr.dict_dir = C.CString(config.Hr.DictDir)
-	defer C.free(unsafe.Pointer(c.hr.dict_dir))
 
 	c.hr.lexicon = C.CString(config.Hr.Lexicon)
 	defer C.free(unsafe.Pointer(c.hr.lexicon))
@@ -402,6 +415,18 @@ type OfflineZipformerCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineWenetCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
+type OfflineOmnilingualAsrCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
+type OfflineMedAsrCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -462,6 +487,9 @@ type OfflineModelConfig struct {
 	Dolphin      OfflineDolphinModelConfig
 	ZipformerCtc OfflineZipformerCtcModelConfig
 	Canary       OfflineCanaryModelConfig
+	WenetCtc     OfflineWenetCtcModelConfig
+	Omnilingual  OfflineOmnilingualAsrCtcModelConfig
+	MedAsr       OfflineMedAsrCtcModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -515,6 +543,7 @@ type OfflineRecognizerResult struct {
 	Text       string
 	Tokens     []string
 	Timestamps []float32
+	Durations  []float32
 	Lang       string
 	Emotion    string
 	Event      string
@@ -562,6 +591,11 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.canary.tgt_lang = C.CString(config.ModelConfig.Canary.TgtLang)
 	c.model_config.canary.use_pnc = C.int(config.ModelConfig.Canary.UsePnc)
 
+	c.model_config.wenet_ctc.model = C.CString(config.ModelConfig.WenetCtc.Model)
+
+	c.model_config.omnilingual.model = C.CString(config.ModelConfig.Omnilingual.Model)
+	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
 	c.model_config.num_threads = C.int(config.ModelConfig.NumThreads)
@@ -593,7 +627,6 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.rule_fsts = C.CString(config.RuleFsts)
 	c.rule_fars = C.CString(config.RuleFars)
 
-	c.hr.dict_dir = C.CString(config.Hr.DictDir)
 	c.hr.lexicon = C.CString(config.Hr.Lexicon)
 	c.hr.rule_fsts = C.CString(config.Hr.RuleFsts)
 	return &c
@@ -710,6 +743,21 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		c.model_config.canary.tgt_lang = nil
 	}
 
+	if c.model_config.wenet_ctc.model != nil {
+		C.free(unsafe.Pointer(c.model_config.wenet_ctc.model))
+		c.model_config.wenet_ctc.model = nil
+	}
+
+	if c.model_config.medasr.model != nil {
+		C.free(unsafe.Pointer(c.model_config.medasr.model))
+		c.model_config.medasr.model = nil
+	}
+
+	if c.model_config.omnilingual.model != nil {
+		C.free(unsafe.Pointer(c.model_config.omnilingual.model))
+		c.model_config.omnilingual.model = nil
+	}
+
 	if c.model_config.tokens != nil {
 		C.free(unsafe.Pointer(c.model_config.tokens))
 		c.model_config.tokens = nil
@@ -758,11 +806,6 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 	if c.rule_fars != nil {
 		C.free(unsafe.Pointer(c.rule_fars))
 		c.rule_fars = nil
-	}
-
-	if c.hr.dict_dir != nil {
-		C.free(unsafe.Pointer(c.hr.dict_dir))
-		c.hr.dict_dir = nil
 	}
 
 	if c.hr.lexicon != nil {
@@ -864,13 +907,19 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 	for i := 0; i < n; i++ {
 		result.Tokens[i] = C.GoString(tokens[i])
 	}
-	if p.timestamps == nil {
-		return result
+	if p.timestamps != nil {
+		result.Timestamps = make([]float32, n)
+		timestamps := unsafe.Slice(p.timestamps, n)
+		for i := 0; i < n; i++ {
+			result.Timestamps[i] = float32(timestamps[i])
+		}
 	}
-	result.Timestamps = make([]float32, n)
-	timestamps := unsafe.Slice(p.timestamps, n)
-	for i := 0; i < n; i++ {
-		result.Timestamps[i] = float32(timestamps[i])
+	if p.durations != nil {
+		result.Durations = make([]float32, n)
+		durations := unsafe.Slice(p.durations, n)
+		for i := 0; i < n; i++ {
+			result.Durations[i] = float32(durations[i])
+		}
 	}
 	return result
 }
@@ -888,7 +937,7 @@ type OfflineTtsVitsModelConfig struct {
 	NoiseScale  float32 // noise scale for vits models. Please use 0.667 in general
 	NoiseScaleW float32 // noise scale for vits models. Please use 0.8 in general
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
-	DictDir     string  // Path to dict directory for jieba (used only in Chinese tts)
+	DictDir     string  // unused
 }
 
 type OfflineTtsMatchaModelConfig struct {
@@ -899,7 +948,7 @@ type OfflineTtsMatchaModelConfig struct {
 	DataDir       string  // Path to espeak-ng-data directory
 	NoiseScale    float32 // noise scale for vits models. Please use 0.667 in general
 	LengthScale   float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
-	DictDir       string  // Path to dict directory for jieba (used only in Chinese tts)
+	DictDir       string  // unused
 }
 
 type OfflineTtsKokoroModelConfig struct {
@@ -907,16 +956,40 @@ type OfflineTtsKokoroModelConfig struct {
 	Voices      string  // Path to the voices.bin for kokoro
 	Tokens      string  // Path to tokens.txt
 	DataDir     string  // Path to espeak-ng-data directory
-	DictDir     string  // Path to dict directory
+	DictDir     string  // unused
 	Lexicon     string  // Path to lexicon files
 	Lang        string  // Example: es for Spanish, fr-fr for French. Can be empty
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
+type OfflineTtsKittenModelConfig struct {
+	Model       string  // Path to the model for kitten
+	Voices      string  // Path to the voices.bin for kitten
+	Tokens      string  // Path to tokens.txt
+	DataDir     string  // Path to espeak-ng-data directory
+	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
+}
+
+type OfflineTtsZipvoiceModelConfig struct {
+	Tokens  string // Path to tokens.txt for ZipVoice
+	Encoder string // Path to text encoder (e.g. encoder.onnx)
+	Decoder string // Path to flow-matching decoder (e.g. fm_decoder.onnx)
+	DataDir string // Path to espeak-ng-data
+	Lexicon string // Path to lexicon.txt (needed for zh)
+	Vocoder string // Path to vocoder (e.g. vocos_24khz.onnx)
+
+	FeatScale     float32 // Feature scale
+	TShift        float32 // t-shift (<1 shifts to smaller t)
+	TargetRms     float32 // Target RMS for speech normalization
+	GuidanceScale float32 // CFG scale
+}
+
 type OfflineTtsModelConfig struct {
-	Vits   OfflineTtsVitsModelConfig
-	Matcha OfflineTtsMatchaModelConfig
-	Kokoro OfflineTtsKokoroModelConfig
+	Vits     OfflineTtsVitsModelConfig
+	Matcha   OfflineTtsMatchaModelConfig
+	Kokoro   OfflineTtsKokoroModelConfig
+	Kitten   OfflineTtsKittenModelConfig
+	Zipvoice OfflineTtsZipvoiceModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -1015,9 +1088,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.vits.noise_scale_w = C.float(config.Model.Vits.NoiseScaleW)
 	c.model.vits.length_scale = C.float(config.Model.Vits.LengthScale)
 
-	c.model.vits.dict_dir = C.CString(config.Model.Vits.DictDir)
-	defer C.free(unsafe.Pointer(c.model.vits.dict_dir))
-
 	// matcha
 	c.model.matcha.acoustic_model = C.CString(config.Model.Matcha.AcousticModel)
 	defer C.free(unsafe.Pointer(c.model.matcha.acoustic_model))
@@ -1037,9 +1107,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.matcha.noise_scale = C.float(config.Model.Matcha.NoiseScale)
 	c.model.matcha.length_scale = C.float(config.Model.Matcha.LengthScale)
 
-	c.model.matcha.dict_dir = C.CString(config.Model.Matcha.DictDir)
-	defer C.free(unsafe.Pointer(c.model.matcha.dict_dir))
-
 	// kokoro
 	c.model.kokoro.model = C.CString(config.Model.Kokoro.Model)
 	defer C.free(unsafe.Pointer(c.model.kokoro.model))
@@ -1053,9 +1120,6 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.kokoro.data_dir = C.CString(config.Model.Kokoro.DataDir)
 	defer C.free(unsafe.Pointer(c.model.kokoro.data_dir))
 
-	c.model.kokoro.dict_dir = C.CString(config.Model.Kokoro.DictDir)
-	defer C.free(unsafe.Pointer(c.model.kokoro.dict_dir))
-
 	c.model.kokoro.lexicon = C.CString(config.Model.Kokoro.Lexicon)
 	defer C.free(unsafe.Pointer(c.model.kokoro.lexicon))
 
@@ -1063,6 +1127,45 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	defer C.free(unsafe.Pointer(c.model.kokoro.lang))
 
 	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
+
+	// kitten
+	c.model.kitten.model = C.CString(config.Model.Kitten.Model)
+	defer C.free(unsafe.Pointer(c.model.kitten.model))
+
+	c.model.kitten.voices = C.CString(config.Model.Kitten.Voices)
+	defer C.free(unsafe.Pointer(c.model.kitten.voices))
+
+	c.model.kitten.tokens = C.CString(config.Model.Kitten.Tokens)
+	defer C.free(unsafe.Pointer(c.model.kitten.tokens))
+
+	c.model.kitten.data_dir = C.CString(config.Model.Kitten.DataDir)
+	defer C.free(unsafe.Pointer(c.model.kitten.data_dir))
+
+	c.model.kitten.length_scale = C.float(config.Model.Kitten.LengthScale)
+
+	// zipvoice
+	c.model.zipvoice.tokens = C.CString(config.Model.Zipvoice.Tokens)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.tokens))
+
+	c.model.zipvoice.encoder = C.CString(config.Model.Zipvoice.Encoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.encoder))
+
+	c.model.zipvoice.decoder = C.CString(config.Model.Zipvoice.Decoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.decoder))
+
+	c.model.zipvoice.vocoder = C.CString(config.Model.Zipvoice.Vocoder)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.vocoder))
+
+	c.model.zipvoice.data_dir = C.CString(config.Model.Zipvoice.DataDir)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.data_dir))
+
+	c.model.zipvoice.lexicon = C.CString(config.Model.Zipvoice.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.zipvoice.lexicon))
+
+	c.model.zipvoice.feat_scale = C.float(config.Model.Zipvoice.FeatScale)
+	c.model.zipvoice.t_shift = C.float(config.Model.Zipvoice.TShift)
+	c.model.zipvoice.target_rms = C.float(config.Model.Zipvoice.TargetRms)
+	c.model.zipvoice.guidance_scale = C.float(config.Model.Zipvoice.GuidanceScale)
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
@@ -1098,6 +1201,52 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 		ans.Samples[i] = float32(samples[i])
 	}
 
+	return ans
+}
+
+func (tts *OfflineTts) GenerateWithZipvoice(
+	text, promptText string,
+	promptSamples []float32,
+	promptSampleRate int,
+	speed float32,
+	numSteps int,
+) *GeneratedAudio {
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
+
+	cPromptText := C.CString(promptText)
+	defer C.free(unsafe.Pointer(cPromptText))
+
+	var p *C.float
+	var n C.int
+	if len(promptSamples) > 0 {
+		p = (*C.float)(&promptSamples[0])
+		n = C.int(len(promptSamples))
+	}
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithZipvoice(
+		tts.impl,
+		cText,
+		cPromptText,
+		p,
+		n,
+		C.int(promptSampleRate),
+		C.float(speed),
+		C.int(numSteps),
+	)
+	if audio == nil {
+		return nil
+	}
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	ans := &GeneratedAudio{
+		SampleRate: int(audio.sample_rate),
+		Samples:    make([]float32, int(audio.n)),
+	}
+	samples := unsafe.Slice(audio.samples, int(audio.n))
+	for i := 0; i < int(audio.n); i++ {
+		ans.Samples[i] = float32(samples[i])
+	}
 	return ans
 }
 
@@ -1813,6 +1962,9 @@ func NewKeywordSpotter(config *KeywordSpotterConfig) *KeywordSpotter {
 
 	c.model_config.zipformer2_ctc.model = C.CString(config.ModelConfig.Zipformer2Ctc.Model)
 	defer C.free(unsafe.Pointer(c.model_config.zipformer2_ctc.model))
+
+	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCtc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

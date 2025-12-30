@@ -1,0 +1,109 @@
+name: export-t-one-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-t-one-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-t-one-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export t-one
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install onnx==1.17.0 onnxruntime==1.17.1 soundfile librosa kaldi_native_fbank "numpy<2"
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/t-one
+
+          wget https://raw.githubusercontent.com/voicekit-team/T-one/refs/heads/main/LICENSE
+          ./run.sh
+
+          d=sherpa-onnx-streaming-t-one-russian-2025-09-08
+          mkdir $d
+          cp -v ./tokens.txt $d
+          cp -v ./model.onnx $d
+          cp -v ./russian_test_short_from_t_one.wav $d/0.wav
+          cp -v ./LICENSE $d
+          cp -v ./README.md $d
+
+          ls -lh $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d.tar.bz2
+
+          mv $d.tar.bz2 ../..
+          mv $d ../..
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            m=sherpa-onnx-streaming-t-one-russian-2025-09-08
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
+            cd huggingface
+            git fetch
+            git pull
+            echo "pwd: $PWD"
+            ls -lh ../$m
+            git lfs track "*.wav"
+
+            rm -rf ./*
+
+            cp -v ../$m/* ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m main || true
+
+            cd ..
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

@@ -62,7 +62,7 @@ ai.on('data', data => {
     kws.decode(stream);
   }
 
-  const keyword = kws.getResult(stream).keyword
+  const keyword = kws.getResult(stream).keyword;
   if (keyword != '') {
     display.print(segmentIndex, keyword);
     segmentIndex += 1;

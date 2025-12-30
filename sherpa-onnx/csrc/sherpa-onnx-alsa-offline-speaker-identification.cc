@@ -10,7 +10,11 @@
 #include <fstream>
 #include <mutex>  // NOLINT
 #include <sstream>
+#include <string>
 #include <thread>  // NOLINT
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/macros.h"

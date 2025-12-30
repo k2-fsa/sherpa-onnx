@@ -1,0 +1,209 @@
+name: export-paraformer-to-rknn
+
+on:
+  push:
+    branches:
+      - ci-paraformer-rknn
+  workflow_dispatch:
+
+concurrency:
+  group: export-paraformer-to-rknn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-paraformer-to-rknn:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.framework }} ${{ matrix.platform }} ${{ matrix.input_in_seconds }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+        platform: ["rk3562", "rk3566", "rk3568", "rk3576", "rk3588"]
+        input_in_seconds: ["5", "10", "15", "20", "25", "30"]
+        framework: ["FunASR", "WSChuan-ASR"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade \
+            pip \
+            "numpy<2" \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            librosa \
+            soundfile \
+            pyyaml \
+            onnxsim \
+            sentencepiece \
+            kaldi_native_fbank
+
+          curl -SL -O https://huggingface.co/csukuangfj/rknn-toolkit2/resolve/main/rknn_toolkit2-2.1.0%2B708089d1-cp310-cp310-linux_x86_64.whl
+          pip install ./*.whl "numpy<=1.26.4"
+
+      - name: Run Paraformer from FunAsr
+        if: matrix.framework == 'FunASR'
+        shell: bash
+        run: |
+          cd scripts/paraformer/rknn
+
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/am.mvn
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/config.yaml
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/tokens.txt
+
+          curl -SL -O https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/resolve/master/model.pt
+          mv model.pt model_state_dict.pt
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/0.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/1.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/2.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/3-sichuan.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/4-tianjin.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/5-henan.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/6-zh-en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/test_wavs/8k.wav
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/README.md
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+          p=${{ matrix.platform }}
+
+          export url="https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
+          export model_author="iic"
+          export comment="iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
+
+          echo "----$t---"
+          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
+
+          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
+
+          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+
+          ls -lh *.onnx
+          echo "---"
+          ls -lh *.rknn
+
+          echo "collect results"
+          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2023-03-28
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
+          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
+          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Run Paraformer from WSChuan-ASR
+        if: matrix.framework == 'WSChuan-ASR'
+        shell: bash
+        run: |
+          cd scripts/paraformer/rknn
+
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/am.mvn
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/config.yaml
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/tokens.json
+          curl -SL -O https://hf-mirror.com/csukuangfj/WSChuan-ASR/resolve/main/Paraformer-large-Chuan/model_state_dict.pt
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/tokens.txt
+
+
+          for i in $(seq 1 16); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/test_wavs/$i.wav
+          done
+
+          rm -f README.md || true
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-int8-2025-10-07/resolve/main/README.md
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+          p=${{ matrix.platform }}
+
+          export model_author="ASLP-lab"
+          export comment="ASLP-lab/WSChuan-ASR"
+          export url="https://huggingface.co/ASLP-lab/WSChuan-ASR/tree/main/Paraformer-large-Chuan"
+
+          echo "----$t---"
+          python3 ./export_encoder_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./encoder-$t-seconds.onnx --out-model ./encoder-$t-seconds.rknn >/dev/null 2>&1
+
+          python3 ./export_predictor_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./predictor-$t-seconds.onnx --out-model ./predictor-$t-seconds.rknn >/dev/null 2>&1
+
+          python3 ./export_decoder_onnx.py  --input-len-in-seconds $t
+          python3 ./export_rknn.py --target-platform $p --in-model ./decoder-$t-seconds.onnx --out-model ./decoder-$t-seconds.rknn >/dev/null 2>&1
+
+          ls -lh *.onnx
+          echo "---"
+          ls -lh *.rknn
+
+          echo "collect results"
+          d=sherpa-onnx-$p-$t-seconds-paraformer-zh-2025-10-07
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v encoder-$t-seconds.rknn $d/encoder.rknn
+          cp -v decoder-$t-seconds.rknn $d/decoder.rknn
+          cp -v predictor-$t-seconds.rknn $d/predictor.rknn
+
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: asr-models

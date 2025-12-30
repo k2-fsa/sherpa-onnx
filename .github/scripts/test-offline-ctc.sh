@@ -114,7 +114,6 @@ for m in model.onnx model.int8.onnx; do
       --sense-voice-model=$repo/$m \
       --sense-voice-use-itn=$use_itn \
       --hr-lexicon=./lexicon.txt \
-      --hr-dict-dir=./dict \
       --hr-rule-fsts=./replace.fst \
       ./test-hr.wav
   done

@@ -9,15 +9,13 @@ func run() {
   let vocoder = "./vocos-22khz-univ.onnx"
   let lexicon = "./matcha-icefall-zh-baker/lexicon.txt"
   let tokens = "./matcha-icefall-zh-baker/tokens.txt"
-  let dictDir = "./matcha-icefall-zh-baker/dict"
   let ruleFsts =
     "./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst"
   let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(
     acousticModel: acousticModel,
     vocoder: vocoder,
     lexicon: lexicon,
-    tokens: tokens,
-    dictDir: dictDir
+    tokens: tokens
   )
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha, debug: 0)
   var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig, ruleFsts: ruleFsts)

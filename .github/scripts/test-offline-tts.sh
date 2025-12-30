@@ -104,7 +104,6 @@ $EXE \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
-  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
   --num-threads=2 \
   --debug=1 \
   --output-filename=./tts/matcha-baker-zh-1.wav \
@@ -115,7 +114,6 @@ $EXE \
   --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
-  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
   --num-threads=2 \
   --debug=1 \
   --output-filename=./tts/matcha-baker-zh-2.wav \

@@ -13,17 +13,6 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
       - 'scripts/lazarus/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/lazarus.yaml'
-      - 'cmake/**'
-      - 'lazarus-examples/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/pascal-api/*'
-      - 'scripts/lazarus/*'
 
   workflow_dispatch:
 
@@ -41,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest, macos-13, windows-latest]
+        os: [ubuntu-22.04, macos-latest, macos-15-intel, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -108,7 +97,7 @@ jobs:
           cd build
           os=${{ matrix.os }}
 
-          if [[ $os == 'windows-latest' || $os == 'ubuntu-22.04' ]]; then
+          if [[ $os == 'windows-2022' || $os == 'ubuntu-22.04' ]]; then
             BUILD_SHARED_LIBS=ON
           else
             BUILD_SHARED_LIBS=OFF
@@ -139,7 +128,7 @@ jobs:
         run: |
           cd lazarus-examples/generate_subtitles
           os=${{ matrix.os }}
-          if [[ $os == macos-13 ]]; then
+          if [[ $os == macos-15-intel ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
@@ -184,7 +173,7 @@ jobs:
           ls -lh /tmp/linux-x64
 
       - name: Collect generating subtitles (windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -202,7 +191,7 @@ jobs:
           ls -lh windows-x64
 
       - name: Collect generating subtitles (macos)
-        if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-15-intel' || matrix.os == 'macos-latest'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -239,13 +228,13 @@ jobs:
           path: /tmp/macos-arm64
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-15-intel'
         with:
           name: macos-x64
           path: /tmp/macos-x64
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         with:
           name: windows-x64
           path: ./windows-x64

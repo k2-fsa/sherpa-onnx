@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/circular-buffer.h"
 
 #include <algorithm>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 

@@ -10,15 +10,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'go-api-examples/**'
       - 'scripts/go/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-go.yaml'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'go-api-examples/**'
-      - 'scripts/go/**'
 
   workflow_dispatch:
 
@@ -33,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-13, ubuntu-latest, windows-latest, ubuntu-22.04-arm]
+        os: [macos-latest, macos-15-intel, ubuntu-latest, windows-2022, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -87,7 +78,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-          if [[ ${{ matrix.os }} == windows-latest ]]; then
+          if [[ ${{ matrix.os }} == windows-2022 ]]; then
             cmake --build . --target install --config Release -- -m:2
           else
             make -j2 install
@@ -101,7 +92,7 @@ jobs:
 
             rm -v ./lib/*.a
             ls -h ./lib
-          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+          elif [[ ${{ matrix.os }} == windows-2022 ]]; then
             cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
@@ -110,6 +101,8 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-medasr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
@@ -149,10 +142,10 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
-      - name: Test non-streaming decoding files with NeMo Canary
+      - name: Test non-streaming decoding files with MedASR
         shell: bash
         run: |
-          cd scripts/go/_internal/non-streaming-canary-decode-files/
+          cd scripts/go/_internal/non-streaming-medasr-ctc-decode-files
           ls -lh
           go mod tidy
           cat go.mod
@@ -160,7 +153,84 @@ jobs:
           ls -lh
 
           ./run.sh
-          rm -rf sherpa-onnx-nemo-*
+          rm -rf sherpa-onnx-medasr-*
+
+      - name: Test non-streaming decoding files with Omnilingual ASR
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-omnilingual-*
+
+      - name: Test non-streaming TTS
+        shell: bash
+        run: |
+          mkdir tts-waves
+
+          cd scripts/go/_internal/non-streaming-tts/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo "Test zipvoice"
+          ./run-zipvoice.sh
+          ls -lh
+
+          echo "Test kitten en"
+          ./run-kitten-en.sh
+          rm -rf kitten-*
+          ls -lh
+          rm -rf sherpa-onnx-zipvoice-distill-zh-en-emilia
+
+          echo "Test kokoro zh+en"
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
+          ls -lh
+
+          echo "Test kokoro en"
+          ./run-kokoro-en.sh
+          rm -rf kokoro-en-*
+          ls -lh
+
+          echo "Test matcha zh"
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+
+          echo "Test matcha en"
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          ls -lh *.wav
+
+          echo "Test vits-ljs"
+          ./run-vits-ljs.sh
+          rm -rf vits-ljs
+
+          echo "Test vits-vctk"
+          ./run-vits-vctk.sh
+          rm -rf vits-vctk
+
+          echo "Test vits-zh-aishell3"
+          ./run-vits-zh-aishell3.sh
+          rm -rf vits-icefall-zh-aishell3
+
+          echo "Test vits-piper-en_US-lessac-medium"
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
+          cp *.wav ../../../../tts-waves/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-waves-${{ matrix.os }}
+          path: tts-waves
 
       - name: Test streaming decoding files
         shell: bash
@@ -171,6 +241,9 @@ jobs:
           cat go.mod
           go build
           ls -lh
+
+          echo "Test T-one CTC"
+          ./run-t-one-ctc.sh
 
           echo "Test zipformer2 CTC"
           ./run-zipformer2-ctc-with-hr.sh
@@ -188,6 +261,19 @@ jobs:
           ./run-paraformer.sh
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
+      - name: Test non-streaming decoding files with NeMo Canary
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-canary-decode-files/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-nemo-*
+
       - name: Test non-streaming decoding files
         shell: bash
         run: |
@@ -197,6 +283,10 @@ jobs:
           cat go.mod
           go build
           ls -lh
+
+          echo "Test Wenet CTC"
+          ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-wenet*
 
           echo "Test Zipformer CTC"
           ./run-zipformer-ctc.sh
@@ -298,57 +388,3 @@ jobs:
         run: |
           cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
-
-      - name: Test non-streaming TTS
-        shell: bash
-        run: |
-          mkdir tts-waves
-
-          cd scripts/go/_internal/non-streaming-tts/
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test kokoro zh+en"
-          ./run-kokoro-zh-en.sh
-          rm -rf kokoro-multi-*
-          ls -lh
-
-          echo "Test kokoro en"
-          ./run-kokoro-en.sh
-          rm -rf kokoro-en-*
-          ls -lh
-
-          echo "Test matcha zh"
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-
-          echo "Test matcha en"
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          ls -lh *.wav
-
-          echo "Test vits-ljs"
-          ./run-vits-ljs.sh
-          rm -rf vits-ljs
-
-          echo "Test vits-vctk"
-          ./run-vits-vctk.sh
-          rm -rf vits-vctk
-
-          echo "Test vits-zh-aishell3"
-          ./run-vits-zh-aishell3.sh
-          rm -rf vits-icefall-zh-aishell3
-
-          echo "Test vits-piper-en_US-lessac-medium"
-          ./run-vits-piper-en_US-lessac-medium.sh
-          rm -rf vits-piper-en_US-lessac-medium
-
-          cp *.wav ../../../../tts-waves/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tts-waves-${{ matrix.os }}
-          path: tts-waves

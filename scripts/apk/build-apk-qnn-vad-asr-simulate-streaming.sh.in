@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# Auto generated! Please DO NOT EDIT!
+
+# Please set the environment variable ANDROID_NDK
+# before running this script
+
+# Inside the $ANDROID_NDK directory, you can find a binary ndk-build
+# and some other files like the file "build/cmake/android.toolchain.cmake"
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+log "Building simulated-streaming VAD + ASR APK + QNN for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
+export SHERPA_ONNX_ENABLE_QNN=ON
+
+log "Download qnn header files"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/qnn-include-2.40.0.251030.tar.bz2
+tar xf qnn-include-2.40.0.251030.tar.bz2
+rm qnn-include-2.40.0.251030.tar.bz2
+ls -lh qnn-include-2.40.0.251030
+
+export QNN_SDK_ROOT=$PWD/qnn-include-2.40.0.251030
+
+log "====================arm64-v8a================="
+./build-android-arm64-v8a.sh
+
+cp -v ./build-android-arm64-v8a/install/lib/*.so ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
+
+log "=======Download qnn libs============"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/qnn-libs-2.40.0.251030.tar.bz2
+tar xvf qnn-libs-2.40.0.251030.tar.bz2
+rm qnn-libs-2.40.0.251030.tar.bz2
+cp -v qnn-libs-2.40.0.251030/*.so ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
+
+rm -rf qnn-libs-2.40.0.251030
+
+ls -lh ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/jniLibs/arm64-v8a/
+
+mkdir -p apks
+
+{% for model in model_list %}
+pushd ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/
+model_name={{ model.model_name }}-android-aarch64
+type={{ model.idx }}
+lang={{ model.lang }}
+short_name={{ model.short_name }}
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+
+{% if model.use_hr %}
+  if [ ! -f lexicon.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+  fi
+
+  if [ ! -f replace.fst ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+  fi
+{% endif %}
+
+{{ model.cmd }}
+
+rm -rf  *.tar.bz2
+ls -lh $model_name
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+popd
+# Now we are at the project root directory
+
+git checkout .
+
+pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr/screens
+sed -i.bak s/"asrModelType = 15/asrModelType = $type/" ./Home.kt
+popd
+
+pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr
+
+{% if model.use_hr %}
+  sed -i.bak s/"useHr = false/useHr = true/" ./SimulateStreamingAsr.kt
+{% endif %}
+
+{% if model.rule_fsts %}
+  rule_fsts={{ model.rule_fsts }}
+  sed -i.bak s%"asrRuleFsts = null"%"asrRuleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
+git diff
+popd
+
+for arch in arm64-v8a; do
+  log "------------------------------------------------------------"
+  log "build simulated-streaming ASR apk for $arch"
+  log "------------------------------------------------------------"
+  src_arch=$arch
+  if [ $arch == "armeabi-v7a" ]; then
+    src_arch=armv7-eabi
+  elif [ $arch == "x86_64" ]; then
+    src_arch=x86-64
+  fi
+
+  pushd ./android/SherpaOnnxSimulateStreamingAsr
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
+  ./gradlew assembleRelease
+  popd
+
+  mv android/SherpaOnnxSimulateStreamingAsr/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-qnn-$arch-simulated_streaming_asr-$lang-$short_name.apk
+  ls -lh apks
+done
+
+rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/$model_name
+rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/lexicon.txt
+rm -rf ./android/SherpaOnnxSimulateStreamingAsr/app/src/main/assets/replace.fst
+
+{% endfor %}
+
+git checkout .
+
+ls -lh apks/

@@ -11,9 +11,11 @@
 #include <algorithm>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
+#include <cstdio>
 #include <fstream>
 #include <mutex>  // NOLINT
 #include <queue>
+#include <string>
 #include <thread>  // NOLINT
 #include <vector>
 

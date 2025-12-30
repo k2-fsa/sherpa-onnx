@@ -4,8 +4,9 @@
 
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <iostream>
+#include <string>
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
 #include "sherpa-onnx/csrc/parse-options.h"

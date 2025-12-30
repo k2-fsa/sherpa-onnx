@@ -40,6 +40,97 @@
 
 #define SHERPA_ONNX_EXTERN_C extern "C" SHERPA_ONNX_API
 
+#define SHERPA_ONNX_JNI_READ_STRING(cpp_field, kotlin_field, cls, config)     \
+  do {                                                                        \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "Ljava/lang/String;"); \
+    if (fid == nullptr || env->ExceptionCheck()) {                            \
+      SHERPA_ONNX_LOGE("Failed to get field ID for '%s'", #kotlin_field);     \
+      SHERPA_ONNX_LOGE(                                                       \
+          "Please check that your kotlin code matches the library file "      \
+          "libsherpa-onnx-jni.so . If you are not sure, always use the "      \
+          "LATEST code and the latest library");                              \
+      if (env->ExceptionCheck()) {                                            \
+        env->ExceptionDescribe();                                             \
+      }                                                                       \
+      env->ExceptionClear();                                                  \
+      jclass exClass = env->FindClass("java/lang/RuntimeException");          \
+      if (exClass) {                                                          \
+        env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field);  \
+      }                                                                       \
+      return ans;                                                             \
+    }                                                                         \
+    jstring s = (jstring)env->GetObjectField(config, fid);                    \
+    const char *p = env->GetStringUTFChars(s, nullptr);                       \
+    cpp_field = p;                                                            \
+    env->ReleaseStringUTFChars(s, p);                                         \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_FLOAT(cpp_field, kotlin_field, cls, config)     \
+  do {                                                                       \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "F");                 \
+    if (fid == nullptr || env->ExceptionCheck()) {                           \
+      SHERPA_ONNX_LOGE("Failed to get field ID for '%s'", #kotlin_field);    \
+      SHERPA_ONNX_LOGE(                                                      \
+          "Please check that your kotlin code matches the library file "     \
+          "libsherpa-onnx-jni.so . If you are not sure, always use the "     \
+          "LATEST code and the latest library");                             \
+      if (env->ExceptionCheck()) {                                           \
+        env->ExceptionDescribe();                                            \
+      }                                                                      \
+      env->ExceptionClear();                                                 \
+      jclass exClass = env->FindClass("java/lang/RuntimeException");         \
+      if (exClass) {                                                         \
+        env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+      }                                                                      \
+      return ans;                                                            \
+    }                                                                        \
+    cpp_field = env->GetFloatField(config, fid);                             \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_INT(cpp_field, kotlin_field, cls, config)       \
+  do {                                                                       \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "I");                 \
+    if (fid == nullptr || env->ExceptionCheck()) {                           \
+      SHERPA_ONNX_LOGE("Failed to get field ID for '%s'", #kotlin_field);    \
+      SHERPA_ONNX_LOGE(                                                      \
+          "Please check that your kotlin code matches the library file "     \
+          "libsherpa-onnx-jni.so . If you are not sure, always use the "     \
+          "LATEST code and the latest library");                             \
+      if (env->ExceptionCheck()) {                                           \
+        env->ExceptionDescribe();                                            \
+      }                                                                      \
+      env->ExceptionClear();                                                 \
+      jclass exClass = env->FindClass("java/lang/RuntimeException");         \
+      if (exClass) {                                                         \
+        env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+      }                                                                      \
+      return ans;                                                            \
+    }                                                                        \
+    cpp_field = env->GetIntField(config, fid);                               \
+  } while (0)
+
+#define SHERPA_ONNX_JNI_READ_BOOL(cpp_field, kotlin_field, cls, config)      \
+  do {                                                                       \
+    jfieldID fid = env->GetFieldID(cls, #kotlin_field, "Z");                 \
+    if (fid == nullptr || env->ExceptionCheck()) {                           \
+      SHERPA_ONNX_LOGE("Failed to get field ID for '%s'", #kotlin_field);    \
+      SHERPA_ONNX_LOGE(                                                      \
+          "Please check that your kotlin code matches the library file "     \
+          "libsherpa-onnx-jni.so . If you are not sure, always use the "     \
+          "LATEST code and the latest library");                             \
+      if (env->ExceptionCheck()) {                                           \
+        env->ExceptionDescribe();                                            \
+      }                                                                      \
+      env->ExceptionClear();                                                 \
+      jclass exClass = env->FindClass("java/lang/RuntimeException");         \
+      if (exClass) {                                                         \
+        env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+      }                                                                      \
+      return ans;                                                            \
+    }                                                                        \
+    cpp_field = env->GetBooleanField(config, fid);                           \
+  } while (0)
+
 // defined in jni.cc
 jobject NewInteger(JNIEnv *env, int32_t value);
 jobject NewFloat(JNIEnv *env, float value);
@@ -89,8 +180,8 @@ void SafeJNI(JNIEnv *env, const char *functionName, Func func) {
 }
 
 // Helper function to validate JNI pointers
-inline bool ValidatePointer(JNIEnv *env, jlong ptr,
-                            const char *functionName, const char *message) {
+inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName,
+                            const char *message) {
   if (ptr == 0) {
     jclass exClass = env->FindClass("java/lang/NullPointerException");
     if (exClass != nullptr) {
@@ -100,6 +191,10 @@ inline bool ValidatePointer(JNIEnv *env, jlong ptr,
     return false;
   }
   return true;
+}
+
+namespace sherpa_onnx {
+void PrependAdspLibraryPath(const std::string &new_path);
 }
 
 #endif  // SHERPA_ONNX_JNI_COMMON_H_

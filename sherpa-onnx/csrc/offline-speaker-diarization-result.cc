@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 

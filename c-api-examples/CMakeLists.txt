@@ -23,6 +23,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(kokoro-tts-en-c-api kokoro-tts-en-c-api.c)
   target_link_libraries(kokoro-tts-en-c-api sherpa-onnx-c-api)
 
+  add_executable(kitten-tts-en-c-api kitten-tts-en-c-api.c)
+  target_link_libraries(kitten-tts-en-c-api sherpa-onnx-c-api)
+
   add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
   target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
 endif()
@@ -41,6 +44,9 @@ target_link_libraries(speaker-identification-c-api sherpa-onnx-c-api)
 add_executable(streaming-hlg-decode-file-c-api streaming-hlg-decode-file-c-api.c)
 target_link_libraries(streaming-hlg-decode-file-c-api sherpa-onnx-c-api)
 
+add_executable(streaming-t-one-ctc-c-api streaming-t-one-ctc-c-api.c)
+target_link_libraries(streaming-t-one-ctc-c-api sherpa-onnx-c-api)
+
 add_executable(audio-tagging-c-api audio-tagging-c-api.c)
 target_link_libraries(audio-tagging-c-api sherpa-onnx-c-api)
 
@@ -56,6 +62,9 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 add_executable(nemo-canary-c-api nemo-canary-c-api.c)
 target_link_libraries(nemo-canary-c-api sherpa-onnx-c-api)
 
+add_executable(nemo-parakeet-c-api nemo-parakeet-c-api.c)
+target_link_libraries(nemo-parakeet-c-api sherpa-onnx-c-api)
+
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
@@ -70,6 +79,15 @@ target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
 
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(wenet-ctc-c-api wenet-ctc-c-api.c)
+target_link_libraries(wenet-ctc-c-api sherpa-onnx-c-api)
+
+add_executable(omnilingual-asr-ctc-c-api omnilingual-asr-ctc-c-api.c)
+target_link_libraries(omnilingual-asr-ctc-c-api sherpa-onnx-c-api)
+
+add_executable(medasr-ctc-c-api medasr-ctc-c-api.c)
+target_link_libraries(medasr-ctc-c-api sherpa-onnx-c-api)
 
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)

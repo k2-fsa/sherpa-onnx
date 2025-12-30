@@ -80,7 +80,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile librosa
           python3 -m pip install wheel twine setuptools
 
       - uses: afoley587/setup-ffmpeg@main
@@ -157,7 +157,7 @@ jobs:
           mkdir t
           cd t
           unzip ../*.whl
-          readelf -d _sherpa_onnx*.so
+          readelf -d sherpa_onnx/lib/_sherpa_onnx*.so
 
           echo "----"
 
@@ -170,7 +170,7 @@ jobs:
           mkdir t
           cd t
           unzip ../*.whl
-          readelf -d _sherpa_onnx*.so
+          readelf -d sherpa_onnx/lib/_sherpa_onnx*.so
 
           echo "----"
 

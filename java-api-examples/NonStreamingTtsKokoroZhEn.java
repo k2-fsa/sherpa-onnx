@@ -13,7 +13,6 @@ public class NonStreamingTtsKokoroZhEn {
     String voices = "./kokoro-multi-lang-v1_0/voices.bin";
     String tokens = "./kokoro-multi-lang-v1_0/tokens.txt";
     String dataDir = "./kokoro-multi-lang-v1_0/espeak-ng-data";
-    String dictDir = "./kokoro-multi-lang-v1_0/dict";
     String lexicon =
         "./kokoro-multi-lang-v1_0/lexicon-us-en.txt,./kokoro-multi-lang-v1_0/lexicon-zh.txt";
     String text =
@@ -26,7 +25,6 @@ public class NonStreamingTtsKokoroZhEn {
             .setVoices(voices)
             .setTokens(tokens)
             .setDataDir(dataDir)
-            .setDictDir(dictDir)
             .setLexicon(lexicon)
             .build();
 
@@ -54,7 +52,7 @@ public class NonStreamingTtsKokoroZhEn {
     String waveFilename = "tts-kokoro-zh-en.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
-    System.out.printf("-- audio duration: %.3f seconds\n", timeElapsedSeconds);
+    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
     System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
     System.out.printf("-- text: %s\n", text);
     System.out.printf("-- Saved to %s\n", waveFilename);

@@ -24,6 +24,8 @@ namespace SherpaOnnx
             BpeVocab = "";
             TokensBuf = "";
             TokensBufSize = 0;
+            NemoCtc = new OnlineNemoCtcModelConfig();
+            ToneCtc = new OnlineToneCtcModelConfig();
         }
 
         public OnlineTransducerModelConfig Transducer;
@@ -55,6 +57,10 @@ namespace SherpaOnnx
         public string TokensBuf;
 
         public int TokensBufSize;
+
+        public OnlineNemoCtcModelConfig NemoCtc;
+
+        public OnlineToneCtcModelConfig ToneCtc;
     }
 
 }

@@ -26,7 +26,7 @@
 #  ./scripts/check_style_cpplint.sh 2
 
 
-cpplint_version="1.5.4"
+cpplint_version="2.0.2"
 cur_dir=$(cd $(dirname $BASH_SOURCE) && pwd)
 sherpa_onnx_dir=$(cd $cur_dir/.. && pwd)
 

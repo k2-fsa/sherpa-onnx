@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/online-nemo-ctc-model-config.h"
 #include "sherpa-onnx/csrc/online-paraformer-model-config.h"
+#include "sherpa-onnx/csrc/online-t-one-ctc-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-wenet-ctc-model-config.h"
 #include "sherpa-onnx/csrc/online-zipformer2-ctc-model-config.h"
@@ -21,6 +22,7 @@ struct OnlineModelConfig {
   OnlineWenetCtcModelConfig wenet_ctc;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
   OnlineNeMoCtcModelConfig nemo_ctc;
+  OnlineToneCtcModelConfig t_one_ctc;
   ProviderConfig provider_config;
   std::string tokens;
   int32_t num_threads = 1;
@@ -56,6 +58,7 @@ struct OnlineModelConfig {
                     const OnlineWenetCtcModelConfig &wenet_ctc,
                     const OnlineZipformer2CtcModelConfig &zipformer2_ctc,
                     const OnlineNeMoCtcModelConfig &nemo_ctc,
+                    const OnlineToneCtcModelConfig &t_one_ctc,
                     const ProviderConfig &provider_config,
                     const std::string &tokens, int32_t num_threads,
                     int32_t warm_up, bool debug, const std::string &model_type,
@@ -66,6 +69,7 @@ struct OnlineModelConfig {
         wenet_ctc(wenet_ctc),
         zipformer2_ctc(zipformer2_ctc),
         nemo_ctc(nemo_ctc),
+        t_one_ctc(t_one_ctc),
         provider_config(provider_config),
         tokens(tokens),
         num_threads(num_threads),

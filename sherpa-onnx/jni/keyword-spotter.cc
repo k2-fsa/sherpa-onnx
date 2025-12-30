@@ -4,12 +4,18 @@
 
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 
 namespace sherpa_onnx {
 
-static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
+OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
+                                       jobject model_config, bool *ok);
+
+static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config,
+                                         bool *ok) {
   KeywordSpotterConfig ans;
 
   jclass cls = env->GetObjectClass(config);
@@ -19,23 +25,17 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
   // https://courses.cs.washington.edu/courses/cse341/99wi/java/tutorial/native1.1/implementing/field.html
 
   //---------- decoding ----------
-  fid = env->GetFieldID(cls, "maxActivePaths", "I");
-  ans.max_active_paths = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.max_active_paths, maxActivePaths, cls, config);
 
-  fid = env->GetFieldID(cls, "keywordsFile", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.keywords_file = p;
-  env->ReleaseStringUTFChars(s, p);
+  SHERPA_ONNX_JNI_READ_STRING(ans.keywords_file, keywordsFile, cls, config);
 
-  fid = env->GetFieldID(cls, "keywordsScore", "F");
-  ans.keywords_score = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.keywords_score, keywordsScore, cls, config);
 
-  fid = env->GetFieldID(cls, "keywordsThreshold", "F");
-  ans.keywords_threshold = env->GetFloatField(config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.keywords_threshold, keywordsThreshold, cls,
+                             config);
 
-  fid = env->GetFieldID(cls, "numTrailingBlanks", "I");
-  ans.num_trailing_blanks = env->GetIntField(config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.num_trailing_blanks, numTrailingBlanks, cls,
+                           config);
 
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
@@ -43,68 +43,29 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
   jobject feat_config = env->GetObjectField(config, fid);
   jclass feat_config_cls = env->GetObjectClass(feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "sampleRate", "I");
-  ans.feat_config.sampling_rate = env->GetIntField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.feat_config.sampling_rate, sampleRate,
+                           feat_config_cls, feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
-  ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.feat_config.feature_dim, featureDim,
+                           feat_config_cls, feat_config);
 
-  fid = env->GetFieldID(feat_config_cls, "dither", "F");
-  ans.feat_config.dither = env->GetFloatField(feat_config, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.feat_config.dither, dither, feat_config_cls,
+                             feat_config);
 
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineModelConfig;");
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
+  ans.model_config =
+      GetOnlineModelConfig(env, model_config_cls, model_config, ok);
 
-  // transducer
-  fid = env->GetFieldID(model_config_cls, "transducer",
-                        "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
-  jobject transducer_config = env->GetObjectField(model_config, fid);
-  jclass transducer_config_cls = env->GetObjectClass(transducer_config);
+  if (!*ok) {
+    return ans;
+  }
 
-  fid = env->GetFieldID(transducer_config_cls, "encoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.encoder = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(transducer_config_cls, "decoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.decoder = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(transducer_config_cls, "joiner", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.transducer.joiner = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model_config.num_threads = env->GetIntField(model_config, fid);
-
-  fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model_config.debug = env->GetBooleanField(model_config, fid);
-
-  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.provider_config.provider = p;
-  env->ReleaseStringUTFChars(s, p);
-
-  fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.model_type = p;
-  env->ReleaseStringUTFChars(s, p);
+  // *ok = false;
+  // If there are more fields, remember to set *ok to false
 
   return ans;
 }
@@ -121,7 +82,14 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_newFromAsset(
     return 0;
   }
 #endif
-  auto config = sherpa_onnx::GetKwsConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetKwsConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   auto kws = new sherpa_onnx::KeywordSpotter(
@@ -136,7 +104,14 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_newFromAsset(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetKwsConfig(env, _config);
+  bool ok = false;
+  auto config = sherpa_onnx::GetKwsConfig(env, _config, &ok);
+
+  if (!ok) {
+    SHERPA_ONNX_LOGE("Please read the error message carefully");
+    return 0;
+  }
+
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {

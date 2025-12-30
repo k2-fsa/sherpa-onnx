@@ -4,11 +4,12 @@
 
 #include "sherpa-onnx/csrc/context-graph.h"
 
-#include <chrono>  // NOLINT
+#include <chrono>
 #include <cmath>
 #include <map>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"

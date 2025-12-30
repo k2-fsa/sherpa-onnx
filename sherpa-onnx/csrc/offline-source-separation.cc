@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-source-separation.h"
 
 #include <memory>
+#include <string>
 
 #include "sherpa-onnx/csrc/offline-source-separation-impl.h"
 

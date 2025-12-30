@@ -1,0 +1,601 @@
+name: export-sense-voice-to-qnn
+
+on:
+  push:
+    branches:
+      - qnn-binary-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-sense-voice-to-qnn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-qnn/generate_sense_voice.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_sense_voice.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  export-sense-voice-to-qnn:
+    needs: generate_build_matrix
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.framework }} ${{ matrix.input_in_seconds }} ${{ matrix.soc }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
+
+      - name: Create Python virtual environment
+        shell: bash
+        run: |
+          python3 -m venv py310
+          which python3
+          source py310/bin/activate
+          which python3
+
+      - name: Show ndk-build help
+        shell: bash
+        run: |
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          ndk-build --help
+
+      - name: Download toolkit
+        shell: bash
+        run: |
+          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          ls -lh v2.40.0.251030.zip
+
+      - name: Unzip toolkit
+        shell: bash
+        run: |
+          unzip v2.40.0.251030.zip
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh
+
+          echo "---ls -lh qairt---"
+
+          ls -lh qairt
+
+          echo "---"
+
+      - name: Install linux dependencies
+        shell: bash
+        run: |
+          ls -lh
+
+          echo "---"
+
+          ls -lh qairt
+
+          cd qairt/2.40.0.251030/bin
+          source envsetup.sh
+
+          yes | sudo ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          cd qairt/2.40.0.251030/bin
+          source envsetup.sh
+
+          python3 -m pip install \
+            mock \
+            numpy \
+            opencv-python \
+            optuna \
+            packaging \
+            pandas \
+            paramiko \
+            pathlib2 \
+            pillow \
+            plotly \
+            protobuf \
+            psutil \
+            pydantic \
+            pytest \
+            pyyaml \
+            rich \
+            scikit-optimize \
+            scipy \
+            six \
+            tabulate \
+            typing-extensions \
+            xlsxwriter
+
+          python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true
+
+          which python3
+
+      - name: Install onnx dependencies
+        shell: bash
+        run: |
+          source py310/bin/activate
+          python3 -m pip install --upgrade \
+            torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+            kaldi_native_fbank \
+            pip \
+            "numpy<2" \
+            onnx==1.17.0 \
+            onnxruntime==1.17.1 \
+            soundfile \
+            librosa \
+            onnxsim \
+            sentencepiece \
+            pyyaml
+
+          which python3
+
+      - name: Show qnn-onnx-converter help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-onnx-converter --help
+
+      - name: Show qnn-model-lib-generator help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-model-lib-generator --help
+
+      - name: Show qnn-net-run help
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          qnn-net-run --help
+
+      - name: Run SenseVoice from FunAsr
+        if: matrix.framework == 'FunASR'
+        shell: bash
+        run: |
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
+
+          cd scripts/sense-voice/qnn
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ko.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/README.md
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/LICENSE
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+
+          echo "----$t---"
+          python3 ./export-onnx.py --input-len-in-seconds $t --opset-version 17
+
+          ls -lh *.onnx
+
+          python3 ../../pyannote/segmentation/show-onnx.py --filename ./model-$t-seconds.onnx
+
+          echo "test exported onnx models"
+
+          echo "----------$t----------"
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ja.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./ko.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
+
+          echo "export to qnn"
+          echo "----------$t----------"
+          num_frames=$(python3 -c "print(int($t*100 / 6 + 0.5))")
+
+          echo "num_frames: $num_frames"
+
+          ./generate_test_data.py  --num-frames $num_frames --wav ./zh.wav
+          mv input0.raw zh-input0.raw
+          mv input1.raw zh-input1.raw
+          echo "zh-input0.raw zh-input1.raw" > input_list.txt
+
+          for w in ja ko en yue; do
+            ./generate_test_data.py  --num-frames $num_frames --wav ./$w.wav
+            mv input0.raw $w-input0.raw
+            mv input1.raw $w-input1.raw
+            echo "$w-input0.raw $w-input1.raw" >> input_list.txt
+          done
+
+          cat ./input_list.txt
+
+          qnn-onnx-converter \
+            --input_network model-$t-seconds.onnx \
+            --output_path ./model-$t-seconds-quantized \
+            --out_node logits \
+            --input_list ./input_list.txt \
+            --use_native_input_files  \
+            --input_dtype x float32 \
+            --input_dtype prompt int32 \
+            --act_bitwidth 16 \
+            --bias_bitwidth 32 \
+            --input_layout x NTF
+          ls -lh
+          mv model-$t-seconds-quantized model-$t-seconds-quantized.cpp
+          echo "----"
+          ls -lh
+
+          python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+            -c "model-$t-seconds-quantized.cpp" \
+            -b "model-$t-seconds-quantized.bin" \
+            -o model_libs > /dev/null 2>&1
+
+          ls -lh model_libs/*/
+
+          readelf -lW model_libs/*/lib*.so
+
+          echo "Generate context binary"
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc}}-binary-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v LICENSE $d
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../../../binary/
+
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v README.md $d
+            cp -v LICENSE $d
+            cp -v model_libs/$p/lib*.so $d/libmodel.so
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+
+            echo "num_frames=$num_frames" > $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../../so/
+
+
+      - name: Run SenseVoice from WSYue-ASR
+        if: matrix.framework == 'WSYue-ASR'
+        shell: bash
+        run: |
+          dir=$PWD
+          source py310/bin/activate
+
+          pushd qairt/2.40.0.251030/bin
+          source envsetup.sh
+          popd
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+
+          cd scripts/sense-voice/qnn
+
+          curl -SL -O https://huggingface.co/ASLP-lab/WSYue-ASR/resolve/main/sensevoice_small_yue/model.pt
+
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/am.mvn
+          curl -SL -O https://hf-mirror.com/FunAudioLLM/SenseVoiceSmall/resolve/main/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/zh.wav
+
+          for i in $(seq 0 17); do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/test_wavs/yue-$i.wav
+          done
+
+          rm -f README.md || true
+
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09/resolve/main/README.md
+
+          echo "export to onnx"
+          t=${{ matrix.input_in_seconds }}
+
+          echo "----$t---"
+
+          export model_author="ASLP-lab"
+          export comment="ASLP-lab/WSYue-ASR"
+          export url="https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/sensevoice_small_yue"
+
+          python3 ./export-onnx.py --input-len-in-seconds $t --opset-version 17
+
+          ls -lh *.onnx
+
+          python3 ../../pyannote/segmentation/show-onnx.py --filename ./model-$t-seconds.onnx
+
+          echo "test exported onnx models"
+
+          echo "----------$t----------"
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./en.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue.wav
+          python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./zh.wav
+
+          for i in $(seq 0 17); do
+            echo "yue-$i.wav"
+            python3 ./test_onnx.py --model model-$t-seconds.onnx --tokens ./tokens.txt --wave ./yue-$i.wav
+          done
+
+          echo "export to qnn"
+          echo "----------$t----------"
+          num_frames=$(python3 -c "print(int($t*100 / 6 + 0.5))")
+
+          echo "num_frames: $num_frames"
+
+          ./generate_test_data.py  --num-frames $num_frames --wav ./zh.wav
+          mv input0.raw zh-input0.raw
+          mv input1.raw zh-input1.raw
+          echo "zh-input0.raw zh-input1.raw" > input_list.txt
+
+          for w in en yue; do
+            ./generate_test_data.py  --num-frames $num_frames --wav ./$w.wav
+            mv input0.raw $w-input0.raw
+            mv input1.raw $w-input1.raw
+            echo "$w-input0.raw $w-input1.raw" >> input_list.txt
+          done
+
+          for i in $(seq 0 17); do
+            echo "yue-$i.wav"
+            ./generate_test_data.py  --num-frames $num_frames --wav ./yue-$i.wav
+            mv input0.raw $i-input0.raw
+            mv input1.raw $i-input1.raw
+            echo "$i-input0.raw $i-input1.raw" >> input_list.txt
+          done
+
+          cat ./input_list.txt
+
+          qnn-onnx-converter \
+            --input_network model-$t-seconds.onnx \
+            --output_path ./model-$t-seconds-quantized \
+            --out_node logits \
+            --input_list ./input_list.txt \
+            --use_native_input_files  \
+            --input_dtype x float32 \
+            --input_dtype prompt int32 \
+            --act_bitwidth 16 \
+            --bias_bitwidth 32 \
+            --input_layout x NTF
+          ls -lh
+          mv model-$t-seconds-quantized model-$t-seconds-quantized.cpp
+          echo "----"
+          ls -lh
+
+          python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+            -c "model-$t-seconds-quantized.cpp" \
+            -b "model-$t-seconds-quantized.bin" \
+            -o model_libs > /dev/null 2>&1
+
+          ls -lh model_libs/*/
+
+          readelf -lW model_libs/*/lib*.so
+
+          $dir/scripts/qnn/generate_config.py  \
+            --soc ${{ matrix.soc }} \
+            --graph-name "model_${t}_seconds_quantized" \
+            --output-dir ./my-config \
+            --qnn-sdk-root $QNN_SDK_ROOT
+
+          ls -lh my-config
+
+          head -n 1000 my-config/*.json
+
+          $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+            --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+            --model ./model_libs/x86_64-linux-clang/libmodel-$t-seconds-quantized.so \
+            --output_dir ./binary \
+            --binary_file model \
+            --config_file ./my-config/htp_backend_extensions.json
+
+          ls -lh binary/
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-int8
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          cp -v README.md $d
+          cp -v binary/model.bin $d/
+          cp -v tokens.txt $d
+          cp -v *.wav $d/test_wavs
+
+          echo "num_frames=$num_frames" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+          mv *.tar.bz2 ../../../binary/
+
+          echo "collect results"
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-int8-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-$t-seconds-sense-voice-zh-en-ja-ko-yue-2025-09-09-int8-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v README.md $d
+            cp -v model_libs/$p/lib*.so $d/libmodel.so
+            cp -v tokens.txt $d
+            cp -v *.wav $d/test_wavs
+
+            echo "num_frames=$num_frames" > $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../../so/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.framework }}-${{ matrix.soc }}-${{ matrix.input_in_seconds }}-seconds
+          path: ./scripts/sense-voice/qnn/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-binary

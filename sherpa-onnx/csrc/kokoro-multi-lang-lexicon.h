@@ -19,7 +19,6 @@ class KokoroMultiLangLexicon : public OfflineTtsFrontend {
   ~KokoroMultiLangLexicon() override;
 
   KokoroMultiLangLexicon(const std::string &tokens, const std::string &lexicon,
-                         const std::string &dict_dir,
                          const std::string &data_dir,
                          const OfflineTtsKokoroModelMetaData &meta_data,
                          bool debug);
@@ -27,7 +26,6 @@ class KokoroMultiLangLexicon : public OfflineTtsFrontend {
   template <typename Manager>
   KokoroMultiLangLexicon(Manager *mgr, const std::string &tokens,
                          const std::string &lexicon,
-                         const std::string &dict_dir,
                          const std::string &data_dir,
                          const OfflineTtsKokoroModelMetaData &meta_data,
                          bool debug);

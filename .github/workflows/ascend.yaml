@@ -1,0 +1,80 @@
+name: ascend
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: ascend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: ascend
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # - image: "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9"
+          #   name: "8.0.0-10b"
+          - image: "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2"
+            name: "8.0.0-310p"
+    container:
+      # image: ascendai/cann:latest
+      # image: ascendai/cann:8.1.rc1-910b-ubuntu22.04-py3.10
+      # see https://hub.docker.com/r/gpustack/ascendai-cann/tags?name=8.0
+      # see https://hub.docker.com/r/gpustack/devel-ascendai-cann/tags?name=310p
+      # and
+      # https://quay.io/repository/ascend/cann?tab=tags
+      image: ${{ matrix.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          apt-get update && apt-get install -y git curl cmake gcc g++
+
+      - name: Show GCC version
+        shell: bash
+        run: |
+          gcc --version
+          g++ --version
+          which gcc
+          which g++
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          ls -lh /usr/local/Ascend/ascend-toolkit/set_env.sh
+          find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          mkdir build
+          cd build
+          cmake -DSHERPA_ONNX_ENABLE_ASCEND_NPU=ON ..
+
+          make -j2
+
+      - name: Show results
+        shell: bash
+        run: |
+          cd build
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          ldd ./bin/sherpa-onnx-offline

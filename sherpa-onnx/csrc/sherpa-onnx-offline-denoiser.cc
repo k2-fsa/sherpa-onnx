@@ -3,7 +3,9 @@
 // Copyright (c)  2025  Xiaomi Corporation
 #include <stdio.h>
 
-#include <chrono>  // NOLINT
+#include <chrono>
+#include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/wave-reader.h"

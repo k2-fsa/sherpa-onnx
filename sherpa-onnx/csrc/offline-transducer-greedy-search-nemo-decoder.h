@@ -16,8 +16,8 @@ class OfflineTransducerGreedySearchNeMoDecoder
     : public OfflineTransducerDecoder {
  public:
   OfflineTransducerGreedySearchNeMoDecoder(OfflineTransducerNeMoModel *model,
-                                           float blank_penalty)
-      : model_(model), blank_penalty_(blank_penalty) {}
+                                           float blank_penalty, bool is_tdt)
+      : model_(model), blank_penalty_(blank_penalty), is_tdt_(is_tdt) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
       Ort::Value encoder_out, Ort::Value encoder_out_length,
@@ -26,6 +26,7 @@ class OfflineTransducerGreedySearchNeMoDecoder
  private:
   OfflineTransducerNeMoModel *model_;  // Not owned
   float blank_penalty_;
+  bool is_tdt_;
 };
 
 }  // namespace sherpa_onnx

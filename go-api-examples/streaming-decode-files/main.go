@@ -27,6 +27,7 @@ func main() {
 	flag.StringVar(&config.ModelConfig.Paraformer.Encoder, "paraformer-encoder", "", "Path to the paraformer encoder model")
 	flag.StringVar(&config.ModelConfig.Paraformer.Decoder, "paraformer-decoder", "", "Path to the paraformer decoder model")
 	flag.StringVar(&config.ModelConfig.Zipformer2Ctc.Model, "zipformer2-ctc", "", "Path to the zipformer2 CTC model")
+	flag.StringVar(&config.ModelConfig.ToneCtc.Model, "t-one-ctc", "", "Path to the T-one CTC model")
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
@@ -36,7 +37,6 @@ func main() {
 	flag.IntVar(&config.MaxActivePaths, "max-active-paths", 4, "Used only when --decoding-method is modified_beam_search")
 	flag.StringVar(&config.RuleFsts, "rule-fsts", "", "If not empty, path to rule fst for inverse text normalization")
 	flag.StringVar(&config.RuleFars, "rule-fars", "", "If not empty, path to rule fst archives for inverse text normalization")
-	flag.StringVar(&config.Hr.DictDir, "hr-dict-dir", "", "If not empty, path to the jieba dict dir for homonphone replacer")
 	flag.StringVar(&config.Hr.Lexicon, "hr-lexicon", "", "If not empty, path to the lexicon.txt for homonphone replacer")
 	flag.StringVar(&config.Hr.RuleFsts, "hr-rule-fsts", "", "If not empty, path to the replace.fst for homonphone replacer")
 
@@ -59,9 +59,12 @@ func main() {
 	stream := sherpa.NewOnlineStream(recognizer)
 	defer sherpa.DeleteOnlineStream(stream)
 
+	leftPadding := make([]float32, int(float32(sampleRate)*0.3))
+	stream.AcceptWaveform(sampleRate, leftPadding)
+
 	stream.AcceptWaveform(sampleRate, samples)
 
-	tailPadding := make([]float32, int(float32(sampleRate)*0.3))
+	tailPadding := make([]float32, int(float32(sampleRate)*0.6))
 	stream.AcceptWaveform(sampleRate, tailPadding)
 
 	for recognizer.IsReady(stream) {
