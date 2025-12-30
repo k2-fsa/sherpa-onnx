@@ -38,6 +38,18 @@ jobs:
         if: true
         shell: bash
         run: |
+          git lfs install
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30
+          d=sherpa-onnx-funasr-nano-int8-2025-12-30
+          rm -rf $d/.git
+          tar cjfv $d.tar.bz2 $d
+          ls -lh $d.tar.bz2
+          ls -lh $d
+
+      - name: Collect funasr-nano with LLM int8
+        if: false
+        shell: bash
+        run: |
           d=sherpa-onnx-funasr-nano-int8-2025-12-30
           mkdir $d
           pushd $d
@@ -489,7 +501,7 @@ jobs:
 
           mv models/* .
 
-      - name: Publish to huggingface (Russian zipformer)
+      - name: Publish to huggingface
         if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -531,6 +543,46 @@ jobs:
               popd
             done
 
+      - name: Publish to modelscope
+        if: true
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            models=(
+              sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+            )
+            for m in ${models[@]}; do
+              if [ ! -f $m ]; then
+                continue;
+              fi
+
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              cp -av $m ms/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh
+              git add .
+
+              git commit -m "add models"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
+              popd
+            done
+
       - uses: actions/upload-artifact@v4
         if: false
         with:
@@ -538,7 +590,7 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Release
-        if: true
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
