@@ -34,6 +34,46 @@ jobs:
         if: false
         uses: mxschmitt/action-tmate@v3
 
+      - name: Collect funasr-nano with LLM int8
+        if: true
+        shell: bash
+        run: |
+          d=sherpa-onnx-funasr-nano-int8-2025-12-30
+          mkdir $d
+          pushd $d
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/llm_int8/llm_prefill.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/llm_int8/llm_decode.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/embedding.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/encoder_adaptor.int8.onnx
+
+          mkdir Qwen3-0.6B
+          cd Qwen3-0.6B
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/merges.txt
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/tokenizer.json
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/vocab.json
+
+          ls -lh
+          cd ..
+          mkdir test_wavs
+          cd test_wavs
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17/resolve/main/test_wavs/zh.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17/resolve/main/test_wavs/ja.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17/resolve/main/test_wavs/yue.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-funasr-nano-int8-2025-12-17/resolve/main/test_wavs/ko.wav
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-v2
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+
       - name: Streaming zipformer from Banafo/Kroko-ASR
         if: false
         shell: bash
@@ -464,8 +504,13 @@ jobs:
             models=(
               sherpa-onnx-zipformer-ru-2025-04-20
               sherpa-onnx-zipformer-ru-int8-2025-04-20
+              sherpa-onnx-funasr-nano-int8-2025-12-30
             )
             for d in ${models[@]}; do
+              if [ ! -d $d ]; then
+                continue;
+              fi
+
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface
@@ -476,6 +521,7 @@ jobs:
               git lfs track "*.onnx"
               git lfs track "bpe.model"
               git lfs track "*.wav"
+              git lfs track "*.json"
               git status
               git add .
 
@@ -492,7 +538,7 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Release
-        if: false
+        if: true
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
