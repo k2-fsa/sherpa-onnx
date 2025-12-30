@@ -233,10 +233,13 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     //   start_times[i] = jump_times[i]
     //   end_times[i] = jump_times[i+1]
     //   durations[i] = end_times[i] - start_times[i]
+    // Pass timestamp_token_indices to filter out timestamp tokens from DTW
+    // (needed when enable_segment_timestamps=true to avoid alignment issues)
     TokenTimingResult timing = dtw.ComputeTokenTimings(
         src.attention_weights.data(), src.attention_n_heads,
         src.attention_n_tokens, src.attention_n_frames, src.num_audio_frames,
-        sot_sequence_length, static_cast<int32_t>(r.tokens.size()));
+        sot_sequence_length, static_cast<int32_t>(r.tokens.size()),
+        src.timestamp_token_indices);
 
     // Populate timestamps and durations
     r.timestamps = std::move(timing.start_times);

@@ -51,6 +51,7 @@ USE_MODEL_METADATA = True
 # For distil-whisper models, we use empirically-determined heads since their
 # metadata includes all heads in certain layers rather than curated ones.
 ALIGNMENT_HEADS = {
+    # TODO: ["medium-aishell"]
     # Official OpenAI models - trust their metadata
     "tiny.en": USE_MODEL_METADATA,
     "tiny": USE_MODEL_METADATA,

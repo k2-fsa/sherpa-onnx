@@ -162,6 +162,10 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t attention_n_heads = 0;
   int32_t attention_n_frames = 0;
 
+  // Track indices of timestamp tokens in the attention sequence
+  // (0-based, relative to the start of all_attention_weights)
+  std::vector<int32_t> timestamp_token_indices;
+
   // Collect attention from initial tokens if enabled
   if (collect_attention) {
     auto &attn = std::get<6>(decoder_out);
@@ -199,6 +203,14 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
     predicted_tokens.push_back(max_token_id);
     all_tokens.push_back(max_token_id);
+
+    // Track if this is a timestamp token (for filtering in DTW)
+    if (max_token_id >= timestamp_begin) {
+      // The attention index is: initial_tokens.size() + current predicted index
+      int32_t attn_idx = static_cast<int32_t>(initial_tokens.size()) +
+                         static_cast<int32_t>(predicted_tokens.size()) - 1;
+      timestamp_token_indices.push_back(attn_idx);
+    }
 
     std::array<int64_t, 2> token_shape{1, 1};
     Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
@@ -293,6 +305,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
         std::copy(src, src + attention_n_frames, dst);
       }
     }
+
+    // Add timestamp token indices for DTW filtering
+    ans[0].timestamp_token_indices = std::move(timestamp_token_indices);
   }
 
   return ans;
