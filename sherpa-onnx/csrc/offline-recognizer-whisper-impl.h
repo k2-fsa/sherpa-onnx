@@ -243,6 +243,11 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     r.durations = std::move(timing.durations);
 
     // Ensure vectors match token count
+    if (r.timestamps.size() != r.tokens.size()) {
+      SHERPA_ONNX_LOGE(
+          "DTW returned %zu timestamps for %zu tokens, padding/truncating",
+          r.timestamps.size(), r.tokens.size());
+    }
     float fill_time = r.timestamps.empty() ? 0.0f : r.timestamps.back();
     r.timestamps.resize(r.tokens.size(), fill_time);
     r.durations.resize(r.tokens.size(), 0.0f);
