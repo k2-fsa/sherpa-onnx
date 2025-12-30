@@ -10,8 +10,8 @@
 // for usages.
 //
 
-#ifndef SHERPA_ONNX_EZY_API_C_API_H_
-#define SHERPA_ONNX_EZY_API_C_API_H_
+#ifndef SHERPA_ONNX_EZY_API_H_
+#define SHERPA_ONNX_EZY_API_H_
 
 #include <stdint.h>
 
@@ -21,7 +21,7 @@ extern "C" {
 
 // See https://github.com/pytorch/pytorch/blob/main/c10/macros/Export.h
 // We will set SHERPA_ONNX_BUILD_SHARED_LIBS and SHERPA_ONNX_BUILD_MAIN_LIB in
-// CMakeLists.txt
+// CMakeLists.txt 
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -300,7 +300,12 @@ SHERPA_ONNX_API void SherpaOnnxDecodeMultipleOnlineStreams(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream **streams, int32_t n);
 
-/// Get the decoding results so far for an OnlineStream.
+SHERPA_ONNX_API void ResultBasic(
+    int32_t *tokens, size_t *count,
+                          const SherpaOnnxOnlineRecognizer *recognizer,
+                          const SherpaOnnxOnlineStream *stream);
+
+    /// Get the decoding results so far for an OnlineStream.
 ///
 /// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer().
 /// @param stream A pointer returned by SherpaOnnxCreateOnlineStream().
@@ -371,4 +376,4 @@ SHERPA_ONNX_API void SherpaOnnxPrint(const SherpaOnnxDisplay *display,
 } /* extern "C" */
 #endif
 
-#endif  // SHERPA_ONNX_C_API_C_API_H_
+#endif  // SHERPA_ONNX_EZY_API_H_

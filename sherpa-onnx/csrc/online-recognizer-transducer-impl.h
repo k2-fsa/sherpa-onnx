@@ -58,7 +58,7 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
       sym = os.str();
     }
 
-    r.tokens.push_back(std::move(sym));
+    r.tokens.push_back(std::move(sym)); 
   }
 
   if (sym_table.IsByteBpe()) {

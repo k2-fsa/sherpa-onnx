@@ -2,7 +2,7 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#include "sherpa-onnx/c-api/c-api.h"
+#include "sherpa-onnx/c-api/ezy-api.h"
 
 #include <algorithm>
 #include <cstring>
@@ -239,6 +239,21 @@ void SherpaOnnxDecodeMultipleOnlineStreams(
     ss[i] = streams[i]->impl.get();
   }
   recognizer->impl->DecodeStreams(ss.data(), n);
+}
+
+void ResultBasic(
+    int32_t *tokens, size_t *count,
+    const SherpaOnnxOnlineRecognizer* recognizer,
+    const SherpaOnnxOnlineStream* stream)
+{
+  sherpa_onnx::OnlineTransducerDecoderResult decoder_result =
+      stream->impl->GetResult();
+      //  decoder_->StripLeadingBlanks(&decoder_result);
+//  return decoder_result.tokens;
+
+  std::copy(decoder_result.tokens.begin(), decoder_result.tokens.end(),
+            tokens);
+  *count = decoder_result.tokens.size();
 }
 
 const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(

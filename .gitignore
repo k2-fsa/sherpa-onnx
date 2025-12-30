@@ -7,6 +7,7 @@ icefall-*
 run.sh
 __pycache__
 dist/
+out/
 sherpa_onnx.egg-info/
 .DS_Store
 build-aarch64-linux-gnu
@@ -72,6 +73,9 @@ build-*
 
 ## User settings
 xcuserdata/
+
+.vs/
+scripts/
 
 ## Xcode 8 and earlier
 *.xcscmblueprint

@@ -118,7 +118,8 @@ for a list of pre-trained models to download.
   if (pDeviceIndex) {
     fprintf(stderr, "Use specified device: %s\n", pDeviceIndex);
     device_index = atoi(pDeviceIndex);
-  }
+  } else
+    device_index = 2;
 
   mic.PrintDevices(device_index);
 
