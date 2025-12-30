@@ -16,7 +16,7 @@ use any T <= 30.
 import argparse
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import onnx
 import torch
@@ -88,6 +88,15 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         onnx.save(model, filename)
 
 
+def modified_qkv_attention(
+    self, q: Tensor, k: Tensor, v: Tensor, mask: Optional[Tensor] = None
+) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    assert False
+
+
+MultiHeadAttention.qkv_attention_self = modified_qkv_attention
+
+
 def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
     """
     x : torch.Tensor, shape = (batch_size, n_mels, n_ctx)
@@ -102,6 +111,7 @@ def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
         assert x.shape[1:] == self.positional_embedding.shape, "incorrect audio shape"
         x = (x + self.positional_embedding).to(x.dtype)
     else:
+        print(x.shape, self.positional_embedding.shape)
         # This branch contains the actual changes
         assert (
             x.shape[2] == self.positional_embedding.shape[1]
@@ -166,16 +176,47 @@ class MultiHeadAttentionSelf(nn.Module):
         x: Tensor,  # (b, n_ctx      , n_state)
         k_cache: Tensor,  # (b, n_ctx_cache, n_state)
         v_cache: Tensor,  # (b, n_ctx_cache, n_state)
+        offset: Tensor,
         mask: Tensor,
     ):
         q = self.multiHeadAttention.query(x)  # (b, n_ctx, n_state)
         k = self.multiHeadAttention.key(x)  # (b, n_ctx, n_state)
         v = self.multiHeadAttention.value(x)  # (b, n_ctx, n_state)
 
-        k_cache[:, -k.shape[1] :, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
-        v_cache[:, -v.shape[1] :, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
+        print("here x", x.sum(), q.sum(), k.sum(), v.sum(), mask[:5, :5])
+        print(
+            "kcache",
+            k_cache.shape,
+            v_cache.shape,
+            k.shape,
+            v.shape,
+            x.shape,
+            q.shape,
+            k.shape,
+        )
 
+        k_cache[:, offset : offset + 1, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
+        v_cache[:, offset : offset + 1, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
+
+        #  wv, qk = self.multiHeadAttention.qkv_attention_self(q, k_cache, v_cache, mask)
         wv, qk = self.multiHeadAttention.qkv_attention(q, k_cache, v_cache, mask)
+
+        torch.save(
+            {
+                "wv": wv,
+                "qk": qk,
+                "q": q,
+                "k_cache": k_cache,
+                "v_cache": v_cache,
+                "mask": mask,
+            },
+            "hyp-0.pt",
+        )
+        print("here wv", wv.sum(), qk.sum())
+
+        #  import sys
+        #
+        #  sys.exit(0)
         return self.multiHeadAttention.out(wv), k_cache, v_cache
 
 
@@ -197,10 +238,15 @@ class ResidualAttentionBlockTensorCache(nn.Module):
         self_v_cache: Tensor,
         cross_k: Tensor,
         cross_v: Tensor,
+        offset: Tensor,
         mask: Tensor,
     ):
         self_attn_x, self_k_cache_updated, self_v_cache_updated = self.attn(
-            self.originalBlock.attn_ln(x), self_k_cache, self_v_cache, mask=mask
+            self.originalBlock.attn_ln(x),
+            self_k_cache,
+            self_v_cache,
+            offset=offset,
+            mask=mask,
         )
         x = x + self_attn_x
 
@@ -232,28 +278,43 @@ class TextDecoderTensorCache(nn.Module):
         n_layer_cross_v: Tensor,
         offset: Tensor,
     ):
+        """
+        tokens: (batch_size, 1)
+        n_layer_self_k_cache: (n_text_layer, batch_size, 448, dim)
+        n_layer_self_v_cache: (n_text_layer, batch_size, 448, dim)
+        n_layer_cross_k_cache: (n_text_layer, batch_size, 1500, dim)
+        n_layer_cross_v_cache: (n_text_layer, batch_size, 1500, dim)
+        """
+        assert tokens.shape == (1, 1), tokens.shape
         x = (
             self.textDecoder.token_embedding(tokens)
-            + self.textDecoder.positional_embedding[
-                offset[0] : offset[0] + tokens.shape[-1]
-            ]
+            + self.textDecoder.positional_embedding[offset[0] : offset[0] + 1]
         )
         x = x.to(n_layer_cross_k[0].dtype)
 
         i = 0
         for block in self.blocks:
-            self_k_cache = n_layer_self_k_cache[i, :, : offset[0] + tokens.shape[-1], :]
-            self_v_cache = n_layer_self_v_cache[i, :, : offset[0] + tokens.shape[-1], :]
+            self_k_cache = n_layer_self_k_cache[i, :, : offset + 1]
+            self_v_cache = n_layer_self_v_cache[i, :, : offset + 1]
+            import sys
+
+            print("here cache", n_layer_self_k_cache.shape, n_layer_self_v_cache.shape)
+            print("here cache", self_k_cache.shape, self_v_cache.shape)
             x, self_k_cache, self_v_cache = block(
                 x,
                 self_k_cache=self_k_cache,
                 self_v_cache=self_v_cache,
                 cross_k=n_layer_cross_k[i],
                 cross_v=n_layer_cross_v[i],
+                offset=offset,
+                #  mask=mask,
                 mask=self.textDecoder.mask,
             )
-            n_layer_self_k_cache[i, :, : offset[0] + tokens.shape[-1], :] = self_k_cache
-            n_layer_self_v_cache[i, :, : offset[0] + tokens.shape[-1], :] = self_v_cache
+            print(i, "x", x.sum())
+            #  print(i, "first k", self_k_cache[0, :5, :5])
+            #  print(i, "first v", self_v_cache[0, :5, :5])
+            n_layer_self_k_cache[i, :, : offset + 1] = self_k_cache
+            n_layer_self_v_cache[i, :, : offset + 1] = self_v_cache
             i += 1
 
         x = self.textDecoder.ln(x)
