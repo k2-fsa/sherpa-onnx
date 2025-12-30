@@ -110,15 +110,6 @@ def main():
     )
     offset += 1
 
-    print("offset", offset, n_layer_self_k_cache[0, 0, :6, :6])
-    print(
-        "offset",
-        offset,
-        n_layer_self_v_cache[0, 0, :6, :6],
-        n_layer_cross_k.sum(),
-        n_layer_cross_v.sum(),
-    )
-
     torch.save(
         {
             "self_k_offset_0": n_layer_self_k_cache,
@@ -159,21 +150,11 @@ def main():
     steps = 0
     results = []
     while idx != tokenizer.eot and steps < 50:
-        print("idx", idx, "steps", steps)
         results.append(idx)
         tokens = torch.tensor([[results[-1]]])
 
         offset += 1
 
-        print("offset", offset, n_layer_self_k_cache[0, 0, :6, :6])
-        print(
-            "offset",
-            offset,
-            n_layer_self_v_cache[0, 0, :6, :6],
-            n_layer_cross_k.sum(),
-            n_layer_cross_v.sum(),
-        )
-        print(n_layer_self_k_cache.sum(), n_layer_self_v_cache.sum())
         logits, n_layer_self_k_cache, n_layer_self_v_cache = decoder(
             tokens,
             n_layer_self_k_cache,
@@ -185,7 +166,6 @@ def main():
         )
         idx = logits[0, -1].argmax().item()
         steps += 1
-        print("here", "idx", idx)
 
     print(results)
     print(tokenizer.decode(results))

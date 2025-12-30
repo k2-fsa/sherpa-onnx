@@ -183,18 +183,6 @@ class MultiHeadAttentionSelf(nn.Module):
         k = self.multiHeadAttention.key(x)  # (b, n_ctx, n_state)
         v = self.multiHeadAttention.value(x)  # (b, n_ctx, n_state)
 
-        print("here x", x.sum(), q.sum(), k.sum(), v.sum(), mask[:5, :5])
-        print(
-            "kcache",
-            k_cache.shape,
-            v_cache.shape,
-            k.shape,
-            v.shape,
-            x.shape,
-            q.shape,
-            k.shape,
-        )
-
         k_cache[:, offset : offset + 1, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
         v_cache[:, offset : offset + 1, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
 
@@ -212,7 +200,6 @@ class MultiHeadAttentionSelf(nn.Module):
             },
             "hyp-0.pt",
         )
-        print("here wv", wv.sum(), qk.sum())
 
         #  import sys
         #
@@ -298,8 +285,6 @@ class TextDecoderTensorCache(nn.Module):
             self_v_cache = n_layer_self_v_cache[i, :, : offset + 1]
             import sys
 
-            print("here cache", n_layer_self_k_cache.shape, n_layer_self_v_cache.shape)
-            print("here cache", self_k_cache.shape, self_v_cache.shape)
             x, self_k_cache, self_v_cache = block(
                 x,
                 self_k_cache=self_k_cache,
@@ -310,9 +295,6 @@ class TextDecoderTensorCache(nn.Module):
                 #  mask=mask,
                 mask=self.textDecoder.mask,
             )
-            print(i, "x", x.sum())
-            #  print(i, "first k", self_k_cache[0, :5, :5])
-            #  print(i, "first v", self_v_cache[0, :5, :5])
             n_layer_self_k_cache[i, :, : offset + 1] = self_k_cache
             n_layer_self_v_cache[i, :, : offset + 1] = self_v_cache
             i += 1
