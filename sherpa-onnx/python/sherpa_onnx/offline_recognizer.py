@@ -7,6 +7,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
+    OfflineFunASRNanoModelConfig,
     OfflineOmnilingualAsrCtcModelConfig,
     OfflineMedAsrCtcModelConfig,
     OfflineCtcFstDecoderConfig,
@@ -291,6 +292,102 @@ class OfflineRecognizer(object):
                 lexicon=hr_lexicon,
                 rule_fsts=hr_rule_fsts,
             ),
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_funasr_nano(
+        cls,
+        encoder_adaptor: str,
+        llm_prefill: str,
+        llm_decode: str,
+        embedding: str,
+        tokenizer: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 80,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        system_prompt: str = "You are a helpful assistant.",
+        user_prompt: str = "语音转录:",
+        max_new_tokens: int = 512,
+        temperature: float = 0.3,
+        top_p: float = 0.8,
+        seed: int = 42,
+    ):
+        """
+        Create an offline recognizer for FunASR-nano models.
+
+        Args:
+          encoder_adaptor:
+            Path to ``encoder_adaptor.onnx``.
+          llm_prefill:
+            Path to ``llm_prefill.onnx`` (KV cache mode).
+          llm_decode:
+            Path to ``llm_decode.onnx`` (KV cache mode).
+          embedding:
+            Path to ``embedding.onnx``.
+          tokenizer:
+            Path to tokenizer directory (e.g., Qwen3-0.6B).
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda.
+          system_prompt:
+            System prompt for FunASR-nano.
+          user_prompt:
+            User prompt template for FunASR-nano.
+          max_new_tokens:
+            Maximum number of new tokens to generate.
+          temperature:
+            Sampling temperature.
+          top_p:
+            Top-p (nucleus) sampling threshold.
+          seed:
+            Random seed.
+        """
+        self = cls.__new__(cls)
+        # Create OfflineFunASRNanoModelConfig and set attributes
+        funasr_nano_config = OfflineFunASRNanoModelConfig()
+        funasr_nano_config.encoder_adaptor = encoder_adaptor
+        funasr_nano_config.llm_prefill = llm_prefill
+        funasr_nano_config.llm_decode = llm_decode
+        funasr_nano_config.embedding = embedding
+        funasr_nano_config.tokenizer = tokenizer
+        funasr_nano_config.system_prompt = system_prompt
+        funasr_nano_config.user_prompt = user_prompt
+        funasr_nano_config.max_new_tokens = max_new_tokens
+        funasr_nano_config.temperature = temperature
+        funasr_nano_config.top_p = top_p
+        funasr_nano_config.seed = seed
+
+        model_config = OfflineModelConfig(
+            funasr_nano=funasr_nano_config,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
