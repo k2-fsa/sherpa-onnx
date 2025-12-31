@@ -78,14 +78,8 @@ def main():
         mask,
     )
     for (k_cache, v_cache), (k, v) in zip(self_kv_pair, this_self_kv_pair):
-
         k_cache[:, offset : offset + 1] = k
         v_cache[:, offset : offset + 1] = v
-
-    for k_cache, v_cache in self_kv_pair:
-        print(k_cache[0, :5, :5])
-        print(v_cache[0, :5, :5])
-        break
 
     offset += 1
 
@@ -99,11 +93,6 @@ def main():
     for (k_cache, v_cache), (k, v) in zip(self_kv_pair, this_self_kv_pair):
         k_cache[:, offset : offset + 1] = k
         v_cache[:, offset : offset + 1] = v
-
-    for k_cache, v_cache in self_kv_pair:
-        print(k_cache[0, :5, :5])
-        print(v_cache[0, :5, :5])
-        break
 
     assert logits.shape == (n_audio, tokens.shape[1], model.dims.n_vocab)
 

@@ -99,16 +99,6 @@ def modified_self_qkv_attention(
     assert mask is not None
     n_batch, n_ctx, n_state = q.shape
 
-    print(
-        "qkv cache",
-        q.shape,
-        k_cache.shape,
-        v_cache.shape,
-        k1.shape,
-        v1.shape,
-        mask.shape,
-    )
-
     scale = (n_state // self.n_head) ** -0.25
     q = q.view(*q.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
     k_cache = k_cache.view(*k_cache.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
@@ -158,7 +148,7 @@ def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
         assert x.shape[1:] == self.positional_embedding.shape, "incorrect audio shape"
         x = (x + self.positional_embedding).to(x.dtype)
     else:
-        print(x.shape, self.positional_embedding.shape)
+        #  print(x.shape, self.positional_embedding.shape)
         # This branch contains the actual changes
         assert (
             x.shape[2] == self.positional_embedding.shape[1]
