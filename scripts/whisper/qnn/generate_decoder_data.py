@@ -49,10 +49,10 @@ class DecoderInput:
 
         for i, (k, v) in enumerate(self.cross_kv_pair):
             to_file(k.permute(0, 2, 1), f"{prefix}-cross_k_{i}.raw", debug)
-            ans.append(f"{prefix}-self_k_{i}.raw")
+            ans.append(f"{prefix}-cross_k_{i}.raw")
 
             to_file(v.permute(0, 2, 1), f"{prefix}-cross_v_{i}.raw", debug)
-            ans.append(f"{prefix}-self_v_{i}.raw")
+            ans.append(f"{prefix}-cross_v_{i}.raw")
 
         to_file(self.offset.to(torch.int32), f"{prefix}-offset.raw", debug)
         ans.append(f"{prefix}-offset.raw")
