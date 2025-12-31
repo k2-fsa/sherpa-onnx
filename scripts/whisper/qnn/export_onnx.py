@@ -564,7 +564,6 @@ def main():
         opset_version=opset_version,
         input_names=[f"{name}-mel"],
         output_names=output_names,
-        dynamic_axes={},
     )
 
     encoder_meta_data = {
@@ -667,7 +666,6 @@ def main():
         opset_version=opset_version,
         input_names=input_names,
         output_names=output_names,
-        dynamic_axes={},
     )
     return
 
