@@ -41,7 +41,7 @@ class DecoderInput:
         ans.append(f"{prefix}-tokens.raw")
 
         for i, (k, v) in enumerate(self.self_kv_pair):
-            to_file(k.permute(0, 2, 1), f"{prefix}_self_k_{i}.raw", debug)
+            to_file(k.permute(0, 2, 1), f"{prefix}-self_k_{i}.raw", debug)
             ans.append(f"{prefix}-self_k_{i}.raw")
 
             to_file(v.permute(0, 2, 1), f"{prefix}-self_v_{i}.raw", debug)
