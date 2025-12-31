@@ -55,6 +55,13 @@ def get_args():
     return parser.parse_args()
 
 
+def causal_mask_1d(n: int, L: int, device=None, dtype=torch.float32):
+    mask = torch.full((L,), float("-inf"), device=device, dtype=dtype)
+    if n > 0:
+        mask[:n] = 0
+    return mask
+
+
 def add_meta_data(filename: str, meta_data: Dict[str, Any]):
     """Add meta data to an ONNX model. It is changed in-place.
 
@@ -484,19 +491,16 @@ def main():
         model = whisper.load_model(filename)
     else:
         model = whisper.load_model(name)
-    print(model.dims)
 
+    num_params = sum(p.numel() for p in model.parameters())
+    num_encoder_params = sum(p.numel() for p in model.encoder.parameters())
+    num_decoder_params = sum(p.numel() for p in model.decoder.parameters())
+    print(f"{name} model parameters: {num_params} (or {num_params/1000/1000} M)")
     print(
-        f"number of model parameters: {name}",
-        sum(p.numel() for p in model.parameters()),
+        f"{name} encoder parameters: {num_encoder_params} (or {num_encoder_params/1000/1000} M)"
     )
     print(
-        f"number of encoder parameters: {name}",
-        sum(p.numel() for p in model.encoder.parameters()),
-    )
-    print(
-        f"number of decoder parameters: {name}",
-        sum(p.numel() for p in model.decoder.parameters()),
+        f"{name} decoder parameters: {num_decoder_params} (or {num_decoder_params/1000/1000} M)"
     )
 
     convert_tokens(name=name, model=model)
@@ -533,20 +537,17 @@ def main():
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
 
     cross_kv_pair = encoder(mel)
-    return
+    assert len(cross_kv_pair) == model.dims.n_text_layer, (
+        len(cross_kv_pair),
+        model.dims.n_text_layer,
+    )
 
-    assert n_layer_cross_k.shape == (
-        model.dims.n_text_layer,
-        batch_size,
-        model.dims.n_audio_ctx,
-        model.dims.n_text_state,
-    ), (n_layer_cross_k.shape, model.dims)
-    assert n_layer_cross_v.shape == (
-        model.dims.n_text_layer,
-        batch_size,
-        model.dims.n_audio_ctx,
-        model.dims.n_text_state,
-    ), (n_layer_cross_v.shape, model.dims)
+    output_names = []
+    for i in range(model.dims.n_text_layer):
+        k = f"cross_k_{i}"
+        v = f"cross_v_{i}"
+        output_names.append(k)
+        output_names.append(v)
 
     encoder_filename = f"{name}-encoder.onnx"
     torch.onnx.export(
@@ -554,13 +555,9 @@ def main():
         mel,
         encoder_filename,
         opset_version=opset_version,
-        input_names=["mel"],
-        output_names=["n_layer_cross_k", "n_layer_cross_v"],
-        dynamic_axes={
-            "mel": {0: "n_audio", 2: "T"},  # n_audio is also known as batch_size
-            "n_layer_cross_k": {1: "n_audio", 2: "T"},
-            "n_layer_cross_v": {1: "n_audio", 2: "T"},
-        },
+        input_names=[f"{name}-mel"],
+        output_names=output_names,
+        dynamic_axes={},
     )
 
     encoder_meta_data = {
@@ -598,96 +595,74 @@ def main():
         "no_timestamps": tokenizer.no_timestamps,
     }
     print(f"encoder_meta_data: {encoder_meta_data}")
-    add_meta_data(filename=encoder_filename, meta_data=encoder_meta_data)
+    #  add_meta_data(filename=encoder_filename, meta_data=encoder_meta_data)
 
-    n_audio = mel.shape[0]
-    tokens = torch.tensor([[tokenizer.sot, tokenizer.sot, tokenizer.sot]] * n_audio).to(
-        mel.device
-    )  # [n_audio, 3]
+    tokens = torch.tensor([[tokenizer.sot]], dtype=torch.int32)
     decoder = TextDecoderTensorCache(model.decoder, model.dims.n_text_ctx)
-    n_layer_self_k_cache = torch.zeros(
-        (
-            len(model.decoder.blocks),
-            n_audio,
-            model.dims.n_text_ctx,
-            model.dims.n_text_state,
-        ),
-        device=mel.device,
-    )
-    n_layer_self_v_cache = torch.zeros(
-        (
-            len(model.decoder.blocks),
-            n_audio,
-            model.dims.n_text_ctx,
-            model.dims.n_text_state,
-        ),
-        device=mel.device,
-    )
-    offset = torch.zeros(1, dtype=torch.int64).to(mel.device)
-    logits, n_layer_self_k_cache, n_layer_self_v_cache = decoder(
+
+    self_kv_pair = []
+    batch_size = 1
+    for i in range(model.dims.n_text_layer):
+        k = torch.zeros(batch_size, model.dims.n_text_ctx, model.dims.n_text_state)
+        v = torch.zeros(batch_size, model.dims.n_text_ctx, model.dims.n_text_state)
+        self_kv_pair.append((k, v))
+
+    offset = torch.zeros(1, dtype=torch.int64)
+    mask = causal_mask_1d(offset.item(), model.dims.n_text_ctx)
+
+    logits, this_self_kv_pair = decoder(
         tokens,
-        n_layer_self_k_cache,
-        n_layer_self_v_cache,
-        n_layer_cross_k,
-        n_layer_cross_v,
+        self_kv_pair,
+        cross_kv_pair,
         offset,
-    )
-    assert logits.shape == (n_audio, tokens.shape[1], model.dims.n_vocab)
-    assert n_layer_self_k_cache.shape == (
-        model.dims.n_text_layer,
-        n_audio,
-        model.dims.n_text_ctx,
-        model.dims.n_text_state,
-    )
-    assert n_layer_self_v_cache.shape == (
-        model.dims.n_text_layer,
-        n_audio,
-        model.dims.n_text_ctx,
-        model.dims.n_text_state,
+        mask,
     )
 
-    offset = torch.tensor([tokens.shape[1]], dtype=torch.int64).to(mel.device)
-    tokens = torch.tensor([[tokenizer.sot]] * n_audio).to(mel.device)  # [n_audio, 1]
-
-    logits, out_n_layer_self_k_cache, out_n_layer_self_v_cache = decoder(
-        tokens,
-        n_layer_self_k_cache,
-        n_layer_self_v_cache,
-        n_layer_cross_k,
-        n_layer_cross_v,
-        offset,
+    assert logits.shape == (batch_size, tokens.shape[1], model.dims.n_vocab)
+    assert len(this_self_kv_pair) == model.dims.n_text_layer, (
+        len(this_self_kv_pair),
+        model.dims.n_text_layer,
     )
+
+    input_names = [f"{name}-tokens"]
+    for i in range(model.dims.n_text_layer):
+        k = f"{name}-self_k_{i}"
+        v = f"{name}-self_v_{i}"
+        input_names.append(k)
+        input_names.append(v)
+
+    for i in range(model.dims.n_text_layer):
+        k = f"{name}-cross_k_{i}"
+        v = f"{name}-cross_v_{i}"
+        input_names.append(k)
+        input_names.append(v)
+    input_names.append(f"{name}-offset")
+    input_names.append(f"{name}-mask")
+
+    output_names = [f"{name}-logits"]
+    for i in range(model.dims.n_text_layer):
+        k = f"{name}-this_self_k_{i}"
+        v = f"{name}-this_self_v_{i}"
+        output_names.append(k)
+        output_names.append(v)
 
     decoder_filename = f"{name}-decoder.onnx"
     torch.onnx.export(
         decoder,
         (
             tokens,
-            n_layer_self_k_cache,
-            n_layer_self_v_cache,
-            n_layer_cross_k,
-            n_layer_cross_v,
+            self_kv_pair,
+            cross_kv_pair,
             offset,
+            mask,
         ),
         decoder_filename,
         opset_version=opset_version,
-        input_names=[
-            "tokens",
-            "in_n_layer_self_k_cache",
-            "in_n_layer_self_v_cache",
-            "n_layer_cross_k",
-            "n_layer_cross_v",
-            "offset",
-        ],
-        output_names=["logits", "out_n_layer_self_k_cache", "out_n_layer_self_v_cache"],
-        dynamic_axes={
-            "tokens": {0: "n_audio", 1: "n_tokens"},
-            "in_n_layer_self_k_cache": {1: "n_audio"},
-            "in_n_layer_self_v_cache": {1: "n_audio"},
-            "n_layer_cross_k": {1: "n_audio", 2: "T"},
-            "n_layer_cross_v": {1: "n_audio", 2: "T"},
-        },
+        input_names=input_names,
+        output_names=output_names,
+        dynamic_axes={},
     )
+    return
 
     if "large" in args.model:
         decoder_external_filename = decoder_filename.split(".onnx")[0]

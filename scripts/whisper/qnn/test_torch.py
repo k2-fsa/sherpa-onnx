@@ -8,14 +8,7 @@ import soundfile as sf
 import torch
 import whisper
 
-from export_onnx import AudioEncoderTensorCache, TextDecoderTensorCache
-
-
-def causal_mask_1d(n: int, L: int, device=None, dtype=torch.float32):
-    mask = torch.full((L,), float("-inf"), device=device, dtype=dtype)
-    if n > 0:
-        mask[:n] = 0
-    return mask
+from export_onnx import AudioEncoderTensorCache, TextDecoderTensorCache, causal_mask_1d
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
