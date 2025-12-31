@@ -87,32 +87,61 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         onnx.save(model, filename)
 
 
-def modified_qkv_attention(
-    self, q: Tensor, k: Tensor, v: Tensor, mask: Optional[Tensor] = None
+def modified_self_qkv_attention(
+    self,
+    q: Tensor,
+    k_cache: Tensor,
+    v_cache: Tensor,
+    k1: Tensor,
+    v1: Tensor,
+    mask: Tensor,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
     assert mask is not None
     n_batch, n_ctx, n_state = q.shape
+
+    print(
+        "qkv cache",
+        q.shape,
+        k_cache.shape,
+        v_cache.shape,
+        k1.shape,
+        v1.shape,
+        mask.shape,
+    )
+
     scale = (n_state // self.n_head) ** -0.25
     q = q.view(*q.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
-    k = k.view(*k.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
-    v = v.view(*v.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+    k_cache = k_cache.view(*k_cache.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+    v_cache = v_cache.view(*v_cache.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
 
-    qk = (q * scale) @ (k * scale).transpose(-1, -2)
+    k1 = k1.view(*k1.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+    v1 = v1.view(*v1.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
 
-    print("here qk", qk.shape, q.shape, k.shape, v.shape)
-    qk = qk + mask[:n_ctx, :n_ctx]
+    qk = (q * scale) @ (k_cache * scale).transpose(-1, -2)  # (1, 6, 1, 448)
+
+    qk1 = (q * scale) @ (k1 * scale).transpose(-1, -2)  # (1, 6, 1, 1)
+
+    qk = qk + mask
 
     qk = qk.float()
+    qk1 = qk1.float()
 
-    w = F.softmax(qk, dim=-1).to(q.dtype)
-    out = (w @ v).permute(0, 2, 1, 3).flatten(start_dim=2)
+    qk_total = torch.cat([qk, qk1], dim=-1)
+
+    w_total = F.softmax(qk_total, dim=-1).to(q.dtype)
+    w = w_total[:, :, :, :-1]
+    w1 = w_total[:, :, :, -1:]
+
+    out = (w @ v_cache).permute(0, 2, 1, 3).flatten(start_dim=2)
+    out1 = (w1 @ v1).permute(0, 2, 1, 3).flatten(start_dim=2)
+    out = out + out1
+
     qk = qk.detach()
-    print("w", w.shape, v.shape, out.shape, qk.shape)
 
     return out, qk
 
 
-MultiHeadAttention.qkv_attention_self = modified_qkv_attention
+MultiHeadAttention.qkv_attention_self = modified_self_qkv_attention
 
 
 def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
@@ -201,34 +230,28 @@ class MultiHeadAttentionSelf(nn.Module):
 
     def forward(
         self,
-        x: Tensor,  # (b, n_ctx      , n_state)
-        k_cache: Tensor,  # (b, n_ctx_cache, n_state)
-        v_cache: Tensor,  # (b, n_ctx_cache, n_state)
-        offset: Tensor,
-        mask: Tensor,
+        x: Tensor,  # (1, 1      , 384)
+        k_cache: Tensor,  # (1, 448, 384)
+        v_cache: Tensor,  # (1, 448, 384)
+        mask: Tensor,  # (448,)
     ):
-        q = self.multiHeadAttention.query(x)  # (b, n_ctx, n_state)
-        k = self.multiHeadAttention.key(x)  # (b, n_ctx, n_state)
-        v = self.multiHeadAttention.value(x)  # (b, n_ctx, n_state)
+        q = self.multiHeadAttention.query(x)  # (1, 1, 384)
+        k = self.multiHeadAttention.key(x)  # (1, 1, 384)
+        v = self.multiHeadAttention.value(x)  # (1, 1, 384)
 
-        k_cache[:, offset : offset + 1, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
-        v_cache[:, offset : offset + 1, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
+        #  k_cache[:, offset : offset + 1, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
+        #  v_cache[:, offset : offset + 1, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
 
-        wv, qk = self.multiHeadAttention.qkv_attention_self(q, k_cache, v_cache, mask)
-
-        torch.save(
-            {
-                "wv": wv,
-                "qk": qk,
-                "q": q,
-                "k_cache": k_cache,
-                "v_cache": v_cache,
-                "mask": mask,
-            },
-            "hyp-0.pt",
+        wv, qk = self.multiHeadAttention.qkv_attention_self(
+            q,
+            k_cache=k_cache,
+            v_cache=v_cache,
+            k1=k,
+            v1=v,
+            mask=mask,
         )
 
-        return self.multiHeadAttention.out(wv), k_cache, v_cache
+        return self.multiHeadAttention.out(wv), k, v
 
 
 class ResidualAttentionBlockTensorCache(nn.Module):
@@ -252,11 +275,10 @@ class ResidualAttentionBlockTensorCache(nn.Module):
         offset: Tensor,
         mask: Tensor,
     ):
-        self_attn_x, self_k_cache_updated, self_v_cache_updated = self.attn(
+        self_attn_x, self_k, self_v = self.attn(
             self.originalBlock.attn_ln(x),
             self_k_cache,
             self_v_cache,
-            offset=offset,
             mask=mask,
         )
         x = x + self_attn_x
@@ -267,7 +289,7 @@ class ResidualAttentionBlockTensorCache(nn.Module):
             )
 
         x = x + self.originalBlock.mlp(self.originalBlock.mlp_ln(x))
-        return x, self_k_cache_updated, self_v_cache_updated
+        return x, self_k, self_v
 
 
 class TextDecoderTensorCache(nn.Module):
@@ -286,6 +308,7 @@ class TextDecoderTensorCache(nn.Module):
         self_kv_pair: List[Tuple[Tensor, Tensor]],
         cross_kv_pair: List[Tuple[Tensor, Tensor]],
         offset: Tensor,
+        mask: Tensor,
     ) -> Tuple[Tensor, List[Tuple[Tensor, Tensor]]]:
         """
         tokens: (batch_size, 1)
@@ -294,7 +317,7 @@ class TextDecoderTensorCache(nn.Module):
             - [i][1]: layer_i_self_v_cache, (batch_size, 448, dim)
         Returns:
           - logits
-          - updated_self_kv_pair
+          - this_self_kv_pair
         """
         assert tokens.shape == (1, 1), tokens.shape
         x = (
@@ -303,24 +326,28 @@ class TextDecoderTensorCache(nn.Module):
         )
 
         i = 0
-        updated_self_kv_pair = []
+        this_self_kv_pair = []
         for block in self.blocks:
             self_k_cache = self_kv_pair[i][0]
             self_v_cache = self_kv_pair[i][1]
 
-            x, updated_self_k_cache, updated_self_v_cache = block(
+            x, self_k, self_v = block(
                 x,
-                self_k_cache=self_k_cache[:, : offset + 1],
-                self_v_cache=self_v_cache[:, : offset + 1],
+                #  self_k_cache=self_k_cache[:, : offset + 1],
+                #  self_v_cache=self_v_cache[:, : offset + 1],
+                self_k_cache=self_k_cache,
+                self_v_cache=self_v_cache,
                 cross_k=cross_kv_pair[i][0],
                 cross_v=cross_kv_pair[i][1],
                 offset=offset,
-                #  mask=mask,
-                mask=self.textDecoder.mask,
+                #  mask=self.textDecoder.mask,
+                mask=mask,
             )
-            self_k_cache[:, : offset + 1] = updated_self_k_cache
-            self_v_cache[:, : offset + 1] = updated_self_v_cache
-            updated_self_kv_pair.append((self_k_cache, self_v_cache))
+            #  self_k_cache[:, : offset + 1] = updated_self_k_cache
+            #  self_v_cache[:, : offset + 1] = updated_self_v_cache
+            #  updated_self_kv_pair.append((self_k_cache, self_v_cache))
+            this_self_kv_pair.append((self_k, self_v))
+
             i += 1
 
         x = self.textDecoder.ln(x)
@@ -345,7 +372,7 @@ class TextDecoderTensorCache(nn.Module):
                 .float()
             )
 
-        return logits, updated_self_kv_pair
+        return logits, this_self_kv_pair
 
 
 # ref: https://github.com/ggerganov/whisper.cpp/blob/master/models/convert-pt-to-ggml.py#L232

@@ -11,28 +11,11 @@ import whisper
 from export_onnx import AudioEncoderTensorCache, TextDecoderTensorCache
 
 
-def make_self_attention_mask(num_tokens: int, n: int, device=None):
-    """
-    Args:
-        num_tokens: total sequence length
-        n: number of already processed tokens
-           (valid rows are [0, n-1])
-    """
-    i = torch.arange(num_tokens, device=device).unsqueeze(1)
-    j = torch.arange(num_tokens, device=device).unsqueeze(0)
-
-    allowed = (i < n) & (j <= i)
-
-    mask = torch.where(
-        allowed,
-        torch.zeros((), device=device),
-        torch.full((), float("-inf"), device=device),
-    )
-
+def causal_mask_1d(n: int, L: int, device=None, dtype=torch.float32):
+    mask = torch.full((L,), float("-inf"), device=device, dtype=dtype)
+    if n > 0:
+        mask[:n] = 0
     return mask
-
-
-#  print(make_self_attention_mask(4, 4))
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
@@ -84,17 +67,43 @@ def main():
 
     offset = torch.zeros(1, dtype=torch.int64).to(mel.device)
 
+    mask = causal_mask_1d(offset.item(), model.dims.n_text_ctx)
+
     tokens = torch.tensor([[tokenizer.sot]])
-    logits, self_kv_pair = decoder(
+    logits, this_self_kv_pair = decoder(
         tokens,
         self_kv_pair,
         cross_kv_pair,
         offset,
+        mask,
     )
+    for (k_cache, v_cache), (k, v) in zip(self_kv_pair, this_self_kv_pair):
+
+        k_cache[:, offset : offset + 1] = k
+        v_cache[:, offset : offset + 1] = v
+
+    for k_cache, v_cache in self_kv_pair:
+        print(k_cache[0, :5, :5])
+        print(v_cache[0, :5, :5])
+        break
+
     offset += 1
 
+    mask = causal_mask_1d(offset.item(), model.dims.n_text_ctx)
+
     tokens = torch.tensor([[tokenizer.no_timestamps]])
-    logits, self_kv_pair = decoder(tokens, self_kv_pair, cross_kv_pair, offset)
+    logits, this_self_kv_pair = decoder(
+        tokens, self_kv_pair, cross_kv_pair, offset, mask
+    )
+
+    for (k_cache, v_cache), (k, v) in zip(self_kv_pair, this_self_kv_pair):
+        k_cache[:, offset : offset + 1] = k
+        v_cache[:, offset : offset + 1] = v
+
+    for k_cache, v_cache in self_kv_pair:
+        print(k_cache[0, :5, :5])
+        print(v_cache[0, :5, :5])
+        break
 
     assert logits.shape == (n_audio, tokens.shape[1], model.dims.n_vocab)
 
@@ -108,8 +117,16 @@ def main():
         tokens = torch.tensor([[results[-1]]])
 
         offset += 1
+        mask = causal_mask_1d(offset.item(), model.dims.n_text_ctx)
 
-        logits, self_kv_pair = decoder(tokens, self_kv_pair, cross_kv_pair, offset)
+        logits, this_self_kv_pair = decoder(
+            tokens, self_kv_pair, cross_kv_pair, offset, mask
+        )
+
+        for (k_cache, v_cache), (k, v) in zip(self_kv_pair, this_self_kv_pair):
+            k_cache[:, offset : offset + 1] = k
+            v_cache[:, offset : offset + 1] = v
+
         idx = logits[0, -1].argmax().item()
         steps += 1
 
