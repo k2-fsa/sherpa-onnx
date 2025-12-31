@@ -268,17 +268,18 @@ class TextDecoderTensorCache(nn.Module):
     def forward(
         self,
         tokens: Tensor,
-        n_layer_self_k_cache: Tensor,
-        n_layer_self_v_cache: Tensor,
+        self_kv_pair: List[Tuple[Tensor, Tensor]],
         cross_kv_pair: List[Tuple[Tensor, Tensor]],
         offset: Tensor,
-    ):
+    ) -> Tuple[Tensor, List[Tuple[Tensor, Tensor]]]:
         """
         tokens: (batch_size, 1)
-        n_layer_self_k_cache: (n_text_layer, batch_size, 448, dim)
-        n_layer_self_v_cache: (n_text_layer, batch_size, 448, dim)
-        n_layer_cross_k_cache: (n_text_layer, batch_size, 1500, dim)
-        n_layer_cross_v_cache: (n_text_layer, batch_size, 1500, dim)
+        self_kv_pair:
+            - [i][0]: layer_i_self_k_cache, (batch_size, 448, dim)
+            - [i][1]: layer_i_self_v_cache, (batch_size, 448, dim)
+        Returns:
+          - logits
+          - updated_self_kv_pair
         """
         assert tokens.shape == (1, 1), tokens.shape
         x = (
@@ -287,23 +288,25 @@ class TextDecoderTensorCache(nn.Module):
         )
 
         i = 0
+        updated_self_kv_pair = []
         for block in self.blocks:
-            self_k_cache = n_layer_self_k_cache[i, :, : offset + 1]
-            self_v_cache = n_layer_self_v_cache[i, :, : offset + 1]
+            self_k_cache = self_kv_pair[i][0]
+            self_v_cache = self_kv_pair[i][1]
             import sys
 
-            x, self_k_cache, self_v_cache = block(
+            x, updated_self_k_cache, updated_self_v_cache = block(
                 x,
-                self_k_cache=self_k_cache,
-                self_v_cache=self_v_cache,
+                self_k_cache=self_k_cache[:, : offset + 1],
+                self_v_cache=self_v_cache[:, : offset + 1],
                 cross_k=cross_kv_pair[i][0],
                 cross_v=cross_kv_pair[i][1],
                 offset=offset,
                 #  mask=mask,
                 mask=self.textDecoder.mask,
             )
-            n_layer_self_k_cache[i, :, : offset + 1] = self_k_cache
-            n_layer_self_v_cache[i, :, : offset + 1] = self_v_cache
+            self_k_cache[:, : offset + 1] = updated_self_k_cache
+            self_v_cache[:, : offset + 1] = updated_self_v_cache
+            updated_self_kv_pair.append((self_k_cache, self_v_cache))
             i += 1
 
         x = self.textDecoder.ln(x)
@@ -328,7 +331,7 @@ class TextDecoderTensorCache(nn.Module):
                 .float()
             )
 
-        return logits, n_layer_self_k_cache, n_layer_self_v_cache
+        return logits, updated_self_kv_pair
 
 
 # ref: https://github.com/ggerganov/whisper.cpp/blob/master/models/convert-pt-to-ggml.py#L232

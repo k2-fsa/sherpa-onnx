@@ -76,69 +76,27 @@ def main():
 
     decoder = TextDecoderTensorCache(model.decoder, model.dims.n_text_ctx)
 
-    n_layer_self_k_cache = torch.zeros(
-        (
-            len(model.decoder.blocks),
-            n_audio,
-            model.dims.n_text_ctx,
-            model.dims.n_text_state,
-        ),
-        device=mel.device,
-    )
-    n_layer_self_v_cache = torch.zeros(
-        (
-            len(model.decoder.blocks),
-            n_audio,
-            model.dims.n_text_ctx,
-            model.dims.n_text_state,
-        ),
-        device=mel.device,
-    )
+    self_kv_pair = []
+    for i in range(model.dims.n_text_layer):
+        k = torch.zeros(n_audio, model.dims.n_text_ctx, model.dims.n_text_state)
+        v = torch.zeros(n_audio, model.dims.n_text_ctx, model.dims.n_text_state)
+        self_kv_pair.append((k, v))
 
     offset = torch.zeros(1, dtype=torch.int64).to(mel.device)
 
     tokens = torch.tensor([[tokenizer.sot]])
-    logits, n_layer_self_k_cache, n_layer_self_v_cache = decoder(
+    logits, self_kv_pair = decoder(
         tokens,
-        n_layer_self_k_cache,
-        n_layer_self_v_cache,
+        self_kv_pair,
         cross_kv_pair,
         offset,
     )
     offset += 1
 
-    torch.save(
-        {
-            "self_k_offset_0": n_layer_self_k_cache,
-            "self_v_offset_0": n_layer_self_v_cache,
-        },
-        "hyp.pt",
-    )
-
-    print(n_layer_self_k_cache.sum(), n_layer_self_v_cache.sum())
-
     tokens = torch.tensor([[tokenizer.no_timestamps]])
-    logits, n_layer_self_k_cache, n_layer_self_v_cache = decoder(
-        tokens,
-        n_layer_self_k_cache,
-        n_layer_self_v_cache,
-        cross_kv_pair,
-        offset,
-    )
+    logits, self_kv_pair = decoder(tokens, self_kv_pair, cross_kv_pair, offset)
 
     assert logits.shape == (n_audio, tokens.shape[1], model.dims.n_vocab)
-    assert n_layer_self_k_cache.shape == (
-        model.dims.n_text_layer,
-        n_audio,
-        model.dims.n_text_ctx,
-        model.dims.n_text_state,
-    )
-    assert n_layer_self_v_cache.shape == (
-        model.dims.n_text_layer,
-        n_audio,
-        model.dims.n_text_ctx,
-        model.dims.n_text_state,
-    )
 
     print("logits.shape", logits.shape)  # (1, 3, 51864)
     idx = logits[0, -1].argmax().item()
@@ -151,14 +109,7 @@ def main():
 
         offset += 1
 
-        logits, n_layer_self_k_cache, n_layer_self_v_cache = decoder(
-            tokens,
-            n_layer_self_k_cache,
-            n_layer_self_v_cache,
-            cross_kv_pair,
-            offset,
-            #  mask,
-        )
+        logits, self_kv_pair = decoder(tokens, self_kv_pair, cross_kv_pair, offset)
         idx = logits[0, -1].argmax().item()
         steps += 1
 
