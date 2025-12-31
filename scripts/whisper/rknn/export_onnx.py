@@ -16,15 +16,14 @@ use any T <= 30.
 import argparse
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import onnx
 import torch
 import torch.nn.functional as F
+import whisper
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from torch import Tensor, nn
-
-import whisper
 from whisper.model import (
     AudioEncoder,
     MultiHeadAttention,
@@ -137,16 +136,26 @@ class AudioEncoderTensorCache(nn.Module):
         self.audioEncoder = inAudioEncoder
         self.textDecoder = inTextDecoder
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor) -> List[Tuple[Tensor, Tensor]]:
+        """
+        Args:
+          x: (1, 80, 3000)
+          cross_kv_pair:
+            - the i-th entry contains kv cache for the i-th layer
+        """
         audio_features = self.audioEncoder(x)
 
         n_layer_cross_k_list = []
         n_layer_cross_v_list = []
-        for block in self.textDecoder.blocks:
-            n_layer_cross_k_list.append(block.cross_attn.key(audio_features))
-            n_layer_cross_v_list.append(block.cross_attn.value(audio_features))
 
-        return torch.stack(n_layer_cross_k_list), torch.stack(n_layer_cross_v_list)
+        cross_kv_pair = []
+        for block in self.textDecoder.blocks:
+            k = block.cross_attn.key(audio_features)  # (batch_size, 1500, 384)
+            v = block.cross_attn.value(audio_features)  # (batch_size, 1500, 384)
+
+            cross_kv_pair.append((k, v))
+
+        return cross_kv_pair
 
 
 class MultiHeadAttentionCross(nn.Module):
@@ -261,8 +270,7 @@ class TextDecoderTensorCache(nn.Module):
         tokens: Tensor,
         n_layer_self_k_cache: Tensor,
         n_layer_self_v_cache: Tensor,
-        n_layer_cross_k: Tensor,
-        n_layer_cross_v: Tensor,
+        cross_kv_pair: List[Tuple[Tensor, Tensor]],
         offset: Tensor,
     ):
         """
@@ -277,7 +285,6 @@ class TextDecoderTensorCache(nn.Module):
             self.textDecoder.token_embedding(tokens)
             + self.textDecoder.positional_embedding[offset[0] : offset[0] + 1]
         )
-        x = x.to(n_layer_cross_k[0].dtype)
 
         i = 0
         for block in self.blocks:
@@ -289,8 +296,8 @@ class TextDecoderTensorCache(nn.Module):
                 x,
                 self_k_cache=self_k_cache,
                 self_v_cache=self_v_cache,
-                cross_k=n_layer_cross_k[i],
-                cross_v=n_layer_cross_v[i],
+                cross_k=cross_kv_pair[i][0],
+                cross_v=cross_kv_pair[i][1],
                 offset=offset,
                 #  mask=mask,
                 mask=self.textDecoder.mask,
@@ -491,7 +498,9 @@ def main():
 
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
 
-    n_layer_cross_k, n_layer_cross_v = encoder(mel)
+    cross_kv_pair = encoder(mel)
+    return
+
     assert n_layer_cross_k.shape == (
         model.dims.n_text_layer,
         batch_size,

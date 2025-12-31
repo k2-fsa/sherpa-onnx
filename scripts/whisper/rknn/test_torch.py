@@ -70,9 +70,7 @@ def main():
 
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
 
-    n_layer_cross_k, n_layer_cross_v = encoder(mel)
-    print("n_layer_cross_k", n_layer_cross_k.shape)  # (4, 1, 1500, 384)
-    print("n_layer_cross_v", n_layer_cross_v.shape)  # (4, 1, 1500, 384)
+    cross_kv_pair = encoder(mel)
 
     n_audio = mel.shape[0]
 
@@ -104,8 +102,7 @@ def main():
         tokens,
         n_layer_self_k_cache,
         n_layer_self_v_cache,
-        n_layer_cross_k,
-        n_layer_cross_v,
+        cross_kv_pair,
         offset,
     )
     offset += 1
@@ -125,8 +122,7 @@ def main():
         tokens,
         n_layer_self_k_cache,
         n_layer_self_v_cache,
-        n_layer_cross_k,
-        n_layer_cross_v,
+        cross_kv_pair,
         offset,
     )
 
@@ -159,8 +155,7 @@ def main():
             tokens,
             n_layer_self_k_cache,
             n_layer_self_v_cache,
-            n_layer_cross_k,
-            n_layer_cross_v,
+            cross_kv_pair,
             offset,
             #  mask,
         )
