@@ -704,8 +704,16 @@ class OfflineFunASRNanoModel::Impl {
 
  private:
   void InitEncoderAdaptor(const std::string &model_path) {
+#if defined(_WIN32)
+    std::wstring tmp;
+    tmp.resize(model_path.size());
+    std::transform(model_path.begin(), model_path.end(), tmp.begin(),
+                   [](auto n) { return wchar_t(n); });
+    encoder_sess_ = std::make_unique<Ort::Session>(env_, tmp.c_str(), sess_opts_encoder_);
+#else
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, model_path.c_str(), sess_opts_encoder_);
+#endif
     GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                   &encoder_input_names_ptr_);
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
@@ -728,8 +736,17 @@ class OfflineFunASRNanoModel::Impl {
   }
 
   void InitLLMPrefill(const std::string &model_path) {
-    prefill_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_llm_);
+#if defined(_WIN32)
+    std::wstring tmp;
+    tmp.resize(model_path.size());
+    std::transform(model_path.begin(), model_path.end(), tmp.begin(),
+                   [](auto n) { return wchar_t(n); });
+    prefill_sess_ = std::make_unique<Ort::Session>(env_, tmp.c_str(),
+                                                   sess_opts_llm_);
+#else
+    prefill_sess_ = std::make_unique<Ort::Session>(env_, model_path.c_str(),
+                                                   sess_opts_llm_);
+#endif
     GetInputNames(prefill_sess_.get(), &prefill_input_names_,
                   &prefill_input_names_ptr_);
     GetOutputNames(prefill_sess_.get(), &prefill_output_names_,
@@ -753,8 +770,17 @@ class OfflineFunASRNanoModel::Impl {
   }
 
   void InitLLMDecode(const std::string &model_path) {
-    decode_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_llm_);
+#if defined(_WIN32)
+    std::wstring tmp;
+    tmp.resize(model_path.size());
+    std::transform(model_path.begin(), model_path.end(), tmp.begin(),
+                   [](auto n) { return wchar_t(n); });
+    decode_sess_ = std::make_unique<Ort::Session>(env_, tmp.c_str(),
+                                                  sess_opts_llm_);
+#else
+    decode_sess_ = std::make_unique<Ort::Session>(env_, model_path.c_str(),
+                                                  sess_opts_llm_);
+#endif
     GetInputNames(decode_sess_.get(), &decode_input_names_,
                   &decode_input_names_ptr_);
     GetOutputNames(decode_sess_.get(), &decode_output_names_,
@@ -787,8 +813,17 @@ class OfflineFunASRNanoModel::Impl {
   }
 
   void InitEmbedding(const std::string &model_path) {
-    embedding_sess_ = std::make_unique<Ort::Session>(
-        env_, model_path.c_str(), sess_opts_embedding_);
+#if defined(_WIN32)
+    std::wstring tmp;
+    tmp.resize(model_path.size());
+    std::transform(model_path.begin(), model_path.end(), tmp.begin(),
+                   [](auto n) { return wchar_t(n); });
+    embedding_sess_ = std::make_unique<Ort::Session>(env_, tmp.c_str(),
+                                                     sess_opts_embedding_);
+#else
+    embedding_sess_ = std::make_unique<Ort::Session>(env_, model_path.c_str(),
+                                                     sess_opts_embedding_);
+#endif
     GetInputNames(embedding_sess_.get(), &embedding_input_names_,
                   &embedding_input_names_ptr_);
     GetOutputNames(embedding_sess_.get(), &embedding_output_names_,

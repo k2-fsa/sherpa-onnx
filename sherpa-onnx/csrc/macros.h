@@ -42,6 +42,9 @@
     fprintf(stdout, "\n");                           \
   } while (0)
 #else
+#if defined(NO_SHERPA_ONNX_LOGE)
+#define SHERPA_ONNX_LOGE(...)
+#else
 #define SHERPA_ONNX_LOGE(...)                        \
   do {                                               \
     fprintf(stderr, "%s:%s:%d ", __FILE__, __func__, \
@@ -49,6 +52,7 @@
     fprintf(stderr, ##__VA_ARGS__);                  \
     fprintf(stderr, "\n");                           \
   } while (0)
+#endif
 #endif
 
 #define SHERPA_ONNX_EXIT(code) exit(code)

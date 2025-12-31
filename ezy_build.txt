@@ -1,0 +1,13 @@
+Build notes for Ezy
+
+December 30 2025
+
+cmake -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF -DSHERPA_ONNX_ENABLE_DIRECTML=ON -DSHERPA_ONNX_ENABLE_TTS=OFF -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=OFF -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_GPU=ON ..
+cmake --build . --config Release
+
+Have to hack offline-funasr-nano-model.cpp to bodge wstring to string for Ort::Session constructor. Probably not ideal.
+
+Turn log output off by modifying macros.h, control with NO_SHERPA_ONNX_LOGE
+
+cmake -DCMAKE_BUILD_TYPE=Release -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF -DSHERPA_ONNX_ENABLE_DIRECTML=ON -DSHERPA_ONNX_ENABLE_TTS=OFF -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=OFF -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_GPU=ON -DCMAKE_CXX_FLAGS="-DNO_SHERPA_ONNX_LOGE=1" ..
+cmake --build . --config Release
