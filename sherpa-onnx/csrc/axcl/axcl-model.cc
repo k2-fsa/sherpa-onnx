@@ -155,6 +155,7 @@ class AxclModel::Impl {
   template <typename T>
   bool SetInputTensorData(const std::string &name, const T *p,
                           int32_t n) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < input_tensor_names_.size(); ++i) {
       if (input_tensor_names_[i] == name) {
         if (n * sizeof(T) != input_tensors_[i].Size()) {
@@ -185,6 +186,7 @@ class AxclModel::Impl {
 
   bool SetInputTensorDataRaw(const std::string &name, const void *p,
                              int32_t nbytes) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < input_tensor_names_.size(); ++i) {
       if (input_tensor_names_[i] == name) {
         if (static_cast<size_t>(nbytes) != input_tensors_[i].Size()) {
@@ -210,6 +212,7 @@ class AxclModel::Impl {
   }
 
   std::vector<float> GetOutputTensorData(const std::string &name) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
       if (output_tensor_names_[i] == name) {
         size_t bytes = output_tensors_[i].Size();
@@ -235,6 +238,7 @@ class AxclModel::Impl {
   }
 
   std::vector<uint8_t> GetOutputTensorDataRaw(const std::string &name) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
       if (output_tensor_names_[i] == name) {
         size_t bytes = output_tensors_[i].Size();
@@ -256,6 +260,7 @@ class AxclModel::Impl {
   }
 
   bool Run() const {
+    EnsureThreadContext();
     uint32_t group = 0;
     auto ret =
         axclrtEngineExecute(model_id_, context_id_, group, *engine_io_guard_);
@@ -270,7 +275,7 @@ class AxclModel::Impl {
   bool IsInitialized() const { return model_loaded_; }
 
  private:
-  bool SetDevice(int32_t device_id) {
+  bool SetDevice(int32_t device_index) {
     axclrtDeviceList lst;
     auto ret = axclrtGetDeviceList(&lst);
     if (ret != 0) {
@@ -286,13 +291,15 @@ class AxclModel::Impl {
     }
 
     // device_id counts from 0
-    if (device_id < 0 || device_id >= lst.num) {
-      SHERPA_ONNX_LOGE("Invalid device_id: %d. Valid range: 0-%d", device_id,
-                       lst.num - 1);
+    if (device_index < 0 || device_index >= lst.num) {
+      SHERPA_ONNX_LOGE("Invalid device_index: %d. Valid range: 0-%d",
+                       device_index, lst.num - 1);
       return false;
     }
 
-    ret = axclrtSetDevice(lst.devices[device_id]);
+    device_id_rt_ = lst.devices[device_index];
+
+    ret = axclrtSetDevice(device_id_rt_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("Failed to call axclrtSetDevice(). Return code is: %d",
                        static_cast<int32_t>(ret));
@@ -418,6 +425,23 @@ class AxclModel::Impl {
     }
   }
 
+  void EnsureThreadContext() const {
+    axclrtContext ctx = nullptr;
+    axclError ret = axclrtGetDefaultContext(&ctx, device_id_rt_);
+    if (ret != 0 || !ctx) {
+      SHERPA_ONNX_LOGE("axclrtGetDefaultContext(%d) failed. ret=%d",
+                       device_id_rt_, (int)ret);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    axclrtContext cur = nullptr;
+    ret = axclrtSetCurrentContext(ctx);
+    if (ret != 0) {
+      SHERPA_ONNX_LOGE("axclrtSetCurrentContext failed. ret=%d", (int)ret);
+      SHERPA_ONNX_EXIT(-1);
+    }
+  }
+
  private:
   AxclManager manager_;
   std::unique_ptr<AxclEngineGuard> engine_guard_;
@@ -425,6 +449,7 @@ class AxclModel::Impl {
   std::unique_ptr<AxclEngineIOInfoGuard> io_info_guard_;
 
   bool model_loaded_ = false;
+  int32_t device_id_rt_ = -1;
   uint64_t model_id_ = 0;
   uint64_t context_id_ = 0;
 
