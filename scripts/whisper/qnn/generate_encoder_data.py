@@ -9,12 +9,16 @@ import numpy as np
 from test_torch import compute_feat
 
 
+@torch.no_grad()
 def main():
     wav_files = glob.glob("*.wav")
     features_name = []
     for w in wav_files:
         f = compute_feat(w)
+
+        # Note: qnn expects (1, 3000, 80) as input
         f = f.permute(0, 2, 1)  # (1, 80, 3000) -> (1, 3000, 80)
+
         f = f.numpy()
         print(w, f.shape)
         name = Path(w).stem
