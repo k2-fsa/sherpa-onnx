@@ -13,7 +13,9 @@ def main():
     wav_files = glob.glob("*.wav")
     features_name = []
     for w in wav_files:
-        f = compute_feat(w).numpy()
+        f = compute_feat(w)
+        f = f.permute(0, 2, 1)  # (1, 80, 3000) -> (1, 3000, 80)
+        f = f.numpy()
         print(w, f.shape)
         name = Path(w).stem
 
