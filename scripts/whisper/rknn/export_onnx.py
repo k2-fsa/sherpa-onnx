@@ -90,7 +90,26 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
 def modified_qkv_attention(
     self, q: Tensor, k: Tensor, v: Tensor, mask: Optional[Tensor] = None
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
-    assert False
+    assert mask is not None
+    n_batch, n_ctx, n_state = q.shape
+    scale = (n_state // self.n_head) ** -0.25
+    q = q.view(*q.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+    k = k.view(*k.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+    v = v.view(*v.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+
+    qk = (q * scale) @ (k * scale).transpose(-1, -2)
+
+    print("here qk", qk.shape, q.shape, k.shape, v.shape)
+    qk = qk + mask[:n_ctx, :n_ctx]
+
+    qk = qk.float()
+
+    w = F.softmax(qk, dim=-1).to(q.dtype)
+    out = (w @ v).permute(0, 2, 1, 3).flatten(start_dim=2)
+    qk = qk.detach()
+    print("w", w.shape, v.shape, out.shape, qk.shape)
+
+    return out, qk
 
 
 MultiHeadAttention.qkv_attention_self = modified_qkv_attention
@@ -195,8 +214,7 @@ class MultiHeadAttentionSelf(nn.Module):
         k_cache[:, offset : offset + 1, :] = k  # (b, n_ctx_cache + n_ctx, n_state)
         v_cache[:, offset : offset + 1, :] = v  # (b, n_ctx_cache + n_ctx, n_state)
 
-        #  wv, qk = self.multiHeadAttention.qkv_attention_self(q, k_cache, v_cache, mask)
-        wv, qk = self.multiHeadAttention.qkv_attention(q, k_cache, v_cache, mask)
+        wv, qk = self.multiHeadAttention.qkv_attention_self(q, k_cache, v_cache, mask)
 
         torch.save(
             {
