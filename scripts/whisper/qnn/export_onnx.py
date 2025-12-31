@@ -324,10 +324,9 @@ class TextDecoderTensorCache(nn.Module):
           - this_self_kv_pair
         """
         assert tokens.shape == (1, 1), tokens.shape
-        x = (
-            self.textDecoder.token_embedding(tokens)
-            + self.textDecoder.positional_embedding[offset[0] : offset[0] + 1]
-        )
+        x = self.textDecoder.token_embedding(
+            tokens
+        ) + self.textDecoder.positional_embedding[offset].unsqueeze(0)
 
         i = 0
         this_self_kv_pair = []
