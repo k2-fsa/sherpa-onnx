@@ -1,4 +1,22 @@
 # Note
+
+## Encoder
+```
+=========./tiny.en-encoder.onnx==========
+NodeArg(name='tiny.en-mel', type='tensor(float)', shape=[1, 80, 3000])
+-----
+NodeArg(name='cross_k_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_3', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_3', type='tensor(float)', shape=[1, 1500, 384])
+```
+
+## Decoder
+
 ```
 =========./tiny.en-decoder.onnx==========
 NodeArg(name='tiny.en-tokens', type='tensor(int32)', shape=[1, 1])
