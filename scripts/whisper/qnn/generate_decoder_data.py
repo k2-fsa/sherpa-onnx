@@ -42,23 +42,23 @@ class DecoderInput:
 
         for i, (k, v) in enumerate(self.self_kv_pair):
             to_file(k.permute(0, 2, 1), f"{prefix}_self_k_{i}.raw", debug)
-            ans.append(f"{prefix}_self_k_{i}.raw")
+            ans.append(f"{prefix}-self_k_{i}.raw")
 
-            to_file(v.permute(0, 2, 1), f"{prefix}_self_v_{i}.raw", debug)
-            ans.append(f"{prefix}_self_v_{i}.raw")
+            to_file(v.permute(0, 2, 1), f"{prefix}-self_v_{i}.raw", debug)
+            ans.append(f"{prefix}-self_v_{i}.raw")
 
         for i, (k, v) in enumerate(self.cross_kv_pair):
-            to_file(k.permute(0, 2, 1), f"{prefix}_cross_k_{i}.raw", debug)
-            ans.append(f"{prefix}_self_k_{i}.raw")
+            to_file(k.permute(0, 2, 1), f"{prefix}-cross_k_{i}.raw", debug)
+            ans.append(f"{prefix}-self_k_{i}.raw")
 
-            to_file(v.permute(0, 2, 1), f"{prefix}_cross_v_{i}.raw", debug)
-            ans.append(f"{prefix}_self_v_{i}.raw")
+            to_file(v.permute(0, 2, 1), f"{prefix}-cross_v_{i}.raw", debug)
+            ans.append(f"{prefix}-self_v_{i}.raw")
 
-        to_file(self.offset.to(torch.int32), f"{prefix}_offset.raw", debug)
-        ans.append(f"{prefix}_offset.raw")
+        to_file(self.offset.to(torch.int32), f"{prefix}-offset.raw", debug)
+        ans.append(f"{prefix}-offset.raw")
 
-        to_file(self.mask.to(torch.int32), f"{prefix}_mask.raw", debug)
-        ans.append(f"{prefix}_mask.raw")
+        to_file(self.mask.to(torch.int32), f"{prefix}-mask.raw", debug)
+        ans.append(f"{prefix}-mask.raw")
 
         return ans
 
@@ -191,7 +191,7 @@ def main():
 
         name = Path(w).stem
         files = [
-            d.save_to_file(f"{name}-decoder-iter-{k}", k == 0)
+            d.save_to_file(f"{name}-decoder-iter-{k:02d}", k == 0)
             for k, d in enumerate(decoder_input_list)
         ]
 
