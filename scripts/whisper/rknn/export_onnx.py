@@ -210,9 +210,6 @@ class MultiHeadAttentionSelf(nn.Module):
             "hyp-0.pt",
         )
 
-        #  import sys
-        #
-        #  sys.exit(0)
         return self.multiHeadAttention.out(wv), k_cache, v_cache
 
 
@@ -292,7 +289,6 @@ class TextDecoderTensorCache(nn.Module):
         for block in self.blocks:
             self_k_cache = self_kv_pair[i][0]
             self_v_cache = self_kv_pair[i][1]
-            import sys
 
             x, updated_self_k_cache, updated_self_v_cache = block(
                 x,
