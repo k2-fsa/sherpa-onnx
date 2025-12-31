@@ -22,9 +22,8 @@ def load_audio(filename: str) -> Tuple[np.ndarray, int]:
     return samples, sample_rate
 
 
-@torch.no_grad()
-def main():
-    wave, sample_rate = load_audio("en.wav")
+def compute_feat(filename: str):
+    wave, sample_rate = load_audio(filename)
     if sample_rate != 16000:
         import librosa
 
@@ -36,6 +35,13 @@ def main():
 
     mel = whisper.log_mel_spectrogram(audio, n_mels=80).unsqueeze(0)
     assert mel.shape == (1, 80, 3000), mel.shape
+
+    return mel
+
+
+@torch.no_grad()
+def main():
+    mel = compute_feat("en.wav")
 
     model = whisper.load_model("tiny.en")
     tokenizer = whisper.tokenizer.get_tokenizer(
