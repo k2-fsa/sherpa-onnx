@@ -55,8 +55,13 @@ def get_args():
     return parser.parse_args()
 
 
-def causal_mask_1d(n: int, L: int, device=None, dtype=torch.float32):
-    mask = torch.full((L,), float("-inf"), device=device, dtype=dtype)
+def causal_mask_1d(n: int, L: int, device=None, dtype=torch.int32):
+    """
+    Returns a 1-D int mask of shape (L,) with:
+      0 -> allowed
+      1 -> masked (will be converted to -inf later)
+    """
+    mask = torch.ones((L,), device=device, dtype=dtype)
     if n > 0:
         mask[:n] = 0
     return mask
@@ -104,6 +109,7 @@ def modified_self_qkv_attention(
     mask: Tensor,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
     assert mask is not None
+
     n_batch, n_ctx, n_state = q.shape
 
     scale = (n_state // self.n_head) ** -0.25
@@ -118,7 +124,8 @@ def modified_self_qkv_attention(
 
     qk1 = (q * scale) @ (k1 * scale).transpose(-1, -2)  # (1, 6, 1, 1)
 
-    qk = qk + mask
+    #  qk = qk + mask
+    qk.masked_fill_(mask.to(torch.bool), float("-inf"))
 
     qk = qk.float()
     qk1 = qk1.float()
