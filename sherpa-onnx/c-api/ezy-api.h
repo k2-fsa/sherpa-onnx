@@ -14,6 +14,7 @@
 #define SHERPA_ONNX_EZY_API_H_
 
 #include <stdint.h>
+#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {
