@@ -69,10 +69,18 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(
     processed[i] *= inv_n_heads;
   }
 
-  // Build a set of timestamp token indices for quick lookup
-  // BUT: keep the first timestamp token as an anchor (like no_timestamps)
-  // The first timestamp token (e.g., <|0.00|>) serves the same role as
-  // no_timestamps in OpenAI's alignment - it's the anchor at time=0.
+  // Build a set of timestamp token indices for quick lookup.
+  // The DTW algorithm needs an "anchor" token at position sot_sequence_length
+  // to establish the time=0 reference point (like OpenAI's timing.py).
+  //
+  // Two modes, same anchor position:
+  // - enable_segment_timestamps=true: the first timestamp token (e.g. <|0.00|>)
+  //   is at index sot_sequence_length. We keep it as the anchor and filter
+  //   out subsequent timestamp tokens to avoid alignment drift.
+  // - enable_segment_timestamps=false: timestamp_token_indices is empty,
+  //   no filtering occurs. But the implementation of enable_segment_timestamps
+  //   being false happens to insert a <no_timestamps> token at index
+  //   sot_sequence_length, so that will serve as the anchor in this case.
   std::vector<bool> is_timestamp_token(n_tokens, false);
   bool found_first_timestamp = false;
   for (int32_t idx : timestamp_token_indices) {
