@@ -452,6 +452,20 @@ type OfflineFireRedAsrModelConfig struct {
 	Decoder string
 }
 
+type OfflineFunASRNanoModelConfig struct {
+	Encoder      string
+	PreFill      string
+	Decoder      string
+	Embedding    string
+	Tokenizer    string
+	SystemPrompt string
+	UserPrompt   string
+	MaxNewTokens int
+	Temperature  float32
+	TopP         float32
+	Seed         int32
+}
+
 type OfflineMoonshineModelConfig struct {
 	Preprocessor    string
 	Encoder         string
@@ -484,6 +498,7 @@ type OfflineModelConfig struct {
 	SenseVoice   OfflineSenseVoiceModelConfig
 	Moonshine    OfflineMoonshineModelConfig
 	FireRedAsr   OfflineFireRedAsrModelConfig
+	FunASRNano   OfflineFunASRNanoModelConfig
 	Dolphin      OfflineDolphinModelConfig
 	ZipformerCtc OfflineZipformerCtcModelConfig
 	Canary       OfflineCanaryModelConfig
@@ -581,6 +596,18 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
+
+	c.model_config.funasr_nano.encoder_adaptor = C.CString(config.ModelConfig.FunASRNano.Encoder)
+	c.model_config.funasr_nano.llm_prefill = C.CString(config.ModelConfig.FunASRNano.PreFill)
+	c.model_config.funasr_nano.llm_decode = C.CString(config.ModelConfig.FunASRNano.Decoder)
+	c.model_config.funasr_nano.embedding = C.CString(config.ModelConfig.FunASRNano.Embedding)
+	c.model_config.funasr_nano.tokenizer = C.CString(config.ModelConfig.FunASRNano.Tokenizer)
+	c.model_config.funasr_nano.system_prompt = C.CString(config.ModelConfig.FunASRNano.SystemPrompt)
+	c.model_config.funasr_nano.user_prompt = C.CString(config.ModelConfig.FunASRNano.UserPrompt)
+	c.model_config.funasr_nano.max_new_tokens = C.CString(config.ModelConfig.FunASRNano.MaxNewTokens)
+	c.model_config.funasr_nano.temperature = C.CString(config.ModelConfig.FunASRNano.Temperature)
+	c.model_config.funasr_nano.top_p = C.CString(config.ModelConfig.FunASRNano.TopP)
+	c.model_config.funasr_nano.seed = C.CString(config.ModelConfig.FunASRNano.Seed)
 
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
 	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
