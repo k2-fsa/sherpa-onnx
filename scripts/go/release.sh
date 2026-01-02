@@ -172,7 +172,121 @@ function windows() {
   rm -rf sherpa-onnx-go-windows
 }
 
+# parse golang file and generate struct defines into platform file
+# params：
+# $1 = source file（like: ./sherpa.go）
+# $2 = output folder（like: ./model）
+# $3 = platform name（like: windows、linux、darwin）
+update() {
+    local source_file="$1"
+    local output_dir="$2"
+    local platform="$3"
 
+    if [ -z "$source_file" ] || [ -z "$output_dir" ] || [ -z "$platform" ]; then
+        echo "error:param is invalid" >&2
+        echo "command pattern: update source_file output_dir platform" >&2
+        echo "example：update ./sherpa.go . \"windows\"" >&2
+        return 1
+    fi
+    if [[ "$source_file" != *.go ]]; then
+        echo "error：source file $source_file is not golang file！" >&2
+        return 1
+    fi
+    if [ ! -f "$source_file" ]; then
+        echo "error：source file $source_file is not exist！" >&2
+        return 1
+    fi
+
+    local source_filename=$(basename "$source_file")
+    local target_filename="sherpa_onnx_${platform}.go"
+    local target_file="${output_dir}/sherpa_onnx/${target_filename}"
+    local target_dir=$(dirname "$target_file")
+
+    mkdir -p "$target_dir" >/dev/null 2>&1
+    if [ ! -d "$target_dir" ]; then
+        echo "error：create folder $target_dir failed！" >&2
+        return 1
+    fi
+
+    case $platform in
+      "windows")
+        platform_content="//go:build (windows && amd64) || (windows && 386)"
+        ;;
+      "linux")
+        platform_content="//go:build (!android && linux && arm64) || (!android && linux && amd64 && !musl) || (!android && linux && arm && !arm7) || (!android && arm7) || (!android && linux && 386 && !musl) || (!android && musl) || (!android && linux && mips) || (!android && linux && mips64) || (!android && linux && mips64le) || (!android && linux && mipsle)"
+        ;;
+      "macos")
+        platform_content="//go:build (darwin && amd64 && !ios) || (darwin && arm64 && !ios)"
+        ;;
+      *)
+        platform_content=""
+        ;;
+    esac
+
+    cat > "$target_file" << EOF
+$platform_content
+package sherpa_onnx
+
+// ============================================================
+// Code Generated Automatically for $platform platform, DO NOT EDIT MANUALLY!!
+// ============================================================
+
+import (
+	sherpa "github.com/k2-fsa/sherpa-onnx-go-$platform"
+)
+
+// ============================================================
+// Structs
+// ============================================================
+
+EOF
+    grep -nE 'type\s+[A-Z][A-Za-z0-9_]*\s+struct\s*\{|type\s+[A-Z][A-Za-z0-9_]*\s+=\s+struct\s*{|type\s+[A-Z][A-Za-z0-9_]*\s+=\s*' "$source_file" \
+        | sed -E 's/^[0-9]+://; s/^\s*//; s/\s+/ /g; s/type ([^ ]+) .*struct.*/\1/; s/type ([^ =]+) .*=.*/\1/' \
+        | sort -u \
+        | awk '{print "type " $0 " = sherpa." $0}' \
+        >> "$target_file"
+
+    cat >> "$target_file" << EOF
+
+// ============================================================
+// Functions
+// ============================================================
+
+EOF
+    grep -nE 'func\s+[A-Z][^ (]*\s*\(' "$source_file" \
+        | sed -E 's/^[0-9]+://; s/^\s*//; s/\s+/ /g; s/func ([^ (]+).*/\1/' \
+        | sort -u \
+        | awk '{print "var " $0 " = sherpa." $0}' \
+        >> "$target_file"
+
+    echo "succeed！"
+    echo "source：$source_file"
+    echo "platform：$platform"
+    echo "target：$target_file"
+    return 0
+}
+
+function basic() {
+  echo "Process basic"
+  git clone git@github.com:k2-fsa/sherpa-onnx-go.git
+
+  update ./sherpa_onnx.go ./sherpa-onnx-go "windows"
+  update ./sherpa_onnx.go ./sherpa-onnx-go "linux"
+  update ./sherpa_onnx.go ./sherpa-onnx-go "macos"
+
+  echo "------------------------------"
+  cd sherpa-onnx-go
+  git status
+  git add .
+  git commit -m "Release v$SHERPA_ONNX_VERSION" && \
+    git push && \
+    git tag v$SHERPA_ONNX_VERSION && \
+    git push origin v$SHERPA_ONNX_VERSION || true
+  cd ..
+  rm -rf sherpa-onnx-go
+}
+
+basic
 windows
 linux
 osx
