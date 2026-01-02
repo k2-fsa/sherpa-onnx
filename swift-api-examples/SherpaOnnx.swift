@@ -405,14 +405,18 @@ func sherpaOnnxOfflineWhisperModelConfig(
   decoder: String = "",
   language: String = "",
   task: String = "transcribe",
-  tailPaddings: Int = -1
+  tailPaddings: Int = -1,
+  enableTimestamps: Bool = false,
+  enableSegmentTimestamps: Bool = false
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
     language: toCPointer(language),
     task: toCPointer(task),
-    tail_paddings: Int32(tailPaddings)
+    tail_paddings: Int32(tailPaddings),
+    enable_timestamps: enableTimestamps ? 1 : 0,
+    enable_segment_timestamps: enableSegmentTimestamps ? 1 : 0
   )
 }
 
@@ -631,6 +635,24 @@ class SherpaOnnxOfflineRecongitionResult {
     return String(cString: cstr)
   }()
 
+  private lazy var _segmentTimestamps: [Float] = {
+    guard let p = result.pointee.segment_timestamps else { return [] }
+    return (0..<result.pointee.segment_count).map { p[Int($0)] }
+  }()
+
+  private lazy var _segmentDurations: [Float] = {
+    guard let p = result.pointee.segment_durations else { return [] }
+    return (0..<result.pointee.segment_count).map { p[Int($0)] }
+  }()
+
+  private lazy var _segmentTexts: [String] = {
+    guard let arr = result.pointee.segment_texts_arr else { return [] }
+    return (0..<result.pointee.segment_count).compactMap { idx -> String? in
+      guard let ptr = arr[Int(idx)] else { return nil }
+      return String(cString: ptr)
+    }
+  }()
+
   /// Return the actual recognition result.
   /// For English models, it contains words separated by spaces.
   /// For Chinese models, it contains Chinese words.
@@ -654,6 +676,12 @@ class SherpaOnnxOfflineRecongitionResult {
 
   // for SenseVoice models
   var event: String { _event }
+
+  // Segment-level timestamps (for Whisper with segment timestamps enabled)
+  var segmentCount: Int { Int(result.pointee.segment_count) }
+  var segmentTimestamps: [Float] { _segmentTimestamps }
+  var segmentDurations: [Float] { _segmentDurations }
+  var segmentTexts: [String] { _segmentTexts }
 
   init(result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>) {
     self.result = result
