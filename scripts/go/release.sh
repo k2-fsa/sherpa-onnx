@@ -270,9 +270,11 @@ function basic() {
   echo "Process basic"
   git clone git@github.com:k2-fsa/sherpa-onnx-go.git
 
-  update ./sherpa_onnx.go ./sherpa-onnx-go "windows"
-  update ./sherpa_onnx.go ./sherpa-onnx-go "linux"
-  update ./sherpa_onnx.go ./sherpa-onnx-go "macos"
+#  update ./sherpa_onnx.go ./sherpa-onnx-go "windows"
+#  update ./sherpa_onnx.go ./sherpa-onnx-go "linux"
+#  update ./sherpa_onnx.go ./sherpa-onnx-go "macos"
+
+  python3 ./generate.py -s ./sherpa_onnx.go -o ./sherpa-onnx-go
 
   echo "------------------------------"
   cd sherpa-onnx-go
@@ -281,7 +283,7 @@ function basic() {
   git commit -m "Release v$SHERPA_ONNX_VERSION" && \
     git push && \
     git tag v$SHERPA_ONNX_VERSION && \
-    git push origin v$SHERPA_ONNX_VERSION || true
+    git push origin v$SHERPA_ONNX_VERSION
   cd ..
   rm -rf sherpa-onnx-go
 }
