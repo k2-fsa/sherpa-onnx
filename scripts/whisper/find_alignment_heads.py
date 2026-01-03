@@ -91,8 +91,9 @@ def compute_cross_attention_weights(
         task="transcribe",
     )
 
-    # Initial tokens (SOT sequence)
-    tokens = list(tokenizer.sot_sequence)
+    # Initial tokens (SOT sequence + no_timestamps)
+    # The no_timestamps token is required for proper decoding
+    tokens = list(tokenizer.sot_sequence) + [tokenizer.no_timestamps]
 
     # Storage for attention weights per (layer, head)
     all_attention_weights: Dict[Tuple[int, int], List[np.ndarray]] = defaultdict(list)
