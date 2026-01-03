@@ -15,6 +15,13 @@ Usage:
         --decoder ./whisper-tiny-attention/tiny-decoder.onnx \
         --tokens ./whisper-tiny-attention/tiny-tokens.txt
 
+    # Parallel processing with 4 workers:
+    PYTHONPATH=build/lib:sherpa-onnx/python python scripts/benchmark/run_timestamp_benchmark.py \
+        --encoder ./whisper-tiny-attention/tiny-encoder.onnx \
+        --decoder ./whisper-tiny-attention/tiny-decoder.onnx \
+        --tokens ./whisper-tiny-attention/tiny-tokens.txt \
+        --num-workers 4
+
 Outputs:
     benchmark_results/details_YYYYMMDD_HHMMSS.csv - Per-word timing errors
     benchmark_results/summary_YYYYMMDD_HHMMSS.csv - Aggregate statistics
@@ -23,8 +30,11 @@ Outputs:
 import argparse
 import csv
 import json
+import multiprocessing
+import os
 import re
 import sys
+import time
 import wave
 from dataclasses import dataclass
 from datetime import datetime
@@ -177,6 +187,112 @@ def get_sherpa_word_timestamps(
     return tokens_to_words(result.tokens, result.timestamps, result.durations)
 
 
+# Global recognizer for worker processes
+_worker_recognizer = None
+
+
+def _init_worker(encoder: str, decoder: str, tokens: str, language: str):
+    """Initialize recognizer in worker process."""
+    global _worker_recognizer
+    _worker_recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
+        encoder=encoder,
+        decoder=decoder,
+        tokens=tokens,
+        language=language,
+        enable_timestamps=True,
+    )
+
+
+def _process_utterance(args: tuple) -> dict:
+    """Process a single utterance in a worker process."""
+    item, data_dir = args
+    utterance_id = item["utterance_id"]
+    audio_path = Path(data_dir) / item["audio_path"]
+
+    # Parse ground truth
+    gt_words = [
+        WordTiming(word=wt["word"], start=wt["start"], end=wt["end"])
+        for wt in item["word_times"]
+    ]
+    gt_transcript = " ".join(w.word for w in gt_words)
+
+    # Get predictions
+    pred_words = get_sherpa_word_timestamps(_worker_recognizer, audio_path)
+    pred_transcript = " ".join(w.word for w in pred_words)
+
+    # Align words
+    aligned = align_words(gt_words, pred_words)
+
+    # Calculate per-utterance stats
+    matched = [a for a in aligned if a.matched]
+
+    if matched:
+        start_errors = [abs(a.pred_start - a.gt_start) * 1000 for a in matched]
+        end_errors = [abs(a.pred_end - a.gt_end) * 1000 for a in matched]
+
+        stats = {
+            "utterance_id": utterance_id,
+            "num_gt_words": len(gt_words),
+            "num_pred_words": len(pred_words),
+            "num_matched": len(matched),
+            "match_rate": len(matched) / len(gt_words) if gt_words else 0,
+            "wer": jiwer.wer(
+                gt_transcript,
+                pred_transcript,
+                reference_transform=wer_transforms,
+                hypothesis_transform=wer_transforms,
+            ),
+            "mean_start_error_ms": np.mean(start_errors),
+            "median_start_error_ms": np.median(start_errors),
+            "max_start_error_ms": np.max(start_errors),
+            "mean_end_error_ms": np.mean(end_errors),
+            "median_end_error_ms": np.median(end_errors),
+            "max_end_error_ms": np.max(end_errors),
+            "pct_within_20ms": sum(1 for e in start_errors if e <= 20) / len(start_errors) * 100,
+            "pct_within_50ms": sum(1 for e in start_errors if e <= 50) / len(start_errors) * 100,
+        }
+    else:
+        stats = {
+            "utterance_id": utterance_id,
+            "num_gt_words": len(gt_words),
+            "num_pred_words": len(pred_words),
+            "num_matched": 0,
+            "match_rate": 0,
+            "wer": jiwer.wer(
+                gt_transcript,
+                pred_transcript,
+                reference_transform=wer_transforms,
+                hypothesis_transform=wer_transforms,
+            ) if gt_transcript else 1.0,
+            "mean_start_error_ms": None,
+            "median_start_error_ms": None,
+            "max_start_error_ms": None,
+            "mean_end_error_ms": None,
+            "median_end_error_ms": None,
+            "max_end_error_ms": None,
+            "pct_within_20ms": None,
+            "pct_within_50ms": None,
+        }
+
+    # Build aligned words for detailed output
+    aligned_words = []
+    for j, a in enumerate(aligned):
+        aligned_words.append({
+            "utterance_id": utterance_id,
+            "word_index": j,
+            "word": a.word,
+            "gt_start": a.gt_start,
+            "gt_end": a.gt_end,
+            "pred_start": a.pred_start if a.pred_start is not None else "",
+            "pred_end": a.pred_end if a.pred_end is not None else "",
+            "matched": a.matched,
+            "start_error_ms": abs(a.pred_start - a.gt_start) * 1000 if a.matched else "",
+            "end_error_ms": abs(a.pred_end - a.gt_end) * 1000 if a.matched else "",
+        })
+
+    return {"stats": stats, "aligned": aligned_words}
+
+
 def align_words(
     gt_words: list[WordTiming],
     pred_words: list[WordTiming]
@@ -228,10 +344,14 @@ def align_words(
 
 
 def run_benchmark(
-    recognizer: sherpa_onnx.OfflineRecognizer,
     manifest: list[dict],
     data_dir: Path,
-    output_dir: Path
+    output_dir: Path,
+    encoder: str,
+    decoder: str,
+    tokens: str,
+    language: str,
+    num_workers: int = 1
 ):
     """Run benchmark on all utterances in manifest."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -244,96 +364,160 @@ def run_benchmark(
     all_aligned = []
     utterance_stats = []
 
-    print(f"\nProcessing {len(manifest)} utterances...")
+    total = len(manifest)
+    start_time = time.time()
 
-    for i, item in enumerate(manifest):
-        utterance_id = item["utterance_id"]
-        audio_path = data_dir / item["audio_path"]
+    if num_workers > 1:
+        # Parallel processing
+        print(f"\nProcessing {total} utterances with {num_workers} workers...")
 
-        # Parse ground truth
-        gt_words = [
-            WordTiming(word=wt["word"], start=wt["start"], end=wt["end"])
-            for wt in item["word_times"]
-        ]
-        gt_transcript = " ".join(w.word for w in gt_words)
+        # Prepare arguments for workers
+        work_items = [(item, str(data_dir)) for item in manifest]
 
-        # Get predictions
-        pred_words = get_sherpa_word_timestamps(recognizer, audio_path)
-        pred_transcript = " ".join(w.word for w in pred_words)
+        with multiprocessing.Pool(
+            processes=num_workers,
+            initializer=_init_worker,
+            initargs=(encoder, decoder, tokens, language)
+        ) as pool:
+            completed = 0
+            for result in pool.imap(_process_utterance, work_items):
+                utterance_stats.append(result["stats"])
+                all_aligned.extend(result["aligned"])
 
-        # Align words
-        aligned = align_words(gt_words, pred_words)
+                completed += 1
+                elapsed = time.time() - start_time
+                avg_per_item = elapsed / completed
+                remaining = total - completed
+                eta_seconds = avg_per_item * remaining
 
-        # Calculate per-utterance stats
-        matched = [a for a in aligned if a.matched]
+                if eta_seconds >= 3600:
+                    eta_str = f"{eta_seconds / 3600:.1f}h"
+                elif eta_seconds >= 60:
+                    eta_str = f"{eta_seconds / 60:.1f}m"
+                else:
+                    eta_str = f"{eta_seconds:.0f}s"
 
-        if matched:
-            start_errors = [abs(a.pred_start - a.gt_start) * 1000 for a in matched]
-            end_errors = [abs(a.pred_end - a.gt_end) * 1000 for a in matched]
+                print(f"  [{completed}/{total}] {result['stats']['utterance_id']} - ETA: {eta_str}", flush=True)
+    else:
+        # Sequential processing (original behavior)
+        print(f"\nProcessing {total} utterances...")
 
-            stats = {
-                "utterance_id": utterance_id,
-                "num_gt_words": len(gt_words),
-                "num_pred_words": len(pred_words),
-                "num_matched": len(matched),
-                "match_rate": len(matched) / len(gt_words) if gt_words else 0,
-                "wer": jiwer.wer(
-                    gt_transcript,
-                    pred_transcript,
-                    reference_transform=wer_transforms,
-                    hypothesis_transform=wer_transforms,
-                ),
-                "mean_start_error_ms": np.mean(start_errors),
-                "median_start_error_ms": np.median(start_errors),
-                "max_start_error_ms": np.max(start_errors),
-                "mean_end_error_ms": np.mean(end_errors),
-                "median_end_error_ms": np.median(end_errors),
-                "max_end_error_ms": np.max(end_errors),
-                "pct_within_20ms": sum(1 for e in start_errors if e <= 20) / len(start_errors) * 100,
-                "pct_within_50ms": sum(1 for e in start_errors if e <= 50) / len(start_errors) * 100,
-            }
-        else:
-            stats = {
-                "utterance_id": utterance_id,
-                "num_gt_words": len(gt_words),
-                "num_pred_words": len(pred_words),
-                "num_matched": 0,
-                "match_rate": 0,
-                "wer": jiwer.wer(
-                    gt_transcript,
-                    pred_transcript,
-                    reference_transform=wer_transforms,
-                    hypothesis_transform=wer_transforms,
-                ) if gt_transcript else 1.0,
-                "mean_start_error_ms": None,
-                "median_start_error_ms": None,
-                "max_start_error_ms": None,
-                "mean_end_error_ms": None,
-                "median_end_error_ms": None,
-                "max_end_error_ms": None,
-                "pct_within_20ms": None,
-                "pct_within_50ms": None,
-            }
+        # Initialize recognizer for sequential mode
+        recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
+            encoder=encoder,
+            decoder=decoder,
+            tokens=tokens,
+            language=language,
+            enable_timestamps=True,
+        )
 
-        utterance_stats.append(stats)
+        for i, item in enumerate(manifest):
+            iter_start = time.time()
+            utterance_id = item["utterance_id"]
+            audio_path = data_dir / item["audio_path"]
 
-        # Store aligned words for detailed output
-        for j, a in enumerate(aligned):
-            all_aligned.append({
-                "utterance_id": utterance_id,
-                "word_index": j,
-                "word": a.word,
-                "gt_start": a.gt_start,
-                "gt_end": a.gt_end,
-                "pred_start": a.pred_start if a.pred_start is not None else "",
-                "pred_end": a.pred_end if a.pred_end is not None else "",
-                "matched": a.matched,
-                "start_error_ms": abs(a.pred_start - a.gt_start) * 1000 if a.matched else "",
-                "end_error_ms": abs(a.pred_end - a.gt_end) * 1000 if a.matched else "",
-            })
+            # Parse ground truth
+            gt_words = [
+                WordTiming(word=wt["word"], start=wt["start"], end=wt["end"])
+                for wt in item["word_times"]
+            ]
+            gt_transcript = " ".join(w.word for w in gt_words)
 
-        if (i + 1) % 10 == 0:
-            print(f"  Processed {i + 1}/{len(manifest)} utterances...")
+            # Get predictions
+            pred_words = get_sherpa_word_timestamps(recognizer, audio_path)
+            pred_transcript = " ".join(w.word for w in pred_words)
+
+            # Align words
+            aligned = align_words(gt_words, pred_words)
+
+            # Calculate per-utterance stats
+            matched = [a for a in aligned if a.matched]
+
+            if matched:
+                start_errors = [abs(a.pred_start - a.gt_start) * 1000 for a in matched]
+                end_errors = [abs(a.pred_end - a.gt_end) * 1000 for a in matched]
+
+                stats = {
+                    "utterance_id": utterance_id,
+                    "num_gt_words": len(gt_words),
+                    "num_pred_words": len(pred_words),
+                    "num_matched": len(matched),
+                    "match_rate": len(matched) / len(gt_words) if gt_words else 0,
+                    "wer": jiwer.wer(
+                        gt_transcript,
+                        pred_transcript,
+                        reference_transform=wer_transforms,
+                        hypothesis_transform=wer_transforms,
+                    ),
+                    "mean_start_error_ms": np.mean(start_errors),
+                    "median_start_error_ms": np.median(start_errors),
+                    "max_start_error_ms": np.max(start_errors),
+                    "mean_end_error_ms": np.mean(end_errors),
+                    "median_end_error_ms": np.median(end_errors),
+                    "max_end_error_ms": np.max(end_errors),
+                    "pct_within_20ms": sum(1 for e in start_errors if e <= 20) / len(start_errors) * 100,
+                    "pct_within_50ms": sum(1 for e in start_errors if e <= 50) / len(start_errors) * 100,
+                }
+            else:
+                stats = {
+                    "utterance_id": utterance_id,
+                    "num_gt_words": len(gt_words),
+                    "num_pred_words": len(pred_words),
+                    "num_matched": 0,
+                    "match_rate": 0,
+                    "wer": jiwer.wer(
+                        gt_transcript,
+                        pred_transcript,
+                        reference_transform=wer_transforms,
+                        hypothesis_transform=wer_transforms,
+                    ) if gt_transcript else 1.0,
+                    "mean_start_error_ms": None,
+                    "median_start_error_ms": None,
+                    "max_start_error_ms": None,
+                    "mean_end_error_ms": None,
+                    "median_end_error_ms": None,
+                    "max_end_error_ms": None,
+                    "pct_within_20ms": None,
+                    "pct_within_50ms": None,
+                }
+
+            utterance_stats.append(stats)
+
+            # Store aligned words for detailed output
+            for j, a in enumerate(aligned):
+                all_aligned.append({
+                    "utterance_id": utterance_id,
+                    "word_index": j,
+                    "word": a.word,
+                    "gt_start": a.gt_start,
+                    "gt_end": a.gt_end,
+                    "pred_start": a.pred_start if a.pred_start is not None else "",
+                    "pred_end": a.pred_end if a.pred_end is not None else "",
+                    "matched": a.matched,
+                    "start_error_ms": abs(a.pred_start - a.gt_start) * 1000 if a.matched else "",
+                    "end_error_ms": abs(a.pred_end - a.gt_end) * 1000 if a.matched else "",
+                })
+
+            # Progress with ETA
+            completed = i + 1
+            elapsed = time.time() - start_time
+            avg_per_item = elapsed / completed
+            remaining = total - completed
+            eta_seconds = avg_per_item * remaining
+
+            if eta_seconds >= 3600:
+                eta_str = f"{eta_seconds / 3600:.1f}h"
+            elif eta_seconds >= 60:
+                eta_str = f"{eta_seconds / 60:.1f}m"
+            else:
+                eta_str = f"{eta_seconds:.0f}s"
+
+            iter_time = time.time() - iter_start
+            print(f"  [{completed}/{total}] {utterance_id} ({iter_time:.1f}s) - ETA: {eta_str}", flush=True)
+
+    # Sort results by utterance_id to ensure consistent output
+    utterance_stats.sort(key=lambda x: x["utterance_id"])
+    all_aligned.sort(key=lambda x: (x["utterance_id"], x["word_index"]))
 
     # Write detailed results
     print(f"\nWriting detailed results to {details_path}...")
@@ -420,6 +604,14 @@ def main():
         default="en",
         help="Language code (default: en)"
     )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=1,
+        help="Number of parallel workers (default: 1, sequential). "
+             "Use higher values to speed up benchmarks on multi-core machines. "
+             "Each worker loads its own model copy, so memory usage scales linearly."
+    )
     args = parser.parse_args()
 
     # Resolve paths
@@ -435,23 +627,26 @@ def main():
         manifest = json.load(f)
     print(f"  Found {len(manifest)} utterances")
 
-    # Create recognizer
-    print(f"\nInitializing recognizer...")
+    # Print recognizer info
+    print(f"\nRecognizer configuration:")
     print(f"  Encoder: {args.encoder}")
     print(f"  Decoder: {args.decoder}")
     print(f"  Tokens: {args.tokens}")
+    if args.num_workers > 1:
+        print(f"  Workers: {args.num_workers} (parallel)")
+    else:
+        print(f"  Workers: 1 (sequential)")
 
-    recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
+    # Run benchmark
+    details_path, summary_path = run_benchmark(
+        manifest=manifest,
+        data_dir=data_dir,
+        output_dir=output_dir,
         encoder=args.encoder,
         decoder=args.decoder,
         tokens=args.tokens,
         language=args.language,
-        enable_timestamps=True,
-    )
-
-    # Run benchmark
-    details_path, summary_path = run_benchmark(
-        recognizer, manifest, data_dir, output_dir
+        num_workers=args.num_workers,
     )
 
     print("\n" + "=" * 60)
