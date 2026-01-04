@@ -172,7 +172,25 @@ function windows() {
   rm -rf sherpa-onnx-go-windows
 }
 
+function basic() {
+  echo "Process sherpa-onnx-go"
+  git clone git@github.com:k2-fsa/sherpa-onnx-go.git
 
+  python3 ./generate.py -s ./sherpa_onnx.go -o ./sherpa-onnx-go
+
+  echo "------------------------------"
+  cd sherpa-onnx-go
+  git status
+  git add .
+  git commit -m "Release v$SHERPA_ONNX_VERSION" && \
+    git push && \
+    git tag v$SHERPA_ONNX_VERSION && \
+    git push origin v$SHERPA_ONNX_VERSION
+  cd ..
+  rm -rf sherpa-onnx-go
+}
+
+basic
 windows
 linux
 osx
