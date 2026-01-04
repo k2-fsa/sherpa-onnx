@@ -57,16 +57,6 @@ class OfflineRecognizerFunASRNanoImpl : public OfflineRecognizerImpl {
   mutable std::mt19937 rng_;
 };
 
-#if __ANDROID_API__ >= 9
-template OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
-    AAssetManager *mgr, const OfflineRecognizerConfig &config);
-#endif
-
-#if __OHOS__
-template OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
-    NativeResourceManager *mgr, const OfflineRecognizerConfig &config);
-#endif
-
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_FUNASR_NANO_IMPL_H_
