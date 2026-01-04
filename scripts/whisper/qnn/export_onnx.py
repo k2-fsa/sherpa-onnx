@@ -326,7 +326,7 @@ class TextDecoderTensorCache(nn.Module):
         assert tokens.shape == (1, 1), tokens.shape
         x = self.textDecoder.token_embedding(
             tokens
-        ) + self.textDecoder.positional_embedding[offset].unsqueeze(0)
+        ) + self.textDecoder.positional_embedding[offset.to(torch.int64)].unsqueeze(0)
 
         i = 0
         this_self_kv_pair = []
@@ -614,7 +614,7 @@ def main():
         v = torch.zeros(batch_size, model.dims.n_text_ctx, model.dims.n_text_state)
         self_kv_pair.append((k, v))
 
-    offset = torch.zeros(1, dtype=torch.int64)
+    offset = torch.zeros(1, dtype=torch.int32)
     mask = causal_mask_1d(offset.item(), model.dims.n_text_ctx)
 
     logits, this_self_kv_pair = decoder(
