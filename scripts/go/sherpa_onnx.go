@@ -463,7 +463,7 @@ type OfflineFunASRNanoModelConfig struct {
 	MaxNewTokens   int
 	Temperature    float32
 	TopP           float32
-	Seed           int32
+	Seed           int
 }
 
 type OfflineMoonshineModelConfig struct {
