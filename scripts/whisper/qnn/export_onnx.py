@@ -14,6 +14,7 @@ use any T <= 30.
 """
 
 import argparse
+import inspect
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -125,7 +126,8 @@ def modified_self_qkv_attention(
     qk1 = (q * scale) @ (k1 * scale).transpose(-1, -2)  # (1, 6, 1, 1)
 
     #  qk = qk + mask
-    qk.masked_fill_(mask.to(torch.bool), float("-inf"))
+    #  qk.masked_fill_(mask.to(torch.bool), float("-inf"))
+    qk.masked_fill_(mask.to(torch.bool), -60000)
 
     qk = qk.float()
     qk1 = qk1.float()
@@ -497,6 +499,7 @@ def main():
         model = whisper.load_model(filename)
     else:
         model = whisper.load_model(name)
+    model.to("cpu")
 
     num_params = sum(p.numel() for p in model.parameters())
     num_encoder_params = sum(p.numel() for p in model.encoder.parameters())
@@ -516,6 +519,15 @@ def main():
     tokenizer = whisper.tokenizer.get_tokenizer(
         model.is_multilingual, num_languages=model.num_languages
     )
+    # tiny: <|startoftranscript|><|en|><|transcribe|> (50258, 50259, 50359)
+    # base: <|startoftranscript|><|en|><|transcribe|> (50258, 50259, 50359)
+    # tiny.en: <|startoftranscript|> (50257,)
+    print(tokenizer.decode(tokenizer.sot_sequence), tokenizer.sot_sequence)
+
+    # tiny: <|notimestamps|> 50363
+    # base: <|notimestamps|> 50363
+    # tiny.en: <|notimestamps|> 50362
+    print(tokenizer.decode([tokenizer.no_timestamps]), tokenizer.no_timestamps)
 
     model.eval()
     print(model.dims)
@@ -555,6 +567,15 @@ def main():
         output_names.append(k)
         output_names.append(v)
 
+    export_sig = inspect.signature(torch.onnx.export)
+
+    kwargs = dict()
+    if "dynamo" in export_sig.parameters:
+        kwargs["dynamo"] = False
+
+    if "external_data" in export_sig.parameters:
+        kwargs["external_data"] = False
+
     encoder_filename = f"{name}-encoder.onnx"
     torch.onnx.export(
         encoder,
@@ -563,8 +584,7 @@ def main():
         opset_version=opset_version,
         input_names=[f"{name}-mel"],
         output_names=output_names,
-        dynamo=False,
-        external_data=False,
+        **kwargs,
     )
 
     encoder_meta_data = {
@@ -582,12 +602,12 @@ def main():
         "n_text_head": model.dims.n_text_head,
         "n_text_layer": model.dims.n_text_layer,
         "sot_sequence": ",".join(list(map(str, tokenizer.sot_sequence))),
-        "all_language_tokens": ",".join(
-            list(map(str, tokenizer.all_language_tokens))
-        ),  # a list of ids
-        "all_language_codes": ",".join(
-            tokenizer.all_language_codes
-        ),  # e.g., en, de, zh, fr
+        #  "all_language_tokens": ",".join(
+        #      list(map(str, tokenizer.all_language_tokens))
+        #  ),  # a list of ids
+        #  "all_language_codes": ",".join(
+        #      tokenizer.all_language_codes
+        #  ),  # e.g., en, de, zh, fr
         "sot": tokenizer.sot,
         "sot_index": tokenizer.sot_sequence.index(tokenizer.sot),
         "eot": tokenizer.eot,
@@ -602,7 +622,7 @@ def main():
         "no_timestamps": tokenizer.no_timestamps,
     }
     print(f"encoder_meta_data: {encoder_meta_data}")
-    #  add_meta_data(filename=encoder_filename, meta_data=encoder_meta_data)
+    add_meta_data(filename=encoder_filename, meta_data=encoder_meta_data)
 
     tokens = torch.tensor([[tokenizer.sot]], dtype=torch.int32)
     decoder = TextDecoderTensorCache(model.decoder, model.dims.n_text_ctx)
@@ -667,10 +687,8 @@ def main():
         opset_version=opset_version,
         input_names=input_names,
         output_names=output_names,
-        dynamo=False,
-        external_data=False,
+        **kwargs,
     )
-    return
 
     if "large" in args.model:
         decoder_external_filename = decoder_filename.split(".onnx")[0]
@@ -683,35 +701,39 @@ def main():
             location=decoder_external_filename + ".weights",
         )
 
-    # Generate int8 quantization models
-    # See https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html#data-type-selection
+    if False:
+        # Generate int8 quantization models
+        # See https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html#data-type-selection
 
-    print("Generate int8 quantization models")
+        print("Generate int8 quantization models")
 
-    encoder_filename_int8 = f"{name}-encoder.int8.onnx"
-    quantize_dynamic(
-        model_input=encoder_filename,
-        model_output=encoder_filename_int8,
-        op_types_to_quantize=["MatMul"],
-        weight_type=QuantType.QInt8,
-    )
+        encoder_filename_int8 = f"{name}-encoder.int8.onnx"
+        quantize_dynamic(
+            model_input=encoder_filename,
+            model_output=encoder_filename_int8,
+            op_types_to_quantize=["MatMul"],
+            weight_type=QuantType.QInt8,
+        )
 
-    decoder_filename_int8 = f"{name}-decoder.int8.onnx"
-    quantize_dynamic(
-        model_input=decoder_filename,
-        model_output=decoder_filename_int8,
-        op_types_to_quantize=["MatMul"],
-        weight_type=QuantType.QInt8,
-    )
+        decoder_filename_int8 = f"{name}-decoder.int8.onnx"
+        quantize_dynamic(
+            model_input=decoder_filename,
+            model_output=decoder_filename_int8,
+            op_types_to_quantize=["MatMul"],
+            weight_type=QuantType.QInt8,
+        )
 
 
 if __name__ == "__main__":
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
-    # To fix
-    # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
-    # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
-    from whisper.model import disable_sdpa
+    try:
+        # To fix
+        # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
+        # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
+        from whisper.model import disable_sdpa
 
-    with disable_sdpa():
+        with disable_sdpa():
+            main()
+    except:
         main()

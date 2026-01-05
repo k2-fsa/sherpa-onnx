@@ -9,7 +9,7 @@ import torch
 import whisper
 
 from test_torch import compute_feat
-from export_onnx import causal_mask_1d
+from export_onnx import causal_mask_1d, get_args
 
 
 class OnnxModel:
@@ -48,6 +48,11 @@ class OnnxModel:
         for i in self.encoder.get_outputs():
             print(i)
             self.encoder_output_names.append(i.name)
+
+        meta = self.encoder.get_modelmeta().custom_metadata_map
+        self.n_text_layer = int(meta["n_text_layer"])
+        self.n_text_ctx = int(meta["n_text_ctx"])
+        self.n_text_state = int(meta["n_text_state"])
 
     def init_decoder(self, decoder: str):
         self.decoder = ort.InferenceSession(
@@ -97,70 +102,74 @@ class OnnxModel:
     def get_self_cache(self) -> List[np.ndarray]:
         self_cache = []
         batch_size = 1
-        for i in range(4):
-            k = np.zeros((batch_size, 448, 384), dtype=np.float32)
-            v = np.zeros((batch_size, 448, 384), dtype=np.float32)
+        for i in range(self.n_text_layer):
+            k = np.zeros(
+                (batch_size, self.n_text_ctx, self.n_text_state), dtype=np.float32
+            )
+            v = np.zeros(
+                (batch_size, self.n_text_ctx, self.n_text_state), dtype=np.float32
+            )
             self_cache.extend([k, v])
         return self_cache
 
 
 def main():
-    torch_model = whisper.load_model("tiny.en")
+    args = get_args()
+    print(vars(args))
+
+    torch_model = whisper.load_model(args.model)
     tokenizer = whisper.tokenizer.get_tokenizer(
         torch_model.is_multilingual, num_languages=torch_model.num_languages
     )
-    print(tokenizer.sot)  # 50527
 
-    mel = compute_feat("./en.wav").numpy()
+    mel = compute_feat("./en-16k.wav").numpy()
     print(mel.shape)  # (1, 80. 3000)
-    model = OnnxModel("./tiny.en-encoder.onnx", "./tiny.en-decoder.onnx")
+    model = OnnxModel(f"./{args.model}-encoder.onnx", f"./{args.model}-decoder.onnx")
+
+    sot_sequence = list(tokenizer.sot_sequence) + [tokenizer.no_timestamps]
+
+    # tiny.en: [50257, 50362]
+    # tiny: [50258, 50259, 50359, 50363]
+    print("sot sequence", sot_sequence)
 
     cross_kv = model.run_encoder(mel)
     print(len(cross_kv))  # 8
 
     self_kv = model.get_self_cache()
 
-    eot = 50256
-    token = np.array([[50257]], dtype=np.int32)  # sot
+    # tiny.en: 50256
+    # tiny: 50257
+    eot = tokenizer.eot
+    print("eot", eot)
+
     offset = np.array([0], dtype=np.int32)
-    mask = causal_mask_1d(offset.item(), 448).numpy()
+    for t in sot_sequence:
+        token = np.array([[t]], dtype=np.int32)  # sot
+        mask = causal_mask_1d(offset.item(), model.n_text_ctx).numpy()
 
-    out = model.run_decoder([token] + self_kv + cross_kv + [offset, mask])
+        out = model.run_decoder([token] + self_kv + cross_kv + [offset, mask])
 
-    logits = out[0]
-
-    torch.save(torch.from_numpy(logits), "logits_onnx.pt")
-
-    for i in range(1, 9):
-        self_kv[i - 1][:, offset.item() : offset.item() + 1, :] = out[i]
-
-    print(logits[0, 0].argmax())
-
-    token = np.array([[50362]], dtype=np.int32)  # no_timestamps
-    offset += 1
-    mask = causal_mask_1d(offset.item(), 448).numpy()
-
-    out = model.run_decoder([token] + self_kv + cross_kv + [offset, mask])
-    idx = out[0][0, 0].argmax()
-
-    eot = 50256
-    t = 0
-
-    ans = []
-
-    while idx != eot and t < 100:
-        t += 1
-
-        ans.append(idx)
-        token = np.array([[idx]], dtype=np.int32)  # no_timestamps
-        for i in range(1, 9):
+        for i in range(1, len(out)):
             self_kv[i - 1][:, offset.item() : offset.item() + 1, :] = out[i]
 
         offset += 1
-        mask = causal_mask_1d(offset.item(), 448).numpy()
+
+    idx = out[0][0, 0].argmax()
+
+    ans = []
+
+    while idx != eot and offset.item() < 200:
+        ans.append(idx)
+        token = np.array([[idx]], dtype=np.int32)  # no_timestamps
+        for i in range(1, len(out)):
+            self_kv[i - 1][:, offset.item() : offset.item() + 1, :] = out[i]
+
+        mask = causal_mask_1d(offset.item(), model.n_text_ctx).numpy()
 
         out = model.run_decoder([token] + self_kv + cross_kv + [offset, mask])
         idx = out[0][0, 0].argmax()
+
+        offset += 1
 
     print(ans)
     text = "".join(tokenizer.decode(ans)).strip()

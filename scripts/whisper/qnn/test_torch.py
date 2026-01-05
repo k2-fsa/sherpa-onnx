@@ -8,7 +8,12 @@ import soundfile as sf
 import torch
 import whisper
 
-from export_onnx import AudioEncoderTensorCache, TextDecoderTensorCache, causal_mask_1d
+from export_onnx import (
+    AudioEncoderTensorCache,
+    TextDecoderTensorCache,
+    causal_mask_1d,
+    get_args,
+)
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
@@ -41,9 +46,11 @@ def compute_feat(filename: str):
 
 @torch.no_grad()
 def main():
+    args = get_args()
+    print(vars(args))
     mel = compute_feat("en.wav")
 
-    model = whisper.load_model("tiny.en")
+    model = whisper.load_model(args.model, device="cpu")
     tokenizer = whisper.tokenizer.get_tokenizer(
         model.is_multilingual, num_languages=model.num_languages
     )
@@ -125,10 +132,13 @@ def main():
 if __name__ == "__main__":
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
-    # To fix
-    # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
-    # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
-    from whisper.model import disable_sdpa
+    try:
+        # To fix
+        # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
+        # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
+        from whisper.model import disable_sdpa
 
-    with disable_sdpa():
+        with disable_sdpa():
+            main()
+    except:
         main()
