@@ -37,11 +37,7 @@ def load_torch_model():
 
     state_dict = torch.load("./model.pt", map_location="cpu")
 
-    to_delete = []
-    for k in state_dict:
-        if "llm" in k or "audio_adaptor" in k:
-            to_delete.append(k)
-            continue
+    to_delete = [k for k in state_dict if "llm" in k or "audio_adaptor" in k]
 
     for k in to_delete:
         del state_dict[k]
