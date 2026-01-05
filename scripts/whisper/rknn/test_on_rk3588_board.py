@@ -201,7 +201,6 @@ class RKNNModel:
            - (k, v) for layer 3
         """
         out = self.encoder.inference(inputs=[x.numpy()])
-        print("after running encoder", len(out))
         return out
 
     def get_self_cache(self) -> List[np.ndarray]:
@@ -239,11 +238,9 @@ def main():
     id2token = load_tokens(args.tokens)
 
     if ".en" in args.encoder:
-        print("here", args.encoder)
         sot_sequence = [50257, 50362]
         eot = 50256
     else:
-        print("not here", args.encoder)
         sot_sequence = [50258, 50259, 50359, 50363]
         eot = 50257
 
@@ -296,7 +293,6 @@ def test(model, id2token):
     for t in model.sot_sequence:
         token = np.array([[t]], dtype=np.int32)  # sot
         mask = causal_mask_1d(offset.item(), model.n_text_ctx)
-        print(t, model.sot_sequence, token, mask.shape, len(cross_kv), len(self_kv))
 
         out = model.run_decoder(
             tokens=token, self_kv=self_kv, cross_kv=cross_kv, offset=offset, mask=mask
