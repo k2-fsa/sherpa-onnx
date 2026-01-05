@@ -191,7 +191,18 @@ Ort::Value View(Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
+#if ORT_API_VERSION >= 12
   auto memory_info = v->GetTensorMemoryInfo();
+#else
+  const OrtMemoryInfo *mem_info = nullptr;
+  OrtStatus *status = Ort::GetApi().GetTensorMemoryInfo(value, &mem_info);
+  if (status != nullptr) {
+    const char *msg = Ort::GetApi().GetErrorMessage(status);
+    Ort::GetApi().ReleaseStatus(status);
+    SHERPA_ONNX_LOGE("Failed to get tensor memory info with error: '%s'", msg);
+    SHERPA_ONNX_EXIT(-1);
+  }
+#endif
 
   switch (type_and_shape.GetElementType()) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
