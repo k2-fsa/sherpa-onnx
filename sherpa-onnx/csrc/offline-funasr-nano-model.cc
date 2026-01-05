@@ -46,6 +46,7 @@ static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
   return n;
 }
 
+#if ORT_API_VERSION >= 14
 static inline void AssertTensorIsCpu(const Ort::Value &v, const char *what) {
   if (!v.IsTensor()) return;
   auto mi = v.GetTensorMemoryInfo();
@@ -55,6 +56,49 @@ static inline void AssertTensorIsCpu(const Ort::Value &v, const char *what) {
     SHERPA_ONNX_EXIT(-1);
   }
 }
+#else
+static inline void AssertTensorIsCpu(const Ort::Value &v, const char *what) {
+  if (!v.IsTensor()) return;
+
+  const OrtValue* v_ptr = reinterpret_cast<const OrtValue*>(&v);
+  const OrtMemoryInfo* memory_info = nullptr;
+
+  // 1. Get memory info
+  OrtStatus* status = Ort::GetApi().GetTensorMemoryInfo(v_ptr, &memory_info);
+  if (status) {
+    const char* msg = Ort::GetApi().GetErrorMessage(status);
+    Ort::GetApi().ReleaseStatus(status);
+    SHERPA_ONNX_LOGE("%s: failed to get tensor memory info: %s", what, msg);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  // 2. Get memory type (OrtMemType)
+  OrtMemType mem_type;
+  status = Ort::GetApi().MemoryInfoGetMemType(memory_info, &mem_type);
+  if (status) {
+    const char* msg = Ort::GetApi().GetErrorMessage(status);
+    Ort::GetApi().ReleaseStatus(status);
+    SHERPA_ONNX_LOGE("%s: failed to get mem type: %s", what, msg);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  // 3. Check CPU
+  if (mem_type != OrtMemTypeCPU) {
+    int device_id = 0;
+    status = Ort::GetApi().MemoryInfoGetId(memory_info, &device_id);
+    if (status) {
+      const char* msg = Ort::GetApi().GetErrorMessage(status);
+      Ort::GetApi().ReleaseStatus(status);
+      SHERPA_ONNX_LOGE("%s: failed to get device id: %s", what, msg);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    SHERPA_ONNX_LOGE("%s: expected CPU tensor but got mem_type=%d device_id=%d",
+                     what, static_cast<int>(mem_type), device_id);
+    SHERPA_ONNX_EXIT(-1);
+  }
+}
+#endif
 
 static inline std::string ToLower(std::string s) {
   std::transform(s.begin(), s.end(), s.begin(),

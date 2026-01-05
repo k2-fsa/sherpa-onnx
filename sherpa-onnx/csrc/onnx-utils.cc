@@ -191,11 +191,11 @@ Ort::Value View(Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
-#if ORT_API_VERSION >= 12
+#if ORT_API_VERSION >= 14
   auto memory_info = v->GetTensorMemoryInfo();
 #else
-  const OrtMemoryInfo *mem_info = nullptr;
-  OrtStatus *status = Ort::GetApi().GetTensorMemoryInfo(value, &mem_info);
+  const OrtMemoryInfo *memory_info = nullptr;
+  OrtStatus *status = Ort::GetApi().GetTensorMemoryInfo(*v, &memory_info);
   if (status != nullptr) {
     const char *msg = Ort::GetApi().GetErrorMessage(status);
     Ort::GetApi().ReleaseStatus(status);
