@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import re
-import sys
-import argparse
+
 import jinja2
+
 
 def parse_args():
     # set the source code file
@@ -20,38 +21,40 @@ def parse_args():
     parser.add_argument("-o", "--output", type=str, required=True)
     return parser.parse_args()
 
+
 def parse_golang(target):
-    with open(target, 'r') as file:
+    with open(target, "r") as file:
         content = file.read()
     defines = []
-    struct_pattern = re.compile(r'type\s+([A-Z]\w+)\s+struct', re.DOTALL)
+    struct_pattern = re.compile(r"type\s+([A-Z]\w+)\s+struct", re.DOTALL)
     struct_matches = struct_pattern.findall(content)
     for name in struct_matches:
         c_define = {
-            'type': 'struct',
-            'name': name,
+            "type": "struct",
+            "name": name,
         }
         defines.append(c_define)
-    struct_pattern = re.compile(r'type\s+([A-Z][^ =]+)\s*=', re.DOTALL)
+    struct_pattern = re.compile(r"type\s+([A-Z][^ =]+)\s*=", re.DOTALL)
     struct_matches = struct_pattern.findall(content)
     for name in struct_matches:
         c_define = {
-            'type': 'struct',
-            'name': name,
+            "type": "struct",
+            "name": name,
         }
         defines.append(c_define)
-    func_pattern = re.compile(r'func\s+([A-Z][^ \(]+)\s*\(', re.DOTALL)
+    func_pattern = re.compile(r"func\s+([A-Z][^ \(]+)\s*\(", re.DOTALL)
     func_matches = func_pattern.findall(content)
     for name in func_matches:
         c_define = {
-            'type': 'function',
-            'name': name,
+            "type": "function",
+            "name": name,
         }
         defines.append(c_define)
     return defines
 
+
 def render(output, defines, platform):
-    build_info = ''
+    build_info = ""
     if platform == "windows":
         build_info = "//go:build (windows && amd64) || (windows && 386)"
     elif platform == "linux":
@@ -71,14 +74,12 @@ def render(output, defines, platform):
     folder = os.path.dirname(output)
     if not os.path.exists(folder):
         os.makedirs(folder)
-    with open(output, 'w') as f:
+    with open(output, "w") as f:
         print(rendered, file=f)
 
+
 def generate(src, output):
-    # print("source: ", src)
-    # print("output: ", output)
     defines = parse_golang(src)
-    # print("defines: ", defines)
     platform = "linux"
     render(f"{output}/sherpa_onnx/sherpa_onnx_{platform}.go", defines, platform)
     platform = "windows"
