@@ -1,5 +1,9 @@
 # Usage
 
+You can find pre-exported rknn models for rk3588 at
+
+https://modelscope.cn/models/csukuangfj/2026-01-05-rknn/files
+
 
 # Download test wave
 
