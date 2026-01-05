@@ -15,11 +15,14 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
   po->Register("funasr-nano-encoder-adaptor", &encoder_adaptor,
                "Path to encoder_adaptor.onnx for FunASR-nano");
 
+  po->Register("funasr-nano-llm", &llm,
+               "Path to llm.onnx for FunASR-nano (unified KV cache mode)");
+
   po->Register("funasr-nano-llm-prefill", &llm_prefill,
-               "Path to llm_prefill.onnx for FunASR-nano (KV cache mode)");
+               "Path to llm_prefill.onnx for FunASR-nano (deprecated, use --funasr-nano-llm)");
 
   po->Register("funasr-nano-llm-decode", &llm_decode,
-               "Path to llm_decode.onnx for FunASR-nano (KV cache mode)");
+               "Path to llm_decode.onnx for FunASR-nano (deprecated, use --funasr-nano-llm)");
 
   po->Register("funasr-nano-embedding", &embedding,
                "Path to embedding.onnx for FunASR-nano");
@@ -58,19 +61,18 @@ bool OfflineFunASRNanoModelConfig::Validate() const {
     return false;
   }
 
-  // KV cache mode (prefill + decode) is required
-  if (llm_prefill.empty() || llm_decode.empty()) {
-    SHERPA_ONNX_LOGE("Both --funasr-nano-llm-prefill and --funasr-nano-llm-decode are required");
+  if (llm.empty()) {
+    SHERPA_ONNX_LOGE("--funasr-nano-llm is required");
     return false;
   }
 
-  if (!FileExists(llm_prefill)) {
-    SHERPA_ONNX_LOGE("--funasr-nano-llm-prefill: '%s' does not exist", llm_prefill.c_str());
+  if (!FileExists(llm)) {
+    SHERPA_ONNX_LOGE("--funasr-nano-llm: '%s' does not exist", llm.c_str());
     return false;
   }
-  if (!FileExists(llm_decode)) {
-    SHERPA_ONNX_LOGE("--funasr-nano-llm-decode: '%s' does not exist", llm_decode.c_str());
-    return false;
+
+  if (!llm_prefill.empty() || !llm_decode.empty()) {
+    SHERPA_ONNX_LOGE("--funasr-nano-llm-prefill and --funasr-nano-llm-decode are deprecated, use --funasr-nano-llm instead");
   }
 
   if (tokenizer.empty()) {
@@ -121,8 +123,7 @@ std::string OfflineFunASRNanoModelConfig::ToString() const {
 
   os << "OfflineFunASRNanoModelConfig(";
   os << "encoder_adaptor=\"" << encoder_adaptor << "\", ";
-  os << "llm_prefill=\"" << llm_prefill << "\", ";
-  os << "llm_decode=\"" << llm_decode << "\", ";
+  os << "llm=\"" << llm << "\", ";
   os << "embedding=\"" << embedding << "\", ";
   os << "tokenizer=\"" << tokenizer << "\", ";
   os << "system_prompt=\"" << system_prompt << "\", ";

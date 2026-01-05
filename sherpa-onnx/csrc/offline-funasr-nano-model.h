@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_FUNASR_NANO_MODEL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_FUNASR_NANO_MODEL_H_
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -30,26 +31,40 @@ class OfflineFunASRNanoModel {
    */
   Ort::Value ForwardEncoderAdaptor(Ort::Value features);
 
-  /** Run the LLM prefill model (KV cache mode).
+  /** Run the unified LLM model (KV cache mode).
    *
-   * @param inputs_embeds  A tensor of shape (N, T, hidden_size).
-   * @param attention_mask  A tensor of shape (N, T) containing attention mask.
-   * @return Return tuple (logits, past_key_values...). Logits shape (N, T, vocab_size).
-   *         past_key_values is a vector of (key, value) pairs for each layer.
+   * @param inputs_embeds  A tensor of shape (N, T, hidden_size), float32.
+   * @param attention_mask  A tensor of shape (N, T) containing attention mask, int64.
+   * @param cache_position  A tensor of shape (T,) containing cache positions, int64.
+   * @param cache_kv  Fixed-size KV cache, vector of (key, value) pairs.
+   * @return Return tuple (logits, kv_outputs...). Logits shape (N, T, vocab_size), float32.
+   *         kv_outputs is a vector of (key_delta, value_delta) pairs for each layer.
    */
-  std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>
-  ForwardLLMPrefill(Ort::Value inputs_embeds, Ort::Value attention_mask);
+   std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>
+   ForwardLLM(Ort::Value inputs_embeds,
+              Ort::Value attention_mask,
+              const Ort::Value &cache_position,
+              const std::vector<std::pair<Ort::Value, Ort::Value>> &cache_kv);
+  
+  /** Create fixed-size KV cache for both legacy and KV-delta models.
+   *
+   * @param batch  Batch size (usually 1).
+   * @param past_len  For legacy models: past sequence length (0 for first prefill).
+   *                  For KV-delta models: ignored, uses max_total_len.
+   * @return Return vector of (key, value) pairs with fixed cache dimensions.
+   */
+  std::vector<std::pair<Ort::Value, Ort::Value>>
+  CreateEmptyKVCache(int64_t batch, int64_t past_len);
 
-  /** Run the LLM decode model (KV cache mode).
+  /** Apply KV-delta in-place to fixed cache (for KV-delta models).
    *
-   * @param inputs_embeds  A tensor of shape (N, 1, hidden_size) for the next token.
-   * @param attention_mask  A tensor of shape (N, total_seq_len) containing attention mask.
-   * @param past_key_values  KV cache from previous steps, vector of (key, value) pairs.
-   * @return Return tuple (logits, updated_past_key_values...). Logits shape (N, 1, vocab_size).
+   * @param cache_kv  Fixed-size KV cache to update, vector of (key, value) pairs.
+   * @param kv_delta  KV deltas from current step, vector of (key_delta, value_delta) pairs.
+   * @param cache_position  Cache position tensor indicating where to write deltas.
    */
-  std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>>
-  ForwardLLMDecode(Ort::Value inputs_embeds, Ort::Value attention_mask,
-                   const std::vector<std::pair<Ort::Value, Ort::Value>> &past_key_values);
+  void ApplyKvDeltaInplace(std::vector<std::pair<Ort::Value, Ort::Value>> *cache_kv,
+                          const std::vector<std::pair<Ort::Value, Ort::Value>> &kv_delta,
+                          const Ort::Value &cache_position);
 
   /** Check if using KV cache mode. Always returns true for FunASR-nano.
    */
@@ -70,6 +85,10 @@ class OfflineFunASRNanoModel {
    */
   int32_t HiddenSize() const;
 
+  /** Return the maximum total sequence length (from metadata)
+   */
+  int32_t GetMaxTotalLen() const;
+
   /** It is lfr_window_size in metadata
    */
   int32_t LfrWindowSize() const;
@@ -78,6 +97,16 @@ class OfflineFunASRNanoModel {
    */
   int32_t LfrWindowShift() const;
 
+  /** Return the maximum total sequence length
+   */
+  int64_t MaxTotalLen() const;
+
+  // Unified LLM exported by Python may provide either cache_position or position_ids.
+  // If neither exists in the model, HasPositionInput() is false and PositionInputRank() returns 0.
+  // Rank is 1 (shape [S] / [1]) or 2 (shape [1,S] / [1,1]).
+  bool HasPositionInput() const;
+  int32_t PositionInputRank() const;
+
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
@@ -85,14 +114,6 @@ class OfflineFunASRNanoModel {
   /** Check if embedding model is available
    */
   bool HasEmbeddingModel() const;
-
-  /** Get expected input type for prefill model
-   */
-  ONNXTensorElementDataType GetPrefillInputType() const;
-
-  /** Get expected input type for decode model
-   */
-  ONNXTensorElementDataType GetDecodeInputType() const;
 
  private:
   class Impl;

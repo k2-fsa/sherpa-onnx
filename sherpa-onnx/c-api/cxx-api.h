@@ -285,6 +285,7 @@ struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
 
 struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   std::string encoder_adaptor;
+  std::string llm;
   std::string llm_prefill;
   std::string llm_decode;
   std::string embedding;
@@ -292,7 +293,7 @@ struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   std::string system_prompt = "You are a helpful assistant.";
   std::string user_prompt = "语音转写：";
   int32_t max_new_tokens = 512;
-  float temperature = 0.3f;
+  float temperature = 1e-6f;
   float top_p = 0.8f;
   int32_t seed = 42;
 };

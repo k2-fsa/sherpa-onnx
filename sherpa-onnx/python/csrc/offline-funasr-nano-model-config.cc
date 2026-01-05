@@ -15,6 +15,7 @@ void PybindOfflineFunASRNanoModelConfig(py::module *m) {
   py::class_<PyClass>(*m, "OfflineFunASRNanoModelConfig")
       .def(py::init<>())
       .def_readwrite("encoder_adaptor", &PyClass::encoder_adaptor)
+      .def_readwrite("llm", &PyClass::llm)
       .def_readwrite("llm_prefill", &PyClass::llm_prefill)
       .def_readwrite("llm_decode", &PyClass::llm_decode)
       .def_readwrite("embedding", &PyClass::embedding)

@@ -513,6 +513,8 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
 
   recognizer_config.model_config.funasr_nano.encoder_adaptor =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.encoder_adaptor, "");
+  recognizer_config.model_config.funasr_nano.llm =
+      SHERPA_ONNX_OR(config->model_config.funasr_nano.llm, "");
   recognizer_config.model_config.funasr_nano.llm_prefill =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.llm_prefill, "");
   recognizer_config.model_config.funasr_nano.llm_decode =
@@ -530,7 +532,7 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.funasr_nano.max_new_tokens =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.max_new_tokens, 512);
   recognizer_config.model_config.funasr_nano.temperature =
-      SHERPA_ONNX_OR(config->model_config.funasr_nano.temperature, 0.3f);
+      SHERPA_ONNX_OR(config->model_config.funasr_nano.temperature, 1e-6f);
   recognizer_config.model_config.funasr_nano.top_p =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.top_p, 0.8f);
   recognizer_config.model_config.funasr_nano.seed =
