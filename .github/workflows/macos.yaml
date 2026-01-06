@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - use-onnxruntime-v1.23.2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -57,14 +58,15 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }}
+    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }} ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, macos-15-intel]
         build_type: [Release, Debug]
         lib_type: [static, shared]
         with_tts: [ON, OFF]
+        arch: ["arm64", "x86_64", "arm64;x86_64"]
 
     steps:
       - uses: actions/checkout@v4
@@ -98,11 +100,13 @@ jobs:
             BUILD_SHARED_LIBS=ON
           fi
 
+          arch="${{ matrix.arch }}"
+
           cmake \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
             -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_OSX_ARCHITECTURES="$arch" \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
