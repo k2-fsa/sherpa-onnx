@@ -45,6 +45,10 @@
 #include "sherpa-onnx/python/csrc/offline-speaker-diarization.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_WEBSOCKET == 1
+#include "sherpa-onnx/python/csrc/online-websocket-server-app.h"
+#endif
+
 namespace sherpa_onnx {
 
 PYBIND11_MODULE(_sherpa_onnx, m) {
@@ -116,6 +120,10 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOfflineSpeechDenoiser(&m);
   PybindOfflineSourceSeparation(&m);
   PybindVersion(&m);
+
+#if SHERPA_ONNX_ENABLE_WEBSOCKET == 1
+  PybindOnlineWebsocketServerApp(&m);
+#endif
 }
 
 }  // namespace sherpa_onnx
