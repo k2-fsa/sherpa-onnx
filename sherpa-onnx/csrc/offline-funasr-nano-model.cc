@@ -222,7 +222,6 @@ static Ort::Value CastToFloat16(Ort::Value in, OrtAllocator *alloc) {
 
 // Cast tensor to the expected element type (float16 or float32).
 // Returns the input unchanged if it already matches the expected type.
-// NOTE: This helper assumes the input tensor is on CPU memory.
 static Ort::Value CastFloatLikeForExpected(Ort::Value in,
                                           ONNXTensorElementDataType expected,
                                           OrtAllocator *alloc) {
@@ -325,7 +324,7 @@ static Ort::Value NormalizeAttentionMask(Ort::Value mask, int64_t target_len,
 }  // namespace
 
 // Implementation class for OfflineFunASRNanoModel.
-// Manages ONNX sessions for encoder, unified-static-KV LLM, and embedding models.
+// Manages ONNX sessions for encoder, KV cache LLM, and embedding models.
 class OfflineFunASRNanoModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
@@ -346,13 +345,8 @@ class OfflineFunASRNanoModel::Impl {
     }
 
     if (c.llm.empty()) {
-      SHERPA_ONNX_LOGE("funasr_nano.llm is required for unified KV-cache mode");
+      SHERPA_ONNX_LOGE("funasr_nano.llm is required for KV cache mode");
       SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (!c.llm_prefill.empty() || !c.llm_decode.empty()) {
-      SHERPA_ONNX_LOGE(
-          "funasr_nano.llm_prefill/llm_decode are deprecated, use llm instead");
     }
     
     InitEncoderAdaptor(c.encoder_adaptor);
@@ -361,27 +355,15 @@ class OfflineFunASRNanoModel::Impl {
     has_embedding_model_ = true;
 
     // FunASR-nano uses CPU-side sampling. When running on CUDA, we bind
-    // logits to CPU (so sampling can read it safely), while keeping KV cache
-    // on GPU to avoid large device<->host copies.
+    // logits to CPU (so sampling can read it safely).
     use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
     if (use_cuda_iobinding_) {
       // Use device 0 by default. SessionOptions() in sherpa-onnx usually
       // configures the CUDA EP device; binding here only affects output memory.
       cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
           "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
-
-      // Check if LLM model is FP16, which is not supported on CUDA yet.
-      Ort::ModelMetadata meta_data = llm_sess_->GetModelMetadata();
-      Ort::AllocatorWithDefaultOptions allocator;
-      auto quant_type = LookupCustomModelMetaData(meta_data, "quantization_type", allocator);
-
-      if (!quant_type.empty() && quant_type == "fp16") {
-        SHERPA_ONNX_LOGE(
-            "fp16 LLM models are not supported on CUDA yet. Please use "
-            "fp32/int8 models.");
-        SHERPA_ONNX_EXIT(-1);
-      }
     }
+    CheckFp16OnCuda();
   }
 
   void InitEncoderAdaptorFromMemory(void *model_data,
@@ -453,12 +435,11 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_READ_META_DATA(hidden_size_, "hidden_size");
     }
 
-    // Detect KV-delta model type
+    // Detect KV delta model type (model_type metadata should contain "kv_delta")
     auto model_type_value =
         LookupCustomModelMetaData(meta_data, "model_type", allocator);
-    bool is_kv_delta_model = (!model_type_value.empty() &&
-                              model_type_value.find("kv_delta") != std::string::npos);
-    is_kv_delta_model_ = is_kv_delta_model;
+    is_kv_delta_model_ = (!model_type_value.empty() &&
+                          model_type_value.find("kv_delta") != std::string::npos);
 
     int32_t num_outputs = static_cast<int32_t>(llm_output_names_.size());
     if (num_outputs < 1 || (num_outputs - 1) % 2 != 0) {
@@ -486,7 +467,7 @@ class OfflineFunASRNanoModel::Impl {
       num_layers_ = inferred_layers;
     }
 
-    // Read static cache length for attention_mask.
+    // Read KV cache capacity from metadata.
     auto max_total_len_value =
         LookupCustomModelMetaData(meta_data, "max_total_len", allocator);
     if (!max_total_len_value.empty()) {
@@ -497,25 +478,30 @@ class OfflineFunASRNanoModel::Impl {
       if (!attn_len_value.empty()) max_total_len_ = atoi(attn_len_value.c_str());
     }
     if (max_total_len_ <= 0) {
-      // best-effort fallback: use input[1] shape if static
+      // Fallback: use input[1] shape
       auto ti = llm_sess_->GetInputTypeInfo(1);
       auto shp = ti.GetTensorTypeAndShapeInfo().GetShape();
-      if (shp.size() == 2 && shp[1] > 0) max_total_len_ = (int32_t)shp[1];
+      if (shp.size() == 2 && shp[1] > 0) {
+        max_total_len_ = static_cast<int32_t>(shp[1]);
+      }
+      if (max_total_len_ <= 0) {
+        SHERPA_ONNX_LOGE("Failed to determine max_total_len from metadata or input shape");
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
-    // Only KV-delta models are supported
-    if (!is_kv_delta_model) {
-      SHERPA_ONNX_LOGE("Only KV-delta models are supported, but model_type does not contain 'kv_delta'");
+    // Only KV delta models are supported
+    if (!is_kv_delta_model_) {
+      SHERPA_ONNX_LOGE("Only KV delta models are supported, but model_type does not contain 'kv_delta'");
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Validate input layout.
+    // Validate input layout: 0 embeds, 1 attention_mask, 2 cache_position, 3+ KV cache
     if (llm_input_names_.size() < 3u) {
       SHERPA_ONNX_LOGE("LLM model inputs must be >=3 (embeds,mask,cache_position)");
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // By export convention: 0 embeds, 1 attention_mask, 2 cache_position
     cache_position_input_index_ = 2;
     past_kv_input_start_index_ = 3;
 
@@ -602,13 +588,8 @@ class OfflineFunASRNanoModel::Impl {
     }
 
     if (c.llm.empty()) {
-      SHERPA_ONNX_LOGE("funasr_nano.llm is required for unified KV-cache mode");
+      SHERPA_ONNX_LOGE("funasr_nano.llm is required for KV cache mode");
       SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (!c.llm_prefill.empty() || !c.llm_decode.empty()) {
-      SHERPA_ONNX_LOGE(
-          "funasr_nano.llm_prefill/llm_decode are deprecated, use llm instead");
     }
 
     auto buf_encoder = ReadFile(mgr, c.encoder_adaptor);
@@ -625,19 +606,8 @@ class OfflineFunASRNanoModel::Impl {
     if (use_cuda_iobinding_) {
       cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
           "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
-
-      // Check if LLM model is FP16, which is not supported on CUDA yet.
-      Ort::ModelMetadata meta_data = llm_sess_->GetModelMetadata();
-      Ort::AllocatorWithDefaultOptions allocator;
-      auto quant_type = LookupCustomModelMetaData(meta_data, "quantization_type", allocator);
-
-      if (!quant_type.empty() && quant_type == "fp16") {
-        SHERPA_ONNX_LOGE(
-            "fp16 LLM models are not supported on CUDA yet. Please use "
-            "fp32/int8 models.");
-        SHERPA_ONNX_EXIT(-1);
-      }
     }
+    CheckFp16OnCuda();
   }
 
   // Forward pass through encoder adaptor model.
@@ -673,60 +643,50 @@ class OfflineFunASRNanoModel::Impl {
     return std::move(outputs[0]);
   }
 
-  std::vector<std::pair<Ort::Value, Ort::Value>> CreateEmptyKVCache(int64_t batch,
-                                                                   int64_t past_len) {
+  std::vector<std::pair<Ort::Value, Ort::Value>> CreateEmptyKVCache(int64_t batch) {
     std::vector<std::pair<Ort::Value, Ort::Value>> kv_cache;
     kv_cache.reserve(num_layers_);
 
-    // Model outputs are KV deltas that get applied in-place via ApplyKvDeltaInplace.
-    if (is_kv_delta_model_) {
-      // Read kv_h, hd from input shape template (dim2, dim3)
-      auto &tpl = past_key_shape_tpl_;
-      if (tpl.size() < 4) {
-        SHERPA_ONNX_LOGE("KV-delta model: invalid cache shape template, expected >=4 dims");
-        SHERPA_ONNX_EXIT(-1);
-      }
-      int64_t kv_h = tpl[2];
-      int64_t hd = tpl[3];
-      std::vector<int64_t> key_shape = {batch, static_cast<int64_t>(max_total_len_), kv_h, hd};
-      std::vector<int64_t> value_shape = key_shape;
-
-      size_t key_numel = NumelFromShape(key_shape);
-      size_t value_numel = NumelFromShape(value_shape);
-
-      for (int32_t i = 0; i < num_layers_; ++i) {
-        Ort::Value key_tensor =
-            AllocTensorByElemType(allocator_, key_shape, kv_in_type_);
-        Ort::Value value_tensor =
-            AllocTensorByElemType(allocator_, value_shape, kv_in_type_);
-
-        if (key_numel > 0) {
-          if (kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-            float *p = key_tensor.GetTensorMutableData<float>();
-            std::memset(p, 0, key_numel * sizeof(float));
-          } else {
-            uint16_t *p = key_tensor.GetTensorMutableData<uint16_t>();
-            std::memset(p, 0, key_numel * sizeof(uint16_t));
-          }
-        }
-
-        if (value_numel > 0) {
-          if (kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-            float *p = value_tensor.GetTensorMutableData<float>();
-            std::memset(p, 0, value_numel * sizeof(float));
-          } else {
-            uint16_t *p = value_tensor.GetTensorMutableData<uint16_t>();
-            std::memset(p, 0, value_numel * sizeof(uint16_t));
-          }
-        }
-
-        kv_cache.emplace_back(std::move(key_tensor), std::move(value_tensor));
-      }
-      return kv_cache;
+    // Read kv_h, hd from input shape template (dim2, dim3)
+    auto &tpl = past_key_shape_tpl_;
+    if (tpl.size() < 4) {
+      SHERPA_ONNX_LOGE("Invalid KV cache shape template, expected >=4 dims");
+      SHERPA_ONNX_EXIT(-1);
     }
+    int64_t kv_h = tpl[2];
+    int64_t hd = tpl[3];
+    std::vector<int64_t> key_shape = {batch, static_cast<int64_t>(max_total_len_), kv_h, hd};
+    std::vector<int64_t> value_shape = key_shape;
 
-    SHERPA_ONNX_LOGE("CreateEmptyKVCache: only KV-delta models are supported");
-    SHERPA_ONNX_EXIT(-1);
+    size_t key_numel = NumelFromShape(key_shape);
+    size_t value_numel = NumelFromShape(value_shape);
+
+    for (int32_t i = 0; i < num_layers_; ++i) {
+      Ort::Value key_tensor =
+          AllocTensorByElemType(allocator_, key_shape, kv_in_type_);
+      Ort::Value value_tensor =
+          AllocTensorByElemType(allocator_, value_shape, kv_in_type_);
+
+      // Zero-initialize cache
+      if (key_numel > 0) {
+        if (kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+          std::memset(key_tensor.GetTensorMutableData<float>(), 0, key_numel * sizeof(float));
+        } else {
+          std::memset(key_tensor.GetTensorMutableData<uint16_t>(), 0, key_numel * sizeof(uint16_t));
+        }
+      }
+
+      if (value_numel > 0) {
+        if (kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+          std::memset(value_tensor.GetTensorMutableData<float>(), 0, value_numel * sizeof(float));
+        } else {
+          std::memset(value_tensor.GetTensorMutableData<uint16_t>(), 0, value_numel * sizeof(uint16_t));
+        }
+      }
+
+      kv_cache.emplace_back(std::move(key_tensor), std::move(value_tensor));
+    }
+    return kv_cache;
   }
 
   std::pair<Ort::Value, std::vector<std::pair<Ort::Value, Ort::Value>>> ForwardLLM(
@@ -755,22 +715,19 @@ class OfflineFunASRNanoModel::Impl {
 
     // Prepare attention_mask: int64, ensure length <= max_total_len
     if (attention_mask.IsTensor()) {
-      auto mi = attention_mask.GetTensorMemoryInfo();
-      if (mi.GetDeviceType() == OrtMemoryInfoDeviceType_CPU) {
-        auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
-        auto mask_type =
-            static_cast<ONNXTensorElementDataType>(mask_info.GetElementType());
-        if (mask_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
-          attention_mask = CastMaskToInt64IfNeeded(std::move(attention_mask), allocator_);
-          mask_info = attention_mask.GetTensorTypeAndShapeInfo();
-        }
+      auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
+      auto mask_type =
+          static_cast<ONNXTensorElementDataType>(mask_info.GetElementType());
+      if (mask_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
+        attention_mask = CastMaskToInt64IfNeeded(std::move(attention_mask), allocator_);
+        mask_info = attention_mask.GetTensorTypeAndShapeInfo();
+      }
 
-        auto mask_shape = mask_info.GetShape();
-        if (mask_shape.size() == 2 && mask_shape[1] > max_total_len_) {
-          // Truncate attention_mask if it exceeds max_total_len
-          attention_mask = NormalizeAttentionMask(std::move(attention_mask),
-                                                  max_total_len_, allocator_);
-        }
+      auto mask_shape = mask_info.GetShape();
+      if (mask_shape.size() == 2 && mask_shape[1] > max_total_len_) {
+        // Truncate attention_mask if it exceeds max_total_len
+        attention_mask = NormalizeAttentionMask(std::move(attention_mask),
+                                                max_total_len_, allocator_);
       }
     }
 
@@ -866,25 +823,19 @@ class OfflineFunASRNanoModel::Impl {
     return {std::move(logits), std::move(kv_outputs)};
   }
 
-  // Apply KV-delta in-place to the fixed cache.
-  // For KV-delta models: copy key_delta/value_delta into cache_key/value at positions [pos0:pos0+S)
+  // Apply KV delta in-place to the KV cache.
+  // Copy key_delta/value_delta into cache_key/value at positions [pos0:pos0+S)
   void ApplyKvDeltaInplace(std::vector<std::pair<Ort::Value, Ort::Value>> *cache_kv,
                           const std::vector<std::pair<Ort::Value, Ort::Value>> &kv_delta,
                           const Ort::Value &cache_position) const {
-    if (!is_kv_delta_model_) {
-      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace called but is_kv_delta_model_=0");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
     if (!cache_kv || cache_kv->size() != static_cast<size_t>(num_layers_) ||
         kv_delta.size() != static_cast<size_t>(num_layers_)) {
-      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: invalid kv sizes: cache=%d delta=%d",
-                       static_cast<int>(cache_kv ? cache_kv->size() : 0),
-                       static_cast<int>(kv_delta.size()));
+      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: invalid kv sizes: cache=%zu delta=%zu",
+                       cache_kv ? cache_kv->size() : 0, kv_delta.size());
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // cache_position: [S], only first element is used as pos0 (contiguous write)
+    // cache_position: [S], first element is pos0 (contiguous write)
     auto pos_info = cache_position.GetTensorTypeAndShapeInfo();
     auto pos_shape = pos_info.GetShape();
     int64_t S = pos_shape.empty() ? 0 : pos_shape[0];
@@ -900,13 +851,10 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0 < 0 (%lld)", static_cast<long long>(pos0));
       SHERPA_ONNX_EXIT(-1);
     }
-
     if (pos0 + S > max_total_len_) {
-      SHERPA_ONNX_LOGE(
-          "ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%lld + %ld > %d), "
-          "clamping S",
-          static_cast<long long>(pos0), static_cast<long>(S), max_total_len_);
-      S = max_total_len_ - static_cast<int64_t>(pos0);
+      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%lld + %lld > %d), clamping S",
+                       static_cast<long long>(pos0), static_cast<long long>(S), max_total_len_);
+      S = max_total_len_ - pos0;
       if (S <= 0) return;
     }
 
@@ -1012,6 +960,21 @@ class OfflineFunASRNanoModel::Impl {
   bool IsCpuProvider() const { return is_cpu_provider_; }
 
  private:
+  void CheckFp16OnCuda() {
+    if (use_cuda_iobinding_) {
+      Ort::ModelMetadata meta_data = llm_sess_->GetModelMetadata();
+      Ort::AllocatorWithDefaultOptions allocator;
+      auto quant_type = LookupCustomModelMetaData(meta_data, "quantization_type", allocator);
+
+      if (!quant_type.empty() && quant_type == "fp16") {
+        SHERPA_ONNX_LOGE(
+            "fp16 LLM models are not supported on CUDA yet. Please use "
+            "fp32/int8 models.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+    }
+  }
+
   void InitEncoderAdaptor(const std::string &model_path) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_encoder_);
@@ -1130,18 +1093,18 @@ class OfflineFunASRNanoModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Detect KV-delta model type 
+    // Detect KV delta model type (model_type metadata should contain "kv_delta")
     auto model_type_value =
         LookupCustomModelMetaData(meta_data, "model_type", allocator);
-    bool is_kv_delta_model = (!model_type_value.empty() &&
-                              model_type_value.find("kv_delta") != std::string::npos);
-    is_kv_delta_model_ = is_kv_delta_model;
+    is_kv_delta_model_ = (!model_type_value.empty() &&
+                          model_type_value.find("kv_delta") != std::string::npos);
 
-    if (!is_kv_delta_model) {
-      SHERPA_ONNX_LOGE("Only KV-delta models are supported, but model_type does not contain 'kv_delta'");
+    if (!is_kv_delta_model_) {
+      SHERPA_ONNX_LOGE("Only KV delta models are supported, but model_type does not contain 'kv_delta'");
       SHERPA_ONNX_EXIT(-1);
     }
 
+    // Validate input layout: 0 embeds, 1 attention_mask, 2 cache_position, 3+ KV cache
     if (llm_input_names_.size() < 3u) {
       SHERPA_ONNX_LOGE("LLM model inputs must be >=3 (embeds,mask,cache_position)");
       SHERPA_ONNX_EXIT(-1);
@@ -1261,7 +1224,7 @@ class OfflineFunASRNanoModel::Impl {
   ONNXTensorElementDataType kv_in_type_ = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
   ONNXTensorElementDataType kv_in_type_v_ = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
 
-  // Input indices for unified static-KV LLM.
+  // Input indices for KV cache LLM.
   size_t cache_position_input_index_ = 2;
   size_t past_kv_input_start_index_ = 3;
 
@@ -1296,8 +1259,8 @@ OfflineFunASRNanoModel::ForwardLLM(
 }
 
 std::vector<std::pair<Ort::Value, Ort::Value>>
-OfflineFunASRNanoModel::CreateEmptyKVCache(int64_t batch, int64_t past_len) {
-  return impl_->CreateEmptyKVCache(batch, past_len);
+OfflineFunASRNanoModel::CreateEmptyKVCache(int64_t batch) {
+  return impl_->CreateEmptyKVCache(batch);
 }
 
 void OfflineFunASRNanoModel::ApplyKvDeltaInplace(

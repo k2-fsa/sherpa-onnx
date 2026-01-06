@@ -33,9 +33,8 @@ namespace sherpa_onnx {
 
 namespace {
 // Build cache_position tensor from attention_mask.
-// For KV-delta models: creates a [S] int64_t tensor where the first element
-// is the starting position (pos0) for writing KV deltas.
-// The remaining elements are consecutive positions [pos0, pos0+1, ..., pos0+S-1].
+// Creates a [S] int64_t tensor where the first element is the starting position (pos0)
+// for writing KV deltas. The remaining elements are consecutive positions [pos0, pos0+1, ..., pos0+S-1].
 // For prefill: pos0 = 0, S = context_len
 // For decode: pos0 = valid_len - 1, S = 1
 static Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
@@ -336,21 +335,16 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       BuildSourceIds(system_prompt, user_prompt, audio_token_len, fbank_beg_idx, fake_token_len);
   int32_t context_len = static_cast<int32_t>(source_ids.size());
 
-  // For KV-delta models: this is a static cache buffer [B, max_total_len, kv_h, hd]
-  // that stores the accumulated KV cache. Model outputs are deltas that get applied in-place.
+  // Create KV cache buffer [B, max_total_len, kv_h, hd].
+  // This stores the accumulated KV cache. Model outputs are deltas that get applied in-place.
   std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
-      model_->CreateEmptyKVCache(1, 0);
-  if (cache_kv.empty()) {
-    SHERPA_ONNX_LOGE("CreateEmptyKVCache returned empty");
-    result.text = "";
-    return result;
-  }
-  int32_t max_seq_len = model_->GetMaxTotalLen();
-  if (max_seq_len <= 0) {
-    // Fallback to default capacity.
-    max_seq_len = 512;
-  }
-
+      model_->CreateEmptyKVCache(1);
+    int32_t max_seq_len = model_->GetMaxTotalLen();
+    if (max_seq_len <= 0) {
+      SHERPA_ONNX_LOGE("Invalid max_seq_len=%d", max_seq_len);
+      result.text = "";
+      return result;
+    }
 
   // If context exceeds KV capacity: prioritize truncating audio placeholders
   // (keep prompt scaffold intact).
@@ -493,7 +487,8 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     if (is_first_step) {
       // Prefill: seq = context_len, mask_len = context_len.
       if (config_.model_config.debug) {
-        SHERPA_ONNX_LOGE("GenerateText: starting prefill with context_len=%d, inputs_embeds_fp32.size()=%zu", context_len, inputs_embeds_fp32.size());
+        SHERPA_ONNX_LOGE("GenerateText: starting prefill with context_len=%d, inputs_embeds_fp32.size()=%zu",
+           context_len, inputs_embeds_fp32.size());
       }
 
       std::array<int64_t, 3> embeds_shape{1, context_len, hidden_size};
@@ -519,8 +514,8 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       logits = std::move(tmp.first);
       auto kv_outputs = std::move(tmp.second);
 
-      // KV-delta model: apply KV deltas to fixed cache buffer in-place
-      // kv_outputs contains deltas that update cache_kv at positions specified by cache_position
+      // Apply KV deltas to cache buffer in-place.
+      // kv_outputs contains deltas that update cache_kv at positions specified by cache_position.
       model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
 
     } else {
@@ -553,7 +548,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
           static_cast<size_t>(hidden_size),
           embeds_shape.data(), embeds_shape.size());
 
-      // Critical: mask_len must equal kv_seq_len (= past + current).
+      // mask_len must equal kv_seq_len (= past + current).
       // Use pre-allocated attention_mask buffer (first valid_len elements)
       std::array<int64_t, 2> mask_shape{1, valid_len};
       Ort::Value attention_mask_tensor = Ort::Value::CreateTensor<int64_t>(
@@ -570,15 +565,14 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       logits = std::move(tmp.first);
       auto kv_outputs = std::move(tmp.second);
 
-      // kv_outputs contains deltas that update cache_kv at positions specified by cache_position
+      // Apply KV deltas to cache buffer in-place.
       model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
     }
 
     auto log_info = logits.GetTensorTypeAndShapeInfo();
     auto log_shape = log_info.GetShape();
 
-    // logits are usually [B, S, V]. For unified prefill/decode graphs, S can be 1
-    // even during the "prefill" call. Always pick the last available step.
+    // logits are [B, S, V]. Always pick the last available step.
     if (log_shape.size() < 3) {
       SHERPA_ONNX_LOGE("Unexpected logits rank=%zu", log_shape.size());
       result.text = "";

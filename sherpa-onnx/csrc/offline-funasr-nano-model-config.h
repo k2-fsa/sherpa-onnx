@@ -15,14 +15,8 @@ struct OfflineFunASRNanoModelConfig {
   // Path to encoder_adaptor.onnx
   std::string encoder_adaptor;
 
-  // Path to llm.onnx (unified prefill+decode KV cache model)
+  // Path to llm.onnx (KV cache model)
   std::string llm;
-
-  // Path to llm_prefill.onnx (deprecated, use llm instead)
-  std::string llm_prefill;
-
-  // Path to llm_decode.onnx (deprecated, use llm instead)
-  std::string llm_decode;
 
   // Path to embedding.onnx
   std::string embedding;

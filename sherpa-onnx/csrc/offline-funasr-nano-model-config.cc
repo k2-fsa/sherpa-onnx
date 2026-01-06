@@ -16,13 +16,7 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
                "Path to encoder_adaptor.onnx for FunASR-nano");
 
   po->Register("funasr-nano-llm", &llm,
-               "Path to llm.onnx for FunASR-nano (unified KV cache mode)");
-
-  po->Register("funasr-nano-llm-prefill", &llm_prefill,
-               "Path to llm_prefill.onnx for FunASR-nano (deprecated, use --funasr-nano-llm)");
-
-  po->Register("funasr-nano-llm-decode", &llm_decode,
-               "Path to llm_decode.onnx for FunASR-nano (deprecated, use --funasr-nano-llm)");
+               "Path to llm.onnx for FunASR-nano (KV cache mode)");
 
   po->Register("funasr-nano-embedding", &embedding,
                "Path to embedding.onnx for FunASR-nano");
@@ -69,10 +63,6 @@ bool OfflineFunASRNanoModelConfig::Validate() const {
   if (!FileExists(llm)) {
     SHERPA_ONNX_LOGE("--funasr-nano-llm: '%s' does not exist", llm.c_str());
     return false;
-  }
-
-  if (!llm_prefill.empty() || !llm_decode.empty()) {
-    SHERPA_ONNX_LOGE("--funasr-nano-llm-prefill and --funasr-nano-llm-decode are deprecated, use --funasr-nano-llm instead");
   }
 
   if (tokenizer.empty()) {

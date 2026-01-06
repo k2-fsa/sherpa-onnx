@@ -286,8 +286,6 @@ struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
 struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   std::string encoder_adaptor;
   std::string llm;
-  std::string llm_prefill;
-  std::string llm_decode;
   std::string embedding;
   std::string tokenizer;
   std::string system_prompt = "You are a helpful assistant.";

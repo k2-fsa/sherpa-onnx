@@ -316,8 +316,6 @@ class OfflineRecognizer(object):
         temperature: float = 1e-6,
         top_p: float = 0.8,
         seed: int = 42,
-        llm_prefill: str = "",
-        llm_decode: str = "",
     ):
         """
         Create an offline recognizer for FunASR-nano models.
@@ -326,7 +324,7 @@ class OfflineRecognizer(object):
           encoder_adaptor:
             Path to ``encoder_adaptor.onnx``.
           llm:
-            Path to ``llm.onnx`` (unified KV cache model).
+            Path to ``llm.onnx`` (KV cache model).
           embedding:
             Path to ``embedding.onnx``.
           tokenizer:
@@ -355,23 +353,12 @@ class OfflineRecognizer(object):
             Top-p (nucleus) sampling threshold.
           seed:
             Random seed.
-          llm_prefill:
-            (Deprecated) Path to ``llm_prefill.onnx``. Use ``llm`` instead.
-          llm_decode:
-            (Deprecated) Path to ``llm_decode.onnx``. Use ``llm`` instead.
         """
         self = cls.__new__(cls)
         # Create OfflineFunASRNanoModelConfig and set attributes
         funasr_nano_config = OfflineFunASRNanoModelConfig()
         funasr_nano_config.encoder_adaptor = encoder_adaptor
         funasr_nano_config.llm = llm
-        if llm_prefill or llm_decode:
-            import warnings
-            warnings.warn(
-                "llm_prefill and llm_decode are deprecated. Use llm instead.",
-                DeprecationWarning,
-                stacklevel=2
-            )
         funasr_nano_config.embedding = embedding
         funasr_nano_config.tokenizer = tokenizer
         funasr_nano_config.system_prompt = system_prompt

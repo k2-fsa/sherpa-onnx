@@ -31,7 +31,7 @@ class OfflineFunASRNanoModel {
    */
   Ort::Value ForwardEncoderAdaptor(Ort::Value features);
 
-  /** Run the unified LLM model (KV cache mode).
+  /** Run the LLM model (KV cache mode).
    *
    * @param inputs_embeds  A tensor of shape (N, T, hidden_size), float32.
    * @param attention_mask  A tensor of shape (N, T) containing attention mask, int64.
@@ -46,17 +46,15 @@ class OfflineFunASRNanoModel {
               const Ort::Value &cache_position,
               const std::vector<std::pair<Ort::Value, Ort::Value>> &cache_kv);
   
-  /** Create fixed-size KV cache for both legacy and KV-delta models.
+  /** Create fixed-size KV cache buffer.
    *
    * @param batch  Batch size (usually 1).
-   * @param past_len  For legacy models: past sequence length (0 for first prefill).
-   *                  For KV-delta models: ignored, uses max_total_len.
-   * @return Return vector of (key, value) pairs with fixed cache dimensions.
+   * @return Return vector of (key, value) pairs with fixed cache dimensions [B, max_total_len, kv_h, hd].
    */
   std::vector<std::pair<Ort::Value, Ort::Value>>
-  CreateEmptyKVCache(int64_t batch, int64_t past_len);
+  CreateEmptyKVCache(int64_t batch);
 
-  /** Apply KV-delta in-place to fixed cache (for KV-delta models).
+  /** Apply KV delta in-place to KV cache buffer.
    *
    * @param cache_kv  Fixed-size KV cache to update, vector of (key, value) pairs.
    * @param kv_delta  KV deltas from current step, vector of (key_delta, value_delta) pairs.
