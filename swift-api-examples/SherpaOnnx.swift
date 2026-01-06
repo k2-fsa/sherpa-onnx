@@ -486,6 +486,34 @@ func sherpaOnnxOfflineLMConfig(
   )
 }
 
+func sherpaOnnxOfflineFunASRNanoModelConfig(
+  encoderAdaptor: String = "",
+  llmPrefill: String = "",
+  llmDecode: String = "",
+  embedding: String = "",
+  tokenizer: String = "",
+  systemPrompt: String = "You are a helpful assistant.",
+  userPrompt: String = "语音转写：",
+  maxNewTokens: Int = 512,
+  temperature: Float = 0.3,
+  topP: Float = 0.8,
+  seed: Int = 42
+) -> SherpaOnnxOfflineFunASRNanoModelConfig {
+  return SherpaOnnxOfflineFunASRNanoModelConfig(
+    encoder_adaptor: toCPointer(encoderAdaptor),
+    llm_prefill: toCPointer(llmPrefill),
+    llm_decode: toCPointer(llmDecode),
+    embedding: toCPointer(embedding),
+    tokenizer: toCPointer(tokenizer),
+    system_prompt: toCPointer(systemPrompt),
+    user_prompt: toCPointer(userPrompt),
+    max_new_tokens: Int32(maxNewTokens),
+    temperature: temperature,
+    top_p: topP,
+    seed: Int32(seed)
+  )
+}
+
 func sherpaOnnxOfflineModelConfig(
   tokens: String,
   transducer: SherpaOnnxOfflineTransducerModelConfig = sherpaOnnxOfflineTransducerModelConfig(),
@@ -511,6 +539,8 @@ func sherpaOnnxOfflineModelConfig(
     sherpaOnnxOfflineWenetCtcModelConfig(),
   omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig =
     sherpaOnnxOfflineOmnilingualAsrCtcModelConfig(),
+  funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
+    sherpaOnnxOfflineFunASRNanoModelConfig(),
   medasr: SherpaOnnxOfflineMedAsrCtcModelConfig =
     sherpaOnnxOfflineMedAsrCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
@@ -536,6 +566,7 @@ func sherpaOnnxOfflineModelConfig(
     canary: canary,
     wenet_ctc: wenetCtc,
     omnilingual: omnilingual,
+    funasr_nano: funasrNano,
     medasr: medasr
   )
 }
