@@ -22,11 +22,11 @@ set(onnxruntime_HASH "SHA256=77ea3532dfdd8d5c66918429f7eacd80c1fea834941a14746ad
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-glibc2_17-Release-1.23.2-patched.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-glibc2_17-Release-1.23.2-patched.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-glibc2_17-Release-1.23.2-patched.zip
-  /tmp/onnxruntime-linux-x64-glibc2_17-Release-1.23.2-patched.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-glibc2_17-Release-1.23.2-patched.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-glibc2_17-Release-1.23.2.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-glibc2_17-Release-1.23.2.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-glibc2_17-Release-1.23.2.zip
+  /tmp/onnxruntime-linux-x64-glibc2_17-Release-1.23.2.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-glibc2_17-Release-1.23.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
