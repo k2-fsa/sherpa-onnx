@@ -13,18 +13,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-osx-universal2-static_lib-1.17.1.zip")
-set(onnxruntime_URL2  "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-universal2-static_lib-1.17.1.zip")
-set(onnxruntime_HASH "SHA256=45599dbd2fb9dd52d6505930c0e82ca165391e222a68f5606b9ea9d4f3922e15")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-osx-universal2-static_lib-1.23.2.zip")
+set(onnxruntime_URL2  "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-osx-universal2-static_lib-1.23.2.zip")
+set(onnxruntime_HASH "SHA256=00816fda16166859fed41dacb786d3dfc3323bbc1a8fa57a235922f597953986")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-universal2-static_lib-1.17.1.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-universal2-static_lib-1.17.1.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-osx-universal2-static_lib-1.17.1.zip
-  /tmp/onnxruntime-osx-universal2-static_lib-1.17.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-osx-universal2-static_lib-1.23.2.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-universal2-static_lib-1.23.2.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-osx-universal2-static_lib-1.23.2.zip
+  /tmp/onnxruntime-osx-universal2-static_lib-1.23.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -60,3 +60,6 @@ set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+
+# disable coreml when using static onnxruntime lib
+add_definitions(-DSHERPA_ONNX_DISABLE_COREML)

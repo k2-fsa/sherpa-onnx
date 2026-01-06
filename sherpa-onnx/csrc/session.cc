@@ -12,7 +12,8 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
-#if defined(__APPLE__) && (ORT_API_VERSION >= 15)
+#if defined(__APPLE__) && (ORT_API_VERSION >= 15) && \
+    !defined(SHERPA_ONNX_DISABLE_COREML)
 #include "coreml_provider_factory.h"  // NOLINT
 #endif
 
@@ -204,7 +205,8 @@ Ort::SessionOptions GetSessionOptionsImpl(
       break;
     }
     case Provider::kCoreML: {
-#if defined(__APPLE__) && (ORT_API_VERSION >= 15)
+#if defined(__APPLE__) && (ORT_API_VERSION >= 15) && \
+    !defined(SHERPA_ONNX_DISABLE_COREML)
       uint32_t coreml_flags = 0;
       (void)OrtSessionOptionsAppendExecutionProvider_CoreML(sess_opts,
                                                             coreml_flags);

@@ -59,3 +59,6 @@ set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+
+# disable coreml when using static onnxruntime lib
+add_definitions(-DSHERPA_ONNX_DISABLE_COREML)

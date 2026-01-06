@@ -14,7 +14,7 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-osx-arm64-static_lib-1.23.2.zip")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-osx-arm64-static_lib-1.23.2.zip")
-set(onnxruntime_HASH "SHA256=99df836fc59fdfe5f00c1009bc5b894b925d007bde2003c05d8a1feac791455e")
+set(onnxruntime_HASH "SHA256=febeb7116f075409c554434a317cd51a2efb26abbf364c2ed77191f728a56633")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
@@ -59,3 +59,6 @@ set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+
+# disable coreml when using static onnxruntime lib
+add_definitions(-DSHERPA_ONNX_DISABLE_COREML)

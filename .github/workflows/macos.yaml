@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - use-onnxruntime-v1.23.2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -58,15 +57,15 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }} ${{ matrix.arch }}
+    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }} ${{ matrix.os }} ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-15-intel]
+        os: [macos-latest]
         build_type: [Release, Debug]
         lib_type: [static, shared]
         with_tts: [ON, OFF]
-        arch: ["arm64", "x86_64", "arm64;x86_64"]
+        arch: ["arm64;x86_64"]
 
     steps:
       - uses: actions/checkout@v4
