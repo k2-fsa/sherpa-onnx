@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - use-onnxruntime-v1.23.2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -66,7 +67,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         build_type: [Release, Debug]
-        shared_lib: [ON, OFF]
+        # shared_lib: [ON, OFF]
+        shared_lib: [OFF]
         with_tts: [ON, OFF]
 
     steps:
@@ -97,6 +99,30 @@ jobs:
             run: |
               uname -a
               gcc --version
+
+              # use gcc 11. the default is gcc 10
+
+              # See https://github.com/nealef/clefos/issues/9
+              echo "multilib_policy=best" >> /etc/yum.conf
+              echo "skip_missing_names_on_install=False" >> /etc/yum.conf
+              sed -i '/^override_install_langs=/d' /etc/yum.conf
+              yum -y update
+              yum -y install yum-utils curl
+              yum-config-manager --enable extras
+              yum -y install centos-release-scl-rh
+              yum -y install devtoolset-11-binutils devtoolset-11-gcc devtoolset-11-gcc-c++ devtoolset-11-gcc-gfortran
+
+              # see https://stackoverflow.com/questions/72904802/can-not-find-required-gcc-version-after-devtoolset-installation
+              ls -lh /opt/rh/devtoolset-11
+
+              source /opt/rh/devtoolset-11/enable
+
+              echo 'which gcc'
+              which gcc
+
+              echo 'gcc --version'
+              gcc --version
+
               cmake --version
               cat /etc/*release
               id
