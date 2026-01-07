@@ -165,3 +165,6 @@ build-riscv64-linux-gnu-spacemit/
 spacemit-toolchain*
 sherpa-onnx-qnn-*
 matcha-icefall-*
+sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+*.raw
+*-input-list.txt

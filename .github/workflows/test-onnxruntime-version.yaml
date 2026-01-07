@@ -1,0 +1,290 @@
+name: test-onnxruntime-version
+
+on:
+  push:
+    branches:
+      - master
+      - test-onnxruntime
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-onnxrntime-version-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: ${{ matrix.os }}
+    name: onnxruntime ${{ matrix.version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        version: ["1.11.0", "1.11.1", "1.12.0", "1.12.1", "1.13.1", "1.14.0", "1.14.1", "1.15.0", "1.15.1", "1.16.1", "1.16.2", "1.17.0", "1.17.1", "1.17.3", "1.18.0", "1.18.1", "1.19.0", "1.19.2", "1.20.0", "1.20.1", "1.20.2", "1.21.0", "1.21.1", "1.22.0", "1.22.1", "1.22.2", "1.23.0", "1.23.1", "1.23.2"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-onnxruntime-${{ matrix.version }}
+
+      - name: Download onnxruntime ${{ matrix.version }}
+        shell: bash
+        run: |
+          version=${{ matrix.version }}
+          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v${version}/onnxruntime-osx-universal2-${version}.tgz
+          tar xvf onnxruntime-osx-universal2-${version}.tgz
+          ls -lh onnxruntime-osx-universal2-${version}
+
+          ls -lh onnxruntime-osx-universal2-${version}
+          echo "---"
+          ls -lh onnxruntime-osx-universal2-${version}/include
+          echo "---"
+          ls -lh onnxruntime-osx-universal2-${version}/lib
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          version=${{ matrix.version }}
+          onnxruntime_dir=$PWD/onnxruntime-osx-universal2-${version}
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$onnxruntime_dir/lib/
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$onnxruntime_dir/include/
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for macos
+        shell: bash
+        run: |
+          version=${{ matrix.version }}
+          onnxruntime_dir=$PWD/onnxruntime-osx-universal2-${version}
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$onnxruntime_dir/lib/
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$onnxruntime_dir/include/
+
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file ./bin/sherpa-onnx
+
+          rm -fv ./install/include/cargs.h
+          rm -fv ./install/lib/cargs.h
+          rm -fv ./install/lib/libcargs.dylib
+          rm -fv ./install/lib/libcargs.a
+          rm -rfv ./install/lib/pkgconfig
+
+      - name: Display dependencies of sherpa-onnx for macos
+        shell: bash
+        run: |
+          file bin/sherpa-onnx
+          otool -L build/bin/sherpa-onnx
+          otool -l build/bin/sherpa-onnx
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-onnxruntime-${{ matrix.version }}-osx-universal2-shared
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          mkdir $dst/lib
+          cp -a build/install/lib/*.dylib* $dst/lib/
+          cp -a build/install/include $dst/
+
+          brew install tree
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*osx-universal2*.tar.bz2
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+
+      - name: Test offline speech denoiser
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-denoiser
+
+          .github/scripts/test-offline-speech-denoiser.sh
+
+      - name: Test offline TTS
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+
+      - name: Test offline Moonshine
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-moonshine.sh
+
+      - name: Test C++ API
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api
+          export CXX_WHISPER_EXE=whisper-cxx-api
+          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api
+
+          .github/scripts/test-cxx-api.sh
+          du -h -d1 .
+
+      - name: Test offline speaker diarization
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-speaker-diarization
+
+          .github/scripts/test-speaker-diarization.sh
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+
+      - name: Test online punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-online-punctuation
+
+          .github/scripts/test-online-punctuation.sh
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
+      - name: Test offline punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-punctuation
+
+          .github/scripts/test-offline-punctuation.sh
+
+      - name: Test C API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export SLID_EXE=spoken-language-identification-c-api
+          export SID_EXE=speaker-identification-c-api
+          export AT_EXE=audio-tagging-c-api
+          export PUNCT_EXE=add-punctuation-c-api
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test Audio tagging
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-audio-tagging
+
+          .github/scripts/test-audio-tagging.sh
+
+      - name: Test spoken language identification (C++ API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
+      - name: Test transducer kws
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-keyword-spotter
+
+          .github/scripts/test-kws.sh
+
+      - name: Test online paraformer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-paraformer.sh
+
+      - name: Test offline Whisper
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-whisper.sh
+
+      - name: Test online transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-transducer.sh
+
+      - name: Test online transducer (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=decode-file-c-api
+
+          .github/scripts/test-online-transducer.sh
+
+

@@ -139,6 +139,10 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-medasr-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-omnilingual-asr-ctc.sh
           rm -rf sherpa-onnx-*
           echo "---"

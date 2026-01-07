@@ -90,6 +90,9 @@ class OfflineDecodeFiles
     [Option("omnilingual-asr-ctc", Required = false, HelpText = "Path to model.onnx. Used only for Omnilingual ASR CTC models")]
     public string Omnilingual { get; set; } = string.Empty;
 
+    [Option("medasr", Required = false, HelpText = "Path to model.onnx. Used only for Google MedASR CTC models")]
+    public string MedAsr { get; set; } = string.Empty;
+
     [Option("sense-voice-model", Required = false, HelpText = "Path to model.onnx. Used only for SenseVoice CTC models")]
     public string SenseVoiceModel { get; set; } = string.Empty;
 
@@ -264,6 +267,10 @@ to download pre-trained Tdnn models.
     else if (!string.IsNullOrEmpty(options.Omnilingual))
     {
       config.ModelConfig.Omnilingual.Model = options.Omnilingual;
+    }
+    else if (!string.IsNullOrEmpty(options.MedAsr))
+    {
+      config.ModelConfig.MedAsr.Model = options.MedAsr;
     }
     else if (!string.IsNullOrEmpty(options.WhisperEncoder))
     {

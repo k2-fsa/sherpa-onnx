@@ -424,10 +424,6 @@ It uses Swift for iOS and Java for Android.
 Flet ASR/STT component based on sherpa-onnx.
 Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
-### [elderly-companion](https://github.com/SearocIsMe/elderly-companion)
-
-It uses sherpa-onnx's Python API for real-time speech recognition in ROS2 with RK NPU.
-
 ### [achatbot-go](https://github.com/ai-bot-pro/achatbot-go)
 
 a multimodal chatbot based on go with sherpa-onnx's speech lib api.

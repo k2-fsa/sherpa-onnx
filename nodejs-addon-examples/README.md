@@ -126,6 +126,7 @@ The following tables list the examples in this folder.
 |[./test_asr_non_streaming_nemo_ctc.js](./test_asr_non_streaming_nemo_ctc.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) CTC model with greedy search|
 |[./test_asr_non_streaming_wenet_ctc.js](./test_asr_non_streaming_wenet_ctc.js)|Non-streaming speech recognition from a file using a [u2pp_conformer_yue](https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue) CTC model with greedy search|
 |[./test_asr_non_streaming_omnilingual_asr_ctc.js](./test_asr_non_streaming_omnilingual_asr_ctc.js)|Non-streaming speech recognition from a file using a [Omnilingual-ASR](https://github.com/facebookresearch/omnilingual-asr) CTC model with greedy search|
+|[./test_asr_non_streaming_medasr_ctc.js](./test_asr_non_streaming_medasr_ctc.js)|Non-streaming speech recognition from a file using a [Google MedASR](https://github.com/google-health/medasr) CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_canary.js](./test_asr_non_streaming_nemo_canary.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [Canary](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french) model|
 |[./test_asr_non_streaming_zipformer_ctc.js](./test_asr_non_streaming_zipformer_ctc.js)|Non-streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_parakeet_tdt_v2.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with greedy search|
@@ -426,6 +427,16 @@ node ./test_asr_non_streaming_nemo_ctc.js
 # To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
+```
+
+### Non-streaming speech recognition with Google MedASR CTC models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+
+node ./test_asr_non_streaming_medasr_ctc.js
 ```
 
 ### Non-streaming speech recognition with Omnilingual ASR CTC models

@@ -118,6 +118,10 @@ std::vector<CopyableOrtValue> Convert(std::vector<Ort::Value> values);
 
 std::vector<Ort::Value> Convert(std::vector<CopyableOrtValue> values);
 
+float HalfBitsToFloat(uint16_t h);
+
+uint16_t FloatToHalfBits(float f);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_

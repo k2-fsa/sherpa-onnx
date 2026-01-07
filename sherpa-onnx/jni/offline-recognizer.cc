@@ -258,6 +258,15 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               omnilingual_ctc_config_cls,
                               omnilingual_ctc_config);
 
+  // medasr ctc
+  fid = env->GetFieldID(model_config_cls, "medasr",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineMedAsrCtcModelConfig;");
+  jobject medasr_ctc_config = env->GetObjectField(model_config, fid);
+  jclass medasr_ctc_config_cls = env->GetObjectClass(medasr_ctc_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.medasr.model, model,
+                              medasr_ctc_config_cls, medasr_ctc_config);
+
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",
                         "Lcom/k2fsa/sherpa/onnx/OfflineCanaryModelConfig;");
