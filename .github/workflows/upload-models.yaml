@@ -24,6 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install ffmpeg
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Verify ffmpeg
+        shell: bash
+        run: |
+          ffmpeg -version
+
       - name: git config
         shell: bash
         run: |
@@ -34,17 +45,24 @@ jobs:
         if: false
         uses: mxschmitt/action-tmate@v3
 
-      - name: Collect funasr-nano with LLM int8
+      - name: Collect funasr-nano with LLM
         if: false
         shell: bash
         run: |
           git lfs install
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30
-          d=sherpa-onnx-funasr-nano-int8-2025-12-30
-          rm -rf $d/.git
-          tar cjfv $d.tar.bz2 $d
-          ls -lh $d.tar.bz2
-          ls -lh $d
+          models=(
+            sherpa-onnx-funasr-nano-int8-2025-12-30
+            sherpa-onnx-funasr-nano-fp16-2025-12-30
+            sherpa-onnx-funasr-nano-2025-12-30
+          )
+          for d in ${models[@]}; do
+            git clone https://huggingface.co/csukuangfj/$d
+            rm -rf $d/.git
+            tar cjfv $d.tar.bz2 $d
+            ls -lh $d.tar.bz2
+            ls -lh $d
+            rm -rf $d
+          done
 
       - name: Collect funasr-nano with LLM int8
         if: false
@@ -95,6 +113,13 @@ jobs:
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/yuenan.wav
 
           mv yuenan.wav vietnamese.wav
+
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
 
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
@@ -196,6 +221,13 @@ jobs:
 
           mv yuenan.wav vietnamese.wav
 
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
+
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
           https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
@@ -295,6 +327,13 @@ jobs:
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/yuenan.wav
 
           mv yuenan.wav vietnamese.wav
+
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
 
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
@@ -762,7 +801,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface
-        if: true
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
