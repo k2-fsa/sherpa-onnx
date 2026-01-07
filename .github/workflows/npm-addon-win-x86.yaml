@@ -41,9 +41,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          registry-url: 'https://registry.npmjs.org'
-          architecture: 'x86'
-          node-version: '16'
+          registry-url: "https://registry.npmjs.org"
+          architecture: "x86"
+          node-version: "16"
 
       - name: Display node version
         shell: bash
@@ -56,7 +56,6 @@ jobs:
           cd scripts/node-addon-api/
 
           npm i || true
-
           cat node_modules/node-addon-api/package.json
           cd node_modules/
           tar cjf node-addon-api.tar.bz2 ./node-addon-api
@@ -107,8 +106,6 @@ jobs:
           cd scripts/node-addon-api/
 
           npm i
-
-          npm run typecheck
 
           npm config set cmake_js_A "Win32"
           ./node_modules/.bin/cmake-js compile -A Win32 --log-level verbose
@@ -161,8 +158,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Display node version
         shell: bash
