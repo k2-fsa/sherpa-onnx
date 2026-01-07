@@ -47,22 +47,22 @@ jobs:
           ls -lh $d
 
       - name: Collect funasr-nano with LLM int8
-        if: false
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-int8-2025-12-30
           mkdir $d
           pushd $d
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/llm_int8/llm_prefill.int8.onnx
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/llm_int8/llm_decode.int8.onnx
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/embedding.int8.onnx
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/encoder_adaptor.int8.onnx
+
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_int8/llm.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/embedding.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/encoder_adaptor.int8.onnx
 
           mkdir Qwen3-0.6B
           cd Qwen3-0.6B
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/merges.txt
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/tokenizer.json
-          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-V2/resolve/master/Qwen3-0.6B/vocab.json
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/merges.txt
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/tokenizer.json
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/vocab.json
 
           ls -lh
           cd ..
@@ -79,7 +79,12 @@ jobs:
 
           # Introduction
           Models in this directory are downloaded from
-          https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx-v2
+          https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/FunASR-nano-onnx
+
+          The author is https://github.com/Wasser1462
           EOF
 
           popd
@@ -502,7 +507,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -527,6 +532,9 @@ jobs:
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface
               git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+
+              rm huggingface/*.onnx
+
               cp -av $d/* huggingface
 
               pushd huggingface
