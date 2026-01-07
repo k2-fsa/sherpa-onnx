@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright    2025  Posit Software, PBC
-# flake8: noqa
 
 """
 Find alignment heads for a Whisper model by analyzing cross-attention patterns.
@@ -45,24 +44,6 @@ def get_args():
     parser.add_argument("--audio", type=str, required=True, help="Path to audio file")
     parser.add_argument("--top-k", type=int, default=10, help="Number of top heads to report")
     return parser.parse_args()
-
-
-class AttentionCaptureHook:
-    """Hook to capture cross-attention weights from all layers/heads."""
-
-    def __init__(self):
-        self.attention_weights: Dict[int, List[torch.Tensor]] = defaultdict(list)
-        self.handles = []
-
-    def hook_fn(self, layer_idx: int):
-        def fn(module, input, output):
-            # output is (attn_output, attn_weights) when output_attentions=True
-            # But whisper doesn't use output_attentions, so we need to compute manually
-            pass
-        return fn
-
-    def clear(self):
-        self.attention_weights.clear()
 
 
 def compute_cross_attention_weights(
@@ -240,11 +221,12 @@ def compute_diagonal_score(attention: np.ndarray) -> float:
 def analyze_attention_heads(
     attention_matrices: Dict[Tuple[int, int], np.ndarray],
     top_k: int = 10,
-) -> List[Tuple[Tuple[int, int], float, float]]:
+) -> List[Tuple[Tuple[int, int], float, float, float]]:
     """
     Analyze all attention heads and rank them by alignment quality.
 
-    Returns list of ((layer, head), monotonicity_score, diagonal_score) sorted by combined score.
+    Returns list of ((layer, head), monotonicity_score, diagonal_score, combined_score)
+    sorted by combined score descending.
     """
     results = []
 
@@ -304,7 +286,6 @@ def main():
     if len(good_heads) < 6:
         good_heads = [(l, h) for (l, h), m, d, c in top_heads[:6]]
 
-    model_name = args.model.replace("-", "_").replace(".", "_")
     print(f'"{args.model}": {good_heads},')
 
 

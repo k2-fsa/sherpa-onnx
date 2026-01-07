@@ -778,7 +778,7 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     char *segment_texts = new char[total_length]{};
     char **segment_texts_temp = new char *[segment_count];
     int32_t pos = 0;
-    for (int32_t i = 0; i < segment_count; ++i) {
+    for (int32_t i = 0; i < static_cast<int32_t>(segment_count); ++i) {
       segment_texts_temp[i] = segment_texts + pos;
       memcpy(segment_texts + pos, result.segment_texts[i].c_str(),
              result.segment_texts[i].size());
