@@ -35,7 +35,7 @@ jobs:
         uses: mxschmitt/action-tmate@v3
 
       - name: Collect funasr-nano with LLM int8
-        if: true
+        if: false
         shell: bash
         run: |
           git lfs install
