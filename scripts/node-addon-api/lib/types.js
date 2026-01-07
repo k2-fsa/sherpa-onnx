@@ -187,6 +187,76 @@
  */
 
 /**
+ * Offline TTS configuration (partial, commonly used props).
+ * @typedef {Object} OfflineTtsConfig
+ * @property {Object} [model]
+ * @property {number} [maxNumSentences]
+ * @property {number} [silenceScale]
+ * @property {number} [numThreads]
+ * @property {string} [provider]
+ */
+
+/**
+ * Offline Speech Denoiser configuration (partial).
+ * @typedef {Object} OfflineSpeechDenoiserConfig
+ * @property {Object} [model]
+ * @property {number} [numThreads]
+ * @property {string} [provider]
+ */
+
+/**
+ * Offline Speaker Diarization configuration (partial).
+ * @typedef {Object} OfflineSpeakerDiarizationConfig
+ * @property {Object} [segmentation]
+ * @property {Object} [embedding]
+ * @property {Object} [clustering]
+ * @property {number} [minDurationOn]
+ * @property {number} [minDurationOff]
+ */
+
+/**
+ * Fast clustering configuration used by diarization.
+ * @typedef {Object} FastClusteringConfig
+ * @property {number} [numClusters]
+ * @property {number} [threshold]
+ */
+
+/**
+ * SpeakerEmbeddingManager add-multi flattened object
+ * @typedef {Object} SpeakerEmbeddingManagerAddListFlattenedObj
+ * @property {string} name
+ * @property {Float32Array} vv
+ * @property {number} n
+ */
+
+/**
+ * SpeakerEmbeddingManager search object
+ * @typedef {Object} SpeakerEmbeddingManagerSearchObj
+ * @property {Float32Array} v
+ * @property {number} threshold
+ */
+
+/**
+ * SpeakerEmbeddingManager verify object
+ * @typedef {Object} SpeakerEmbeddingManagerVerifyObj
+ * @property {string} name
+ * @property {Float32Array} v
+ * @property {number} threshold
+ */
+
+/**
+ * KeywordSpotter config (partial)
+ * @typedef {Object} KeywordSpotterConfig
+ * @property {FeatureConfig} [featConfig]
+ * @property {OfflineModelConfig} [modelConfig]
+ * @property {number} [maxActivePaths]
+ * @property {number} [numTrailingBlanks]
+ * @property {number} [keywordsScore]
+ * @property {number} [keywordsThreshold]
+ * @property {string} [keywordsFile]
+ */
+
+/**
  * Offline recognition result returned by `getOfflineStreamResultAsJson`.
  * See `OfflineRecognitionResult::AsJsonString()` in C++ for precise fields.
  * @typedef {Object} OfflineRecognizerResult

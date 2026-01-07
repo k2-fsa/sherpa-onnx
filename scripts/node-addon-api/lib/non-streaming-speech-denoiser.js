@@ -1,6 +1,12 @@
+/** @typedef {import('./types').OfflineSpeechDenoiserConfig} OfflineSpeechDenoiserConfig */
+/** @typedef {import('./types').GeneratedAudio} GeneratedAudio */
+
 const addon = require('./addon.js');
 
 class OfflineSpeechDenoiser {
+  /**
+   * @param {OfflineSpeechDenoiserConfig} config
+   */
   constructor(config) {
     this.handle = addon.createOfflineSpeechDenoiser(config);
     this.config = config;
@@ -9,14 +15,10 @@ class OfflineSpeechDenoiser {
         addon.offlineSpeechDenoiserGetSampleRateWrapper(this.handle);
   }
 
-  /*
-    obj is
-    {samples: samples, sampleRate: sampleRate, enableExternalBuffer: true}
-
-    samples is a float32 array containing samples in the range [-1, 1]
-    sampleRate is a number
-
-   return an object {samples: Float32Array, sampleRate: <a number>}
+  /**
+   * Run denoiser synchronously.
+   * @param {Object} obj - { samples: Float32Array, sampleRate: number, enableExternalBuffer?: boolean }
+   * @returns {GeneratedAudio}
    */
   run(obj) {
     return addon.offlineSpeechDenoiserRunWrapper(this.handle, obj);
@@ -25,4 +27,4 @@ class OfflineSpeechDenoiser {
 
 module.exports = {
   OfflineSpeechDenoiser,
-}
+} 

@@ -1,6 +1,12 @@
+/** @typedef {import('./types').OfflineSpeakerDiarizationConfig} OfflineSpeakerDiarizationConfig */
+/** @typedef {import('./types').SpeakerDiarizationSegment} SpeakerDiarizationSegment */
+
 const addon = require('./addon.js');
 
 class OfflineSpeakerDiarization {
+  /**
+   * @param {OfflineSpeakerDiarizationConfig} config
+   */
   constructor(config) {
     this.handle = addon.createOfflineSpeakerDiarization(config);
     this.config = config;
@@ -9,23 +15,17 @@ class OfflineSpeakerDiarization {
   }
 
   /**
-   * samples is a 1-d float32 array. Each element of the array should be
-   * in the range [-1, 1].
-   *
-   * We assume its sample rate equals to this.sampleRate.
-   *
-   * Returns an array of object, where an object is
-   *
-   *  {
-   *    "start": start_time_in_seconds,
-   *    "end": end_time_in_seconds,
-   *    "speaker": an_integer,
-   *  }
+   * @param {Float32Array} samples - 1-D float32 array in [-1, 1]
+   * @returns {SpeakerDiarizationSegment[]}
    */
   process(samples) {
     return addon.offlineSpeakerDiarizationProcess(this.handle, samples);
   }
 
+  /**
+   * Set clustering configuration.
+   * @param {{clustering: import('./types').FastClusteringConfig}} config
+   */
   setConfig(config) {
     addon.offlineSpeakerDiarizationSetConfig(this.handle, config);
     this.config.clustering = config.clustering;
@@ -34,4 +34,4 @@ class OfflineSpeakerDiarization {
 
 module.exports = {
   OfflineSpeakerDiarization,
-}
+} 
