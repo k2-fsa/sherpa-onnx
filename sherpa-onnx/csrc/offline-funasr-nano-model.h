@@ -95,16 +95,6 @@ class OfflineFunASRNanoModel {
    */
   int32_t LfrWindowShift() const;
 
-  /** Return the maximum total sequence length
-   */
-  int64_t MaxTotalLen() const;
-
-  // Unified LLM exported by Python may provide either cache_position or position_ids.
-  // If neither exists in the model, HasPositionInput() is false and PositionInputRank() returns 0.
-  // Rank is 1 (shape [S] / [1]) or 2 (shape [1,S] / [1,1]).
-  bool HasPositionInput() const;
-  int32_t PositionInputRank() const;
-
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;

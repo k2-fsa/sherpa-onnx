@@ -9,12 +9,12 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <climits>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -391,23 +391,7 @@ class OfflineFunASRNanoModel::Impl {
     SHERPA_ONNX_READ_META_DATA(hidden_size_, "llm_dim");
   }
 
-  void InitLLMFromMemory(void *model_data, size_t model_data_length) {
-    try {
-      llm_sess_ = std::make_unique<Ort::Session>(env_, model_data,
-                                                 model_data_length,
-                                                 sess_opts_llm_);
-    } catch (const Ort::Exception &e) {
-      SHERPA_ONNX_LOGE("InitLLMFromMemory: failed to create session: %s", e.what());
-      if (std::string(e.what()).find("external data") != std::string::npos ||
-          std::string(e.what()).find("External data") != std::string::npos) {
-        SHERPA_ONNX_LOGE(
-            "LLM model requires external data (.data file) but loaded from memory. "
-            "Please use fp16/int8 single-file model or load by file path instead.");
-        SHERPA_ONNX_EXIT(-1);
-      }
-      throw;
-    }
-
+  void SetupLlmFromSession() {
     GetInputNames(llm_sess_.get(), &llm_input_names_, &llm_input_names_ptr_);
     GetOutputNames(llm_sess_.get(), &llm_output_names_, &llm_output_names_ptr_);
 
@@ -544,6 +528,26 @@ class OfflineFunASRNanoModel::Impl {
 
     auto past_value_ti = llm_sess_->GetInputTypeInfo(past_kv_input_start_index_ + 1);
     past_value_shape_tpl_ = past_value_ti.GetTensorTypeAndShapeInfo().GetShape();
+  }
+
+  void InitLLMFromMemory(void *model_data, size_t model_data_length) {
+    try {
+      llm_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                 model_data_length,
+                                                 sess_opts_llm_);
+    } catch (const Ort::Exception &e) {
+      SHERPA_ONNX_LOGE("InitLLMFromMemory: failed to create session: %s", e.what());
+      if (std::string(e.what()).find("external data") != std::string::npos ||
+          std::string(e.what()).find("External data") != std::string::npos) {
+        SHERPA_ONNX_LOGE(
+            "LLM model requires external data (.data file) but loaded from memory. "
+            "Please use fp16/int8 single-file model or load by file path instead.");
+        SHERPA_ONNX_EXIT(-1);
+      }
+      throw;
+    }
+
+    SetupLlmFromSession();
   }
 
   void InitEmbeddingFromMemory(void *model_data, size_t model_data_length) {
@@ -883,6 +887,7 @@ class OfflineFunASRNanoModel::Impl {
           elem_bytes = 4;
           break;
         case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
           elem_bytes = 2;
           break;
         default:
@@ -1012,11 +1017,8 @@ class OfflineFunASRNanoModel::Impl {
 
     // Resolve absolute path for model file
     std::string abs_model_path = model_path;
-    if (!model_path.empty() && model_path[0] != '/') {
-      char abs_path_buf[PATH_MAX];
-      if (realpath(model_path.c_str(), abs_path_buf) != nullptr) {
-        abs_model_path = abs_path_buf;
-      }
+    if (!model_path.empty() && !std::filesystem::path(model_path).is_absolute()) {
+      abs_model_path = std::filesystem::absolute(model_path).string();
     }
 
     if (has_external_data) {
@@ -1033,123 +1035,7 @@ class OfflineFunASRNanoModel::Impl {
                                                  sess_opts_llm_);
     }
 
-    GetInputNames(llm_sess_.get(), &llm_input_names_, &llm_input_names_ptr_);
-    GetOutputNames(llm_sess_.get(), &llm_output_names_, &llm_output_names_ptr_);
-
-    llm_embeds_in_type_ = GetSessionInputElemType(llm_sess_.get(), 0);
-    if (llm_embeds_in_type_ != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-      SHERPA_ONNX_LOGE("LLM inputs_embeds must be float32, got elem_type=%d",
-                       (int)llm_embeds_in_type_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    Ort::ModelMetadata meta_data = llm_sess_->GetModelMetadata();
-    if (config_.debug) {
-      std::ostringstream os;
-      PrintModelMetadata(os, meta_data);
-#if __OHOS__
-      SHERPA_ONNX_LOGE("LLM model metadata:\n%{public}s\n", os.str().c_str());
-#else
-      SHERPA_ONNX_LOGE("LLM model metadata:\n%s\n", os.str().c_str());
-#endif
-    }
-
-    Ort::AllocatorWithDefaultOptions allocator;
-    SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
-    if (hidden_size_ == 0) {
-      SHERPA_ONNX_READ_META_DATA(hidden_size_, "hidden_size");
-    }
-
-    int32_t num_outputs = static_cast<int32_t>(llm_output_names_.size());
-    if (num_outputs < 1 || (num_outputs - 1) % 2 != 0) {
-      SHERPA_ONNX_LOGE(
-          "LLM model must have 1 logits output + 2*num_layers KV outputs, got %d outputs",
-          num_outputs);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    int32_t inferred_layers = (num_outputs - 1) / 2;
-
-    auto num_layers_value =
-        LookupCustomModelMetaData(meta_data, "num_layers", allocator);
-    if (!num_layers_value.empty()) {
-      num_layers_ = atoi(num_layers_value.c_str());
-      if (num_layers_ <= 0) {
-        SHERPA_ONNX_LOGE("Invalid num_layers=%d from metadata", num_layers_);
-        SHERPA_ONNX_EXIT(-1);
-      }
-      if (num_layers_ != inferred_layers) {
-        SHERPA_ONNX_LOGE("LLM num_layers mismatch: metadata=%d, inferred=%d",
-                         num_layers_, inferred_layers);
-        SHERPA_ONNX_EXIT(-1);
-      }
-    } else {
-      num_layers_ = inferred_layers;
-    }
-
-    // Read max_total_len from metadata
-    SHERPA_ONNX_READ_META_DATA(max_total_len_, "max_total_len");
-    if (max_total_len_ <= 0) {
-      SHERPA_ONNX_LOGE("Invalid max_total_len=%d from metadata", max_total_len_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    // Detect KV delta model type (model_type metadata should contain "kv_delta")
-    auto model_type_value =
-        LookupCustomModelMetaData(meta_data, "model_type", allocator);
-    is_kv_delta_model_ = (!model_type_value.empty() &&
-                          model_type_value.find("kv_delta") != std::string::npos);
-
-    if (!is_kv_delta_model_) {
-      SHERPA_ONNX_LOGE("Only KV delta models are supported, but model_type does not contain 'kv_delta'");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    // Validate input layout: 0 embeds, 1 attention_mask, 2 cache_position, 3+ KV cache
-    if (llm_input_names_.size() < 3u) {
-      SHERPA_ONNX_LOGE("LLM model inputs must be >=3 (embeds,mask,cache_position)");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    cache_position_input_index_ = 2;
-    past_kv_input_start_index_ = 3;
-
-    int32_t expected_inputs = 3 + 2 * num_layers_;
-    int32_t actual_inputs = static_cast<int32_t>(llm_input_names_.size());
-    if (actual_inputs != expected_inputs) {
-      if (actual_inputs == 2 + 2 * num_layers_) {
-        SHERPA_ONNX_LOGE(
-            "LLM model inputs mismatch: expected %d (=3+2*num_layers with cache_position) "
-            "got %d (=2+2*num_layers without cache_position). "
-            "Please use a model exported with cache_position support.",
-            expected_inputs, actual_inputs);
-      } else {
-        SHERPA_ONNX_LOGE(
-            "LLM model inputs mismatch: expected %d (=3+2*num_layers) got %d",
-            expected_inputs, actual_inputs);
-      }
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    kv_in_type_ = GetSessionInputElemType(llm_sess_.get(), past_kv_input_start_index_);
-    kv_in_type_v_ = GetSessionInputElemType(llm_sess_.get(), past_kv_input_start_index_ + 1);
-    if (!(kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
-          kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
-          kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16)) {
-      SHERPA_ONNX_LOGE("LLM past_key elem_type=%d not supported", (int)kv_in_type_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (!(kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
-          kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
-          kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16)) {
-      SHERPA_ONNX_LOGE("LLM past_value elem_type=%d not supported", (int)kv_in_type_v_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    auto past_key_ti = llm_sess_->GetInputTypeInfo(past_kv_input_start_index_);
-    past_key_shape_tpl_ = past_key_ti.GetTensorTypeAndShapeInfo().GetShape();
-
-    auto past_value_ti = llm_sess_->GetInputTypeInfo(past_kv_input_start_index_ + 1);
-    past_value_shape_tpl_ = past_value_ti.GetTensorTypeAndShapeInfo().GetShape();
+    SetupLlmFromSession();
   }
 
   void InitEmbedding(const std::string &model_path) {
