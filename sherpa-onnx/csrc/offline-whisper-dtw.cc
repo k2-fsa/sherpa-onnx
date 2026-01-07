@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-dtw.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Posit Software, PBC
 
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 
