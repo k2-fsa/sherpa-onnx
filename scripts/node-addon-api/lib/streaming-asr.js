@@ -3,6 +3,7 @@
 /** @typedef {import('./types').DisplayObject} DisplayObject */
 /** @typedef {import('./types').OnlineRecognizerConfig} OnlineRecognizerConfig */
 /** @typedef {import('./types').Waveform} Waveform */
+/** @typedef {import('./types').OnlineRecognizerResult} OnlineRecognizerResult */
 
 const addon = require('./addon.js');
 

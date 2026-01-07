@@ -647,6 +647,11 @@
  */
 
 /**
+ * @typedef {Object} OfflineStreamObject
+ * @property {OfflineStreamHandle} handle
+ */
+
+/**
  * @typedef {Object} OnlineStreamObject
  * @property {OnlineStreamHandle} handle
  */
