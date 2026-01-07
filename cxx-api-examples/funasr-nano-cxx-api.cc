@@ -9,8 +9,7 @@
 // Example usage:
 //   ./bin/funasr-nano-cxx-api \
 //     --funasr-nano-encoder-adaptor=/path/to/encoder_adaptor.onnx \
-//     --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
-//     --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
+//     --funasr-nano-llm=/path/to/llm.onnx \
 //     --funasr-nano-embedding=/path/to/embedding.onnx \
 //     --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
 //     /path/to/audio.wav
@@ -33,27 +32,25 @@ FunASR-nano speech recognition example using sherpa-onnx C++ API.
 Usage:
   ./bin/funasr-nano-cxx-api \
     --funasr-nano-encoder-adaptor=/path/to/encoder_adaptor.onnx \
-    --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
-    --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
+    --funasr-nano-llm=/path/to/llm.onnx \
     --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
     --funasr-nano-embedding=/path/to/embedding.onnx \
     [--funasr-nano-user-prompt="语音转写："] \
     [--funasr-nano-max-new-tokens=512] \
-    [--funasr-nano-temperature=0.3] \
+    [--funasr-nano-temperature=1e-6] \
     [--funasr-nano-top-p=0.8] \
     /path/to/audio.wav
 
 Required arguments:
   --funasr-nano-encoder-adaptor: Path to encoder_adaptor.onnx
-  --funasr-nano-llm-prefill: Path to llm_prefill.onnx
-  --funasr-nano-llm-decode: Path to llm_decode.onnx
+  --funasr-nano-llm: Path to llm.onnx (unified KV cache model)
   --funasr-nano-tokenizer: Path to tokenizer directory (e.g., Qwen3-0.6B)
   --funasr-nano-embedding: Path to embedding.onnx
 
 Optional arguments:
   --funasr-nano-user-prompt: User prompt template (default: "语音转写：")
   --funasr-nano-max-new-tokens: Maximum tokens to generate (default: 512)
-  --funasr-nano-temperature: Sampling temperature (default: 0.3)
+  --funasr-nano-temperature: Sampling temperature (default: 1e-6)
   --funasr-nano-top-p: Top-p sampling threshold (default: 0.8)
   --num-threads: Number of threads (default: 2)
   --provider: cpu (default) or cuda
@@ -61,8 +58,7 @@ Optional arguments:
 Example:
   ./bin/funasr-nano-cxx-api \
     --funasr-nano-encoder-adaptor=./models/encoder_adaptor.onnx \
-    --funasr-nano-llm-prefill=./models/llm_prefill.onnx \
-    --funasr-nano-llm-decode=./models/llm_decode.onnx \
+    --funasr-nano-llm=./models/llm.onnx \
     --funasr-nano-tokenizer=./models/Qwen3-0.6B \
     --funasr-nano-embedding=./models/embedding.onnx \
     ./test.wav
@@ -80,8 +76,7 @@ Example:
 
   // Parse command line arguments
   const char kEncoderAdaptor[] = "--funasr-nano-encoder-adaptor=";
-  const char kLlmPrefill[] = "--funasr-nano-llm-prefill=";
-  const char kLlmDecode[] = "--funasr-nano-llm-decode=";
+  const char kLlm[] = "--funasr-nano-llm=";
   const char kEmbedding[] = "--funasr-nano-embedding=";
   const char kTokenizer[] = "--funasr-nano-tokenizer=";
   const char kUserPrompt[] = "--funasr-nano-user-prompt=";
@@ -96,12 +91,9 @@ Example:
     if (arg.find(kEncoderAdaptor) == 0) {
       config.model_config.funasr_nano.encoder_adaptor =
           arg.substr(sizeof(kEncoderAdaptor) - 1);
-    } else if (arg.find(kLlmPrefill) == 0) {
-      config.model_config.funasr_nano.llm_prefill =
-          arg.substr(sizeof(kLlmPrefill) - 1);
-    } else if (arg.find(kLlmDecode) == 0) {
-      config.model_config.funasr_nano.llm_decode =
-          arg.substr(sizeof(kLlmDecode) - 1);
+    } else if (arg.find(kLlm) == 0) {
+      config.model_config.funasr_nano.llm =
+          arg.substr(sizeof(kLlm) - 1);
     } else if (arg.find(kEmbedding) == 0) {
       config.model_config.funasr_nano.embedding =
           arg.substr(sizeof(kEmbedding) - 1);
@@ -132,10 +124,8 @@ Example:
       std::cout << "Loading model...\n";
       std::cout << "  encoder_adaptor: "
                 << config.model_config.funasr_nano.encoder_adaptor << "\n";
-      std::cout << "  llm_prefill: "
-                << config.model_config.funasr_nano.llm_prefill << "\n";
-      std::cout << "  llm_decode: "
-                << config.model_config.funasr_nano.llm_decode << "\n";
+      std::cout << "  llm: "
+                << config.model_config.funasr_nano.llm << "\n";
       std::cout << "  tokenizer: " << config.model_config.funasr_nano.tokenizer
                 << "\n";
       std::cout << "  embedding: "

@@ -454,8 +454,7 @@ type OfflineFireRedAsrModelConfig struct {
 
 type OfflineFunASRNanoModelConfig struct {
 	EncoderAdaptor string
-	LlmPreFill     string
-	LlmDecoder     string
+	Llm            string
 	Embedding      string
 	Tokenizer      string
 	SystemPrompt   string
@@ -598,8 +597,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
 
 	c.model_config.funasr_nano.encoder_adaptor = C.CString(config.ModelConfig.FunASRNano.EncoderAdaptor)
-	c.model_config.funasr_nano.llm_prefill = C.CString(config.ModelConfig.FunASRNano.LlmPreFill)
-	c.model_config.funasr_nano.llm_decode = C.CString(config.ModelConfig.FunASRNano.LlmDecoder)
+	c.model_config.funasr_nano.llm = C.CString(config.ModelConfig.FunASRNano.Llm)
 	c.model_config.funasr_nano.embedding = C.CString(config.ModelConfig.FunASRNano.Embedding)
 	c.model_config.funasr_nano.tokenizer = C.CString(config.ModelConfig.FunASRNano.Tokenizer)
 	c.model_config.funasr_nano.system_prompt = C.CString(config.ModelConfig.FunASRNano.SystemPrompt)
@@ -679,8 +677,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.fire_red_asr.encoder,
 		&c.model_config.fire_red_asr.decoder,
 		&c.model_config.funasr_nano.encoder_adaptor,
-		&c.model_config.funasr_nano.llm_prefill,
-		&c.model_config.funasr_nano.llm_decode,
+		&c.model_config.funasr_nano.llm,
 		&c.model_config.funasr_nano.embedding,
 		&c.model_config.funasr_nano.tokenizer,
 		&c.model_config.funasr_nano.system_prompt,

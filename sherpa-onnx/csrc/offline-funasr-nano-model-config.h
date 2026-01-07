@@ -15,11 +15,8 @@ struct OfflineFunASRNanoModelConfig {
   // Path to encoder_adaptor.onnx
   std::string encoder_adaptor;
 
-  // Path to llm_prefill.onnx (KV cache prefill)
-  std::string llm_prefill;
-
-  // Path to llm_decode.onnx (KV cache decode)
-  std::string llm_decode;
+  // Path to llm.onnx (KV cache model)
+  std::string llm;
 
   // Path to embedding.onnx
   std::string embedding;
@@ -37,7 +34,7 @@ struct OfflineFunASRNanoModelConfig {
   int32_t max_new_tokens = 512;
 
   // Sampling temperature
-  float temperature = 0.3f;
+  float temperature = 1e-6f;
 
   // Top-p (nucleus) sampling threshold
   float top_p = 0.8f;
