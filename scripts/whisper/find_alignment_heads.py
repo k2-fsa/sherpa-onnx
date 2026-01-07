@@ -271,12 +271,9 @@ def main():
 
     # Check if model already has alignment heads
     if hasattr(model, 'alignment_heads') and model.alignment_heads is not None:
-        try:
-            indices = model.alignment_heads.indices()
-            existing_heads = list(zip(indices[0].tolist(), indices[1].tolist()))
-            print(f"Model has pre-defined alignment heads: {existing_heads}")
-        except:
-            print("Model has alignment_heads attribute but couldn't parse it")
+        indices = model.alignment_heads.indices()
+        existing_heads = list(zip(indices[0].tolist(), indices[1].tolist()))
+        print(f"Model has pre-defined alignment heads: {existing_heads}")
 
     # Run transcription and capture attention
     print(f"\nTranscribing: {args.audio}")
