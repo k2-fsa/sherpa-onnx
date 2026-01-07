@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright    2025  Posit Software, PBC
+# flake8: noqa
+
 """
 Find alignment heads for a Whisper model by analyzing cross-attention patterns.
 

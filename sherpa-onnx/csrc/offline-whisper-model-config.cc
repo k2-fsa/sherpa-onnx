@@ -103,8 +103,8 @@ std::string OfflineWhisperModelConfig::ToString() const {
   os << "language=\"" << language << "\", ";
   os << "task=\"" << task << "\", ";
   os << "tail_paddings=" << tail_paddings << ", ";
-  os << "enable_timestamps=" << (enable_timestamps ? "true" : "false") << ", ";
-  os << "enable_segment_timestamps=" << (enable_segment_timestamps ? "true" : "false") << ")";
+  os << "enable_timestamps=" << (enable_timestamps ? "True" : "False") << ", ";
+  os << "enable_segment_timestamps=" << (enable_segment_timestamps ? "True" : "False") << ")";
 
   return os.str();
 }

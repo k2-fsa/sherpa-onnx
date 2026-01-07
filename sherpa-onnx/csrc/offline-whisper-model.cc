@@ -415,17 +415,7 @@ class OfflineWhisperModel::Impl {
       // Try to read n_alignment_heads from encoder metadata
       Ort::AllocatorWithDefaultOptions allocator;
       Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
-
-      try {
-        auto n_heads_str = meta_data.LookupCustomMetadataMapAllocated(
-            "n_alignment_heads", allocator);
-        if (n_heads_str) {
-          n_alignment_heads_ = std::stoi(n_heads_str.get());
-        }
-      } catch (...) {
-        // Metadata not found, will be inferred from output shape at runtime
-        n_alignment_heads_ = 0;
-      }
+      SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(n_alignment_heads_, "n_alignment_heads", 0);
 
       if (config_.debug) {
         SHERPA_ONNX_LOGE("Decoder has attention output with %d alignment heads",
