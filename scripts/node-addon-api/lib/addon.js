@@ -1,3 +1,6 @@
+/** @typedef {import('./types').WaveObject} WaveObject */
+/** @typedef {import('./types').GeneratedAudio} GeneratedAudio */
+
 const os = require('os');
 const path = require('path');
 
@@ -64,3 +67,27 @@ if (!found) {
 
   throw new Error(msg)
 }
+
+/**
+ * Read a wave file from disk.
+ * @function module.exports.readWave
+ * @param {string} filename
+ * @param {boolean} [enableExternalBuffer=true]
+ * @returns {WaveObject}
+ */
+
+/**
+ * Read a wave from binary buffer.
+ * @function module.exports.readWaveFromBinary
+ * @param {Uint8Array} data - Binary contents of a wave file.
+ * @param {boolean} [enableExternalBuffer=true]
+ * @returns {WaveObject}
+ */
+
+/**
+ * Write a wave file to disk.
+ * @function module.exports.writeWave
+ * @param {string} filename
+ * @param {Object} obj - { samples: Float32Array, sampleRate: number }
+ * @returns {boolean}
+ */
