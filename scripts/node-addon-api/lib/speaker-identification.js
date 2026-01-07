@@ -2,8 +2,8 @@
 /** @typedef {import('./types').SpeakerEmbeddingManagerAddListFlattenedObj} SpeakerEmbeddingManagerAddListFlattenedObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerSearchObj} SpeakerEmbeddingManagerSearchObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerVerifyObj} SpeakerEmbeddingManagerVerifyObj */
-/** @typedef {import('./types').OnlineStreamObject} OnlineStreamObject */
 /** @typedef {import('./types').SpeakerEmbeddingExtractorConfig} SpeakerEmbeddingExtractorConfig */
+/** @typedef {import('./streaming-asr').OnlineStream} OnlineStream */
 
 const addon = require('./addon.js');
 const streaming_asr = require('./streaming-asr.js');
@@ -22,7 +22,7 @@ class SpeakerEmbeddingExtractor {
   }
 
   /**
-   * @returns {OnlineStreamObject}
+   * @returns {OnlineStream}
    */
   createStream() {
     return new streaming_asr.OnlineStream(
@@ -30,7 +30,7 @@ class SpeakerEmbeddingExtractor {
   }
 
   /**
-   * @param {OnlineStreamObject} stream
+   * @param {OnlineStream} stream
    * @returns {boolean}
    */
   isReady(stream) {
@@ -39,7 +39,7 @@ class SpeakerEmbeddingExtractor {
 
   /**
    * Compute embedding and return a Float32Array
-   * @param {OnlineStreamObject} stream
+   * @param {OnlineStream} stream
    * @param {boolean} [enableExternalBuffer=true]
    * @returns {Float32Array}
    */

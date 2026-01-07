@@ -115,8 +115,6 @@ jobs:
 
               pushd scripts/node-addon-api/
               npm i
-              
-              npm run typecheck
 
               ./node_modules/.bin/cmake-js compile --log-level verbose
               popd

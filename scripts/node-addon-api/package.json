@@ -9,6 +9,7 @@
   },
   "scripts": {
     "install": "cmake-js compile --log-level verbose",
+    "postinstall": "npm run typecheck",
     "test": "node --napi-modules ./test/test_binding.js",
     "typecheck": "tsc"
   },

@@ -57,8 +57,6 @@ jobs:
 
           npm i || true
 
-          npm run typecheck
-
           cat node_modules/node-addon-api/package.json
           cd node_modules/
           tar cjf node-addon-api.tar.bz2 ./node-addon-api

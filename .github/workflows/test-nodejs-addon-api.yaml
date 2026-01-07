@@ -144,8 +144,6 @@ jobs:
 
           npm i
 
-          npm run typecheck
-
           ./node_modules/.bin/cmake-js compile --log-level verbose
 
       - name: Run tests
