@@ -9,7 +9,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -1016,10 +1015,7 @@ class OfflineFunASRNanoModel::Impl {
     bool has_external_data = FileExists(data_path);
 
     // Resolve absolute path for model file
-    std::string abs_model_path = model_path;
-    if (!model_path.empty() && !std::filesystem::path(model_path).is_absolute()) {
-      abs_model_path = std::filesystem::absolute(model_path).string();
-    }
+    std::string abs_model_path = ResolveAbsolutePath(model_path);
 
     if (has_external_data) {
       // When external data exists, use absolute file path to create session.
