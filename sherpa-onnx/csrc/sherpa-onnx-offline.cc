@@ -100,8 +100,7 @@ See https://github.com/FunAudioLLM/Fun-ASR-Nano-2512
 
   ./bin/sherpa-onnx-offline \
     --funasr-nano-encoder-adaptor=/path/to/encoder_adaptor.onnx \
-    --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
-    --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
+    --funasr-nano-llm=/path/to/llm.onnx \
     --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
     --funasr-nano-embedding=/path/to/embedding.onnx \
     /path/to/foo.wav [bar.wav foobar.wav ...]

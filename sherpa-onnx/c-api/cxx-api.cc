@@ -274,10 +274,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
 
   c.model_config.funasr_nano.encoder_adaptor =
       config.model_config.funasr_nano.encoder_adaptor.c_str();
-  c.model_config.funasr_nano.llm_prefill =
-      config.model_config.funasr_nano.llm_prefill.c_str();
-  c.model_config.funasr_nano.llm_decode =
-      config.model_config.funasr_nano.llm_decode.c_str();
+  c.model_config.funasr_nano.llm =
+      config.model_config.funasr_nano.llm.c_str();
   c.model_config.funasr_nano.embedding =
       config.model_config.funasr_nano.embedding.c_str();
   c.model_config.funasr_nano.tokenizer =

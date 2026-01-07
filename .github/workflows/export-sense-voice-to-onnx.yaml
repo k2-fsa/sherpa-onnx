@@ -101,7 +101,7 @@ jobs:
             mv $m ../../
           done
 
-      - name: Publish v3 to huggingface
+      - name: Publish to huggingface
         if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

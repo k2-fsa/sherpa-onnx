@@ -8,11 +8,21 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -20,6 +30,43 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+namespace {
+// Build cache_position tensor from attention_mask.
+// Creates a [S] int64_t tensor where the first element is the starting position (pos0)
+// for writing KV deltas. The remaining elements are consecutive positions [pos0, pos0+1, ..., pos0+S-1].
+// For prefill: pos0 = 0, S = context_len
+// For decode: pos0 = valid_len - 1, S = 1
+static Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
+                                             int32_t seq_len,
+                                             OrtAllocator *allocator) {
+  auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
+  auto mask_shape = mask_info.GetShape();
+  
+  // Get the current position from attention_mask length
+  // mask_shape is [1, mask_len], where mask_len = past_len + seq_len
+  int64_t pos0 = 0;
+  if (mask_shape.size() == 2 && mask_shape[1] > 0) {
+    // pos0 is the current position in cache (past length = mask_len - seq_len)
+    pos0 = static_cast<int64_t>(mask_shape[1]) - seq_len;
+  }
+  if (pos0 < 0) pos0 = 0;
+  
+  // Create tensor using allocator
+  std::array<int64_t, 1> pos_shape{seq_len};
+  Ort::Value cache_position = Ort::Value::CreateTensor<int64_t>(
+      allocator, pos_shape.data(), pos_shape.size());
+  
+  // Fill the tensor with position values
+  int64_t *p = cache_position.GetTensorMutableData<int64_t>();
+  for (int32_t i = 0; i < seq_len; ++i) {
+    p[i] = pos0 + i;
+  }
+  
+  return cache_position;
+}
+
+}  // namespace
 
 OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
     const OfflineRecognizerConfig &config)
@@ -144,9 +191,134 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenFromLogitsFp16OrFp32(
   return static_cast<int64_t>(best);
 }
 
-// Generate text from encoder output using autoregressive decoding with KV cache.
-// Combines text embeddings (from prompts) and audio embeddings (from encoder)
-// to form the input sequence, then generates tokens autoregressively.
+// Sample token from logits using temperature and top-p (nucleus) sampling.
+// Handles both FP16 and FP32 logits.
+// Returns token ID 0 as fallback if all logits are invalid.
+// If temperature is very small (<= 1e-6) or invalid, falls back to greedy decoding.
+// If top_p >= 1.0, samples from all tokens without sorting (full vocabulary).
+int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
+    const void *logits, bool is_fp16, int32_t vocab_size, float temperature,
+    float top_p) const {
+  if (temperature <= 1e-6f || !std::isfinite(temperature)) {
+    return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
+  }
+
+  // top_p <= 0: treat as greedy (minimal candidate set)
+  if (!std::isfinite(top_p) || top_p <= 0.0f) {
+    return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
+  }
+  if (top_p > 1.0f) top_p = 1.0f;
+
+  // Reuse buffers to avoid per-token allocations
+  thread_local std::vector<float> probs;
+  thread_local std::vector<int32_t> idx;
+
+  probs.resize(vocab_size);
+  idx.resize(vocab_size);
+
+  // Scale logits & find max for numerical stability
+  float max_logit = -std::numeric_limits<float>::infinity();
+  bool found_valid = false;
+
+  if (is_fp16) {
+    const uint16_t *p = reinterpret_cast<const uint16_t *>(logits);
+    for (int32_t i = 0; i < vocab_size; ++i) {
+      float v = HalfBitsToFloat(p[i]);
+      if (std::isfinite(v)) {
+        v /= temperature;
+        probs[i] = v;
+        if (v > max_logit) max_logit = v;
+        found_valid = true;
+      } else {
+        probs[i] = -1e30f;
+      }
+      idx[i] = i;
+    }
+  } else {
+    const float *p = reinterpret_cast<const float *>(logits);
+    for (int32_t i = 0; i < vocab_size; ++i) {
+      float v = p[i];
+      if (std::isfinite(v)) {
+        v /= temperature;
+        probs[i] = v;
+        if (v > max_logit) max_logit = v;
+        found_valid = true;
+      } else {
+        probs[i] = -1e30f;
+      }
+      idx[i] = i;
+    }
+  }
+
+  if (!found_valid) return 0;
+
+  // Compute softmax probabilities
+  float sum_exp = 0.0f;
+  for (int32_t i = 0; i < vocab_size; ++i) {
+    float e = std::exp(probs[i] - max_logit);
+    probs[i] = e;
+    sum_exp += e;
+  }
+  if (sum_exp <= 0.0f || !std::isfinite(sum_exp)) return 0;
+  for (int32_t i = 0; i < vocab_size; ++i) {
+    probs[i] /= sum_exp;
+  }
+
+  // top_p >= 1: sample from full distribution (no sorting)
+  if (top_p >= 1.0f) {
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    float sample = dist(rng_);
+    float cumsum = 0.0f;
+    for (int32_t i = 0; i < vocab_size; ++i) {
+      cumsum += probs[i];
+      if (sample <= cumsum) return static_cast<int64_t>(i);
+    }
+    return static_cast<int64_t>(vocab_size - 1);
+  }
+
+  // Fast path: partial_sort top-K, increase K only if needed
+  int32_t k = std::min<int32_t>(256, vocab_size);
+  float cum_k = 0.0f;
+
+  while (true) {
+    std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),
+                      [&](int32_t a, int32_t b) { return probs[a] > probs[b]; });
+
+    cum_k = 0.0f;
+    for (int32_t i = 0; i < k; ++i) cum_k += probs[idx[i]];
+
+    if (cum_k >= top_p || k == vocab_size) break;
+
+    int32_t new_k = std::min(vocab_size, k * 2);
+    if (new_k == k) break;
+    k = new_k;
+  }
+
+  // Find cutoff inside sorted top-K
+  float cumsum = 0.0f;
+  int32_t cutoff = k;
+  for (int32_t i = 0; i < k; ++i) {
+    cumsum += probs[idx[i]];
+    if (cumsum >= top_p) {
+      cutoff = i + 1;
+      break;
+    }
+  }
+
+  float renorm_sum = 0.0f;
+  for (int32_t i = 0; i < cutoff; ++i) renorm_sum += probs[idx[i]];
+  if (renorm_sum <= 0.0f) return 0;
+
+  std::uniform_real_distribution<float> dist(0.0f, renorm_sum);
+  float sample = dist(rng_);
+  float cumsum_sample = 0.0f;
+  for (int32_t i = 0; i < cutoff; ++i) {
+    cumsum_sample += probs[idx[i]];
+    if (sample <= cumsum_sample) return static_cast<int64_t>(idx[i]);
+  }
+  return static_cast<int64_t>(idx[cutoff - 1]);
+}
+
 OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     Ort::Value encoder_out, const std::string &system_prompt,
     const std::string &user_prompt) const {
@@ -159,228 +331,334 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   int32_t hidden_size = static_cast<int32_t>(enc_shape[2]);
   int32_t fbank_beg_idx = 0;
   int32_t fake_token_len = 0;
-  std::vector<int64_t> source_ids = BuildSourceIds(
-      system_prompt, user_prompt, audio_token_len, fbank_beg_idx,
-      fake_token_len);
+  std::vector<int64_t> source_ids =
+      BuildSourceIds(system_prompt, user_prompt, audio_token_len, fbank_beg_idx, fake_token_len);
   int32_t context_len = static_cast<int32_t>(source_ids.size());
-  const int32_t max_seq_len = 2048;
+
+  // Create KV cache buffer [B, max_total_len, kv_h, hd].
+  // This stores the accumulated KV cache. Model outputs are deltas that get applied in-place.
+  std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
+      model_->CreateEmptyKVCache(1);
+    int32_t max_seq_len = model_->GetMaxTotalLen();
+    if (max_seq_len <= 0) {
+      SHERPA_ONNX_LOGE("Invalid max_seq_len=%d", max_seq_len);
+      result.text = "";
+      return result;
+    }
+
+  // If context exceeds KV capacity: prioritize truncating audio placeholders
+  // (keep prompt scaffold intact).
   if (context_len > max_seq_len) {
-    SHERPA_ONNX_LOGE(
-        "Input sequence length (%d) exceeds maximum sequence length (%d). "
-        "Truncating to %d tokens. Recognition result may be incomplete due to "
-        "truncated input.",
-        context_len, max_seq_len, max_seq_len);
-    source_ids.resize(max_seq_len);
-    context_len = max_seq_len;
+    int32_t before_len = fbank_beg_idx;
+    int32_t after_len = context_len - before_len - fake_token_len;
+    if (after_len < 0) after_len = 0;
+
+    int32_t keep_audio = max_seq_len - before_len - after_len;
+    if (keep_audio < 0) {
+      SHERPA_ONNX_LOGE(
+          "Context_len (%d) too large for KV capacity (%d) and prompts already exceed capacity. "
+          "Falling back to keep last %d tokens.",
+          context_len, max_seq_len, max_seq_len);
+      // Fallback: keep the suffix.
+      source_ids.erase(source_ids.begin(), source_ids.end() - max_seq_len);
+      // Audio alignment is no longer controllable, skip injecting audio embeddings.
+      fbank_beg_idx = -1;
+      fake_token_len = 0;
+      context_len = static_cast<int32_t>(source_ids.size());
+    } else {
+      if (keep_audio > audio_token_len) keep_audio = audio_token_len;
+
+      SHERPA_ONNX_LOGE(
+          "Context_len (%d) exceeds KV capacity (%d). Truncating audio placeholders: "
+          "audio_token_len=%d -> keep_audio=%d (before=%d after=%d).",
+          context_len, max_seq_len, audio_token_len, keep_audio, before_len, after_len);
+
+      // Rebuild ids_before/ids_after using slices.
+      std::vector<int64_t> ids_before(source_ids.begin(),
+                                      source_ids.begin() + before_len);
+      std::vector<int64_t> ids_after(source_ids.end() - after_len,
+                                     source_ids.end());
+
+      int64_t pad_id = tokenizer_->GetPadTokenId();
+      if (pad_id < 0) pad_id = tokenizer_->GetEosTokenId();
+
+      source_ids.clear();
+      source_ids.reserve(before_len + keep_audio + after_len);
+      source_ids.insert(source_ids.end(), ids_before.begin(), ids_before.end());
+      source_ids.insert(source_ids.end(), keep_audio, pad_id);
+      source_ids.insert(source_ids.end(), ids_after.begin(), ids_after.end());
+
+      fake_token_len = keep_audio;
+      fbank_beg_idx = before_len;
+      context_len = static_cast<int32_t>(source_ids.size());
+    }
   }
 
   // Get text embeddings for the prompt tokens
   std::vector<int64_t> input_ids = source_ids;
   std::array<int64_t, 2> ids_shape{1, context_len};
   Ort::Value input_ids_tensor = Ort::Value::CreateTensor(
-      memory_info, input_ids.data(), input_ids.size(), ids_shape.data(),
-      ids_shape.size());
-  Ort::Value text_embeds =
-      model_->ForwardEmbedding(std::move(input_ids_tensor));
+      memory_info, input_ids.data(), input_ids.size(),
+      ids_shape.data(), ids_shape.size());
+
+  Ort::Value text_embeds = model_->ForwardEmbedding(std::move(input_ids_tensor));
+
   auto te_info = text_embeds.GetTensorTypeAndShapeInfo();
   auto te_shape = te_info.GetShape();
-  if (static_cast<int32_t>(te_shape[2]) != hidden_size) {
-    SHERPA_ONNX_LOGE("Embedding hidden mismatch: %d vs %d",
-                     static_cast<int32_t>(te_shape[2]), hidden_size);
-    result.text = "";
-    return result;
-  }
+
   const auto te_type = te_info.GetElementType();
   const bool te_fp16 = (te_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-  // Pre-allocate full inputs_embeds buffer to max_seq_len
-  std::vector<uint16_t> inputs_embeds_fp16(
-      static_cast<size_t>(max_seq_len) * hidden_size, FloatToHalfBits(0.0f));
-  std::vector<int64_t> attention_mask(static_cast<size_t>(max_seq_len), 0);
-  // Copy text embeddings into inputs_embeds buffer
+
+  // Allocate inputs_embeds only for prefill (context_len * hidden_size).
+  // Decode steps will use a separate reusable buffer.
+  std::vector<float> inputs_embeds_fp32(
+      static_cast<size_t>(context_len) * hidden_size, 0.0f);
+
+  // Copy text embeddings.
   if (te_fp16) {
     const uint16_t *p = text_embeds.GetTensorData<uint16_t>();
-    std::copy(p, p + static_cast<size_t>(context_len) * hidden_size,
-              inputs_embeds_fp16.data());
+    const size_t total = static_cast<size_t>(context_len) * hidden_size;
+    for (size_t i = 0; i < total; ++i) {
+      inputs_embeds_fp32[i] = HalfBitsToFloat(p[i]);
+    }
   } else {
     const float *p = text_embeds.GetTensorData<float>();
-    for (int64_t i = 0; i < static_cast<int64_t>(context_len) * hidden_size;
-         ++i) {
-      inputs_embeds_fp16[static_cast<size_t>(i)] = FloatToHalfBits(p[i]);
-    }
+    const size_t total = static_cast<size_t>(context_len) * hidden_size;
+    std::memcpy(inputs_embeds_fp32.data(), p, total * sizeof(float));
   }
-  // Inject audio embeddings into inputs_embeds at the position of audio tokens
+
+  // Inject audio embeddings into placeholder region (if alignment is still possible).
   auto enc_info2 = encoder_out.GetTensorTypeAndShapeInfo();
-  auto enc_et =
-      static_cast<ONNXTensorElementDataType>(enc_info2.GetElementType());
+  auto enc_et = static_cast<ONNXTensorElementDataType>(enc_info2.GetElementType());
   int32_t copy_len = std::min(fake_token_len, audio_token_len);
-  if (enc_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16) {
-    const uint16_t *enc = encoder_out.GetTensorData<uint16_t>();
-    for (int32_t t = 0; t < copy_len; ++t) {
-      const uint16_t *src = enc + static_cast<int64_t>(t) * hidden_size;
-      uint16_t *dst = inputs_embeds_fp16.data() +
-                      static_cast<int64_t>(fbank_beg_idx + t) * hidden_size;
-      std::copy(src, src + hidden_size, dst);
-    }
-  } else if (enc_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-    const float *enc = encoder_out.GetTensorData<float>();
-    for (int32_t t = 0; t < copy_len; ++t) {
-      const float *src = enc + static_cast<int64_t>(t) * hidden_size;
-      uint16_t *dst = inputs_embeds_fp16.data() +
-                      static_cast<int64_t>(fbank_beg_idx + t) * hidden_size;
-      for (int32_t d = 0; d < hidden_size; ++d) {
-        dst[d] = FloatToHalfBits(src[d]);
+
+  if (copy_len > 0 && fbank_beg_idx >= 0) {
+    if (enc_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16) {
+      const uint16_t *enc = encoder_out.GetTensorData<uint16_t>();
+      const size_t hidden_size_u = static_cast<size_t>(hidden_size);
+      for (int32_t t = 0; t < copy_len; ++t) {
+        const uint16_t *src = enc + static_cast<size_t>(t) * hidden_size_u;
+        float *dst = inputs_embeds_fp32.data() +
+                     static_cast<size_t>(fbank_beg_idx + t) * hidden_size_u;
+        for (size_t d = 0; d < hidden_size_u; ++d) {
+          dst[d] = HalfBitsToFloat(src[d]);
+        }
       }
+    } else if (enc_et == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+      const float *enc = encoder_out.GetTensorData<float>();
+      const size_t hidden_size_u = static_cast<size_t>(hidden_size);
+      for (int32_t t = 0; t < copy_len; ++t) {
+        const float *src = enc + static_cast<size_t>(t) * hidden_size_u;
+        float *dst = inputs_embeds_fp32.data() +
+                     static_cast<size_t>(fbank_beg_idx + t) * hidden_size_u;
+        std::memcpy(dst, src, hidden_size_u * sizeof(float));
+      }
+    } else {
+      SHERPA_ONNX_LOGE("encoder_out elem_type=%d not supported", (int)enc_et);
+      result.text = "";
+      return result;
     }
-  } else {
-    SHERPA_ONNX_LOGE("encoder_out elem_type=%d not supported", (int)enc_et);
-    result.text = "";
-    return result;
   }
-  // Set attention mask for context tokens
-  for (int32_t i = 0; i < context_len; ++i) attention_mask[i] = 1;
+
+  // Pre-allocate attention_mask buffer to avoid per-step allocations
+  // All values are 1, we'll use a slice of this buffer for each step
+  std::vector<int64_t> attention_mask(static_cast<size_t>(max_seq_len), 1);
+
+  // Pre-allocate reusable buffer for decode step embeddings (hidden_size)
+  std::vector<float> next_embed_fp32(static_cast<size_t>(hidden_size));
+
   int32_t valid_len = context_len;
+
   std::vector<int64_t> generated_ids;
-  
   generated_ids.reserve(funasr_config.max_new_tokens);
+
   const int64_t eos_id = tokenizer_->GetEosTokenId();
   const int64_t im_end_id = tokenizer_->GetImEndTokenId();
   const int32_t max_new_tokens = funasr_config.max_new_tokens;
-  std::vector<std::pair<Ort::Value, Ort::Value>> past_key_values;
-  bool is_first_step = true;
-  // Autoregressive generation loop
-  for (int32_t step = 0; step < max_new_tokens; ++step) {
-    if (valid_len >= max_seq_len) break;
-    Ort::Value logits(nullptr);
-    
-    if (is_first_step) {
-      // First step: use prefill model with full context
-      std::array<int64_t, 3> embeds_shape{1, context_len, hidden_size};
-      Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor(
-          memory_info, inputs_embeds_fp16.data(),
-          static_cast<size_t>(context_len) * hidden_size * sizeof(uint16_t),
-          embeds_shape.data(), embeds_shape.size(),
-          ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 
+  bool is_first_step = true;
+
+  for (int32_t step = 0; step < max_new_tokens; ++step) {
+    // valid_len represents the mask_len for the next decode step (= past + current).
+    if (valid_len >= max_seq_len) break;
+
+    Ort::Value logits{nullptr};
+
+    if (is_first_step) {
+      // Prefill: seq = context_len, mask_len = context_len.
+      if (config_.model_config.debug) {
+        SHERPA_ONNX_LOGE("GenerateText: starting prefill with context_len=%d, inputs_embeds_fp32.size()=%zu",
+           context_len, inputs_embeds_fp32.size());
+      }
+
+      std::array<int64_t, 3> embeds_shape{1, context_len, hidden_size};
+      Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor<float>(
+          memory_info, inputs_embeds_fp32.data(),
+          static_cast<size_t>(context_len) * hidden_size,
+          embeds_shape.data(), embeds_shape.size());
+
+      // Use pre-allocated attention_mask buffer (first context_len elements)
       std::array<int64_t, 2> mask_shape{1, context_len};
-      Ort::Value attention_mask_tensor =
-          Ort::Value::CreateTensor<int64_t>(
-              memory_info, attention_mask.data(),
-              static_cast<size_t>(context_len), mask_shape.data(),
-              mask_shape.size());
-      auto tmp = model_->ForwardLLMPrefill(std::move(inputs_embeds_tensor),
-                                           std::move(attention_mask_tensor));
+      Ort::Value attention_mask_tensor = Ort::Value::CreateTensor<int64_t>(
+          memory_info, attention_mask.data(),
+          static_cast<size_t>(context_len),
+          mask_shape.data(), mask_shape.size());
+
+      Ort::Value cache_position = BuildCachePositionFromMask(
+          attention_mask_tensor, context_len, model_->Allocator());
+
+      auto tmp = model_->ForwardLLM(std::move(inputs_embeds_tensor),
+                                    std::move(attention_mask_tensor),
+                                    cache_position,
+                                    cache_kv);
       logits = std::move(tmp.first);
-      past_key_values = std::move(tmp.second);
+      auto kv_outputs = std::move(tmp.second);
+
+      // Apply KV deltas to cache buffer in-place.
+      // kv_outputs contains deltas that update cache_kv at positions specified by cache_position.
+      model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
+
     } else {
-      // Subsequent steps: use decode model with KV cache
+      // Decode: seq = 1, mask_len = valid_len (= past + 1).
       int64_t last_token_id = generated_ids.back();
       std::vector<int64_t> one_id{last_token_id};
       std::array<int64_t, 2> one_shape{1, 1};
       Ort::Value one_tensor = Ort::Value::CreateTensor(
-          memory_info, one_id.data(), one_id.size(), one_shape.data(),
-          one_shape.size());
-      Ort::Value next_embed =
-          model_->ForwardEmbedding(std::move(one_tensor));
+          memory_info, one_id.data(), one_id.size(),
+          one_shape.data(), one_shape.size());
+
+      Ort::Value next_embed = model_->ForwardEmbedding(std::move(one_tensor));
       auto ne_info = next_embed.GetTensorTypeAndShapeInfo();
-      bool ne_fp16 = (ne_info.GetElementType() ==
-                      ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-      std::vector<uint16_t> next_embed_fp16(hidden_size);
+      bool ne_fp16 = (ne_info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+
+      // Reuse pre-allocated buffer for decode step embedding
       if (ne_fp16) {
         const uint16_t *src = next_embed.GetTensorData<uint16_t>();
-        std::copy(src, src + hidden_size, next_embed_fp16.data());
+        for (size_t d = 0; d < static_cast<size_t>(hidden_size); ++d) {
+          next_embed_fp32[d] = HalfBitsToFloat(src[d]);
+        }
       } else {
         const float *src = next_embed.GetTensorData<float>();
-        for (int32_t d = 0; d < hidden_size; ++d) {
-          next_embed_fp16[d] = FloatToHalfBits(src[d]);
-        }
+        std::memcpy(next_embed_fp32.data(), src, static_cast<size_t>(hidden_size) * sizeof(float));
       }
+
       std::array<int64_t, 3> embeds_shape{1, 1, hidden_size};
-      Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor(
-          memory_info, next_embed_fp16.data(),
-          static_cast<size_t>(hidden_size) * sizeof(uint16_t),
-          embeds_shape.data(), embeds_shape.size(),
-          ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-      std::vector<int64_t> decode_mask(valid_len, 1);
+      Ort::Value inputs_embeds_tensor = Ort::Value::CreateTensor<float>(
+          memory_info, next_embed_fp32.data(),
+          static_cast<size_t>(hidden_size),
+          embeds_shape.data(), embeds_shape.size());
+
+      // mask_len must equal kv_seq_len (= past + current).
+      // Use pre-allocated attention_mask buffer (first valid_len elements)
       std::array<int64_t, 2> mask_shape{1, valid_len};
-      Ort::Value attention_mask_tensor =
-          Ort::Value::CreateTensor<int64_t>(
-              memory_info, decode_mask.data(), decode_mask.size(),
-              mask_shape.data(), mask_shape.size());
-      auto tmp = model_->ForwardLLMDecode(std::move(inputs_embeds_tensor),
-                                          std::move(attention_mask_tensor),
-                                          past_key_values);
+      Ort::Value attention_mask_tensor = Ort::Value::CreateTensor<int64_t>(
+          memory_info, attention_mask.data(), static_cast<size_t>(valid_len),
+          mask_shape.data(), mask_shape.size());
+
+      Ort::Value cache_position = BuildCachePositionFromMask(
+          attention_mask_tensor, 1, model_->Allocator());
+
+      auto tmp = model_->ForwardLLM(std::move(inputs_embeds_tensor),
+                                    std::move(attention_mask_tensor),
+                                    cache_position,
+                                    cache_kv);
       logits = std::move(tmp.first);
-      past_key_values = std::move(tmp.second);
+      auto kv_outputs = std::move(tmp.second);
+
+      // Apply KV deltas to cache buffer in-place.
+      model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
     }
-    // Extract logits for the last position
+
     auto log_info = logits.GetTensorTypeAndShapeInfo();
     auto log_shape = log_info.GetShape();
-    int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
-    const bool log_fp16 =
-        (log_info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
-    // In KV cache mode: prefill uses last position, decode uses position 0
-    int32_t last_idx = is_first_step ? (context_len - 1) : 0;
-    const void *base = nullptr;
-    if (log_fp16) {
-      base = logits.GetTensorData<uint16_t>();
-    } else {
-      base = logits.GetTensorData<float>();
+
+    // logits are [B, S, V]. Always pick the last available step.
+    if (log_shape.size() < 3) {
+      SHERPA_ONNX_LOGE("Unexpected logits rank=%zu", log_shape.size());
+      result.text = "";
+      return result;
     }
+
+    int32_t time_dim = static_cast<int32_t>(log_shape[1]);
+    int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
+    if (time_dim <= 0 || vocab_size <= 0) {
+      SHERPA_ONNX_LOGE("Invalid logits shape [%lld,%lld,%lld]",
+                       (long long)log_shape[0], (long long)log_shape[1],
+                       (long long)log_shape[2]);
+      result.text = "";
+      return result;
+    }
+
+    const bool log_fp16 = (log_info.GetElementType() == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+
+    int32_t last_idx = time_dim - 1;
+
+    const void *base = nullptr;
+    if (log_fp16) base = logits.GetTensorData<uint16_t>();
+    else base = logits.GetTensorData<float>();
+
     const size_t offset = static_cast<size_t>(last_idx) * vocab_size;
     const void *last_logits =
         log_fp16
-            ? static_cast<const void *>(
-                  reinterpret_cast<const uint16_t *>(base) + offset)
-            : static_cast<const void *>(
-                  reinterpret_cast<const float *>(base) + offset);
-    // Sample next token using greedy decoding
-    int64_t next_id =
-        SampleTokenFromLogitsFp16OrFp32(last_logits, log_fp16, vocab_size);
-    if (next_id == eos_id || next_id == im_end_id) {
-      break;
-    }
+            ? static_cast<const void *>(reinterpret_cast<const uint16_t *>(base) + offset)
+            : static_cast<const void *>(reinterpret_cast<const float *>(base) + offset);
+
+    int64_t next_id = SampleTokenWithTemperatureAndTopP(
+        last_logits, log_fp16, vocab_size,
+        funasr_config.temperature, funasr_config.top_p);
+
+    if (next_id == eos_id || next_id == im_end_id) break;
+
     generated_ids.push_back(next_id);
 
-    // After sampling the first token from prefill, switch to decode mode
-    if (is_first_step) {
-      is_first_step = false;
-    }
+    if (is_first_step) is_first_step = false;
+
+    // valid_len represents the kv_seq_len for the next decode step.
     valid_len += 1;
   }
-  // Decode generated token IDs to text
+
   result.text = tokenizer_->Decode(generated_ids);
   result.text = ApplyInverseTextNormalization(std::move(result.text));
   result.text = ApplyHomophoneReplacer(std::move(result.text));
+
+  if (config_.model_config.debug) {
+    SHERPA_ONNX_LOGE("GenerateText: generated %zu tokens: %s",
+                     generated_ids.size(), result.text.c_str());
+    std::string token_str;
+    for (size_t i = 0; i < generated_ids.size() && i < 10; ++i) {
+      if (i > 0) token_str += ",";
+      token_str += std::to_string(generated_ids[i]);
+    }
+    SHERPA_ONNX_LOGE("GenerateText: token ids: %s%s",
+                     token_str.c_str(), generated_ids.size() > 10 ? "..." : "");
+  }
+
   if (!generated_ids.empty()) {
-    // Fill tokens: decode each token individually
     result.tokens.reserve(generated_ids.size());
     for (int64_t token_id : generated_ids) {
       std::vector<int64_t> single_token{token_id};
-      std::string token_str = tokenizer_->Decode(single_token);
-      result.tokens.push_back(token_str);
+      result.tokens.push_back(tokenizer_->Decode(single_token));
     }
-    // Fill timestamps: estimate based on audio duration and token count
+
     auto enc_shape2 = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
     int32_t audio_token_len2 = static_cast<int32_t>(enc_shape2[1]);
     int32_t lfr_window_size = model_->LfrWindowSize();
     int32_t lfr_window_shift = model_->LfrWindowShift();
-    int32_t sampling_rate = config_.feat_config.sampling_rate;
-    // Reverse LFR to get original feature frames
+
     int32_t original_feature_frames =
         (audio_token_len2 > 0)
             ? ((audio_token_len2 - 1) * lfr_window_shift + lfr_window_size)
             : 0;
+
     float frame_shift_ms = config_.feat_config.frame_shift_ms;
     float audio_duration =
         (original_feature_frames > 0 && frame_shift_ms > 0)
-            ? static_cast<float>(original_feature_frames) * frame_shift_ms /
-                  1000.0f
+            ? static_cast<float>(original_feature_frames) * frame_shift_ms / 1000.0f
             : 0.0f;
+
     result.timestamps.reserve(generated_ids.size());
-    // Linear interpolation: distribute tokens evenly over audio duration
     if (generated_ids.size() > 1 && audio_duration > 0) {
-      float time_per_token =
-          audio_duration / static_cast<float>(generated_ids.size());
+      float time_per_token = audio_duration / static_cast<float>(generated_ids.size());
       for (size_t i = 0; i < generated_ids.size(); ++i) {
         result.timestamps.push_back(static_cast<float>(i) * time_per_token);
       }
@@ -388,6 +666,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       result.timestamps.push_back(audio_duration / 2.0f);
     }
   }
+
   return result;
 }
 
@@ -409,16 +688,22 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
       ss[i]->SetResult(r);
       continue;
     }
-    std::array<int64_t, 3> shape{1, num_frames,
-                                  static_cast<int64_t>(f.size() / num_frames)};
+
+    std::array<int64_t, 3> shape{
+        1, num_frames, static_cast<int64_t>(f.size() / num_frames)};
+
     Ort::Value features = Ort::Value::CreateTensor<float>(
-        memory_info, const_cast<float *>(f.data()), f.size(), shape.data(),
-        shape.size());
+        memory_info, const_cast<float *>(f.data()), f.size(),
+        shape.data(), shape.size());
+
     Ort::Value encoder_out =
         model_->ForwardEncoderAdaptor(std::move(features));
+
     OfflineRecognitionResult r = GenerateText(
-        std::move(encoder_out), funasr_config.system_prompt,
+        std::move(encoder_out),
+        funasr_config.system_prompt,
         funasr_config.user_prompt);
+
     ss[i]->SetResult(r);
   }
 }

@@ -36,6 +36,12 @@ def load_torch_model():
     model = nano.Nano()
 
     state_dict = torch.load("./model.pt", map_location="cpu")
+
+    to_delete = [k for k in state_dict if "llm" in k or "audio_adaptor" in k]
+
+    for k in to_delete:
+        del state_dict[k]
+
     model.load_state_dict(state_dict, strict=True)
     model.eval()
 

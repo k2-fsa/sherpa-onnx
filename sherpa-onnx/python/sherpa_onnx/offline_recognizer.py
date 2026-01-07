@@ -301,8 +301,7 @@ class OfflineRecognizer(object):
     def from_funasr_nano(
         cls,
         encoder_adaptor: str,
-        llm_prefill: str,
-        llm_decode: str,
+        llm: str,
         embedding: str,
         tokenizer: str,
         num_threads: int = 1,
@@ -312,9 +311,9 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         system_prompt: str = "You are a helpful assistant.",
-        user_prompt: str = "语音转录:",
+        user_prompt: str = "语音转写:",
         max_new_tokens: int = 512,
-        temperature: float = 0.3,
+        temperature: float = 1e-6,
         top_p: float = 0.8,
         seed: int = 42,
     ):
@@ -324,10 +323,8 @@ class OfflineRecognizer(object):
         Args:
           encoder_adaptor:
             Path to ``encoder_adaptor.onnx``.
-          llm_prefill:
-            Path to ``llm_prefill.onnx`` (KV cache mode).
-          llm_decode:
-            Path to ``llm_decode.onnx`` (KV cache mode).
+          llm:
+            Path to ``llm.onnx`` (KV cache model).
           embedding:
             Path to ``embedding.onnx``.
           tokenizer:
@@ -361,8 +358,7 @@ class OfflineRecognizer(object):
         # Create OfflineFunASRNanoModelConfig and set attributes
         funasr_nano_config = OfflineFunASRNanoModelConfig()
         funasr_nano_config.encoder_adaptor = encoder_adaptor
-        funasr_nano_config.llm_prefill = llm_prefill
-        funasr_nano_config.llm_decode = llm_decode
+        funasr_nano_config.llm = llm
         funasr_nano_config.embedding = embedding
         funasr_nano_config.tokenizer = tokenizer
         funasr_nano_config.system_prompt = system_prompt
