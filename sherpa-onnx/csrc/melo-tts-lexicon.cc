@@ -228,6 +228,12 @@ class MeloTtsLexicon::Impl {
     if (!token2id_.count("、") && token2id_.count("，")) {
       token2id_["、"] = token2id_["，"];
     }
+
+    // Map 'v' to 'V' token (same as post_replace_ph in MeloTTS)
+    // Only for English models
+    if (meta_data_.language == "en" && token2id_.count("V")) {
+      token2id_["v"] = token2id_["V"];
+    }
   }
 
   void InitLexicon(std::istream &is) {
