@@ -3,6 +3,7 @@
 /** @typedef {import('./types').SpeakerEmbeddingManagerSearchObj} SpeakerEmbeddingManagerSearchObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerVerifyObj} SpeakerEmbeddingManagerVerifyObj */
 /** @typedef {import('./types').OnlineStreamObject} OnlineStreamObject */
+/** @typedef {import('./types').SpeakerEmbeddingExtractorConfig} SpeakerEmbeddingExtractorConfig */
 
 const addon = require('./addon.js');
 const streaming_asr = require('./streaming-asr.js');
@@ -12,7 +13,7 @@ const streaming_asr = require('./streaming-asr.js');
  */
 class SpeakerEmbeddingExtractor {
   /**
-   * @param {Object} config
+   * @param {SpeakerEmbeddingExtractorConfig} config
    */
   constructor(config) {
     this.handle = addon.createSpeakerEmbeddingExtractor(config);

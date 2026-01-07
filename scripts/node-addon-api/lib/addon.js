@@ -88,6 +88,6 @@ if (!found) {
  * Write a wave file to disk.
  * @function module.exports.writeWave
  * @param {string} filename
- * @param {Object} obj - { samples: Float32Array, sampleRate: number }
+ * @param {WaveObject} obj - { samples: Float32Array, sampleRate: number }
  * @returns {boolean}
  */

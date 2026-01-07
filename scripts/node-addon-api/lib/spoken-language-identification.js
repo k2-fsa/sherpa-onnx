@@ -1,11 +1,12 @@
 /** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
+/** @typedef {import('./types').SpokenLanguageIdentificationConfig} SpokenLanguageIdentificationConfig */
 
 const addon = require('./addon.js');
 const non_streaming_asr = require('./non-streaming-asr.js');
 
 class SpokenLanguageIdentification {
   /**
-   * @param {Object} config
+   * @param {SpokenLanguageIdentificationConfig} config
    */
   constructor(config) {
     this.handle = addon.createSpokenLanguageIdentification(config);

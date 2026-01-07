@@ -1,10 +1,12 @@
 /** @typedef {import('./types').OfflinePunctuationHandle} OfflinePunctuationHandle */
+/** @typedef {import('./types').OfflinePunctuationConfig} OfflinePunctuationConfig */
+/** @typedef {import('./types').OnlinePunctuationConfig} OnlinePunctuationConfig */
 
 const addon = require('./addon.js');
 
 class OfflinePunctuation {
   /**
-   * @param {Object} config
+   * @param {OfflinePunctuationConfig} config
    */
   constructor(config) {
     this.handle = addon.createOfflinePunctuation(config);
@@ -22,7 +24,7 @@ class OfflinePunctuation {
 
 class OnlinePunctuation {
   /**
-   * @param {Object} config
+   * @param {OnlinePunctuationConfig} config
    */
   constructor(config) {
     this.handle = addon.createOnlinePunctuation(config);

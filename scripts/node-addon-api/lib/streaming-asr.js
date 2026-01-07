@@ -1,6 +1,8 @@
 /** @typedef {import('./types').OnlineStreamObject} OnlineStreamObject */
 /** @typedef {import('./types').OnlineRecognizerHandle} OnlineRecognizerHandle */
 /** @typedef {import('./types').DisplayObject} DisplayObject */
+/** @typedef {import('./types').OnlineRecognizerConfig} OnlineRecognizerConfig */
+/** @typedef {import('./types').Waveform} Waveform */
 
 const addon = require('./addon.js');
 
@@ -38,7 +40,7 @@ class OnlineStream {
 
   /**
    * Accept waveform data
-   * @param {Object} obj - { samples: Float32Array, sampleRate: number }
+   * @param {Waveform} obj - { samples: Float32Array, sampleRate: number }
    */
   acceptWaveform(obj) {
     addon.acceptWaveformOnline(this.handle, obj)
@@ -55,7 +57,7 @@ class OnlineStream {
  */
 class OnlineRecognizer {
   /**
-   * @param {Object} config - online recognizer config (see C++ for fields)
+   * @param {OnlineRecognizerConfig} config - online recognizer config (see C++ for fields)
    */
   constructor(config) {
     this.handle = addon.createOnlineRecognizer(config);

@@ -1,5 +1,6 @@
 /** @typedef {import('./types').OfflineSpeechDenoiserConfig} OfflineSpeechDenoiserConfig */
 /** @typedef {import('./types').GeneratedAudio} GeneratedAudio */
+/** @typedef {import('./types').AudioProcessRequest} AudioProcessRequest */
 
 const addon = require('./addon.js');
 
@@ -17,7 +18,7 @@ class OfflineSpeechDenoiser {
 
   /**
    * Run denoiser synchronously.
-   * @param {Object} obj - { samples: Float32Array, sampleRate: number, enableExternalBuffer?: boolean }
+   * @param {AudioProcessRequest} obj - { samples: Float32Array, sampleRate: number, enableExternalBuffer?: boolean }
    * @returns {GeneratedAudio}
    */
   run(obj) {

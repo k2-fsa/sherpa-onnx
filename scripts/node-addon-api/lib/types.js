@@ -135,14 +135,204 @@
  */
 
 /**
- * Minimal offline model config used in JS-facing constructors.
+ * Offline Transducer model config
+ * @typedef {Object} OfflineTransducerModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [joiner]
+ */
+
+/**
+ * Offline Paraformer model config
+ * @typedef {Object} OfflineParaformerModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Zipformer CTC model config
+ * @typedef {Object} OfflineZipformerCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Wenet CTC model config
+ * @typedef {Object} OfflineWenetCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Omnilingual ASR CTC model config
+ * @typedef {Object} OfflineOmnilingualAsrCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Med ASR CTC model config
+ * @typedef {Object} OfflineMedAsrCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Dolphin model config
+ * @typedef {Object} OfflineDolphinModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline NeMo CTC model config
+ * @typedef {Object} OfflineNeMoCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Canary model config
+ * @typedef {Object} OfflineCanaryModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [srcLang]
+ * @property {string} [tgtLang]
+ * @property {number} [usePnc]
+ */
+
+/**
+ * Offline Whisper model config
+ * @typedef {Object} OfflineWhisperModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [language]
+ * @property {string} [task]
+ * @property {number} [tailPaddings]
+ */
+
+/**
+ * Offline FireRed ASR model config
+ * @typedef {Object} OfflineFireRedAsrModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ */
+
+/**
+ * Offline Moonshine model config
+ * @typedef {Object} OfflineMoonshineModelConfig
+ * @property {string} [preprocessor]
+ * @property {string} [encoder]
+ * @property {string} [uncachedDecoder]
+ * @property {string} [cachedDecoder]
+ */
+
+/**
+ * Offline TDNN model config
+ * @typedef {Object} OfflineTdnnModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline SenseVoice model config
+ * @typedef {Object} OfflineSenseVoiceModelConfig
+ * @property {string} [model]
+ * @property {string} [language]
+ * @property {number} [useInverseTextNormalization]
+ */
+
+/**
+ * Offline model config.
  * @typedef {Object} OfflineModelConfig
- * @property {Object} [transducer] - {encoder?:string, decoder?:string, joiner?:string}
- * @property {Object} [paraformer] - {model?:string}
+ * @property {OfflineTransducerModelConfig} [transducer]
+ * @property {OfflineParaformerModelConfig} [paraformer]
+ * @property {OfflineZipformerCtcModelConfig} [zipformerCtc]
+ * @property {OfflineWenetCtcModelConfig} [wenetCtc]
+ * @property {OfflineOmnilingualAsrCtcModelConfig} [omnilingual]
+ * @property {OfflineMedAsrCtcModelConfig} [medasr]
+ * @property {OfflineDolphinModelConfig} [dolphin]
+ * @property {OfflineNeMoCtcModelConfig} [nemoCtc]
+ * @property {OfflineCanaryModelConfig} [canary]
+ * @property {OfflineWhisperModelConfig} [whisper]
+ * @property {OfflineFireRedAsrModelConfig} [fireRedAsr]
+ * @property {OfflineMoonshineModelConfig} [moonshine]
+ * @property {OfflineTdnnModelConfig} [tdnn]
+ * @property {OfflineSenseVoiceModelConfig} [senseVoice]
  * @property {string} [tokens]
  * @property {number} [numThreads]
  * @property {boolean|number} [debug]
  * @property {string} [provider]
+ */
+
+/**
+ * Transducer model config
+ * @typedef {Object} TransducerModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [joiner]
+ */
+
+/**
+ * Paraformer model config
+ * @typedef {Object} ParaformerModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ */
+
+/**
+ * Zipformer2 CTC model config
+ * @typedef {Object} Zipformer2CtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * NeMo CTC model config
+ * @typedef {Object} NemoCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Tone CTC model config
+ * @typedef {Object} ToneCtcModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Online model config (subset of C++ `OnlineModelConfig`).
+ * @typedef {Object} OnlineModelConfig
+ * @property {TransducerModelConfig} [transducer]
+ * @property {ParaformerModelConfig} [paraformer]
+ * @property {Zipformer2CtcModelConfig} [zipformer2Ctc]
+ * @property {NemoCtcModelConfig} [nemoCtc]
+ * @property {ToneCtcModelConfig} [toneCtc]
+ * @property {string} [tokens]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ * @property {string} [modelType]
+ * @property {string} [modelingUnit]
+ * @property {string} [bpeVocab]
+ * @property {string} [tokensBuf]
+ * @property {number} [tokensBufSize]
+ */
+
+/**
+ * Homophone replacer configuration used both in online and offline recognizers.
+ * @typedef {Object} HomophoneReplacerConfig
+ * @property {string} [lexicon]
+ * @property {string} [ruleFsts]
+ */
+
+/**
+ * Online recognizer configuration passed to createOnlineRecognizer.
+ * @typedef {Object} OnlineRecognizerConfig
+ * @property {FeatureConfig} [featConfig]
+ * @property {OnlineModelConfig} [modelConfig]
+ * @property {HomophoneReplacerConfig} [hr]
+ * @property {string} [decodingMethod]
+ * @property {number} [maxActivePaths]
+ * @property {boolean|number} [enableEndpoint]
+ * @property {number} [rule1MinTrailingSilence]
+ * @property {number} [rule2MinTrailingSilence]
+ * @property {number} [rule3MinUtteranceLength]
+ * @property {string} [hotwordsFile]
+ * @property {number} [hotwordsScore]
+ * @property {string} [ruleFsts]
+ * @property {string} [ruleFars]
+ * @property {number} [blankPenalty]
  */
 
 /**
@@ -187,9 +377,126 @@
  */
 
 /**
+ * Spoken Language ID whisper config
+ * @typedef {Object} SpokenLanguageIdentificationWhisperConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {number} [tailPaddings]
+ */
+
+/**
+ * SpokenLanguageIdentification config
+ * @typedef {Object} SpokenLanguageIdentificationConfig
+ * @property {SpokenLanguageIdentificationWhisperConfig} [whisper]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * Speaker embedding extractor config
+ * @typedef {Object} SpeakerEmbeddingExtractorConfig
+ * @property {string} [model]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * Offline punctuation model config
+ * @typedef {Object} OfflinePunctuationModelConfig
+ * @property {string} [ctTransformer]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * Offline punctuation config
+ * @typedef {Object} OfflinePunctuationConfig
+ * @property {OfflinePunctuationModelConfig} [model]
+ */
+
+/**
+ * Online punctuation model config
+ * @typedef {Object} OnlinePunctuationModelConfig
+ * @property {string} [cnnBilstm]
+ * @property {string} [bpeVocab]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
+ */
+
+/**
+ * Online punctuation config
+ * @typedef {Object} OnlinePunctuationConfig
+ * @property {OnlinePunctuationModelConfig} [model]
+ */
+
+/**
+ * Generic audio processing request used by denoisers/tts generators.
+ * @typedef {Object} AudioProcessRequest
+ * @property {Float32Array} samples
+ * @property {number} sampleRate
+ * @property {boolean} [enableExternalBuffer]
+ */
+
+/**
+ * Offline TTS model configs
+ * @typedef {Object} OfflineTtsVitsModelConfig
+ * @property {string} [model]
+ * @property {string} [lexicon]
+ * @property {string} [tokens]
+ * @property {string} [dataDir]
+ * @property {number} [noiseScale]
+ * @property {number} [noiseScaleW]
+ * @property {number} [lengthScale]
+ */
+
+/**
+ * @typedef {Object} OfflineTtsMatchaModelConfig
+ * @property {string} [acousticModel]
+ * @property {string} [vocoder]
+ * @property {string} [lexicon]
+ * @property {string} [tokens]
+ * @property {string} [dataDir]
+ * @property {number} [noiseScale]
+ * @property {number} [lengthScale]
+ */
+
+/**
+ * @typedef {Object} OfflineTtsKokoroModelConfig
+ * @property {string} [model]
+ * @property {string} [voices]
+ * @property {string} [tokens]
+ * @property {string} [dataDir]
+ * @property {number} [lengthScale]
+ * @property {string} [lexicon]
+ * @property {string} [lang]
+ */
+
+/**
+ * @typedef {Object} OfflineTtsKittenModelConfig
+ * @property {string} [model]
+ * @property {string} [voices]
+ * @property {string} [tokens]
+ * @property {string} [dataDir]
+ * @property {number} [lengthScale]
+ */
+
+/**
+ * Offline TTS model config
+ * @typedef {Object} OfflineTtsModelConfig
+ * @property {OfflineTtsVitsModelConfig} [vits]
+ * @property {OfflineTtsMatchaModelConfig} [matcha]
+ * @property {OfflineTtsKokoroModelConfig} [kokoro]
+ * @property {OfflineTtsKittenModelConfig} [kitten]
+ */
+
+/**
  * Offline TTS configuration (partial, commonly used props).
  * @typedef {Object} OfflineTtsConfig
- * @property {Object} [model]
+ * @property {OfflineTtsModelConfig} [model]
  * @property {number} [maxNumSentences]
  * @property {number} [silenceScale]
  * @property {number} [numThreads]
@@ -197,19 +504,46 @@
  */
 
 /**
+ * Offline Speech Denoiser model config
+ * @typedef {Object} OfflineSpeechDenoiserGtcrnModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Speech Denoiser model config
+ * @typedef {Object} OfflineSpeechDenoiserModelConfig
+ * @property {OfflineSpeechDenoiserGtcrnModelConfig} [gtcrn]
+ */
+
+/**
  * Offline Speech Denoiser configuration (partial).
  * @typedef {Object} OfflineSpeechDenoiserConfig
- * @property {Object} [model]
+ * @property {OfflineSpeechDenoiserModelConfig} [model]
  * @property {number} [numThreads]
+ * @property {string} [provider]
+ */
+
+/**
+ * Offline speaker segmentation (pyannote) model config
+ * @typedef {Object} OfflineSpeakerSegmentationPyannoteModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline speaker segmentation model config
+ * @typedef {Object} OfflineSpeakerSegmentationModelConfig
+ * @property {OfflineSpeakerSegmentationPyannoteModelConfig} [pyannote]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
  * @property {string} [provider]
  */
 
 /**
  * Offline Speaker Diarization configuration (partial).
  * @typedef {Object} OfflineSpeakerDiarizationConfig
- * @property {Object} [segmentation]
- * @property {Object} [embedding]
- * @property {Object} [clustering]
+ * @property {OfflineSpeakerSegmentationModelConfig} [segmentation]
+ * @property {SpeakerEmbeddingExtractorConfig} [embedding]
+ * @property {FastClusteringConfig} [clustering]
  * @property {number} [minDurationOn]
  * @property {number} [minDurationOff]
  */
