@@ -15,14 +15,14 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(onnxruntime_HASH "SHA256=ecc68d914541c3b6ebc36148af63fe2a6af0f4f955b35199d612698d23169fa5")
+  set(onnxruntime_HASH "SHA256=e9e45524bf402263e5280b16b8342a923bb3b17959f5d88296e4778d6ee709ee")
 elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-  set(onnxruntime_HASH "SHA256=7cbe58273e55d033568f84fb16d220cea4e25ec29eb7db405c4ac7b6e41f2dfa")
+  set(onnxruntime_HASH "SHA256=1c923107630ffbd045115157b44f2e415cc553d64811a5399009208683ebcf58")
 elseif(CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
-  set(onnxruntime_HASH "SHA256=9eb3adf0f6ac3b0e9f118e0d9e686f50fc651394e0b0cc569275af6e3ffed0e0")
+  set(onnxruntime_HASH "SHA256=0ceab7ac41b220d43bbcb0826e8ecd6294669fd3a13b8643e40dd3c9db2ef896")
 else()
   message(FATAL_ERROR "This file is for building a debug version on Windows x64. Given ${CMAKE_BUILD_TYPE}")
 endif()
@@ -31,10 +31,10 @@ endif()
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2
-  /tmp/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  /tmp/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)
