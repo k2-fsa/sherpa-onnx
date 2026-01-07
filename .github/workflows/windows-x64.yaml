@@ -59,7 +59,6 @@ jobs:
           cmake \
             -A x64 \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D CMAKE_BUILD_TYPE=Release \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -DCMAKE_INSTALL_PREFIX=./install \

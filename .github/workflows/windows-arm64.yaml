@@ -48,7 +48,6 @@ jobs:
             -A ARM64 \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
             -D CMAKE_BUILD_TYPE=Release \
-            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
             -D BUILD_ESPEAK_NG_EXE=OFF \

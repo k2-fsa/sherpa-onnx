@@ -146,7 +146,7 @@ jobs:
           tar cjvf $d.tar.bz2 $d
 
       - name: Collect funasr-nano with LLM float32
-        if: true
+        if: false
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-2025-12-30
@@ -859,7 +859,7 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Release
-        if: true
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
