@@ -41,9 +41,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          registry-url: "https://registry.npmjs.org"
-          architecture: "x86"
-          node-version: "16"
+          registry-url: 'https://registry.npmjs.org'
+          architecture: 'x86'
+          node-version: '16'
 
       - name: Display node version
         shell: bash
@@ -158,8 +158,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Display node version
         shell: bash
