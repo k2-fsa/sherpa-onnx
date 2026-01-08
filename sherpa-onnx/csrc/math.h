@@ -161,5 +161,8 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
                           std::vector<float> *mean,
                           std::vector<float> *inv_stddev);
 
+void NormalizeWhisperFeatures(float *features, int32_t num_frames,
+                              int32_t feat_dim);
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_
