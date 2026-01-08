@@ -13,10 +13,39 @@
 
 namespace sherpa_onnx {
 
+// Represents a segment with start/end timestamps from timestamp tokens
+struct OfflineWhisperSegment {
+  float start_time = 0.0f;
+  float end_time = 0.0f;
+  std::vector<int32_t> token_ids;  // Text token IDs in this segment
+};
+
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
   std::string lang;
+
+  /// Cross-attention weights for token-level timestamps (if enabled)
+  /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D
+  /// Empty if timestamps are not enabled or model doesn't support it
+  std::vector<float> attention_weights;
+
+  /// Dimensions of attention weights
+  int32_t attention_n_heads = 0;
+  int32_t attention_n_tokens = 0;
+  int32_t attention_n_frames = 0;
+
+  /// Number of actual audio feature frames (for clipping attention)
+  /// This is num_feature_frames / 2 (due to encoder downsampling)
+  int32_t num_audio_frames = 0;
+
+  /// Indices of timestamp tokens in the attention weights (0-based, relative
+  /// to the start of the attention sequence which includes initial tokens).
+  /// Used to filter out timestamp tokens before DTW alignment.
+  std::vector<int32_t> timestamp_token_indices;
+
+  /// Segments with timestamps (when using timestamp token mode)
+  std::vector<OfflineWhisperSegment> segments;
 };
 
 class OfflineWhisperDecoder {
