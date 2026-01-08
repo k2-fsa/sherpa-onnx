@@ -31,7 +31,13 @@ static Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
 
 static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols, OnlineTransducerNeMoModel *model,
-                      float blank_penalty, OnlineStream *s) {
+                      float blank_penalty, float temperature_scale,
+                      OnlineStream *s) {
+  // Defensive: temperature must be > 0. Treat invalid values as "no scaling".
+  if (temperature_scale <= 0.0f) {
+    temperature_scale = 1.0f;
+  }
+
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -86,6 +92,22 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       r.timestamps.push_back(t + r.frame_offset);
       r.num_trailing_blanks = 0;
 
+      // Export the per-token log scores
+      // Copy logits before modifying to avoid issues with tensor data
+      // Note: p_logit already includes blank_penalty adjustment (applied at line 81)
+      // so vocab_log_probs will contain adjusted probabilities, not raw model outputs
+      std::vector<float> logits_copy(p_logit, p_logit + vocab_size);
+      if (temperature_scale != 1.0f) {
+        for (int32_t n = 0; n < vocab_size; ++n) {
+          logits_copy[n] /= temperature_scale;
+        }
+      }
+      LogSoftmax(logits_copy.data(), vocab_size);
+      r.ys_probs.push_back(logits_copy[y]);
+
+      // Store full vocabulary distribution (includes blank penalty and temperature scaling)
+      r.vocab_log_probs.push_back(std::move(logits_copy));
+
       decoder_input = BuildDecoderInput(y, model->Allocator());
 
       // last decoder state becomes the current state for the first chunk
@@ -123,7 +145,8 @@ void OnlineTransducerGreedySearchNeMoDecoder::Decode(Ort::Value encoder_out,
   for (int32_t i = 0; i != batch_size; ++i) {
     const float *this_p = p + dim1 * dim2 * i;
 
-    DecodeOne(this_p, dim1, dim2, model_, blank_penalty_, ss[i]);
+    DecodeOne(this_p, dim1, dim2, model_, blank_penalty_, temperature_scale_,
+              ss[i]);
   }
 }
 

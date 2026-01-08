@@ -30,6 +30,10 @@ struct OnlineTransducerDecoderResult {
   std::vector<float> lm_probs;
   std::vector<float> context_scores;
 
+  /// Shape: (num_emitted_tokens, vocab_size)
+  /// Empty if confidence calculation is disabled
+  std::vector<std::vector<float>> vocab_log_probs;
+
   // Cache decoder_out for endpointing
   Ort::Value decoder_out;
 
