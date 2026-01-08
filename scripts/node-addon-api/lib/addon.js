@@ -1,5 +1,4 @@
 /** @typedef {import('./types').WaveObject} WaveObject */
-/** @typedef {import('./types').GeneratedAudio} GeneratedAudio */
 
 const os = require('os');
 const path = require('path');

@@ -1,7 +1,7 @@
 /** @typedef {import('./types').AudioTaggingConfig} AudioTaggingConfig */
-/** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
 /** @typedef {import('./types').AudioEvent} AudioEvent */
 /** @typedef {import('./types').AudioTaggingHandle} AudioTaggingHandle */
+/** @typedef {import('./non-streaming-asr').OfflineStream} OfflineStream */
 
 const addon = require('./addon.js');
 const non_streaming_asr = require('./non-streaming-asr.js');
@@ -22,7 +22,7 @@ class AudioTagging {
 
   /**
    * Create an offline stream bound to this AudioTagging instance.
-   * @returns {OfflineStreamObject}
+   * @returns {OfflineStream}
    */
   createStream() {
     return new non_streaming_asr.OfflineStream(
@@ -31,7 +31,7 @@ class AudioTagging {
 
   /**
    * Compute audio tags from an offline stream.
-   * @param {OfflineStreamObject} stream - An offline stream created by `AudioTagging.createStream()`.
+   * @param {OfflineStream} stream - An offline stream created by `AudioTagging.createStream()`.
    * @param {number} [topK=-1] - Return top K results; -1 for all.
    * @returns {AudioEvent[]}
    */

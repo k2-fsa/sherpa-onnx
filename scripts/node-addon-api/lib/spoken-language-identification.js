@@ -1,5 +1,5 @@
-/** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
 /** @typedef {import('./types').SpokenLanguageIdentificationConfig} SpokenLanguageIdentificationConfig */
+/** @typedef {import('./non-streaming-asr').OfflineStream} OfflineStream */
 
 const addon = require('./addon.js');
 const non_streaming_asr = require('./non-streaming-asr.js');
@@ -14,7 +14,7 @@ class SpokenLanguageIdentification {
   }
 
   /**
-   * @returns {OfflineStreamObject}
+   * @returns {OfflineStream}
    */
   createStream() {
     return new non_streaming_asr.OfflineStream(
@@ -23,7 +23,7 @@ class SpokenLanguageIdentification {
 
   /**
    * Return a 2-letter language code, e.g. 'en', 'de', 'fr', 'es', 'zh'
-   * @param {OfflineStreamObject} stream
+   * @param {OfflineStream} stream
    * @returns {string}
    */
   compute(stream) {
