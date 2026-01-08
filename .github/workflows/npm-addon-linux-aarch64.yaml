@@ -54,6 +54,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Show .npmrc
@@ -132,12 +133,8 @@ jobs:
 
               ls -lh ./sherpa-onnx-node
 
-              export NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
-
               cd ./sherpa-onnx-node
               cp -v /shared/.npmrc ./
-              npm install
-              npm ci
+              # https://docs.npmjs.com/trusted-publishers
               ls -lh
-              # see https://docs.npmjs.com/generating-provenance-statements
-              npm publish --provenance --access public
+              npm publish --access public

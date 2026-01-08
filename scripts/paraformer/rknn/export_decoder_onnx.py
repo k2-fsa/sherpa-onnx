@@ -3,7 +3,38 @@
 
 import torch
 
-from export_encoder_onnx import load_model, get_args, get_num_input_frames
+from export_encoder_onnx import load_model, get_num_input_frames
+
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "--input-len-in-seconds",
+        type=int,
+        required=True,
+        help="""RKNN/QNN does not support dynamic shape, so we need to hard-code
+        how long the model can process.
+        """,
+    )
+
+    parser.add_argument(
+        "--float-mask",
+        type=int,
+        default=1,
+        help="1 to use float mask. 0 to use int32 mask",
+    )
+
+    parser.add_argument(
+        "--opset-version",
+        type=int,
+        default=14,
+    )
+    return parser.parse_args()
 
 
 @torch.no_grad()
@@ -18,12 +49,15 @@ def main():
 
     encoder_out = torch.randn(1, num_input_frames, 512, dtype=torch.float32)
     acoustic_embedding = torch.randn(1, num_input_frames, 512, dtype=torch.float32)
-    mask = torch.ones([num_input_frames], dtype=torch.float32)
+    if args.float_mask == 1:
+        mask = torch.ones([num_input_frames], dtype=torch.float32)
+    else:
+        mask = torch.ones([num_input_frames], dtype=torch.int32)
 
     d = model.decoder(encoder_out, acoustic_embedding)
     print("d", d.shape)
 
-    opset_version = 14
+    opset_version = args.opset_version
     filename = f"decoder-{input_len_in_seconds}-seconds.onnx"
     torch.onnx.export(
         model.decoder,

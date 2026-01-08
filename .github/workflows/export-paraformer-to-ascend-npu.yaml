@@ -3,7 +3,7 @@ name: export-paraformer-to-ascend-npu
 on:
   push:
     branches:
-      - ascend-910b4-2
+      - ci-export-whisper-ascend-npu-2
   workflow_dispatch:
 
 concurrency:
@@ -63,7 +63,7 @@ jobs:
 
       - name: Install curl
         shell: bash
-        run: apt-get update && apt-get install -y curl bzip2
+        run: apt-get update && apt-get install -y curl bzip2 git git-lfs
 
       - name: Verify environment
         shell: bash
@@ -127,6 +127,8 @@ jobs:
           python3 ./export_decoder_onnx.py
           python3 ./export_predictor_onnx.py
 
+          rm -v *.pt
+
           ls -lh *.onnx
 
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -171,6 +173,8 @@ jobs:
 
           ls -lh *.om
 
+          rm -v *.onnx
+
 
           echo "collect results"
           d=sherpa-onnx-ascend-${soc_version}-cann-$cann-paraformer-zh-2023-03-28
@@ -190,6 +194,8 @@ jobs:
           tar cjfv $d.tar.bz2 $d
           ls -lh *.tar.bz2
           rm -rf $d
+
+          rm -v *.om
 
           echo "----show---"
           ls -lh *.tar.bz2
@@ -267,6 +273,7 @@ jobs:
 
           ls -lh *.om
 
+          rm -v *.onnx
 
           echo "collect results"
           d=sherpa-onnx-ascend-${soc_version}-cann-$cann-paraformer-zh-2025-10-07
@@ -286,6 +293,8 @@ jobs:
           tar cjfv $d.tar.bz2 $d
           ls -lh *.tar.bz2
           rm -rf $d
+
+          rm -v *.om
 
           echo "----show---"
           ls -lh *.tar.bz2
@@ -311,3 +320,81 @@ jobs:
           file: ./*.tar.bz2
           overwrite: true
           tag: asr-models-ascend
+
+      - name: Publish to huggingface
+        if: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+
+              d=asr-models/ascend-npu/paraformer
+              mkdir -p huggingface/$d
+
+              cp -v $m huggingface/$d/
+
+              pushd huggingface
+              git lfs track "*.tar.bz2"
+              ls -lh $d
+              pushd $d
+              git lfs track "*.tar.bz2"
+              popd
+
+              git status
+              git add .
+
+              git commit -m "add $m"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
+              popd
+            done
+            rm -rf huggingface
+
+      - name: Publish to modelscope
+        if: true
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              d=ascend-npu/paraformer
+              mkdir -p ms/$d
+
+              cp -av $m ms/$d/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh $d/$m
+
+              ls -lh $d
+              git add .
+
+              git commit -m "add $m"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
+              popd
+            done
+            rm -rf ms

@@ -272,6 +272,28 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.omnilingual.model =
       config.model_config.omnilingual.model.c_str();
 
+  c.model_config.funasr_nano.encoder_adaptor =
+      config.model_config.funasr_nano.encoder_adaptor.c_str();
+  c.model_config.funasr_nano.llm =
+      config.model_config.funasr_nano.llm.c_str();
+  c.model_config.funasr_nano.embedding =
+      config.model_config.funasr_nano.embedding.c_str();
+  c.model_config.funasr_nano.tokenizer =
+      config.model_config.funasr_nano.tokenizer.c_str();
+  c.model_config.funasr_nano.system_prompt =
+      config.model_config.funasr_nano.system_prompt.c_str();
+  c.model_config.funasr_nano.user_prompt =
+      config.model_config.funasr_nano.user_prompt.c_str();
+  c.model_config.funasr_nano.max_new_tokens =
+      config.model_config.funasr_nano.max_new_tokens;
+  c.model_config.funasr_nano.temperature =
+      config.model_config.funasr_nano.temperature;
+  c.model_config.funasr_nano.top_p =
+      config.model_config.funasr_nano.top_p;
+  c.model_config.funasr_nano.seed =
+      config.model_config.funasr_nano.seed;
+  c.model_config.medasr.model = config.model_config.medasr.model.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 

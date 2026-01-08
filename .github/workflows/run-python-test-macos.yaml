@@ -31,10 +31,10 @@ jobs:
         # macos-14 is for arm64
         # macos-14-large is for x64
         include:
-          - os: macos-13
+          - os: macos-15-intel
             python-version: "3.8"
 
-          - os: macos-13
+          - os: macos-15-intel
             python-version: "3.9"
           - os: macos-14
             python-version: "3.10"

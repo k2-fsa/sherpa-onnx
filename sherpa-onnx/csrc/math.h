@@ -13,6 +13,8 @@
 #include <numeric>
 #include <vector>
 
+#include "Eigen/Dense"
+
 namespace sherpa_onnx {
 
 // logf(FLT_EPSILON)
@@ -131,10 +133,33 @@ std::vector<int32_t> TopkIndex(const std::vector<std::vector<T>> &vec,
   return TopkIndex(flatten.data(), flatten.size(), topk);
 }
 
+// in_out[i] += src[i] * scale
+void ScaleAdd(const float *src, float scale, int32_t n, float *in_out);
+
+// out[i] = src[i] * scale
+void Scale(const float *src, float scale, int32_t n, float *out);
+
 // For Paraformer
 std::vector<float> ComputeAcousticEmbedding(
     const std::vector<float> &encoder_out, const std::vector<float> &alphas,
     int32_t encoder_dim);
+
+// Transpose a 2-D matrix in row-major
+std::vector<float> Transpose(const float *input, int32_t rows, int32_t cols);
+
+/* Compute mean and inverse stddev over rows.
+ *
+ * @param p  A pointer to a 2-d array of shape (num_rows, num_cols)
+ * @param num_rows Number of rows
+ * @param num_cols Number of columns
+ * @param mean On return, it contains p.mean(axis=0). You don't need to
+ *             pre-allocate space for it.
+ * @param inv_stddev On return, it contains 1/p.std(axis=0) You don't need to
+ *                   pre-allocate space for it.
+ */
+void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
+                          std::vector<float> *mean,
+                          std::vector<float> *inv_stddev);
 
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

@@ -340,6 +340,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineMedAsrCtcModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineWhisperModelConfig = record
     Encoder: AnsiString;
     Decoder: AnsiString;
@@ -416,6 +421,7 @@ type
     Canary: TSherpaOnnxOfflineCanaryModelConfig;
     WenetCtc: TSherpaOnnxOfflineWenetCtcModelConfig;
     Omnilingual: TSherpaOnnxOfflineOmnilingualAsrCtcModelConfig;
+    MedAsr: TSherpaOnnxOfflineMedAsrCtcModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -828,6 +834,9 @@ type
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig = record
     Model: PAnsiChar;
   end;
+  SherpaOnnxOfflineMedAsrCtcModelConfig = record
+    Model: PAnsiChar;
+  end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -886,6 +895,7 @@ type
     Canary: SherpaOnnxOfflineCanaryModelConfig;
     WenetCtc: SherpaOnnxOfflineWenetCtcModelConfig;
     Omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig;
+    MedAsr: SherpaOnnxOfflineMedAsrCtcModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1719,6 +1729,12 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineMedAsrCtcModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineMedAsrCtcModelConfig(Model := %s)',
+    [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineWhisperModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineWhisperModelConfig(' +
@@ -1810,7 +1826,8 @@ begin
     'ZipformerCtc := %s, ' +
     'Canary := %s, ' +
     'WenetCtc := %s, ' +
-    'Omnilingual := %s' +
+    'Omnilingual := %s, ' +
+    'MedAsr := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
@@ -1819,7 +1836,7 @@ begin
      Self.TeleSpeechCtc, Self.SenseVoice.ToString, Self.Moonshine.ToString,
      Self.FireRedAsr.ToString, Self.Dolphin.ToString,
      Self.ZipformerCtc.ToString, Self.Canary.ToString, Self.WenetCtc.ToString,
-     Self.Omnilingual.ToString
+     Self.Omnilingual.ToString, Self.MedAsr.ToString
      ]);
 end;
 
@@ -1900,6 +1917,7 @@ begin
 
   C.ModelConfig.WenetCtc.Model := PAnsiChar(Config.ModelConfig.WenetCtc.Model);
   C.ModelConfig.Omnilingual.Model := PAnsiChar(Config.ModelConfig.Omnilingual.Model);
+  C.ModelConfig.MedAsr.Model := PAnsiChar(Config.ModelConfig.MedAsr.Model);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
