@@ -408,6 +408,7 @@ def convert_tokens(name, model):
     with open(f"{name}-tokens.txt", "w") as f:
         for t, i in tokens.items():
             f.write(f"{t} {i}\n")
+    print(f"Saved to {name}-tokens.txt")
 
 
 @torch.no_grad()

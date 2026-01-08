@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c)  2025  Xiaomi Corporation
+# Copyright    2026  Xiaomi Corp.        (authors: Fangjun Kuang)
+
+"""
+Usage example:
+
+./test_om.py \
+  --encoder ./tiny.en-encoder.om \
+  --decoder ./tiny.en-decoder.om \
+  --tokens ./tiny.en-tokens.txt \
+  --wav  ./test_wavs/0.wav
+"""
 
 import argparse
 import base64
@@ -217,6 +227,7 @@ def main():
     for t in model.sot_sequence:
         token = np.array([[t]], dtype=np.int32)  # sot
         mask = causal_mask_1d(offset.item(), model.n_text_ctx)
+        print(t, model.sot_sequence, token, mask.shape, len(cross_kv), len(self_kv))
 
         out = model.run_decoder(
             tokens=token, self_kv=self_kv, cross_kv=cross_kv, offset=offset, mask=mask
