@@ -90,4 +90,46 @@ std::string OfflineWhisperModelConfig::ToString() const {
   return os.str();
 }
 
+std::string ToString(WhisperModelType model) {
+  switch (model) {
+    case WhisperModelType::Tiny:
+      return "tiny";
+    case WhisperModelType::TinyEn:
+      return "tiny.en";
+    case WhisperModelType::Base:
+      return "base";
+    case WhisperModelType::BaseEn:
+      return "base.en";
+    case WhisperModelType::Small:
+      return "small";
+    case WhisperModelType::SmallEn:
+      return "small.en";
+    case WhisperModelType::Medium:
+      return "medium";
+    case WhisperModelType::MediumEn:
+      return "medium.en";
+    case WhisperModelType::Large:
+      return "large";
+  }
+  return "unknown";
+}
+
+WhisperModelType ParseWhisperModelType(const std::string &name) {
+  if (name == "tiny") return WhisperModelType::Tiny;
+  if (name == "tiny.en") return WhisperModelType::TinyEn;
+  if (name == "base") return WhisperModelType::Base;
+  if (name == "base.en") return WhisperModelType::BaseEn;
+  if (name == "small") return WhisperModelType::Small;
+  if (name == "small.en") return WhisperModelType::SmallEn;
+  if (name == "medium") return WhisperModelType::Medium;
+  if (name == "medium.en") return WhisperModelType::MediumEn;
+  if (name == "large") return WhisperModelType::Large;
+
+  SHERPA_ONNX_LOGE("Unknown Whisper model: '%s'", name.c_str());
+  SHERPA_ONNX_EXIT(-1);
+
+  // Unreachable code
+  return WhisperModelType::Tiny;
+}
+
 }  // namespace sherpa_onnx

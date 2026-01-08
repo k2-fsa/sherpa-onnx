@@ -55,6 +55,23 @@ struct OfflineWhisperModelConfig {
   std::string ToString() const;
 };
 
+// used by ascend/rknn/qnn/axera, etc.
+enum class WhisperModelType {
+  Tiny,
+  TinyEn,
+  Base,
+  BaseEn,
+  Small,
+  SmallEn,
+  Medium,
+  MediumEn,
+  Large
+};
+
+std::string ToString(WhisperModelType model);
+
+WhisperModelType ParseWhisperModelType(const std::string &name);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_WHISPER_MODEL_CONFIG_H_

@@ -350,11 +350,14 @@ AclDataBuffer::AclDataBuffer(void *data, size_t size) {
   }
 }
 
-AclDataBuffer::~AclDataBuffer() {
+AclDataBuffer::~AclDataBuffer() { Release(); }
+
+void AclDataBuffer::Release() {
   if (p_) {
     aclError ret = aclDestroyDataBuffer(p_);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclDestroyDataBuffer");
   }
+  p_ = nullptr;
 }
 
 AclTensorDesc::AclTensorDesc(aclDataType data_type, int num_dims,
