@@ -1,5 +1,4 @@
 /** @typedef {import('./types').SpeakerEmbeddingEntry} SpeakerEmbeddingEntry */
-/** @typedef {import('./types').SpeakerEmbeddingManagerAddListFlattenedObj} SpeakerEmbeddingManagerAddListFlattenedObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerSearchObj} SpeakerEmbeddingManagerSearchObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerVerifyObj} SpeakerEmbeddingManagerVerifyObj */
 /** @typedef {import('./types').SpeakerEmbeddingExtractorConfig} SpeakerEmbeddingExtractorConfig */
@@ -49,6 +48,11 @@ class SpeakerEmbeddingExtractor {
   }
 }
 
+/**
+ * Flattens an array of Float32Arrays into a single Float32Array.
+ * @param {Float32Array[]} arrayList
+ * @returns {Float32Array}
+ */
 function flatten(arrayList) {
   let n = 0;
   for (let i = 0; i < arrayList.length; ++i) {
@@ -68,14 +72,14 @@ function flatten(arrayList) {
  * Manager for speaker embeddings.
  */
 class SpeakerEmbeddingManager {
+  /**
+   * @param {number} dim - The embedding dimension
+   */
   constructor(dim) {
     this.handle = addon.createSpeakerEmbeddingManager(dim);
     this.dim = dim;
   }
 
-  /*
-   obj = {name: "xxx", v: a-float32-array}
-   */
   /**
    * @param {SpeakerEmbeddingEntry} obj
    * @returns {boolean}
@@ -84,10 +88,6 @@ class SpeakerEmbeddingManager {
     return addon.speakerEmbeddingManagerAdd(this.handle, obj);
   }
 
-  /*
-   * obj =
-   * {name: "xxx", v: [float32_array1, float32_array2, ..., float32_arrayn]
-   */
   /**
    * @param {{name:string, v: Float32Array[]}} obj
    * @returns {boolean}
@@ -109,9 +109,6 @@ class SpeakerEmbeddingManager {
     return addon.speakerEmbeddingManagerRemove(this.handle, name);
   }
 
-  /*
-   * obj = {v: a-float32-array, threshold: a-float }
-   */
   /**
    * @param {SpeakerEmbeddingManagerSearchObj} obj
    * @returns {string}
@@ -120,9 +117,6 @@ class SpeakerEmbeddingManager {
     return addon.speakerEmbeddingManagerSearch(this.handle, obj);
   }
 
-  /*
-   * obj = {name: 'xxx', v: a-float32-array, threshold: a-float }
-   */
   /**
    * @param {SpeakerEmbeddingManagerVerifyObj} obj
    * @returns {boolean}

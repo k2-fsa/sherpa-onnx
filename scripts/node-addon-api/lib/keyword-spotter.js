@@ -60,7 +60,7 @@ class KeywordSpotter {
 
     return JSON.parse(jsonStr);
   }
-} 
+}
 
 module.exports = {
   KeywordSpotter,
