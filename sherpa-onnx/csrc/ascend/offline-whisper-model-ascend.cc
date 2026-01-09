@@ -233,7 +233,7 @@ class OfflineWhisperModelAscend::Impl {
   int32_t DetectLanguage() {
     RunDecoderImpl();
 
-    // no need to update the Self KV cache
+    // No need to update the Self KV cache
 
     auto ret = aclrtMemcpy(
         logits_cpu_.data(), logits_cpu_.size() * sizeof(float), logits_ptr_,
