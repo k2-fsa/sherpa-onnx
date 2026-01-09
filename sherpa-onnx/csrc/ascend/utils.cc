@@ -266,7 +266,7 @@ std::string AclModel::GetInfo() const {
     size_t size_in_bytes = aclmdlGetInputSizeByIndex(desc_->Get(), i);
 
     os << " size in bytes: " << size_in_bytes << "\n";
-    os << " size in MB:    " << size_in_bytes / 1024 / 1024 << "\n";
+    os << " size in MB:    " << size_in_bytes / 1024. / 1024 << "\n";
 
     const char *name = aclmdlGetInputNameByIndex(desc_->Get(), i);
     os << " name: " << name << "\n";

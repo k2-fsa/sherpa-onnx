@@ -31,8 +31,8 @@ namespace sherpa_onnx {
 
 // masked positions: 1
 // unmasked positions: 0
-static std::vector<float> CreateCausalMask(int32_t n, int32_t capacity) {
-  std::vector<float> mask(capacity, 1);
+static std::vector<int32_t> CreateCausalMask(int32_t n, int32_t capacity) {
+  std::vector<int32_t> mask(capacity, 1);
   std::fill(mask.data(), mask.data() + n, 0);
 
   return mask;
@@ -92,7 +92,14 @@ class OfflineWhisperModelAscend::Impl {
           "Recognition result may be truncated/incomplete. Please select a "
           "model accepting longer audios or use VAD to cut your audio into "
           "small chunks.");
+
+      num_frames = num_frames_;
     }
+
+    // assume at most 6 tokens per second
+    int32_t num_possible_tokens = num_frames / 100.0 * 6;
+    num_possible_tokens =
+        std::min<int32_t>(num_possible_tokens, n_text_ctx_ / 2);
 
     features.resize(num_frames_ * feat_dim_);
 
@@ -102,9 +109,35 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_LOGE("features size: %d. %dx%d", (int)features.size(),
                      (int)features.size() / feat_dim_, feat_dim_);
     RunEncoder(std::move(features));
-    SHERPA_ONNX_LOGE("run encoder done!");
 
-    return {};
+    int32_t token = 0;
+    int32_t offset = 0;
+    int32_t i = 0;
+    auto mask = CreateCausalMask(offset, n_text_ctx_);
+    for (int32_t i = 0; i < sot_sequence_.size(); ++i) {
+      token = sot_sequence_[i];
+      token = RunDecoder(token, offset, mask);
+      mask[offset] = 0;
+
+      offset += 1;
+      SHERPA_ONNX_LOGE("token: %d", token);
+    }
+
+    std::vector<int32_t> ans;
+    if (token == eot_) {
+      return ans;
+    }
+    ans.reserve(n_text_ctx_);
+
+    while (offset < num_possible_tokens && token != eot_) {
+      ans.push_back(token);
+      token = RunDecoder(token, offset, mask);
+
+      mask[offset] = 0;
+      offset += 1;
+    }
+
+    return ans;
   }
 
   int32_t FeatureDim() const { return feat_dim_; }
@@ -137,6 +170,93 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
   }
 
+  int32_t RunDecoder(int32_t token, int32_t offset,
+                     const std::vector<int32_t> &mask) {
+    // TODO(fangjun): Allocate token, offset, mask into a single block
+    aclError ret = aclrtMemcpy(*token_ptr_, sizeof(int32_t), &token,
+                               sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    ret = aclrtMemcpy(*offset_ptr_, sizeof(int32_t), &offset, sizeof(int32_t),
+                      ACL_MEMCPY_HOST_TO_DEVICE);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    ret = aclrtMemcpy(*mask_ptr_, mask.size() * sizeof(int32_t), mask.data(),
+                      mask.size() * sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    AclMdlDataset input_dataset;
+    AclDataBuffer token_buf(*token_ptr_, sizeof(int32_t));
+    input_dataset.AddBuffer(token_buf);
+
+    std::vector<AclDataBuffer> self_kv_buffer;
+    self_kv_buffer.reserve(self_kv_ptr_.size());
+    for (auto &p : self_kv_ptr_) {
+      AclDataBuffer tmp_buffer(*p, n_text_ctx_ * n_text_state_ * sizeof(float));
+      self_kv_buffer.push_back(std::move(tmp_buffer));
+
+      input_dataset.AddBuffer(self_kv_buffer.back());
+    }
+
+    std::vector<AclDataBuffer> cross_kv_buffer;
+    cross_kv_buffer.reserve(cross_kv_ptr_.size());
+    for (auto &p : cross_kv_ptr_) {
+      AclDataBuffer tmp_buffer(*p,
+                               num_out_frames_ * n_text_state_ * sizeof(float));
+      cross_kv_buffer.push_back(std::move(tmp_buffer));
+
+      input_dataset.AddBuffer(cross_kv_buffer.back());
+    }
+
+    AclDataBuffer offset_buf(*offset_ptr_, sizeof(int32_t));
+    input_dataset.AddBuffer(offset_buf);
+
+    AclDataBuffer mask_buf(*mask_ptr_, mask.size() * sizeof(int32_t));
+    input_dataset.AddBuffer(mask_buf);
+
+    AclMdlDataset output_dataset;
+
+    AclDataBuffer logits_buf(*logits_ptr_, vocab_size_ * sizeof(float));
+    output_dataset.AddBuffer(logits_buf);
+
+    std::vector<AclDataBuffer> delta_kv_buffer;
+    delta_kv_buffer.reserve(delta_kv_ptr_.size());
+    for (auto &p : delta_kv_ptr_) {
+      AclDataBuffer tmp_buffer(*p, n_text_state_ * sizeof(float));
+      delta_kv_buffer.push_back(std::move(tmp_buffer));
+
+      output_dataset.AddBuffer(delta_kv_buffer.back());
+    }
+
+    ret = aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
+
+    UpdateSelfKvCache(offset);
+
+    ret = aclrtMemcpy(logits_cpu_.data(), logits_cpu_.size() * sizeof(float),
+                      *logits_ptr_, logits_cpu_.size() * sizeof(float),
+                      ACL_MEMCPY_DEVICE_TO_HOST);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    return MaxElementIndex(logits_cpu_.data(), logits_cpu_.size());
+  }
+
+  void UpdateSelfKvCache(int32_t offset) {
+    for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
+      const float *src = delta_kv_ptr_[i]->GetFloat();
+      float *dst = self_kv_ptr_[i]->GetFloat() + offset * n_text_state_;
+
+      auto ret = aclrtMemcpy(dst, n_text_state_ * sizeof(float), src,
+                             n_text_state_ * sizeof(float),
+                             ACL_MEMCPY_DEVICE_TO_DEVICE);
+      SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+    }
+  }
+
   void PreInit() {
     int32_t device_id = 0;
     aclError ret = aclrtSetDevice(device_id);
@@ -153,15 +273,77 @@ class OfflineWhisperModelAscend::Impl {
     PostInitEncoder();
     PostInitDecoder();
     Preallocate();
+    InitSotSequence();
+  }
+
+  void InitSotSequence() {
+    switch (model_type_) {
+      case WhisperModelType::TinyEn:
+        // fallthrough
+      case WhisperModelType::BaseEn:
+        // fallthrough
+      case WhisperModelType::SmallEn:
+        // fallthrough
+      case WhisperModelType::MediumEn:
+        // fallthrough
+        // <|startoftranscript|><|notimestamps|>
+        sot_sequence_ = {50257, 50362};
+        eot_ = 50256;
+        break;
+      case WhisperModelType::Tiny:
+      case WhisperModelType::Base:
+        // fallthrough
+      case WhisperModelType::Small:
+        // fallthrough
+      case WhisperModelType::Medium:
+        // fallthrough
+      case WhisperModelType::Large:
+        // <|startoftranscript|><|en|><|transcribe|><|notimestamps|>
+        sot_sequence_ = {50258, 50259, 50359, 50363};
+        eot_ = 50257;
+        break;
+      default:
+        SHERPA_ONNX_LOGE("Unsupported model type: '%s'",
+                         ToString(model_type_).c_str());
+        SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      os << "sot_sequence: ";
+      for (auto i : sot_sequence_) {
+        os << i << " ";
+      }
+      os << "\n";
+      os << "eot: " << eot_ << "\n";
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    }
   }
 
   void Preallocate() {
     // TODO(fangjun): Allocate a single big block.
     int32_t total = 0;
+
     features_ptr_ =
         std::make_unique<AclDevicePtr>(num_frames_ * feat_dim_ * sizeof(float));
 
     total += num_frames_ * feat_dim_ * sizeof(float);
+
+    token_ptr_ = std::make_unique<AclDevicePtr>(sizeof(int32_t));
+
+    total += sizeof(int32_t);
+
+    offset_ptr_ = std::make_unique<AclDevicePtr>(sizeof(int32_t));
+
+    total += sizeof(int32_t);
+
+    mask_ptr_ = std::make_unique<AclDevicePtr>(n_text_ctx_ * sizeof(int32_t));
+
+    total += n_text_ctx_ * sizeof(int32_t);
+
+    logits_ptr_ = std::make_unique<AclDevicePtr>(vocab_size_ * sizeof(float));
+
+    total += vocab_size_ * sizeof(float);
 
     cross_kv_ptr_.reserve(n_text_layer_ * 2);
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
@@ -253,6 +435,16 @@ class OfflineWhisperModelAscend::Impl {
     if (config_.debug) {
       SHERPA_ONNX_LOGE("n_text_ctx_: %d", n_text_ctx_);
     }
+
+    const std::vector<std::vector<int64_t>> &output_shapes =
+        decoder_model_->GetOutputShapes();
+
+    vocab_size_ = output_shapes[0].back();
+    logits_cpu_.resize(vocab_size_);
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("vocab_size: %d", vocab_size_);
+    }
   }
 
   void InitEncoder(const std::string &filename) {
@@ -292,12 +484,21 @@ class OfflineWhisperModelAscend::Impl {
   int32_t n_text_layer_ = 0;
   int32_t n_text_ctx_ = 0;
   int32_t n_text_state_ = 0;
+  int32_t vocab_size_ = 0;
 
   std::unique_ptr<AclDevicePtr> features_ptr_;
+  std::unique_ptr<AclDevicePtr> token_ptr_;
+  std::unique_ptr<AclDevicePtr> offset_ptr_;
+  std::unique_ptr<AclDevicePtr> mask_ptr_;
+  std::unique_ptr<AclDevicePtr> logits_ptr_;
+  std::vector<float> logits_cpu_;
 
   std::vector<std::unique_ptr<AclDevicePtr>> cross_kv_ptr_;
   std::vector<std::unique_ptr<AclDevicePtr>> self_kv_ptr_;
   std::vector<std::unique_ptr<AclDevicePtr>> delta_kv_ptr_;
+
+  std::vector<int32_t> sot_sequence_;
+  int32_t eot_ = 0;
 };
 
 OfflineWhisperModelAscend::OfflineWhisperModelAscend(
