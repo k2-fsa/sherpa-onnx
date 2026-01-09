@@ -71,8 +71,19 @@ class OfflineWhisperModelAscend::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
-    SHERPA_ONNX_LOGE("Not implemented");
-    SHERPA_ONNX_EXIT(-1);
+    PreInit();
+
+    {
+      auto buf = ReadFile(mgr, config_.whisper.encoder);
+      InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config_.whisper.decoder);
+      InitDecoder(buf.data(), buf.size());
+    }
+
+    PostInit();
   }
 
   OfflineWhisperDecoderResult Run(std::vector<float> features) {
@@ -106,8 +117,6 @@ class OfflineWhisperModelAscend::Impl {
     // (num_frames_, feat_dim_) -> (feat_dim_, num_frames_)
     features = Transpose(features.data(), num_frames_, feat_dim_);
 
-    SHERPA_ONNX_LOGE("features size: %d. %dx%d", (int)features.size(),
-                     (int)features.size() / feat_dim_, feat_dim_);
     RunEncoder(std::move(features));
 
     // Note(fangjun): No need to intialize the self kv cache to 0
@@ -169,7 +178,6 @@ class OfflineWhisperModelAscend::Impl {
       p_mask[offset] = 0;
 
       offset += 1;
-      SHERPA_ONNX_LOGE("token: %d", token);
     }
 
     if (token == eot_) {
@@ -565,11 +573,27 @@ class OfflineWhisperModelAscend::Impl {
     }
   }
 
+  void InitEncoder(void *data, size_t size) {
+    encoder_model_ = std::make_unique<AclModel>(data, size);
+    if (config_.debug) {
+      auto s = encoder_model_->GetInfo();
+      SHERPA_ONNX_LOGE("----encoder----\n%s\n", s.c_str());
+    }
+  }
+
   void InitDecoder(const std::string &filename) {
     decoder_model_ = std::make_unique<AclModel>(filename);
     if (config_.debug) {
       auto s = decoder_model_->GetInfo();
 
+      SHERPA_ONNX_LOGE("----decoder----\n%s\n", s.c_str());
+    }
+  }
+
+  void InitDecoder(void *data, size_t size) {
+    decoder_model_ = std::make_unique<AclModel>(data, size);
+    if (config_.debug) {
+      auto s = decoder_model_->GetInfo();
       SHERPA_ONNX_LOGE("----decoder----\n%s\n", s.c_str());
     }
   }
