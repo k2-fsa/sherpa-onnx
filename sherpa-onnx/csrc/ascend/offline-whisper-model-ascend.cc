@@ -115,7 +115,7 @@ class OfflineWhisperModelAscend::Impl {
     int32_t &token = token_offset_mask_cpu_[0];
     int32_t &offset = token_offset_mask_cpu_[1];
     offset = 0;
-    int32_t i = 0;
+
     auto mask = CreateCausalMask(offset, n_text_ctx_);
     int32_t *p_mask = token_offset_mask_cpu_.data() + 2;
     std::copy(mask.begin(), mask.end(), p_mask);
