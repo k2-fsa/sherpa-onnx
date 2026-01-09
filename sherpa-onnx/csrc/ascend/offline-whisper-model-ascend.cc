@@ -110,14 +110,19 @@ class OfflineWhisperModelAscend::Impl {
                      (int)features.size() / feat_dim_, feat_dim_);
     RunEncoder(std::move(features));
 
-    int32_t token = 0;
-    int32_t offset = 0;
+    // Note(fangjun): No need to intialize the self kv cache to 0
+
+    int32_t &token = token_offset_mask_cpu_[0];
+    int32_t &offset = token_offset_mask_cpu_[1];
     int32_t i = 0;
     auto mask = CreateCausalMask(offset, n_text_ctx_);
+    int32_t *p_mask = token_offset_mask_cpu_.data() + 2;
+    std::copy(mask.begin(), mask.end(), p_mask);
+
     for (int32_t i = 0; i < sot_sequence_.size(); ++i) {
       token = sot_sequence_[i];
-      token = RunDecoder(token, offset, mask);
-      mask[offset] = 0;
+      token = RunDecoder();
+      p_mask[offset] = 0;
 
       offset += 1;
       SHERPA_ONNX_LOGE("token: %d", token);
@@ -131,9 +136,9 @@ class OfflineWhisperModelAscend::Impl {
 
     while (offset < num_possible_tokens && token != eot_) {
       ans.push_back(token);
-      token = RunDecoder(token, offset, mask);
+      token = RunDecoder();
 
-      mask[offset] = 0;
+      p_mask[offset] = 0;
       offset += 1;
     }
 
@@ -170,21 +175,12 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
   }
 
-  int32_t RunDecoder(int32_t token, int32_t offset,
-                     const std::vector<int32_t> &mask) {
-    // TODO(fangjun): Allocate token, offset, mask into a single block
-    aclError ret = aclrtMemcpy(token_ptr_, sizeof(int32_t), &token,
-                               sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
-
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
-
-    ret = aclrtMemcpy(offset_ptr_, sizeof(int32_t), &offset, sizeof(int32_t),
-                      ACL_MEMCPY_HOST_TO_DEVICE);
-
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
-
-    ret = aclrtMemcpy(mask_ptr_, mask.size() * sizeof(int32_t), mask.data(),
-                      mask.size() * sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
+  int32_t RunDecoder() {
+    aclError ret =
+        aclrtMemcpy(token_ptr_, token_offset_mask_cpu_.size() * sizeof(int32_t),
+                    token_offset_mask_cpu_.data(),
+                    token_offset_mask_cpu_.size() * sizeof(int32_t),
+                    ACL_MEMCPY_HOST_TO_DEVICE);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
@@ -214,7 +210,7 @@ class OfflineWhisperModelAscend::Impl {
     AclDataBuffer offset_buf(offset_ptr_, sizeof(int32_t));
     input_dataset.AddBuffer(offset_buf);
 
-    AclDataBuffer mask_buf(mask_ptr_, mask.size() * sizeof(int32_t));
+    AclDataBuffer mask_buf(mask_ptr_, n_text_ctx_ * sizeof(int32_t));
     input_dataset.AddBuffer(mask_buf);
 
     AclMdlDataset output_dataset;
@@ -234,7 +230,7 @@ class OfflineWhisperModelAscend::Impl {
     ret = aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
 
-    UpdateSelfKvCache(offset);
+    UpdateSelfKvCache();
 
     ret = aclrtMemcpy(logits_cpu_.data(), logits_cpu_.size() * sizeof(float),
                       logits_ptr_, logits_cpu_.size() * sizeof(float),
@@ -245,7 +241,8 @@ class OfflineWhisperModelAscend::Impl {
     return MaxElementIndex(logits_cpu_.data(), logits_cpu_.size());
   }
 
-  void UpdateSelfKvCache(int32_t offset) {
+  void UpdateSelfKvCache() {
+    int32_t offset = token_offset_mask_cpu_[1];
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
       const float *src = delta_kv_ptr_[i];
       float *dst = self_kv_ptr_[i] + offset * n_text_state_;
@@ -356,6 +353,8 @@ class OfflineWhisperModelAscend::Impl {
     // (1, feat_dim_, num_frames_)
     features_ptr_ = start + offset;
     offset += feat_dim_ * num_frames_;  // in float or in int32_t, not in bytes
+
+    // make sure token,offset,mask are contiguous in device memory
 
     // (1,)
     token_ptr_ = start_int32 + offset;
