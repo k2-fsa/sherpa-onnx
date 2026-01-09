@@ -6,6 +6,9 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_WHISPER_TPL_IMPL_H_
 
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
@@ -73,9 +76,6 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeStream(OfflineStream *s) const {
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
     int32_t feat_dim = s->FeatureDim();
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;

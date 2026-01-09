@@ -87,8 +87,11 @@ class OfflineWhisperModelAscend::Impl {
   OfflineWhisperDecoderResult Run(std::vector<float> features) {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
+
+    OfflineWhisperDecoderResult r;
+
     if (features.empty()) {
-      return {};
+      return r;
     }
 
     int32_t num_frames = features.size() / feat_dim_;
@@ -110,7 +113,7 @@ class OfflineWhisperModelAscend::Impl {
     num_possible_tokens =
         std::min<int32_t>(num_possible_tokens, n_text_ctx_ / 2);
 
-    features.resize(num_frames_ * feat_dim_);
+    features.resize(num_frames_ * feat_dim_, 0);
 
     // (num_frames_, feat_dim_) -> (feat_dim_, num_frames_)
     features = Transpose(features.data(), num_frames_, feat_dim_);
@@ -138,6 +141,7 @@ class OfflineWhisperModelAscend::Impl {
                            config_.whisper.language.c_str());
           SHERPA_ONNX_EXIT(-1);
         }
+        r.lang = config_.whisper.language;
 
         sot_sequence[1] = lang_id;
       } else {
@@ -150,10 +154,10 @@ class OfflineWhisperModelAscend::Impl {
         UpdateCausalMask(0, n_text_ctx_, token_offset_mask_cpu_.data() + 2);
 
         int32_t lang_id = DetectLanguage();
+        r.lang = GetWhisperLanguageCode(lang_id);
 
         if (config_.debug) {
-          SHERPA_ONNX_LOGE("Detected Language: %s",
-                           GetWhisperLanguageCode(lang_id).c_str());
+          SHERPA_ONNX_LOGE("Detected Language: %s", r.lang.c_str());
         }
 
         sot_sequence[1] = lang_id;
@@ -176,10 +180,9 @@ class OfflineWhisperModelAscend::Impl {
     }
 
     if (token == eot_) {
-      return {};
+      return r;
     }
 
-    OfflineWhisperDecoderResult r;
     r.tokens.reserve(num_possible_tokens);
 
     while (offset < num_possible_tokens && token != eot_) {

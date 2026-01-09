@@ -182,7 +182,7 @@ class AclDataBuffer {
     other.p_ = nullptr;
   }
   AclDataBuffer &operator=(AclDataBuffer &&other) {
-    if (other == *this) {
+    if (this == &other) {
       return *this;
     }
 
