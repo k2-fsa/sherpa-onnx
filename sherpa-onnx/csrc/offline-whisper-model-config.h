@@ -76,9 +76,13 @@ enum class WhisperModelType {
 };
 
 std::string ToString(WhisperModelType model);
+bool IsMultilingual(WhisperModelType model_type);
 
 WhisperModelType ParseWhisperModelType(const std::string &name);
 int32_t GetWhisperLanguageTokenId(const std::string &lang);
+std::string GetWhisperLanguageCode(int32_t token_id);
+const std::vector<int32_t> &GetAllWhisperLanguageTokenIds();
+const std::vector<std::string> &GetAllWhisperLanguageCodes();
 
 struct WhisperModelMultilingualTokens {
   int32_t sot = 50258;

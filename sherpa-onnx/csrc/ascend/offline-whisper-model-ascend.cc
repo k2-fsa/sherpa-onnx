@@ -112,6 +112,49 @@ class OfflineWhisperModelAscend::Impl {
 
     // Note(fangjun): No need to intialize the self kv cache to 0
 
+    auto sot_sequence = sot_sequence_;
+
+    if (IsMultilingual(model_type_)) {
+      if (config_.whisper.task == "translate") {
+        sot_sequence[2] = translate_;
+      } else if (config_.whisper.task != "transcribe") {
+        SHERPA_ONNX_LOGE(
+            "Valid task values are: translate, transcribe. Given: '%s'",
+            config_.whisper.task.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (!config_.whisper.language.empty()) {
+        int32_t lang_id = GetWhisperLanguageTokenId(config_.whisper.language);
+        if (lang_id < 0) {
+          SHERPA_ONNX_LOGE("Unsupported language: '%s'",
+                           config_.whisper.language.c_str());
+          SHERPA_ONNX_EXIT(-1);
+        }
+
+        sot_sequence[1] = lang_id;
+      } else {
+        // detect language
+        if (config_.debug) {
+          SHERPA_ONNX_LOGE("Detecting language.");
+          token_offset_mask_cpu_[0] = sot_sequence_[0];
+          token_offset_mask_cpu_[1] = 0;
+          auto mask = CreateCausalMask(0, n_text_ctx_);
+          std::copy(mask.begin(), mask.end(),
+                    token_offset_mask_cpu_.data() + 2);
+
+          int32_t lang_id = DetectLanguage();
+
+          if (config_.debug) {
+            SHERPA_ONNX_LOGE("Detected Language: %s",
+                             GetWhisperLanguageCode(lang_id).c_str());
+          }
+
+          sot_sequence[1] = lang_id;
+        }
+      }
+    }
+
     int32_t &token = token_offset_mask_cpu_[0];
     int32_t &offset = token_offset_mask_cpu_[1];
     offset = 0;
@@ -120,8 +163,8 @@ class OfflineWhisperModelAscend::Impl {
     int32_t *p_mask = token_offset_mask_cpu_.data() + 2;
     std::copy(mask.begin(), mask.end(), p_mask);
 
-    for (int32_t i = 0; i < sot_sequence_.size(); ++i) {
-      token = sot_sequence_[i];
+    for (int32_t i = 0; i < sot_sequence.size(); ++i) {
+      token = sot_sequence[i];
       token = RunDecoder();
       p_mask[offset] = 0;
 
@@ -177,6 +220,46 @@ class OfflineWhisperModelAscend::Impl {
   }
 
   int32_t RunDecoder() {
+    RunDecoderImpl();
+
+    UpdateSelfKvCache();
+
+    auto ret = aclrtMemcpy(
+        logits_cpu_.data(), logits_cpu_.size() * sizeof(float), logits_ptr_,
+        logits_cpu_.size() * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST);
+
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
+    return MaxElementIndex(logits_cpu_.data(), logits_cpu_.size());
+  }
+
+  int32_t DetectLanguage() {
+    RunDecoderImpl();
+
+    // no need to update the Self KV cache
+
+    auto ret = aclrtMemcpy(
+        logits_cpu_.data(), logits_cpu_.size() * sizeof(float), logits_ptr_,
+        logits_cpu_.size() * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST);
+
+    const auto &all_lang_ids = GetAllWhisperLanguageTokenIds();
+    int32_t lang_id = all_lang_ids[0];
+    float this_logit = logits_cpu_[lang_id];
+
+    for (int32_t i = 1; i != all_lang_ids.size(); ++i) {
+      int32_t id = all_lang_ids[i];
+      float p = logits_cpu_[id];
+
+      if (p > this_logit) {
+        this_logit = p;
+        lang_id = id;
+      }
+    }
+
+    return lang_id;
+  }
+
+  void RunDecoderImpl() {
     aclError ret =
         aclrtMemcpy(token_ptr_, token_offset_mask_cpu_.size() * sizeof(int32_t),
                     token_offset_mask_cpu_.data(),
@@ -230,16 +313,6 @@ class OfflineWhisperModelAscend::Impl {
 
     ret = aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclmdlExecute");
-
-    UpdateSelfKvCache();
-
-    ret = aclrtMemcpy(logits_cpu_.data(), logits_cpu_.size() * sizeof(float),
-                      logits_ptr_, logits_cpu_.size() * sizeof(float),
-                      ACL_MEMCPY_DEVICE_TO_HOST);
-
-    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
-
-    return MaxElementIndex(logits_cpu_.data(), logits_cpu_.size());
   }
 
   void UpdateSelfKvCache() {
@@ -299,6 +372,7 @@ class OfflineWhisperModelAscend::Impl {
         // <|startoftranscript|><|en|><|transcribe|><|notimestamps|>
         sot_sequence_ = {50258, 50259, 50359, 50363};
         eot_ = 50257;
+        translate_ = 50358;
         break;
       default:
         SHERPA_ONNX_LOGE("Unsupported model type: '%s'",
@@ -540,6 +614,7 @@ class OfflineWhisperModelAscend::Impl {
 
   std::vector<int32_t> sot_sequence_;
   int32_t eot_ = 0;
+  int32_t translate_ = 0;
 };
 
 OfflineWhisperModelAscend::OfflineWhisperModelAscend(
