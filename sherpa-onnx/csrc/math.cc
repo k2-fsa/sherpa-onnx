@@ -142,4 +142,14 @@ void NormalizeWhisperFeatures(float *features, int32_t num_frames,
 #endif
 }
 
+int32_t MaxElementIndex(const float *v, int32_t n) {
+  // Map raw pointer to an Eigen vector (no copy)
+  Eigen::Map<const Eigen::VectorXf> vec(v, n);
+
+  Eigen::Index maxIndex;
+  vec.maxCoeff(&maxIndex);
+
+  return static_cast<int32_t>(maxIndex);
+}
+
 }  // namespace sherpa_onnx

@@ -164,5 +164,7 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
 void NormalizeWhisperFeatures(float *features, int32_t num_frames,
                               int32_t feat_dim);
 
+int32_t MaxElementIndex(const float *v, int32_t n);
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

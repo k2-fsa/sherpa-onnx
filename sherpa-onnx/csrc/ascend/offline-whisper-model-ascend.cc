@@ -144,22 +144,22 @@ class OfflineWhisperModelAscend::Impl {
 
  private:
   void RunEncoder(std::vector<float> features) {
-    aclError ret = aclrtMemcpy(*features_ptr_, features.size() * sizeof(float),
+    aclError ret = aclrtMemcpy(features_ptr_, features.size() * sizeof(float),
                                features.data(), features.size() * sizeof(float),
                                ACL_MEMCPY_HOST_TO_DEVICE);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer features_buf(*features_ptr_, features.size() * sizeof(float));
+    AclDataBuffer features_buf(features_ptr_, features.size() * sizeof(float));
     input_dataset.AddBuffer(features_buf);
 
     AclMdlDataset output_dataset;
 
     std::vector<AclDataBuffer> cross_kv_buffer;
     cross_kv_buffer.reserve(cross_kv_ptr_.size());
-    for (auto &p : cross_kv_ptr_) {
-      AclDataBuffer tmp_buffer(*p,
+    for (auto p : cross_kv_ptr_) {
+      AclDataBuffer tmp_buffer(p,
                                num_out_frames_ * n_text_state_ * sizeof(float));
       cross_kv_buffer.push_back(std::move(tmp_buffer));
 
@@ -173,29 +173,29 @@ class OfflineWhisperModelAscend::Impl {
   int32_t RunDecoder(int32_t token, int32_t offset,
                      const std::vector<int32_t> &mask) {
     // TODO(fangjun): Allocate token, offset, mask into a single block
-    aclError ret = aclrtMemcpy(*token_ptr_, sizeof(int32_t), &token,
+    aclError ret = aclrtMemcpy(token_ptr_, sizeof(int32_t), &token,
                                sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
-    ret = aclrtMemcpy(*offset_ptr_, sizeof(int32_t), &offset, sizeof(int32_t),
+    ret = aclrtMemcpy(offset_ptr_, sizeof(int32_t), &offset, sizeof(int32_t),
                       ACL_MEMCPY_HOST_TO_DEVICE);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
-    ret = aclrtMemcpy(*mask_ptr_, mask.size() * sizeof(int32_t), mask.data(),
+    ret = aclrtMemcpy(mask_ptr_, mask.size() * sizeof(int32_t), mask.data(),
                       mask.size() * sizeof(int32_t), ACL_MEMCPY_HOST_TO_DEVICE);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer token_buf(*token_ptr_, sizeof(int32_t));
+    AclDataBuffer token_buf(token_ptr_, sizeof(int32_t));
     input_dataset.AddBuffer(token_buf);
 
     std::vector<AclDataBuffer> self_kv_buffer;
     self_kv_buffer.reserve(self_kv_ptr_.size());
     for (auto &p : self_kv_ptr_) {
-      AclDataBuffer tmp_buffer(*p, n_text_ctx_ * n_text_state_ * sizeof(float));
+      AclDataBuffer tmp_buffer(p, n_text_ctx_ * n_text_state_ * sizeof(float));
       self_kv_buffer.push_back(std::move(tmp_buffer));
 
       input_dataset.AddBuffer(self_kv_buffer.back());
@@ -204,28 +204,28 @@ class OfflineWhisperModelAscend::Impl {
     std::vector<AclDataBuffer> cross_kv_buffer;
     cross_kv_buffer.reserve(cross_kv_ptr_.size());
     for (auto &p : cross_kv_ptr_) {
-      AclDataBuffer tmp_buffer(*p,
+      AclDataBuffer tmp_buffer(p,
                                num_out_frames_ * n_text_state_ * sizeof(float));
       cross_kv_buffer.push_back(std::move(tmp_buffer));
 
       input_dataset.AddBuffer(cross_kv_buffer.back());
     }
 
-    AclDataBuffer offset_buf(*offset_ptr_, sizeof(int32_t));
+    AclDataBuffer offset_buf(offset_ptr_, sizeof(int32_t));
     input_dataset.AddBuffer(offset_buf);
 
-    AclDataBuffer mask_buf(*mask_ptr_, mask.size() * sizeof(int32_t));
+    AclDataBuffer mask_buf(mask_ptr_, mask.size() * sizeof(int32_t));
     input_dataset.AddBuffer(mask_buf);
 
     AclMdlDataset output_dataset;
 
-    AclDataBuffer logits_buf(*logits_ptr_, vocab_size_ * sizeof(float));
+    AclDataBuffer logits_buf(logits_ptr_, vocab_size_ * sizeof(float));
     output_dataset.AddBuffer(logits_buf);
 
     std::vector<AclDataBuffer> delta_kv_buffer;
     delta_kv_buffer.reserve(delta_kv_ptr_.size());
     for (auto &p : delta_kv_ptr_) {
-      AclDataBuffer tmp_buffer(*p, n_text_state_ * sizeof(float));
+      AclDataBuffer tmp_buffer(p, n_text_state_ * sizeof(float));
       delta_kv_buffer.push_back(std::move(tmp_buffer));
 
       output_dataset.AddBuffer(delta_kv_buffer.back());
@@ -237,7 +237,7 @@ class OfflineWhisperModelAscend::Impl {
     UpdateSelfKvCache(offset);
 
     ret = aclrtMemcpy(logits_cpu_.data(), logits_cpu_.size() * sizeof(float),
-                      *logits_ptr_, logits_cpu_.size() * sizeof(float),
+                      logits_ptr_, logits_cpu_.size() * sizeof(float),
                       ACL_MEMCPY_DEVICE_TO_HOST);
 
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
@@ -247,8 +247,8 @@ class OfflineWhisperModelAscend::Impl {
 
   void UpdateSelfKvCache(int32_t offset) {
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
-      const float *src = delta_kv_ptr_[i]->GetFloat();
-      float *dst = self_kv_ptr_[i]->GetFloat() + offset * n_text_state_;
+      const float *src = delta_kv_ptr_[i];
+      float *dst = self_kv_ptr_[i] + offset * n_text_state_;
 
       auto ret = aclrtMemcpy(dst, n_text_state_ * sizeof(float), src,
                              n_text_state_ * sizeof(float),
@@ -321,53 +321,86 @@ class OfflineWhisperModelAscend::Impl {
   }
 
   void Preallocate() {
-    // TODO(fangjun): Allocate a single big block.
+    // Allocate a single big block.
     int32_t total = 0;
 
-    features_ptr_ =
-        std::make_unique<AclDevicePtr>(num_frames_ * feat_dim_ * sizeof(float));
-
+    // features: (1, feat_dim_, num_frames_)
     total += num_frames_ * feat_dim_ * sizeof(float);
-
-    token_ptr_ = std::make_unique<AclDevicePtr>(sizeof(int32_t));
-
+    // token: (1,)
+    total += sizeof(int32_t);
+    // offset: (1,)
     total += sizeof(int32_t);
 
-    offset_ptr_ = std::make_unique<AclDevicePtr>(sizeof(int32_t));
-
-    total += sizeof(int32_t);
-
-    mask_ptr_ = std::make_unique<AclDevicePtr>(n_text_ctx_ * sizeof(int32_t));
-
+    // mask: (1, n_text_ctx_)
     total += n_text_ctx_ * sizeof(int32_t);
 
-    logits_ptr_ = std::make_unique<AclDevicePtr>(vocab_size_ * sizeof(float));
-
+    // logits: (1, 1, vocab_size_)
     total += vocab_size_ * sizeof(float);
 
+    // cross_kv: n_text_layer_ * 2 * (num_out_frames_, n_text_state_)
+
+    total +=
+        n_text_layer_ * 2 * num_out_frames_ * n_text_state_ * sizeof(float);
+
+    // self_kv: n_text_layer_ * 2 * (n_text_ctx_, n_text_state_)
+    total += n_text_layer_ * 2 * n_text_ctx_ * n_text_state_ * sizeof(float);
+
+    // delta_kv: n_text_layer_ * 2 * (1, 1, n_text_state_)
+    total += n_text_layer_ * 2 * n_text_state_ * sizeof(float);
+
+    ptr_ = std::make_unique<AclDevicePtr>(total);
+    float *start = ptr_->Get<float>();
+    int32_t *start_int32 = ptr_->Get<int32_t>();
+    int32_t offset = 0;
+
+    // (1, feat_dim_, num_frames_)
+    features_ptr_ = start + offset;
+    offset += feat_dim_ * num_frames_;  // in float or in int32_t, not in bytes
+
+    // (1,)
+    token_ptr_ = start_int32 + offset;
+    offset += 1;
+
+    // (1,)
+    offset_ptr_ = start_int32 + offset;
+    offset += 1;
+
+    // (1, n_text_ctx_)
+    mask_ptr_ = start_int32 + offset;
+    offset += n_text_ctx_;
+
+    // (1, 1, vocab_size_)
+    logits_ptr_ = start + offset;
+    offset += vocab_size_;
+
+    // (1, num_frames_, n_text_state_)
     cross_kv_ptr_.reserve(n_text_layer_ * 2);
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
-      auto p = std::make_unique<AclDevicePtr>(num_out_frames_ * n_text_state_ *
-                                              sizeof(float));
+      auto p = start + offset;
+      offset += num_out_frames_ * n_text_state_;
       cross_kv_ptr_.push_back(std::move(p));
-      total += num_out_frames_ * n_text_state_ * sizeof(float);
     }
 
+    // (1, n_text_ctx_, n_text_state_)
     self_kv_ptr_.reserve(n_text_layer_ * 2);
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
-      auto p = std::make_unique<AclDevicePtr>(n_text_ctx_ * n_text_state_ *
-                                              sizeof(float));
+      auto p = start + offset;
+      offset += n_text_ctx_ * n_text_state_;
       self_kv_ptr_.push_back(std::move(p));
-      total += n_text_ctx_ * n_text_state_ * sizeof(float);
     }
 
+    // (1, 1, n_text_state_)
     delta_kv_ptr_.reserve(n_text_layer_ * 2);
     for (int32_t i = 0; i < n_text_layer_ * 2; ++i) {
-      auto p = std::make_unique<AclDevicePtr>(n_text_state_ * sizeof(float));
+      auto p = start + offset;
+      offset += n_text_state_;
       delta_kv_ptr_.push_back(std::move(p));
-      total += n_text_state_ * sizeof(float);
     }
-    SHERPA_ONNX_LOGE("Allocated %.3f MB", total / 1024. / 1024.);
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Allocated %d bytes, or %.3f MB", total,
+                       total / 1024. / 1024.);
+    }
   }
 
   void PostInitEncoder() {
@@ -426,6 +459,8 @@ class OfflineWhisperModelAscend::Impl {
     }
 
     n_text_ctx_ = s[1];
+    token_offset_mask_cpu_.resize(1 + 1 + n_text_ctx_);
+
     if (s[2] != n_text_state_) {
       SHERPA_ONNX_LOGE("Expect n_text_state_ %d. Given: %d", n_text_state_,
                        static_cast<int32_t>(s[2]));
@@ -486,16 +521,20 @@ class OfflineWhisperModelAscend::Impl {
   int32_t n_text_state_ = 0;
   int32_t vocab_size_ = 0;
 
-  std::unique_ptr<AclDevicePtr> features_ptr_;
-  std::unique_ptr<AclDevicePtr> token_ptr_;
-  std::unique_ptr<AclDevicePtr> offset_ptr_;
-  std::unique_ptr<AclDevicePtr> mask_ptr_;
-  std::unique_ptr<AclDevicePtr> logits_ptr_;
-  std::vector<float> logits_cpu_;
+  std::unique_ptr<AclDevicePtr> ptr_;
 
-  std::vector<std::unique_ptr<AclDevicePtr>> cross_kv_ptr_;
-  std::vector<std::unique_ptr<AclDevicePtr>> self_kv_ptr_;
-  std::vector<std::unique_ptr<AclDevicePtr>> delta_kv_ptr_;
+  float *features_ptr_ = nullptr;
+  int32_t *token_ptr_ = nullptr;
+  int32_t *offset_ptr_ = nullptr;
+  int32_t *mask_ptr_ = nullptr;
+  float *logits_ptr_ = nullptr;
+
+  std::vector<float *> cross_kv_ptr_;
+  std::vector<float *> self_kv_ptr_;
+  std::vector<float *> delta_kv_ptr_;
+
+  std::vector<int32_t> token_offset_mask_cpu_;
+  std::vector<float> logits_cpu_;
 
   std::vector<int32_t> sot_sequence_;
   int32_t eot_ = 0;

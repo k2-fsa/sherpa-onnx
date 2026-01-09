@@ -61,7 +61,12 @@ class AclDevicePtr {
   AclDevicePtr &operator=(AclDevicePtr &&) = delete;
 
   void *Get() const { return p_; }
-  float *GetFloat() const { return reinterpret_cast<float *>(p_); }
+
+  template <typename T>
+  T *Get() const {
+    return reinterpret_cast<T *>(p_);
+  }
+
   operator void *() { return p_; }
 
   size_t Size() const { return size_; }
