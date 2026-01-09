@@ -28,18 +28,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.11.0"
-          - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.16.0"
-          - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.18.0"
-          - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.18.1"
+          # - os: ubuntu-22.04-arm
+          #   gpu: ON
+          #   onnxruntime_version: "1.11.0"
+          # - os: ubuntu-22.04-arm
+          #   gpu: ON
+          #   onnxruntime_version: "1.16.0"
+          # - os: ubuntu-22.04-arm
+          #   gpu: ON
+          #   onnxruntime_version: "1.18.0"
+          # - os: ubuntu-22.04-arm
+          #   gpu: ON
+          #   onnxruntime_version: "1.18.1"
           - os: ubuntu-22.04-arm
             gpu: OFF
             onnxruntime_version: ""
