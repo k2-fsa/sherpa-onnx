@@ -31,11 +31,9 @@ namespace sherpa_onnx {
 
 // masked positions: 1
 // unmasked positions: 0
-static std::vector<int32_t> CreateCausalMask(int32_t n, int32_t capacity) {
-  std::vector<int32_t> mask(capacity, 1);
-  std::fill(mask.data(), mask.data() + n, 0);
-
-  return mask;
+static void UpdateCausalMask(int32_t offset, int32_t capacity, int32_t *p) {
+  std::fill(p, p + offset, 0);
+  std::fill(p + offset, p + capacity, 1);
 }
 
 static WhisperModelType ParseWhisperModelFromString(const std::string &s) {
@@ -121,7 +119,7 @@ class OfflineWhisperModelAscend::Impl {
 
     // Note(fangjun): No need to intialize the self kv cache to 0
 
-    auto sot_sequence = sot_sequence_;
+    std::vector<int32_t> sot_sequence(sot_sequence_);
 
     if (IsMultilingual(model_type_)) {
       if (config_.whisper.task == "translate") {
@@ -146,21 +144,19 @@ class OfflineWhisperModelAscend::Impl {
         // detect language
         if (config_.debug) {
           SHERPA_ONNX_LOGE("Detecting language.");
-          token_offset_mask_cpu_[0] = sot_sequence_[0];
-          token_offset_mask_cpu_[1] = 0;
-          auto mask = CreateCausalMask(0, n_text_ctx_);
-          std::copy(mask.begin(), mask.end(),
-                    token_offset_mask_cpu_.data() + 2);
-
-          int32_t lang_id = DetectLanguage();
-
-          if (config_.debug) {
-            SHERPA_ONNX_LOGE("Detected Language: %s",
-                             GetWhisperLanguageCode(lang_id).c_str());
-          }
-
-          sot_sequence[1] = lang_id;
         }
+        token_offset_mask_cpu_[0] = sot_sequence_[0];
+        token_offset_mask_cpu_[1] = 0;
+        UpdateCausalMask(0, n_text_ctx_, token_offset_mask_cpu_.data() + 2);
+
+        int32_t lang_id = DetectLanguage();
+
+        if (config_.debug) {
+          SHERPA_ONNX_LOGE("Detected Language: %s",
+                           GetWhisperLanguageCode(lang_id).c_str());
+        }
+
+        sot_sequence[1] = lang_id;
       }
     }
 
@@ -168,9 +164,8 @@ class OfflineWhisperModelAscend::Impl {
     int32_t &offset = token_offset_mask_cpu_[1];
     offset = 0;
 
-    auto mask = CreateCausalMask(offset, n_text_ctx_);
     int32_t *p_mask = token_offset_mask_cpu_.data() + 2;
-    std::copy(mask.begin(), mask.end(), p_mask);
+    UpdateCausalMask(offset, n_text_ctx_, p_mask);
 
     for (int32_t i = 0; i < sot_sequence.size(); ++i) {
       token = sot_sequence[i];
@@ -183,6 +178,7 @@ class OfflineWhisperModelAscend::Impl {
     if (token == eot_) {
       return {};
     }
+
     OfflineWhisperDecoderResult r;
     r.tokens.reserve(num_possible_tokens);
 
@@ -208,19 +204,12 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer features_buf(features_ptr_, features.size() * sizeof(float));
-    input_dataset.AddBuffer(features_buf);
+    input_dataset.AddBuffer(encoder_input_buffer_[0]);
 
     AclMdlDataset output_dataset;
 
-    std::vector<AclDataBuffer> cross_kv_buffer;
-    cross_kv_buffer.reserve(cross_kv_ptr_.size());
-    for (auto p : cross_kv_ptr_) {
-      AclDataBuffer tmp_buffer(p,
-                               num_out_frames_ * n_text_state_ * sizeof(float));
-      cross_kv_buffer.push_back(std::move(tmp_buffer));
-
-      output_dataset.AddBuffer(cross_kv_buffer.back());
+    for (auto &p : encoder_output_buffer_) {
+      output_dataset.AddBuffer(p);
     }
 
     ret = aclmdlExecute(*encoder_model_, input_dataset, output_dataset);
@@ -277,46 +266,15 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
 
     AclMdlDataset input_dataset;
-    AclDataBuffer token_buf(token_ptr_, sizeof(int32_t));
-    input_dataset.AddBuffer(token_buf);
 
-    std::vector<AclDataBuffer> self_kv_buffer;
-    self_kv_buffer.reserve(self_kv_ptr_.size());
-    for (auto &p : self_kv_ptr_) {
-      AclDataBuffer tmp_buffer(p, n_text_ctx_ * n_text_state_ * sizeof(float));
-      self_kv_buffer.push_back(std::move(tmp_buffer));
-
-      input_dataset.AddBuffer(self_kv_buffer.back());
+    for (auto &p : decoder_input_buffer_) {
+      input_dataset.AddBuffer(p);
     }
-
-    std::vector<AclDataBuffer> cross_kv_buffer;
-    cross_kv_buffer.reserve(cross_kv_ptr_.size());
-    for (auto &p : cross_kv_ptr_) {
-      AclDataBuffer tmp_buffer(p,
-                               num_out_frames_ * n_text_state_ * sizeof(float));
-      cross_kv_buffer.push_back(std::move(tmp_buffer));
-
-      input_dataset.AddBuffer(cross_kv_buffer.back());
-    }
-
-    AclDataBuffer offset_buf(offset_ptr_, sizeof(int32_t));
-    input_dataset.AddBuffer(offset_buf);
-
-    AclDataBuffer mask_buf(mask_ptr_, n_text_ctx_ * sizeof(int32_t));
-    input_dataset.AddBuffer(mask_buf);
 
     AclMdlDataset output_dataset;
 
-    AclDataBuffer logits_buf(logits_ptr_, vocab_size_ * sizeof(float));
-    output_dataset.AddBuffer(logits_buf);
-
-    std::vector<AclDataBuffer> delta_kv_buffer;
-    delta_kv_buffer.reserve(delta_kv_ptr_.size());
-    for (auto &p : delta_kv_ptr_) {
-      AclDataBuffer tmp_buffer(p, n_text_state_ * sizeof(float));
-      delta_kv_buffer.push_back(std::move(tmp_buffer));
-
-      output_dataset.AddBuffer(delta_kv_buffer.back());
+    for (auto &p : decoder_output_buffer_) {
+      output_dataset.AddBuffer(p);
     }
 
     ret = aclmdlExecute(*decoder_model_, input_dataset, output_dataset);
@@ -353,6 +311,58 @@ class OfflineWhisperModelAscend::Impl {
     PostInitDecoder();
     Preallocate();
     InitSotSequence();
+
+    InitEncoderBuffer();
+    InitDecoderBuffer();
+  }
+
+  void InitEncoderBuffer() {
+    AclDataBuffer features_buf(features_ptr_,
+                               feat_dim_ * num_frames_ * sizeof(float));
+    encoder_input_buffer_.clear();
+    encoder_input_buffer_.push_back(std::move(features_buf));
+
+    encoder_output_buffer_.reserve(cross_kv_ptr_.size());
+    for (auto p : cross_kv_ptr_) {
+      AclDataBuffer tmp_buffer(p,
+                               num_out_frames_ * n_text_state_ * sizeof(float));
+      encoder_output_buffer_.push_back(std::move(tmp_buffer));
+    }
+  }
+
+  void InitDecoderBuffer() {
+    decoder_input_buffer_.reserve(1 + 2 * n_text_layer_ + 2 * n_text_layer_ +
+                                  1 + 1);
+    // token, self_kv, cross_kv, offset, mask
+
+    AclDataBuffer token_buf(token_ptr_, sizeof(int32_t));
+    decoder_input_buffer_.push_back(std::move(token_buf));
+
+    for (auto &p : self_kv_ptr_) {
+      AclDataBuffer tmp_buffer(p, n_text_ctx_ * n_text_state_ * sizeof(float));
+      decoder_input_buffer_.push_back(std::move(tmp_buffer));
+    }
+
+    for (auto &p : cross_kv_ptr_) {
+      AclDataBuffer tmp_buffer(p,
+                               num_out_frames_ * n_text_state_ * sizeof(float));
+      decoder_input_buffer_.push_back(std::move(tmp_buffer));
+    }
+
+    AclDataBuffer offset_buf(offset_ptr_, sizeof(int32_t));
+    decoder_input_buffer_.push_back(std::move(offset_buf));
+
+    AclDataBuffer mask_buf(mask_ptr_, n_text_ctx_ * sizeof(int32_t));
+    decoder_input_buffer_.push_back(std::move(mask_buf));
+
+    decoder_output_buffer_.reserve(1 + 2 * n_text_layer_);
+    AclDataBuffer logits_buf(logits_ptr_, vocab_size_ * sizeof(float));
+    decoder_output_buffer_.push_back(std::move(logits_buf));
+
+    for (auto &p : delta_kv_ptr_) {
+      AclDataBuffer tmp_buffer(p, n_text_state_ * sizeof(float));
+      decoder_output_buffer_.push_back(std::move(tmp_buffer));
+    }
   }
 
   void InitSotSequence() {
@@ -639,6 +649,12 @@ class OfflineWhisperModelAscend::Impl {
   std::vector<int32_t> sot_sequence_;
   int32_t eot_ = 0;
   int32_t translate_ = 0;
+
+  std::vector<AclDataBuffer> encoder_input_buffer_;
+  std::vector<AclDataBuffer> encoder_output_buffer_;
+
+  std::vector<AclDataBuffer> decoder_input_buffer_;
+  std::vector<AclDataBuffer> decoder_output_buffer_;
 };
 
 OfflineWhisperModelAscend::OfflineWhisperModelAscend(
