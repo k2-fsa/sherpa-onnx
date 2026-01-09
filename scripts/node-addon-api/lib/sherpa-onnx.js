@@ -1,3 +1,7 @@
+/** @typedef {import('./types').WaveObject} WaveObject */
+/** @typedef {import('./types').OnlineRecognizerResult} OnlineRecognizerResult */
+/** @typedef {import('./types').OfflineRecognizerResult} OfflineRecognizerResult */
+
 const addon = require('./addon.js')
 const streaming_asr = require('./streaming-asr.js');
 const non_streaming_asr = require('./non-streaming-asr.js');
