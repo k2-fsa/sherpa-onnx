@@ -64,7 +64,7 @@ class OfflineZipformerCtcModelAscend::Impl {
             "model accepting longer audios.");
       }
 
-      features.resize(max_num_frames_ * feat_dim_);
+      features.resize(max_num_frames_ * feat_dim_, 0);
 
       num_frames = max_num_frames_;
     }

@@ -98,4 +98,33 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
   inv_stddev->assign(inv_std.data(), inv_std.data() + num_cols);
 }
 
+void NormalizeWhisperFeatures(float *features, int32_t num_frames,
+                              int32_t feat_dim) {
+  // log_spec = torch.clamp(features, min=1e-10).log10()
+  // log_spec = torch.maximum(log_spec, log_spec.max() - 8.0)
+  // mel = (log_spec + 4.0) / 4.0
+
+  using Eigen::ArrayXXf;
+  using Eigen::Map;
+
+  Map<ArrayXXf, Eigen::RowMajor> feats(features, num_frames, feat_dim);
+
+  feats = feats.max(1e-10f).log10();
+
+  float max_v = feats.maxCoeff() - 8.0f;
+
+  feats = feats.max(max_v);
+  feats = (feats + 4.0f) / 4.0f;
+}
+
+int32_t MaxElementIndex(const float *v, int32_t n) {
+  // Map raw pointer to an Eigen vector (no copy)
+  Eigen::Map<const Eigen::VectorXf> vec(v, n);
+
+  Eigen::Index maxIndex;
+  vec.maxCoeff(&maxIndex);
+
+  return static_cast<int32_t>(maxIndex);
+}
+
 }  // namespace sherpa_onnx
