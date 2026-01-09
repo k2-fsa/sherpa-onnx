@@ -103,7 +103,7 @@ void NormalizeWhisperFeatures(float *features, int32_t num_frames,
   // log_spec = torch.clamp(features, min=1e-10).log10()
   // log_spec = torch.maximum(log_spec, log_spec.max() - 8.0)
   // mel = (log_spec + 4.0) / 4.0
-#if 0
+
   using Eigen::ArrayXXf;
   using Eigen::Map;
 
@@ -115,31 +115,6 @@ void NormalizeWhisperFeatures(float *features, int32_t num_frames,
 
   feats = feats.max(max_v);
   feats = (feats + 4.0f) / 4.0f;
-#else
-  int32_t n = num_frames * feat_dim;
-  float max_v = -1e20;
-  for (int32_t i = 0; i != n; ++i) {
-    float f = features[i];
-
-    f = std::max<float>(f, 1e-10);
-    f = std::log10(f);
-
-    max_v = std::max(f, max_v);
-
-    features[i] = f;
-  }
-
-  max_v -= 8;
-
-  for (int32_t i = 0; i != n; ++i) {
-    float f = features[i];
-    f = std::max(f, max_v);
-
-    f = (f + 4) / 4;
-
-    features[i] = f;
-  }
-#endif
 }
 
 int32_t MaxElementIndex(const float *v, int32_t n) {

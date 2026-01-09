@@ -242,6 +242,8 @@ class OfflineWhisperModelAscend::Impl {
         logits_cpu_.data(), logits_cpu_.size() * sizeof(float), logits_ptr_,
         logits_cpu_.size() * sizeof(float), ACL_MEMCPY_DEVICE_TO_HOST);
 
+    SHERPA_ONNX_ASCEND_CHECK(ret, "Failed to call aclrtMemcpy");
+
     const auto &all_lang_ids = GetAllWhisperLanguageTokenIds();
     int32_t lang_id = all_lang_ids[0];
     float this_logit = logits_cpu_[lang_id];
