@@ -13,7 +13,9 @@ set(srcs
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-model-config.cc
+  offline-funasr-nano-model-config.cc
   offline-lm-config.cc
+  offline-medasr-ctc-model-config.cc
   offline-model-config.cc
   offline-moonshine-model-config.cc
   offline-nemo-enc-dec-ctc-model-config.cc

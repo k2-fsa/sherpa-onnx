@@ -423,6 +423,10 @@ type OfflineOmnilingualAsrCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineMedAsrCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -446,6 +450,19 @@ type OfflineCanaryModelConfig struct {
 type OfflineFireRedAsrModelConfig struct {
 	Encoder string
 	Decoder string
+}
+
+type OfflineFunASRNanoModelConfig struct {
+	EncoderAdaptor string
+	Llm            string
+	Embedding      string
+	Tokenizer      string
+	SystemPrompt   string
+	UserPrompt     string
+	MaxNewTokens   int
+	Temperature    float32
+	TopP           float32
+	Seed           int
 }
 
 type OfflineMoonshineModelConfig struct {
@@ -480,11 +497,13 @@ type OfflineModelConfig struct {
 	SenseVoice   OfflineSenseVoiceModelConfig
 	Moonshine    OfflineMoonshineModelConfig
 	FireRedAsr   OfflineFireRedAsrModelConfig
+	FunASRNano   OfflineFunASRNanoModelConfig
 	Dolphin      OfflineDolphinModelConfig
 	ZipformerCtc OfflineZipformerCtcModelConfig
 	Canary       OfflineCanaryModelConfig
 	WenetCtc     OfflineWenetCtcModelConfig
 	Omnilingual  OfflineOmnilingualAsrCtcModelConfig
+	MedAsr       OfflineMedAsrCtcModelConfig
 	Tokens       string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -577,6 +596,17 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
 
+	c.model_config.funasr_nano.encoder_adaptor = C.CString(config.ModelConfig.FunASRNano.EncoderAdaptor)
+	c.model_config.funasr_nano.llm = C.CString(config.ModelConfig.FunASRNano.Llm)
+	c.model_config.funasr_nano.embedding = C.CString(config.ModelConfig.FunASRNano.Embedding)
+	c.model_config.funasr_nano.tokenizer = C.CString(config.ModelConfig.FunASRNano.Tokenizer)
+	c.model_config.funasr_nano.system_prompt = C.CString(config.ModelConfig.FunASRNano.SystemPrompt)
+	c.model_config.funasr_nano.user_prompt = C.CString(config.ModelConfig.FunASRNano.UserPrompt)
+	c.model_config.funasr_nano.max_new_tokens = C.int(config.ModelConfig.FunASRNano.MaxNewTokens)
+	c.model_config.funasr_nano.temperature = C.float(config.ModelConfig.FunASRNano.Temperature)
+	c.model_config.funasr_nano.top_p = C.float(config.ModelConfig.FunASRNano.TopP)
+	c.model_config.funasr_nano.seed = C.int(config.ModelConfig.FunASRNano.Seed)
+
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
 	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
 
@@ -589,6 +619,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.wenet_ctc.model = C.CString(config.ModelConfig.WenetCtc.Model)
 
 	c.model_config.omnilingual.model = C.CString(config.ModelConfig.Omnilingual.Model)
+	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -626,185 +657,60 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	return &c
 }
 func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig) {
-	if c.model_config.transducer.encoder != nil {
-		C.free(unsafe.Pointer(c.model_config.transducer.encoder))
-		c.model_config.transducer.encoder = nil
-	}
-	if c.model_config.transducer.decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.transducer.decoder))
-		c.model_config.transducer.decoder = nil
-	}
-	if c.model_config.transducer.joiner != nil {
-		C.free(unsafe.Pointer(c.model_config.transducer.joiner))
-		c.model_config.transducer.joiner = nil
-	}
-
-	if c.model_config.paraformer.model != nil {
-		C.free(unsafe.Pointer(c.model_config.paraformer.model))
-		c.model_config.paraformer.model = nil
-	}
-
-	if c.model_config.nemo_ctc.model != nil {
-		C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
-		c.model_config.nemo_ctc.model = nil
-	}
-
-	if c.model_config.whisper.encoder != nil {
-		C.free(unsafe.Pointer(c.model_config.whisper.encoder))
-		c.model_config.whisper.encoder = nil
-	}
-	if c.model_config.whisper.decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.whisper.decoder))
-		c.model_config.whisper.decoder = nil
-	}
-	if c.model_config.whisper.language != nil {
-		C.free(unsafe.Pointer(c.model_config.whisper.language))
-		c.model_config.whisper.language = nil
-	}
-	if c.model_config.whisper.task != nil {
-		C.free(unsafe.Pointer(c.model_config.whisper.task))
-		c.model_config.whisper.task = nil
-	}
-
-	if c.model_config.tdnn.model != nil {
-		C.free(unsafe.Pointer(c.model_config.tdnn.model))
-		c.model_config.tdnn.model = nil
-	}
-
-	if c.model_config.sense_voice.model != nil {
-		C.free(unsafe.Pointer(c.model_config.sense_voice.model))
-		c.model_config.sense_voice.model = nil
-	}
-	if c.model_config.sense_voice.language != nil {
-		C.free(unsafe.Pointer(c.model_config.sense_voice.language))
-		c.model_config.sense_voice.language = nil
+	stringFields := []*(*C.char){
+		&c.model_config.transducer.encoder,
+		&c.model_config.transducer.decoder,
+		&c.model_config.transducer.joiner,
+		&c.model_config.paraformer.model,
+		&c.model_config.nemo_ctc.model,
+		&c.model_config.whisper.encoder,
+		&c.model_config.whisper.decoder,
+		&c.model_config.whisper.language,
+		&c.model_config.whisper.task,
+		&c.model_config.tdnn.model,
+		&c.model_config.sense_voice.model,
+		&c.model_config.sense_voice.language,
+		&c.model_config.moonshine.preprocessor,
+		&c.model_config.moonshine.encoder,
+		&c.model_config.moonshine.uncached_decoder,
+		&c.model_config.moonshine.cached_decoder,
+		&c.model_config.fire_red_asr.encoder,
+		&c.model_config.fire_red_asr.decoder,
+		&c.model_config.funasr_nano.encoder_adaptor,
+		&c.model_config.funasr_nano.llm,
+		&c.model_config.funasr_nano.embedding,
+		&c.model_config.funasr_nano.tokenizer,
+		&c.model_config.funasr_nano.system_prompt,
+		&c.model_config.funasr_nano.user_prompt,
+		&c.model_config.dolphin.model,
+		&c.model_config.zipformer_ctc.model,
+		&c.model_config.canary.encoder,
+		&c.model_config.canary.decoder,
+		&c.model_config.canary.src_lang,
+		&c.model_config.canary.tgt_lang,
+		&c.model_config.wenet_ctc.model,
+		&c.model_config.medasr.model,
+		&c.model_config.omnilingual.model,
+		&c.model_config.tokens,
+		&c.model_config.provider,
+		&c.model_config.model_type,
+		&c.model_config.modeling_unit,
+		&c.model_config.bpe_vocab,
+		&c.model_config.telespeech_ctc,
+		&c.lm_config.model,
+		&c.decoding_method,
+		&c.hotwords_file,
+		&c.rule_fsts,
+		&c.rule_fars,
+		&c.hr.lexicon,
+		&c.hr.rule_fsts,
 	}
 
-	if c.model_config.moonshine.preprocessor != nil {
-		C.free(unsafe.Pointer(c.model_config.moonshine.preprocessor))
-		c.model_config.moonshine.preprocessor = nil
-	}
-	if c.model_config.moonshine.encoder != nil {
-		C.free(unsafe.Pointer(c.model_config.moonshine.encoder))
-		c.model_config.moonshine.encoder = nil
-	}
-	if c.model_config.moonshine.uncached_decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.moonshine.uncached_decoder))
-		c.model_config.moonshine.uncached_decoder = nil
-	}
-	if c.model_config.moonshine.cached_decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.moonshine.cached_decoder))
-		c.model_config.moonshine.cached_decoder = nil
-	}
-
-	if c.model_config.fire_red_asr.encoder != nil {
-		C.free(unsafe.Pointer(c.model_config.fire_red_asr.encoder))
-		c.model_config.fire_red_asr.encoder = nil
-	}
-
-	if c.model_config.fire_red_asr.decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.fire_red_asr.decoder))
-		c.model_config.fire_red_asr.decoder = nil
-	}
-
-	if c.model_config.dolphin.model != nil {
-		C.free(unsafe.Pointer(c.model_config.dolphin.model))
-		c.model_config.dolphin.model = nil
-	}
-
-	if c.model_config.zipformer_ctc.model != nil {
-		C.free(unsafe.Pointer(c.model_config.zipformer_ctc.model))
-		c.model_config.zipformer_ctc.model = nil
-	}
-
-	if c.model_config.canary.encoder != nil {
-		C.free(unsafe.Pointer(c.model_config.canary.encoder))
-		c.model_config.canary.encoder = nil
-	}
-
-	if c.model_config.canary.decoder != nil {
-		C.free(unsafe.Pointer(c.model_config.canary.decoder))
-		c.model_config.canary.decoder = nil
-	}
-
-	if c.model_config.canary.src_lang != nil {
-		C.free(unsafe.Pointer(c.model_config.canary.src_lang))
-		c.model_config.canary.src_lang = nil
-	}
-
-	if c.model_config.canary.tgt_lang != nil {
-		C.free(unsafe.Pointer(c.model_config.canary.tgt_lang))
-		c.model_config.canary.tgt_lang = nil
-	}
-
-	if c.model_config.wenet_ctc.model != nil {
-		C.free(unsafe.Pointer(c.model_config.wenet_ctc.model))
-		c.model_config.wenet_ctc.model = nil
-	}
-
-	if c.model_config.omnilingual.model != nil {
-		C.free(unsafe.Pointer(c.model_config.omnilingual.model))
-		c.model_config.omnilingual.model = nil
-	}
-
-	if c.model_config.tokens != nil {
-		C.free(unsafe.Pointer(c.model_config.tokens))
-		c.model_config.tokens = nil
-	}
-	if c.model_config.provider != nil {
-		C.free(unsafe.Pointer(c.model_config.provider))
-		c.model_config.provider = nil
-	}
-	if c.model_config.model_type != nil {
-		C.free(unsafe.Pointer(c.model_config.model_type))
-		c.model_config.model_type = nil
-	}
-	if c.model_config.modeling_unit != nil {
-		C.free(unsafe.Pointer(c.model_config.modeling_unit))
-		c.model_config.modeling_unit = nil
-	}
-	if c.model_config.bpe_vocab != nil {
-		C.free(unsafe.Pointer(c.model_config.bpe_vocab))
-		c.model_config.bpe_vocab = nil
-	}
-	if c.model_config.telespeech_ctc != nil {
-		C.free(unsafe.Pointer(c.model_config.telespeech_ctc))
-		c.model_config.telespeech_ctc = nil
-	}
-
-	if c.lm_config.model != nil {
-		C.free(unsafe.Pointer(c.lm_config.model))
-		c.lm_config.model = nil
-	}
-
-	if c.decoding_method != nil {
-		C.free(unsafe.Pointer(c.decoding_method))
-		c.decoding_method = nil
-	}
-
-	if c.hotwords_file != nil {
-		C.free(unsafe.Pointer(c.hotwords_file))
-		c.hotwords_file = nil
-	}
-
-	if c.rule_fsts != nil {
-		C.free(unsafe.Pointer(c.rule_fsts))
-		c.rule_fsts = nil
-	}
-
-	if c.rule_fars != nil {
-		C.free(unsafe.Pointer(c.rule_fars))
-		c.rule_fars = nil
-	}
-
-	if c.hr.lexicon != nil {
-		C.free(unsafe.Pointer(c.hr.lexicon))
-		c.hr.lexicon = nil
-	}
-
-	if c.hr.rule_fsts != nil {
-		C.free(unsafe.Pointer(c.hr.rule_fsts))
-		c.hr.rule_fsts = nil
+	for _, field := range stringFields {
+		if *field != nil {
+			C.free(unsafe.Pointer(*field))
+			*field = nil
+		}
 	}
 }
 

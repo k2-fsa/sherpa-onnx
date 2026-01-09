@@ -8,7 +8,7 @@ import com.k2fsa.sherpa.onnx.*;
 public class NonStreamingDecodeFileOmnilingualAsrCtc {
   public static void main(String[] args) {
     // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/sense-voice/index.html
+    // https://k2-fsa.github.io/sherpa/onnx/omnilingual-asr/index.html
     // to download model files
     String model =
         "sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/model.int8.onnx";

@@ -28,6 +28,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-canary-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h"
@@ -208,6 +209,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerSenseVoiceImpl>(config);
   }
 
+  if (!config.model_config.funasr_nano.encoder_adaptor.empty()) {
+    return std::make_unique<OfflineRecognizerFunASRNanoImpl>(config);
+  }
+
   if (!config.model_config.paraformer.model.empty()) {
     return std::make_unique<OfflineRecognizerParaformerImpl>(config);
   }
@@ -217,6 +222,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.tdnn.model.empty() ||
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
+      !config.model_config.medasr.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -538,6 +544,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerSenseVoiceImpl>(mgr, config);
   }
 
+  if (!config.model_config.funasr_nano.encoder_adaptor.empty()) {
+    return std::make_unique<OfflineRecognizerFunASRNanoImpl>(mgr, config);
+  }
+
   if (!config.model_config.paraformer.model.empty()) {
     return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
   }
@@ -547,6 +557,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.tdnn.model.empty() ||
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
+      !config.model_config.medasr.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }

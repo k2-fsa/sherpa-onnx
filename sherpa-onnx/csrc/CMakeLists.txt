@@ -40,6 +40,8 @@ set(sources
   offline-fire-red-asr-model.cc
   offline-lm-config.cc
   offline-lm.cc
+  offline-medasr-ctc-model-config.cc
+  offline-medasr-ctc-model.cc
   offline-model-config.cc
   offline-moonshine-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
@@ -242,6 +244,13 @@ if(SHERPA_ONNX_ENABLE_QNN)
     ./qnn/utils.cc
   )
 endif()
+
+list(APPEND sources
+  offline-funasr-nano-model-config.cc
+  offline-funasr-nano-model.cc
+  offline-recognizer-funasr-nano-impl.cc
+  funasr-nano-tokenizer.cc
+)
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
