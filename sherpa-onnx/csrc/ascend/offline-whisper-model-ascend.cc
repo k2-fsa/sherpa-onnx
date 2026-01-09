@@ -75,7 +75,7 @@ class OfflineWhisperModelAscend::Impl {
     SHERPA_ONNX_EXIT(-1);
   }
 
-  std::vector<int32_t> Run(std::vector<float> features) {
+  OfflineWhisperDecoderResult Run(std::vector<float> features) {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
     if (features.empty()) {
@@ -114,6 +114,7 @@ class OfflineWhisperModelAscend::Impl {
 
     int32_t &token = token_offset_mask_cpu_[0];
     int32_t &offset = token_offset_mask_cpu_[1];
+    offset = 0;
     int32_t i = 0;
     auto mask = CreateCausalMask(offset, n_text_ctx_);
     int32_t *p_mask = token_offset_mask_cpu_.data() + 2;
@@ -128,21 +129,21 @@ class OfflineWhisperModelAscend::Impl {
       SHERPA_ONNX_LOGE("token: %d", token);
     }
 
-    std::vector<int32_t> ans;
     if (token == eot_) {
-      return ans;
+      return {};
     }
-    ans.reserve(n_text_ctx_);
+    OfflineWhisperDecoderResult r;
+    r.tokens.reserve(num_possible_tokens);
 
     while (offset < num_possible_tokens && token != eot_) {
-      ans.push_back(token);
+      r.tokens.push_back(token);
       token = RunDecoder();
 
       p_mask[offset] = 0;
       offset += 1;
     }
 
-    return ans;
+    return r;
   }
 
   int32_t FeatureDim() const { return feat_dim_; }
@@ -522,6 +523,8 @@ class OfflineWhisperModelAscend::Impl {
 
   std::unique_ptr<AclDevicePtr> ptr_;
 
+  // All of the following raw pointers will point to some already allocated
+  // device memory. No need to free them.
   float *features_ptr_ = nullptr;
   int32_t *token_ptr_ = nullptr;
   int32_t *offset_ptr_ = nullptr;
@@ -550,7 +553,7 @@ OfflineWhisperModelAscend::OfflineWhisperModelAscend(
 
 OfflineWhisperModelAscend::~OfflineWhisperModelAscend() = default;
 
-std::vector<int32_t> OfflineWhisperModelAscend::Run(
+OfflineWhisperDecoderResult OfflineWhisperModelAscend::Run(
     std::vector<float> features) const {
   return impl_->Run(std::move(features));
 }

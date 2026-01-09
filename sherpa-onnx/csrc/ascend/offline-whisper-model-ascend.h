@@ -22,10 +22,9 @@ class OfflineWhisperModelAscend {
   OfflineWhisperModelAscend(Manager *mgr, const OfflineModelConfig &config);
 
   /**
-   * @param features A tensor of shape (1, feat_dim, num_frames)
-   * @returns Return a list of token IDs.
+   * @param features A tensor of shape (1, num_frames, feat_dim)
    */
-  std::vector<int32_t> Run(std::vector<float> features) const;
+  OfflineWhisperDecoderResult Run(std::vector<float> features) const;
 
   int32_t FeatureDim() const;
 

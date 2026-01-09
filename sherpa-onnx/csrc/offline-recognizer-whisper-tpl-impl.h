@@ -82,19 +82,19 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
 
     NormalizeWhisperFeatures(f.data(), num_frames, feat_dim);
 
-    std::vector<int32_t> token_ids = model_->Run(std::move(f));
+    auto r = model_->Run(std::move(f));
+    auto res = Convert(r, symbol_table_);
 
-    auto r = Convert(token_ids, symbol_table_);
-    s->SetResult(r);
+    s->SetResult(res);
   }
 
-  OfflineRecognitionResult Convert(const std::vector<int32_t> &token_ids,
+  OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
                                    const SymbolTable &sym_table) const {
     OfflineRecognitionResult r;
-    r.tokens.reserve(token_ids.size());
+    r.tokens.reserve(src.tokens.size());
 
     std::string text;
-    for (auto i : token_ids) {
+    for (auto i : src.tokens) {
       if (!sym_table.Contains(i)) {
         continue;
       }
@@ -108,7 +108,7 @@ class OfflineRecognizerWhisperTplImpl : public OfflineRecognizerImpl {
     }
 
     r.text = text;
-    // r.lang = src.lang;
+    r.lang = src.lang;
 
     return r;
   }
