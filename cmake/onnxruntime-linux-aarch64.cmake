@@ -16,7 +16,7 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-linux-aarch64-glibc2_17-Release-1.23.2.zip")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-linux-aarch64-glibc2_17-Release-1.23.2.zip")
-set(onnxruntime_HASH "SHA256=74958437277569d5f6a7c509daa1ae10863e233f0ae373d35dfb1eb207c1c142")
+set(onnxruntime_HASH "SHA256=2a40a5323827bc59844d00ffdd3697d5e30dccb691233054bace0dc61cfa8341")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

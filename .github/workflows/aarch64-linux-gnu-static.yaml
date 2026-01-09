@@ -43,7 +43,8 @@ jobs:
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
         with:
-            image: quay.io/pypa/manylinux2014_aarch64
+            # image: quay.io/pypa/manylinux2014_aarch64 # it does not have gcc 11
+            image: ghcr.io/csukuangfj/manylinux2014-aarch64-gcc11:latest # i have built gcc 11 from source
             options: |
               --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
             shell: bash
@@ -180,5 +181,7 @@ jobs:
           export EXE=sherpa-onnx-offline
 
           readelf -d build/bin/sherpa-onnx-offline
+
+          strings build/bin/sherpa-onnx-offline | grep ^GLIBC
 
           .github/scripts/test-offline-moonshine.sh
