@@ -14,6 +14,7 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
+# requires gcc 11
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-linux-arm-static_lib-1.23.2.zip")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-static_lib-1.23.2.zip")
 set(onnxruntime_HASH "SHA256=334a51dbdc6812f91ee88356cedca14b097ed2907c80aa2b91670680e155ad9f")
