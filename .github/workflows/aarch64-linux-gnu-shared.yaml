@@ -265,6 +265,10 @@ jobs:
           export PATH=$PWD/build/install/bin:$PATH
           export EXE=sherpa-onnx-offline
 
+          ls -lh build/bin/sherpa-onnx-offline
+
           readelf -d build/bin/sherpa-onnx-offline
+
+          strings build/bin/sherpa-onnx-offline | grep ^GLIBC
 
           .github/scripts/test-offline-moonshine.sh

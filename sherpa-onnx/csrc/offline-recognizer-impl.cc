@@ -37,6 +37,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
@@ -56,6 +57,7 @@
 #include "sherpa-onnx/csrc/ascend/offline-paraformer-model-ascend.h"
 #include "sherpa-onnx/csrc/ascend/offline-recognizer-zipformer-ctc-ascend-impl.h"
 #include "sherpa-onnx/csrc/ascend/offline-sense-voice-model-ascend.h"
+#include "sherpa-onnx/csrc/ascend/offline-whisper-model-ascend.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_QNN
@@ -154,10 +156,13 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           config);
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(config);
+    } else if (!config.model_config.whisper.encoder.empty()) {
+      return std::make_unique<
+          OfflineRecognizerWhisperTplImpl<OfflineWhisperModelAscend>>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
-          "supported by Ascend NPU for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, Whisper, and Zipformer CTC models are "
+          "currently supported by Ascend NPU for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -488,10 +493,14 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (!config.model_config.zipformer_ctc.model.empty()) {
       return std::make_unique<OfflineRecognizerZipformerCtcAscendImpl>(mgr,
                                                                        config);
+    } else if (!config.model_config.whisper.encoder.empty()) {
+      return std::make_unique<
+          OfflineRecognizerWhisperTplImpl<OfflineWhisperModelAscend>>(mgr,
+                                                                      config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
-          "supported by Ascend NPU for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, Whisper, and Zipformer CTC models are "
+          "currently supported by Ascend NPU for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }

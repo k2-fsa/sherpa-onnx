@@ -61,6 +61,12 @@ class AclDevicePtr {
   AclDevicePtr &operator=(AclDevicePtr &&) = delete;
 
   void *Get() const { return p_; }
+
+  template <typename T>
+  T *Get() const {
+    return reinterpret_cast<T *>(p_);
+  }
+
   operator void *() { return p_; }
 
   size_t Size() const { return size_; }
@@ -171,8 +177,23 @@ class AclDataBuffer {
   AclDataBuffer(const AclDataBuffer &) = delete;
   AclDataBuffer &operator=(const AclDataBuffer &) = delete;
 
-  AclDataBuffer(AclDataBuffer &&) = delete;
-  AclDataBuffer &operator=(AclDataBuffer &&) = delete;
+  AclDataBuffer(AclDataBuffer &&other) {
+    p_ = other.p_;
+    other.p_ = nullptr;
+  }
+  AclDataBuffer &operator=(AclDataBuffer &&other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    Release();
+
+    p_ = other.p_;
+    other.p_ = nullptr;
+    return *this;
+  }
+
+  void Release();
 
   aclDataBuffer *Get() const { return p_; }
   operator aclDataBuffer *() const { return p_; }
