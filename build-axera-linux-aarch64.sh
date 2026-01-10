@@ -202,7 +202,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-make VERBOSE=1 -j2
+make VERBOSE=1 -j4
 make install/strip
 
 

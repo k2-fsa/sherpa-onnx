@@ -25,6 +25,12 @@ class AxclModel {
 
   std::vector<int32_t> TensorShape(const std::string &name) const;
   int32_t TensorSizeInBytes(const std::string &name) const;
+  int32_t NumInputs() const;
+  int32_t NumOutputs() const;
+  const std::string &InputName(int32_t i) const;
+  const std::string &OutputName(int32_t i) const;
+  int32_t InputSizeInBytes(int32_t i) const;
+  int32_t OutputSizeInBytes(int32_t i) const;
 
   bool HasTensor(const std::string &name) const;
 
@@ -34,7 +40,12 @@ class AxclModel {
   bool SetInputTensorData(const std::string &name, const int32_t *p,
                           int32_t n) const;
 
+  bool SetInputTensorDataRaw(const std::string &name, const void *p,
+                             int32_t nbytes) const;
+
   std::vector<float> GetOutputTensorData(const std::string &name) const;
+
+  std::vector<uint8_t> GetOutputTensorDataRaw(const std::string &name) const;
 
   bool Run() const;
   bool IsInitialized() const;

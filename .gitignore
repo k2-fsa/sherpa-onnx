@@ -168,3 +168,6 @@ matcha-icefall-*
 sherpa-onnx-medasr-ctc-en-int8-2025-12-25
 *.raw
 *-input-list.txt
+ax650n_bsp_sdk-*
+aarch64-linux-gnu-g++
+aarch64-linux-gnu-gcc
