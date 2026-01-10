@@ -51,6 +51,7 @@
 
 #if SHERPA_ONNX_ENABLE_AXCL
 #include "sherpa-onnx/csrc/axcl/offline-sense-voice-model-axcl.h"
+#include "sherpa-onnx/csrc/axcl/offline-whisper-model-axcl.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_ASCEND_NPU
@@ -126,9 +127,12 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
           config);
+    } else if (!config.model_config.whisper.encoder.empty()) {
+      return std::make_unique<
+          OfflineRecognizerWhisperTplImpl<OfflineWhisperModelAxcl>>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by axcl for "
+          "Only SenseVoice, Whisper models are currently supported by axcl for "
           "non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
@@ -462,9 +466,13 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
           mgr, config);
+    } else if (!config.model_config.whisper.encoder.empty()) {
+      return std::make_unique<
+          OfflineRecognizerWhisperTplImpl<OfflineWhisperModelAxcl>>(mgr,
+                                                                    config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by axcl for "
+          "Only SenseVoice, Whisper models are currently supported by axcl for "
           "non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;

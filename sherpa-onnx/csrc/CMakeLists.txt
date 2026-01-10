@@ -220,6 +220,7 @@ if(SHERPA_ONNX_ENABLE_AXCL)
     ./axcl/axcl-manager.cc
     ./axcl/axcl-model.cc
     ./axcl/offline-sense-voice-model-axcl.cc
+    ./axcl/offline-whisper-model-axcl.cc
     ./axcl/online-stream-axcl.cc
     ./axcl/online-transducer-greedy-search-decoder-axcl.cc
     ./axcl/online-transducer-modified-beam-search-decoder-axcl.cc
