@@ -56,6 +56,22 @@ jobs:
               gcc --version
               g++ --version
 
+              ldd --version
+
+              # ✅ FORCE GCC 11
+              export GCC_ROOT=/opt/gcc-11.4.0
+              export CC=$GCC_ROOT/bin/gcc
+              export CXX=$GCC_ROOT/bin/g++
+              export PATH=$GCC_ROOT/bin:$PATH
+
+              gcc --version
+              which gcc
+
+              g++ --version
+              which g++
+
+              ldd --version
+
               echo "pwd"
 
               ls -lh
@@ -179,6 +195,8 @@ jobs:
           du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline
+
+          ls -lh build/bin/sherpa-onnx-offline
 
           readelf -d build/bin/sherpa-onnx-offline
 
