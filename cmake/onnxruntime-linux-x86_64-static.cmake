@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip")
-set(onnxruntime_HASH "SHA256=b646beeb983de843a267096d4457d832f93089f5e7264fd54b48cff207cb2068")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip")
+set(onnxruntime_HASH "SHA256=93a52b9d93a0932259a03090291be861ba21ad4b1b58057d3a0f57a4c4108671")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip
-  /tmp/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip
+  /tmp/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.23.2-glibc2_17.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
