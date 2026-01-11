@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13, windows-2022, ubuntu-22.04-arm]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, windows-2022, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
           sudo apt-get install -q -y fpc
 
       - name: Install Free pascal compiler (macos)
-        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
         shell: bash
         run: |
           brew install fpc
@@ -136,6 +136,10 @@ jobs:
           pushd non-streaming-asr
 
           ./run-wenet-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-medasr-ctc.sh
           rm -rf sherpa-onnx-*
           echo "---"
 

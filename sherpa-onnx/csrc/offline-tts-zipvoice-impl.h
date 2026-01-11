@@ -16,6 +16,7 @@
 #include "kaldi-native-fbank/csrc/stft.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model-config.h"
@@ -33,6 +34,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         model_(std::make_unique<OfflineTtsZipvoiceModel>(config.model)),
         vocoder_(Vocoder::Create(config.model)) {
     InitFrontend();
+
+    PostInit();
   }
 
   template <typename Manager>
@@ -41,6 +44,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         model_(std::make_unique<OfflineTtsZipvoiceModel>(mgr, config.model)),
         vocoder_(Vocoder::Create(mgr, config.model)) {
     InitFrontend(mgr);
+
+    PostInit();
   }
 
   int32_t SampleRate() const override {
@@ -99,6 +104,33 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   }
 
  private:
+  void PostInit() { InitMelBanks(); }
+
+  void InitMelBanks() {
+    const auto &meta = model_->GetMetaData();
+    int32_t sample_rate = meta.sample_rate;
+    int32_t n_fft = meta.n_fft;
+    int32_t hop_length = meta.hop_length;
+    int32_t win_length = meta.window_length;
+    int32_t num_mels = meta.num_mels;
+
+    knf::FrameExtractionOptions frame_opts;
+    frame_opts.samp_freq = sample_rate;
+    frame_opts.frame_length_ms = win_length * 1000 / sample_rate;
+    frame_opts.frame_shift_ms = hop_length * 1000 / sample_rate;
+    frame_opts.window_type = "hanning";
+
+    knf::MelBanksOptions mel_opts;
+    mel_opts.num_bins = num_mels;
+    mel_opts.low_freq = 0;
+    mel_opts.high_freq = sample_rate / 2;
+    mel_opts.is_librosa = true;
+    mel_opts.use_slaney_mel_scale = false;
+    mel_opts.norm = "";
+
+    mel_banks_ = std::make_unique<knf::MelBanks>(mel_opts, frame_opts, 1.0f);
+  }
+
   template <typename Manager>
   void InitFrontend(Manager *mgr) {
     frontend_ = std::make_unique<MatchaTtsLexicon>(
@@ -112,9 +144,9 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         config_.model.zipvoice.data_dir, config_.model.debug, true);
   }
 
-  std::vector<int32_t> ComputeMelSpectrogram(
-      const std::vector<float> &_samples, int32_t sample_rate,
-      std::vector<float> *prompt_features) const {
+  void ComputeMelSpectrogram(const std::vector<float> &_samples,
+                             int32_t sample_rate, float feat_scale,
+                             std::vector<float> *prompt_features) const {
     const auto &meta = model_->GetMetaData();
     if (sample_rate != meta.sample_rate) {
       SHERPA_ONNX_LOGE(
@@ -131,19 +163,18 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
           sample_rate, meta.sample_rate, lowpass_cutoff, lowpass_filter_width);
       std::vector<float> samples;
       resampler->Resample(_samples.data(), _samples.size(), true, &samples);
-      return ComputeMelSpectrogram(samples, prompt_features);
-    } else {
-      // Use the original samples if the sample rate matches
-      return ComputeMelSpectrogram(_samples, prompt_features);
+      ComputeMelSpectrogram(samples, feat_scale, prompt_features);
+      return;
     }
+
+    ComputeMelSpectrogram(_samples, feat_scale, prompt_features);
   }
 
-  std::vector<int32_t> ComputeMelSpectrogram(
-      const std::vector<float> &samples,
-      std::vector<float> *prompt_features) const {
+  void ComputeMelSpectrogram(const std::vector<float> &samples,
+                             float feat_scale,
+                             std::vector<float> *prompt_features) const {
     const auto &meta = model_->GetMetaData();
 
-    int32_t sample_rate = meta.sample_rate;
     int32_t n_fft = meta.n_fft;
     int32_t hop_length = meta.hop_length;
     int32_t win_length = meta.window_length;
@@ -161,46 +192,23 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     int32_t num_frames = stft_result.num_frames;
     int32_t fft_bins = n_fft / 2 + 1;
 
-    knf::FrameExtractionOptions frame_opts;
-    frame_opts.samp_freq = sample_rate;
-    frame_opts.frame_length_ms = win_length * 1000 / sample_rate;
-    frame_opts.frame_shift_ms = hop_length * 1000 / sample_rate;
-    frame_opts.window_type = "hanning";
+    prompt_features->resize(num_frames * num_mels);
+    float *p = prompt_features->data();
 
-    knf::MelBanksOptions mel_opts;
-    mel_opts.num_bins = num_mels;
-    mel_opts.low_freq = 0;
-    mel_opts.high_freq = sample_rate / 2;
-    mel_opts.is_librosa = true;
-    mel_opts.use_slaney_mel_scale = false;
-    mel_opts.norm = "";
+    std::vector<float> magnitude_spectrum(fft_bins);
 
-    knf::MelBanks mel_banks(mel_opts, frame_opts, 1.0f);
-
-    prompt_features->clear();
-    prompt_features->reserve(num_frames * num_mels);
-
-    for (int32_t i = 0; i < num_frames; ++i) {
-      std::vector<float> magnitude_spectrum(fft_bins);
+    for (int32_t i = 0; i < num_frames; ++i, p += num_mels) {
       for (int32_t k = 0; k < fft_bins; ++k) {
         float real = stft_result.real[i * fft_bins + k];
         float imag = stft_result.imag[i * fft_bins + k];
         magnitude_spectrum[k] = std::sqrt(real * real + imag * imag);
       }
-      std::vector<float> mel_features(num_mels, 0.0f);
-      mel_banks.Compute(magnitude_spectrum.data(), mel_features.data());
-      for (auto &v : mel_features) {
-        v = std::log(v + 1e-10f);
+
+      mel_banks_->Compute(magnitude_spectrum.data(), p);
+
+      for (int32_t j = 0; j < num_mels; ++j) {
+        p[j] = std::log(p[j] + 1e-10f) * feat_scale;
       }
-      // Instead of push_back a vector, push elements individually
-      prompt_features->insert(prompt_features->end(), mel_features.begin(),
-                              mel_features.end());
-    }
-    if (num_frames == 0) {
-      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
-      return {0, 0};
-    } else {
-      return {num_frames, num_mels};
     }
   }
 
@@ -214,12 +222,14 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     std::array<int64_t, 2> tokens_shape = {1,
                                            static_cast<int64_t>(tokens.size())};
+
     Ort::Value tokens_tensor = Ort::Value::CreateTensor(
         memory_info, const_cast<int64_t *>(tokens.data()), tokens.size(),
         tokens_shape.data(), tokens_shape.size());
 
     std::array<int64_t, 2> prompt_tokens_shape = {
         1, static_cast<int64_t>(prompt_tokens.size())};
+
     Ort::Value prompt_tokens_tensor = Ort::Value::CreateTensor(
         memory_info, const_cast<int64_t *>(prompt_tokens.data()),
         prompt_tokens.size(), prompt_tokens_shape.data(),
@@ -230,7 +240,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     // Scale prompt_samples
     std::vector<float> prompt_samples_scaled = prompt_samples;
-    float prompt_rms = 0.0f;
+    double prompt_rms = 0.0;
     double sum_sq = 0.0;
     // Compute RMS of prompt_samples
     for (float s : prompt_samples_scaled) {
@@ -238,23 +248,24 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
     prompt_rms = std::sqrt(sum_sq / prompt_samples_scaled.size());
     if (prompt_rms < target_rms && prompt_rms > 0.0f) {
-      float scale = target_rms / static_cast<float>(prompt_rms);
+      float scale = target_rms / prompt_rms;
       for (auto &s : prompt_samples_scaled) {
         s *= scale;
       }
     }
 
     std::vector<float> prompt_features;
-    auto res_shape = ComputeMelSpectrogram(prompt_samples_scaled, sample_rate,
-                                           &prompt_features);
 
-    int32_t num_frames = res_shape[0];
-    int32_t mel_dim = res_shape[1];
+    int32_t mel_dim = model_->GetMetaData().num_mels;
 
-    if (feat_scale != 1.0f) {
-      for (auto &item : prompt_features) {
-        item *= feat_scale;
-      }
+    ComputeMelSpectrogram(prompt_samples_scaled, sample_rate, feat_scale,
+                          &prompt_features);
+
+    int32_t num_frames = prompt_features.size() / mel_dim;
+
+    if (num_frames == 0) {
+      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
+      return {};
     }
 
     std::array<int64_t, 3> shape = {1, num_frames, mel_dim};
@@ -268,18 +279,18 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
-    int64_t T = mel_shape[1], C = mel_shape[2];
+    int64_t T = mel_shape[1];
+    int64_t C = mel_shape[2];
 
-    float *mel_data = mel.GetTensorMutableData<float>();
-    std::vector<float> mel_permuted(C * T);
+    const float *mel_data = mel.GetTensorData<float>();
 
-    for (int64_t c = 0; c < C; ++c) {
-      for (int64_t t = 0; t < T; ++t) {
-        int64_t src_idx = t * C + c;  // src: [T, C] (row major)
-        int64_t dst_idx = c * T + t;  // dst: [C, T] (row major)
-        mel_permuted[dst_idx] = mel_data[src_idx] / feat_scale;
-      }
-    }
+    float inv_feat_scale = 1 / feat_scale;
+
+    // mel_permuted is (C, T)
+    std::vector<float> mel_permuted = Transpose(mel_data, T, C);
+
+    Scale(mel_permuted.data(), inv_feat_scale, mel_permuted.size(),
+          mel_permuted.data());
 
     std::array<int64_t, 3> new_shape = {1, C, T};
     Ort::Value mel_new = Ort::Value::CreateTensor<float>(
@@ -304,6 +315,8 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   std::unique_ptr<OfflineTtsZipvoiceModel> model_;
   std::unique_ptr<Vocoder> vocoder_;
   std::unique_ptr<OfflineTtsFrontend> frontend_;
+
+  std::unique_ptr<knf::MelBanks> mel_banks_;
 };
 
 }  // namespace sherpa_onnx

@@ -149,7 +149,8 @@ class OfflineWenetCtcModelConfig {
 class OfflineOmnilingualAsrCtcModelConfig {
   const OfflineOmnilingualAsrCtcModelConfig({this.model = ''});
 
-  factory OfflineOmnilingualAsrCtcModelConfig.fromJson(Map<String, dynamic> json) {
+  factory OfflineOmnilingualAsrCtcModelConfig.fromJson(
+      Map<String, dynamic> json) {
     return OfflineOmnilingualAsrCtcModelConfig(
       model: json['model'] as String? ?? '',
     );
@@ -629,7 +630,7 @@ class OfflineRecognizerResult {
   Map<String, dynamic> toJson() => {
         'text': text,
         'tokens': tokens,
-        'tokenLogProbs': tokenLogProbs,
+        'token_log_probs': tokenLogProbs,
         'timestamps': timestamps,
         'lang': lang,
         'emotion': emotion,
@@ -754,7 +755,8 @@ class OfflineRecognizer {
     c.ref.model.canary.usePnc = config.model.canary.usePnc ? 1 : 0;
 
     c.ref.model.wenetCtc.model = config.model.wenetCtc.model.toNativeUtf8();
-    c.ref.model.omnilingual.model = config.model.omnilingual.model.toNativeUtf8();
+    c.ref.model.omnilingual.model =
+        config.model.omnilingual.model.toNativeUtf8();
 
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
@@ -862,7 +864,10 @@ class OfflineRecognizer {
     return OfflineRecognizerResult(
         text: parsedJson['text'],
         tokens: List<String>.from(parsedJson['tokens']),
-        tokenLogProbs: List<double>.from(parsedJson['token_log_probs'] ?? []),
+        tokenLogProbs: (parsedJson['token_log_probs'] as List?)
+                ?.map((e) => (e as num).toDouble())
+                .toList() ??
+            [],
         timestamps: List<double>.from(parsedJson['timestamps']),
         lang: parsedJson['lang'],
         emotion: parsedJson['emotion'],

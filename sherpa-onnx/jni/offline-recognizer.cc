@@ -99,6 +99,22 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.paraformer.model, model,
                               paraformer_config_cls, paraformer_config);
 
+  fid = env->GetFieldID(paraformer_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  jobject qnn_config = env->GetObjectField(paraformer_config, fid);
+  jclass qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.paraformer.qnn_config.backend_lib, backendLib,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.paraformer.qnn_config.context_binary, contextBinary,
+      qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.paraformer.qnn_config.system_lib,
+                              systemLib, qnn_config_cls, qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "whisper",
                         "Lcom/k2fsa/sherpa/onnx/OfflineWhisperModelConfig;");
   jobject whisper_config = env->GetObjectField(model_config, fid);
@@ -168,8 +184,8 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   fid = env->GetFieldID(sense_voice_config_cls, "qnnConfig",
                         "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
-  jobject qnn_config = env->GetObjectField(sense_voice_config, fid);
-  jclass qnn_config_cls = env->GetObjectClass(qnn_config);
+  qnn_config = env->GetObjectField(sense_voice_config, fid);
+  qnn_config_cls = env->GetObjectClass(qnn_config);
 
   SHERPA_ONNX_JNI_READ_STRING(
       ans.model_config.sense_voice.qnn_config.backend_lib, backendLib,
@@ -241,6 +257,15 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.omnilingual.model, model,
                               omnilingual_ctc_config_cls,
                               omnilingual_ctc_config);
+
+  // medasr ctc
+  fid = env->GetFieldID(model_config_cls, "medasr",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineMedAsrCtcModelConfig;");
+  jobject medasr_ctc_config = env->GetObjectField(model_config, fid);
+  jclass medasr_ctc_config_cls = env->GetObjectClass(medasr_ctc_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.medasr.model, model,
+                              medasr_ctc_config_cls, medasr_ctc_config);
 
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",

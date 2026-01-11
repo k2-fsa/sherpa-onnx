@@ -32,9 +32,6 @@ from whisper.model import (
     TextDecoder,
 )
 
-torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
-
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -321,7 +318,7 @@ def main():
     print(args)
     print(name)
 
-    opset_version = 13
+    opset_version = 17
 
     if name == "distil-medium.en":
         filename = "./distil-medium-en-original-model.bin"
@@ -640,4 +637,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+    # To fix
+    # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
+    # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
+    from whisper.model import disable_sdpa
+
+    with disable_sdpa():
+        main()

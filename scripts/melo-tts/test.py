@@ -15,6 +15,11 @@ class Lexicon:
             for line in f:
                 s, i = line.split()
                 tokens[s] = int(i)
+        # Map "v" to "V" token ID (same as post_replace_ph in MeloTTS, only for English models)
+        # English models have "V" with token ID 14
+        if tokens.get("V") == 14 and "v" in tokens:
+            tokens["v"] = tokens["V"]
+
 
         lexicon = dict()
         with open(lexion_filename, encoding="utf-8") as f:

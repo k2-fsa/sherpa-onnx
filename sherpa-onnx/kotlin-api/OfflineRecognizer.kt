@@ -22,6 +22,7 @@ data class OfflineTransducerModelConfig(
 
 data class OfflineParaformerModelConfig(
     var model: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineNemoEncDecCtcModelConfig(
@@ -42,6 +43,10 @@ data class OfflineWenetCtcModelConfig(
 )
 
 data class OfflineOmnilingualAsrCtcModelConfig(
+    var model: String = "",
+)
+
+data class OfflineMedAsrCtcModelConfig(
     var model: String = "",
 )
 
@@ -92,6 +97,7 @@ data class OfflineModelConfig(
     var zipformerCtc: OfflineZipformerCtcModelConfig = OfflineZipformerCtcModelConfig(),
     var wenetCtc: OfflineWenetCtcModelConfig = OfflineWenetCtcModelConfig(),
     var omnilingual: OfflineOmnilingualAsrCtcModelConfig = OfflineOmnilingualAsrCtcModelConfig(),
+    var medasr: OfflineMedAsrCtcModelConfig = OfflineMedAsrCtcModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
@@ -405,7 +411,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         15 -> {
-            val modelDir = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17"
+            val modelDir = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17"
             return OfflineModelConfig(
                 senseVoice = OfflineSenseVoiceModelConfig(
                     model = "$modelDir/model.int8.onnx",
@@ -722,7 +728,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         42 -> {
-            val modelDir = "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10"
+            val modelDir =
+                "sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10"
             return OfflineModelConfig(
                 wenetCtc = OfflineWenetCtcModelConfig(
                     model = "$modelDir/model.int8.onnx",
@@ -752,20 +759,31 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             )
         }
 
+        45 -> {
+            val modelDir = "sherpa-onnx-medasr-ctc-en-int8-2025-12-25"
+            return OfflineModelConfig(
+                medasr = OfflineMedAsrCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
         9000 -> {
-            val modelDir = "sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
                     model = "$modelDir/libmodel.so",
                     qnnConfig = QnnConfig(
-                      // Please copy libQnnHtp.so and libQnnSystem.so to jniLibs/arm64-v8a by yourself
-                      //
-                      // model.bin is created in the first run and is used from the second run
-                      // to speed up the initialization
-                      backendLib = "libQnnHtp.so",
-                      systemLib = "libQnnSystem.so",
-                      contextBinary = "$modelDir/model.bin",
+                        // Please copy libQnnHtp.so and libQnnSystem.so to jniLibs/arm64-v8a by yourself
+                        //
+                        // model.bin is created in the first run and is used from the second run
+                        // to speed up the initialization
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/model.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",
@@ -774,7 +792,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9001 -> {
-            val modelDir = "sherpa-onnx-qnn-8-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-8-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -791,7 +810,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9002 -> {
-            val modelDir = "sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -808,7 +828,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9003 -> {
-            val modelDir = "sherpa-onnx-qnn-13-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-13-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -824,7 +845,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9004 -> {
-            val modelDir = "sherpa-onnx-qnn-15-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-15-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -840,7 +862,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9005 -> {
-            val modelDir = "sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -856,7 +879,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9006 -> {
-            val modelDir = "sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -872,7 +896,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9007 -> {
-            val modelDir = "sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -888,7 +913,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9008 -> {
-            val modelDir = "sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -904,7 +930,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9009 -> {
-            val modelDir = "sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -920,7 +947,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9010 -> {
-            val modelDir = "sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -936,7 +964,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9011 -> {
-            val modelDir = "sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -953,7 +982,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9012 -> {
-            val modelDir = "sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -970,7 +1000,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9013 -> {
-            val modelDir = "sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -987,7 +1018,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9014 -> {
-            val modelDir = "sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1003,7 +1035,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9015 -> {
-            val modelDir = "sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1019,7 +1052,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9016 -> {
-            val modelDir = "sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1035,7 +1069,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9017 -> {
-            val modelDir = "sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1051,7 +1086,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9018 -> {
-            val modelDir = "sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1067,7 +1103,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9019 -> {
-            val modelDir = "sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1083,7 +1120,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9020 -> {
-            val modelDir = "sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1099,7 +1137,8 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9021 -> {
-            val modelDir = "sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
+            val modelDir =
+                "sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64"
             return OfflineModelConfig(
                 provider = "qnn",
                 zipformerCtc = OfflineZipformerCtcModelConfig(
@@ -1115,8 +1154,9 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         9022 -> {
-            // for my Xiaomi 17 Pro
-            val modelDir = "sherpa-onnx-qnn-SM8850-binary-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8"
+            // for Xiaomi 17 Pro
+            val modelDir =
+                "sherpa-onnx-qnn-SM8850-binary-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8"
             return OfflineModelConfig(
                 provider = "qnn",
                 senseVoice = OfflineSenseVoiceModelConfig(
@@ -1125,6 +1165,61 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                         backendLib = "libQnnHtp.so",
                         systemLib = "libQnnSystem.so",
                         contextBinary = "$modelDir/model.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9023 -> {
+            val modelDir = "sherpa-onnx-qnn-5-seconds-paraformer-zh-2023-03-28-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                paraformer = OfflineParaformerModelConfig(
+                    model = "$modelDir/libencoder.so,$modelDir/libpredictor.so,$modelDir/libdecoder.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        // The following three *.bin files are generated during the first run
+                        // and are used to replace the corresponding *.so files in later runs
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/predictor.bin,$modelDir/decoder.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9024 -> {
+            val modelDir = "sherpa-onnx-qnn-5-seconds-paraformer-zh-2025-10-07-int8-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                paraformer = OfflineParaformerModelConfig(
+                    model = "$modelDir/libencoder.so,$modelDir/libpredictor.so,$modelDir/libdecoder.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        // The following three *.bin files are generated during the first run
+                        // and are used to replace the corresponding *.so files in later runs
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/predictor.bin,$modelDir/decoder.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                debug = true,
+            )
+        }
+
+        9025 -> {
+            // for Xiaomi 17 Pro
+            val modelDir = "sherpa-onnx-qnn-SM8850-binary-5-seconds-paraformer-zh-2023-03-28-int8"
+            return OfflineModelConfig(
+                provider = "qnn",
+                paraformer = OfflineParaformerModelConfig(
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/predictor.bin,$modelDir/decoder.bin",
                     ),
                 ),
                 tokens = "$modelDir/tokens.txt",

@@ -32,6 +32,9 @@ rm -rf sherpa-onnx-nemo-*
 
 cd ../offline-decode-files
 
+./run-medasr-ctc.sh
+rm -rf sherpa-onnx-*
+
 ./run-omnilingual-asr-ctc.sh
 rm -rf sherpa-onnx-*
 

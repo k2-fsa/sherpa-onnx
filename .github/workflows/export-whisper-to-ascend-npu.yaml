@@ -1,0 +1,307 @@
+name: export-whisper-to-ascend-npu
+
+on:
+  push:
+    branches:
+      - ci-export-whisper-ascend-npu-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-whisper-to-ascend-npu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    # see https://github.com/pytorch/pytorch/pull/50633
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-ascend/generate_whisper.py
+          MATRIX=$(python3 .github/scripts/export-ascend/generate_whisper.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  export-whisper-to-ascend-npu:
+    needs: generate_build_matrix
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.model }} ${{ matrix.soc_version }} ${{ matrix.cann }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Show Python
+        shell: bash
+        run: |
+          python3 --version
+          which python3
+
+      - name: Install curl
+        shell: bash
+        run: |
+          apt-get update && apt-get install -y curl bzip2 git git-lfs
+
+      - name: Verify environment
+        shell: bash
+        run: |
+          ls -lh /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+          find /usr/local/Ascend -name "libascend*.so" 2>/dev/null
+
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
+
+          echo "CANN environment:"
+          which atc || echo "atc not found"
+          atc --help
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install "numpy<2" \
+                  onnx==1.17.0 \
+                  onnxruntime==1.17.1 \
+                  torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+                  torchaudio==2.0.0+cpu -f https://download.pytorch.org/whl/torchaudio \
+                  openai-whisper \
+                  attrs psutil scipy decorator cloudpickle ml-dtypes tornado \
+                  sentencepiece \
+                  pyyaml
+
+      - name: export ${{ matrix.model }} to ONNX
+        shell: bash
+        run: |
+          cd scripts/whisper/ascend-npu
+          model=${{ matrix.model }}
+          echo "model: $model"
+          if [[ $model == distil-medium.en ]]; then
+            curl -L -s -o distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == distil-large-v2 ]]; then
+            curl -L -s -o distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == distil-large-v3 ]]; then
+            curl -L -s -o distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
+            ls -lh
+          elif [[ $model == distil-large-v3.5 ]]; then
+            curl -L -s -o distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
+            ls -lh
+          elif [[ $model == distil-small.en ]]; then
+            curl -L -s -o distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == medium-aishell ]]; then
+            curl -L -s -o medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
+            ls -lh
+          fi
+          python3 ./export_onnx.py --model ${{ matrix.model }}
+
+
+          ls -lh
+
+          ls -lh ~/.cache/whisper || true
+          ls -lh distil*original-model.bin || true
+          rm -rf ~/.cache/whisper
+          rm -f distil*original-model.bin
+          rm -f medium-aishell.pt
+
+      - name: export ${{ matrix.model }} ONNX to Ascend OM
+        shell: bash
+        run: |
+          cd scripts/whisper/ascend-npu
+          ls -lh *.onnx
+
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/linux/x86_64:$LD_LIBRARY_PATH
+
+          # for cann 7.0.0
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/x86_64:$LD_LIBRARY_PATH
+
+          soc_version=${{ matrix.soc_version }}
+          cann=${{ matrix.cann }}
+
+          model=${{ matrix.model }}
+
+          atc --model=./${model}-encoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=${model}-encoder \
+            --input_format=ND \
+            --soc_version="Ascend${soc_version}"
+
+          ls -lh *.om
+
+          atc --model=./${model}-decoder.onnx \
+            --framework=5 \
+            --host_env_os=linux \
+            --host_env_cpu=aarch64 \
+            --output=${model}-decoder \
+            --input_format=ND \
+            --soc_version="Ascend${soc_version}"
+
+          ls -lh *.om
+
+          rm -v *.onnx
+
+          echo "collect results"
+          d=sherpa-onnx-ascend-${soc_version}-cann-${cann}-whisper-$model
+
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+
+          pushd $d/test_wavs
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/0.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/1.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/8k.wav
+          curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/trans.txt
+          popd
+
+          cp -v $model-encoder*.om $d/${model}-encoder.om
+          cp -v $model-decoder*.om $d/${model}-decoder.om
+          cp -v $model-tokens.txt $d/
+          cp -v test_om.py $d
+          ls -lh $d
+
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          rm -v *.om
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mv *.tar.bz2 ../../..
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-ascend
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: asr-models-ascend
+
+      - name: Publish to huggingface
+        if: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+
+              d=asr-models/ascend-npu/whisper
+              mkdir -p huggingface/$d
+
+              cp -v $m huggingface/$d/
+
+              pushd huggingface
+              git lfs track "*.tar.bz2"
+              ls -lh $d/$m
+
+              ls -lh $d
+
+              pushd $d
+              git lfs track "*.tar.bz2"
+              popd
+
+              git status
+              git add .
+
+              git commit -m "add $m"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
+              popd
+            done
+            rm -rf huggingface
+
+      - name: Publish to modelscope
+        if: true
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            models=(
+              sherpa-onnx-ascend-${{ matrix.soc_version }}-cann-${{ matrix.cann }}-whisper-${{ matrix.model }}.tar.bz2
+            )
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              d=ascend-npu/whisper
+              mkdir -p ms/$d
+
+              cp -av $m ms/$d/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh $d/$m
+
+              ls -lh $d
+
+              git add .
+
+              git commit -m "add $m"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
+              popd
+            done
+            rm -rf ms

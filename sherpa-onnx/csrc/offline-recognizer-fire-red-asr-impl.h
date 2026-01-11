@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-decoder.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model.h"
@@ -131,20 +132,19 @@ class OfflineRecognizerFireRedAsrImpl : public OfflineRecognizerImpl {
 
   void ApplyCMVN(std::vector<float> *v) const {
     const auto &meta_data = model_->GetModelMetadata();
-    const auto &mean = meta_data.mean;
-    const auto &inv_stddev = meta_data.inv_stddev;
-    int32_t feat_dim = static_cast<int32_t>(mean.size());
+    const auto &mean_vec = meta_data.mean;
+    const auto &inv_stddev_vec = meta_data.inv_stddev;
+    int32_t feat_dim = static_cast<int32_t>(mean_vec.size());
     int32_t num_frames = static_cast<int32_t>(v->size()) / feat_dim;
+    Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+        mat(v->data(), num_frames, feat_dim);
+    Eigen::Map<const Eigen::RowVectorXf> mean(mean_vec.data(), feat_dim);
+    Eigen::Map<const Eigen::RowVectorXf> inv_std(inv_stddev_vec.data(),
+                                                 feat_dim);
 
-    float *p = v->data();
-
-    for (int32_t i = 0; i != num_frames; ++i) {
-      for (int32_t k = 0; k != feat_dim; ++k) {
-        p[k] = (p[k] - mean[k]) * inv_stddev[k];
-      }
-
-      p += feat_dim;
-    }
+    mat.array() =
+        (mat.array().rowwise() - mean.array()).rowwise() * inv_std.array();
   }
 
  private:

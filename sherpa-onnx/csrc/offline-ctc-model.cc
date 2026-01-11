@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model.h"
+#include "sherpa-onnx/csrc/offline-medasr-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
@@ -126,6 +127,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineTeleSpeechCtcModel>(config);
   } else if (!config.omnilingual.model.empty()) {
     return std::make_unique<OfflineOmnilingualAsrCtcModel>(config);
+  } else if (!config.medasr.model.empty()) {
+    return std::make_unique<OfflineMedAsrCtcModel>(config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here
@@ -192,6 +195,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineTeleSpeechCtcModel>(mgr, config);
   } else if (!config.omnilingual.model.empty()) {
     return std::make_unique<OfflineOmnilingualAsrCtcModel>(mgr, config);
+  } else if (!config.medasr.model.empty()) {
+    return std::make_unique<OfflineMedAsrCtcModel>(mgr, config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here

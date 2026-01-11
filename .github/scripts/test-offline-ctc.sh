@@ -80,12 +80,12 @@ rm -rf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24
 log "------------------------------------------------------------"
 log "Run SenseVoice models"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-repo=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+repo=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
 
-for m in model.onnx model.int8.onnx; do
+for m in model.int8.onnx; do
   for w in zh en yue ja ko; do
     for use_itn in 0 1; do
       echo "$m $w $use_itn"
@@ -106,7 +106,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/rep
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/test-hr.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
 
-for m in model.onnx model.int8.onnx; do
+for m in model.int8.onnx; do
   for use_itn in 0 1; do
     echo "$m $w $use_itn"
     time $EXE \

@@ -311,6 +311,10 @@ final class SherpaOnnxOfflineOmnilingualAsrCtcModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineMedAsrCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -392,6 +396,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineCanaryModelConfig canary;
   external SherpaOnnxOfflineWenetCtcModelConfig wenetCtc;
   external SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
+  external SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -694,7 +699,8 @@ final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
 
 typedef SherpaOnnxCreateOfflineSpeechDenoiserNative
     = Pointer<SherpaOnnxOfflineSpeechDenoiser> Function(
-        Pointer<SherpaOnnxOfflineSpeechDenoiserConfig>);
+  Pointer<SherpaOnnxOfflineSpeechDenoiserConfig>,
+);
 
 typedef SherpaOnnxCreateOfflineSpeechDenoiser
     = SherpaOnnxCreateOfflineSpeechDenoiserNative;
@@ -713,11 +719,19 @@ typedef SherpaOnnxOfflineSpeechDenoiserGetSampleRate = int Function(
 
 typedef SherpaOnnxOfflineSpeechDenoiserRunNative
     = Pointer<SherpaOnnxDenoisedAudio> Function(
-        Pointer<SherpaOnnxOfflineSpeechDenoiser>, Pointer<Float>, Int32, Int32);
+  Pointer<SherpaOnnxOfflineSpeechDenoiser>,
+  Pointer<Float>,
+  Int32,
+  Int32,
+);
 
-typedef SherpaOnnxOfflineSpeechDenoiserRun
-    = Pointer<SherpaOnnxDenoisedAudio> Function(
-        Pointer<SherpaOnnxOfflineSpeechDenoiser>, Pointer<Float>, int, int);
+typedef SherpaOnnxOfflineSpeechDenoiserRun = Pointer<SherpaOnnxDenoisedAudio>
+    Function(
+  Pointer<SherpaOnnxOfflineSpeechDenoiser>,
+  Pointer<Float>,
+  int,
+  int,
+);
 
 typedef SherpaOnnxDestroyDenoisedAudioNative = Void Function(
     Pointer<SherpaOnnxDenoisedAudio>);
@@ -727,7 +741,8 @@ typedef SherpaOnnxDestroyDenoisedAudio = void Function(
 
 typedef SherpaOnnxCreateSpokenLanguageIdentificationNative
     = Pointer<SherpaOnnxSpokenLanguageIdentification> Function(
-        Pointer<SherpaOnnxSpokenLanguageIdentificationConfig>);
+  Pointer<SherpaOnnxSpokenLanguageIdentificationConfig>,
+);
 
 typedef SherpaOnnxCreateSpokenLanguageIdentification
     = SherpaOnnxCreateSpokenLanguageIdentificationNative;
@@ -740,15 +755,17 @@ typedef SherpaOnnxDestroySpokenLanguageIdentification = void Function(
 
 typedef SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamNative
     = Pointer<SherpaOnnxOfflineStream> Function(
-        Pointer<SherpaOnnxSpokenLanguageIdentification>);
+  Pointer<SherpaOnnxSpokenLanguageIdentification>,
+);
 
 typedef SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream
     = SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamNative;
 
 typedef SherpaOnnxSpokenLanguageIdentificationComputeNative
     = Pointer<SherpaOnnxSpokenLanguageIdentificationResult> Function(
-        Pointer<SherpaOnnxSpokenLanguageIdentification>,
-        Pointer<SherpaOnnxOfflineStream>);
+  Pointer<SherpaOnnxSpokenLanguageIdentification>,
+  Pointer<SherpaOnnxOfflineStream>,
+);
 
 typedef SherpaOnnxSpokenLanguageIdentificationCompute
     = SherpaOnnxSpokenLanguageIdentificationComputeNative;
@@ -761,7 +778,8 @@ typedef SherpaOnnxDestroySpokenLanguageIdentificationResult = void Function(
 
 typedef SherpaOnnxCreateOfflineSpeakerDiarizationNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarization> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>,
+);
 
 typedef SherpaOnnxCreateOfflineSpeakerDiarization
     = SherpaOnnxCreateOfflineSpeakerDiarizationNative;
@@ -774,11 +792,13 @@ typedef SherpaOnnxDestroyOfflineSpeakerDiarization = void Function(
 
 typedef SherpaOnnxCreateOfflinePunctuationNative
     = Pointer<SherpaOnnxOfflinePunctuation> Function(
-        Pointer<SherpaOnnxOfflinePunctuationConfig>);
+  Pointer<SherpaOnnxOfflinePunctuationConfig>,
+);
 
 typedef SherpaOnnxCreateOnlinePunctuationNative
     = Pointer<SherpaOnnxOnlinePunctuation> Function(
-        Pointer<SherpaOnnxOnlinePunctuationConfig>);
+  Pointer<SherpaOnnxOnlinePunctuationConfig>,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationGetSampleRateNative = Int32 Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarization>);
@@ -787,8 +807,9 @@ typedef SherpaOnnxOfflineSpeakerDiarizationGetSampleRate = int Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarization>);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationSetConfigNative = Void Function(
-    Pointer<SherpaOnnxOfflineSpeakerDiarization>,
-    Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakersNative = Int32
     Function(Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
@@ -804,7 +825,8 @@ typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments = int Function(
 
 typedef SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTimeNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationSegment> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime
     = SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTimeNative;
@@ -817,32 +839,40 @@ typedef SherpaOnnxOfflineSpeakerDiarizationDestroySegment = void Function(
 
 typedef SherpaOnnxOfflineSpeakerDiarizationProcessNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarization>, Pointer<Float>, Int32);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<Float>,
+  Int32,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationProcess
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarization>, Pointer<Float>, int);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<Float>,
+  int,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative = Int32
     Function(Int32, Int32);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
-        Pointer<Float>,
-        Int32,
-        Pointer<
-            NativeFunction<
-                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<Float>,
+  Int32,
+  Pointer<
+      NativeFunction<
+          SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
-        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
-        Pointer<Float>,
-        int,
-        Pointer<
-            NativeFunction<
-                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<Float>,
+  int,
+  Pointer<
+      NativeFunction<
+          SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>,
+);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative = Void Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
@@ -851,8 +881,9 @@ typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResult = void Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationSetConfig = void Function(
-    Pointer<SherpaOnnxOfflineSpeakerDiarization>,
-    Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
+  Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+  Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>,
+);
 
 typedef SherpaOnnxCreateOfflinePunctuation
     = SherpaOnnxCreateOfflinePunctuationNative;
@@ -864,7 +895,9 @@ typedef SherpaOnnxDestroyOfflinePunctuation = void Function(
     Pointer<SherpaOnnxOfflinePunctuation>);
 
 typedef SherpaOfflinePunctuationAddPunctNative = Pointer<Utf8> Function(
-    Pointer<SherpaOnnxOfflinePunctuation>, Pointer<Utf8>);
+  Pointer<SherpaOnnxOfflinePunctuation>,
+  Pointer<Utf8>,
+);
 
 typedef SherpaOfflinePunctuationAddPunct
     = SherpaOfflinePunctuationAddPunctNative;
@@ -894,7 +927,9 @@ typedef SherpaOnnxOnlinePunctuationFreeTextNative = Void Function(
 typedef SherpaOnnxOnlinePunctuationFreeText = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateAudioTaggingNative = Pointer<SherpaOnnxAudioTagging>
-    Function(Pointer<SherpaOnnxAudioTaggingConfig>);
+    Function(
+  Pointer<SherpaOnnxAudioTaggingConfig>,
+);
 
 typedef SherpaOnnxCreateAudioTagging = SherpaOnnxCreateAudioTaggingNative;
 
@@ -913,13 +948,17 @@ typedef SherpaOnnxAudioTaggingCreateOfflineStream
 
 typedef SherpaOnnxAudioTaggingComputeNative
     = Pointer<Pointer<SherpaOnnxAudioEvent>> Function(
-        Pointer<SherpaOnnxAudioTagging>,
-        Pointer<SherpaOnnxOfflineStream>,
-        Int32);
+  Pointer<SherpaOnnxAudioTagging>,
+  Pointer<SherpaOnnxOfflineStream>,
+  Int32,
+);
 
-typedef SherpaOnnxAudioTaggingCompute
-    = Pointer<Pointer<SherpaOnnxAudioEvent>> Function(
-        Pointer<SherpaOnnxAudioTagging>, Pointer<SherpaOnnxOfflineStream>, int);
+typedef SherpaOnnxAudioTaggingCompute = Pointer<Pointer<SherpaOnnxAudioEvent>>
+    Function(
+  Pointer<SherpaOnnxAudioTagging>,
+  Pointer<SherpaOnnxOfflineStream>,
+  int,
+);
 
 typedef SherpaOnnxAudioTaggingFreeResultsNative = Void Function(
     Pointer<Pointer<SherpaOnnxAudioEvent>>);
@@ -928,7 +967,8 @@ typedef SherpaOnnxAudioTaggingFreeResults = void Function(
     Pointer<Pointer<SherpaOnnxAudioEvent>>);
 
 typedef CreateKeywordSpotterNative = Pointer<SherpaOnnxKeywordSpotter> Function(
-    Pointer<SherpaOnnxKeywordSpotterConfig>);
+  Pointer<SherpaOnnxKeywordSpotterConfig>,
+);
 
 typedef CreateKeywordSpotter = CreateKeywordSpotterNative;
 
@@ -944,30 +984,47 @@ typedef CreateKeywordStreamNative = Pointer<SherpaOnnxOnlineStream> Function(
 typedef CreateKeywordStream = CreateKeywordStreamNative;
 
 typedef CreateKeywordStreamWithKeywordsNative = Pointer<SherpaOnnxOnlineStream>
-    Function(Pointer<SherpaOnnxKeywordSpotter>, Pointer<Utf8>);
+    Function(
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<Utf8>,
+);
 
 typedef CreateKeywordStreamWithKeywords = CreateKeywordStreamWithKeywordsNative;
 
 typedef IsKeywordStreamReadyNative = Int32 Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef IsKeywordStreamReady = int Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef DecodeKeywordStreamNative = Void Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef DecodeKeywordStream = void Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef ResetKeywordStreamNative = Void Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef ResetKeywordStream = void Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef GetKeywordResultAsJsonNative = Pointer<Utf8> Function(
-    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxKeywordSpotter>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef GetKeywordResultAsJson = GetKeywordResultAsJsonNative;
 
@@ -999,10 +1056,20 @@ typedef SherpaOnnxOfflineTtsNumSpeakers = int Function(
     Pointer<SherpaOnnxOfflineTts>);
 
 typedef SherpaOnnxOfflineTtsGenerateNative = Pointer<SherpaOnnxGeneratedAudio>
-    Function(Pointer<SherpaOnnxOfflineTts>, Pointer<Utf8>, Int32, Float);
+    Function(
+  Pointer<SherpaOnnxOfflineTts>,
+  Pointer<Utf8>,
+  Int32,
+  Float,
+);
 
 typedef SherpaOnnxOfflineTtsGenerate = Pointer<SherpaOnnxGeneratedAudio>
-    Function(Pointer<SherpaOnnxOfflineTts>, Pointer<Utf8>, int, double);
+    Function(
+  Pointer<SherpaOnnxOfflineTts>,
+  Pointer<Utf8>,
+  int,
+  double,
+);
 
 typedef SherpaOnnxDestroyOfflineTtsGeneratedAudioNative = Void Function(
     Pointer<SherpaOnnxGeneratedAudio>);
@@ -1015,32 +1082,38 @@ typedef SherpaOnnxGeneratedAudioCallbackNative = Int Function(
 
 typedef SherpaOnnxOfflineTtsGenerateWithCallbackNative
     = Pointer<SherpaOnnxGeneratedAudio> Function(
-        Pointer<SherpaOnnxOfflineTts>,
-        Pointer<Utf8>,
-        Int32,
-        Float,
-        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
+  Pointer<SherpaOnnxOfflineTts>,
+  Pointer<Utf8>,
+  Int32,
+  Float,
+  Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>,
+);
 
 typedef SherpaOnnxOfflineTtsGenerateWithCallback
     = Pointer<SherpaOnnxGeneratedAudio> Function(
-        Pointer<SherpaOnnxOfflineTts>,
-        Pointer<Utf8>,
-        int,
-        double,
-        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
+  Pointer<SherpaOnnxOfflineTts>,
+  Pointer<Utf8>,
+  int,
+  double,
+  Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>,
+);
 
 typedef CreateOfflineRecognizerNative = Pointer<SherpaOnnxOfflineRecognizer>
-    Function(Pointer<SherpaOnnxOfflineRecognizerConfig>);
+    Function(
+  Pointer<SherpaOnnxOfflineRecognizerConfig>,
+);
 
 typedef CreateOfflineRecognizer = CreateOfflineRecognizerNative;
 
 typedef OfflineRecognizerSetConfigNative = Void Function(
-    Pointer<SherpaOnnxOfflineRecognizer>,
-    Pointer<SherpaOnnxOfflineRecognizerConfig>);
+  Pointer<SherpaOnnxOfflineRecognizer>,
+  Pointer<SherpaOnnxOfflineRecognizerConfig>,
+);
 
 typedef OfflineRecognizerSetConfig = void Function(
-    Pointer<SherpaOnnxOfflineRecognizer>,
-    Pointer<SherpaOnnxOfflineRecognizerConfig>);
+  Pointer<SherpaOnnxOfflineRecognizer>,
+  Pointer<SherpaOnnxOfflineRecognizerConfig>,
+);
 
 typedef DestroyOfflineRecognizerNative = Void Function(
     Pointer<SherpaOnnxOfflineRecognizer>);
@@ -1049,7 +1122,8 @@ typedef DestroyOfflineRecognizer = void Function(
     Pointer<SherpaOnnxOfflineRecognizer>);
 
 typedef CreateOfflineStreamNative = Pointer<SherpaOnnxOfflineStream> Function(
-    Pointer<SherpaOnnxOfflineRecognizer>);
+  Pointer<SherpaOnnxOfflineRecognizer>,
+);
 
 typedef CreateOfflineStream = CreateOfflineStreamNative;
 
@@ -1059,16 +1133,24 @@ typedef DestroyOfflineStreamNative = Void Function(
 typedef DestroyOfflineStream = void Function(Pointer<SherpaOnnxOfflineStream>);
 
 typedef AcceptWaveformOfflineNative = Void Function(
-    Pointer<SherpaOnnxOfflineStream>, Int32, Pointer<Float>, Int32);
+  Pointer<SherpaOnnxOfflineStream>,
+  Int32,
+  Pointer<Float>,
+  Int32,
+);
 
 typedef AcceptWaveformOffline = void Function(
     Pointer<SherpaOnnxOfflineStream>, int, Pointer<Float>, int);
 
 typedef DecodeOfflineStreamNative = Void Function(
-    Pointer<SherpaOnnxOfflineRecognizer>, Pointer<SherpaOnnxOfflineStream>);
+  Pointer<SherpaOnnxOfflineRecognizer>,
+  Pointer<SherpaOnnxOfflineStream>,
+);
 
 typedef DecodeOfflineStream = void Function(
-    Pointer<SherpaOnnxOfflineRecognizer>, Pointer<SherpaOnnxOfflineStream>);
+  Pointer<SherpaOnnxOfflineRecognizer>,
+  Pointer<SherpaOnnxOfflineStream>,
+);
 
 typedef GetOfflineStreamResultAsJsonNative = Pointer<Utf8> Function(
     Pointer<SherpaOnnxOfflineStream>);
@@ -1081,7 +1163,8 @@ typedef DestroyOfflineStreamResultJson = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateOnlineRecognizerNative
     = Pointer<SherpaOnnxOnlineRecognizer> Function(
-        Pointer<SherpaOnnxOnlineRecognizerConfig>);
+  Pointer<SherpaOnnxOnlineRecognizerConfig>,
+);
 
 typedef SherpaOnnxCreateOnlineRecognizer
     = SherpaOnnxCreateOnlineRecognizerNative;
@@ -1093,45 +1176,67 @@ typedef SherpaOnnxDestroyOnlineRecognizer = void Function(
     Pointer<SherpaOnnxOnlineRecognizer>);
 
 typedef SherpaOnnxCreateOnlineStreamNative = Pointer<SherpaOnnxOnlineStream>
-    Function(Pointer<SherpaOnnxOnlineRecognizer>);
+    Function(
+  Pointer<SherpaOnnxOnlineRecognizer>,
+);
 
 typedef SherpaOnnxCreateOnlineStream = SherpaOnnxCreateOnlineStreamNative;
 
 typedef SherpaOnnxCreateOnlineStreamWithHotwordsNative
     = Pointer<SherpaOnnxOnlineStream> Function(
-        Pointer<SherpaOnnxOnlineRecognizer>, Pointer<Utf8>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<Utf8>,
+);
 
 typedef SherpaOnnxCreateOnlineStreamWithHotwords
     = SherpaOnnxCreateOnlineStreamWithHotwordsNative;
 
 typedef IsOnlineStreamReadyNative = Int32 Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef IsOnlineStreamReady = int Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef SherpaOnnxDecodeOnlineStreamNative = Void Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef SherpaOnnxDecodeOnlineStream = void Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef GetOnlineStreamResultAsJsonNative = Pointer<Utf8> Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef GetOnlineStreamResultAsJson = GetOnlineStreamResultAsJsonNative;
 
 typedef ResetNative = Void Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef Reset = void Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef IsEndpointNative = Int32 Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef IsEndpoint = int Function(
-    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxOnlineRecognizer>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef DestroyOnlineStreamResultJsonNative = Void Function(Pointer<Utf8>);
 
@@ -1139,11 +1244,15 @@ typedef DestroyOnlineStreamResultJson = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateVoiceActivityDetectorNative
     = Pointer<SherpaOnnxVoiceActivityDetector> Function(
-        Pointer<SherpaOnnxVadModelConfig>, Float);
+  Pointer<SherpaOnnxVadModelConfig>,
+  Float,
+);
 
 typedef SherpaOnnxCreateVoiceActivityDetector
     = Pointer<SherpaOnnxVoiceActivityDetector> Function(
-        Pointer<SherpaOnnxVadModelConfig>, double);
+  Pointer<SherpaOnnxVadModelConfig>,
+  double,
+);
 
 typedef SherpaOnnxDestroyVoiceActivityDetectorNative = Void Function(
     Pointer<SherpaOnnxVoiceActivityDetector>);
@@ -1152,10 +1261,16 @@ typedef SherpaOnnxDestroyVoiceActivityDetector = void Function(
     Pointer<SherpaOnnxVoiceActivityDetector>);
 
 typedef SherpaOnnxVoiceActivityDetectorAcceptWaveformNative = Void Function(
-    Pointer<SherpaOnnxVoiceActivityDetector>, Pointer<Float>, Int32);
+  Pointer<SherpaOnnxVoiceActivityDetector>,
+  Pointer<Float>,
+  Int32,
+);
 
 typedef SherpaOnnxVoiceActivityDetectorAcceptWaveform = void Function(
-    Pointer<SherpaOnnxVoiceActivityDetector>, Pointer<Float>, int);
+  Pointer<SherpaOnnxVoiceActivityDetector>,
+  Pointer<Float>,
+  int,
+);
 
 typedef SherpaOnnxVoiceActivityDetectorEmptyNative = Int32 Function(
     Pointer<SherpaOnnxVoiceActivityDetector>);
@@ -1195,7 +1310,8 @@ typedef SherpaOnnxVoiceActivityDetectorFlush = void Function(
 
 typedef SherpaOnnxVoiceActivityDetectorFrontNative
     = Pointer<SherpaOnnxSpeechSegment> Function(
-        Pointer<SherpaOnnxVoiceActivityDetector>);
+  Pointer<SherpaOnnxVoiceActivityDetector>,
+);
 
 typedef SherpaOnnxVoiceActivityDetectorFront
     = SherpaOnnxVoiceActivityDetectorFrontNative;
@@ -1271,20 +1387,31 @@ typedef SherpaOnnxDestroySpeakerEmbeddingManager = void Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerAddNative = Int32 Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>, Pointer<Float>);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerAdd = int Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>, Pointer<Float>);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+);
 
-typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedNative
-    = Int32 Function(Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>,
-        Pointer<Float>, Int32);
+typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedNative = Int32
+    Function(
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+  Int32,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattened = int Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
-    Pointer<Utf8>,
-    Pointer<Float>,
-    int);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+  int,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerRemoveNative = Int32 Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
@@ -1299,10 +1426,16 @@ typedef SherpaOnnxSpeakerEmbeddingManagerContains = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerSearchNative = Pointer<Utf8> Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Float>, Float);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Float>,
+  Float,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerSearch = Pointer<Utf8> Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Float>, double);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Float>,
+  double,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerFreeSearchNative = Void Function(
     Pointer<Utf8>);
@@ -1317,16 +1450,18 @@ typedef SherpaOnnxSpeakerEmbeddingManagerNumSpeakers = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerVerifyNative = Int32 Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
-    Pointer<Utf8>,
-    Pointer<Float>,
-    Float);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+  Float,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerVerify = int Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
-    Pointer<Utf8>,
-    Pointer<Float>,
-    double);
+  Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+  Pointer<Utf8>,
+  Pointer<Float>,
+  double,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersNative
     = Pointer<Pointer<Utf8>> Function(
@@ -1343,7 +1478,8 @@ typedef SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers = void Function(
 
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
     = Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
-        Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>);
+  Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>,
+);
 
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractor
     = SherpaOnnxCreateSpeakerEmbeddingExtractorNative;
@@ -1362,7 +1498,8 @@ typedef SherpaOnnxSpeakerEmbeddingExtractorDim = int Function(
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative
     = Pointer<SherpaOnnxOnlineStream> Function(
-        Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
+  Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorCreateStream
     = SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative;
@@ -1374,7 +1511,11 @@ typedef SherpaOnnxDestroyOnlineStream = void Function(
     Pointer<SherpaOnnxOnlineStream>);
 
 typedef OnlineStreamAcceptWaveformNative = Void Function(
-    Pointer<SherpaOnnxOnlineStream>, Int32, Pointer<Float>, Int32);
+  Pointer<SherpaOnnxOnlineStream>,
+  Int32,
+  Pointer<Float>,
+  Int32,
+);
 
 typedef OnlineStreamAcceptWaveform = void Function(
     Pointer<SherpaOnnxOnlineStream>, int, Pointer<Float>, int);
@@ -1386,16 +1527,20 @@ typedef OnlineStreamInputFinished = void Function(
     Pointer<SherpaOnnxOnlineStream>);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative = Int32 Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
-    Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReady = int Function(
-    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
-    Pointer<SherpaOnnxOnlineStream>);
+  Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingNative
-    = Pointer<Float> Function(Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
-        Pointer<SherpaOnnxOnlineStream>);
+    = Pointer<Float> Function(
+  Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+  Pointer<SherpaOnnxOnlineStream>,
+);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding
     = SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingNative;
@@ -1678,12 +1823,14 @@ class SherpaOnnxBindings {
   static void init(DynamicLibrary dynamicLibrary) {
     sherpaOnnxCreateOfflineSpeechDenoiser ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOfflineSpeechDenoiserNative>>(
-            'SherpaOnnxCreateOfflineSpeechDenoiser')
+          'SherpaOnnxCreateOfflineSpeechDenoiser',
+        )
         .asFunction();
 
     sherpaOnnxDestroyOfflineSpeechDenoiser ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOfflineSpeechDenoiserNative>>(
-            'SherpaOnnxDestroyOfflineSpeechDenoiser')
+          'SherpaOnnxDestroyOfflineSpeechDenoiser',
+        )
         .asFunction();
 
     sherpaOnnxOfflineSpeechDenoiserGetSampleRate ??= dynamicLibrary
@@ -1695,12 +1842,14 @@ class SherpaOnnxBindings {
 
     sherpaOnnxOfflineSpeechDenoiserRun ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineSpeechDenoiserRunNative>>(
-            'SherpaOnnxOfflineSpeechDenoiserRun')
+          'SherpaOnnxOfflineSpeechDenoiserRun',
+        )
         .asFunction();
 
     sherpaOnnxDestroyDenoisedAudio ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyDenoisedAudioNative>>(
-            'SherpaOnnxDestroyDenoisedAudio')
+          'SherpaOnnxDestroyDenoisedAudio',
+        )
         .asFunction();
 
     sherpaOnnxCreateSpokenLanguageIdentification ??= dynamicLibrary
@@ -1817,52 +1966,62 @@ class SherpaOnnxBindings {
 
     sherpaOnnxCreateOfflinePunctuation ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOfflinePunctuationNative>>(
-            'SherpaOnnxCreateOfflinePunctuation')
+          'SherpaOnnxCreateOfflinePunctuation',
+        )
         .asFunction();
 
     sherpaOnnxDestroyOfflinePunctuation ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOfflinePunctuationNative>>(
-            'SherpaOnnxDestroyOfflinePunctuation')
+          'SherpaOnnxDestroyOfflinePunctuation',
+        )
         .asFunction();
 
     sherpaOfflinePunctuationAddPunct ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOfflinePunctuationAddPunctNative>>(
-            'SherpaOfflinePunctuationAddPunct')
+          'SherpaOfflinePunctuationAddPunct',
+        )
         .asFunction();
 
     sherpaOfflinePunctuationFreeText ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOfflinePunctuationFreeTextNative>>(
-            'SherpaOfflinePunctuationFreeText')
+          'SherpaOfflinePunctuationFreeText',
+        )
         .asFunction();
 
     sherpaOnnxCreateOnlinePunctuation ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOnlinePunctuationNative>>(
-            'SherpaOnnxCreateOnlinePunctuation')
+          'SherpaOnnxCreateOnlinePunctuation',
+        )
         .asFunction();
 
     sherpaOnnxDestroyOnlinePunctuation ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOnlinePunctuationNative>>(
-            'SherpaOnnxDestroyOnlinePunctuation')
+          'SherpaOnnxDestroyOnlinePunctuation',
+        )
         .asFunction();
 
     sherpaOnnxOnlinePunctuationAddPunct ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOnlinePunctuationAddPunctNative>>(
-            'SherpaOnnxOnlinePunctuationAddPunct')
+          'SherpaOnnxOnlinePunctuationAddPunct',
+        )
         .asFunction();
 
     sherpaOnnxOnlinePunctuationFreeText ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOnlinePunctuationFreeTextNative>>(
-            'SherpaOnnxOnlinePunctuationFreeText')
+          'SherpaOnnxOnlinePunctuationFreeText',
+        )
         .asFunction();
 
     sherpaOnnxCreateAudioTagging ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateAudioTaggingNative>>(
-            'SherpaOnnxCreateAudioTagging')
+          'SherpaOnnxCreateAudioTagging',
+        )
         .asFunction();
 
     sherpaOnnxDestroyAudioTagging ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyAudioTaggingNative>>(
-            'SherpaOnnxDestroyAudioTagging')
+          'SherpaOnnxDestroyAudioTagging',
+        )
         .asFunction();
 
     sherpaOnnxAudioTaggingCreateOfflineStream ??= dynamicLibrary
@@ -1874,82 +2033,98 @@ class SherpaOnnxBindings {
 
     sherpaOnnxAudioTaggingCompute ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxAudioTaggingComputeNative>>(
-            'SherpaOnnxAudioTaggingCompute')
+          'SherpaOnnxAudioTaggingCompute',
+        )
         .asFunction();
 
     sherpaOnnxAudioTaggingFreeResults ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxAudioTaggingFreeResultsNative>>(
-            'SherpaOnnxAudioTaggingFreeResults')
+          'SherpaOnnxAudioTaggingFreeResults',
+        )
         .asFunction();
 
     createKeywordSpotter ??= dynamicLibrary
         .lookup<NativeFunction<CreateKeywordSpotterNative>>(
-            'SherpaOnnxCreateKeywordSpotter')
+          'SherpaOnnxCreateKeywordSpotter',
+        )
         .asFunction();
 
     destroyKeywordSpotter ??= dynamicLibrary
         .lookup<NativeFunction<DestroyKeywordSpotterNative>>(
-            'SherpaOnnxDestroyKeywordSpotter')
+          'SherpaOnnxDestroyKeywordSpotter',
+        )
         .asFunction();
 
     createKeywordStream ??= dynamicLibrary
         .lookup<NativeFunction<CreateKeywordStreamNative>>(
-            'SherpaOnnxCreateKeywordStream')
+          'SherpaOnnxCreateKeywordStream',
+        )
         .asFunction();
 
     createKeywordStreamWithKeywords ??= dynamicLibrary
         .lookup<NativeFunction<CreateKeywordStreamWithKeywordsNative>>(
-            'SherpaOnnxCreateKeywordStreamWithKeywords')
+          'SherpaOnnxCreateKeywordStreamWithKeywords',
+        )
         .asFunction();
 
     isKeywordStreamReady ??= dynamicLibrary
         .lookup<NativeFunction<IsKeywordStreamReadyNative>>(
-            'SherpaOnnxIsKeywordStreamReady')
+          'SherpaOnnxIsKeywordStreamReady',
+        )
         .asFunction();
 
     decodeKeywordStream ??= dynamicLibrary
         .lookup<NativeFunction<DecodeKeywordStreamNative>>(
-            'SherpaOnnxDecodeKeywordStream')
+          'SherpaOnnxDecodeKeywordStream',
+        )
         .asFunction();
 
     resetKeywordStream ??= dynamicLibrary
         .lookup<NativeFunction<ResetKeywordStreamNative>>(
-            'SherpaOnnxResetKeywordStream')
+          'SherpaOnnxResetKeywordStream',
+        )
         .asFunction();
 
     getKeywordResultAsJson ??= dynamicLibrary
         .lookup<NativeFunction<GetKeywordResultAsJsonNative>>(
-            'SherpaOnnxGetKeywordResultAsJson')
+          'SherpaOnnxGetKeywordResultAsJson',
+        )
         .asFunction();
 
     freeKeywordResultJson ??= dynamicLibrary
         .lookup<NativeFunction<FreeKeywordResultJsonNative>>(
-            'SherpaOnnxFreeKeywordResultJson')
+          'SherpaOnnxFreeKeywordResultJson',
+        )
         .asFunction();
 
     createOfflineTts ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOfflineTtsNative>>(
-            'SherpaOnnxCreateOfflineTts')
+          'SherpaOnnxCreateOfflineTts',
+        )
         .asFunction();
 
     destroyOfflineTts ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOfflineTtsNative>>(
-            'SherpaOnnxDestroyOfflineTts')
+          'SherpaOnnxDestroyOfflineTts',
+        )
         .asFunction();
 
     offlineTtsSampleRate ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineTtsSampleRateNative>>(
-            'SherpaOnnxOfflineTtsSampleRate')
+          'SherpaOnnxOfflineTtsSampleRate',
+        )
         .asFunction();
 
     offlineTtsNumSpeakers ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineTtsNumSpeakersNative>>(
-            'SherpaOnnxOfflineTtsNumSpeakers')
+          'SherpaOnnxOfflineTtsNumSpeakers',
+        )
         .asFunction();
 
     offlineTtsGenerate ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineTtsGenerateNative>>(
-            'SherpaOnnxOfflineTtsGenerate')
+          'SherpaOnnxOfflineTtsGenerate',
+        )
         .asFunction();
 
     destroyOfflineTtsGeneratedAudio ??= dynamicLibrary
@@ -1961,87 +2136,104 @@ class SherpaOnnxBindings {
 
     offlineTtsGenerateWithCallback ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxOfflineTtsGenerateWithCallbackNative>>(
-            'SherpaOnnxOfflineTtsGenerateWithCallback')
+          'SherpaOnnxOfflineTtsGenerateWithCallback',
+        )
         .asFunction();
 
     createOfflineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<CreateOfflineRecognizerNative>>(
-            'SherpaOnnxCreateOfflineRecognizer')
+          'SherpaOnnxCreateOfflineRecognizer',
+        )
         .asFunction();
 
     destroyOfflineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOfflineRecognizerNative>>(
-            'SherpaOnnxDestroyOfflineRecognizer')
+          'SherpaOnnxDestroyOfflineRecognizer',
+        )
         .asFunction();
 
     offlineRecognizerSetConfig ??= dynamicLibrary
         .lookup<NativeFunction<OfflineRecognizerSetConfigNative>>(
-            'SherpaOnnxOfflineRecognizerSetConfig')
+          'SherpaOnnxOfflineRecognizerSetConfig',
+        )
         .asFunction();
 
     createOfflineStream ??= dynamicLibrary
         .lookup<NativeFunction<CreateOfflineStreamNative>>(
-            'SherpaOnnxCreateOfflineStream')
+          'SherpaOnnxCreateOfflineStream',
+        )
         .asFunction();
 
     destroyOfflineStream ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOfflineStreamNative>>(
-            'SherpaOnnxDestroyOfflineStream')
+          'SherpaOnnxDestroyOfflineStream',
+        )
         .asFunction();
 
     acceptWaveformOffline ??= dynamicLibrary
         .lookup<NativeFunction<AcceptWaveformOfflineNative>>(
-            'SherpaOnnxAcceptWaveformOffline')
+          'SherpaOnnxAcceptWaveformOffline',
+        )
         .asFunction();
 
     decodeOfflineStream ??= dynamicLibrary
         .lookup<NativeFunction<DecodeOfflineStreamNative>>(
-            'SherpaOnnxDecodeOfflineStream')
+          'SherpaOnnxDecodeOfflineStream',
+        )
         .asFunction();
 
     getOfflineStreamResultAsJson ??= dynamicLibrary
         .lookup<NativeFunction<GetOfflineStreamResultAsJsonNative>>(
-            'SherpaOnnxGetOfflineStreamResultAsJson')
+          'SherpaOnnxGetOfflineStreamResultAsJson',
+        )
         .asFunction();
 
     destroyOfflineStreamResultJson ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOfflineStreamResultJsonNative>>(
-            'SherpaOnnxDestroyOfflineStreamResultJson')
+          'SherpaOnnxDestroyOfflineStreamResultJson',
+        )
         .asFunction();
 
     createOnlineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOnlineRecognizerNative>>(
-            'SherpaOnnxCreateOnlineRecognizer')
+          'SherpaOnnxCreateOnlineRecognizer',
+        )
         .asFunction();
 
     destroyOnlineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOnlineRecognizerNative>>(
-            'SherpaOnnxDestroyOnlineRecognizer')
+          'SherpaOnnxDestroyOnlineRecognizer',
+        )
         .asFunction();
 
     createOnlineStream ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOnlineStreamNative>>(
-            'SherpaOnnxCreateOnlineStream')
+          'SherpaOnnxCreateOnlineStream',
+        )
         .asFunction();
 
     createOnlineStreamWithHotwords ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOnlineStreamWithHotwordsNative>>(
-            'SherpaOnnxCreateOnlineStreamWithHotwords')
+          'SherpaOnnxCreateOnlineStreamWithHotwords',
+        )
         .asFunction();
 
     isOnlineStreamReady ??= dynamicLibrary
         .lookup<NativeFunction<IsOnlineStreamReadyNative>>(
-            'SherpaOnnxIsOnlineStreamReady')
+          'SherpaOnnxIsOnlineStreamReady',
+        )
         .asFunction();
 
     decodeOnlineStream ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDecodeOnlineStreamNative>>(
-            'SherpaOnnxDecodeOnlineStream')
+          'SherpaOnnxDecodeOnlineStream',
+        )
         .asFunction();
 
     getOnlineStreamResultAsJson ??= dynamicLibrary
         .lookup<NativeFunction<GetOnlineStreamResultAsJsonNative>>(
-            'SherpaOnnxGetOnlineStreamResultAsJson')
+          'SherpaOnnxGetOnlineStreamResultAsJson',
+        )
         .asFunction();
 
     reset ??= dynamicLibrary
@@ -2050,22 +2242,26 @@ class SherpaOnnxBindings {
 
     isEndpoint ??= dynamicLibrary
         .lookup<NativeFunction<IsEndpointNative>>(
-            'SherpaOnnxOnlineStreamIsEndpoint')
+          'SherpaOnnxOnlineStreamIsEndpoint',
+        )
         .asFunction();
 
     destroyOnlineStreamResultJson ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOnlineStreamResultJsonNative>>(
-            'SherpaOnnxDestroyOnlineStreamResultJson')
+          'SherpaOnnxDestroyOnlineStreamResultJson',
+        )
         .asFunction();
 
     createVoiceActivityDetector ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateVoiceActivityDetectorNative>>(
-            'SherpaOnnxCreateVoiceActivityDetector')
+          'SherpaOnnxCreateVoiceActivityDetector',
+        )
         .asFunction();
 
     destroyVoiceActivityDetector ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyVoiceActivityDetectorNative>>(
-            'SherpaOnnxDestroyVoiceActivityDetector')
+          'SherpaOnnxDestroyVoiceActivityDetector',
+        )
         .asFunction();
 
     voiceActivityDetectorAcceptWaveform ??= dynamicLibrary
@@ -2077,87 +2273,104 @@ class SherpaOnnxBindings {
 
     voiceActivityDetectorEmpty ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorEmptyNative>>(
-            'SherpaOnnxVoiceActivityDetectorEmpty')
+          'SherpaOnnxVoiceActivityDetectorEmpty',
+        )
         .asFunction();
 
     voiceActivityDetectorDetected ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorDetectedNative>>(
-            'SherpaOnnxVoiceActivityDetectorDetected')
+          'SherpaOnnxVoiceActivityDetectorDetected',
+        )
         .asFunction();
 
     voiceActivityDetectorPop ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorPopNative>>(
-            'SherpaOnnxVoiceActivityDetectorPop')
+          'SherpaOnnxVoiceActivityDetectorPop',
+        )
         .asFunction();
 
     voiceActivityDetectorClear ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorClearNative>>(
-            'SherpaOnnxVoiceActivityDetectorClear')
+          'SherpaOnnxVoiceActivityDetectorClear',
+        )
         .asFunction();
 
     voiceActivityDetectorFront ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorFrontNative>>(
-            'SherpaOnnxVoiceActivityDetectorFront')
+          'SherpaOnnxVoiceActivityDetectorFront',
+        )
         .asFunction();
 
     destroySpeechSegment ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroySpeechSegmentNative>>(
-            'SherpaOnnxDestroySpeechSegment')
+          'SherpaOnnxDestroySpeechSegment',
+        )
         .asFunction();
 
     voiceActivityDetectorReset ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorResetNative>>(
-            'SherpaOnnxVoiceActivityDetectorReset')
+          'SherpaOnnxVoiceActivityDetectorReset',
+        )
         .asFunction();
 
     voiceActivityDetectorFlush ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorFlushNative>>(
-            'SherpaOnnxVoiceActivityDetectorFlush')
+          'SherpaOnnxVoiceActivityDetectorFlush',
+        )
         .asFunction();
 
     createCircularBuffer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateCircularBufferNative>>(
-            'SherpaOnnxCreateCircularBuffer')
+          'SherpaOnnxCreateCircularBuffer',
+        )
         .asFunction();
 
     destroyCircularBuffer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyCircularBufferNative>>(
-            'SherpaOnnxDestroyCircularBuffer')
+          'SherpaOnnxDestroyCircularBuffer',
+        )
         .asFunction();
 
     circularBufferPush ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferPushNative>>(
-            'SherpaOnnxCircularBufferPush')
+          'SherpaOnnxCircularBufferPush',
+        )
         .asFunction();
 
     circularBufferGet ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferGetNative>>(
-            'SherpaOnnxCircularBufferGet')
+          'SherpaOnnxCircularBufferGet',
+        )
         .asFunction();
 
     circularBufferFree ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferFreeNative>>(
-            'SherpaOnnxCircularBufferFree')
+          'SherpaOnnxCircularBufferFree',
+        )
         .asFunction();
 
     circularBufferPop ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferPopNative>>(
-            'SherpaOnnxCircularBufferPop')
+          'SherpaOnnxCircularBufferPop',
+        )
         .asFunction();
 
     circularBufferSize ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferSizeNative>>(
-            'SherpaOnnxCircularBufferSize')
+          'SherpaOnnxCircularBufferSize',
+        )
         .asFunction();
 
     circularBufferHead ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferHeadNative>>(
-            'SherpaOnnxCircularBufferHead')
+          'SherpaOnnxCircularBufferHead',
+        )
         .asFunction();
 
     circularBufferReset ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCircularBufferResetNative>>(
-            'SherpaOnnxCircularBufferReset')
+          'SherpaOnnxCircularBufferReset',
+        )
         .asFunction();
 
     createSpeakerEmbeddingExtractor ??= dynamicLibrary
@@ -2176,7 +2389,8 @@ class SherpaOnnxBindings {
 
     speakerEmbeddingExtractorDim ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingExtractorDimNative>>(
-            'SherpaOnnxSpeakerEmbeddingExtractorDim')
+          'SherpaOnnxSpeakerEmbeddingExtractorDim',
+        )
         .asFunction();
 
     speakerEmbeddingExtractorCreateStream ??= dynamicLibrary
@@ -2202,17 +2416,20 @@ class SherpaOnnxBindings {
 
     destroyOnlineStream ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyOnlineStreamNative>>(
-            'SherpaOnnxDestroyOnlineStream')
+          'SherpaOnnxDestroyOnlineStream',
+        )
         .asFunction();
 
     onlineStreamAcceptWaveform ??= dynamicLibrary
         .lookup<NativeFunction<OnlineStreamAcceptWaveformNative>>(
-            'SherpaOnnxOnlineStreamAcceptWaveform')
+          'SherpaOnnxOnlineStreamAcceptWaveform',
+        )
         .asFunction();
 
     onlineStreamInputFinished ??= dynamicLibrary
         .lookup<NativeFunction<OnlineStreamInputFinishedNative>>(
-            'SherpaOnnxOnlineStreamInputFinished')
+          'SherpaOnnxOnlineStreamInputFinished',
+        )
         .asFunction();
 
     speakerEmbeddingExtractorIsReady ??= dynamicLibrary
@@ -2224,17 +2441,20 @@ class SherpaOnnxBindings {
 
     createSpeakerEmbeddingManager ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateSpeakerEmbeddingManagerNative>>(
-            'SherpaOnnxCreateSpeakerEmbeddingManager')
+          'SherpaOnnxCreateSpeakerEmbeddingManager',
+        )
         .asFunction();
 
     destroySpeakerEmbeddingManager ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroySpeakerEmbeddingManagerNative>>(
-            'SherpaOnnxDestroySpeakerEmbeddingManager')
+          'SherpaOnnxDestroySpeakerEmbeddingManager',
+        )
         .asFunction();
 
     speakerEmbeddingManagerAdd ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerAddNative>>(
-            'SherpaOnnxSpeakerEmbeddingManagerAdd')
+          'SherpaOnnxSpeakerEmbeddingManagerAdd',
+        )
         .asFunction();
 
     speakerEmbeddingManagerAddListFlattened ??= dynamicLibrary
@@ -2246,7 +2466,8 @@ class SherpaOnnxBindings {
 
     speakerEmbeddingManagerRemove ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerRemoveNative>>(
-            'SherpaOnnxSpeakerEmbeddingManagerRemove')
+          'SherpaOnnxSpeakerEmbeddingManagerRemove',
+        )
         .asFunction();
 
     speakerEmbeddingManagerContains ??= dynamicLibrary
@@ -2258,7 +2479,8 @@ class SherpaOnnxBindings {
 
     speakerEmbeddingManagerSearch ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerSearchNative>>(
-            'SherpaOnnxSpeakerEmbeddingManagerSearch')
+          'SherpaOnnxSpeakerEmbeddingManagerSearch',
+        )
         .asFunction();
 
     speakerEmbeddingManagerFreeSearch ??= dynamicLibrary
@@ -2277,7 +2499,8 @@ class SherpaOnnxBindings {
 
     speakerEmbeddingManagerVerify ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerVerifyNative>>(
-            'SherpaOnnxSpeakerEmbeddingManagerVerify')
+          'SherpaOnnxSpeakerEmbeddingManagerVerify',
+        )
         .asFunction();
 
     speakerEmbeddingManagerGetAllSpeakers ??= dynamicLibrary
@@ -2300,7 +2523,8 @@ class SherpaOnnxBindings {
 
     writeWave ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxWriteWaveNative>>(
-            'SherpaOnnxWriteWave')
+          'SherpaOnnxWriteWave',
+        )
         .asFunction();
 
     freeWave ??= dynamicLibrary
@@ -2309,32 +2533,35 @@ class SherpaOnnxBindings {
 
     getVersionStr ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxGetVersionStrNative>>(
-            'SherpaOnnxGetVersionStr')
+          'SherpaOnnxGetVersionStr',
+        )
         .asFunction();
 
     getGitSha1 ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxGetGitSha1Native>>(
-            'SherpaOnnxGetGitSha1')
+          'SherpaOnnxGetGitSha1',
+        )
         .asFunction();
 
     getGitDate ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxGetGitDateNative>>(
-            'SherpaOnnxGetGitDate')
+          'SherpaOnnxGetGitDate',
+        )
         .asFunction();
 
-    getOnlineStreamVocabLogProbs = dynamicLibrary.lookupFunction<
+    getOnlineStreamVocabLogProbs ??= dynamicLibrary.lookupFunction<
         SherpaOnnxOnlineStreamGetVocabLogProbsNative,
         SherpaOnnxOnlineStreamGetVocabLogProbsNative>(
       'SherpaOnnxOnlineStreamGetVocabLogProbs',
     );
 
-    getOfflineStreamVocabLogProbs = dynamicLibrary.lookupFunction<
+    getOfflineStreamVocabLogProbs ??= dynamicLibrary.lookupFunction<
         SherpaOnnxOfflineStreamGetVocabLogProbsNative,
         SherpaOnnxOfflineStreamGetVocabLogProbsNative>(
       'SherpaOnnxOfflineStreamGetVocabLogProbs',
     );
 
-    destroyVocabLogProbs = dynamicLibrary.lookupFunction<
+    destroyVocabLogProbs ??= dynamicLibrary.lookupFunction<
         SherpaOnnxDestroyVocabLogProbsNative,
         SherpaOnnxDestroyVocabLogProbsDart>(
       'SherpaOnnxDestroyVocabLogProbs',

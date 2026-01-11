@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_MODEL_CONFIG_H_
 
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -53,6 +54,48 @@ struct OfflineWhisperModelConfig {
   bool Validate() const;
 
   std::string ToString() const;
+};
+
+struct OfflineWhisperDecoderResult {
+  /// The decoded token IDs
+  std::vector<int32_t> tokens;
+  std::string lang;
+};
+
+// used by ascend/rknn/qnn/axera, etc.
+enum class WhisperModelType {
+  Tiny,
+  TinyEn,
+  Base,
+  BaseEn,
+  Small,
+  SmallEn,
+  Medium,
+  MediumEn,
+  Large
+};
+
+std::string ToString(WhisperModelType model);
+bool IsMultilingual(WhisperModelType model_type);
+
+WhisperModelType ParseWhisperModelType(const std::string &name);
+int32_t GetWhisperLanguageTokenId(const std::string &lang);
+std::string GetWhisperLanguageCode(int32_t token_id);
+const std::vector<int32_t> &GetAllWhisperLanguageTokenIds();
+const std::vector<std::string> &GetAllWhisperLanguageCodes();
+
+struct WhisperModelMultilingualTokens {
+  int32_t sot = 50258;
+  int32_t eot = 50257;
+  int32_t transcribe = 50359;
+  int32_t translate = 50358;
+  int32_t no_timestamps = 50363;
+};
+
+struct WhisperModelEnglishTokens {
+  int32_t sot = 50257;
+  int32_t eot = 50256;
+  int32_t no_timestamps = 50362;
 };
 
 }  // namespace sherpa_onnx

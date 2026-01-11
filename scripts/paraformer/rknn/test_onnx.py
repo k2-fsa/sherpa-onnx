@@ -61,7 +61,7 @@ def compute_feat(filename):
     )
     assert features.data.contiguous is True
     assert features.dtype == np.float32, features.dtype
-    print("features sum", features.sum(), features.shape)
+    #  print("features sum", features.sum(), features.shape)
 
     window_size = 7  # lfr_m
     window_shift = 6  # lfr_n

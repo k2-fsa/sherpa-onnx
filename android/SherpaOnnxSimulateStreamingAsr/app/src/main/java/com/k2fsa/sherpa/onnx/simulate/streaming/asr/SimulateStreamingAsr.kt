@@ -23,6 +23,23 @@ fun assetExists(assetManager: AssetManager, path: String): Boolean {
     return files.contains(fileName)
 }
 
+fun assetListExists(
+    assetManager: AssetManager,
+    paths: String
+): Boolean {
+    if (paths.isBlank()) return false
+
+    val pathList = paths.split(",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    if (pathList.isEmpty()) return false
+
+    return pathList.all { path ->
+        assetExists(assetManager, path)
+    }
+}
+
 fun copyAssetToInternalStorage(path: String, context: Context): String {
     val targetRoot = context.filesDir
     val outFile = File(targetRoot, path)
@@ -54,6 +71,23 @@ fun copyAssetToInternalStorage(path: String, context: Context): String {
     Log.i(TAG, "Copied $path to $targetRoot/$path")
 
     return outFile.absolutePath
+}
+
+fun copyAssetListToInternalStorage(
+    paths: String,
+    context: Context
+): String {
+    if (paths.isBlank()) return paths
+
+    val pathList = paths.split(",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    val copiedPaths = pathList.map { path ->
+        copyAssetToInternalStorage(path, context)
+    }
+
+    return copiedPaths.joinToString(",")
 }
 
 
@@ -125,7 +159,10 @@ object SimulateStreamingAsr {
                 OfflineRecognizer.prependAdspLibraryPath(context.applicationInfo.nativeLibraryDir)
 
                 // for qnn, we need to copy *.so files from assets folder to sd card
-                if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty() && config.modelConfig.zipformerCtc.qnnConfig.backendLib.isEmpty()) {
+                if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty()
+                    && config.modelConfig.zipformerCtc.qnnConfig.backendLib.isEmpty()
+                    && config.modelConfig.paraformer.qnnConfig.backendLib.isEmpty()
+                ) {
                     Log.e(TAG, "You should provide libQnnHtp.so for qnn")
                     throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
                 }
@@ -147,13 +184,42 @@ object SimulateStreamingAsr {
                             config.modelConfig.senseVoice.qnnConfig.contextBinary,
                             context
                         )
-                } else if (config.modelConfig.zipformerCtc.model.isNotEmpty()) {
-                    config.modelConfig.zipformerCtc.model =
-                        copyAssetToInternalStorage(config.modelConfig.zipformerCtc.model, context)
+                } else if (config.modelConfig.zipformerCtc.model.isNotEmpty() ||
+                    assetExists(
+                        context.assets,
+                        path = config.modelConfig.zipformerCtc.qnnConfig.contextBinary
+                    )
+                ) {
+                    if (config.modelConfig.zipformerCtc.model.isNotEmpty()) {
+                        config.modelConfig.zipformerCtc.model =
+                            copyAssetToInternalStorage(
+                                config.modelConfig.zipformerCtc.model,
+                                context
+                            )
+                    }
 
                     config.modelConfig.zipformerCtc.qnnConfig.contextBinary =
                         copyAssetToInternalStorage(
                             config.modelConfig.zipformerCtc.qnnConfig.contextBinary,
+                            context
+                        )
+                } else if (config.modelConfig.paraformer.model.isNotEmpty()
+                    || assetListExists(
+                        context.assets,
+                        config.modelConfig.paraformer.qnnConfig.contextBinary
+                    )
+                ) {
+                    if (config.modelConfig.paraformer.model.isNotEmpty()) {
+                        config.modelConfig.paraformer.model =
+                            copyAssetListToInternalStorage(
+                                config.modelConfig.paraformer.model,
+                                context
+                            )
+                    }
+
+                    config.modelConfig.paraformer.qnnConfig.contextBinary =
+                        copyAssetListToInternalStorage(
+                            config.modelConfig.paraformer.qnnConfig.contextBinary,
                             context
                         )
                 }
