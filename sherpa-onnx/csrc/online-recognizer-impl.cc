@@ -34,6 +34,14 @@
 #include "sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/online-recognizer-transducer-axera-impl.h"
+#endif
+
+#if SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/online-recognizer-transducer-axcl-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
@@ -54,6 +62,40 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+  if (config.model_config.provider_config.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+    if (config.model_config.transducer.encoder.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers models are currently supported "
+          "by axera. Fallback to CPU. Make sure you pass an onnx model");
+    } else if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerTransducerAxeraImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXERA=ON if you "
+        "want to use axera.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+  if (config.model_config.provider_config.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (config.model_config.transducer.encoder.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers models are currently supported "
+          "by axcl. Fallback to CPU. Make sure you pass an onnx model");
+    } else if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerTransducerAxclImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -114,6 +156,46 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider_config.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+    // Currently, only zipformer v1 is suported for axera
+    if (config.model_config.transducer.encoder.empty() &&
+        config.model_config.zipformer2_ctc.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers models are currently supported "
+          "by axera. Fallback to CPU");
+    } else if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerTransducerAxeraImpl>(mgr, config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXERA=ON if you "
+        "want to use axera.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider_config.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    // Currently, only zipformer v1 is suported for axcl
+    if (config.model_config.transducer.encoder.empty() &&
+        config.model_config.zipformer2_ctc.model.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers models are currently supported "
+          "by axcl. Fallback to CPU");
+    } else if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerTransducerAxclImpl>(mgr, config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif

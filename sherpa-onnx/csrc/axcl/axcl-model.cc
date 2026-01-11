@@ -155,6 +155,7 @@ class AxclModel::Impl {
   template <typename T>
   bool SetInputTensorData(const std::string &name, const T *p,
                           int32_t n) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < input_tensor_names_.size(); ++i) {
       if (input_tensor_names_[i] == name) {
         if (n * sizeof(T) != input_tensors_[i].Size()) {
@@ -183,7 +184,35 @@ class AxclModel::Impl {
     return false;
   }
 
+  bool SetInputTensorDataRaw(const std::string &name, const void *p,
+                             int32_t nbytes) const {
+    EnsureThreadContext();
+    for (size_t i = 0; i < input_tensor_names_.size(); ++i) {
+      if (input_tensor_names_[i] == name) {
+        if (static_cast<size_t>(nbytes) != input_tensors_[i].Size()) {
+          SHERPA_ONNX_LOGE("Expected size: %zu, given: %d",
+                           input_tensors_[i].Size(), nbytes);
+          return false;
+        }
+        auto ret =
+            axclrtMemcpy(input_tensors_[i].Get(), p, input_tensors_[i].Size(),
+                         AXCL_MEMCPY_HOST_TO_DEVICE);
+        if (ret != 0) {
+          SHERPA_ONNX_LOGE(
+              "Failed to call axclrtMemcpy() (raw). tensor name: '%s', return "
+              "code: %d",
+              name.c_str(), static_cast<int32_t>(ret));
+          return false;
+        }
+        return true;
+      }
+    }
+    SHERPA_ONNX_LOGE("Found no tensor with name: '%s'", name.c_str());
+    return false;
+  }
+
   std::vector<float> GetOutputTensorData(const std::string &name) const {
+    EnsureThreadContext();
     for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
       if (output_tensor_names_[i] == name) {
         size_t bytes = output_tensors_[i].Size();
@@ -208,7 +237,30 @@ class AxclModel::Impl {
     return {};
   }
 
+  std::vector<uint8_t> GetOutputTensorDataRaw(const std::string &name) const {
+    EnsureThreadContext();
+    for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
+      if (output_tensor_names_[i] == name) {
+        size_t bytes = output_tensors_[i].Size();
+        std::vector<uint8_t> out(bytes);
+        auto ret = axclrtMemcpy(out.data(), output_tensors_[i].Get(), bytes,
+                                AXCL_MEMCPY_DEVICE_TO_HOST);
+        if (ret != 0) {
+          SHERPA_ONNX_LOGE(
+              "Failed to call axclrtMemcpy() (raw). tensor name: '%s', return "
+              "code: %d",
+              name.c_str(), static_cast<int32_t>(ret));
+          return {};
+        }
+        return out;
+      }
+    }
+    SHERPA_ONNX_LOGE("Found no tensor with name: '%s'", name.c_str());
+    return {};
+  }
+
   bool Run() const {
+    EnsureThreadContext();
     uint32_t group = 0;
     auto ret =
         axclrtEngineExecute(model_id_, context_id_, group, *engine_io_guard_);
@@ -223,7 +275,7 @@ class AxclModel::Impl {
   bool IsInitialized() const { return model_loaded_; }
 
  private:
-  bool SetDevice(int32_t device_id) {
+  bool SetDevice(int32_t device_index) {
     axclrtDeviceList lst;
     auto ret = axclrtGetDeviceList(&lst);
     if (ret != 0) {
@@ -239,13 +291,15 @@ class AxclModel::Impl {
     }
 
     // device_id counts from 0
-    if (device_id < 0 || device_id >= lst.num) {
-      SHERPA_ONNX_LOGE("Invalid device_id: %d. Valid range: 0-%d", device_id,
-                       lst.num - 1);
+    if (device_index < 0 || device_index >= lst.num) {
+      SHERPA_ONNX_LOGE("Invalid device_index: %d. Valid range: 0-%d",
+                       device_index, lst.num - 1);
       return false;
     }
 
-    ret = axclrtSetDevice(lst.devices[device_id]);
+    device_id_rt_ = lst.devices[device_index];
+
+    ret = axclrtSetDevice(device_id_rt_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("Failed to call axclrtSetDevice(). Return code is: %d",
                        static_cast<int32_t>(ret));
@@ -371,6 +425,23 @@ class AxclModel::Impl {
     }
   }
 
+  void EnsureThreadContext() const {
+    axclrtContext ctx = nullptr;
+    axclError ret = axclrtGetDefaultContext(&ctx, device_id_rt_);
+    if (ret != 0 || !ctx) {
+      SHERPA_ONNX_LOGE("axclrtGetDefaultContext(%d) failed. ret=%d",
+                       device_id_rt_, (int)ret);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    axclrtContext cur = nullptr;
+    ret = axclrtSetCurrentContext(ctx);
+    if (ret != 0) {
+      SHERPA_ONNX_LOGE("axclrtSetCurrentContext failed. ret=%d", (int)ret);
+      SHERPA_ONNX_EXIT(-1);
+    }
+  }
+
  private:
   AxclManager manager_;
   std::unique_ptr<AxclEngineGuard> engine_guard_;
@@ -378,6 +449,7 @@ class AxclModel::Impl {
   std::unique_ptr<AxclEngineIOInfoGuard> io_info_guard_;
 
   bool model_loaded_ = false;
+  int32_t device_id_rt_ = -1;
   uint64_t model_id_ = 0;
   uint64_t context_id_ = 0;
 
@@ -413,6 +485,40 @@ std::vector<int32_t> AxclModel::TensorShape(const std::string &name) const {
 
 int32_t AxclModel::TensorSizeInBytes(const std::string &name) const {
   return impl_->TensorSizeInBytes(name);
+}
+
+int32_t AxclModel::NumInputs() const {
+  return static_cast<int32_t>(impl_->InputTensorNames().size());
+}
+
+int32_t AxclModel::NumOutputs() const {
+  return static_cast<int32_t>(impl_->OutputTensorNames().size());
+}
+
+const std::string &AxclModel::InputName(int32_t i) const {
+  return impl_->InputTensorNames().at(i);
+}
+
+const std::string &AxclModel::OutputName(int32_t i) const {
+  return impl_->OutputTensorNames().at(i);
+}
+
+int32_t AxclModel::InputSizeInBytes(int32_t i) const {
+  return impl_->TensorSizeInBytes(impl_->InputTensorNames().at(i));
+}
+
+int32_t AxclModel::OutputSizeInBytes(int32_t i) const {
+  return impl_->TensorSizeInBytes(impl_->OutputTensorNames().at(i));
+}
+
+bool AxclModel::SetInputTensorDataRaw(const std::string &name, const void *p,
+                                      int32_t nbytes) const {
+  return impl_->SetInputTensorDataRaw(name, p, nbytes);
+}
+
+std::vector<uint8_t> AxclModel::GetOutputTensorDataRaw(
+    const std::string &name) const {
+  return impl_->GetOutputTensorDataRaw(name);
 }
 
 bool AxclModel::HasTensor(const std::string &name) const {
