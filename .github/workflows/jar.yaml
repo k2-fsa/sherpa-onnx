@@ -101,7 +101,7 @@ jobs:
           dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/osx-aarch64
 
           mkdir -p $dst
-          cp -v $src/lib/libonnxruntime.1.17.1.dylib $dst/
+          cp -v $src/lib/libonnxruntime.1.23.2.dylib $dst/
           cp -v $src/lib/libsherpa-onnx-jni.dylib $dst/
 
           ls -lh $dst
@@ -119,7 +119,7 @@ jobs:
           dst=sherpa-onnx/java-api/resources/sherpa-onnx/native/osx-x64
 
           mkdir -p $dst
-          cp -v $src/lib/libonnxruntime.1.17.1.dylib $dst/
+          cp -v $src/lib/libonnxruntime.1.23.2.dylib $dst/
           cp -v $src/lib/libsherpa-onnx-jni.dylib $dst/
 
           ls -lh $dst
