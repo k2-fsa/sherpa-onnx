@@ -16,7 +16,7 @@ cd ../non-streaming-funasr-nano-decode-files
 ls -lh
 rm -rf sherpa-onnx-funasr-*
 
-cd ./version-test
+cd ../version-test
 ./run.sh
 ls -lh
 

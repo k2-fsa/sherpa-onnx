@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c)  2023  Xiaomi Corporation
 
-import argparse
 import glob
 import os
 import re
@@ -29,7 +28,6 @@ def read_proj_file(filename):
 
 
 def get_dict():
-    version = get_version()
     return {
         "version": get_version(),
     }
@@ -63,8 +61,6 @@ def process_macos(s, rid):
 
     other_libs = [os.path.join(lib_dir, "libsherpa-onnx-c-api.dylib")]
     libs = onnx_libs + other_libs
-
-    libs = [prefix + lib for lib in libs]
     libs_str = "\n      ;".join(libs)
 
     d = get_dict()
@@ -83,8 +79,6 @@ def process_windows(s, rid):
         "onnxruntime.dll",
         "sherpa-onnx-c-api.dll",
     ]
-
-    version = get_version()
 
     prefix = f"{src_dir}/windows-{rid}/"
     libs = [prefix + lib for lib in libs]
