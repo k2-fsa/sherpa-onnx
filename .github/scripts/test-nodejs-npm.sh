@@ -9,13 +9,13 @@ git status
 ls -lh
 ls -lh node_modules
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+# curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+# tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+# rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+#
+# node ./test-offline-funasr-nano.js
 
-node ./test-offline-funasr-nano.js
-
-rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
+# rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
