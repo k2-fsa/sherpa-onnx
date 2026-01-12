@@ -168,6 +168,65 @@ class OfflineMedAsrCtcModelConfig {
   final String model;
 }
 
+class OfflineFunAsrNanoModelConfig {
+  const OfflineFunAsrNanoModelConfig({
+    this.encoderAdaptor = '',
+    this.llm = '',
+    this.embedding = '',
+    this.tokenizer = '',
+    this.systemPrompt = 'You are a helpful assistant.',
+    this.userPrompt = '语音转写：',
+    this.maxNewTokens = 512,
+    this.temperature = 1e-6,
+    this.topP = 0.8,
+    this.seed = 42,
+  });
+
+  factory OfflineFunAsrNanoModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineFunAsrNanoModelConfig(
+      encoderAdaptor: json['encoderAdaptor'] as String? ?? '',
+      llm: json['llm'] as String? ?? '',
+      embedding: json['embedding'] as String? ?? '',
+      tokenizer: json['tokenizer'] as String? ?? '',
+      systemPrompt: json['systemPrompt'] as String? ?? '',
+      userPrompt: json['userPrompt'] as String? ?? '',
+      maxNewTokens: json['maxNewTokens'] as int? ?? 512,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
+      topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
+      seed: json['seed'] as int? ?? 42,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineFunAsrNanoModelConfig(encoderAdaptor: $encoderAdaptor, llm: $llm, embedding: $embedding, tokenizer: $tokenizer, systemPrompt: $systemPrompt, userPrompt: $userPrompt, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
+  }
+
+  Map<String, dynamic> toJson() => {
+    'encoderAdaptor': encoderAdaptor,
+    'llm': llm,
+    'embedding': embedding,
+    'tokenizer': tokenizer,
+    'systemPrompt': systemPrompt,
+    'userPrompt': userPrompt,
+    'maxNewTokens': maxNewTokens,
+    'temperature': temperature,
+    'topP': topP,
+    'seed': seed,
+  };
+
+  final String encoderAdaptor;
+  final String llm;
+  final String embedding;
+  final String tokenizer;
+  final String systemPrompt;
+  final String userPrompt;
+  final int maxNewTokens;
+  final double temperature;
+  final double topP;
+  final int seed;
+}
+
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig({
     this.encoder = '',
@@ -388,6 +447,7 @@ class OfflineModelConfig {
     this.wenetCtc = const OfflineWenetCtcModelConfig(),
     this.omnilingual = const OfflineOmnilingualAsrCtcModelConfig(),
     this.medasr = const OfflineMedAsrCtcModelConfig(),
+    this.funasrNano = const OfflineFunAsrNanoModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -470,6 +530,11 @@ class OfflineModelConfig {
               json['medasr'] as Map<String, dynamic>,
             )
           : const OfflineMedAsrCtcModelConfig(),
+      funasrNano: json['funasrNano'] != null
+          ? OfflineFunAsrNanoModelConfig.fromJson(
+              json['funasrNano'] as Map<String, dynamic>,
+            )
+          : const OfflineFunAsrNanoModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -483,7 +548,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -501,6 +566,7 @@ class OfflineModelConfig {
     'wenetCtc': wenetCtc.toJson(),
     'omnilingual': omnilingual.toJson(),
     'medasr': medasr.toJson(),
+    'funasrNano': funasrNano.toJson(),
     'tokens': tokens,
     'numThreads': numThreads,
     'debug': debug,
@@ -525,6 +591,7 @@ class OfflineModelConfig {
   final OfflineWenetCtcModelConfig wenetCtc;
   final OfflineOmnilingualAsrCtcModelConfig omnilingual;
   final OfflineMedAsrCtcModelConfig medasr;
+  final OfflineFunAsrNanoModelConfig funasrNano;
 
   final String tokens;
   final int numThreads;
@@ -773,6 +840,25 @@ class OfflineRecognizer {
         .toNativeUtf8();
     c.ref.model.medasr.model = config.model.medasr.model.toNativeUtf8();
 
+    c.ref.model.funasrNano.encoderAdaptor = config
+        .model
+        .funasrNano
+        .encoderAdaptor
+        .toNativeUtf8();
+    c.ref.model.funasrNano.llm = config.model.funasrNano.llm.toNativeUtf8();
+    c.ref.model.funasrNano.embedding = config.model.funasrNano.embedding
+        .toNativeUtf8();
+    c.ref.model.funasrNano.tokenizer = config.model.funasrNano.tokenizer
+        .toNativeUtf8();
+    c.ref.model.funasrNano.systemPrompt = config.model.funasrNano.systemPrompt
+        .toNativeUtf8();
+    c.ref.model.funasrNano.userPrompt = config.model.funasrNano.userPrompt
+        .toNativeUtf8();
+    c.ref.model.funasrNano.maxNewTokens = config.model.funasrNano.maxNewTokens;
+    c.ref.model.funasrNano.temperature = config.model.funasrNano.temperature;
+    c.ref.model.funasrNano.topP = config.model.funasrNano.topP;
+    c.ref.model.funasrNano.seed = config.model.funasrNano.seed;
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -817,6 +903,12 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.funasrNano.userPrompt);
+    calloc.free(c.ref.model.funasrNano.systemPrompt);
+    calloc.free(c.ref.model.funasrNano.tokenizer);
+    calloc.free(c.ref.model.funasrNano.embedding);
+    calloc.free(c.ref.model.funasrNano.llm);
+    calloc.free(c.ref.model.funasrNano.encoderAdaptor);
     calloc.free(c.ref.model.medasr.model);
     calloc.free(c.ref.model.omnilingual.model);
     calloc.free(c.ref.model.wenetCtc.model);
