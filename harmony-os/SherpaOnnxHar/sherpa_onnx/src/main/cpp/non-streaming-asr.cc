@@ -115,7 +115,7 @@ static SherpaOnnxOfflineFunAsrNanoModelConfig GetOfflineFunAsrNanoModelConfig(
   SherpaOnnxOfflineFunAsrNanoModelConfig c;
   memset(&c, 0, sizeof(c));
 
-  if (!obj.Has("funasr_nano") || !obj.Get("funasr_nano").IsObject()) {
+  if (!obj.Has("funasrNano") || !obj.Get("funasrNano").IsObject()) {
     return c;
   }
 
