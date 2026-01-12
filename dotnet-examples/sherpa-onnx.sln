@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kitten-tts-play", "kitten-t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-audio-tagging", "offline-audio-tagging\offline-audio-tagging.csproj", "{0EBE2CE5-8940-4472-8A38-6A0E976E678F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-funasr-nano-decode-files", "non-streaming-funasr-nano-decode-files\non-streaming-funasr-nano-decode-files.csproj", "{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,10 @@ Global
 		{0EBE2CE5-8940-4472-8A38-6A0E976E678F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0EBE2CE5-8940-4472-8A38-6A0E976E678F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0EBE2CE5-8940-4472-8A38-6A0E976E678F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

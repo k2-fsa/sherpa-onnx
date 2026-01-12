@@ -4,6 +4,11 @@ set -ex
 
 cd dotnet-examples/
 
+cd ../non-streaming-funasr-nano-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-funasr-*
+
 cd ./version-test
 ./run.sh
 ls -lh
