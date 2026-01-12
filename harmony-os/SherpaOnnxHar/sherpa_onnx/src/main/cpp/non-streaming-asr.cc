@@ -119,7 +119,7 @@ static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
     return c;
   }
 
-  Napi::Object o = obj.Get("funasr_nano").As<Napi::Object>();
+  Napi::Object o = obj.Get("funasrNano").As<Napi::Object>();
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(encoder_adaptor, encoderAdaptor);
   SHERPA_ONNX_ASSIGN_ATTR_STR(llm, llm);
