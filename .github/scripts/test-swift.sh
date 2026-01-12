@@ -9,6 +9,9 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-funasr-nano.sh
+rm -rf sherpa-onnx-funasr-*
+
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 
