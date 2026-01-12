@@ -108,13 +108,19 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (FunASR Nano)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-funar-nano.sh
+          rm -rf sherpa-onnx-funasr-*
+
       - name:  Run java test (MedASR CTC)
         shell: bash
         run: |
           cd ./java-api-examples
           ./run-non-streaming-decode-file-medasr-ctc.sh
           rm -rf sherpa-onnx-medasr-*
-
 
       - name:  Run java test (Omnilingual ASR CTC)
         shell: bash
