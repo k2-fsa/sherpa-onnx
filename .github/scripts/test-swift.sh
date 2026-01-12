@@ -12,6 +12,9 @@ ls -lh
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 
+./run-funasr-nano-asr.sh
+rm -rf sherpa-onnx-funasr-nano-*
+
 ./run-omnilingual-asr-ctc-asr.sh
 rm -rf sherpa-onnx-omnilingual-*
 
