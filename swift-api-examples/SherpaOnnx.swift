@@ -514,21 +514,19 @@ func sherpaOnnxOfflineLMConfig(
 
 func sherpaOnnxOfflineFunASRNanoModelConfig(
   encoderAdaptor: String = "",
-  llmPrefill: String = "",
-  llmDecode: String = "",
+  llm: String = "",
   embedding: String = "",
   tokenizer: String = "",
   systemPrompt: String = "You are a helpful assistant.",
   userPrompt: String = "语音转写：",
   maxNewTokens: Int = 512,
-  temperature: Float = 0.3,
+  temperature: Float = 1e-6,
   topP: Float = 0.8,
   seed: Int = 42
 ) -> SherpaOnnxOfflineFunASRNanoModelConfig {
   return SherpaOnnxOfflineFunASRNanoModelConfig(
     encoder_adaptor: toCPointer(encoderAdaptor),
-    llm_prefill: toCPointer(llmPrefill),
-    llm_decode: toCPointer(llmDecode),
+    llm: toCPointer(llm),
     embedding: toCPointer(embedding),
     tokenizer: toCPointer(tokenizer),
     system_prompt: toCPointer(systemPrompt),
