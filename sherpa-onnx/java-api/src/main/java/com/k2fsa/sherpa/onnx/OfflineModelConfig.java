@@ -15,6 +15,7 @@ public class OfflineModelConfig {
     private final OfflineWenetCtcModelConfig wenetCtc;
     private final OfflineOmnilingualAsrCtcModelConfig omnilingual;
     private final OfflineMedAsrCtcModelConfig medasr;
+    private final OfflineFunAsrNanoModelConfig funasrNano;
     private final OfflineCanaryModelConfig canary;
     private final String teleSpeech;
     private final String tokens;
@@ -38,6 +39,7 @@ public class OfflineModelConfig {
         this.wenetCtc = builder.wenetCtc;
         this.omnilingual = builder.omnilingual;
         this.medasr = builder.medasr;
+        this.funasrNano = builder.funasrNano;
         this.senseVoice = builder.senseVoice;
         this.dolphin = builder.dolphin;
         this.teleSpeech = builder.teleSpeech;
@@ -98,6 +100,10 @@ public class OfflineModelConfig {
         return medasr;
     }
 
+    public OfflineFunAsrNanoModelConfig getFunAsrNano() {
+        return funasrNano;
+    }
+
     public OfflineCanaryModelConfig getCanary() {
         return canary;
     }
@@ -147,6 +153,7 @@ public class OfflineModelConfig {
         private OfflineWenetCtcModelConfig wenetCtc = OfflineWenetCtcModelConfig.builder().build();
         private OfflineOmnilingualAsrCtcModelConfig omnilingual = OfflineOmnilingualAsrCtcModelConfig.builder().build();
         private OfflineMedAsrCtcModelConfig medasr = OfflineMedAsrCtcModelConfig.builder().build();
+        private OfflineFunAsrNanoModelConfig funasrNano = OfflineFunAsrNanoModelConfig.builder().build();
         private OfflineCanaryModelConfig canary = OfflineCanaryModelConfig.builder().build();
         private String teleSpeech = "";
         private String tokens = "";
@@ -198,6 +205,11 @@ public class OfflineModelConfig {
 
         public Builder setMedAsr(OfflineMedAsrCtcModelConfig medasr) {
             this.medasr = medasr;
+            return this;
+        }
+
+        public Builder setFunAsrNano(OfflineFunAsrNanoModelConfig funasrNano) {
+            this.funasrNano = funasrNano;
             return this;
         }
 
