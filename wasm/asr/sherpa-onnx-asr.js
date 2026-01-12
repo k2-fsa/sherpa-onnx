@@ -1267,7 +1267,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
-      omnilingual.len + medasr.len + funasrNano;
+      omnilingual.len + medasr.len + funasrNano.len;
 
   const ptr = Module._malloc(len);
 
