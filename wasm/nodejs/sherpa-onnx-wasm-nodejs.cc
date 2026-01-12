@@ -164,7 +164,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "max_new_tokens: %d\n", funasr_nano->max_new_tokens);
   fprintf(stdout, "temperature: %f\n", funasr_nano->temperature);
   fprintf(stdout, "top_p: %f\n", funasr_nano->top_p);
-  fprintf(stdout, "seed: %f\n", funasr_nano->seed);
+  fprintf(stdout, "seed: %d\n", funasr_nano->seed);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);
