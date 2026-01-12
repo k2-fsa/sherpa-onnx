@@ -146,6 +146,27 @@ class OfflineWenetCtcModelConfig {
   final String model;
 }
 
+class OfflineMedAsrCtcModelConfig {
+  const OfflineMedAsrCtcModelConfig({this.model = ''});
+
+  factory OfflineMedAsrCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineMedAsrCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineMedAsrCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OfflineOmnilingualAsrCtcModelConfig {
   const OfflineOmnilingualAsrCtcModelConfig({this.model = ''});
 
@@ -393,6 +414,7 @@ class OfflineModelConfig {
     this.zipformerCtc = const OfflineZipformerCtcModelConfig(),
     this.canary = const OfflineCanaryModelConfig(),
     this.wenetCtc = const OfflineWenetCtcModelConfig(),
+    this.medasr = const OfflineMedAsrCtcModelConfig(),
     this.omnilingual = const OfflineOmnilingualAsrCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
@@ -454,6 +476,10 @@ class OfflineModelConfig {
           ? OfflineWenetCtcModelConfig.fromJson(
               json['wenetCtc'] as Map<String, dynamic>)
           : const OfflineWenetCtcModelConfig(),
+      medasr: json['medasr'] != null
+          ? OfflineMedAsrCtcModelConfig.fromJson(
+              json['medasr'] as Map<String, dynamic>)
+          : const OfflineMedAsrCtcModelConfig(),
       omnilingual: json['omnilingual'] != null
           ? OfflineOmnilingualAsrCtcModelConfig.fromJson(
               json['omnilingual'] as Map<String, dynamic>)
@@ -471,7 +497,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, medasr: $medasr, omnilingual: $omnilingual, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -487,6 +513,7 @@ class OfflineModelConfig {
         'zipformerCtc': zipformerCtc.toJson(),
         'canary': canary.toJson(),
         'wenetCtc': wenetCtc.toJson(),
+        'medasr': medasr.toJson(),
         'omnilingual': omnilingual.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
@@ -510,6 +537,7 @@ class OfflineModelConfig {
   final OfflineZipformerCtcModelConfig zipformerCtc;
   final OfflineCanaryModelConfig canary;
   final OfflineWenetCtcModelConfig wenetCtc;
+  final OfflineMedAsrCtcModelConfig medasr;
   final OfflineOmnilingualAsrCtcModelConfig omnilingual;
 
   final String tokens;
@@ -755,6 +783,7 @@ class OfflineRecognizer {
     c.ref.model.canary.usePnc = config.model.canary.usePnc ? 1 : 0;
 
     c.ref.model.wenetCtc.model = config.model.wenetCtc.model.toNativeUtf8();
+    c.ref.model.medasr.model = config.model.medasr.model.toNativeUtf8();
     c.ref.model.omnilingual.model =
         config.model.omnilingual.model.toNativeUtf8();
 
@@ -803,6 +832,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
     calloc.free(c.ref.model.omnilingual.model);
+    calloc.free(c.ref.model.medasr.model);
     calloc.free(c.ref.model.wenetCtc.model);
     calloc.free(c.ref.model.canary.tgtLang);
     calloc.free(c.ref.model.canary.srcLang);
