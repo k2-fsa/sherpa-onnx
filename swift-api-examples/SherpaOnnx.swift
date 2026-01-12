@@ -500,7 +500,7 @@ func sherpaOnnxOfflineFunASRNanoModelConfig(
 ) -> SherpaOnnxOfflineFunASRNanoModelConfig {
   return SherpaOnnxOfflineFunASRNanoModelConfig(
     encoder_adaptor: toCPointer(encoderAdaptor),
-    ll: toCPointer(llm),
+    llm: toCPointer(llm),
     embedding: toCPointer(embedding),
     tokenizer: toCPointer(tokenizer),
     system_prompt: toCPointer(systemPrompt),
