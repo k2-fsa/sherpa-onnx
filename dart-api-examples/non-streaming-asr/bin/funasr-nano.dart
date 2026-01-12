@@ -32,7 +32,12 @@ void main(List<String> arguments) async {
   final tokenizer = res['tokenizer'] as String;
   final inputWav = res['input-wav'] as String;
 
-  final funasrNano = sherpa_onnx.OfflineFunAsrNanoModelConfig(model: model);
+  final funasrNano = sherpa_onnx.OfflineFunAsrNanoModelConfig(
+    encoderAdaptor: encoderAdaptor,
+    llm: llm,
+    embedding: embedding,
+    tokenizer: tokenizer,
+  );
 
   final modelConfig = sherpa_onnx.OfflineModelConfig(
     funasrNano: funasrNano,
