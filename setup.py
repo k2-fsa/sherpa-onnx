@@ -109,7 +109,7 @@ setuptools.setup(
         ],
     },
     license="Apache licensed, as found in the LICENSE file",
-    install_requires=["sherpa-onnx-core==1.12.20"] if need_split_package() else None,
+    install_requires=["sherpa-onnx-core==1.12.21"] if need_split_package() else None,
 )
 
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "r") as f:
