@@ -130,8 +130,10 @@ function initSherpaOnnxOnlineTransducerModelConfig(config, Module) {
   Module.setValue(ptr + 8, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOnlineParaformerModelConfig(config, Module) {
@@ -157,8 +159,10 @@ function initSherpaOnnxOnlineParaformerModelConfig(config, Module) {
   Module.setValue(ptr + 4, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOnlineZipformer2CtcModelConfig(config, Module) {
@@ -173,8 +177,10 @@ function initSherpaOnnxOnlineZipformer2CtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOnlineNemoCtcModelConfig(config, Module) {
@@ -189,8 +195,10 @@ function initSherpaOnnxOnlineNemoCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOnlineToneCtcModelConfig(config, Module) {
@@ -205,8 +213,10 @@ function initSherpaOnnxOnlineToneCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOnlineModelConfig(config, Module) {
@@ -357,10 +367,15 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   offset += toneCtc.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, transducer: transducer,
-        paraformer: paraformer, zipformer2Ctc: zipformer2Ctc, nemoCtc: nemoCtc,
-        toneCtc: toneCtc,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    transducer: transducer,
+    paraformer: paraformer,
+    zipformer2Ctc: zipformer2Ctc,
+    nemoCtc: nemoCtc,
+    toneCtc: toneCtc,
+  };
 }
 
 function initSherpaOnnxFeatureConfig(config, Module) {
@@ -544,9 +559,14 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   offset += hr.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model,
-        ctcFstDecoder: ctcFstDecoder, hr: hr,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    feat: feat,
+    model: model,
+    ctcFstDecoder: ctcFstDecoder,
+    hr: hr,
+  };
 }
 
 function createOnlineRecognizer(Module, myConfig) {
@@ -678,8 +698,10 @@ function initSherpaOnnxOfflineTransducerModelConfig(config, Module) {
   Module.setValue(ptr + 8, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineParaformerModelConfig(config, Module) {
@@ -695,8 +717,10 @@ function initSherpaOnnxOfflineParaformerModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
@@ -712,8 +736,10 @@ function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineDolphinModelConfig(config, Module) {
@@ -729,8 +755,10 @@ function initSherpaOnnxOfflineDolphinModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineZipformerCtcModelConfig(config, Module) {
@@ -746,8 +774,10 @@ function initSherpaOnnxOfflineZipformerCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineWenetCtcModelConfig(config, Module) {
@@ -763,8 +793,10 @@ function initSherpaOnnxOfflineWenetCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(config, Module) {
@@ -780,8 +812,10 @@ function initSherpaOnnxOfflineOmnilingualAsrCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineMedAsrCtcModelConfig(config, Module) {
@@ -797,8 +831,10 @@ function initSherpaOnnxOfflineMedAsrCtcModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
@@ -870,8 +906,10 @@ function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
   Module.setValue(ptr + 9 * 4, config.seed || 42, 'i32');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
@@ -914,8 +952,10 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   Module.setValue(ptr + 16, config.tailPaddings || 2000, 'i32');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineCanaryModelConfig(config, Module) {
@@ -959,8 +999,10 @@ function initSherpaOnnxOfflineCanaryModelConfig(config, Module) {
   Module.setValue(ptr + 16, config.usePnc ?? 1, 'i32');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
@@ -1008,8 +1050,10 @@ function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
   offset += cachedDecoderLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineFireRedAsrModelConfig(config, Module) {
@@ -1037,8 +1081,10 @@ function initSherpaOnnxOfflineFireRedAsrModelConfig(config, Module) {
   offset += decoderLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTdnnModelConfig(config, Module) {
@@ -1053,8 +1099,10 @@ function initSherpaOnnxOfflineTdnnModelConfig(config, Module) {
   Module.setValue(ptr, buffer, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineSenseVoiceModelConfig(config, Module) {
@@ -1085,8 +1133,10 @@ function initSherpaOnnxOfflineSenseVoiceModelConfig(config, Module) {
   Module.setValue(ptr + 8, config.useInverseTextNormalization ?? 0, 'i32');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineLMConfig(config, Module) {
@@ -1101,8 +1151,10 @@ function initSherpaOnnxOfflineLMConfig(config, Module) {
   Module.setValue(ptr + 4, config.scale || 1, 'float');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineModelConfig(config, Module) {
@@ -1388,13 +1440,25 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   offset += funasrNano.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, transducer: transducer,
-        paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
-        senseVoice: senseVoice, moonshine: moonshine, fireRedAsr: fireRedAsr,
-        dolphin: dolphin, zipformerCtc: zipformerCtc, canary: canary,
-        wenetCtc: wenetCtc, omnilingual: omnilingual, medasr: medasr,
-        funasrNano: funasrNano
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    transducer: transducer,
+    paraformer: paraformer,
+    nemoCtc: nemoCtc,
+    whisper: whisper,
+    tdnn: tdnn,
+    senseVoice: senseVoice,
+    moonshine: moonshine,
+    fireRedAsr: fireRedAsr,
+    dolphin: dolphin,
+    zipformerCtc: zipformerCtc,
+    canary: canary,
+    wenetCtc: wenetCtc,
+    omnilingual: omnilingual,
+    medasr: medasr,
+    funasrNano: funasrNano
+  };
 }
 
 function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
@@ -1491,9 +1555,14 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   offset += hr.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model, lm: lm,
-        hr: hr,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    feat: feat,
+    model: model,
+    lm: lm,
+    hr: hr,
+  };
 }
 
 class OfflineStream {
