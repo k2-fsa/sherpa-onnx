@@ -41,6 +41,10 @@ public class OfflineFunAsrNanoModelConfig {
         return embedding;
     }
 
+    public String getTokenizer() {
+        return tokenizer;
+    }
+
     public String getSystemPrompt() {
         return systemPrompt;
     }
