@@ -565,10 +565,10 @@ func sherpaOnnxOfflineModelConfig(
     sherpaOnnxOfflineWenetCtcModelConfig(),
   omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig =
     sherpaOnnxOfflineOmnilingualAsrCtcModelConfig(),
-  funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
-    sherpaOnnxOfflineFunASRNanoModelConfig(),
   medasr: SherpaOnnxOfflineMedAsrCtcModelConfig =
-    sherpaOnnxOfflineMedAsrCtcModelConfig()
+    sherpaOnnxOfflineMedAsrCtcModelConfig(),
+  funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
+    sherpaOnnxOfflineFunASRNanoModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -592,8 +592,8 @@ func sherpaOnnxOfflineModelConfig(
     canary: canary,
     wenet_ctc: wenetCtc,
     omnilingual: omnilingual,
-    funasr_nano: funasrNano,
-    medasr: medasr
+    medasr: medasr,
+    funasr_nano: funasrNano
   )
 }
 
