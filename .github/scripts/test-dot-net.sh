@@ -4,6 +4,13 @@ set -ex
 
 cd dotnet-examples/
 
+cd ./vad-non-streaming-funasr-nano
+./run-ten-vad.sh
+rm -fv *.onnx
+
+./run.sh
+rm -fv *.onnx
+
 cd ../non-streaming-funasr-nano-decode-files
 ./run.sh
 ls -lh

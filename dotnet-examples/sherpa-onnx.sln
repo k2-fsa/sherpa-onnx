@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-audio-tagging", "of
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-funasr-nano-decode-files", "non-streaming-funasr-nano-decode-files\non-streaming-funasr-nano-decode-files.csproj", "{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vad-non-streaming-funasr-nano", "vad-non-streaming-funasr-nano\vad-non-streaming-funasr-nano.csproj", "{32C8C12B-D7DB-455E-B35C-945A745520CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -147,6 +149,10 @@ Global
 		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32F7534B-117E-4D1D-BAED-A1D1A6C6A62C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
