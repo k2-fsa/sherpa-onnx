@@ -110,9 +110,9 @@ static SherpaOnnxOfflineMedAsrCtcModelConfig GetOfflineMedAsrCtcModelConfig(
   return c;
 }
 
-static SherpaOnnxOfflineFunAsrNanoModelConfig GetOfflineFunAsrNanoModelConfig(
+static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineFunAsrNanoModelConfig c;
+  SherpaOnnxOfflineFunASRNanoModelConfig c;
   memset(&c, 0, sizeof(c));
 
   if (!obj.Has("funasrNano") || !obj.Get("funasrNano").IsObject()) {
