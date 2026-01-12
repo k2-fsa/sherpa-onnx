@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
-          ./run-non-streaming-decode-file-funar-nano.sh
+          ./run-non-streaming-decode-file-funasr-nano.sh
           rm -rf sherpa-onnx-funasr-*
 
       - name:  Run java test (MedASR CTC)
