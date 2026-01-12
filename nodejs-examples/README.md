@@ -212,7 +212,7 @@ how to decode a file with a FunASR Nano model. In the code we use
 You can use the following command to run it:
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 
