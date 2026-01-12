@@ -7,7 +7,7 @@ func run() {
   )
 
   let modelConfig = sherpaOnnxOfflineModelConfig(
-    tokens: '',
+    tokens: "",
     debug: 1,
     funasrNano: funasrNano
   )

@@ -19,7 +19,7 @@ if [ ! -e ./funasr-nano ]; then
     -lc++ \
     -I ../build-swift-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./medasr-ctc.swift  ./SherpaOnnx.swift \
+    ./funasr-nano.swift  ./SherpaOnnx.swift \
     -L ../build-swift-macos/install/lib/ \
     -l sherpa-onnx \
     -l onnxruntime \
