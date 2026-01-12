@@ -2549,22 +2549,22 @@ class SherpaOnnxBindings {
         )
         .asFunction();
 
-    getOnlineStreamVocabLogProbs ??= dynamicLibrary.lookupFunction<
-        SherpaOnnxOnlineStreamGetVocabLogProbsNative,
-        SherpaOnnxOnlineStreamGetVocabLogProbsNative>(
-      'SherpaOnnxOnlineStreamGetVocabLogProbs',
-    );
+    getOnlineStreamVocabLogProbs ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlineStreamGetVocabLogProbsNative>>(
+          'SherpaOnnxOnlineStreamGetVocabLogProbs',
+        )
+        .asFunction();
 
-    getOfflineStreamVocabLogProbs ??= dynamicLibrary.lookupFunction<
-        SherpaOnnxOfflineStreamGetVocabLogProbsNative,
-        SherpaOnnxOfflineStreamGetVocabLogProbsNative>(
-      'SherpaOnnxOfflineStreamGetVocabLogProbs',
-    );
+    getOfflineStreamVocabLogProbs ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineStreamGetVocabLogProbsNative>>(
+          'SherpaOnnxOfflineStreamGetVocabLogProbs',
+        )
+        .asFunction();
 
-    destroyVocabLogProbs ??= dynamicLibrary.lookupFunction<
-        SherpaOnnxDestroyVocabLogProbsNative,
-        SherpaOnnxDestroyVocabLogProbsDart>(
-      'SherpaOnnxDestroyVocabLogProbs',
-    );
+    destroyVocabLogProbs ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyVocabLogProbsNative>>(
+          'SherpaOnnxDestroyVocabLogProbs',
+        )
+        .asFunction();
   }
 }
