@@ -37,8 +37,10 @@ function initSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(config, Module) {
   offset += modelLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
@@ -91,8 +93,10 @@ function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
   offset += modelConfig.len;
 
   return {
-    ptr: ptr, len: len, config: modelConfig,
-  }
+    ptr: ptr,
+    len: len,
+    config: modelConfig,
+  };
 }
 
 class OfflineSpeechDenoiser {

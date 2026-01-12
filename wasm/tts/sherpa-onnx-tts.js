@@ -79,8 +79,10 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   offset += dictDirLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
@@ -143,8 +145,10 @@ function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
   offset += dictDirLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
@@ -212,8 +216,10 @@ function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
   offset += langLen;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
@@ -258,8 +264,10 @@ function initSherpaOnnxOfflineTtsKittenModelConfig(config, Module) {
   Module.setValue(ptr + 16, config.lengthScale || 1.0, 'float');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
@@ -322,8 +330,10 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   Module.setValue(ptr + 36, config.guidanceScale || 1.0, 'float');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
@@ -439,10 +449,15 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   offset += zipVoiceModelConfig.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
-        matcha: matchaModelConfig, kokoro: kokoroModelConfig,
-        kitten: kittenModelConfig, zipvoice: zipVoiceModelConfig,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    config: vitsModelConfig,
+    matcha: matchaModelConfig,
+    kokoro: kokoroModelConfig,
+    kitten: kittenModelConfig,
+    zipvoice: zipVoiceModelConfig,
+  };
 }
 
 function initSherpaOnnxOfflineTtsConfig(config, Module) {
@@ -475,8 +490,11 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   offset += 4;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, config: modelConfig,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    config: modelConfig,
+  };
 }
 
 class OfflineTts {
