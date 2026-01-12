@@ -319,8 +319,8 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineCanaryModelConfig canary;
   OfflineWenetCtcModelConfig wenet_ctc;
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
-  OfflineFunASRNanoModelConfig funasr_nano;
   OfflineMedAsrCtcModelConfig medasr;
+  OfflineFunASRNanoModelConfig funasr_nano;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {
