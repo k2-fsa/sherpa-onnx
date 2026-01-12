@@ -36,7 +36,7 @@ func run() {
   print("decode done")
 
   print("\nresult is:\n\(result.text)")
-  if result.timestamps.count != 0 {
+  if !result.timestamps.isEmpty {
     print("\ntimestamps is:\n\(result.timestamps)")
   }
 }
