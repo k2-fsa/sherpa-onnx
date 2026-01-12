@@ -267,6 +267,46 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.medasr.model, model,
                               medasr_ctc_config_cls, medasr_ctc_config);
 
+  // FunASR Nano
+  fid = env->GetFieldID(model_config_cls, "funasrNano",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineFunAsrNanoModelConfig;");
+  jobject funasr_nano_config = env->GetObjectField(model_config, fid);
+  jclass funasr_nano_config_cls = env->GetObjectClass(funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.encoder_adaptor,
+                              encoderAdaptor, funasr_nano_config_cls,
+                              funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.llm, llm,
+                              funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.embedding, embedding,
+                              funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.tokenizer, tokenizer,
+                              funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.system_prompt,
+                              systemPrompt, funasr_nano_config_cls,
+                              funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.user_prompt,
+                              userPrompt, funasr_nano_config_cls,
+                              funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_INT(ans.model_config.funasr_nano.max_new_tokens,
+                           maxNewTokens, funasr_nano_config_cls,
+                           funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model_config.funasr_nano.temperature,
+                             temperature, funasr_nano_config_cls,
+                             funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model_config.funasr_nano.top_p, topP,
+                             funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_INT(ans.model_config.funasr_nano.seed, seed,
+                           funasr_nano_config_cls, funasr_nano_config);
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",
                         "Lcom/k2fsa/sherpa/onnx/OfflineCanaryModelConfig;");

@@ -103,6 +103,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-medasr-ctc-decode-files
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-funasr-nano-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
@@ -124,7 +125,7 @@ jobs:
             rm ./lib/*.a
             rm ./lib/libonnxruntime.dylib
             cd lib
-            ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+            ln -s libonnxruntime.1.23.2.dylib libonnxruntime.dylib
             cd ..
           fi
 
@@ -141,6 +142,19 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test non-streaming decoding files with FunASR Nano
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-funasr-nano-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-funasr-*
 
       - name: Test non-streaming decoding files with MedASR
         shell: bash

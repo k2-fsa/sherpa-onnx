@@ -40,8 +40,10 @@ function initSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(
   Module.setValue(ptr, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
@@ -188,9 +190,12 @@ function initSherpaOnnxOfflineSpeakerDiarizationConfig(config, Module) {
   offset += 4;
 
   return {
-    ptr: ptr, len: len, segmentation: segmentation, embedding: embedding,
-        clustering: clustering,
-  }
+    ptr: ptr,
+    len: len,
+    segmentation: segmentation,
+    embedding: embedding,
+    clustering: clustering,
+  };
 }
 
 class OfflineSpeakerDiarization {

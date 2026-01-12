@@ -203,6 +203,22 @@ rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
 node ./test-offline-zipformer-ctc.js
 ```
 
+## ./test-offline-funasr-nano.js
+
+[./test-offline-funasr-nano.js](./test-offline-funasr-nano.js) demonstrates
+how to decode a file with a FunASR Nano model. In the code we use
+[sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+node ./test-offline-funasr-nano.js
+```
+
 ## ./test-offline-medasr-ctc.js
 
 [./test-offline-medasr-ctc.js](./test-offline-medasr-ctc.js) demonstrates

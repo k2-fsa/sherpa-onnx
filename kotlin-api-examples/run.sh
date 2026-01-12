@@ -537,6 +537,28 @@ function testOfflineMedAsrCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineFunAsrNano() {
+  if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+    tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+    rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+  fi
+
+  out_filename=test_offline_funasr_nano.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_funasr_nano.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOfflineWenetCtc() {
   if [ ! -f sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
@@ -561,6 +583,7 @@ function testOfflineWenetCtc() {
 
 testVersion
 
+testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc
 testOfflineWenetCtc

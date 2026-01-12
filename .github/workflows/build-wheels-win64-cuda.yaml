@@ -22,7 +22,7 @@ jobs:
       matrix:
         os: [windows-2022]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-        onnxruntime_version: ["1.17.1", "1.22.0"]
+        onnxruntime_version: ["1.17.1", "1.23.2"]
 
     steps:
       - uses: actions/checkout@v4
@@ -46,13 +46,13 @@ jobs:
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON"
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
-            curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
-            unzip onnxruntime-win-x64-gpu-1.22.0.zip
+          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v$onnxruntime_version/onnxruntime-win-x64-gpu-$onnxruntime_version.zip
+          unzip onnxruntime-win-x64-gpu-$onnxruntime_version.zip
 
-            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/lib
-            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/include
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/lib
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/include
 
+          if [[ $onnxruntime_version == "1.23.2" ]]; then
             export SHERPA_ONNX_CUDA_VERSION="12.cudnn9"
           fi
 

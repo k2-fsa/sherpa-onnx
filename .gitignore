@@ -166,5 +166,7 @@ spacemit-toolchain*
 sherpa-onnx-qnn-*
 matcha-icefall-*
 sherpa-onnx-medasr-ctc-en-int8-2025-12-25
+sherpa-onnx-funasr-nano-int8-2025-12-30
 *.raw
 *-input-list.txt
+sherpa-onnx-funasr-nano*2025-12-30

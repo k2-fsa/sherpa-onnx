@@ -527,8 +527,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineCanaryModelConfig canary;
   SherpaOnnxOfflineWenetCtcModelConfig wenet_ctc;
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
-  SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
   SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
+  SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

@@ -35,7 +35,7 @@ jobs:
         os: [ubuntu-latest]
         # build_type: [Release, Debug]
         build_type: [Release]
-        onnxruntime_version: ["1.17.1", "1.22.0"]
+        onnxruntime_version: ["1.17.1", "1.23.2"]
 
     steps:
       - uses: actions/checkout@v4
@@ -66,15 +66,13 @@ jobs:
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
               onnxruntime_version=${{ matrix.onnxruntime_version }}
-              if [[ $onnxruntime_version == "1.22.0" ]]; then
-                curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0-patched.zip
-                unzip  onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+              curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$onnxruntime_version/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
+              unzip  onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
 
-                export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/lib
-                export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/include
+              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib
+              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/include
 
-                ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-1.22.0-patched/lib/libonnxruntime.so
-              fi
+              ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib/libonnxruntime.so
 
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
@@ -144,7 +142,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
+          if [[ $onnxruntime_version == "1.23.2" ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-linux-x64-gpu
           fi
 

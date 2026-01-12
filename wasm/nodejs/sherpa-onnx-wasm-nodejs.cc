@@ -17,6 +17,7 @@ static_assert(sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWenetCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
@@ -41,7 +42,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineCanaryModelConfig) +
                       sizeof(SherpaOnnxOfflineWenetCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) +
-                      sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig),
+                      sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) +
+                      sizeof(SherpaOnnxOfflineFunASRNanoModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -92,6 +94,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto wenet_ctc = &model_config->wenet_ctc;
   auto omnilingual = &model_config->omnilingual;
   auto medasr = &model_config->medasr;
+  auto funasr_nano = &model_config->funasr_nano;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -150,6 +153,18 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline MedASR model config----------\n");
   fprintf(stdout, "model: %s\n", medasr->model);
+
+  fprintf(stdout, "----------offline FunASR Nano config----------\n");
+  fprintf(stdout, "encoder_adaptor: %s\n", funasr_nano->encoder_adaptor);
+  fprintf(stdout, "llm: %s\n", funasr_nano->llm);
+  fprintf(stdout, "embedding: %s\n", funasr_nano->embedding);
+  fprintf(stdout, "tokenizer: %s\n", funasr_nano->tokenizer);
+  fprintf(stdout, "system_prompt: %s\n", funasr_nano->system_prompt);
+  fprintf(stdout, "user_prompt: %s\n", funasr_nano->user_prompt);
+  fprintf(stdout, "max_new_tokens: %d\n", funasr_nano->max_new_tokens);
+  fprintf(stdout, "temperature: %f\n", funasr_nano->temperature);
+  fprintf(stdout, "top_p: %f\n", funasr_nano->top_p);
+  fprintf(stdout, "seed: %d\n", funasr_nano->seed);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

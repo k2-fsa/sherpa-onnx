@@ -56,8 +56,10 @@ function initSherpaOnnxOnlineTransducerModelConfig(config, Module) {
   Module.setValue(ptr + 8, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 // The user should free the returned pointers
@@ -155,9 +157,7 @@ function initModelConfig(config, Module) {
   offset += 4;
   // skip nemo_ctc and t_one_ctc
 
-  return {
-    buffer: buffer, ptr: ptr, len: len, transducer: transducer
-  }
+  return {buffer: buffer, ptr: ptr, len: len, transducer: transducer};
 }
 
 function initFeatureExtractorConfig(config, Module) {
@@ -165,8 +165,9 @@ function initFeatureExtractorConfig(config, Module) {
   Module.setValue(ptr, config.samplingRate || 16000, 'i32');
   Module.setValue(ptr + 4, config.featureDim || 80, 'i32');
   return {
-    ptr: ptr, len: 8,
-  }
+    ptr: ptr,
+    len: 8,
+  };
 }
 
 function initKwsConfig(config, Module) {
@@ -228,9 +229,12 @@ function initKwsConfig(config, Module) {
   offset += 4;
 
   return {
-    ptr: ptr, len: numBytes, featConfig: featConfig, modelConfig: modelConfig,
-        keywordsBuffer: keywordsBuffer
-  }
+    ptr: ptr,
+    len: numBytes,
+    featConfig: featConfig,
+    modelConfig: modelConfig,
+    keywordsBuffer: keywordsBuffer
+  };
 }
 
 class Stream {

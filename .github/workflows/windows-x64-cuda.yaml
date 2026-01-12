@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        onnxruntime_version: ["1.17.1", "1.22.0"]
+        onnxruntime_version: ["1.17.1", "1.23.2"]
 
     steps:
       - uses: actions/checkout@v4
@@ -48,13 +48,11 @@ jobs:
         shell: bash
         run: |
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
-            curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip
-            unzip onnxruntime-win-x64-gpu-1.22.0.zip
+          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v$onnxruntime_version/onnxruntime-win-x64-gpu-$onnxruntime_version.zip
+          unzip onnxruntime-win-x64-gpu-$onnxruntime_version.zip
 
-            export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/lib
-            export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-1.22.0/include
-          fi
+          export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/lib
+          export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/include
 
           mkdir build
           cd build
@@ -85,7 +83,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-cuda
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
+          if [[ $onnxruntime_version == "1.23.2" ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-win-x64-cuda
           fi
 

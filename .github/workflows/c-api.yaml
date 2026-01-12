@@ -75,6 +75,36 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test FunASR Nano
+        shell: bash
+        run: |
+          name=funasr-nano-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+          tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+          rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-funasr-*
+
       - name: Test MedASR CTC
         shell: bash
         run: |

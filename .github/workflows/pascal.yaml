@@ -135,6 +135,10 @@ jobs:
 
           pushd non-streaming-asr
 
+          ./run-funasr-nano.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-wenet-ctc.sh
           rm -rf sherpa-onnx-*
           echo "---"

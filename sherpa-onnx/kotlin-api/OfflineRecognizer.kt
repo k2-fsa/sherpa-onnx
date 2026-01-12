@@ -50,6 +50,19 @@ data class OfflineMedAsrCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineFunAsrNanoModelConfig(
+    var encoderAdaptor: String = "",
+    var llm: String = "",
+    var embedding: String = "",
+    var tokenizer: String = "",
+    var systemPrompt: String = "You are a helpful assistant.",
+    var userPrompt: String = "语音转写：",
+    var maxNewTokens: Int = 512,
+    var temperature: Float = 1e-6f,
+    var topP: Float = 0.8f,
+    var seed: Int = 42,
+)
+
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -98,6 +111,7 @@ data class OfflineModelConfig(
     var wenetCtc: OfflineWenetCtcModelConfig = OfflineWenetCtcModelConfig(),
     var omnilingual: OfflineOmnilingualAsrCtcModelConfig = OfflineOmnilingualAsrCtcModelConfig(),
     var medasr: OfflineMedAsrCtcModelConfig = OfflineMedAsrCtcModelConfig(),
+    var funasrNano: OfflineFunAsrNanoModelConfig = OfflineFunAsrNanoModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
@@ -766,6 +780,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     model = "$modelDir/model.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        46 -> {
+            val modelDir = "sherpa-onnx-funasr-nano-int8-2025-12-30"
+            return OfflineModelConfig(
+                funasrNano = OfflineFunAsrNanoModelConfig(
+                    encoderAdaptor = "$modelDir/encoder_adaptor.int8.onnx",
+                    llm = "$modelDir/llm.int8.onnx",
+                    embedding = "$modelDir/embedding.int8.onnx",
+                    tokenizer = "$modelDir/Qwen3-0.6B",
+                ),
+                tokens = "",
             )
         }
 
