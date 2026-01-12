@@ -6,7 +6,7 @@ using SherpaOnnx;
 using System.IO;
 
 
-class VadNonStreamingAsrParaformer
+class VadNonStreamingFunAsrNano
 {
   static void Main(string[] args)
   {

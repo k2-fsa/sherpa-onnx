@@ -6,7 +6,7 @@
 // https://k2-fsa.github.io/sherpa/onnx/funasr-nano.html
 using SherpaOnnx;
 
-class NonStreamingAsrCanary
+class NonStreamingFunAsrNano
 {
   static void Main(string[] args)
   {
