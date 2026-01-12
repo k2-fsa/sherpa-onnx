@@ -2,6 +2,7 @@
 # Copyright (c)  2023  Xiaomi Corporation
 
 import argparse
+import glob
 import os
 import re
 from pathlib import Path
@@ -55,17 +56,20 @@ def process_linux(s, rid):
 
 
 def process_macos(s, rid):
-    libs = [
-        "libonnxruntime.1.23.2.dylib",
-        "libsherpa-onnx-c-api.dylib",
-    ]
-    prefix = f"{src_dir}/macos-{rid}/"
+    lib_dir = os.path.join(src_dir, f"macos-{rid}")
+    onnx_libs = glob.glob(os.path.join(lib_dir, "libonnxruntime*.dylib"))
+    if not onnx_libs:
+        raise FileNotFoundError(f"No libonnxruntime*.dylib found in {lib_dir}")
+
+    other_libs = [os.path.join(lib_dir, "libsherpa-onnx-c-api.dylib")]
+    libs = onnx_libs + other_libs
+
     libs = [prefix + lib for lib in libs]
-    libs = "\n      ;".join(libs)
+    libs_str = "\n      ;".join(libs)
 
     d = get_dict()
     d["dotnet_rid"] = f"osx-{rid}"
-    d["libs"] = libs
+    d["libs"] = libs_str
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
