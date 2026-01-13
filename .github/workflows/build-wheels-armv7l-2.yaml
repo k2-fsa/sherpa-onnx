@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - wheel
-      - fix-arm-wheel
+      - fix-arm-wheel-2
   workflow_dispatch:
     inputs:
       publish_sherpa_onnx_bin:
