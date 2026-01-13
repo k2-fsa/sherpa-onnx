@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04-arm]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +39,11 @@ jobs:
         run: |
           ./new-release.sh
           git diff .
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm
 
       - name: Display PWD
         shell: bash
