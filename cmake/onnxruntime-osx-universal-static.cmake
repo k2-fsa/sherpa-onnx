@@ -15,7 +15,7 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-osx-universal2-static_lib-1.23.2.zip")
 set(onnxruntime_URL2  "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-osx-universal2-static_lib-1.23.2.zip")
-set(onnxruntime_HASH "SHA256=00816fda16166859fed41dacb786d3dfc3323bbc1a8fa57a235922f597953986")
+set(onnxruntime_HASH "SHA256=9ea206a621d6e5550ddb9de0b96c4f666b074620f5c685b0479b5fa02c0bba76")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
