@@ -5,6 +5,8 @@
   "main": "",
   "author": "",
   "license": "",
-  "dependencies": {}
+  "dependencies": {
+    "sherpa_onnx": "file:../sherpa_onnx"
+  }
 }
 
