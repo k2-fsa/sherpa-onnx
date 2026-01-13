@@ -8,6 +8,10 @@ import {
   isEndpoint,
   isOnlineStreamReady,
   reset,
+  createOnlinePunctuation,
+  onlinePunctuationAddPunct,
+  createOfflinePunctuation,
+  offlinePunctuationAddPunct,
 } from 'libsherpa_onnx.so';
 
 import { FeatureConfig, HomophoneReplacerConfig, Samples } from './NonStreamingAsr';
@@ -36,6 +40,24 @@ export class OnlineTransducerModelConfig {
   public decoder: string = '';
   public joiner: string = '';
 }
+
+export class OnlinePunctuationModelConfig {
+  public cnn_bilstm: string = '';
+  public bpe_vocab: string = '';
+  public provider: string = '';
+}
+
+export class OfflinePunctuationConfig {
+  public model: OfflinePunctuationModelConfig = new OfflinePunctuationModelConfig();
+}
+
+export class OfflinePunctuationModelConfig {
+  public ctTransformer: string = '';
+  public numThreads: number = 1;
+  public provider: string = 'cpu';
+  public debug: boolean = false;
+}
+
 
 export class OnlineParaformerModelConfig {
   public encoder: string = '';
@@ -74,9 +96,26 @@ export class OnlineCtcFstDecoderConfig {
   public maxActive: number = 3000;
 }
 
+export class OfflinePunctuation {
+  public handle: object;
+  // public config: OfflinePunctuationConfig
+
+  constructor(config: OfflinePunctuationModelConfig) {
+    let onlineConfig = new OfflinePunctuationConfig()
+    onlineConfig.model = config
+    this.handle = createOfflinePunctuation(onlineConfig)
+  }
+
+  offlinePunctuationAddPunct(text: string): string {
+    let result = offlinePunctuationAddPunct(this.handle, text)
+    return result
+  }
+}
+
 export class OnlineRecognizerConfig {
   public featConfig: FeatureConfig = new FeatureConfig();
   public modelConfig: OnlineModelConfig = new OnlineModelConfig();
+  // public punctuation: OfflinePunctuationModelConfig = new OfflinePunctuationModelConfig();
   public decodingMethod: string = 'greedy_search';
   public maxActivePaths: number = 4;
   public enableEndpoint: boolean = false;
@@ -107,11 +146,14 @@ export class OnlineRecognizerResult {
 
 export class OnlineRecognizer {
   public handle: object;
+  // public punct: object;
   public config: OnlineRecognizerConfig
 
   constructor(config: OnlineRecognizerConfig, mgr?: object) {
     this.handle = createOnlineRecognizer(config, mgr);
     this.config = config
+    // let configp = new OfflinePunctuationModelConfig()
+    // this.punct = createOfflinePunctuation(configp)
   }
 
   createStream(): OnlineStream {
@@ -146,6 +188,7 @@ export class OnlineRecognizer {
     r.tokens = o.tokens;
     r.json = jsonStr;
 
+    // r.text = offlinePunctuationAddPunct(this.punct, r.text)
     return r;
   }
 }

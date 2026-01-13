@@ -5,6 +5,8 @@ import {
   decodeOfflineStream,
   getOfflineStreamResultAsJson,
   offlineRecognizerSetConfig,
+  createOfflinePunctuation,
+  offlinePunctuationAddPunct,
 } from 'libsherpa_onnx.so';
 
 export interface Samples {

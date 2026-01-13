@@ -23,6 +23,7 @@ export { Samples,
   OfflineRecognizerConfig,
   OfflineRecognizerResult,
   OfflineRecognizer,
+
 } from './src/main/ets/components/NonStreamingAsr';
 
 export { OnlineStream,
@@ -36,6 +37,8 @@ export { OnlineStream,
   OnlineRecognizerConfig,
   OnlineRecognizerResult,
   OnlineRecognizer,
+  OfflinePunctuation,
+  OfflinePunctuationModelConfig
 } from './src/main/ets/components/StreamingAsr';
 
 export { OfflineTtsKittenModelConfig,

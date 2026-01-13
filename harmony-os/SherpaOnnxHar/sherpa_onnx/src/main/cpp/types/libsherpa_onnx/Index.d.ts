@@ -27,6 +27,11 @@ export const acceptWaveformOffline: (handle: object, audio: object) => void;
 export const decodeOfflineStream: (handle: object, streamHandle: object) => void;
 export const getOfflineStreamResultAsJson: (streamHandle: object) => string;
 
+export const createOnlinePunctuation: (config: object) => object;
+export const createOfflinePunctuation: (config: object) => object;
+export const offlinePunctuationAddPunct: (handle: object,text: string) => string;
+export const onlinePunctuationAddPunct: (handle: object,text: string) => string;
+
 export const createOnlineRecognizer: (config: object, mgr?: object) => object;
 export const createOnlineStream: (handle: object) => object;
 export const acceptWaveformOnline: (handle: object, audio: object) => void;
