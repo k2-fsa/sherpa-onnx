@@ -65,7 +65,7 @@ jobs:
           done
 
       - name: Collect funasr-nano with LLM int8
-        if: true
+        if: false
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-int8-2025-12-30
@@ -172,7 +172,7 @@ jobs:
           tar cjvf $d.tar.bz2 $d
 
       - name: Collect funasr-nano with LLM float32
-        if: false
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-2025-12-30
@@ -281,7 +281,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Collect funasr-nano with LLM fp16
-        if: true
+        if: false
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-fp16-2025-12-30
