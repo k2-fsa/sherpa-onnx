@@ -52,6 +52,7 @@ jobs:
         with:
             image: quay.io/pypa/manylinux_2_35_armv7l
             options: |
+              --platform linux/arm/v7
               --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
             shell: bash
             run: |
@@ -108,10 +109,16 @@ jobs:
               echo "----"
               ls -lh install/lib
 
+              file install/lib/*
+
               rm -fv install/lib/libcargs.so
 
               echo "----"
               ls -lh install/bin
+
+              file install/bin/*
+
+              ./install/bin/sherpa-onnx --help
 
               echo 'sherpa-onnx-core'
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
@@ -149,7 +156,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-core-linux-aarch64
+          name: wheels-core-linux-armv7l
           path: ./wheelhouse/*.whl
 
       - name: Show wheels
@@ -182,7 +189,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-core-linux-aarch64-patched
+          name: wheels-core-linux-armv7l-patched
           path: ./wheelhouse/*.whl
 
   test:
