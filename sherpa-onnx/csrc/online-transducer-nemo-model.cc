@@ -199,6 +199,8 @@ class OnlineTransducerNeMoModel::Impl {
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
 
+  int32_t FeatureDim() const { return feat_dim_; }
+
   int32_t VocabSize() const { return vocab_size_; }
 
   OrtAllocator *Allocator() { return allocator_; }
@@ -300,12 +302,17 @@ class OnlineTransducerNeMoModel::Impl {
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
                    &encoder_output_names_ptr_);
 
+    feat_dim_ = encoder_sess_->GetInputTypeInfo(0)
+                    .GetTensorTypeAndShapeInfo()
+                    .GetShape()[1];
+
     // get meta data
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
+      os << "feat_dim: " << feat_dim_ << "\n";
 #if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
 #else
@@ -323,6 +330,7 @@ class OnlineTransducerNeMoModel::Impl {
     SHERPA_ONNX_READ_META_DATA(window_size_, "window_size");
     SHERPA_ONNX_READ_META_DATA(chunk_shift_, "chunk_shift");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
+
     SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
@@ -443,6 +451,7 @@ class OnlineTransducerNeMoModel::Impl {
   int32_t chunk_shift_ = 0;
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 8;
+  int32_t feat_dim_ = 80;
   std::string normalize_type_;
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
@@ -511,6 +520,10 @@ int32_t OnlineTransducerNeMoModel::SubsamplingFactor() const {
 
 int32_t OnlineTransducerNeMoModel::VocabSize() const {
   return impl_->VocabSize();
+}
+
+int32_t OnlineTransducerNeMoModel::FeatureDim() const {
+  return impl_->FeatureDim();
 }
 
 OrtAllocator *OnlineTransducerNeMoModel::Allocator() const {

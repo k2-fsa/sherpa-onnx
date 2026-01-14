@@ -210,11 +210,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 
+    config_.feat_config.feature_dim = model_->FeatureDim();
+
     config_.feat_config.low_freq = 0;
-    // config_.feat_config.high_freq = 8000;
+    config_.feat_config.high_freq = 8000;
     config_.feat_config.is_librosa = true;
     config_.feat_config.remove_dc_offset = false;
-    // config_.feat_config.window_type = "hann";
+    config_.feat_config.window_type = "hann";
     config_.feat_config.dither = 0;
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
