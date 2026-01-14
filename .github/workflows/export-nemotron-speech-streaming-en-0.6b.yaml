@@ -3,7 +3,7 @@ name: export-nemotron-speech-streaming-en-06b
 on:
   push:
     branches:
-      - export-nemotron-streaming
+      - export-nemotron-streaming-2
   workflow_dispatch:
 
 concurrency:
