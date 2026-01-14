@@ -21,6 +21,8 @@ class OfflineStream {
     this.handle = handle;
   }
 
+
+
   /**
    * Accept a chunk of waveform samples.
    * @param {Waveform} obj - { samples: Float32Array, sampleRate: number }
@@ -35,13 +37,37 @@ class OfflineStream {
  */
 class OfflineRecognizer {
   /**
-   * @param {OfflineRecognizerConfig} config
+   * Construct a recognizer.
+   * @param {OfflineRecognizerConfig|any} configOrHandle
+   *   - If OfflineRecognizerConfig: creates a synchronous recognizer.
+   *   - If object with { handle, config }: wraps the handle (used by async
+   * factory).
    */
-  constructor(config) {
-    this.handle = addon.createOfflineRecognizer(config);
-    this.config = config
+  constructor(configOrHandle) {
+    if (configOrHandle && configOrHandle.__isNativeHandle) {
+      // Wrapping a handle from async creation
+      this.handle = configOrHandle.handle;
+      this.config = configOrHandle.config;  // save config for reference
+    } else if (configOrHandle) {
+      // Sync constructor path
+      this.handle = addon.createOfflineRecognizer(configOrHandle);
+      this.config = configOrHandle;
+    } else {
+      throw new Error(
+          'OfflineRecognizer constructor requires a config or native handle');
+    }
   }
 
+  /**
+   * Create an OfflineRecognizer asynchronously (non-blocking).
+   * @param {OfflineRecognizerConfig} config
+   * @returns {Promise<OfflineRecognizer>}
+   */
+  static async createAsync(config) {
+    const handle = await addon.createOfflineRecognizerAsync(config);
+    // Wrap handle and config for constructor
+    return new OfflineRecognizer({__isNativeHandle: true, handle, config});
+  }
   /**
    * Create a new OfflineStream bound to this recognizer.
    * @returns {OfflineStream}
