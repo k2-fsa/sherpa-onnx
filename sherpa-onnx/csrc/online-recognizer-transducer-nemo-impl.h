@@ -207,9 +207,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
  private:
   void PostInit() {
-    config_.feat_config.nemo_normalize_type =
-        model_->FeatureNormalizationMethod();
-
     config_.feat_config.feature_dim = model_->FeatureDim();
 
     config_.feat_config.low_freq = 0;
