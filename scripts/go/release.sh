@@ -54,8 +54,8 @@ function linux() {
   dst=$(realpath sherpa-onnx-go-linux/lib/arm-unknown-linux-gnueabihf)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx_core-$SHERPA_ONNX_VERSION-py3-none-manylinux_2_35_armv7l.whl
+  unzip ./sherpa_onnx_core-$SHERPA_ONNX_VERSION-py3-none-manylinux_2_35_armv7l.whl
 
   rm -fv $dst/_sherpa*.so
   cp -v sherpa_onnx/lib/lib*.so* $dst
