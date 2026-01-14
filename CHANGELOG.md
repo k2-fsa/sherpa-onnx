@@ -1,3 +1,12 @@
+## 1.12.22
+
+* Update wav files for FunASR Nano (#3038)
+* cmake: fix sha256 for onnxruntime linux x86_64 gpu package (#3042)
+* Fix checking funasr nano tokenizer on Windows (#3043)
+* Support nemotron-speech-streaming-en-0.6b (#3044)
+* Build APK for nemotron-speech-streaming-en-0.6b (#3045)
+* Fix building Linux arm wheels (#3047)
+
 ## 1.12.21
 
 * Fix publishing NPM packages (#2909)
