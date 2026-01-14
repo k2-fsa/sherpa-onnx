@@ -128,6 +128,7 @@ The following tables list the examples in this folder.
 |[./test_asr_non_streaming_omnilingual_asr_ctc.js](./test_asr_non_streaming_omnilingual_asr_ctc.js)|Non-streaming speech recognition from a file using a [Omnilingual-ASR](https://github.com/facebookresearch/omnilingual-asr) CTC model with greedy search|
 |[./test_asr_non_streaming_medasr_ctc.js](./test_asr_non_streaming_medasr_ctc.js)|Non-streaming speech recognition from a file using a [Google MedASR](https://github.com/google-health/medasr) CTC model with greedy search|
 |[./test_asr_non_streaming_funasr_nano.js](./test_asr_non_streaming_funasr_nano.js)|Non-streaming speech recognition from a file using a [FunASR Nano](https://modelscope.cn/models/FunAudioLLM/Fun-ASR-Nano-2512) model|
+|[./test_asr_non_streaming_funasr_nano_async.js](./test_asr_non_streaming_funasr_nano_async.js)|Async non-streaming speech recognition from multiple files using a [FunASR Nano](https://modelscope.cn/models/FunAudioLLM/Fun-ASR-Nano-2512) model|
 |[./test_asr_non_streaming_nemo_canary.js](./test_asr_non_streaming_nemo_canary.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [Canary](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french) model|
 |[./test_asr_non_streaming_zipformer_ctc.js](./test_asr_non_streaming_zipformer_ctc.js)|Non-streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_parakeet_tdt_v2.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with greedy search|
@@ -428,6 +429,16 @@ node ./test_asr_non_streaming_nemo_ctc.js
 # To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
+```
+
+### Asynchronous non-streaming speech recognition with FunASR Nano models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+node ./test_asr_non_streaming_funasr_nano_async.js
 ```
 
 ### Non-streaming speech recognition with FunASR Nano models

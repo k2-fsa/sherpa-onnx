@@ -1,7 +1,11 @@
 /** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
 /** @typedef {import('./types').Waveform} Waveform */
-/** @typedef {import('./types').OfflineRecognizerConfig} OfflineRecognizerConfig */
-/** @typedef {import('./types').OfflineRecognizerResult} OfflineRecognizerResult */
+/**
+ * @typedef {import('./types').OfflineRecognizerConfig} OfflineRecognizerConfig
+ */
+/**
+ * @typedef {import('./types').OfflineRecognizerResult} OfflineRecognizerResult
+ */
 
 const addon = require('./addon.js');
 
@@ -10,7 +14,8 @@ const addon = require('./addon.js');
  */
 class OfflineStream {
   /**
-   * @param {OfflineStreamObject|Object} handle - Internal stream object with `handle` property.
+   * @param {OfflineStreamObject|Object} handle - Internal stream object with
+   *     `handle` property.
    */
   constructor(handle) {
     this.handle = handle;
@@ -60,6 +65,17 @@ class OfflineRecognizer {
    */
   decode(stream) {
     addon.decodeOfflineStream(this.handle, stream.handle);
+  }
+
+  /**
+   * Decode an offline stream asynchronously (non-blocking).
+   * @param {OfflineStream} stream
+   * @returns {Promise<OfflineRecognizerResult>}
+   */
+  async decodeAsync(stream) {
+    const jsonStr =
+        await addon.decodeOfflineStreamAsync(this.handle, stream.handle);
+    return JSON.parse(jsonStr);
   }
 
   /**
