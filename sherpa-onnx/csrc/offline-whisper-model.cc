@@ -46,8 +46,8 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(config.whisper.encoder), sess_opts_);
@@ -65,8 +65,8 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(config.whisper.encoder), sess_opts_);
@@ -85,8 +85,8 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(mgr, config.whisper.encoder);
@@ -107,8 +107,8 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(mgr, config.whisper.encoder);
@@ -128,7 +128,8 @@ class OfflineWhisperModel::Impl {
 
     if (use_cuda_iobinding_) {
       // Encoder outputs are n_layer_cross_k and n_layer_cross_v, which are used
-      // multiple times in decoder steps. Keep them on GPU to avoid device<->host copies.
+      // multiple times in decoder steps. Keep them on GPU to avoid
+      // device<->host copies.
       Ort::IoBinding binding(*encoder_sess_);
       binding.BindInput(encoder_input_names_ptr_[0], features);
 
@@ -302,8 +303,7 @@ class OfflineWhisperModel::Impl {
     } else if (!encoder_sess_) {
       SHERPA_ONNX_LOGE(
           "Please pass buffer data or initialize encoder session outside of "
-          "this "
-          "function");
+          "this function");
       SHERPA_ONNX_EXIT(-1);
     }
 
