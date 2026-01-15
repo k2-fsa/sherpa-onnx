@@ -115,7 +115,7 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
 
@@ -128,7 +128,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android.tar.bz2"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Release android libs
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -249,7 +249,7 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=android/aar
@@ -264,8 +264,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-rknn.aar"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
-
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
       - name: Release android aar
         if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2

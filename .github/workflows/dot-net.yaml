@@ -97,7 +97,7 @@ jobs:
             export GIT_CLONE_PROTECTION_ACTIVE=false
             export GIT_LFS_SKIP_SMUDGE=1
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             git fetch
@@ -114,7 +114,7 @@ jobs:
 
             git commit -m "add more files"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
             rm -rf huggingface
 
   release-nuget-package:
