@@ -181,7 +181,7 @@ jobs:
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=riscv64-spacemit/$SHERPA_ONNX_VERSION
@@ -196,7 +196,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-riscv64-spacemit-shared.tar.bz2"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - uses: actions/upload-artifact@v4
         if: matrix.lib_type == 'static'

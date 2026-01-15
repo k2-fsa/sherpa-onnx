@@ -226,7 +226,7 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=jni/$SHERPA_ONNX_VERSION
@@ -243,4 +243,4 @@ jobs:
 
             git commit -m "add more files"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main

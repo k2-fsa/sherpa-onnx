@@ -222,7 +222,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -235,7 +235,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
         if: ${{ (github.event.inputs.publish_sherpa_onnx_bin || 'true') == 'true' }}
@@ -318,7 +318,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -331,7 +331,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI
         env:

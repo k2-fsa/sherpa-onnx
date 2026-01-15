@@ -151,7 +151,7 @@ jobs:
             git config --global user.name "Fangjun Kuang"
 
             rm -rf huggingface
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=arm32/$SHERPA_ONNX_VERSION
@@ -166,7 +166,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf ${{ matrix.lib_type }}
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

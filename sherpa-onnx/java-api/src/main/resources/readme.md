@@ -1,5 +1,5 @@
 please downlaod file and put in folder
-[donwload link](https://huggingface.co/csukuangfj/sherpa-onnx-libs/tree/main/jni)
+[donwload link](https://huggingface.co/csukuangfj2/sherpa-onnx-libs/tree/main/jni)
 
 - sherpa-onnx-v1.12.7-linux-aarch64-jni.tar.bz2
 - sherpa-onnx-v1.12.7-linux-x64-jni.tar.bz2
