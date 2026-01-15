@@ -4,9 +4,9 @@ const path = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
 
 /**
- * Create an OfflineRecognizer with FunASR Nano model.
+ * Create an OfflineRecognizer with FunASR Nano model asynchronously.
  */
-function createRecognizer(modelDir, numThreads = 2, debug = 1) {
+async function createRecognizerAsync(modelDir, numThreads = 2, debug = 1) {
   const config = {
     featConfig: {
       sampleRate: 16000,
@@ -26,7 +26,8 @@ function createRecognizer(modelDir, numThreads = 2, debug = 1) {
     },
   };
 
-  return new sherpa_onnx.OfflineRecognizer(config);
+  // Use the async C++ API to create recognizer without blocking Node.js
+  return await sherpa_onnx.OfflineRecognizer.createAsync(config);
 }
 
 /**
@@ -41,7 +42,9 @@ function createStreamFromFile(recognizer, file) {
 
 async function main() {
   const modelDir = './sherpa-onnx-funasr-nano-int8-2025-12-30';
-  const recognizer = createRecognizer(modelDir);
+
+  // Async recognizer creation
+  const recognizer = await createRecognizerAsync(modelDir);
 
   const testFiles = [
     'test_wavs/lyrics_en_1.wav',
