@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.speaker.identification"
         minSdk = 21
         targetSdk = 34
-        versionCode = 20260114
-        versionName = "1.12.22"
+        versionCode = 20260115
+        versionName = "1.12.23"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

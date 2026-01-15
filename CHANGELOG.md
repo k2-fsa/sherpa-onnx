@@ -1,3 +1,12 @@
+## 1.12.23
+
+* Node addon api jsdoc (#3005)
+* Add JavaScript async api for OfflineRecongizer decodeStream. (#3049)
+* Support creating OfflineRecognizer asynchronously in JavaScript. (#3050)
+* Fix uploading files to huggingface (#3054)
+* Add Dart API for FunASR Nano (#3055)
+* Fix uploading APK files (#3056)
+
 ## 1.12.22
 
 * Update wav files for FunASR Nano (#3038)
