@@ -250,9 +250,6 @@ static Utf8ConsumeResult ConsumeValidUtf8Prefix(std::string *pending) {
   if (i == n) {
     r.status = Utf8ConsumeStatus::kOk;
     last_good = n;
-  } else if (r.status != Utf8ConsumeStatus::kIncomplete &&
-             r.status != Utf8ConsumeStatus::kInvalid) {
-    r.status = Utf8ConsumeStatus::kInvalid;
   }
 
   if (last_good > 0) {

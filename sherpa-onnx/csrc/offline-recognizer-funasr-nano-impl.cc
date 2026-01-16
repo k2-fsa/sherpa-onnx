@@ -662,6 +662,17 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       result.tokens.push_back(std::move(s));
     }
 
+    if (!pending_bytes.empty() && !result.tokens.empty()) {
+      // Handle any remaining bytes from the last token, treating them as
+      // invalid.
+      std::string replacement_chars;
+      replacement_chars.reserve(pending_bytes.size() * 3);
+      for (size_t i = 0; i < pending_bytes.size(); ++i) {
+        replacement_chars.append("\xEF\xBF\xBD");
+      }
+      result.tokens.back().append(replacement_chars);
+    }
+
     auto enc_shape2 = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
     int32_t audio_token_len2 = static_cast<int32_t>(enc_shape2[1]);
     int32_t lfr_window_size = model_->LfrWindowSize();
