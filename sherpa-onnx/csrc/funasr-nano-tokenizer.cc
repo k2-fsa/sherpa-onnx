@@ -135,6 +135,160 @@ static inline bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp,
   return false;
 }
 
+enum class Utf8ConsumeStatus {
+  kOk = 0,
+  kIncomplete = 1,
+  kInvalid = 2,
+};
+
+struct Utf8ConsumeResult {
+  std::string prefix;
+  Utf8ConsumeStatus status;
+};
+
+static Utf8ConsumeResult ConsumeValidUtf8Prefix(std::string *pending) {
+  Utf8ConsumeResult r;
+  if (!pending || pending->empty()) {
+    r.status = Utf8ConsumeStatus::kOk;
+    return r;
+  }
+
+  const auto is_cont = [](uint8_t b) -> bool { return (b & 0xC0u) == 0x80u; };
+
+  const std::string &s = *pending;
+  const size_t n = s.size();
+
+  size_t i = 0;
+  size_t last_good = 0;
+
+  while (i < n) {
+    uint8_t b0 = static_cast<uint8_t>(s[i]);
+
+    if (b0 < 0x80u) {
+      ++i;
+      last_good = i;
+      continue;
+    }
+
+    size_t need = 0;
+
+    if (b0 >= 0xC2u && b0 <= 0xDFu) {
+      need = 2;
+      if (i + need > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+      uint8_t b1 = static_cast<uint8_t>(s[i + 1]);
+      if (!is_cont(b1)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+      i += need;
+      last_good = i;
+      continue;
+    }
+
+    if (b0 >= 0xE0u && b0 <= 0xEFu) {
+      need = 3;
+      if (i + need > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+      uint8_t b1 = static_cast<uint8_t>(s[i + 1]);
+      uint8_t b2 = static_cast<uint8_t>(s[i + 2]);
+      if (!is_cont(b1) || !is_cont(b2)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xE0u && b1 < 0xA0u) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+      if (b0 == 0xEDu && b1 > 0x9Fu) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      i += need;
+      last_good = i;
+      continue;
+    }
+
+    if (b0 >= 0xF0u && b0 <= 0xF4u) {
+      need = 4;
+      if (i + need > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+      uint8_t b1 = static_cast<uint8_t>(s[i + 1]);
+      uint8_t b2 = static_cast<uint8_t>(s[i + 2]);
+      uint8_t b3 = static_cast<uint8_t>(s[i + 3]);
+      if (!is_cont(b1) || !is_cont(b2) || !is_cont(b3)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xF0u && b1 < 0x90u) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+      if (b0 == 0xF4u && b1 > 0x8Fu) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      i += need;
+      last_good = i;
+      continue;
+    }
+
+    r.status = Utf8ConsumeStatus::kInvalid;
+    break;
+  }
+
+  if (i == n) {
+    r.status = Utf8ConsumeStatus::kOk;
+    last_good = n;
+  }
+
+  if (last_good > 0) {
+    r.prefix = pending->substr(0, last_good);
+    pending->erase(0, last_good);
+  } else {
+    r.prefix.clear();
+  }
+
+  return r;
+}
+
+static inline void ByteLevelDecodeTokenToBytes(
+    const std::string &token,
+    const std::unordered_map<std::string, uint8_t> &unicode_to_byte,
+    std::string *out_bytes) {
+  if (!out_bytes) return;
+
+  size_t i = 0;
+  while (i < token.size()) {
+    size_t t = i;
+    uint32_t cp = 0;
+    size_t n = 0;
+    if (!Utf8Next(token, &t, &cp, &n) || n == 0) {
+      out_bytes->push_back(token[i]);
+      i += 1;
+      continue;
+    }
+    std::string ch = token.substr(i, n);
+    auto it = unicode_to_byte.find(ch);
+    if (it != unicode_to_byte.end()) {
+      out_bytes->push_back(static_cast<char>(it->second));
+    } else {
+      out_bytes->append(ch);
+    }
+    i += n;
+  }
+}
+
 static inline bool IsNewline(uint32_t cp) { return cp == '\n' || cp == '\r'; }
 
 static inline bool IsAsciiSpace(uint32_t cp) { return cp == ' '; }
@@ -148,7 +302,9 @@ static inline bool IsAsciiAlpha(uint32_t cp) {
   return (cp >= 'a' && cp <= 'z') || (cp >= 'A' && cp <= 'Z');
 }
 
-static inline bool IsAsciiDigit(uint32_t cp) { return (cp >= '0' && cp <= '9'); }
+static inline bool IsAsciiDigit(uint32_t cp) {
+  return (cp >= '0' && cp <= '9');
+}
 
 // A light-weight unicode letter/number approximation good enough for
 // Qwen3(English/Chinese/Japanese/Korean + common scripts).
@@ -348,8 +504,7 @@ class JsonReader {
       return false;
     }
     int64_t v = 0;
-    while (p_ < s_.size() &&
-           std::isdigit(static_cast<unsigned char>(s_[p_]))) {
+    while (p_ < s_.size() && std::isdigit(static_cast<unsigned char>(s_[p_]))) {
       int d = s_[p_] - '0';
       if (v > (std::numeric_limits<int64_t>::max() - d) / 10) return false;
       v = v * 10 + d;
@@ -662,10 +817,10 @@ static std::vector<std::string> SplitByQwen3Pattern(const std::string &text) {
           uint32_t cx = 0;
           size_t nx = 0;
           if (!Utf8Next(text, &t, &cx, &nx)) break;
-            if (!is_punct_like(cx)) break;
-            j += nx;
-          }
-          while (j < text.size()) {
+          if (!is_punct_like(cx)) break;
+          j += nx;
+        }
+        while (j < text.size()) {
           size_t t = j;
           uint32_t cx = 0;
           size_t nx = 0;
@@ -788,7 +943,8 @@ static inline std::string MakeMergeKey(const std::string &a,
 
 // Parse tokenizer.json added_tokens: extract objects with {id, content, ...}
 static bool ParseAddedTokensFromTokenizerJson(
-    const std::string &blob, std::vector<FunASRNanoTokenizer::AddedToken> *out) {
+    const std::string &blob,
+    std::vector<FunASRNanoTokenizer::AddedToken> *out) {
   if (!out) return false;
   out->clear();
 
@@ -857,8 +1013,8 @@ void BuildAddedTokensTrie(
   for (int32_t i = 0; i < static_cast<int32_t>(tokens.size()); ++i) {
     const auto &tok = tokens[i];
     int32_t node = 0;
-    for (uint8_t b : std::vector<uint8_t>(tok.content.begin(),
-                                          tok.content.end())) {
+    for (uint8_t b :
+         std::vector<uint8_t>(tok.content.begin(), tok.content.end())) {
       auto it = (*trie)[node].next.find(b);
       if (it == (*trie)[node].next.end()) {
         int32_t new_node = static_cast<int32_t>(trie->size());
@@ -900,10 +1056,9 @@ static void MergeVocabAndAddedTokens(
   }
 }
 
-void BuildIdToToken(
-    const std::unordered_map<std::string, int32_t> &vocab,
-    const std::unordered_set<std::string> &added_contents,
-    std::vector<std::string> *id2token) {
+void BuildIdToToken(const std::unordered_map<std::string, int32_t> &vocab,
+                    const std::unordered_set<std::string> &added_contents,
+                    std::vector<std::string> *id2token) {
   if (!id2token) return;
   int32_t max_id = -1;
   for (const auto &kv : vocab) {
@@ -942,7 +1097,6 @@ void BuildIdToToken(
         dup);
   }
 }
-
 
 // Try to match an AddedToken at byte-position `pos`.
 // Returns (matched_len_bytes, token_index) or (0, -1) if no match.
@@ -986,7 +1140,6 @@ FunASRNanoTokenizer::FunASRNanoTokenizer(NativeResourceManager *mgr,
   Init(mgr, tokenizer_dir);
 }
 #endif
-
 
 void FunASRNanoTokenizer::Init(const std::string &tokenizer_dir) {
   std::string tok_json = FindTokenizerJson(tokenizer_dir);
@@ -1114,7 +1267,8 @@ void FunASRNanoTokenizer::Init(NativeResourceManager *mgr,
   }
 
   if (!ParseAddedTokensFromTokenizerJson(tok_blob, &added_tokens_)) {
-    SHERPA_ONNX_LOGE("Failed to parse added_tokens from rawfile tokenizer.json");
+    SHERPA_ONNX_LOGE(
+        "Failed to parse added_tokens from rawfile tokenizer.json");
     SHERPA_ONNX_EXIT(-1);
   }
   MergeVocabAndAddedTokens(&token2id_, added_tokens_, &added_token_contents_);
@@ -1172,8 +1326,7 @@ static inline bool CheckSingleWordBoundary(const std::string &text, size_t pos,
 
 // ByteLevel encode: map each byte to unicode char (bytes_to_unicode).
 static inline std::string ByteLevelEncode(
-    const std::string &token,
-    const std::string byte_to_unicode[256]) {
+    const std::string &token, const std::string byte_to_unicode[256]) {
   std::string out;
   out.reserve(token.size() * 2);
   for (unsigned char b : token) {
@@ -1261,8 +1414,7 @@ std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
         auto pieces = SplitByQwen3Pattern(seg);
         for (const auto &p : pieces) {
           std::string bl = ByteLevelEncode(p, byte_to_unicode_);
-          auto bpe_toks =
-              BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_);
+          auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_);
           for (const auto &bt : bpe_toks) {
             auto it = token2id_.find(bt);
             if (it == token2id_.end()) {
@@ -1295,6 +1447,51 @@ std::vector<int64_t> FunASRNanoTokenizer::Encode(const std::string &text) {
         if (it == token2id_.end()) continue;
         out.push_back(static_cast<int64_t>(it->second));
       }
+    }
+  }
+
+  return out;
+}
+
+std::string FunASRNanoTokenizer::GetTokenStringStreaming(
+    int64_t token_id, std::string *pending_bytes) const {
+  if (!pending_bytes) return "";
+
+  if (id2token_.empty()) {
+    SHERPA_ONNX_LOGE("Tokenizer not initialized");
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  int32_t id = static_cast<int32_t>(token_id);
+  if (id < 0 || static_cast<size_t>(id) >= id2token_.size()) return "";
+
+  if (!special_ids_.empty() && special_ids_.count(id)) return "";
+
+  const std::string &token = id2token_[static_cast<size_t>(id)];
+  if (token.empty()) return "";
+
+  ByteLevelDecodeTokenToBytes(token, unicode_to_byte_, pending_bytes);
+
+  std::string out;
+
+  while (!pending_bytes->empty()) {
+    Utf8ConsumeResult c = ConsumeValidUtf8Prefix(pending_bytes);
+    out.append(c.prefix);
+
+    if (c.status == Utf8ConsumeStatus::kOk) {
+      break;
+    }
+
+    if (c.status == Utf8ConsumeStatus::kIncomplete) {
+      break;
+    }
+
+    if (c.status == Utf8ConsumeStatus::kInvalid) {
+      if (!pending_bytes->empty()) {
+        pending_bytes->erase(0, 1);
+      }
+      out.append("\xEF\xBF\xBD");
+      continue;
     }
   }
 
