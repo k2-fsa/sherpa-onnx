@@ -26,15 +26,16 @@ constexpr float kNegInf = -std::numeric_limits<float>::infinity();
 //   <|0.00|> text text <|6.60|><|6.60|> text text <|12.00|> EOT
 enum class TimestampDecodingState {
   kStart,           // num_sampled == 0: first token must be timestamp
-  kAfterOpeningTs,  // last=TS, penult=TS: after opening or double TS, force text
+  kAfterOpeningTs,  // last=TS, penult=TS: after opening or double TS, force
+                    // text
   kSegmentClosing,  // last=TS, penult=text: segment just closed, force TS/EOT
   kInText           // last=text: in text, probability rule may apply
 };
 
 // Raw information extracted from the token sequence
 struct TokenSequenceInfo {
-  int32_t num_sampled;             // tokens sampled so far (excluding SOT sequence)
-  bool last_was_timestamp;         // was the last token a timestamp?
+  int32_t num_sampled;      // tokens sampled so far (excluding SOT sequence)
+  bool last_was_timestamp;  // was the last token a timestamp?
   bool penultimate_was_timestamp;  // was the second-to-last token a timestamp?
   int32_t last_ts;                 // last timestamp token ID (-1 if none)
 };
@@ -83,12 +84,13 @@ TimestampDecodingState DetermineDecodingState(const TokenSequenceInfo &info) {
 
 // What actions to take based on the current state
 struct TimestampDecision {
-  bool suppress_text;           // suppress text tokens
-  bool suppress_timestamps;     // suppress timestamp tokens
-  bool suppress_eot;            // suppress EOT token
-  int32_t min_timestamp;        // minimum allowed timestamp (-1 = no constraint)
-  int32_t max_timestamp;        // maximum allowed timestamp (-1 = no constraint)
-  bool check_probability_rule;  // apply probability rule after other suppressions
+  bool suppress_text;        // suppress text tokens
+  bool suppress_timestamps;  // suppress timestamp tokens
+  bool suppress_eot;         // suppress EOT token
+  int32_t min_timestamp;     // minimum allowed timestamp (-1 = no constraint)
+  int32_t max_timestamp;     // maximum allowed timestamp (-1 = no constraint)
+  bool check_probability_rule;  // apply probability rule after other
+                                // suppressions
 };
 
 // Map state to actions - each case must set ALL variables
@@ -155,9 +157,9 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
       break;
   }
 
-  return TimestampDecision{suppress_text,           suppress_timestamps,
-                           suppress_eot,            min_timestamp,
-                           max_timestamp,           check_probability_rule};
+  return TimestampDecision{suppress_text, suppress_timestamps,
+                           suppress_eot,  min_timestamp,
+                           max_timestamp, check_probability_rule};
 }
 
 // =============================================================================
@@ -203,8 +205,8 @@ void ApplyTimestampDecision(float *logits, int32_t vocab_size,
 void ApplyProbabilityRule(float *logits, int32_t vocab_size,
                           int32_t timestamp_begin) {
   // Compute logsumexp of timestamp logits
-  float max_ts_logit = *std::max_element(logits + timestamp_begin,
-                                         logits + vocab_size);
+  float max_ts_logit =
+      *std::max_element(logits + timestamp_begin, logits + vocab_size);
   if (max_ts_logit == kNegInf) {
     return;  // All timestamps suppressed, nothing to do
   }
@@ -260,9 +262,8 @@ void ApplyTimestampRules(float *logits, int32_t vocab_size,
   TimestampDecodingState state = DetermineDecodingState(info);
 
   // Step 2: Map state to actions
-  TimestampDecision decision =
-      DecideTimestampAction(state, info, timestamp_begin,
-                            max_initial_timestamp_index);
+  TimestampDecision decision = DecideTimestampAction(
+      state, info, timestamp_begin, max_initial_timestamp_index);
 
   // Step 3: Execute the decisions
   ApplyTimestampDecision(logits, vocab_size, decision, timestamp_begin, eot);
@@ -293,7 +294,8 @@ std::vector<OfflineWhisperSegment> ParseTimestampTokens(
     if (token == eot) {
       // End of transcript - close any open segment
       if (in_segment && !current_segment.token_ids.empty()) {
-        current_segment.end_time = -1.0f;  // Use sentinel for EOT-closed segment
+        current_segment.end_time =
+            -1.0f;  // Use sentinel for EOT-closed segment
         segments.push_back(std::move(current_segment));
         current_segment = OfflineWhisperSegment();
       }
