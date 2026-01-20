@@ -136,7 +136,9 @@ def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=F
         assert 0.0 <= ts <= 30.0, f"Timestamp out of range: {ts}"
 
     # Note: Word-level timestamps can be derived from token-level data client-side
-    # by grouping tokens that start with a space character into words.
+    # by grouping tokens that start with a space character into words--or, in the
+    # case of non-space-delimited languages like Chinese, Japanese, etc., treat
+    # each unicode character as a word.
 
     # Check segment timestamps if enabled
     if enable_segment_timestamps:

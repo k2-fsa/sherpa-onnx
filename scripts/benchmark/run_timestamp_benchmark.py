@@ -46,8 +46,8 @@ import numpy as np
 try:
     import sherpa_onnx
 except ImportError:
-    print("ERROR: sherpa_onnx not found.")
-    print("Run with: PYTHONPATH=build/lib:sherpa-onnx/python python ...")
+    print("ERROR: sherpa_onnx not found. Please install it using one of the methods at:")
+    print("https://k2-fsa.github.io/sherpa/onnx/python/install.html")
     sys.exit(1)
 
 try:

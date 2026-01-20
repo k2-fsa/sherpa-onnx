@@ -23,19 +23,7 @@ import torch
 import whisper
 from whisper.audio import load_audio, log_mel_spectrogram, pad_or_trim
 
-# Import load_model from the base export script.
-# We use importlib because the filename has a hyphen which isn't valid for
-# regular Python imports.
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-_spec = importlib.util.spec_from_file_location(
-    "export_onnx", os.path.join(_script_dir, "export-onnx.py")
-)
-_export_onnx = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_export_onnx)
-
-load_model = _export_onnx.load_model
-
-del _script_dir, _spec, _export_onnx
+from export_onnx import load_model
 
 
 def get_args():
