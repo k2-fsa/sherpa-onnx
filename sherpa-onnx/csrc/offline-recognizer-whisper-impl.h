@@ -197,6 +197,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
         float duration = (seg.end_time == -1.0f)
                              ? (total_audio_duration - seg.start_time)
                              : (seg.end_time - seg.start_time);
+        // Clamp to non-negative to handle rounding/model quirks
+        duration = std::max(0.0f, duration);
         r.segment_durations.push_back(duration);
 
         // Convert token IDs to text

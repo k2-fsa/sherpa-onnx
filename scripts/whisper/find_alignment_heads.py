@@ -13,8 +13,6 @@ Usage:
 """
 
 import argparse
-import importlib.util
-import os
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
@@ -34,6 +32,7 @@ def get_args():
     return parser.parse_args()
 
 
+@torch.no_grad()
 def compute_cross_attention_weights(
     model: whisper.Whisper,
     audio_path: str,
@@ -236,6 +235,7 @@ def main():
     # Load model
     print(f"Loading model: {args.model}")
     model = load_model(args.model)
+    model.eval()  # Set to evaluation mode
 
     print(f"Model dimensions: {model.dims}")
 

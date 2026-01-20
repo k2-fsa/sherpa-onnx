@@ -195,8 +195,11 @@ void ApplyTimestampDecision(float *logits, int32_t vocab_size,
 
   // Apply max_initial constraint (suppress timestamps above maximum)
   if (decision.max_timestamp >= 0) {
-    std::fill(logits + decision.max_timestamp + 1, logits + vocab_size,
-              kNegInf);
+    // Clamp to valid range to avoid out-of-bounds access
+    int32_t safe_max = std::min(decision.max_timestamp, vocab_size - 1);
+    if (safe_max + 1 < vocab_size) {
+      std::fill(logits + safe_max + 1, logits + vocab_size, kNegInf);
+    }
   }
 }
 

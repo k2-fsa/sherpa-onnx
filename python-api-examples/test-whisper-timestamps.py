@@ -89,7 +89,7 @@ def test_without_timestamps(args, samples, sample_rate):
     print("\nTest without timestamps PASSED!")
 
 
-def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=False):
+def test_with_timestamps(args, samples, sample_rate, audio_duration, enable_segment_timestamps=False):
     """Test token-level timestamps using cross-attention DTW."""
     print("\n" + "=" * 60)
     if enable_segment_timestamps:
@@ -142,9 +142,10 @@ def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=F
             f"{result.timestamps[i - 1]} > {result.timestamps[i]}"
         )
 
-    # Check range
+    # Check range: timestamps bounded by actual audio duration (or 30s if truncated)
+    max_timestamp = min(audio_duration, 30.0)
     for ts in result.timestamps:
-        assert 0.0 <= ts <= 30.0, f"Timestamp out of range: {ts}"
+        assert 0.0 <= ts <= max_timestamp, f"Timestamp out of range: {ts}"
 
     # Note: Word-level timestamps can be derived from token-level data client-side
     # by grouping tokens that start with a space character into words--or, in the
@@ -198,6 +199,12 @@ def main():
     )
     args = parser.parse_args()
 
+    # Handle --enable-segment-timestamps dependency on --enable-timestamps
+    if args.enable_segment_timestamps and not args.enable_timestamps:
+        parser.error(
+            "--enable-segment-timestamps requires --enable-timestamps to be set"
+        )
+
     # Read audio
     samples, sample_rate = read_wave(args.audio)
     print(f"Loaded audio: {len(samples)} samples at {sample_rate} Hz")
@@ -207,11 +214,13 @@ def main():
     test_without_timestamps(args, samples, sample_rate)
 
     # Test with timestamps if requested
+    audio_duration = len(samples) / sample_rate
     if args.enable_timestamps:
         test_with_timestamps(
             args,
             samples,
             sample_rate,
+            audio_duration,
             enable_segment_timestamps=args.enable_segment_timestamps,
         )
 
