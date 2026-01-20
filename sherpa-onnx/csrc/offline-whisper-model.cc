@@ -190,14 +190,10 @@ class OfflineWhisperModel::Impl {
     }
 
     // Handle attention output (4th output) if present
+    // For models without attention output, this remains nullptr
     Ort::Value attention_weights{nullptr};
     if (has_attention_output_ && decoder_out.size() > 3) {
       attention_weights = std::move(decoder_out[3]);
-    } else {
-      // Create empty tensor for models without attention output
-      std::array<int64_t, 4> empty_shape{1, 0, 1, 1};
-      attention_weights = Ort::Value::CreateTensor<float>(
-          allocator_, empty_shape.data(), empty_shape.size());
     }
 
     return std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value,
