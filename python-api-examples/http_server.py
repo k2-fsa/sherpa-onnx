@@ -23,17 +23,18 @@ _static_files = (
     ("/js/bootstrap.min.js", "application/javascript"),
     ("/js/bootstrap.min.js.map", "application/javascript"),
     ("/js/jquery-3.6.0.min.js", "application/javascript"),
-    ("/js/offline_record.js", "application/javascript"),
-    ("/js/offline_record.js", "application/javascript"),
+    ("/js/non_streaming_record.js", "application/javascript"),
     ("/js/popper.min.js", "application/javascript"),
     ("/js/popper.min.js.map", "application/javascript"),
     ("/js/streaming_record.js", "application/javascript"),
-    ("/js/upload.js", "application/javascript"),
+    ("/js/streaming_upload.js", "application/javascript"),
+    ("/js/non_streaming_upload.js", "application/javascript"),
     ("/k2-logo.png", "image/png"),
     ("/nav-partial.html", "text/html"),
-    ("/offline_record.html", "text/html"),
+    ("/non_streaming_record.html", "text/html"),
     ("/streaming_record.html", "text/html"),
-    ("/upload.html", "text/html"),
+    ("/streaming_upload.html", "text/html"),
+    ("/non_streaming_upload.html", "text/html"),
 )
 
 _404_page = r"""

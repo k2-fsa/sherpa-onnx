@@ -616,15 +616,21 @@ class StreamingServer(object):
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
-
-            if path in ("/upload.html", "/offline_record.html"):
+            if path == "/upload.html":
+                path = "/streaming_upload.html"
+            if path == "/offline_record.html":
                 response = r"""
 <!doctype html><html><head>
 <title>Speech recognition with next-gen Kaldi</title><body>
-<h2>Only /streaming_record.html is available for the streaming server.<h2>
+<h2>Only
+<a href="/upload.html">/upload.html</a>
+and
+<a href="/streaming_record.html">/streaming_record.html</a>
+is available for the streaming server.<h2>
 <br/>
 <br/>
-Go back to <a href="/streaming_record.html">/streaming_record.html</a>
+Go back to <a href="/upload.html">/upload.html</a>
+or <a href="/streaming_record.html">/streaming_record.html</a>
 </body></head></html>
 """
                 found = True
