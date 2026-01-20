@@ -93,6 +93,11 @@
         .token-row:active {
             background: #e0e0e0;
         }
+        .token-row:focus {
+            outline: 2px solid #4a90d9;
+            outline-offset: -2px;
+            background: #e8f0fa;
+        }
         .token-row.active {
             background: #fff3cd;
         }
@@ -270,23 +275,28 @@
             return div.innerHTML;
         }
 
-        // Play a segment from start to end time, then pause
+        // Play a segment from start to end time, then pause and seek back to start
+        let segmentStartTime = null;
         let segmentEndTime = null;
         let isPlayingSegment = false;
 
         function playSegment(start, end) {
             isPlayingSegment = true;
+            segmentStartTime = start;
             segmentEndTime = end;
             audioPlayer.currentTime = start;
             audioPlayer.play();
-            // Reset flag after a short delay (after seeked event fires)
-            setTimeout(() => { isPlayingSegment = false; }, 50);
         }
 
         function checkSegmentEnd() {
             if (segmentEndTime !== null && audioPlayer.currentTime >= segmentEndTime) {
                 audioPlayer.pause();
+                const seekBackTo = segmentStartTime;
+                segmentStartTime = null;
                 segmentEndTime = null;
+                if (seekBackTo !== null) {
+                    audioPlayer.currentTime = seekBackTo;
+                }
             }
         }
 
@@ -297,7 +307,8 @@
                     <div class="column-content" id="column-${colIndex}">
                         ${csv.tokens.map((t, i) => `
                             <div class="token-row" data-col="${colIndex}" data-idx="${i}"
-                                 data-start="${t.timestamp}" data-end="${t.timestamp + t.duration}">
+                                 data-start="${t.timestamp}" data-end="${t.timestamp + t.duration}"
+                                 tabindex="0" role="button">
                                 <span class="token-text">${escapeHtml(t.token)}</span>
                                 <span class="token-time">${t.timestamp.toFixed(2)}s</span>
                             </div>
@@ -306,10 +317,10 @@
                 </div>
             `).join('');
 
-            // Add click handlers to play just that token's timespan
+            // Add click and keyboard handlers to play just that token's timespan
             // Shift+click plays continuously from that point
             document.querySelectorAll('.token-row').forEach(row => {
-                row.addEventListener('click', (e) => {
+                function activateRow(e) {
                     const start = parseFloat(row.dataset.start);
                     const end = parseFloat(row.dataset.end);
                     if (e.shiftKey) {
@@ -320,6 +331,14 @@
                     } else {
                         // Regular click: play just this token
                         playSegment(start, end);
+                    }
+                }
+
+                row.addEventListener('click', activateRow);
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        activateRow(e);
                     }
                 });
             });
@@ -396,10 +415,13 @@
         });
 
         audioPlayer.addEventListener('seeked', () => {
-            // Clear segment end on manual seek (but not if triggered by playSegment)
+            // Clear segment on manual seek (but not if triggered by playSegment)
             if (!isPlayingSegment && segmentEndTime !== null) {
+                segmentStartTime = null;
                 segmentEndTime = null;
             }
+            // Clear the flag now that seek has completed
+            isPlayingSegment = false;
             // Update highlighting immediately after seek
             const currentTime = audioPlayer.currentTime;
             lastScrolledToken = null;  // Reset so we scroll to new position
