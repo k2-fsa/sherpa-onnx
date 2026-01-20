@@ -188,9 +188,16 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       r.segment_durations.reserve(src.segments.size());
       r.segment_texts.reserve(src.segments.size());
 
+      // Total audio duration for fallback when segment has no explicit end time
+      float total_audio_duration = src.num_audio_frames * 0.02f;
+
       for (const auto &seg : src.segments) {
         r.segment_timestamps.push_back(seg.start_time);
-        r.segment_durations.push_back(seg.end_time - seg.start_time);
+        // Use remaining audio duration if end_time is sentinel (-1.0f)
+        float duration = (seg.end_time == -1.0f)
+                             ? (total_audio_duration - seg.start_time)
+                             : (seg.end_time - seg.start_time);
+        r.segment_durations.push_back(duration);
 
         // Convert token IDs to text
         std::string seg_text;
