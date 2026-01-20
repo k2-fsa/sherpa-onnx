@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-timestamp-rules.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2026  Posit Software, PBC
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_WHISPER_TIMESTAMP_RULES_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_TIMESTAMP_RULES_H_

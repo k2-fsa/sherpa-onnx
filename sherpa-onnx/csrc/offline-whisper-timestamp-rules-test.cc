@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-timestamp-rules-test.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2026  Posit Software, PBC
 
 #include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 
@@ -22,9 +22,7 @@ constexpr int32_t kSampleBegin = 3;  // After [sot, language, task]
 constexpr float kNegInf = -std::numeric_limits<float>::infinity();
 
 // Helper to check if a logit is suppressed (is -inf)
-bool IsSuppressed(float logit) {
-  return std::isinf(logit) && logit < 0;
-}
+bool IsSuppressed(float logit) { return std::isinf(logit) && logit < 0; }
 
 // Helper to count non-suppressed logits in a range
 int32_t CountNonSuppressed(const float *logits, int32_t start, int32_t end) {
@@ -46,9 +44,7 @@ class ApplyTimestampRulesTest : public ::testing::Test {
  protected:
   std::vector<float> logits_;
 
-  void SetUp() override {
-    InitLogits(&logits_);
-  }
+  void SetUp() override { InitLogits(&logits_); }
 };
 
 // =============================================================================
@@ -57,7 +53,7 @@ class ApplyTimestampRulesTest : public ::testing::Test {
 
 TEST_F(ApplyTimestampRulesTest, AlwaysSuppressNoTimestamps) {
   std::vector<int64_t> tokens = {1, 2, 3};  // SOT sequence only
-  logits_[kNoTimestamps] = 5.0f;  // Give it a high value
+  logits_[kNoTimestamps] = 5.0f;            // Give it a high value
 
   ApplyTimestampRules(logits_.data(), kVocabSize, tokens, kSampleBegin,
                       kTimestampBegin, kNoTimestamps, kEot, 50);
@@ -156,7 +152,7 @@ TEST_F(ApplyTimestampRulesTest, AfterTextThenTimestampForceTimestampOrEot) {
   // Pattern: <|0.00|> "hello" <|2.00|> - segment just closed
   int32_t ts_0_00 = kTimestampBegin;
   int32_t ts_2_00 = kTimestampBegin + 100;  // 2.00 seconds = 100 * 0.02
-  int32_t text_token = 500;  // some text token
+  int32_t text_token = 500;                 // some text token
 
   std::vector<int64_t> tokens = {1, 2, 3, ts_0_00, text_token, ts_2_00};
 
@@ -326,7 +322,8 @@ TEST_F(ParseTimestampTokensTest, MultipleSegments) {
   int32_t ts_0_00 = kTimestampBegin;
   int32_t ts_1_00 = kTimestampBegin + 50;
   int32_t ts_2_00 = kTimestampBegin + 100;
-  std::vector<int32_t> tokens = {ts_0_00, 100, ts_1_00, ts_1_00, 200, ts_2_00, kEot};
+  std::vector<int32_t> tokens = {ts_0_00, 100,     ts_1_00, ts_1_00,
+                                 200,     ts_2_00, kEot};
 
   auto segments = ParseTimestampTokens(tokens, kTimestampBegin, kEot);
 

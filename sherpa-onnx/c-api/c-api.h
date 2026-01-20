@@ -707,10 +707,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   // NULL if the model does not produce segment-level timestamps.
 
   // Start time (in seconds) of each segment
-  float *segment_timestamps;
+  const float *segment_timestamps;
 
   // Duration (in seconds) of each segment
-  float *segment_durations;
+  const float *segment_durations;
 
   // Pointer to continuous memory which holds segment texts separated by \0
   const char *segment_texts;

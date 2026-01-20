@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -146,12 +147,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       ApplyTimestampRules(logits_copy.data(), vocab_size, all_tokens,
                           sample_begin, timestamp_begin, no_timestamps, eot,
                           kMaxInitialTimestampIndex);
-      auto max_it =
-          std::max_element(logits_copy.begin(), logits_copy.end());
-      max_token_id = static_cast<int32_t>(std::distance(logits_copy.begin(), max_it));
+      max_token_id = MaxElementIndex(logits_copy.data(), vocab_size);
     } else {
-      auto max_it = std::max_element(p_start, p_start + vocab_size);
-      max_token_id = static_cast<int32_t>(std::distance(p_start, max_it));
+      max_token_id = MaxElementIndex(p_start, vocab_size);
     }
   }
 
@@ -260,13 +258,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       ApplyTimestampRules(logits_copy.data(), vocab_size, all_tokens,
                           sample_begin, timestamp_begin, no_timestamps, eot,
                           -1);  // -1 = no max_initial constraint
-      auto max_it =
-          std::max_element(logits_copy.begin(), logits_copy.end());
-      max_token_id = static_cast<int32_t>(std::distance(logits_copy.begin(), max_it));
-
+      max_token_id = MaxElementIndex(logits_copy.data(), vocab_size);
     } else {
-      auto max_it = std::max_element(p_logits, p_logits + vocab_size);
-      max_token_id = static_cast<int32_t>(std::distance(p_logits, max_it));
+      max_token_id = MaxElementIndex(p_logits, vocab_size);
     }
   }
 

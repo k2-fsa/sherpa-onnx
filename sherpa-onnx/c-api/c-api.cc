@@ -760,14 +760,16 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     r->segment_count = segment_count;
 
     // Copy segment timestamps
-    r->segment_timestamps = new float[segment_count];
+    float *timestamps = new float[segment_count];
     std::copy(result.segment_timestamps.begin(), result.segment_timestamps.end(),
-              r->segment_timestamps);
+              timestamps);
+    r->segment_timestamps = timestamps;
 
     // Copy segment durations
-    r->segment_durations = new float[segment_count];
+    float *durations = new float[segment_count];
     std::copy(result.segment_durations.begin(), result.segment_durations.end(),
-              r->segment_durations);
+              durations);
+    r->segment_durations = durations;
 
     // Copy segment texts (similar to tokens)
     size_t total_length = 0;

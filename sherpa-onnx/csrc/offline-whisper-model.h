@@ -68,7 +68,7 @@ class OfflineWhisperModel {
    *  - out_n_layer_cross_v Same as n_layer_cross_v
    *  - out_offset Same as offset
    *  - cross_attention_weights (if HasAttentionOutput()) A 4-D tensor of shape
-   *                            (N, n_alignment_heads, num_words, n_audio_ctx)
+   *                            (N, n_alignment_heads, n_tokens, n_audio_ctx)
    *                            Empty tensor if model doesn't have attention output
    */
   std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,

@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-dtw.cc
 //
-// Copyright (c)  2024  Posit Software, PBC
+// Copyright (c)  2026  Posit Software, PBC
 
 #include "sherpa-onnx/csrc/offline-whisper-dtw.h"
 

@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-whisper-timestamp-rules.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2026  Posit Software, PBC
 
 #include "sherpa-onnx/csrc/offline-whisper-timestamp-rules.h"
 
@@ -25,10 +25,10 @@ constexpr float kNegInf = -std::numeric_limits<float>::infinity();
 // The expected token pattern is:
 //   <|0.00|> text text <|6.60|><|6.60|> text text <|12.00|> EOT
 enum class TimestampDecodingState {
-  START,            // num_sampled == 0: first token must be timestamp
-  AFTER_OPENING_TS, // last=TS, penult=TS: after opening or double TS, force text
-  SEGMENT_CLOSING,  // last=TS, penult=text: segment just closed, force TS/EOT
-  IN_TEXT           // last=text: in text, probability rule may apply
+  kStart,           // num_sampled == 0: first token must be timestamp
+  kAfterOpeningTs,  // last=TS, penult=TS: after opening or double TS, force text
+  kSegmentClosing,  // last=TS, penult=text: segment just closed, force TS/EOT
+  kInText           // last=text: in text, probability rule may apply
 };
 
 // Raw information extracted from the token sequence
@@ -66,15 +66,15 @@ TokenSequenceInfo ExtractTokenSequenceInfo(const std::vector<int64_t> &tokens,
 // Map raw token info to a mutually exclusive state
 TimestampDecodingState DetermineDecodingState(const TokenSequenceInfo &info) {
   if (info.num_sampled == 0) {
-    return TimestampDecodingState::START;
+    return TimestampDecodingState::kStart;
   }
   if (info.last_was_timestamp && info.penultimate_was_timestamp) {
-    return TimestampDecodingState::AFTER_OPENING_TS;
+    return TimestampDecodingState::kAfterOpeningTs;
   }
   if (info.last_was_timestamp && !info.penultimate_was_timestamp) {
-    return TimestampDecodingState::SEGMENT_CLOSING;
+    return TimestampDecodingState::kSegmentClosing;
   }
-  return TimestampDecodingState::IN_TEXT;
+  return TimestampDecodingState::kInText;
 }
 
 // =============================================================================
@@ -106,7 +106,7 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
   // Compute monotonicity constraint (cross-cutting concern, used by all cases)
   int32_t min_timestamp = -1;
   if (info.last_ts >= 0) {
-    if (state == TimestampDecodingState::SEGMENT_CLOSING) {
+    if (state == TimestampDecodingState::kSegmentClosing) {
       // Same timestamp allowed for next segment opening
       min_timestamp = info.last_ts;
     } else {
@@ -116,7 +116,7 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
   }
 
   switch (state) {
-    case TimestampDecodingState::START:
+    case TimestampDecodingState::kStart:
       // First token must be a timestamp
       suppress_text = true;
       suppress_timestamps = false;
@@ -127,7 +127,7 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
       check_probability_rule = false;
       break;
 
-    case TimestampDecodingState::AFTER_OPENING_TS:
+    case TimestampDecodingState::kAfterOpeningTs:
       // After opening timestamp (or double timestamp), force text
       suppress_text = false;
       suppress_timestamps = true;
@@ -136,7 +136,7 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
       check_probability_rule = false;
       break;
 
-    case TimestampDecodingState::SEGMENT_CLOSING:
+    case TimestampDecodingState::kSegmentClosing:
       // Segment just closed, force timestamp or EOT
       suppress_text = true;
       suppress_timestamps = false;
@@ -145,7 +145,7 @@ TimestampDecision DecideTimestampAction(TimestampDecodingState state,
       check_probability_rule = false;
       break;
 
-    case TimestampDecodingState::IN_TEXT:
+    case TimestampDecodingState::kInText:
       // In text, probability rule may force timestamp
       suppress_text = false;
       suppress_timestamps = false;
