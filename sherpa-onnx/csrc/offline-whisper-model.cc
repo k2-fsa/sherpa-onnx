@@ -174,6 +174,9 @@ class OfflineWhisperModel::Impl {
       binding.BindOutput(decoder_output_names_ptr_[0], cpu_mem_info_);
       binding.BindOutput(decoder_output_names_ptr_[1], *cuda_mem_info_);
       binding.BindOutput(decoder_output_names_ptr_[2], *cuda_mem_info_);
+      if (has_attention_output_ && decoder_output_names_ptr_.size() > 3) {
+        binding.BindOutput(decoder_output_names_ptr_[3], cpu_mem_info_);
+      }
 
       binding.SynchronizeInputs();
       decoder_sess_->Run(Ort::RunOptions{nullptr}, binding);

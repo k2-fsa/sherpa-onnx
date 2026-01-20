@@ -21,6 +21,15 @@ Usage:
     --tokens=/path/to/tokens.txt \
     --audio=/path/to/test.wav \
     --enable-timestamps
+
+  # Test with CUDA GPU acceleration
+  python test-whisper-timestamps.py \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --tokens=/path/to/tokens.txt \
+    --audio=/path/to/test.wav \
+    --enable-timestamps \
+    --provider=cuda
 """
 
 import argparse
@@ -63,6 +72,7 @@ def test_without_timestamps(args, samples, sample_rate):
         decoder=args.decoder,
         tokens=args.tokens,
         enable_timestamps=False,
+        provider=args.provider,
     )
 
     stream = recognizer.create_stream()
@@ -94,6 +104,7 @@ def test_with_timestamps(args, samples, sample_rate, enable_segment_timestamps=F
         tokens=args.tokens,
         enable_timestamps=True,
         enable_segment_timestamps=enable_segment_timestamps,
+        provider=args.provider,
     )
 
     stream = recognizer.create_stream()
@@ -179,6 +190,11 @@ def main():
         "--enable-segment-timestamps",
         action="store_true",
         help="Enable segment-level timestamps using timestamp tokens",
+    )
+    parser.add_argument(
+        "--provider",
+        default="cpu",
+        help="Execution provider: cpu, cuda, coreml, etc. (default: cpu)",
     )
     args = parser.parse_args()
 
