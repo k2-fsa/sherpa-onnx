@@ -434,13 +434,13 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWhisperModelConfig {
 
   // If non-zero, use cross-attention weights and DTW to compute token-level
   // timestamps. This requires ONNX models exported with attention outputs.
-  int32_t enable_timestamps;
+  int32_t enable_token_timestamps;
 
   // If non-zero, use Whisper's native timestamp token mode to produce
   // segment-level timestamps. The decoder outputs timestamp tokens like
   // <|0.00|> interleaved with text, creating segments with start/end times.
-  // Does not require attention outputs. Can be combined with enable_timestamps
-  // for both segment-level and token-level timestamps.
+  // Does not require attention outputs. Can be combined with
+  // enable_token_timestamps for both segment-level and token-level timestamps.
   int32_t enable_segment_timestamps;
 } SherpaOnnxOfflineWhisperModelConfig;
 

@@ -406,7 +406,7 @@ func sherpaOnnxOfflineWhisperModelConfig(
   language: String = "",
   task: String = "transcribe",
   tailPaddings: Int = -1,
-  enableTimestamps: Bool = false,
+  enableTokenTimestamps: Bool = false,
   enableSegmentTimestamps: Bool = false
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
@@ -415,7 +415,7 @@ func sherpaOnnxOfflineWhisperModelConfig(
     language: toCPointer(language),
     task: toCPointer(task),
     tail_paddings: Int32(tailPaddings),
-    enable_timestamps: enableTimestamps ? 1 : 0,
+    enable_token_timestamps: enableTokenTimestamps ? 1 : 0,
     enable_segment_timestamps: enableSegmentTimestamps ? 1 : 0
   )
 }

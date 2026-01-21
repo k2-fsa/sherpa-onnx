@@ -48,7 +48,7 @@ def main():
         tokens=args.tokens,
         language=args.language,
         task="transcribe",
-        enable_timestamps=True,
+        enable_token_timestamps=True,
         enable_segment_timestamps=args.enable_segment_timestamps,
         num_threads=args.num_threads,
     )

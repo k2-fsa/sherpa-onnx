@@ -20,7 +20,7 @@ Usage:
     --decoder=/path/to/decoder.onnx \
     --tokens=/path/to/tokens.txt \
     --audio=/path/to/test.wav \
-    --enable-timestamps
+    --enable-token-timestamps
 
   # Test with CUDA GPU acceleration
   python test-whisper-timestamps.py \
@@ -28,7 +28,7 @@ Usage:
     --decoder=/path/to/decoder.onnx \
     --tokens=/path/to/tokens.txt \
     --audio=/path/to/test.wav \
-    --enable-timestamps \
+    --enable-token-timestamps \
     --provider=cuda
 """
 
@@ -71,7 +71,7 @@ def test_without_timestamps(args, samples, sample_rate):
         encoder=args.encoder,
         decoder=args.decoder,
         tokens=args.tokens,
-        enable_timestamps=False,
+        enable_token_timestamps=False,
         provider=args.provider,
     )
 
@@ -102,7 +102,7 @@ def test_with_timestamps(args, samples, sample_rate, audio_duration, enable_segm
         encoder=args.encoder,
         decoder=args.decoder,
         tokens=args.tokens,
-        enable_timestamps=True,
+        enable_token_timestamps=True,
         enable_segment_timestamps=enable_segment_timestamps,
         provider=args.provider,
     )
@@ -183,7 +183,7 @@ def main():
     parser.add_argument("--tokens", required=True, help="Path to tokens.txt")
     parser.add_argument("--audio", required=True, help="Path to audio file (wav)")
     parser.add_argument(
-        "--enable-timestamps",
+        "--enable-token-timestamps",
         action="store_true",
         help="Enable token-level timestamps (requires attention-enabled model)",
     )
@@ -199,10 +199,10 @@ def main():
     )
     args = parser.parse_args()
 
-    # Handle --enable-segment-timestamps dependency on --enable-timestamps
-    if args.enable_segment_timestamps and not args.enable_timestamps:
+    # Handle --enable-segment-timestamps dependency on --enable-token-timestamps
+    if args.enable_segment_timestamps and not args.enable_token_timestamps:
         parser.error(
-            "--enable-segment-timestamps requires --enable-timestamps to be set"
+            "--enable-segment-timestamps requires --enable-token-timestamps to be set"
         )
 
     # Read audio
@@ -215,7 +215,7 @@ def main():
 
     # Test with timestamps if requested
     audio_duration = len(samples) / sample_rate
-    if args.enable_timestamps:
+    if args.enable_token_timestamps:
         test_with_timestamps(
             args,
             samples,

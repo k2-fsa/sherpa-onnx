@@ -428,8 +428,8 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.whisper.tail_paddings =
       SHERPA_ONNX_OR(config->model_config.whisper.tail_paddings, -1);
 
-  recognizer_config.model_config.whisper.enable_timestamps =
-      config->model_config.whisper.enable_timestamps;
+  recognizer_config.model_config.whisper.enable_token_timestamps =
+      config->model_config.whisper.enable_token_timestamps;
 
   recognizer_config.model_config.whisper.enable_segment_timestamps =
       config->model_config.whisper.enable_segment_timestamps;

@@ -28,17 +28,17 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   // Check if we should collect attention weights for DTW timestamp computation
-  bool collect_attention = config_.enable_timestamps &&
+  bool collect_attention = config_.enable_token_timestamps &&
                            model_->HasAttentionOutput();
 
   // Warn once if timestamps requested but model doesn't support it
   static bool warned_no_attention = false;
-  if (config_.enable_timestamps && !model_->HasAttentionOutput() &&
+  if (config_.enable_token_timestamps && !model_->HasAttentionOutput() &&
       !warned_no_attention) {
     warned_no_attention = true;
     SHERPA_ONNX_LOGE(
-        "Warning: enable_timestamps=true but the decoder model does not have "
-        "cross-attention outputs. Timestamps will not be available. "
+        "Warning: enable_token_timestamps=true but the decoder model does not "
+        "have cross-attention outputs. Timestamps will not be available. "
         "To enable timestamps, export the model with attention outputs using: "
         "python scripts/whisper/export-onnx-with-attention.py");
   }
@@ -83,7 +83,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   // Add no_timestamps token when NOT using segment timestamp mode.
   // When enable_segment_timestamps=true, we let the decoder output timestamp
   // tokens (like <|0.00|>) which serve as alignment anchors.
-  // When enable_timestamps=true (DTW mode), we MUST include no_timestamps
+  // When enable_token_timestamps=true (DTW mode), we MUST include no_timestamps
   // because OpenAI's alignment (timing.py) uses it as an anchor token at the
   // start of the DTW matrix. Without it, the first text token is misaligned.
   if (!config_.enable_segment_timestamps) {

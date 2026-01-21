@@ -45,7 +45,7 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
       "so that whisper can detect the eot token. Leave it to -1 to use 1000.");
 
   po->Register(
-      "whisper-enable-timestamps", &enable_timestamps,
+      "whisper-enable-token-timestamps", &enable_token_timestamps,
       "If true, use cross-attention weights and DTW to compute token-level "
       "timestamps. Requires ONNX models exported with attention outputs. "
       "Default: false.");
@@ -56,7 +56,7 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
       "segment-level timestamps. The decoder outputs timestamp tokens like "
       "<|0.00|> interleaved with text, creating segments with start/end times. "
       "Does not require attention outputs. Can be combined with "
-      "--whisper-enable-timestamps for both segment-level and token-level "
+      "--whisper-enable-token-timestamps for both segment-level and token-level "
       "timestamps. Default: false.");
 }
 
@@ -103,7 +103,7 @@ std::string OfflineWhisperModelConfig::ToString() const {
   os << "language=\"" << language << "\", ";
   os << "task=\"" << task << "\", ";
   os << "tail_paddings=" << tail_paddings << ", ";
-  os << "enable_timestamps=" << (enable_timestamps ? "True" : "False") << ", ";
+  os << "enable_token_timestamps=" << (enable_token_timestamps ? "True" : "False") << ", ";
   os << "enable_segment_timestamps=" << (enable_segment_timestamps ? "True" : "False") << ")";
 
   return os.str();
