@@ -239,8 +239,12 @@ def load_tokens(filename):
 
 def verify_attention(attention_weights, n_audio_ctx, tokens, token_table):
     """Verify attention weights and print approximate timestamps."""
+    if not attention_weights:
+        print("No attention weights to verify")
+        return
+
     n_heads = attention_weights[0].shape[1]
-    print(f"\n--- Attention Verification ---")
+    print("\n--- Attention Verification ---")
     print(f"Alignment heads: {n_heads}, Audio frames: {n_audio_ctx}, Tokens: {len(tokens)}")
 
     for i, attn in enumerate(attention_weights):
