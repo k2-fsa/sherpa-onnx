@@ -224,17 +224,17 @@ class OfflineFunAsrNanoModelConfig {
   }
 
   Map<String, dynamic> toJson() => {
-    'encoderAdaptor': encoderAdaptor,
-    'llm': llm,
-    'embedding': embedding,
-    'tokenizer': tokenizer,
-    'systemPrompt': systemPrompt,
-    'userPrompt': userPrompt,
-    'maxNewTokens': maxNewTokens,
-    'temperature': temperature,
-    'topP': topP,
-    'seed': seed,
-  };
+        'encoderAdaptor': encoderAdaptor,
+        'llm': llm,
+        'embedding': embedding,
+        'tokenizer': tokenizer,
+        'systemPrompt': systemPrompt,
+        'userPrompt': userPrompt,
+        'maxNewTokens': maxNewTokens,
+        'temperature': temperature,
+        'topP': topP,
+        'seed': seed,
+      };
 
   final String encoderAdaptor;
   final String llm;
@@ -474,11 +474,8 @@ class OfflineModelConfig {
     this.canary = const OfflineCanaryModelConfig(),
     this.wenetCtc = const OfflineWenetCtcModelConfig(),
     this.medasr = const OfflineMedAsrCtcModelConfig(),
-<<<<<<< HEAD
     this.omnilingual = const OfflineOmnilingualAsrCtcModelConfig(),
-=======
     this.funasrNano = const OfflineFunAsrNanoModelConfig(),
->>>>>>> upstream/master
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -543,18 +540,15 @@ class OfflineModelConfig {
           ? OfflineMedAsrCtcModelConfig.fromJson(
               json['medasr'] as Map<String, dynamic>)
           : const OfflineMedAsrCtcModelConfig(),
-<<<<<<< HEAD
       omnilingual: json['omnilingual'] != null
           ? OfflineOmnilingualAsrCtcModelConfig.fromJson(
               json['omnilingual'] as Map<String, dynamic>)
           : const OfflineOmnilingualAsrCtcModelConfig(),
-=======
       funasrNano: json['funasrNano'] != null
           ? OfflineFunAsrNanoModelConfig.fromJson(
               json['funasrNano'] as Map<String, dynamic>,
             )
           : const OfflineFunAsrNanoModelConfig(),
->>>>>>> upstream/master
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -568,8 +562,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-<<<<<<< HEAD
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, medasr: $medasr, omnilingual: $omnilingual, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, medasr: $medasr, omnilingual: $omnilingual, funasrNano: $funasrNano, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -587,6 +580,7 @@ class OfflineModelConfig {
         'wenetCtc': wenetCtc.toJson(),
         'medasr': medasr.toJson(),
         'omnilingual': omnilingual.toJson(),
+        'funasrNano': funasrNano.toJson(),
         'tokens': tokens,
         'numThreads': numThreads,
         'debug': debug,
@@ -596,36 +590,6 @@ class OfflineModelConfig {
         'bpeVocab': bpeVocab,
         'telespeechCtc': telespeechCtc,
       };
-=======
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
-  }
-
-  Map<String, dynamic> toJson() => {
-    'transducer': transducer.toJson(),
-    'paraformer': paraformer.toJson(),
-    'nemoCtc': nemoCtc.toJson(),
-    'whisper': whisper.toJson(),
-    'tdnn': tdnn.toJson(),
-    'senseVoice': senseVoice.toJson(),
-    'moonshine': moonshine.toJson(),
-    'fireRedAsr': fireRedAsr.toJson(),
-    'dolphin': dolphin.toJson(),
-    'zipformerCtc': zipformerCtc.toJson(),
-    'canary': canary.toJson(),
-    'wenetCtc': wenetCtc.toJson(),
-    'omnilingual': omnilingual.toJson(),
-    'medasr': medasr.toJson(),
-    'funasrNano': funasrNano.toJson(),
-    'tokens': tokens,
-    'numThreads': numThreads,
-    'debug': debug,
-    'provider': provider,
-    'modelType': modelType,
-    'modelingUnit': modelingUnit,
-    'bpeVocab': bpeVocab,
-    'telespeechCtc': telespeechCtc,
-  };
->>>>>>> upstream/master
 
   final OfflineTransducerModelConfig transducer;
   final OfflineParaformerModelConfig paraformer;
@@ -640,11 +604,8 @@ class OfflineModelConfig {
   final OfflineCanaryModelConfig canary;
   final OfflineWenetCtcModelConfig wenetCtc;
   final OfflineMedAsrCtcModelConfig medasr;
-<<<<<<< HEAD
   final OfflineOmnilingualAsrCtcModelConfig omnilingual;
-=======
   final OfflineFunAsrNanoModelConfig funasrNano;
->>>>>>> upstream/master
 
   final String tokens;
   final int numThreads;
@@ -893,20 +854,17 @@ class OfflineRecognizer {
     c.ref.model.omnilingual.model =
         config.model.omnilingual.model.toNativeUtf8();
 
-    c.ref.model.funasrNano.encoderAdaptor = config
-        .model
-        .funasrNano
-        .encoderAdaptor
-        .toNativeUtf8();
+    c.ref.model.funasrNano.encoderAdaptor =
+        config.model.funasrNano.encoderAdaptor.toNativeUtf8();
     c.ref.model.funasrNano.llm = config.model.funasrNano.llm.toNativeUtf8();
-    c.ref.model.funasrNano.embedding = config.model.funasrNano.embedding
-        .toNativeUtf8();
-    c.ref.model.funasrNano.tokenizer = config.model.funasrNano.tokenizer
-        .toNativeUtf8();
-    c.ref.model.funasrNano.systemPrompt = config.model.funasrNano.systemPrompt
-        .toNativeUtf8();
-    c.ref.model.funasrNano.userPrompt = config.model.funasrNano.userPrompt
-        .toNativeUtf8();
+    c.ref.model.funasrNano.embedding =
+        config.model.funasrNano.embedding.toNativeUtf8();
+    c.ref.model.funasrNano.tokenizer =
+        config.model.funasrNano.tokenizer.toNativeUtf8();
+    c.ref.model.funasrNano.systemPrompt =
+        config.model.funasrNano.systemPrompt.toNativeUtf8();
+    c.ref.model.funasrNano.userPrompt =
+        config.model.funasrNano.userPrompt.toNativeUtf8();
     c.ref.model.funasrNano.maxNewTokens = config.model.funasrNano.maxNewTokens;
     c.ref.model.funasrNano.temperature = config.model.funasrNano.temperature;
     c.ref.model.funasrNano.topP = config.model.funasrNano.topP;
@@ -956,16 +914,12 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
-<<<<<<< HEAD
-=======
     calloc.free(c.ref.model.funasrNano.userPrompt);
     calloc.free(c.ref.model.funasrNano.systemPrompt);
     calloc.free(c.ref.model.funasrNano.tokenizer);
     calloc.free(c.ref.model.funasrNano.embedding);
     calloc.free(c.ref.model.funasrNano.llm);
     calloc.free(c.ref.model.funasrNano.encoderAdaptor);
-    calloc.free(c.ref.model.medasr.model);
->>>>>>> upstream/master
     calloc.free(c.ref.model.omnilingual.model);
     calloc.free(c.ref.model.medasr.model);
     calloc.free(c.ref.model.wenetCtc.model);
