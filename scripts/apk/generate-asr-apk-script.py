@@ -484,6 +484,21 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14",
+            idx=28,
+            lang="en",
+            short_name="nemotron-speech-streaming-en-0.6b-int8-2026-01-14",
+            cmd="""
+            pushd $model_name
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models

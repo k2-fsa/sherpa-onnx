@@ -9,7 +9,9 @@
   },
   "scripts": {
     "install": "cmake-js compile --log-level verbose",
-    "test": "node --napi-modules ./test/test_binding.js"
+    "postinstall": "npm run typecheck",
+    "test": "node --napi-modules ./test/test_binding.js",
+    "typecheck": "tsc"
   },
   "repository": {
     "type": "git",
@@ -60,5 +62,9 @@
   "bugs": {
     "url": "https://github.com/k2-fsa/sherpa-onnx/issues"
   },
-  "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme"
+  "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme",
+  "devDependencies": {
+    "@types/node": "^24.10.4",
+    "typescript": "^5.9.3"
+  }
 }

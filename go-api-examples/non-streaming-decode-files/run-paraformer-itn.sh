@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 if [ ! -d sherpa-onnx-paraformer-zh-2023-09-14 ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2

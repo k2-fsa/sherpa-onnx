@@ -487,6 +487,60 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
       });
 }
 
+class CreateRecognizerAsyncWorker : public Napi::AsyncWorker {
+ public:
+  CreateRecognizerAsyncWorker(const Napi::Env &env,
+                              const SherpaOnnxOfflineRecognizerConfig &cfg,
+                              const Napi::Promise::Deferred &deferred)
+      : Napi::AsyncWorker(env), cfg_(cfg), deferred_(deferred) {}
+
+  void Execute() override {
+    recognizer_ = SherpaOnnxCreateOfflineRecognizer(&cfg_);
+    FreeConfig(cfg_);
+
+    if (!recognizer_) {
+      SetError("Failed to create offline recognizer");
+    }
+  }
+
+  void OnOK() override {
+    Napi::Env env = Env();
+
+    deferred_.Resolve(Napi::External<SherpaOnnxOfflineRecognizer>::New(
+        env, const_cast<SherpaOnnxOfflineRecognizer *>(recognizer_),
+        [](Napi::Env /*env*/, SherpaOnnxOfflineRecognizer *r) {
+          SherpaOnnxDestroyOfflineRecognizer(r);
+        }));
+  }
+
+  void OnError(const Napi::Error &e) override { deferred_.Reject(e.Value()); }
+
+ private:
+  SherpaOnnxOfflineRecognizerConfig cfg_;
+  const SherpaOnnxOfflineRecognizer *recognizer_ = nullptr;
+  Napi::Promise::Deferred deferred_;
+};
+
+Napi::Value CreateOfflineRecognizerAsyncWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expected config object")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  SherpaOnnxOfflineRecognizerConfig cfg =
+      ParseConfig(info[0].As<Napi::Object>());
+
+  Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+  auto *worker = new CreateRecognizerAsyncWorker(env, cfg, deferred);
+  worker->Queue();
+
+  return deferred.Promise();
+}
+
 static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
@@ -632,6 +686,75 @@ static void OfflineRecognizerSetConfigWrapper(const Napi::CallbackInfo &info) {
   FreeConfig(c);
 }
 
+class DecodeOfflineStreamAsyncWorker : public Napi::AsyncWorker {
+ public:
+  DecodeOfflineStreamAsyncWorker(Napi::Env env,
+                                 const SherpaOnnxOfflineRecognizer *recognizer,
+                                 const SherpaOnnxOfflineStream *stream,
+                                 Napi::Promise::Deferred deferred)
+      : Napi::AsyncWorker(env),
+        recognizer_(recognizer),
+        stream_(stream),
+        deferred_(deferred) {}
+
+  void Execute() override {
+    try {
+      SherpaOnnxDecodeOfflineStream(recognizer_, stream_);
+    } catch (const std::exception &e) {
+      SetError(e.what());
+    }
+  }
+
+  void OnOK() override {
+    const char *json = SherpaOnnxGetOfflineStreamResultAsJson(stream_);
+    Napi::String s = Napi::String::New(Env(), json);
+    SherpaOnnxDestroyOfflineStreamResultJson(json);
+    deferred_.Resolve(s);
+  }
+
+  void OnError(const Napi::Error &e) override { deferred_.Reject(e.Value()); }
+
+ private:
+  const SherpaOnnxOfflineRecognizer *recognizer_;
+  const SherpaOnnxOfflineStream *stream_;
+  Napi::Promise::Deferred deferred_;
+};
+
+static Napi::Value DecodeOfflineStreamAsyncWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect 2 arguments. Given: " << info.Length();
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  if (!info[0].IsExternal() || !info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Expected recognizer and stream as external pointers")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  const SherpaOnnxOfflineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
+
+  const SherpaOnnxOfflineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
+
+  Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+
+  // no need to free worker by ourselves
+  auto worker =
+      new DecodeOfflineStreamAsyncWorker(env, recognizer, stream, deferred);
+
+  worker->Queue();
+
+  return deferred.Promise();
+}
+
 static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -701,6 +824,9 @@ void InitNonStreamingAsr(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createOfflineRecognizer"),
               Napi::Function::New(env, CreateOfflineRecognizerWrapper));
 
+  exports.Set(Napi::String::New(env, "createOfflineRecognizerAsync"),
+              Napi::Function::New(env, CreateOfflineRecognizerAsyncWrapper));
+
   exports.Set(Napi::String::New(env, "createOfflineStream"),
               Napi::Function::New(env, CreateOfflineStreamWrapper));
 
@@ -709,6 +835,9 @@ void InitNonStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "decodeOfflineStream"),
               Napi::Function::New(env, DecodeOfflineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "decodeOfflineStreamAsync"),
+              Napi::Function::New(env, DecodeOfflineStreamAsyncWrapper));
 
   exports.Set(Napi::String::New(env, "offlineRecognizerSetConfig"),
               Napi::Function::New(env, OfflineRecognizerSetConfigWrapper));

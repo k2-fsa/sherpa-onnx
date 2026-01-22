@@ -1,3 +1,21 @@
+## 1.12.23
+
+* Node addon api jsdoc (#3005)
+* Add JavaScript async api for OfflineRecongizer decodeStream. (#3049)
+* Support creating OfflineRecognizer asynchronously in JavaScript. (#3050)
+* Fix uploading files to huggingface (#3054)
+* Add Dart API for FunASR Nano (#3055)
+* Fix uploading APK files (#3056)
+
+## 1.12.22
+
+* Update wav files for FunASR Nano (#3038)
+* cmake: fix sha256 for onnxruntime linux x86_64 gpu package (#3042)
+* Fix checking funasr nano tokenizer on Windows (#3043)
+* Support nemotron-speech-streaming-en-0.6b (#3044)
+* Build APK for nemotron-speech-streaming-en-0.6b (#3045)
+* Fix building Linux arm wheels (#3047)
+
 ## 1.12.21
 
 * Fix publishing NPM packages (#2909)

@@ -10,12 +10,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  # TODO: This example directory includes examples that use the Vocabulary Log 
-  # Probabilities API (getVocabLogProbs, SherpaOnnxVocabLogProbs) which is not 
-  # yet published to pub.dev.
-  # Revert to local path (../../flutter/sherpa_onnx) for local testing,
-  # or wait until the updated package is released.
-  sherpa_onnx: ^1.12.21
+  sherpa_onnx: ^1.12.23
   path: ^1.9.0
   args: ^2.5.0
 

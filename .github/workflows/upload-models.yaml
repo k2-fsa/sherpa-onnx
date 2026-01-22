@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models
+      - upload-models-2
   workflow_dispatch:
 
 concurrency:
@@ -100,9 +100,7 @@ jobs:
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_1.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_3.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
@@ -121,6 +119,9 @@ jobs:
             && mv "${f}.tmp.wav" "$f"
           done
 
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
           https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
@@ -134,9 +135,9 @@ jobs:
           |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
           |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
           |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
-          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon. Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon.|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
           |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
-          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|It may be a good idea for Joe, but it wouldn't be good for me to sit in a mortgaged bungalow with my little ones on my knee. I'd much rather go and blow my dough on a casual chickadee. I don't want a mark that I'll have to toe—my toe can go where it wants to go. It wants to go where the wild girls grow in extravagant quantity to bask in the warm and peaceful glow of connubial constancy. May be awfully good for good old Joe, but it wouldn't be good for me!|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
           |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
           |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
           |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
@@ -171,7 +172,7 @@ jobs:
           tar cjvf $d.tar.bz2 $d
 
       - name: Collect funasr-nano with LLM float32
-        if: false
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-2025-12-30
@@ -207,9 +208,7 @@ jobs:
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_1.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_3.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
@@ -228,6 +227,9 @@ jobs:
             && mv "${f}.tmp.wav" "$f"
           done
 
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
           https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
@@ -241,9 +243,9 @@ jobs:
           |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
           |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
           |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
-          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon. Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon.|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
           |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
-          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|It may be a good idea for Joe, but it wouldn't be good for me to sit in a mortgaged bungalow with my little ones on my knee. I'd much rather go and blow my dough on a casual chickadee. I don't want a mark that I'll have to toe—my toe can go where it wants to go. It wants to go where the wild girls grow in extravagant quantity to bask in the warm and peaceful glow of connubial constancy. May be awfully good for good old Joe, but it wouldn't be good for me!|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
           |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
           |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
           |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
@@ -314,9 +316,7 @@ jobs:
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_1.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
-          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_3.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
           curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
@@ -335,6 +335,9 @@ jobs:
             && mv "${f}.tmp.wav" "$f"
           done
 
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
           cat >README.md <<EOF
           Audio files in this directory are downloaded from
           https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
@@ -348,9 +351,9 @@ jobs:
           |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
           |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
           |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
-          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon. Hey diddle diddle, the cat and the fiddle, the cow jumped over the moon. The little dog laughed to see such sport, and the dish ran away with the spoon.|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
           |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
-          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|It may be a good idea for Joe, but it wouldn't be good for me to sit in a mortgaged bungalow with my little ones on my knee. I'd much rather go and blow my dough on a casual chickadee. I don't want a mark that I'll have to toe—my toe can go where it wants to go. It wants to go where the wild girls grow in extravagant quantity to bask in the warm and peaceful glow of connubial constancy. May be awfully good for good old Joe, but it wouldn't be good for me!|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
           |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
           |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
           |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
@@ -801,7 +804,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -898,7 +901,7 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Release
-        if: false
+        if: true
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

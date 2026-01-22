@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 # please visit
 # https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
 # to download more models

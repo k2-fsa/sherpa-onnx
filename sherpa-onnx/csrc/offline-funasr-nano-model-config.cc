@@ -4,8 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
 
-#include <string>
 #include <sstream>
+#include <string>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -21,8 +22,9 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
   po->Register("funasr-nano-embedding", &embedding,
                "Path to embedding.onnx for FunASR-nano");
 
-  po->Register("funasr-nano-tokenizer", &tokenizer,
-               "Path to tokenizer directory (e.g., Qwen3-0.6B) for FunASR-nano");
+  po->Register(
+      "funasr-nano-tokenizer", &tokenizer,
+      "Path to tokenizer directory (e.g., Qwen3-0.6B) for FunASR-nano");
 
   po->Register("funasr-nano-system-prompt", &system_prompt,
                "System prompt for FunASR-nano");
@@ -39,8 +41,7 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
   po->Register("funasr-nano-top-p", &top_p,
                "Top-p (nucleus) sampling threshold for FunASR-nano");
 
-  po->Register("funasr-nano-seed", &seed,
-               "Random seed for FunASR-nano");
+  po->Register("funasr-nano-seed", &seed, "Random seed for FunASR-nano");
 }
 
 bool OfflineFunASRNanoModelConfig::Validate() const {
@@ -70,9 +71,25 @@ bool OfflineFunASRNanoModelConfig::Validate() const {
     return false;
   }
 
-  if (!FileExists(tokenizer)) {
-    SHERPA_ONNX_LOGE("--funasr-nano-tokenizer: '%s' does not exist",
-                     tokenizer.c_str());
+  if (!FileExists(tokenizer + "/vocab.json")) {
+    SHERPA_ONNX_LOGE(
+        "'%s/vocab.json' does not exist. Please check --funasr-nano-tokenizer",
+        tokenizer.c_str());
+    return false;
+  }
+
+  if (!FileExists(tokenizer + "/merges.txt")) {
+    SHERPA_ONNX_LOGE(
+        "'%s/merges.txt' does not exist. Please check --funasr-nano-tokenizer",
+        tokenizer.c_str());
+    return false;
+  }
+
+  if (!FileExists(tokenizer + "/tokenizer.json")) {
+    SHERPA_ONNX_LOGE(
+        "'%s/tokenizer.json' does not exist. Please check "
+        "--funasr-nano-tokenizer",
+        tokenizer.c_str());
     return false;
   }
 
@@ -127,4 +144,3 @@ std::string OfflineFunASRNanoModelConfig::ToString() const {
 }
 
 }  // namespace sherpa_onnx
-

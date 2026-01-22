@@ -1,0 +1,235 @@
+name: export-nemotron-speech-streaming-en-06b
+
+on:
+  push:
+    branches:
+      - export-nemotron-streaming-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemotron-streaming-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-nemotron-speech-streaming-en-0-6b-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: nemotron-speech-streaming-en-0-6b-to-onnx
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install NeMo
+        shell: bash
+        run: |
+          BRANCH='main'
+          pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
+          pip install onnxruntime ipython
+          pip install kaldi-native-fbank
+          pip install soundfile librosa
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/nemo/nemotron-speech-streaming-en-0.6b
+
+          python3 ./export_onnx.py
+
+          ls -lh *.onnx
+          echo "---"
+          ls -lh encoder.*
+
+      - name: Collect results
+        shell: bash
+        run: |
+          src=scripts/nemo/nemotron-speech-streaming-en-0.6b
+          d=sherpa-onnx-nemotron-speech-streaming-en-0.6b-2026-01-14
+          mkdir -p $d
+
+          cp -av $src/encoder.onnx $d/
+          cp -av $src/encoder.data $d/
+          cp -av $src/decoder.onnx $d/
+          cp -av $src/joiner.onnx $d/
+          cp -av $src/tokens.txt $d/
+          cat >$d/README.md <<EOF
+          # Introduction
+          This model is from https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b
+          EOF
+
+          ls -lh $d
+
+          d=sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14
+          mkdir -p $d
+
+          cp -av $src/encoder.int8.onnx $d/
+          cp -av $src/decoder.int8.onnx $d/
+          cp -av $src/joiner.int8.onnx $d/
+          cp -av $src/tokens.txt $d/
+          cat >$d/README.md <<EOF
+          # Introduction
+          This model is from https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b
+          EOF
+
+          ls -lh $d
+
+
+      - name: Download test waves
+        if: true
+        shell: bash
+        run: |
+          mkdir test_wavs
+          pushd test_wavs
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-small/resolve/main/test_wavs/0.wav
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-small/resolve/main/test_wavs/1.wav
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-small/resolve/main/test_wavs/8k.wav
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-small/resolve/main/test_wavs/trans.txt
+          popd
+
+          models=(
+            sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14
+            sherpa-onnx-nemotron-speech-streaming-en-0.6b-2026-01-14
+          )
+          for m in ${models[@]}; do
+            cp -av test_wavs $m
+            tar cjvf $m.tar.bz2 $m
+          done
+
+          ls -lh *.tar.bz2
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          # fp32 models is 2.2GB > 2GB
+          file: sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            models=(
+              sherpa-onnx-nemotron-speech-streaming-en-0.6b-int8-2026-01-14
+              sherpa-onnx-nemotron-speech-streaming-en-0.6b-2026-01-14
+            )
+
+            for m in ${models[@]}; do
+              if [ ! -d $m ]; then
+                echo "skip $m"
+                continue
+              fi
+
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
+              cp -av $m/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.data"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "first commit"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m main
+              cd ..
+            done
+
+            rm -rf huggingface
+
+      - name: Publish to modelscope
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              mkdir ms/nemo
+              cp -av $m ms/nemo
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh
+              git add .
+
+              git commit -m "add models"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
+              popd
+            done
+            rm -rf ms
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in "*.tar.bz2"; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+
+              d=asr-models/nemo
+              mkdir -p huggingface/$d
+
+              cp -v $m huggingface/$d/
+
+              pushd huggingface
+              git lfs track "*.tar.bz2"
+              ls -lh $d/$m
+
+              ls -lh $d
+
+              pushd $d
+              git lfs track "*.tar.bz2"
+              popd
+
+              git status
+              git add .
+
+              git commit -m "add $m"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
+              popd
+            done
+            rm -rf huggingface
