@@ -496,6 +496,7 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
+  include(json)
   include(espeak-ng-for-piper)
   set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
   message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")

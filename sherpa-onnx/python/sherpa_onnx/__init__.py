@@ -59,6 +59,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OnlinePunctuationConfig,
     OnlinePunctuationModelConfig,
     OnlineStream,
+    SentencePieceTokenizer,
     SileroVadModelConfig,
     SpeakerEmbeddingExtractor,
     SpeakerEmbeddingExtractorConfig,

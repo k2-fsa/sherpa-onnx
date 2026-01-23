@@ -196,7 +196,6 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/transducer-keyword-decoder-rknn.cc
     ./rknn/utils.cc
   )
-
 endif()
 
 if(SHERPA_ONNX_ENABLE_AXERA)
@@ -277,6 +276,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-zipvoice-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    sentence-piece-tokenizer.cc
     vocoder.cc
     vocos-vocoder.cc
   )
@@ -796,6 +796,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
+      sentence-piece-tokenizer-test.cc
       piper-phonemize-test.cc
     )
   endif()

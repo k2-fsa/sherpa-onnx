@@ -37,6 +37,7 @@
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
 #include "sherpa-onnx/python/csrc/offline-tts.h"
+#include "sherpa-onnx/python/csrc/sentence-piece-tokenizer.h"
 #endif
 
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
@@ -79,6 +80,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
   PybindOfflineTts(&m);
+  PybindSentencePieceTokenizer(&m);
 #else
   /* Define "empty" TTS symbols */
   m.attr("OfflineTtsKittenModelConfig") = py::none();
@@ -90,6 +92,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   m.attr("GeneratedAudio") = py::none();
   m.attr("OfflineTtsConfig") = py::none();
   m.attr("OfflineTts") = py::none();
+  m.attr("SentencePieceTokenizer") = py::none();
 #endif
 
   PybindSpeakerEmbeddingExtractor(&m);
