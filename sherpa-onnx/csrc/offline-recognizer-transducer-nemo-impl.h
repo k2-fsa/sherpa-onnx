@@ -18,11 +18,13 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-nemo-decoder.h"
+#include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-nemo-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-nemo-model.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
 #include "sherpa-onnx/csrc/utils.h"
+#include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
 
@@ -41,9 +43,29 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerNeMoModel>(
             config_.model_config)) {
+    
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+    
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty, model_->IsTDT());
+    } else if (config_.decoding_method == "modified_beam_search") {
+      // Initialize BPE encoder if provided
+      if (!config_.model_config.bpe_vocab.empty()) {
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
+            config_.model_config.bpe_vocab);
+      }
+
+      // Initialize hotwords if provided
+      if (!config_.hotwords_file.empty()) {
+        InitHotwords();
+      }
+
+      decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
+          model_.get(), config_.max_active_paths, unk_id_,
+          config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -60,9 +82,30 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerNeMoModel>(
             mgr, config_.model_config)) {
+    
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+    
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty, model_->IsTDT());
+    } else if (config_.decoding_method == "modified_beam_search") {
+      // Initialize BPE encoder if provided
+      if (!config_.model_config.bpe_vocab.empty()) {
+        auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
+        std::istringstream iss(std::string(buf.begin(), buf.end()));
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
+      }
+
+      // Initialize hotwords if provided
+      if (!config_.hotwords_file.empty()) {
+        InitHotwords(mgr);
+      }
+
+      decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchNeMoDecoder>(
+          model_.get(), config_.max_active_paths, unk_id_,
+          config_.blank_penalty, model_->IsTDT(), config_.hotwords_score);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -72,8 +115,46 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     PostInit();
   }
 
+  std::unique_ptr<OfflineStream> CreateStream(
+      const std::string &hotwords) const override {
+    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::istringstream is(hws);
+    std::vector<std::vector<int32_t>> current;
+    std::vector<float> current_scores;
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &current, &current_scores)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : '%s'",
+                       hotwords.c_str());
+    }
+
+    int32_t num_default_hws = hotwords_.size();
+    int32_t num_hws = current.size();
+
+    current.insert(current.end(), hotwords_.begin(), hotwords_.end());
+
+    if (!current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else if (!current_scores.empty() && boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_default_hws,
+                            config_.hotwords_score);
+    } else if (current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_hws,
+                            config_.hotwords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else {
+      // Do nothing.
+    }
+
+    auto context_graph = std::make_shared<ContextGraph>(
+        current, config_.hotwords_score, current_scores);
+    return std::make_unique<OfflineStream>(config_.feat_config, context_graph);
+  }
+
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(config_.feat_config);
+    return std::make_unique<OfflineStream>(config_.feat_config,
+                                           hotwords_graph_);
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
@@ -121,12 +202,19 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
 
-    auto results = decoder_->Decode(std::move(encoder_out), std::move(t[1]));
+    auto results = decoder_->Decode(std::move(encoder_out), std::move(t[1]),
+                                    ss, n);
 
     int32_t frame_shift_ms = 10;
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
+
+      // Remove leading space from BPE tokenization
+      if (!r.text.empty() && r.text.front() == ' ') {
+        r.text.erase(0, 1);
+      }
+
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       r.text = ApplyHomophoneReplacer(std::move(r.text));
 
@@ -188,11 +276,54 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     }
   }
 
+  void InitHotwords() {
+    // each line in hotwords_file contains space-separated words
+
+    std::ifstream is(config_.hotwords_file);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
+                       config_.hotwords_file.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Some hotwords failed to encode and were skipped. See above for "
+          "details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
+  template <typename Manager>
+  void InitHotwords(Manager *mgr) {
+    // each line in hotwords_file contains space-separated words
+
+    auto buf = ReadFile(mgr, config_.hotwords_file);
+
+    std::istringstream is(std::string(buf.begin(), buf.end()));
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+      SHERPA_ONNX_LOGE(
+          "Some hotwords failed to encode and were skipped. See above for "
+          "details.");
+    }
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
+  }
+
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
+  std::vector<std::vector<int32_t>> hotwords_;
+  std::vector<float> boost_scores_;
+  ContextGraphPtr hotwords_graph_;
+  std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
   std::unique_ptr<OfflineTransducerNeMoModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
+  int32_t unk_id_ = -1;
 };
 
 }  // namespace sherpa_onnx

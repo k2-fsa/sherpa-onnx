@@ -349,3 +349,50 @@ time $EXE \
   $repo/test_wavs/8k.wav
 
 rm -rf $repo
+
+log "------------------------------------------------------------"
+log "Run NeMo transducer (modified_beam_search + hotwords)"
+log "------------------------------------------------------------"
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-24500.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "Test NeMo transducer with modified_beam_search (no hotwords)"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --model-type=nemo_transducer \
+  --decoding-method=modified_beam_search \
+  --debug=1 \
+  $repo/test_wavs/en-english.wav
+
+log "Test NeMo transducer with modified_beam_search and hotwords"
+
+# Create hotwords file (BPE tokens for common English words)
+cat > $repo/hotwords.txt << EOF
+▁THE
+▁AND
+▁THAT
+EOF
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --model-type=nemo_transducer \
+  --decoding-method=modified_beam_search \
+  --hotwords-file=$repo/hotwords.txt \
+  --hotwords-score=1.5 \
+  --debug=1 \
+  $repo/test_wavs/en-english.wav
+
+rm -rf $repo
