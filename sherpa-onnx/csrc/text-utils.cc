@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <charconv>
 #include <codecvt>
 #include <cstdint>
+#include <cstdlib>
 #include <cwctype>
 #include <limits>
 #include <locale>
@@ -827,6 +829,39 @@ bool IsPunct(const std::string &s) {
       "。", "！", "？", "“", "”", "‘",  "’",
   };
   return puncts.count(s);
+}
+
+int32_t ToIntOrDefault(const std::string &s, int32_t default_value) {
+  int32_t value = default_value;
+  auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+
+  if (ec != std::errc() || ptr != s.data() + s.size()) {
+    return default_value;
+  }
+
+  return value;
+}
+
+float ToFloatOrDefault(const std::string &s, float default_value) {
+  if (s.empty()) {
+    return default_value;
+  }
+
+  char *end = nullptr;
+  errno = 0;
+  float value = std::strtof(s.c_str(), &end);
+
+  // No conversion or out of range
+  if (end == s.c_str() || errno == ERANGE) {
+    return default_value;
+  }
+
+  // Reject trailing garbage (optional but recommended)
+  if (*end != '\0') {
+    return default_value;
+  }
+
+  return value;
 }
 
 }  // namespace sherpa_onnx

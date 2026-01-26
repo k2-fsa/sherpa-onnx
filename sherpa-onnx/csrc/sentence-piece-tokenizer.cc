@@ -11,6 +11,15 @@
 #include <unordered_map>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -20,13 +29,38 @@ namespace sherpa_onnx {
 using json = nlohmann::json;
 static constexpr float kNegInf = -1e30f;
 
+static json LoadJson(const std::string &filename) {
+  if (filename.empty()) {
+    SHERPA_ONNX_LOGE("Empty json filename");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  AssertFileExists(filename);
+
+  std::ifstream is(filename);
+  json j;
+  is >> j;
+  return j;
+}
+
+static json LoadJson(const std::vector<char> &buf) {
+  if (buf.empty()) {
+    SHERPA_ONNX_LOGE("Empty json buffer");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  return json::parse(buf.begin(), buf.end());
+}
+
 class SentencePieceTokenizer::Impl {
  public:
   Impl(const std::string &vocab_json, const std::string &token_scores_json) {
-    InitVocabJson(vocab_json);
+    Init(LoadJson(vocab_json), LoadJson(token_scores_json));
+  }
 
-    InitTokenScores(token_scores_json);
-    InitTrie();
+  template <typename Manager>
+  Impl(Manager *mgr, const std::string &vocab_json,
+       const std::string &token_scores_json) {
+    Init(LoadJson(ReadFile(mgr, vocab_json)),
+         LoadJson(ReadFile(mgr, token_scores_json)));
   }
 
   std::vector<int32_t> EncodeIds(const std::string &text) const {
@@ -42,18 +76,27 @@ class SentencePieceTokenizer::Impl {
   }
 
  private:
-  void InitVocabJson(const std::string &filename) {
-    if (filename.empty()) {
-      SHERPA_ONNX_LOGE("Please provide vocab.json");
-      SHERPA_ONNX_EXIT(-1);
+  void Init(const json &vocab, const json &scores) {
+    InitVocabJson(vocab);
+    InitTokenScores(scores);
+
+    for (int i = 0; i < 256; ++i) {
+      byte_token_id_[i] = -1;
+      byte_token_score_[i] = kNegInf;
     }
-    AssertFileExists(filename);
 
-    std::ifstream is(filename);
+    InitTrie();
+  }
 
-    json j;
-    is >> j;
+  void InitVocabJson(const std::string &filename) {
+    InitVocabJson(LoadJson(filename));
+  }
 
+  void InitVocabJson(const std::vector<char> &buf) {
+    InitVocabJson(LoadJson(buf));
+  }
+
+  void InitVocabJson(const json &j) {
     token2id_.reserve(j.size());
     id2token_.resize(j.size());
 
@@ -64,15 +107,14 @@ class SentencePieceTokenizer::Impl {
   }
 
   void InitTokenScores(const std::string &filename) {
-    if (filename.empty()) {
-      SHERPA_ONNX_LOGE("Please provide token_scores.json");
-      SHERPA_ONNX_EXIT(-1);
-    }
-    AssertFileExists(filename);
+    InitTokenScores(LoadJson(filename));
+  }
 
-    std::ifstream is(filename);
-    json j;
-    is >> j;
+  void InitTokenScores(const std::vector<char> &buf) {
+    InitTokenScores(LoadJson(buf));
+  }
+
+  void InitTokenScores(const json &j) {
     token2score_.reserve(j.size());
 
     for (const auto &item : j.items()) {
@@ -182,8 +224,13 @@ class SentencePieceTokenizer::Impl {
       int32_t id = back_id[i];
       if (j <= i || id < 0) break;
 
-      if (ids) ids->push_back(id);
-      if (tokens) tokens->push_back(id2token_[id]);
+      if (ids != nullptr) {
+        ids->push_back(id);
+      }
+
+      if (tokens != nullptr) {
+        tokens->push_back(id2token_[id]);
+      }
 
       i = j;
     }
@@ -210,6 +257,12 @@ SentencePieceTokenizer::SentencePieceTokenizer(
     const std::string &vocab_json, const std::string &token_scores_json)
     : impl_(std::make_unique<Impl>(vocab_json, token_scores_json)) {}
 
+template <typename Manager>
+SentencePieceTokenizer::SentencePieceTokenizer(
+    Manager *mgr, const std::string &vocab_json,
+    const std::string &token_scores_json)
+    : impl_(std::make_unique<Impl>(mgr, vocab_json, token_scores_json)) {}
+
 SentencePieceTokenizer::~SentencePieceTokenizer() = default;
 
 std::vector<int32_t> SentencePieceTokenizer::EncodeIds(
@@ -221,5 +274,17 @@ std::vector<std::string> SentencePieceTokenizer::EncodeTokens(
     const std::string &text) const {
   return impl_->EncodeTokens(text);
 }
+
+#if __ANDROID_API__ >= 9
+template SentencePieceTokenizer::SentencePieceTokenizer(
+    AAssetManager *mgr, const std::string &vocab_json,
+    const std::string &token_scores_json);
+#endif
+
+#if __OHOS__
+template SentencePieceTokenizer::SentencePieceTokenizer(
+    NativeResourceManager *mgr, const std::string &vocab_json,
+    const std::string &token_scores_json);
+#endif
 
 }  // namespace sherpa_onnx

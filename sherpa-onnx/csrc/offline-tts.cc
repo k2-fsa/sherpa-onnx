@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include <cmath>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -89,6 +90,63 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   }
 
   return ans;
+}
+
+std::string GenerationConfig::GetExtraString(
+    const std::string &key, const std::string &def /*= ""*/) const {
+  auto it = extra.find(key);
+  return it == extra.end() ? def : it->second;
+}
+
+int32_t GenerationConfig::GetExtraInt(const std::string &key,
+                                      int32_t def) const {
+  auto it = extra.find(key);
+  if (it == extra.end()) {
+    return def;
+  }
+
+  return ToIntOrDefault(it->second, def);
+}
+
+float GenerationConfig::GetExtraFloat(const std::string &key, float def) const {
+  auto it = extra.find(key);
+  if (it == extra.end()) {
+    return def;
+  }
+
+  return ToFloatOrDefault(it->second, def);
+}
+
+std::string GenerationConfig::ToString() const {
+  std::ostringstream os;
+
+  os << "GenerationConfig(";
+  os << "silence_scale=" << silence_scale;
+  os << ", speed=" << speed;
+  os << ", sid=" << sid;
+  os << ", num_steps=" << num_steps;
+  os << ", reference_audio_len=" << reference_audio.size();
+  os << ", reference_sample_rate=" << reference_sample_rate;
+
+  if (!reference_text.empty()) {
+    os << ", reference_text=\"" << reference_text << "\"";
+  }
+
+  if (!extra.empty()) {
+    os << ", extra={";
+    std::string sep;
+
+    std::map<std::string, std::string> sorted(extra.begin(), extra.end());
+
+    for (const auto &kv : sorted) {
+      os << sep << kv.first << ": \"" << kv.second << "\"";
+      sep = ", ";
+    }
+    os << "}";
+  }
+
+  os << ")";
+  return os.str();
 }
 
 void OfflineTtsConfig::Register(ParseOptions *po) {
@@ -233,6 +291,32 @@ GeneratedAudio OfflineTts::Generate(
         "results!");
     return impl_->Generate(utf8_text, utf8_prompt_text, prompt_samples,
                            sample_rate, speed, num_steps, std::move(callback));
+  }
+#endif
+}
+
+GeneratedAudio OfflineTts::Generate(
+    const std::string &text, const GenerationConfig &config,
+    GeneratedAudioCallback callback /*= nullptr*/) const {
+#if !defined(_WIN32)
+  return impl_->Generate(text, config, std::move(callback));
+#else
+  if (IsUtf8(text)) {
+    return impl_->Generate(text, config, std::move(callback));
+  } else if (IsGB2312(text)) {
+    auto utf8_text = Gb2312ToUtf8(text);
+    static bool printed = false;
+    if (!printed) {
+      SHERPA_ONNX_LOGE(
+          "Detected GB2312 encoded string! Converting it to UTF8.");
+      printed = true;
+    }
+    return impl_->Generate(utf8_text, config, std::move(callback));
+  } else {
+    SHERPA_ONNX_LOGE(
+        "Non UTF8 encoded string is received. You would not get expected "
+        "results!");
+    return impl_->Generate(text, config, std::move(callback));
   }
 #endif
 }

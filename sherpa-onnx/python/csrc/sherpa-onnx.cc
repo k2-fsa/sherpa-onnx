@@ -84,6 +84,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 #else
   /* Define "empty" TTS symbols */
   m.attr("OfflineTtsKittenModelConfig") = py::none();
+  m.attr("OfflineTtsPocketModelConfig") = py::none();
   m.attr("OfflineTtsKokoroModelConfig") = py::none();
   m.attr("OfflineTtsMatchaModelConfig") = py::none();
   m.attr("OfflineTtsModelConfig") = py::none();

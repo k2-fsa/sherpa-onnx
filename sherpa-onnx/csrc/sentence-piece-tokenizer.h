@@ -16,6 +16,11 @@ class SentencePieceTokenizer {
  public:
   SentencePieceTokenizer(const std::string &vocab_json,
                          const std::string &token_scores_json);
+
+  template <typename Manager>
+  SentencePieceTokenizer(Manager *mgr, const std::string &vocab_json,
+                         const std::string &token_scores_json);
+
   ~SentencePieceTokenizer();
 
   std::vector<int32_t> EncodeIds(const std::string &text) const;
