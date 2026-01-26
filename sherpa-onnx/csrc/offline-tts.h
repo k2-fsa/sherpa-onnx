@@ -63,6 +63,21 @@ struct GeneratedAudio {
   GeneratedAudio ScaleSilence(float scale) const;
 };
 
+struct GenerationConfig {
+  float speed = 1.0f;
+  int32_t sid = 0;  // for multi-speaker models
+
+  // Zero-shot / voice cloning fields
+  //
+
+  std::vector<float> reference_audio;  // mono, [-1, 1]
+  int32_t reference_sample_rate = 0;   // sample rate of reference_audio
+  std::string reference_text;          // not all models require this
+  int32_t num_steps = 4;
+
+  std::map<std::string, std::string> extra;  // model specific
+};
+
 class OfflineTtsImpl;
 
 // If the callback returns 0, then it stops generating
@@ -113,6 +128,10 @@ class OfflineTts {
                           const std::vector<float> &prompt_samples,
                           int32_t sample_rate, float speed = 1.0,
                           int32_t num_steps = 4,
+                          GeneratedAudioCallback callback = nullptr) const;
+
+  GeneratedAudio Generate(const std::string &text,
+                          const GenerationConfig &config,
                           GeneratedAudioCallback callback = nullptr) const;
 
   // Return the sample rate of the generated audio
