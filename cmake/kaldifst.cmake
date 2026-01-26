@@ -29,7 +29,7 @@ function(download_kaldifst)
   set(KALDIFST_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
 
   FetchContent_Declare(kaldifst
-    URL               ${kaldifst_URL}
+    URL               ${kaldifst_URL} ${kaldifst_URL2}
     URL_HASH          ${kaldifst_HASH}
   )
 

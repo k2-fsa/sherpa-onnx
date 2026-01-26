@@ -57,9 +57,9 @@ class SentencePieceTokenizer::Impl {
     token2id_.reserve(j.size());
     id2token_.resize(j.size());
 
-    for (auto it = j.begin(); it != j.end(); ++it) {
-      token2id_[it.key()] = it.value();
-      id2token_[it.value()] = it.key();
+    for (const auto &item : j.items()) {
+      token2id_[item.key()] = item.value();
+      id2token_[item.value()] = item.key();
     }
   }
 
@@ -75,8 +75,8 @@ class SentencePieceTokenizer::Impl {
     is >> j;
     token2score_.reserve(j.size());
 
-    for (auto it = j.begin(); it != j.end(); ++it) {
-      token2score_[it.key()] = it.value();
+    for (const auto &item : j.items()) {
+      token2score_[item.key()] = item.value();
     }
   }
 
@@ -88,11 +88,11 @@ class SentencePieceTokenizer::Impl {
       const std::string &tok = kv.first;
       int32_t id = kv.second;
 
-      int node = 0;
+      int32_t node = 0;
       for (unsigned char c : tok) {
         auto it = trie_[node].next.find(c);
         if (it == trie_[node].next.end()) {
-          int new_node = trie_.size();
+          int32_t new_node = trie_.size();
           trie_[node].next[c] = new_node;
           trie_.push_back(TrieNode());
           node = new_node;
@@ -108,7 +108,7 @@ class SentencePieceTokenizer::Impl {
     // -------------------------
     // Byte fallback
     // -------------------------
-    for (int i = 0; i < 256; ++i) {
+    for (int32_t i = 0; i < 256; ++i) {
       char buf[8];
       std::snprintf(buf, sizeof(buf), "<0x%02X>", i);
       std::string tok(buf);
@@ -137,21 +137,21 @@ class SentencePieceTokenizer::Impl {
         text.push_back(c);
     }
 
-    if (text.rfind("\xE2\x96\x81", 0) != 0) {
+    if (text.rfind("\xE2\x96\x81", 0) == std::string::npos) {
       text.insert(0, "\xE2\x96\x81");
     }
 
-    const int n = static_cast<int>(text.size());
+    const int32_t n = static_cast<int32_t>(text.size());
     std::vector<float> dp(n + 1, kNegInf);
-    std::vector<int> back(n + 1, -1);
+    std::vector<int32_t> back(n + 1, -1);
     std::vector<int32_t> back_id(n + 1, -1);
 
     dp[n] = 0.0f;
 
     // DP
-    for (int i = n - 1; i >= 0; --i) {
-      int node = 0;
-      for (int j = i; j < n; ++j) {
+    for (int32_t i = n - 1; i >= 0; --i) {
+      int32_t node = 0;
+      for (int32_t j = i; j < n; ++j) {
         unsigned char c = static_cast<unsigned char>(text[j]);
         auto it = trie_[node].next.find(c);
         if (it == trie_[node].next.end()) break;
@@ -177,8 +177,8 @@ class SentencePieceTokenizer::Impl {
     }
 
     // reconstruct
-    for (int i = 0; i < n;) {
-      int j = back[i];
+    for (int32_t i = 0; i < n;) {
+      int32_t j = back[i];
       int32_t id = back_id[i];
       if (j <= i || id < 0) break;
 
@@ -191,7 +191,7 @@ class SentencePieceTokenizer::Impl {
 
  private:
   struct TrieNode {
-    std::unordered_map<unsigned char, int> next;
+    std::unordered_map<unsigned char, int32_t> next;
     int32_t token_id = -1;
     float score = 0.0f;
   };

@@ -26,7 +26,7 @@ function(download_json)
   endforeach()
 
   FetchContent_Declare(json
-    URL               ${json_URL}
+    URL               ${json_URL} ${json_URL2}
     URL_HASH          ${json_HASH}
   )
 
