@@ -8,11 +8,11 @@ function(download_json)
   # If you don't have access to the Internet,
   # please pre-download json
   set(possible_file_locations
-    $ENV{HOME}/Downloads/json-3.12.0.tar.gz2
-    ${CMAKE_SOURCE_DIR}/json-3.12.0.tar.gz2
-    ${CMAKE_BINARY_DIR}/json-3.12.0.tar.gz2
-    /tmp/json-3.12.0.tar.gz2
-    /star-fj/fangjun/download/github/json-3.12.0.tar.gz2
+    $ENV{HOME}/Downloads/json-3.12.0.tar.gz
+    ${CMAKE_SOURCE_DIR}/json-3.12.0.tar.gz
+    ${CMAKE_BINARY_DIR}/json-3.12.0.tar.gz
+    /tmp/json-3.12.0.tar.gz
+    /star-fj/fangjun/download/github/json-3.12.0.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
