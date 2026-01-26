@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
@@ -75,7 +76,7 @@ struct GenerationConfig {
   std::string reference_text;          // not all models require this
   int32_t num_steps = 4;
 
-  std::map<std::string, std::string> extra;  // model specific
+  std::unordered_map<std::string, std::string> extra;  // model specific
 };
 
 class OfflineTtsImpl;

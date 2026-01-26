@@ -16,6 +16,7 @@ void OfflineTtsModelConfig::Register(ParseOptions *po) {
   kokoro.Register(po);
   zipvoice.Register(po);
   kitten.Register(po);
+  pocket.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -51,6 +52,10 @@ bool OfflineTtsModelConfig::Validate() const {
 
   if (!kitten.model.empty()) {
     return kitten.Validate();
+  }
+
+  if (!pocket.lm_flow.empty()) {
+    return pocket.Validate();
   }
 
   SHERPA_ONNX_LOGE("Please provide exactly one tts model.");

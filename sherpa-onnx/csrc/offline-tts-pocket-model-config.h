@@ -1,0 +1,46 @@
+// sherpa-onnx/csrc/offline-tts-pocket-model-config.h
+//
+// Copyright (c)  2026  Xiaomi Corporation
+
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_MODEL_CONFIG_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_MODEL_CONFIG_H_
+
+#include <string>
+
+#include "sherpa-onnx/csrc/parse-options.h"
+
+namespace sherpa_onnx {
+
+struct OfflineTtsPocketModelConfig {
+  std::string lm_flow;
+  std::string lm_main;
+  std::string encoder;
+  std::string decoder;
+
+  std::string vocab_json;
+  std::string token_scores_json;
+
+  OfflineTtsPocketModelConfig() = default;
+
+  OfflineTtsPocketModelConfig(const std::string &lm_flow,
+                              const std::string &lm_main,
+                              const std::string &encoder,
+                              const std::string &decoder,
+                              const std::string &vocab_json,
+                              const std::string &token_scores_json)
+      : lm_flow(lm_flow),
+        lm_main(lm_main),
+        encoder(encoder),
+        decoder(decoder),
+        vocab_json(vocab_json),
+        token_scores_json(token_scores_json) {}
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
+
+  std::string ToString() const;
+};
+
+}  // namespace sherpa_onnx
+
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_MODEL_CONFIG_H_
