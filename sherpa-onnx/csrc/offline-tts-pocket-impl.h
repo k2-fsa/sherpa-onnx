@@ -156,6 +156,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
    *  - frames_after_eos, int, default 3
    *  - temperature, float, default 0.7
    *  - chunk_size, int, default 15
+   *  - max_reference_audio_len, float, default 10, in seconds
    */
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
@@ -393,6 +394,22 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     } else {
       p_audio = gen_config.reference_audio.data();
       num_samples = gen_config.reference_audio.size();
+    }
+
+    // in seconds
+    float max_reference_audio_len =
+        gen_config.GetExtraFloat("max_reference_audio_len", 10);
+
+    int32_t max_len =
+        static_cast<int32_t>(max_reference_audio_len * SampleRate());
+
+    if (num_samples > max_len) {
+      SHERPA_ONNX_LOGE(
+          "max_reference_audio_len is %.3f seconds. Given reference audio of "
+          "%.3f seconds. Only the first %.3f seconds are used",
+          max_reference_audio_len, num_samples * 1.0f / SampleRate(),
+          max_reference_audio_len);
+      num_samples = max_len;
     }
 
     auto memory_info =

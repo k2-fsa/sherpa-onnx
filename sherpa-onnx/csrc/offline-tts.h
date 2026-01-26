@@ -81,7 +81,7 @@ struct GenerationConfig {
   std::unordered_map<std::string, std::string> extra;
 
   std::string GetExtraString(const std::string &key,
-                             const std::string &def = "");
+                             const std::string &def = "") const;
 
   int32_t GetExtraInt(const std::string &key, int32_t def) const;
 
