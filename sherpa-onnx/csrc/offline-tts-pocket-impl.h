@@ -148,9 +148,22 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
   int32_t NumSpeakers() const override { return 1; }
 
+  /**
+   *
+   * Supported extra parameters:
+   *
+   *  - max_frames, int, default 500
+   *  - frames_after_eos, int, default 3
+   *  - temperature, float, default 0.7
+   *  - chunk_size, int, default 15
+   */
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
       GeneratedAudioCallback callback = nullptr) const override {
+    if (config_.model.debug) {
+      SHERPA_ONNX_LOGE("%s", gen_config.ToString().c_str());
+    }
+
     std::string text = _text;
     if (config_.model.debug) {
 #if __OHOS__
@@ -217,9 +230,9 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     std::array<int64_t, 3> cur_shape = {1, 1, 32};
 
     int32_t num_steps = gen_config.num_steps;
-    int32_t max_frames = 500;
-    int32_t frames_after_eos = 3;
-    float temperature = 0.7f;
+    int32_t max_frames = gen_config.GetExtraInt("max_frames", 500);
+    int32_t frames_after_eos = gen_config.GetExtraInt("frames_after_eos", 3);
+    float temperature = gen_config.GetExtraFloat("temperature", 0.7f);
     float stddev = std::sqrt(temperature);
 
     NormalDataGenerator normal_gen(0, stddev);
@@ -279,7 +292,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     auto decoder_state = model_->GetMimiDecoderInitState();
 
-    int32_t chunk_size = 15;
+    int32_t chunk_size = gen_config.GetExtraInt("chunk_size", 15);
 
     int32_t num_chunks = latent_list.size() / frame_size / chunk_size;
     std::array<int64_t, 3> chunk_shape = {1, chunk_size, frame_size};

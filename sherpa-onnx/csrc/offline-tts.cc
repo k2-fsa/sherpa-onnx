@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include <cmath>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -89,6 +90,63 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   }
 
   return ans;
+}
+
+std::string GenerationConfig::GetExtraString(
+    const std::string &key, const std::string &def /*= ""*/) const {
+  auto it = extra.find(key);
+  return it == extra.end() ? def : it->second;
+}
+
+int32_t GenerationConfig::GetExtraInt(const std::string &key,
+                                      int32_t def) const {
+  auto it = extra.find(key);
+  if (it == extra.end()) {
+    return def;
+  }
+
+  return ToIntOrDefault(it->second, def);
+}
+
+float GenerationConfig::GetExtraFloat(const std::string &key, float def) const {
+  auto it = extra.find(key);
+  if (it == extra.end()) {
+    return def;
+  }
+
+  return ToFloatOrDefault(it->second, def);
+}
+
+std::string GenerationConfig::ToString() const {
+  std::ostringstream os;
+
+  os << "GenerationConfig(";
+  os << "silence_scale=" << silence_scale;
+  os << ", speed=" << speed;
+  os << ", sid=" << sid;
+  os << ", num_steps=" << num_steps;
+  os << ", reference_audio_len=" << reference_audio.size();
+  os << ", reference_sample_rate=" << reference_sample_rate;
+
+  if (!reference_text.empty()) {
+    os << ", reference_text=\"" << reference_text << "\"";
+  }
+
+  if (!extra.empty()) {
+    os << ", extra={";
+    std::string sep;
+
+    std::map<std::string, std::string> sorted(extra.begin(), extra.end());
+
+    for (const auto &kv : sorted) {
+      os << sep << kv.first << ": \"" << kv.second << "\"";
+      sep = ", ";
+    }
+    os << "}";
+  }
+
+  os << ")";
+  return os.str();
 }
 
 void OfflineTtsConfig::Register(ParseOptions *po) {
