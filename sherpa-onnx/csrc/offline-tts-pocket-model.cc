@@ -327,8 +327,8 @@ class OfflineTtsPocketModel::Impl {
           env_, model_data, model_data_length, sess_opts_);
     } else if (!text_conditioner_sess_) {
       SHERPA_ONNX_LOGE(
-          "Please pass buffer data or initialize mimi decoder session outside "
-          "of this function");
+          "Please pass buffer data or initialize text conditioner session "
+          "outside of this function");
       SHERPA_ONNX_EXIT(-1);
     }
 
