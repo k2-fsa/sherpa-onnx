@@ -329,7 +329,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
       if (callback) {
         should_continue =
-            callback(out.GetTensorData<float>(), n, (i + 1) * 1.0 / num_chunks);
+            callback(out.GetTensorData<float>(), n,
+                     (i + 1) * 1.0 / (num_chunks + !!remaining_chunks));
         // Caution(fangjun): out is freed when the callback returns, so users
         // should copy the data if they want to access the data after
         // the callback returns to avoid segmentation fault.
