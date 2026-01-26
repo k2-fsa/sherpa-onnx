@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -52,6 +53,12 @@ or details.
   po.Register(
       "reference-audio", &reference_audio,
       "Path to reference audio if you are using a TTS model supporting that");
+
+  sherpa_onnx::GenerationConfig gen_config;
+
+  po.Register(
+      "num-steps", &gen_config.num_steps,
+      "Used by some models, e.g., PocketTTS. Number of flow matching steps");
 
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
@@ -108,7 +115,6 @@ or details.
       exit(EXIT_FAILURE);
     }
 
-    sherpa_onnx::GenerationConfig gen_config;
     gen_config.reference_audio = std::move(samples);
     gen_config.reference_sample_rate = sample_rate;
 

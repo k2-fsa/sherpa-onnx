@@ -4,7 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
 
+#include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -230,6 +232,8 @@ class OfflineTtsPocketModel::Impl {
     return {std::move(outputs[0]), std::move(new_state)};
   }
 
+  OrtAllocator *Allocator() { return allocator_; }
+
  private:
   void InitLmFlow(void *model_data, size_t model_data_length) {
     if (model_data) {
@@ -428,6 +432,10 @@ std::pair<Ort::Value, PocketMimiDecoderState>
 OfflineTtsPocketModel::RunMimiDecoder(Ort::Value latent,
                                       PocketMimiDecoderState state) const {
   return impl_->RunMimiDecoder(std::move(latent), std::move(state));
+}
+
+OrtAllocator *OfflineTtsPocketModel::Allocator() const {
+  return impl_->Allocator();
 }
 
 #if __ANDROID_API__ >= 9

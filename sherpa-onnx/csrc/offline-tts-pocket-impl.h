@@ -4,11 +4,15 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
 
+#include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <ios>
+#include <limits>
 #include <memory>
 #include <string>
 #include <strstream>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -16,15 +20,13 @@
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/offline-tts-frontend.h"
+#include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/normal-data-generator.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
-#include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/sentence-piece-tokenizer.h"
-#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -185,139 +187,154 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       }
     }
 
-    std::vector<int32_t> token_ids = tokenizer_->EncodeIds(text);
-    if (config_.model.debug) {
-      std::ostringstream os;
-      os << "\ntoken_ids (len=" << token_ids.size() << "): ";
-      for (auto i : token_ids) {
-        os << i << " ";
-      }
-      os << "\n";
-
-      auto tokens = tokenizer_->EncodeTokens(text);
-      os << "tokens (len=" << tokens.size() << "):";
-      for (const auto &t : tokens) {
-        os << t << " ";
-      }
-      os << "\n";
-
-      SHERPA_ONNX_LOGE("%s", os.str().c_str());
-    }
-
     Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
-    auto shape = voice_embedding.GetTensorTypeAndShapeInfo().GetShape();
-    for (int32_t i : shape) {
-      SHERPA_ONNX_LOGE("%d", (int32_t)i);
+    Ort::Value text_embedding = GetTextEmbedding(text);
+
+    auto lm_main_state = model_->GetLmMainInitState();
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    {
+      std::array<int64_t, 3> empty_seq_shape = {1, 0, 32};
+
+      Ort::Value empty_seq_tensor = Ort::Value::CreateTensor<float>(
+          memory_info, nullptr, 0, empty_seq_shape.data(),
+          empty_seq_shape.size());
+
+      // voice conditioning
+      // discard the return result
+      RunLmMain(View(&empty_seq_tensor), std::move(voice_embedding),
+                lm_main_state);
+
+      // text conditioning
+      // discard the return result
+      RunLmMain(std::move(empty_seq_tensor), std::move(text_embedding),
+                lm_main_state);
     }
 
-#if 0
-    std::vector<TokenIDs> token_ids =
-        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
+    std::vector<float> cur(1 * 1 * 32, std::numeric_limits<float>::quiet_NaN());
+    std::array<int64_t, 3> cur_shape = {1, 1, 32};
 
-    if (token_ids.empty() ||
-        (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
-                       text.c_str());
-#else
-      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
-#endif
-      return {};
+    int32_t num_steps = gen_config.num_steps;
+    int32_t max_frames = 500;
+    int32_t frames_after_eos = 3;
+    float temperature = 0.7f;
+    float stddev = std::sqrt(temperature);
+
+    NormalDataGenerator normal_gen(0, stddev);
+    std::vector<float> noise(32, 0);
+    std::array<int64_t, 2> noise_shape = {1, 32};
+
+    Ort::Value noise_tensor =
+        Ort::Value::CreateTensor(memory_info, noise.data(), noise.size(),
+                                 noise_shape.data(), noise_shape.size());
+
+    std::array<int64_t, 3> empty_text_shape = {1, 0, 1024};
+
+    Ort::Value empty_text_tensor = Ort::Value::CreateTensor<float>(
+        memory_info, nullptr, 0, empty_text_shape.data(),
+        empty_text_shape.size());
+
+    Ort::Value conditioning;
+    Ort::Value eos_logit;
+
+    std::vector<float> latent_list;
+    int32_t eos_step = -1;
+    int32_t frame_size = -1;
+    for (int32_t step = 0; step < max_frames; ++step) {
+      Ort::Value cur_tensor =
+          Ort::Value::CreateTensor(memory_info, cur.data(), cur.size(),
+                                   cur_shape.data(), cur_shape.size());
+
+      std::tie(conditioning, eos_logit) = RunLmMain(
+          std::move(cur_tensor), View(&empty_text_tensor), lm_main_state);
+      const float *p_logit = eos_logit.GetTensorData<float>();
+
+      if (eos_step < 0 && p_logit[0] > -4) {
+        eos_step = step;
+      }
+
+      if (eos_step > 0 && (step >= eos_step + frames_after_eos)) {
+        break;
+      }
+
+      normal_gen.Fill(noise.data(), noise.size());
+
+      Ort::Value latent =
+          RunLmFlow(std::move(conditioning), View(&noise_tensor), num_steps);
+
+      auto n = latent.GetTensorTypeAndShapeInfo().GetShape().back();
+      if (frame_size == -1) {
+        frame_size = n;
+      }
+
+      cur = {latent.GetTensorData<float>(), latent.GetTensorData<float>() + n};
+
+      latent_list.insert(latent_list.end(), latent.GetTensorData<float>(),
+                         latent.GetTensorData<float>() + n);
     }
 
-    std::vector<std::vector<int64_t>> x;
+    lm_main_state.values.clear();
 
-    x.reserve(token_ids.size());
+    auto decoder_state = model_->GetMimiDecoderInitState();
 
-    for (auto &i : token_ids) {
-      x.push_back(std::move(i.tokens));
-    }
+    int32_t chunk_size = 15;
 
-    int32_t x_size = static_cast<int32_t>(x.size());
+    int32_t num_chunks = latent_list.size() / frame_size / chunk_size;
+    std::array<int64_t, 3> chunk_shape = {1, chunk_size, frame_size};
 
-    if (config_.max_num_sentences != 1) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE(
-          "max_num_sentences (%{public}d) != 1 is ignored for Pocket TTS "
-          "models",
-          config_.max_num_sentences);
-#else
-      SHERPA_ONNX_LOGE(
-          "max_num_sentences (%d) != 1 is ignored for Pocket TTS models",
-          config_.max_num_sentences);
-#endif
-    }
+    std::vector<float> audio_list;
 
-    // the input text is too long, we process sentences within it in batches
-    // to avoid OOM. Batch size is config_.max_num_sentences
-    std::vector<std::vector<int64_t>> batch_x;
+    bool should_continue = true;
 
-    int32_t batch_size = 1;
-    batch_x.reserve(batch_size);
-    int32_t num_batches = x_size / batch_size;
+    int32_t remaining_chunks =
+        (latent_list.size() - num_chunks * chunk_size * frame_size) /
+        frame_size;
 
-    if (config_.model.debug) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE(
-          "Split it into %{public}d batches. batch size: "
-          "%{public}d. Number of sentences: %{public}d",
-          num_batches, batch_size, x_size);
-#else
-      SHERPA_ONNX_LOGE(
-          "Split it into %d batches. batch size: %d. Number "
-          "of sentences: %d",
-          num_batches, batch_size, x_size);
-#endif
+    const float *p = latent_list.data();
+    for (int32_t i = 0;
+         (p < latent_list.data() + latent_list.size()) && should_continue;
+         ++i) {
+      int32_t this_chunk_size = chunk_size;
+      if (i >= num_chunks) {
+        this_chunk_size = remaining_chunks;
+      }
+
+      chunk_shape[1] = this_chunk_size;
+
+      Ort::Value chunk_tensor = Ort::Value::CreateTensor(
+          memory_info, const_cast<float *>(p), this_chunk_size * frame_size,
+          chunk_shape.data(), chunk_shape.size());
+
+      p += this_chunk_size * frame_size;
+
+      Ort::Value out = RunMimiDecoder(std::move(chunk_tensor), decoder_state);
+
+      auto n = out.GetTensorTypeAndShapeInfo().GetShape().back();
+
+      if (callback) {
+        should_continue =
+            callback(out.GetTensorData<float>(), n, (i + 1) * 1.0 / num_chunks);
+        // Caution(fangjun): out is freed when the callback returns, so users
+        // should copy the data if they want to access the data after
+        // the callback returns to avoid segmentation fault.
+      }
+
+      audio_list.insert(audio_list.end(), out.GetTensorData<float>(),
+                        out.GetTensorData<float>() + n);
     }
 
     GeneratedAudio ans;
+    ans.sample_rate = SampleRate();
+    ans.samples = std::move(audio_list);
 
-    int32_t should_continue = 1;
-
-    int32_t k = 0;
-
-    for (int32_t b = 0; b != num_batches && should_continue; ++b) {
-      batch_x.clear();
-      for (int32_t i = 0; i != batch_size; ++i, ++k) {
-        batch_x.push_back(std::move(x[k]));
-      }
-
-      auto audio = Process(batch_x, sid, speed);
-      ans.sample_rate = audio.sample_rate;
-      ans.samples.insert(ans.samples.end(), audio.samples.begin(),
-                         audio.samples.end());
-      if (callback) {
-        should_continue = callback(audio.samples.data(), audio.samples.size(),
-                                   (b + 1) * 1.0 / num_batches);
-        // Caution(fangjun): audio is freed when the callback returns, so users
-        // should copy the data if they want to access the data after
-        // the callback returns to avoid segmentation fault.
-      }
-    }
-
-    batch_x.clear();
-    while (k < static_cast<int32_t>(x.size()) && should_continue) {
-      batch_x.push_back(std::move(x[k]));
-
-      ++k;
-    }
-
-    if (!batch_x.empty()) {
-      auto audio = Process(batch_x, sid, speed);
-      ans.sample_rate = audio.sample_rate;
-      ans.samples.insert(ans.samples.end(), audio.samples.begin(),
-                         audio.samples.end());
-      if (callback) {
-        callback(audio.samples.data(), audio.samples.size(), 1.0);
-        // Caution(fangjun): audio is freed when the callback returns, so users
-        // should copy the data if they want to access the data after
-        // the callback returns to avoid segmentation fault.
-      }
+    float silence_scale = gen_config.silence_scale;
+    if (silence_scale != 1) {
+      ans = ans.ScaleSilence(silence_scale);
     }
 
     return ans;
-#endif
-    return {};
   }
 
  private:
@@ -340,11 +357,11 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     const float *p_audio;
     int32_t num_samples;
     if (gen_config.reference_sample_rate != SampleRate()) {
-      fprintf(stderr,
-              "Creating a resampler:\n"
-              "   in_sample_rate: %d\n"
-              "   output_sample_rate: %d\n",
-              gen_config.reference_sample_rate, SampleRate());
+      SHERPA_ONNX_LOGE(
+          "Creating a resampler:\n"
+          "   in_sample_rate: %d\n"
+          "   output_sample_rate: %d",
+          gen_config.reference_sample_rate, SampleRate());
 
       float min_freq =
           std::min<int32_t>(gen_config.reference_sample_rate, SampleRate());
@@ -373,6 +390,99 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         Ort::Value::CreateTensor(memory_info, const_cast<float *>(p_audio),
                                  num_samples, shape.data(), shape.size());
     return model_->RunMimiEncoder(std::move(x));
+  }
+
+  Ort::Value GetTextEmbedding(const std::string &text) const {
+    std::vector<int32_t> token_ids = tokenizer_->EncodeIds(text);
+    if (config_.model.debug) {
+      std::ostringstream os;
+      os << "\ntoken_ids (len=" << token_ids.size() << "): ";
+      for (auto i : token_ids) {
+        os << i << " ";
+      }
+      os << "\n";
+
+      auto tokens = tokenizer_->EncodeTokens(text);
+      os << "tokens (len=" << tokens.size() << "):";
+      for (const auto &t : tokens) {
+        os << t << " ";
+      }
+
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    }
+
+    std::vector<int64_t> token_ids_i64 = {token_ids.begin(), token_ids.end()};
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 2> shape = {1,
+                                    static_cast<int64_t>(token_ids_i64.size())};
+
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, token_ids_i64.data(),
+                                            token_ids_i64.size(), shape.data(),
+                                            shape.size());
+    return model_->RunTextConditioner(std::move(x));
+  }
+
+  // state is changed in-place
+  std::pair<Ort::Value, Ort::Value> RunLmMain(Ort::Value seq,
+                                              Ort::Value embedding,
+                                              PocketLmMainState &state) const {
+    std::tuple<Ort::Value, Ort::Value, PocketLmMainState> output =
+        model_->RunLmMain(std::move(seq), std::move(embedding),
+                          std::move(state));
+
+    state = std::move(std::get<2>(output));
+
+    return {std::move(std::get<0>(output)), std::move(std::get<1>(output))};
+  }
+
+  Ort::Value RunLmFlow(Ort::Value conditioning, Ort::Value noise,
+                       int32_t num_steps) const {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    Ort::Value x = Clone(model_->Allocator(), &noise);
+
+    std::array<int64_t, 2> shape = {1, 1};
+
+    float dt = 1.0f / static_cast<float>(num_steps);
+
+    float s = 0;
+    float t = 0;
+
+    Ort::Value s_tensor = Ort::Value::CreateTensor(memory_info, &s, 1,
+                                                   shape.data(), shape.size());
+
+    Ort::Value t_tensor = Ort::Value::CreateTensor(memory_info, &t, 1,
+                                                   shape.data(), shape.size());
+
+    for (int32_t i = 0; i < num_steps; ++i) {
+      s = static_cast<float>(i) / static_cast<float>(num_steps);
+      t = s + dt;
+
+      Ort::Value out = model_->RunLmFlow(View(&conditioning), View(&s_tensor),
+                                         View(&t_tensor), View(&x));
+
+      auto n = out.GetTensorTypeAndShapeInfo().GetShape().back();
+
+      ScaleAdd(out.GetTensorData<float>(), dt, n,
+               x.GetTensorMutableData<float>());
+    }
+
+    return std::move(x);
+  }
+
+  // state is changed in-place
+  Ort::Value RunMimiDecoder(Ort::Value latent,
+                            PocketMimiDecoderState &state) const {
+    std::pair<Ort::Value, PocketMimiDecoderState> output =
+        model_->RunMimiDecoder(std::move(latent), std::move(state));
+
+    state = std::move(output.second);
+
+    return std::move(output.first);
   }
 
  private:

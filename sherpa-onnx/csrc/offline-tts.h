@@ -67,6 +67,7 @@ struct GeneratedAudio {
 struct GenerationConfig {
   float speed = 1.0f;
   int32_t sid = 0;  // for multi-speaker models
+  float silence_scale = 0.2;
 
   // Zero-shot / voice cloning fields
   //
@@ -74,7 +75,7 @@ struct GenerationConfig {
   std::vector<float> reference_audio;  // mono, [-1, 1]
   int32_t reference_sample_rate = 0;   // sample rate of reference_audio
   std::string reference_text;          // not all models require this
-  int32_t num_steps = 4;
+  int32_t num_steps = 20;              // number of steps in flow matching
 
   std::unordered_map<std::string, std::string> extra;  // model specific
 };

@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_MODEL_H_
 
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -56,6 +57,8 @@ class OfflineTtsPocketModel {
 
   std::pair<Ort::Value, PocketMimiDecoderState> RunMimiDecoder(
       Ort::Value latent, PocketMimiDecoderState state) const;
+
+  OrtAllocator *Allocator() const;
 
  private:
   class Impl;
