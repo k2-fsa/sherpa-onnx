@@ -16,6 +16,7 @@ struct OfflineTtsPocketModelConfig {
   std::string lm_main;
   std::string encoder;
   std::string decoder;
+  std::string text_conditioner;
 
   std::string vocab_json;
   std::string token_scores_json;
@@ -26,12 +27,14 @@ struct OfflineTtsPocketModelConfig {
                               const std::string &lm_main,
                               const std::string &encoder,
                               const std::string &decoder,
+                              const std::string &text_conditioner,
                               const std::string &vocab_json,
                               const std::string &token_scores_json)
       : lm_flow(lm_flow),
         lm_main(lm_main),
         encoder(encoder),
         decoder(decoder),
+        text_conditioner(text_conditioner),
         vocab_json(vocab_json),
         token_scores_json(token_scores_json) {}
 

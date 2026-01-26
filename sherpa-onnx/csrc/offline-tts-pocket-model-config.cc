@@ -17,6 +17,8 @@ void OfflineTtsPocketModelConfig::Register(ParseOptions *po) {
   po->Register("pocket-lm-main", &lm_main, "Path to PocketTTS lm main model");
   po->Register("pocket-encoder", &encoder, "Path to PocketTTS encoder model");
   po->Register("pocket-decoder", &decoder, "Path to PocketTTS decoder model");
+  po->Register("pocket-text-conditioner", &decoder,
+               "Path to PocketTTS text conditioner model");
   po->Register("pocket-vocab-json", &vocab_json,
                "Path to PocketTTS vocab.json");
   po->Register("pocket-token-scores-json", &token_scores_json,
@@ -64,6 +66,17 @@ bool OfflineTtsPocketModelConfig::Validate() const {
     return false;
   }
 
+  if (text_conditioner.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --pocket-text-conditioner");
+    return false;
+  }
+
+  if (!FileExists(text_conditioner)) {
+    SHERPA_ONNX_LOGE("--pocket-text-conditioner '%s' does not exist",
+                     text_conditioner.c_str());
+    return false;
+  }
+
   if (vocab_json.empty()) {
     SHERPA_ONNX_LOGE("Please provide --pocket-vocab-json");
     return false;
@@ -97,6 +110,7 @@ std::string OfflineTtsPocketModelConfig::ToString() const {
   os << "lm_main=\"" << lm_main << "\", ";
   os << "encoder=\"" << encoder << "\", ";
   os << "decoder=\"" << decoder << "\", ";
+  os << "text_conditioner=\"" << text_conditioner << "\", ";
   os << "vocab_json=\"" << vocab_json << "\", ";
   os << "token_scores_json=\"" << token_scores_json << "\")";
 
