@@ -78,6 +78,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model-config.cc
     offline-tts-zipvoice-model-config.cc
     offline-tts.cc
+    sentence-piece-tokenizer.cc
   )
 endif()
 

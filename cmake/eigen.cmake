@@ -29,7 +29,7 @@ function(download_eigen)
   set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
 
   FetchContent_Declare(eigen
-    URL               ${eigen_URL}
+    URL               ${eigen_URL} ${eigen_URL2}
     URL_HASH          ${eigen_HASH}
   )
 
