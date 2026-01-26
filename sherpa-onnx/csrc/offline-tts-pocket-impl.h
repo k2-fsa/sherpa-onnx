@@ -1,0 +1,386 @@
+// sherpa-onnx/csrc/offline-tts-pocket-impl.h
+//
+// Copyright (c)  2026  Xiaomi Corporation
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
+
+#include <iomanip>
+#include <ios>
+#include <memory>
+#include <string>
+#include <strstream>
+#include <utility>
+#include <vector>
+
+#include "fst/extensions/far/far.h"
+#include "kaldifst/csrc/kaldi-fst-io.h"
+#include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/lexicon.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-frontend.h"
+#include "sherpa-onnx/csrc/offline-tts-impl.h"
+#include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
+#include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
+#include "sherpa-onnx/csrc/resample.h"
+#include "sherpa-onnx/csrc/sentence-piece-tokenizer.h"
+#include "sherpa-onnx/csrc/text-utils.h"
+
+namespace sherpa_onnx {
+
+class OfflineTtsPocketImpl : public OfflineTtsImpl {
+ public:
+  explicit OfflineTtsPocketImpl(const OfflineTtsConfig &config)
+      : config_(config),
+        model_(std::make_unique<OfflineTtsPocketModel>(config.model)) {
+    InitTokenizer();
+
+    if (!config.rule_fsts.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fsts, ",", false, &files);
+      tn_list_.reserve(files.size());
+      for (const auto &f : files) {
+        if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+#endif
+        }
+        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
+      }
+    }
+
+    if (!config.rule_fars.empty()) {
+      if (config.model.debug) {
+        SHERPA_ONNX_LOGE("Loading FST archives");
+      }
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fars, ",", false, &files);
+
+      tn_list_.reserve(files.size() + tn_list_.size());
+
+      for (const auto &f : files) {
+        if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+#endif
+        }
+        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+            fst::FarReader<fst::StdArc>::Open(f));
+        for (; !reader->Done(); reader->Next()) {
+          std::unique_ptr<fst::StdConstFst> r(
+              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+          tn_list_.push_back(
+              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+        }
+      }
+
+      if (config.model.debug) {
+        SHERPA_ONNX_LOGE("FST archives loaded!");
+      }
+    }
+  }
+
+  template <typename Manager>
+  OfflineTtsPocketImpl(Manager *mgr, const OfflineTtsConfig &config)
+      : config_(config),
+        model_(std::make_unique<OfflineTtsPocketModel>(mgr, config.model)) {
+    InitTokenizer(mgr);
+
+    if (!config.rule_fsts.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fsts, ",", false, &files);
+      tn_list_.reserve(files.size());
+      for (const auto &f : files) {
+        if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+#endif
+        }
+        auto buf = ReadFile(mgr, f);
+        std::istrstream is(buf.data(), buf.size());
+        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
+      }
+    }
+
+    if (!config.rule_fars.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fars, ",", false, &files);
+      tn_list_.reserve(files.size() + tn_list_.size());
+
+      for (const auto &f : files) {
+        if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+#endif
+        }
+
+        auto buf = ReadFile(mgr, f);
+
+        std::unique_ptr<std::istream> s(
+            new std::istrstream(buf.data(), buf.size()));
+
+        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+            fst::FarReader<fst::StdArc>::Open(std::move(s)));
+
+        for (; !reader->Done(); reader->Next()) {
+          std::unique_ptr<fst::StdConstFst> r(
+              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+          tn_list_.push_back(
+              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+        }  // for (; !reader->Done(); reader->Next())
+      }  // for (const auto &f : files)
+    }  // if (!config.rule_fars.empty())
+  }
+
+  int32_t SampleRate() const override { return 24000; }
+
+  int32_t NumSpeakers() const override { return 1; }
+
+  GeneratedAudio Generate(
+      const std::string &_text, const GenerationConfig &gen_config,
+      GeneratedAudioCallback callback = nullptr) const override {
+    std::string text = _text;
+    if (config_.model.debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Raw text: %{public}s", text.c_str());
+#else
+      SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
+#endif
+      std::ostringstream os;
+      os << "In bytes (hex):\n";
+      const auto p = reinterpret_cast<const uint8_t *>(text.c_str());
+      for (int32_t i = 0; i != text.size(); ++i) {
+        os << std::setw(2) << std::setfill('0') << std::hex
+           << static_cast<uint32_t>(p[i]) << " ";
+      }
+      os << "\n";
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+    }
+
+    if (!tn_list_.empty()) {
+      for (const auto &tn : tn_list_) {
+        text = tn->Normalize(text);
+        if (config_.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("After normalizing: %{public}s", text.c_str());
+#else
+          SHERPA_ONNX_LOGE("After normalizing: %s", text.c_str());
+#endif
+        }
+      }
+    }
+
+    std::vector<int32_t> token_ids = tokenizer_->EncodeIds(text);
+    if (config_.model.debug) {
+      std::ostringstream os;
+      os << "\ntoken_ids (len=" << token_ids.size() << "): ";
+      for (auto i : token_ids) {
+        os << i << " ";
+      }
+      os << "\n";
+
+      auto tokens = tokenizer_->EncodeTokens(text);
+      os << "tokens (len=" << tokens.size() << "):";
+      for (const auto &t : tokens) {
+        os << t << " ";
+      }
+      os << "\n";
+
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    }
+
+    Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
+    auto shape = voice_embedding.GetTensorTypeAndShapeInfo().GetShape();
+    for (int32_t i : shape) {
+      SHERPA_ONNX_LOGE("%d", (int32_t)i);
+    }
+
+#if 0
+    std::vector<TokenIDs> token_ids =
+        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
+
+    if (token_ids.empty() ||
+        (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
+                       text.c_str());
+#else
+      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
+#endif
+      return {};
+    }
+
+    std::vector<std::vector<int64_t>> x;
+
+    x.reserve(token_ids.size());
+
+    for (auto &i : token_ids) {
+      x.push_back(std::move(i.tokens));
+    }
+
+    int32_t x_size = static_cast<int32_t>(x.size());
+
+    if (config_.max_num_sentences != 1) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "max_num_sentences (%{public}d) != 1 is ignored for Pocket TTS "
+          "models",
+          config_.max_num_sentences);
+#else
+      SHERPA_ONNX_LOGE(
+          "max_num_sentences (%d) != 1 is ignored for Pocket TTS models",
+          config_.max_num_sentences);
+#endif
+    }
+
+    // the input text is too long, we process sentences within it in batches
+    // to avoid OOM. Batch size is config_.max_num_sentences
+    std::vector<std::vector<int64_t>> batch_x;
+
+    int32_t batch_size = 1;
+    batch_x.reserve(batch_size);
+    int32_t num_batches = x_size / batch_size;
+
+    if (config_.model.debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "Split it into %{public}d batches. batch size: "
+          "%{public}d. Number of sentences: %{public}d",
+          num_batches, batch_size, x_size);
+#else
+      SHERPA_ONNX_LOGE(
+          "Split it into %d batches. batch size: %d. Number "
+          "of sentences: %d",
+          num_batches, batch_size, x_size);
+#endif
+    }
+
+    GeneratedAudio ans;
+
+    int32_t should_continue = 1;
+
+    int32_t k = 0;
+
+    for (int32_t b = 0; b != num_batches && should_continue; ++b) {
+      batch_x.clear();
+      for (int32_t i = 0; i != batch_size; ++i, ++k) {
+        batch_x.push_back(std::move(x[k]));
+      }
+
+      auto audio = Process(batch_x, sid, speed);
+      ans.sample_rate = audio.sample_rate;
+      ans.samples.insert(ans.samples.end(), audio.samples.begin(),
+                         audio.samples.end());
+      if (callback) {
+        should_continue = callback(audio.samples.data(), audio.samples.size(),
+                                   (b + 1) * 1.0 / num_batches);
+        // Caution(fangjun): audio is freed when the callback returns, so users
+        // should copy the data if they want to access the data after
+        // the callback returns to avoid segmentation fault.
+      }
+    }
+
+    batch_x.clear();
+    while (k < static_cast<int32_t>(x.size()) && should_continue) {
+      batch_x.push_back(std::move(x[k]));
+
+      ++k;
+    }
+
+    if (!batch_x.empty()) {
+      auto audio = Process(batch_x, sid, speed);
+      ans.sample_rate = audio.sample_rate;
+      ans.samples.insert(ans.samples.end(), audio.samples.begin(),
+                         audio.samples.end());
+      if (callback) {
+        callback(audio.samples.data(), audio.samples.size(), 1.0);
+        // Caution(fangjun): audio is freed when the callback returns, so users
+        // should copy the data if they want to access the data after
+        // the callback returns to avoid segmentation fault.
+      }
+    }
+
+    return ans;
+#endif
+    return {};
+  }
+
+ private:
+  template <typename Manager>
+  void InitTokenizer(Manager *mgr) {
+    tokenizer_ = std::make_unique<SentencePieceTokenizer>(
+        mgr, config_.model.pocket.vocab_json,
+        config_.model.pocket.token_scores_json);
+  }
+
+  void InitTokenizer() {
+    tokenizer_ = std::make_unique<SentencePieceTokenizer>(
+        config_.model.pocket.vocab_json,
+        config_.model.pocket.token_scores_json);
+  }
+
+  Ort::Value GetVoiceEmbedding(const GenerationConfig &gen_config) const {
+    std::vector<float> reference_audio;
+
+    const float *p_audio;
+    int32_t num_samples;
+    if (gen_config.reference_sample_rate != SampleRate()) {
+      fprintf(stderr,
+              "Creating a resampler:\n"
+              "   in_sample_rate: %d\n"
+              "   output_sample_rate: %d\n",
+              gen_config.reference_sample_rate, SampleRate());
+
+      float min_freq =
+          std::min<int32_t>(gen_config.reference_sample_rate, SampleRate());
+      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
+
+      int32_t lowpass_filter_width = 6;
+      auto resampler = std::make_unique<sherpa_onnx::LinearResample>(
+          gen_config.reference_sample_rate, SampleRate(), lowpass_cutoff,
+          lowpass_filter_width);
+
+      resampler->Resample(gen_config.reference_audio.data(),
+                          gen_config.reference_audio.size(), true,
+                          &reference_audio);
+      p_audio = reference_audio.data();
+      num_samples = reference_audio.size();
+    } else {
+      p_audio = gen_config.reference_audio.data();
+      num_samples = gen_config.reference_audio.size();
+    }
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 3> shape = {1, 1, num_samples};
+    Ort::Value x =
+        Ort::Value::CreateTensor(memory_info, const_cast<float *>(p_audio),
+                                 num_samples, shape.data(), shape.size());
+    return model_->RunMimiEncoder(std::move(x));
+  }
+
+ private:
+  OfflineTtsConfig config_;
+  std::unique_ptr<OfflineTtsPocketModel> model_;
+  std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
+  std::unique_ptr<SentencePieceTokenizer> tokenizer_;
+};
+
+}  // namespace sherpa_onnx
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_

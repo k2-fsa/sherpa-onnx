@@ -17,7 +17,7 @@ void OfflineTtsPocketModelConfig::Register(ParseOptions *po) {
   po->Register("pocket-lm-main", &lm_main, "Path to PocketTTS lm main model");
   po->Register("pocket-encoder", &encoder, "Path to PocketTTS encoder model");
   po->Register("pocket-decoder", &decoder, "Path to PocketTTS decoder model");
-  po->Register("pocket-text-conditioner", &decoder,
+  po->Register("pocket-text-conditioner", &text_conditioner,
                "Path to PocketTTS text conditioner model");
   po->Register("pocket-vocab-json", &vocab_json,
                "Path to PocketTTS vocab.json");
