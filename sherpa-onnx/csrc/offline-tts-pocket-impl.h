@@ -201,11 +201,162 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       }
     }
 
+    auto sentences = SplitByPunctuation(text);
+
+    if (sentences.empty()) {
+      return {};
+    }
+
+    sentences = MergeShortSentences(sentences);
+
+    std::vector<std::string> final_chunks;
+    for (const auto &s : sentences) {
+      auto pieces = SplitLongSentence(s, 200);  // max 200 chars per chunk
+      final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
+    }
+
+    sentences = std::move(final_chunks);
+
     Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
     if (!voice_embedding) {
       return {};
     }
 
+    GeneratedAudio result;
+    result.sample_rate = SampleRate();
+
+    const int32_t total = sentences.size();
+
+    bool should_continue = true;
+
+    for (int32_t i = 0; i < total && should_continue; ++i) {
+      if (config_.model.debug) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Processing %{public}d/%{public}d: %{public}s", i + 1,
+                         total, sentences[i].c_str());
+#else
+        SHERPA_ONNX_LOGE("Processing %d/%d: %s", i + 1, total,
+                         sentences[i].c_str());
+#endif
+      }
+      GeneratedAudioCallback wrapped_cb = nullptr;
+
+      if (callback) {
+        wrapped_cb = [&, i](const float *samples, int32_t n,
+                            float sentence_progress) -> bool {
+          float global_progress = (i + sentence_progress) / total;
+
+          return callback(samples, n, global_progress);
+        };
+      }
+
+      GeneratedAudio cur = GenerateSingleSentence(sentences[i], gen_config,
+                                                  View(&voice_embedding),
+                                                  should_continue, wrapped_cb);
+
+      if (cur.samples.empty()) {
+        continue;
+      }
+
+      result.samples.insert(result.samples.end(), cur.samples.begin(),
+                            cur.samples.end());
+    }
+
+    float silence_scale = gen_config.silence_scale;
+    if (silence_scale != 1) {
+      result = result.ScaleSilence(silence_scale);
+    }
+
+    return result;
+  }
+
+  static std::vector<std::string> MergeShortSentences(
+      const std::vector<std::string> &sentences, size_t min_chars = 30) {
+    std::vector<std::string> merged;
+    std::string buffer;
+
+    for (const auto &s : sentences) {
+      if (!buffer.empty()) {
+        buffer += " ";
+      }
+      buffer += s;
+
+      if (buffer.size() >= min_chars) {
+        merged.push_back(buffer);
+        buffer.clear();
+      }
+    }
+
+    if (!buffer.empty()) {
+      merged.push_back(buffer);
+    }
+
+    return merged;
+  }
+
+  static std::vector<std::string> SplitLongSentence(const std::string &sentence,
+                                                    size_t max_chars = 200) {
+    std::vector<std::string> chunks;
+    size_t start = 0;
+    size_t len = sentence.size();
+
+    while (start < len) {
+      size_t end = start + max_chars;
+      if (end >= len) {
+        chunks.push_back(sentence.substr(start));
+        break;
+      }
+
+      // Try to break at last space within max_chars
+      size_t space_pos = sentence.rfind(' ', end);
+      if (space_pos == std::string::npos || space_pos < start) {
+        space_pos = end;  // no space found, force split
+      }
+
+      chunks.push_back(sentence.substr(start, space_pos - start));
+      start = space_pos;
+
+      // Skip spaces at start of next chunk
+      while (start < len && sentence[start] == ' ') {
+        ++start;
+      }
+    }
+
+    return chunks;
+  }
+
+  static std::vector<std::string> SplitByPunctuation(const std::string &text) {
+    std::vector<std::string> sentences;
+    std::string cur;
+
+    auto flush = [&]() {
+      if (!cur.empty()) {
+        // trim leading/trailing spaces
+        auto begin = cur.find_first_not_of(" \t\n");
+        auto end = cur.find_last_not_of(" \t\n");
+        if (begin != std::string::npos) {
+          sentences.emplace_back(cur.substr(begin, end - begin + 1));
+        }
+        cur.clear();
+      }
+    };
+
+    for (char c : text) {
+      cur.push_back(c);
+      if (c == '.' || c == '!' || c == '?') {
+        flush();
+      }
+    }
+
+    flush();
+
+    return sentences;
+  }
+
+  GeneratedAudio GenerateSingleSentence(
+      const std::string &text, const GenerationConfig &gen_config,
+      Ort::Value voice_embedding, bool &should_continue,
+      GeneratedAudioCallback callback = nullptr) const {
     Ort::Value text_embedding = GetTextEmbedding(text);
 
     auto lm_main_state = model_->GetLmMainInitState();
@@ -304,8 +455,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     std::vector<float> audio_list;
 
-    bool should_continue = true;
-
     int32_t remaining_chunks =
         (latent_list.size() - num_chunks * chunk_size * frame_size) /
         frame_size;
@@ -347,11 +496,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     GeneratedAudio ans;
     ans.sample_rate = SampleRate();
     ans.samples = std::move(audio_list);
-
-    float silence_scale = gen_config.silence_scale;
-    if (silence_scale != 1) {
-      ans = ans.ScaleSilence(silence_scale);
-    }
 
     return ans;
   }
