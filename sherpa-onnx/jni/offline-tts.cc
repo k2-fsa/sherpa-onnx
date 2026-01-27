@@ -11,6 +11,106 @@
 
 namespace sherpa_onnx {
 
+static GenerationConfig GetGenerationConfig(JNIEnv *env, jobject config_obj) {
+  GenerationConfig ans;
+
+  if (config_obj == nullptr) {
+    SHERPA_ONNX_LOGE("GenerationConfig is null");
+    return ans;
+  }
+
+  jclass cls = env->GetObjectClass(config_obj);
+  jfieldID fid;
+
+  // silenceScale
+  fid = env->GetFieldID(cls, "silenceScale", "F");
+  if (fid != nullptr) ans.silence_scale = env->GetFloatField(config_obj, fid);
+
+  // speed
+  fid = env->GetFieldID(cls, "speed", "F");
+  if (fid != nullptr) ans.speed = env->GetFloatField(config_obj, fid);
+
+  // sid
+  fid = env->GetFieldID(cls, "sid", "I");
+  if (fid != nullptr) ans.sid = env->GetIntField(config_obj, fid);
+
+  // referenceAudio
+  fid = env->GetFieldID(cls, "referenceAudio", "[F");
+  if (fid != nullptr) {
+    jfloatArray arr = (jfloatArray)env->GetObjectField(config_obj, fid);
+    if (arr != nullptr) {
+      jsize len = env->GetArrayLength(arr);
+      jfloat *elems = env->GetFloatArrayElements(arr, nullptr);
+      ans.reference_audio.assign(elems, elems + len);
+      env->ReleaseFloatArrayElements(arr, elems, JNI_ABORT);
+    }
+  }
+
+  // referenceSampleRate
+  fid = env->GetFieldID(cls, "referenceSampleRate", "I");
+  if (fid != nullptr)
+    ans.reference_sample_rate = env->GetIntField(config_obj, fid);
+
+  // referenceText
+  fid = env->GetFieldID(cls, "referenceText", "Ljava/lang/String;");
+  if (fid != nullptr) {
+    jstring str = (jstring)env->GetObjectField(config_obj, fid);
+    if (str != nullptr) {
+      const char *chars = env->GetStringUTFChars(str, nullptr);
+      ans.reference_text = chars;
+      env->ReleaseStringUTFChars(str, chars);
+    }
+  }
+
+  // numSteps
+  fid = env->GetFieldID(cls, "numSteps", "I");
+  if (fid != nullptr) ans.num_steps = env->GetIntField(config_obj, fid);
+
+  // extra Map<String, String>
+  fid = env->GetFieldID(cls, "extra", "Ljava/util/Map;");
+  if (fid != nullptr) {
+    jobject map_obj = env->GetObjectField(config_obj, fid);
+    if (map_obj != nullptr) {
+      jclass map_cls = env->GetObjectClass(map_obj);
+      jmethodID entrySet =
+          env->GetMethodID(map_cls, "entrySet", "()Ljava/util/Set;");
+      jobject entry_set = env->CallObjectMethod(map_obj, entrySet);
+
+      jclass set_cls = env->GetObjectClass(entry_set);
+      jmethodID iteratorMid =
+          env->GetMethodID(set_cls, "iterator", "()Ljava/util/Iterator;");
+      jobject iterator = env->CallObjectMethod(entry_set, iteratorMid);
+
+      jclass iter_cls = env->GetObjectClass(iterator);
+      jmethodID hasNextMid = env->GetMethodID(iter_cls, "hasNext", "()Z");
+      jmethodID nextMid =
+          env->GetMethodID(iter_cls, "next", "()Ljava/lang/Object;");
+
+      jclass entry_cls = env->FindClass("java/util/Map$Entry");
+      jmethodID getKeyMid =
+          env->GetMethodID(entry_cls, "getKey", "()Ljava/lang/Object;");
+      jmethodID getValueMid =
+          env->GetMethodID(entry_cls, "getValue", "()Ljava/lang/Object;");
+
+      while (env->CallBooleanMethod(iterator, hasNextMid)) {
+        jobject entry = env->CallObjectMethod(iterator, nextMid);
+        jstring key = (jstring)env->CallObjectMethod(entry, getKeyMid);
+        jstring value = (jstring)env->CallObjectMethod(entry, getValueMid);
+
+        const char *keyChars = env->GetStringUTFChars(key, nullptr);
+        const char *valueChars = env->GetStringUTFChars(value, nullptr);
+
+        ans.extra[std::string(keyChars)] = std::string(valueChars);
+
+        env->ReleaseStringUTFChars(key, keyChars);
+        env->ReleaseStringUTFChars(value, valueChars);
+      }
+    }
+  }
+
+  return ans;
+}
+
 static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
                                             bool *ok) {
   OfflineTtsConfig ans;
@@ -328,6 +428,54 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
 
   env->ReleaseStringUTFChars(text, p_text);
 
+  return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jobject _gen_config,
+    jobject callback) {
+  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
+
+  std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
+      [env, callback](const float *samples, int32_t n,
+                      float /*progress*/) -> int {
+    if (callback == nullptr) {
+      return 1;
+    }
+
+    jclass cls = env->GetObjectClass(callback);
+    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
+    if (!mid) {
+      return 1;
+    }
+
+    jfloatArray samples_arr = env->NewFloatArray(n);
+    env->SetFloatArrayRegion(samples_arr, 0, n, samples);
+
+    jobject should_continue = env->CallObjectMethod(callback, mid, samples_arr);
+    jclass jklass = env->GetObjectClass(should_continue);
+    jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
+    return env->CallIntMethod(should_continue, int_value_mid);
+  };
+
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
+  auto audio = tts->Generate(p_text, gen_config, callback_wrapper);
+
+  // Convert to Java array
+  jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
+  env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),
+                           audio.samples.data());
+
+  jobjectArray obj_arr =
+      env->NewObjectArray(2, env->FindClass("java/lang/Object"), nullptr);
+
+  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
+  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, audio.sample_rate));
+
+  env->ReleaseStringUTFChars(text, p_text);
   return obj_arr;
 }
 
