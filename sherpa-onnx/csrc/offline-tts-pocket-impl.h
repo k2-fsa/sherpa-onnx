@@ -157,6 +157,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
    *  - temperature, float, default 0.7
    *  - chunk_size, int, default 15
    *  - max_reference_audio_len, float, default 10, in seconds
+   *  - max_char_in_sentence, int, default 200
+   *  - min_char_in_sentence, int, default 30
    */
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
@@ -207,11 +209,17 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       return {};
     }
 
-    sentences = MergeShortSentences(sentences);
+    int32_t max_char_in_sentence =
+        gen_config.GetExtraInt("max_char_in_sentence", 200);
+
+    int32_t min_char_in_sentence =
+        gen_config.GetExtraInt("min_char_in_sentence", 30);
+
+    sentences = MergeShortSentences(sentences, max_char_in_sentence);
 
     std::vector<std::string> final_chunks;
     for (const auto &s : sentences) {
-      auto pieces = SplitLongSentence(s, 200);  // max 200 chars per chunk
+      auto pieces = SplitLongSentence(s, max_char_in_sentence);
       final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
     }
 
