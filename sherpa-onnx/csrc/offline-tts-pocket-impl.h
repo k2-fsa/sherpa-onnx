@@ -202,6 +202,10 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     Ort::Value voice_embedding = GetVoiceEmbedding(gen_config);
+    if (!voice_embedding) {
+      return {};
+    }
+
     Ort::Value text_embedding = GetTextEmbedding(text);
 
     auto lm_main_state = model_->GetLmMainInitState();
@@ -367,6 +371,17 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
   }
 
   Ort::Value GetVoiceEmbedding(const GenerationConfig &gen_config) const {
+    if (gen_config.reference_sample_rate <= 0) {
+      SHERPA_ONNX_LOGE("reference_sample_rate %d is invalid.",
+                       gen_config.reference_sample_rate);
+      return nullptr;
+    }
+
+    if (gen_config.reference_audio.empty()) {
+      SHERPA_ONNX_LOGE("reference audio is empty");
+      return nullptr;
+    }
+
     std::vector<float> reference_audio;
 
     const float *p_audio;

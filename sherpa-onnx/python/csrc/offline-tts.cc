@@ -65,6 +65,7 @@ static void PybindOfflineTtsConfig(py::module *m) {
 void PybindOfflineTts(py::module *m) {
   PybindOfflineTtsConfig(m);
   PybindGeneratedAudio(m);
+  PybindGenerationConfig(m);
 
   using PyClass = OfflineTts;
   py::class_<PyClass>(*m, "OfflineTts")
