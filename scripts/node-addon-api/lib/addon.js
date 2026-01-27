@@ -2,11 +2,13 @@
 
 const os = require('os');
 const path = require('path');
+const addonStaticImport = require('./addon-static-import');
 
 // Package name triggered spam for sherpa-onnx-win32-x64
 // so we have renamed it to sherpa-onnx-win-x64
-const platform_arch =
-    `${os.platform() == 'win32' ? 'win' : os.platform()}-${os.arch()}`;
+const platform = os.platform() === 'win32' ? 'win' : os.platform();
+const arch = os.arch();
+const platform_arch = `${platform}-${arch}`;
 const possible_paths = [
   '../build/Release/sherpa-onnx.node',
   '../build/Debug/sherpa-onnx.node',
@@ -15,19 +17,23 @@ const possible_paths = [
   './sherpa-onnx.node',
 ];
 
-let found = false;
-for (const p of possible_paths) {
-  try {
-    module.exports = require(p);
-    found = true;
-    break;
-  } catch (error) {
-    // do nothing; try the next option
-    ;
+let addon = addonStaticImport;
+
+if (!addon) {
+  for (const p of possible_paths) {
+    try {
+      addon = require(p);
+      break;
+    } catch (error) {
+      // do nothing; try the next option
+      ;
+    }
   }
 }
 
-if (!found) {
+module.exports = addon;
+
+if (!addon) {
   let addon_path =
       `${process.env.PWD}/node_modules/sherpa-onnx-${platform_arch}`;
   const pnpmIndex = __dirname.indexOf(`node_modules${path.sep}.pnpm`);
