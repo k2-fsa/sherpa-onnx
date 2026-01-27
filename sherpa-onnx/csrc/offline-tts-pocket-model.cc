@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 
 namespace sherpa_onnx {
 
@@ -40,7 +41,7 @@ static Ort::Value CreateZeroTensorLike(Ort::Session &sess, int32_t input_index,
     }
   }
 
-  Ort::Value v;
+  Ort::Value v{nullptr};
   switch (elem_type) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
       v = Ort::Value::CreateTensor<float>(allocator, shape.data(),
