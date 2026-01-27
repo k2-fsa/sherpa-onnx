@@ -407,17 +407,35 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  os << "\""
-     << "ys_log_probs"
-     << "\""
-     << ": ";
-  os << "[";
-  sep = "";
-  for (auto p : ys_log_probs) {
-    os << sep << std::fixed << std::setprecision(6) << p;
-    sep = ", ";
+  // Serialize ys_log_probs (upstream field)
+  if (!ys_log_probs.empty()) {
+    os << "\""
+       << "ys_log_probs"
+       << "\""
+       << ": ";
+    os << "[";
+    sep = "";
+    for (auto p : ys_log_probs) {
+      os << sep << std::fixed << std::setprecision(6) << p;
+      sep = ", ";
+    }
+    os << "], ";
   }
-  os << "], ";
+
+  // Serialize token_log_probs (custom field, may be same as ys_log_probs)
+  if (!token_log_probs.empty()) {
+    os << "\""
+       << "token_log_probs"
+       << "\""
+       << ": ";
+    os << "[";
+    sep = "";
+    for (auto prob : token_log_probs) {
+      os << sep << std::fixed << std::setprecision(4) << prob;
+      sep = ", ";
+    }
+    os << "], ";
+  }
 
   sep = "";
 
@@ -430,7 +448,6 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << sep << w;
     sep = ", ";
   }
-
   os << "]";
   os << "}";
 

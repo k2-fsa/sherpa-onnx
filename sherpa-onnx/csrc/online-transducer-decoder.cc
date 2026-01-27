@@ -40,6 +40,7 @@ OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
   ys_probs = other.ys_probs;
   lm_probs = other.lm_probs;
   context_scores = other.context_scores;
+  vocab_log_probs = other.vocab_log_probs;
 
   return *this;
 }
@@ -67,6 +68,7 @@ OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
   ys_probs = std::move(other.ys_probs);
   lm_probs = std::move(other.lm_probs);
   context_scores = std::move(other.context_scores);
+  vocab_log_probs = std::move(other.vocab_log_probs);
 
   return *this;
 }
