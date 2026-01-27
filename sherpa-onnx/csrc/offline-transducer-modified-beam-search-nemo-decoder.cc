@@ -243,17 +243,26 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
         // Determine duration/skip for TDT
         int32_t predicted_skip = 1;  // Default: advance by 1 frame
+        float duration_log_prob = 0.0f;
         if (is_tdt_ && duration_logits != nullptr && num_durations > 0) {
+          // Apply log softmax to duration logits
+          LogSoftmax(duration_logits, num_durations, 1);
+
           // Find best duration
           predicted_skip = static_cast<int32_t>(std::distance(
               duration_logits,
               std::max_element(duration_logits, duration_logits + num_durations)));
+
+          // Get the log probability for the selected duration
+          duration_log_prob = duration_logits[predicted_skip];
         }
 
         // Create candidate hypotheses
         for (int32_t idx : top_k_tokens) {
           int32_t token = idx;
-          float token_log_prob = token_logits[token] + hyp.log_prob;
+          // For TDT: joint probability = P(token) * P(duration)
+          // In log space: log P(token, duration) = log P(token) + log P(duration)
+          float token_log_prob = token_logits[token] + duration_log_prob + hyp.log_prob;
 
           NeMoHypothesis new_hyp;
           new_hyp.ys = hyp.ys;
