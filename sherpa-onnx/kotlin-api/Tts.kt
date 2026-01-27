@@ -44,11 +44,36 @@ data class OfflineTtsKittenModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+/**
+ * Configuration for Pocket TTS models.
+ *
+ * See https://k2-fsa.github.io/sherpa/onnx/tts/pocket/index.html for details.
+ *
+ * @property lmFlow Path to the LM flow model (.onnx)
+ * @property lmMain Path to the LM main model (.onnx)
+ * @property encoder Path to the encoder model (.onnx)
+ * @property decoder Path to the decoder model (.onnx)
+ * @property textConditioner Path to the text conditioner model (.onnx)
+ * @property vocabJson Path to vocabulary JSON file
+ * @property tokenScoresJson Path to token scores JSON file
+ */
+data class OfflineTtsPocketModelConfig(
+  var lmFlow: String = "",
+  var lmMain: String = "",
+  var encoder: String = "",
+  var decoder: String = "",
+  var textConditioner: String = "",
+  var vocabJson: String = "",
+  var tokenScoresJson: String = "",
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
+    val pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",

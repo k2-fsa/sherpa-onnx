@@ -118,6 +118,33 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kitten.length_scale, lengthScale,
                              kitten_cls, kitten);
 
+  // pocket
+  fid = env->GetFieldID(model_config_cls, "pocket",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsPocketModelConfig;");
+  jobject pocket = env->GetObjectField(model, fid);
+  jclass pocket_cls = env->GetObjectClass(pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.lm_flow, lmFlow, pocket_cls,
+                              pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.lm_main, lmMain, pocket_cls,
+                              pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.encoder, encoder, pocket_cls,
+                              pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.decoder, decoder, pocket_cls,
+                              pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.text_conditioner,
+                              textConditioner, pocket_cls, pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.vocab_json, vocabJson,
+                              pocket_cls, pocket);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.token_scores_json,
+                              tokenScoresJson, pocket_cls, pocket);
+
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
 
