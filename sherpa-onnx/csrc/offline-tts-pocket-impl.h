@@ -215,7 +215,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     int32_t min_char_in_sentence =
         gen_config.GetExtraInt("min_char_in_sentence", 30);
 
-    sentences = MergeShortSentences(sentences, max_char_in_sentence);
+    sentences = MergeShortSentences(sentences, min_char_in_sentence);
 
     std::vector<std::string> final_chunks;
     for (const auto &s : sentences) {

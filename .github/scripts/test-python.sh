@@ -8,6 +8,16 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test PocketTTS"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+python3 ./python-api-examples/pocket-tts.py
+
+rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+
 log "test Google MedASR"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
