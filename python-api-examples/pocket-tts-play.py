@@ -193,13 +193,13 @@ def main():
     if not Path(reference_audio_file).is_file():
         raise ValueError(f"Reference audio {reference_audio_file} does not exist")
 
-    reference_audio, reference_sample_rate = librosa.load(
-        reference_audio_file, sr=16000
-    )
-
     logging.info("Loading model ...")
     tts = create_tts()
     logging.info("Loading model done.")
+
+    reference_audio, reference_sample_rate = librosa.load(
+        reference_audio_file, sr=tts.sample_rate
+    )
 
     text = """
     I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.
