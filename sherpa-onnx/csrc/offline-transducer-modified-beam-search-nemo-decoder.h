@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-transducer-modified-beam-search-nemo-decoder.h
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2026  (authors: github.com/nefastosaturo, github.com/nullbio)
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_NEMO_DECODER_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_NEMO_DECODER_H_

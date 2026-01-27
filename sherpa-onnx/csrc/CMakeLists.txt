@@ -71,10 +71,10 @@ set(sources
   offline-telespeech-ctc-model.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-greedy-search-nemo-decoder.cc
-  offline-transducer-modified-beam-search-nemo-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  offline-transducer-modified-beam-search-nemo-decoder.cc
   offline-transducer-nemo-model.cc
   offline-wenet-ctc-model-config.cc
   offline-wenet-ctc-model.cc
