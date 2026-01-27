@@ -379,38 +379,44 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
       [env, callback](const float *samples, int32_t n,
                       float /*progress*/) -> int {
-    jclass cls = env->GetObjectClass(callback);
-
-#if 0
-        // this block is for debugging only
-        // see also
-        // https://jnjosh.com/posts/kotlinfromcpp/
-        jmethodID classMethodId =
-            env->GetMethodID(cls, "getClass", "()Ljava/lang/Class;");
-        jobject klassObj = env->CallObjectMethod(callback, classMethodId);
-        auto klassObject = env->GetObjectClass(klassObj);
-        auto nameMethodId =
-            env->GetMethodID(klassObject, "getName", "()Ljava/lang/String;");
-        jstring classString =
-            (jstring)env->CallObjectMethod(klassObj, nameMethodId);
-        auto className = env->GetStringUTFChars(classString, NULL);
-        SHERPA_ONNX_LOGE("name is: %s", className);
-        env->ReleaseStringUTFChars(classString, className);
-#endif
-
-    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
-    if (mid == nullptr) {
-      SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
-      return 1;
-    }
+    if (!callback) return 1;
 
     jfloatArray samples_arr = env->NewFloatArray(n);
     env->SetFloatArrayRegion(samples_arr, 0, n, samples);
 
-    jobject should_continue = env->CallObjectMethod(callback, mid, samples_arr);
-    jclass jklass = env->GetObjectClass(should_continue);
-    jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
-    return env->CallIntMethod(should_continue, int_value_mid);
+    jclass cls = env->GetObjectClass(callback);
+
+    // Try Kotlin-style lambda first (boxed Int)
+    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
+    if (mid != nullptr) {
+      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
+      if (result != nullptr) {
+        jclass int_cls = env->GetObjectClass(result);
+        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
+        return env->CallIntMethod(result, int_value_mid);
+      }
+      return 1;
+    }
+
+    // Optional: Java primitive int apply([F)I fallback for pure Java callbacks
+    mid = env->GetMethodID(cls, "apply", "([F)I");
+    if (mid != nullptr) {
+      return env->CallIntMethod(callback, mid, samples_arr);
+    }
+
+    // Optional: Java boxed Integer apply([F)Integer fallback
+    mid = env->GetMethodID(cls, "apply", "([F)Ljava/lang/Integer;");
+    if (mid != nullptr) {
+      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
+      if (result != nullptr) {
+        jclass int_cls = env->GetObjectClass(result);
+        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
+        return env->CallIntMethod(result, int_value_mid);
+      }
+      return 1;
+    }
+
+    return 1;  // default
   };
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
@@ -442,23 +448,44 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
       [env, callback](const float *samples, int32_t n,
                       float /*progress*/) -> int {
-    if (callback == nullptr) {
-      return 1;
-    }
-
-    jclass cls = env->GetObjectClass(callback);
-    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
-    if (!mid) {
-      return 1;
-    }
+    if (!callback) return 1;
 
     jfloatArray samples_arr = env->NewFloatArray(n);
     env->SetFloatArrayRegion(samples_arr, 0, n, samples);
 
-    jobject should_continue = env->CallObjectMethod(callback, mid, samples_arr);
-    jclass jklass = env->GetObjectClass(should_continue);
-    jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
-    return env->CallIntMethod(should_continue, int_value_mid);
+    jclass cls = env->GetObjectClass(callback);
+
+    // Try Kotlin-style lambda first (boxed Int)
+    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
+    if (mid != nullptr) {
+      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
+      if (result != nullptr) {
+        jclass int_cls = env->GetObjectClass(result);
+        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
+        return env->CallIntMethod(result, int_value_mid);
+      }
+      return 1;
+    }
+
+    // Optional: Java primitive int apply([F)I fallback for pure Java callbacks
+    mid = env->GetMethodID(cls, "apply", "([F)I");
+    if (mid != nullptr) {
+      return env->CallIntMethod(callback, mid, samples_arr);
+    }
+
+    // Optional: Java boxed Integer apply([F)Integer fallback
+    mid = env->GetMethodID(cls, "apply", "([F)Ljava/lang/Integer;");
+    if (mid != nullptr) {
+      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
+      if (result != nullptr) {
+        jclass int_cls = env->GetObjectClass(result);
+        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
+        return env->CallIntMethod(result, int_value_mid);
+      }
+      return 1;
+    }
+
+    return 1;  // default
   };
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
