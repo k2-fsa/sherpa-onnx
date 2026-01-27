@@ -413,8 +413,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         memory_info, nullptr, 0, empty_text_shape.data(),
         empty_text_shape.size());
 
-    Ort::Value conditioning;
-    Ort::Value eos_logit;
+    Ort::Value conditioning{nullptr};
+    Ort::Value eos_logit{nullptr};
 
     std::vector<float> latent_list;
     int32_t eos_step = -1;
@@ -526,12 +526,12 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     if (gen_config.reference_sample_rate <= 0) {
       SHERPA_ONNX_LOGE("reference_sample_rate %d is invalid.",
                        gen_config.reference_sample_rate);
-      return nullptr;
+      return Ort::Value{nullptr};
     }
 
     if (gen_config.reference_audio.empty()) {
       SHERPA_ONNX_LOGE("reference audio is empty");
-      return nullptr;
+      return Ort::Value{nullptr};
     }
 
     std::vector<float> reference_audio;
