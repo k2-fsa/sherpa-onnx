@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -76,9 +77,14 @@ static OfflineTransducerDecoderResult DecodeOne(
           std::max_element(static_cast<const float *>(p_logit),
                            static_cast<const float *>(p_logit) + vocab_size)));
 
+      // Apply LogSoftmax and get log probability for selected token
+      LogSoftmax(p_logit, vocab_size);
+      float log_prob = p_logit[y];
+
       if (y != blank_id) {
         ans.tokens.push_back(y);
         ans.timestamps.push_back(t);
+        ans.ys_log_probs.push_back(log_prob);
 
         decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
@@ -145,6 +151,12 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
         token_logits,
         std::max_element(token_logits, token_logits + vocab_size)));
 
+    // Apply LogSoftmax to token logits and get log probability
+    // Note: Need to make a copy since token_logits is const
+    std::vector<float> token_logits_copy(token_logits, token_logits + vocab_size);
+    LogSoftmax(token_logits_copy.data(), vocab_size);
+    float log_prob = token_logits_copy[y];
+
     // note that skip can be 0
     skip = static_cast<int32_t>(std::distance(
         duration_logits,
@@ -154,6 +166,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
       ans.tokens.push_back(y);
       ans.timestamps.push_back(t);
       ans.durations.push_back(skip);
+      ans.ys_log_probs.push_back(log_prob);
 
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
