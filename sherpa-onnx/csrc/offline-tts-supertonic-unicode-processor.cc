@@ -18,6 +18,7 @@
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -98,22 +99,6 @@ static const std::unordered_map<uint32_t, std::vector<uint16_t>>
         {0x00E7, {0x0063, 0x0327}},
 };
 
-static std::string Trim(const std::string &str) {
-  size_t start = 0;
-  while (start < str.size() &&
-         std::isspace(static_cast<unsigned char>(str[start]))) {
-    start++;
-  }
-
-  size_t end = str.size();
-  while (end > start &&
-         std::isspace(static_cast<unsigned char>(str[end - 1]))) {
-    end--;
-  }
-
-  return str.substr(start, end - start);
-}
-
 static void DecomposeCharacter(uint32_t codepoint,
                                std::vector<uint16_t> *output) {
   // Check Hangul syllables first
@@ -158,89 +143,11 @@ static void ReplaceString(std::string *text, const std::string &from,
     pos += to.length();
   }
 }
-
-// Optimized: Return flat vector + shape instead of nested vectors
-static void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
-                             int64_t max_len, std::vector<float> *mask_flat,
-                             std::vector<int64_t> *mask_shape) {
-  // Validate input sizes
-  if (lengths.size() != static_cast<size_t>(bsz)) {
-    SHERPA_ONNX_LOGE("LengthToMaskFlat: lengths.size() (%zu) != bsz (%d)",
-                     lengths.size(), bsz);
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  if (max_len == -1) {
-    max_len = *std::max_element(lengths.begin(), lengths.end());
-  }
-
-  if (max_len < 0) {
-    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%ld) < 0", max_len);
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  mask_shape->assign({bsz, 1, max_len});
-
-  // Prevent overflow: use size_t for multiplication
-  size_t total_size = static_cast<size_t>(bsz) * static_cast<size_t>(max_len);
-  mask_flat->resize(total_size);
-
-  for (int b = 0; b < bsz; ++b) {
-    int64_t len = lengths[b];
-    float *batch_mask = mask_flat->data() + b * max_len;
-    for (int64_t i = 0; i < max_len; i++) {
-      batch_mask[i] = (i < len) ? 1.0f : 0.0f;
-    }
-  }
-}
-
-// Helper function to load JSON from file (consistent with
-// sentence-piece-tokenizer.cc)
-static json LoadJson(const std::string &filename) {
-  if (filename.empty()) {
-    SHERPA_ONNX_LOGE("Empty json filename");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  AssertFileExists(filename);
-
-  std::ifstream is(filename);
-  if (!is.is_open()) {
-    SHERPA_ONNX_LOGE("Failed to open JSON file: %s", filename.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  json j;
-  try {
-    is >> j;
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON file %s: %s", filename.c_str(),
-                     e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
-}
-
-// Helper function to load JSON from buffer (for Android/OHOS)
-static json LoadJson(const std::vector<char> &buf) {
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Empty json buffer");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  json j;
-  try {
-    j = json::parse(buf.begin(), buf.end());
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON buffer: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
-}
-
 }  // namespace
 
 SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     const std::string &unicode_indexer_path) {
-  json j = LoadJson(unicode_indexer_path);
+  json j = sherpa_onnx::LoadJsonFromFile(unicode_indexer_path);
   indexer_ = j.get<std::vector<int64_t>>();
 }
 
@@ -253,7 +160,7 @@ SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
                      unicode_indexer_path.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
-  json j = LoadJson(buf);
+  json j = sherpa_onnx::LoadJsonFromBuffer(buf);
   indexer_ = j.get<std::vector<int64_t>>();
 }
 
@@ -383,7 +290,7 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
       last_was_space = false;
     }
   }
-  result = Trim(spaces_fixed);
+  result = sherpa_onnx::Trim(spaces_fixed);
 
   // Add period if text doesn't end with punctuation
   if (!result.empty()) {
@@ -475,8 +382,8 @@ SupertonicUnicodeProcessor::GetTextMask(
   std::vector<float> mask_flat;
   std::vector<int64_t> mask_shape;
   int bsz = static_cast<int>(text_ids_lengths.size());
-  LengthToMaskFlat(text_ids_lengths, bsz, static_cast<int64_t>(-1), &mask_flat,
-                   &mask_shape);
+  sherpa_onnx::LengthToMaskFlat(text_ids_lengths, bsz, static_cast<int64_t>(-1),
+                                &mask_flat, &mask_shape);
 
   int max_len = static_cast<int>(mask_shape[2]);
   std::vector<std::vector<std::vector<float>>> mask;
@@ -503,6 +410,13 @@ void SupertonicUnicodeProcessor::Process(
     SHERPA_ONNX_EXIT(-1);
   }
 
+  // Handle empty batch case to avoid UB with std::max_element
+  if (text_list.empty()) {
+    text_ids->clear();
+    *text_mask = GetTextMask(std::vector<int64_t>());
+    return;
+  }
+
   std::vector<std::string> processed_texts;
   for (size_t i = 0; i < text_list.size(); i++) {
     processed_texts.push_back(PreprocessText(text_list[i], lang_list[i]));
@@ -516,6 +430,8 @@ void SupertonicUnicodeProcessor::Process(
     all_unicode_vals.push_back(std::move(unicode_vals));
   }
 
+  // text_ids_lengths is guaranteed to be non-empty here (same size as
+  // text_list)
   int64_t max_len =
       *std::max_element(text_ids_lengths.begin(), text_ids_lengths.end());
 

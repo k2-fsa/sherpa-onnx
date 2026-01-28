@@ -42,20 +42,28 @@ using json = nlohmann::json;
 
 namespace {
 
+// Minimum duration (in seconds) to prevent zero-length audio
+constexpr float kMinDuration = 0.1f;
+
+// Maximum latent length to prevent excessive memory allocation and OOM.
+constexpr int kMaxLatentLen = 10000;
+
 template <typename T>
 static void Flatten3DArray(
     const std::vector<std::vector<std::vector<T>>> &array,
     std::vector<T> *flat) {
+  flat->clear();
   size_t total_size = 0;
   for (const auto &batch : array) {
     for (const auto &row : batch) {
       total_size += row.size();
     }
   }
-  flat->reserve(total_size);
+  flat->resize(total_size);
+  T *dest = flat->data();
   for (const auto &batch : array) {
     for (const auto &row : batch) {
-      flat->insert(flat->end(), row.begin(), row.end());
+      dest = std::copy(row.begin(), row.end(), dest);
     }
   }
 }
@@ -63,54 +71,15 @@ static void Flatten3DArray(
 template <typename T>
 static void Flatten2DArray(const std::vector<std::vector<T>> &array,
                            std::vector<T> *flat) {
+  flat->clear();
   size_t total_size = 0;
   for (const auto &row : array) {
     total_size += row.size();
   }
-  flat->reserve(total_size);
+  flat->resize(total_size);
+  T *dest = flat->data();
   for (const auto &row : array) {
-    flat->insert(flat->end(), row.begin(), row.end());
-  }
-}
-
-static std::string Trim(const std::string &str) {
-  size_t start = 0;
-  while (start < str.size() &&
-         std::isspace(static_cast<unsigned char>(str[start]))) {
-    start++;
-  }
-  size_t end = str.size();
-  while (end > start &&
-         std::isspace(static_cast<unsigned char>(str[end - 1]))) {
-    end--;
-  }
-  return str.substr(start, end - start);
-}
-
-static void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
-                             int64_t max_len, std::vector<float> *mask_flat,
-                             std::vector<int64_t> *mask_shape) {
-  if (lengths.size() != static_cast<size_t>(bsz)) {
-    SHERPA_ONNX_LOGE("LengthToMaskFlat: lengths.size() (%zu) != bsz (%d)",
-                     lengths.size(), bsz);
-    SHERPA_ONNX_EXIT(-1);
-  }
-  if (max_len == -1) {
-    max_len = *std::max_element(lengths.begin(), lengths.end());
-  }
-  if (max_len < 0) {
-    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%ld) < 0", max_len);
-    SHERPA_ONNX_EXIT(-1);
-  }
-  mask_shape->assign({bsz, 1, max_len});
-  size_t total_size = static_cast<size_t>(bsz) * static_cast<size_t>(max_len);
-  mask_flat->resize(total_size);
-  for (int b = 0; b < bsz; ++b) {
-    int64_t len = lengths[b];
-    float *batch_mask = mask_flat->data() + b * max_len;
-    for (int64_t i = 0; i < max_len; i++) {
-      batch_mask[i] = (i < len) ? 1.0f : 0.0f;
-    }
+    dest = std::copy(row.begin(), row.end(), dest);
   }
 }
 
@@ -124,11 +93,12 @@ static void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths, int bsz,
   for (auto len : wav_lengths) {
     latent_lengths.push_back((len + latent_size - 1) / latent_size);
   }
-  LengthToMaskFlat(latent_lengths, bsz, latent_len, mask_flat, mask_shape);
+  sherpa_onnx::LengthToMaskFlat(latent_lengths, bsz, latent_len, mask_flat,
+                                mask_shape);
 }
 
 static std::vector<std::string> ChunkText(const std::string &text,
-                                          int max_len) {
+                                          size_t max_len) {
   std::vector<std::string> chunks;
   std::regex paragraph_regex(R"(\n\s*\n+)");
   std::sregex_token_iterator iter(text.begin(), text.end(), paragraph_regex,
@@ -136,7 +106,7 @@ static std::vector<std::string> ChunkText(const std::string &text,
   std::sregex_token_iterator end;
   std::vector<std::string> paragraphs;
   for (; iter != end; ++iter) {
-    std::string para = Trim(*iter);
+    std::string para = sherpa_onnx::Trim(*iter);
     if (!para.empty()) {
       paragraphs.push_back(para);
     }
@@ -168,25 +138,29 @@ static std::vector<std::string> ChunkText(const std::string &text,
     }
     std::string current_chunk = "";
     for (const auto &sentence : sentences) {
-      if (static_cast<int>(current_chunk.length() + sentence.length() + 1) <=
-          max_len) {
+      size_t total_len = current_chunk.length() + sentence.length();
+      // Add space separator length if chunk is not empty
+      if (!current_chunk.empty()) {
+        total_len += 1;
+      }
+      if (total_len <= max_len) {
         if (!current_chunk.empty()) {
           current_chunk += " ";
         }
         current_chunk += sentence;
       } else {
         if (!current_chunk.empty()) {
-          chunks.push_back(Trim(current_chunk));
+          chunks.push_back(sherpa_onnx::Trim(current_chunk));
         }
         current_chunk = sentence;
       }
     }
     if (!current_chunk.empty()) {
-      chunks.push_back(Trim(current_chunk));
+      chunks.push_back(sherpa_onnx::Trim(current_chunk));
     }
   }
   if (chunks.empty()) {
-    chunks.push_back(Trim(text));
+    chunks.push_back(sherpa_onnx::Trim(text));
   }
   return chunks;
 }
@@ -274,71 +248,9 @@ static SupertonicStyle ParseVoiceStyleFromJson(const json &j) {
   return style;
 }
 
-// Helper to split string by delimiter and trim whitespace
-static std::vector<std::string> SplitString(const std::string &str,
-                                            char delim) {
-  std::vector<std::string> result;
-  std::string delim_str(1, delim);
-  SplitStringToVector(str, delim_str.c_str(), true, &result);
-  // Trim whitespace from each part
-  for (auto &part : result) {
-    size_t start = 0;
-    while (start < part.size() &&
-           std::isspace(static_cast<unsigned char>(part[start]))) {
-      start++;
-    }
-    size_t end = part.size();
-    while (end > start &&
-           std::isspace(static_cast<unsigned char>(part[end - 1]))) {
-      end--;
-    }
-    part = part.substr(start, end - start);
-  }
-  // Remove empty strings after trimming
-  result.erase(std::remove_if(result.begin(), result.end(),
-                              [](const std::string &s) { return s.empty(); }),
-               result.end());
-  return result;
-}
-
-template <typename Manager>
-static json LoadJsonFromFile(Manager *mgr, const std::string &path) {
-  auto buf = ReadFile(mgr, path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read file: %s", path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  json j;
-  try {
-    j = json::parse(buf.begin(), buf.end());
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
-}
-
-static json LoadJsonFromFile(const std::string &path) {
-  std::string abs_path = ResolveAbsolutePath(path);
-  AssertFileExists(abs_path);
-  std::ifstream file(abs_path);
-  if (!file.is_open()) {
-    SHERPA_ONNX_LOGE("Failed to open file: %s", abs_path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  json j;
-  try {
-    file >> j;
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
-}
-
 static SupertonicStyle LoadVoiceStylesImpl(
     const std::vector<std::string> &voice_style_paths,
-    std::function<json(const std::string &)> load_json_fn) {
+    std::function<nlohmann::json(const std::string &)> load_json_fn) {
   if (voice_style_paths.empty()) {
     SHERPA_ONNX_LOGE("Empty voice style paths");
     SHERPA_ONNX_EXIT(-1);
@@ -465,13 +377,13 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
       config.speed > 0 ? config.speed : config_.model.supertonic.speed;
   int32_t num_steps = config.num_steps > 0 ? config.num_steps
                                            : config_.model.supertonic.num_steps;
-  std::vector<std::string> text_list = SplitString(text, '|');
+  std::vector<std::string> text_list = SplitStringAndTrim(text, '|');
   std::vector<std::string> lang_list;
   std::string lang_str = config.GetExtraString("lang", "");
   std::string batch_str = config.GetExtraString("batch", "");
   bool batch_mode_flag = (batch_str == "1" || batch_str == "true");
   if (!lang_str.empty()) {
-    lang_list = SplitString(lang_str, ',');
+    lang_list = SplitStringAndTrim(lang_str, ',');
   } else {
     lang_list.resize(text_list.size(), "en");
   }
@@ -486,7 +398,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
     }
   }
   std::vector<std::string> voice_style_paths =
-      SplitString(config_.model.supertonic.voice_style, ',');
+      SplitStringAndTrim(config_.model.supertonic.voice_style, ',');
   if (voice_style_paths.size() != text_list.size()) {
     if (voice_style_paths.size() == 1) {
       voice_style_paths.resize(text_list.size(), voice_style_paths[0]);
@@ -504,7 +416,10 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   } else {
     std::string lang = lang_list[0];
     float silence_duration = 0.3f;
-    int max_len = (lang == "ko") ? 120 : 300;
+    size_t max_len =
+        (lang == "ko")
+            ? static_cast<size_t>(config_.model.supertonic.max_len_korean)
+            : static_cast<size_t>(config_.model.supertonic.max_len_other);
     auto text_chunks = ChunkText(text_list[0], max_len);
     SupertonicStyle style = LoadVoiceStyle(voice_style_paths[0]);
     return ProcessChunksAndConcatenate(text_chunks, lang, style, num_steps,
@@ -585,8 +500,8 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
   for (auto &dur : duration) {
     dur /= speed;
     // Ensure minimum duration to avoid zero-length audio
-    if (dur < 0.1f) {
-      dur = 0.1f;
+    if (dur < kMinDuration) {
+      dur = kMinDuration;
     }
   }
 
@@ -635,7 +550,6 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
   int latent_len =
       static_cast<int>((wav_len_max + chunk_size - 1) / chunk_size);
   // Cap latent_len to prevent excessive memory allocation
-  const int kMaxLatentLen = 10000;
   if (latent_len > kMaxLatentLen) {
     SHERPA_ONNX_LOGE(
         "Latent length (%d) exceeds maximum (%d), capping to prevent OOM",
@@ -877,27 +791,29 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
 
 SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
     const std::string &voice_style_path) const {
-  return ParseVoiceStyleFromJson(LoadJsonFromFile(voice_style_path));
+  return ParseVoiceStyleFromJson(
+      sherpa_onnx::LoadJsonFromFile(voice_style_path));
 }
 
 SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
     const std::vector<std::string> &voice_style_paths) const {
   return LoadVoiceStylesImpl(voice_style_paths, [](const std::string &path) {
-    return LoadJsonFromFile(path);
+    return sherpa_onnx::LoadJsonFromFile(path);
   });
 }
 
 template <typename Manager>
 SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
     Manager *mgr, const std::string &voice_style_path) const {
-  return ParseVoiceStyleFromJson(LoadJsonFromFile(mgr, voice_style_path));
+  return ParseVoiceStyleFromJson(
+      sherpa_onnx::LoadJsonFromFile(mgr, voice_style_path));
 }
 
 template <typename Manager>
 SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
     Manager *mgr, const std::vector<std::string> &voice_style_paths) const {
   return LoadVoiceStylesImpl(voice_style_paths, [mgr](const std::string &path) {
-    return LoadJsonFromFile(mgr, path);
+    return sherpa_onnx::LoadJsonFromFile(mgr, path);
   });
 }
 

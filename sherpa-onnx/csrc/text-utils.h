@@ -61,6 +61,14 @@ void SplitStringToVector(const std::string &full, const char *delim,
                          bool omit_empty_strings,
                          std::vector<std::string> *out);
 
+/// Trim leading and trailing whitespace from a string.
+std::string Trim(const std::string &str);
+
+/// Split a string by a single character delimiter, trim whitespace from each
+/// part, and remove empty strings. This is a convenience wrapper around
+/// SplitStringToVector with trimming and filtering.
+std::vector<std::string> SplitStringAndTrim(const std::string &str, char delim);
+
 /**
   \brief Split a string (e.g. 1:2:3) into a vector of integers.
 
@@ -194,6 +202,14 @@ bool IsPunct(const std::string &s);
 int32_t ToIntOrDefault(const std::string &s, int32_t default_value);
 
 float ToFloatOrDefault(const std::string &s, float default_value);
+
+// Convert a vector of sequence lengths to a flat mask tensor.
+// Creates a 3D mask tensor of shape [bsz, 1, max_len] where mask[b][0][i] = 1.0
+// if i < lengths[b], else 0.0.
+// If max_len == -1, it will be set to the maximum value in lengths.
+void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
+                      int64_t max_len, std::vector<float> *mask_flat,
+                      std::vector<int64_t> *mask_shape);
 
 }  // namespace sherpa_onnx
 

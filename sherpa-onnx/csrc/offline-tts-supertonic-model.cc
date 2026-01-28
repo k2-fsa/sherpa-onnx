@@ -132,48 +132,48 @@ class OfflineTtsSupertonicModel::Impl {
     PrintModelInfo(vocoder_sess_.get(), "vocoder");
   }
 
-  void LoadModels(const std::string &model_dir) {
+  void LoadModels() {
     {
-      auto buf = ReadFile(model_dir + "/duration_predictor.onnx");
+      auto buf = ReadFile(config_.supertonic.duration_predictor);
       dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
                                                 sess_opts_);
     }
     {
-      auto buf = ReadFile(model_dir + "/text_encoder.onnx");
+      auto buf = ReadFile(config_.supertonic.text_encoder);
       text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                       buf.size(), sess_opts_);
     }
     {
-      auto buf = ReadFile(model_dir + "/vector_estimator.onnx");
+      auto buf = ReadFile(config_.supertonic.vector_estimator);
       vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                         buf.size(), sess_opts_);
     }
     {
-      auto buf = ReadFile(model_dir + "/vocoder.onnx");
+      auto buf = ReadFile(config_.supertonic.vocoder);
       vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                      buf.size(), sess_opts_);
     }
   }
 
   template <typename Manager>
-  void LoadModels(Manager *mgr, const std::string &model_dir) {
+  void LoadModels(Manager *mgr) {
     {
-      auto buf = ReadFile(mgr, model_dir + "/duration_predictor.onnx");
+      auto buf = ReadFile(mgr, config_.supertonic.duration_predictor);
       dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
                                                 sess_opts_);
     }
     {
-      auto buf = ReadFile(mgr, model_dir + "/text_encoder.onnx");
+      auto buf = ReadFile(mgr, config_.supertonic.text_encoder);
       text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                       buf.size(), sess_opts_);
     }
     {
-      auto buf = ReadFile(mgr, model_dir + "/vector_estimator.onnx");
+      auto buf = ReadFile(mgr, config_.supertonic.vector_estimator);
       vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                         buf.size(), sess_opts_);
     }
     {
-      auto buf = ReadFile(mgr, model_dir + "/vocoder.onnx");
+      auto buf = ReadFile(mgr, config_.supertonic.vocoder);
       vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                      buf.size(), sess_opts_);
     }
@@ -184,7 +184,7 @@ class OfflineTtsSupertonicModel::Impl {
         ResolveAbsolutePath(config_.supertonic.model_dir);
     LoadConfig(model_dir + "/tts.json");
     PrintDebugInfo(model_dir);
-    LoadModels(model_dir);
+    LoadModels();
     PrintModelInfos();
   }
 
@@ -192,26 +192,15 @@ class OfflineTtsSupertonicModel::Impl {
   void Init(Manager *mgr) {
     const std::string &model_dir =
         ResolveAbsolutePath(config_.supertonic.model_dir);
-    LoadConfig(model_dir + "/tts.json");
+    LoadConfig(mgr, model_dir + "/tts.json");
     PrintDebugInfo(model_dir);
-    LoadModels(mgr, model_dir);
+    LoadModels(mgr);
     PrintModelInfos();
   }
 
-  void LoadConfig(const std::string &config_path) {
-    AssertFileExists(config_path);
-    std::ifstream file(config_path);
-    if (!file.is_open()) {
-      SHERPA_ONNX_LOGE("Failed to open config file: %s", config_path.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    json j;
-    try {
-      file >> j;
-    } catch (const std::exception &e) {
-      SHERPA_ONNX_LOGE("Failed to parse JSON config: %s", e.what());
-      SHERPA_ONNX_EXIT(-1);
-    }
+  // Parse JSON config and populate cfg_. Shared logic for both LoadConfig
+  // variants.
+  void ParseConfig(const json &j) {
     if (j.find("ae") == j.end() || j.find("ttl") == j.end()) {
       SHERPA_ONNX_LOGE("Invalid config file: missing 'ae' or 'ttl' section");
       SHERPA_ONNX_EXIT(-1);
@@ -237,6 +226,40 @@ class OfflineTtsSupertonicModel::Impl {
       SHERPA_ONNX_LOGE("Invalid latent_dim: %d", cfg_.ttl.latent_dim);
       SHERPA_ONNX_EXIT(-1);
     }
+  }
+
+  void LoadConfig(const std::string &config_path) {
+    AssertFileExists(config_path);
+    std::ifstream file(config_path);
+    if (!file.is_open()) {
+      SHERPA_ONNX_LOGE("Failed to open config file: %s", config_path.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    json j;
+    try {
+      file >> j;
+    } catch (const std::exception &e) {
+      SHERPA_ONNX_LOGE("Failed to parse JSON config: %s", e.what());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    ParseConfig(j);
+  }
+
+  template <typename Manager>
+  void LoadConfig(Manager *mgr, const std::string &config_path) {
+    auto buf = ReadFile(mgr, config_path);
+    if (buf.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read config file: %s", config_path.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    json j;
+    try {
+      j = json::parse(buf.begin(), buf.end());
+    } catch (const std::exception &e) {
+      SHERPA_ONNX_LOGE("Failed to parse JSON config: %s", e.what());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    ParseConfig(j);
   }
 
   void InitCudaIOBinding() {
