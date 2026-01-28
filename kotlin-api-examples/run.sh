@@ -37,6 +37,26 @@ function testVersion() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testPocketTts() {
+  if [ ! -f ./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+    tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+    rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+  fi
+
+  out_filename=test_pocket_tts.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_pocket_tts.kt \
+    Tts.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
@@ -582,7 +602,7 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
-
+testPocketTts
 testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc

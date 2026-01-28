@@ -44,11 +44,36 @@ data class OfflineTtsKittenModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+/**
+ * Configuration for Pocket TTS models.
+ *
+ * See https://k2-fsa.github.io/sherpa/onnx/tts/pocket/index.html for details.
+ *
+ * @property lmFlow Path to the LM flow model (.onnx)
+ * @property lmMain Path to the LM main model (.onnx)
+ * @property encoder Path to the encoder model (.onnx)
+ * @property decoder Path to the decoder model (.onnx)
+ * @property textConditioner Path to the text conditioner model (.onnx)
+ * @property vocabJson Path to vocabulary JSON file
+ * @property tokenScoresJson Path to token scores JSON file
+ */
+data class OfflineTtsPocketModelConfig(
+  var lmFlow: String = "",
+  var lmMain: String = "",
+  var encoder: String = "",
+  var decoder: String = "",
+  var textConditioner: String = "",
+  var vocabJson: String = "",
+  var tokenScoresJson: String = "",
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
+    val pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -76,6 +101,17 @@ class GeneratedAudio(
     ): Boolean
 }
 
+data class GenerationConfig(
+    var silenceScale: Float = 0.2f,
+    var speed: Float = 1.0f,
+    var sid: Int = 0,
+    var referenceAudio: FloatArray? = null,
+    var referenceSampleRate: Int = 0,
+    var referenceText: String? = null,
+    var numSteps: Int = 5,
+    var extra: Map<String, String>? = null
+)
+
 class OfflineTts(
     assetManager: AssetManager? = null,
     var config: OfflineTtsConfig,
@@ -99,11 +135,7 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f
     ): GeneratedAudio {
-        val objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
-        )
+        return generateImpl(ptr, text = text, sid = sid, speed = speed)
     }
 
     fun generateWithCallback(
@@ -112,17 +144,28 @@ class OfflineTts(
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
     ): GeneratedAudio {
-        val objArray = generateWithCallbackImpl(
+        return generateWithCallbackImpl(
             ptr,
             text = text,
             sid = sid,
             speed = speed,
             callback = callback
         )
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
-        )
+    }
+
+    fun generateWithConfig(
+      text: String,
+      config: GenerationConfig
+    ): GeneratedAudio {
+        return generateWithConfigImpl(ptr, text, config, null)
+    }
+
+    fun generateWithConfigAndCallback(
+        text: String,
+        config: GenerationConfig,
+        callback: (samples: FloatArray) -> Int
+    ): GeneratedAudio {
+        return generateWithConfigImpl(ptr, text, config, callback)
     }
 
     fun allocate(assetManager: AssetManager? = null) {
@@ -173,7 +216,7 @@ class OfflineTts(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f
-    ): Array<Any>
+    ): GeneratedAudio
 
     private external fun generateWithCallbackImpl(
         ptr: Long,
@@ -181,7 +224,15 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
-    ): Array<Any>
+    ): GeneratedAudio
+
+
+    private external fun generateWithConfigImpl(
+        ptr: Long,
+        text: String,
+        config: GenerationConfig,
+        callback: ((samples: FloatArray) -> Int)?
+    ): GeneratedAudio
 
     companion object {
         init {

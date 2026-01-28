@@ -73,7 +73,7 @@ struct GenerationConfig {
   std::vector<float> reference_audio;  // mono, [-1, 1]
   int32_t reference_sample_rate = 0;   // sample rate of reference_audio
   std::string reference_text;          // not all models require this
-  int32_t num_steps = 20;              // number of steps in flow matching
+  int32_t num_steps = 5;               // number of steps in flow matching
 
   // model specific
   // Please see the Generate method of each model in ./offline-tts-xx-impl.h
