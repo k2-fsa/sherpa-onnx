@@ -55,22 +55,8 @@ class AudioTagging(
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun compute(stream: OfflineStream, topK: Int = -1): ArrayList<AudioEvent> {
-        val events: Array<Any> = compute(ptr, stream.ptr, topK)
-        val ans = ArrayList<AudioEvent>()
-
-        for (e in events) {
-            val p: Array<Any> = e as Array<Any>
-            ans.add(
-                AudioEvent(
-                    name = p[0] as String,
-                    index = p[1] as Int,
-                    prob = p[2] as Float,
-                )
-            )
-        }
-
-        return ans
+    fun compute(stream: OfflineStream, topK: Int = -1): Array<AudioEvent> {
+        return compute(ptr, stream.ptr, topK)
     }
 
     private external fun newFromAsset(
@@ -86,7 +72,7 @@ class AudioTagging(
 
     private external fun createStream(ptr: Long): Long
 
-    private external fun compute(ptr: Long, streamPtr: Long, topK: Int): Array<Any>
+    private external fun compute(ptr: Long, streamPtr: Long, topK: Int): Array<AudioEvent>
 
     companion object {
         init {

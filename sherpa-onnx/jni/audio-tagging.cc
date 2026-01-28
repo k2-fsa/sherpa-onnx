@@ -133,25 +133,36 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_compute(
   auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
   std::vector<sherpa_onnx::AudioEvent> events = tagger->Compute(stream, top_k);
 
-  // TODO(fangjun): Return an array of AudioEvent directly
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      events.size(), env->FindClass("java/lang/Object"), nullptr);
+  // Find the AudioEvent class
+  jclass audioEventCls = env->FindClass("com/k2fsa/sherpa/onnx/AudioEvent");
+  if (audioEventCls == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to find class com/k2fsa/sherpa/onnx/AudioEvent");
+    return nullptr;
+  }
 
-  int32_t i = 0;
-  for (const auto &e : events) {
-    jobjectArray a = (jobjectArray)env->NewObjectArray(
-        3, env->FindClass("java/lang/Object"), nullptr);
+  // Get the constructor: AudioEvent(String name, int index, float prob)
+  jmethodID ctor =
+      env->GetMethodID(audioEventCls, "<init>", "(Ljava/lang/String;IF)V");
+  if (ctor == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to get AudioEvent constructor");
+    return nullptr;
+  }
 
-    // 0 name
-    // 1 index
-    // 2 prob
-    jstring js = env->NewStringUTF(e.name.c_str());
-    env->SetObjectArrayElement(a, 0, js);
-    env->SetObjectArrayElement(a, 1, NewInteger(env, e.index));
-    env->SetObjectArrayElement(a, 2, NewFloat(env, e.prob));
+  // Create a jobjectArray of AudioEvent
+  jobjectArray obj_arr =
+      env->NewObjectArray(events.size(), audioEventCls, nullptr);
 
-    env->SetObjectArrayElement(obj_arr, i, a);
-    i += 1;
+  for (size_t i = 0; i < events.size(); ++i) {
+    const auto &e = events[i];
+
+    jstring name = env->NewStringUTF(e.name.c_str());
+    jobject event_obj =
+        env->NewObject(audioEventCls, ctor, name, e.index, e.prob);
+
+    env->SetObjectArrayElement(obj_arr, i, event_obj);
+
+    env->DeleteLocalRef(name);
+    env->DeleteLocalRef(event_obj);
   }
 
   return obj_arr;

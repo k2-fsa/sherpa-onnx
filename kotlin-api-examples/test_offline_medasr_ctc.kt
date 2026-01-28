@@ -4,14 +4,12 @@ fun main() {
   val recognizer = createOfflineRecognizer()
   val waveFilename = "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/test_wavs/0.wav"
 
-  val objArray = WaveReader.readWaveFromFile(
+  val waveData = WaveReader.readWaveFromFile(
       filename = waveFilename,
   )
-  val samples: FloatArray = objArray[0] as FloatArray
-  val sampleRate: Int = objArray[1] as Int
 
   var stream = recognizer.createStream()
-  stream.acceptWaveform(samples, sampleRate=sampleRate)
+  stream.acceptWaveform(waveData.samples, sampleRate=waveData.sampleRate)
   recognizer.decode(stream)
 
   var result = recognizer.getResult(stream)
