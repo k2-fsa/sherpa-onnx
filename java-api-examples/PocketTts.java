@@ -5,6 +5,8 @@
 import com.k2fsa.sherpa.onnx.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class PocketTts {
   public static void main(String[] args) {
@@ -94,6 +96,29 @@ public class PocketTts {
                   samples -> {
                     System.out.println("Lambda Integer callback: " + samples.length);
                     return 1; // continue
+                  });
+    }
+
+    if (false) {
+      audio =
+          tts.generateWithConfigAndCallback(
+              text,
+              genConfig,
+              (Consumer<float[]>)
+                  samples -> {
+                    System.out.println("Consumer: " + samples.length);
+                  });
+    }
+
+    if (false) {
+      audio =
+          tts.generateWithConfigAndCallback(
+              text,
+              genConfig,
+              (Function<float[], Integer>)
+                  samples -> {
+                    System.out.println("Function: " + samples.length);
+                    return 1;
                   });
     }
 

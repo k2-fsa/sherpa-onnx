@@ -135,11 +135,7 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f
     ): GeneratedAudio {
-        val objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
-        )
+        return generateImpl(ptr, text = text, sid = sid, speed = speed)
     }
 
     fun generateWithCallback(
@@ -148,16 +144,12 @@ class OfflineTts(
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
     ): GeneratedAudio {
-        val objArray = generateWithCallbackImpl(
+        return generateWithCallbackImpl(
             ptr,
             text = text,
             sid = sid,
             speed = speed,
             callback = callback
-        )
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
         )
     }
 
@@ -165,11 +157,7 @@ class OfflineTts(
       text: String,
       config: GenerationConfig
     ): GeneratedAudio {
-        val objArray = generateWithConfigImpl(ptr, text, config, null)
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
-        )
+        return generateWithConfigImpl(ptr, text, config, null)
     }
 
     fun generateWithConfigAndCallback(
@@ -177,11 +165,7 @@ class OfflineTts(
         config: GenerationConfig,
         callback: (samples: FloatArray) -> Int
     ): GeneratedAudio {
-        val objArray = generateWithConfigImpl(ptr, text, config, callback)
-        return GeneratedAudio(
-            samples = objArray[0] as FloatArray,
-            sampleRate = objArray[1] as Int
-        )
+        return generateWithConfigImpl(ptr, text, config, callback)
     }
 
     fun allocate(assetManager: AssetManager? = null) {
@@ -232,7 +216,7 @@ class OfflineTts(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f
-    ): Array<Any>
+    ): GeneratedAudio
 
     private external fun generateWithCallbackImpl(
         ptr: Long,
@@ -240,7 +224,7 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
-    ): Array<Any>
+    ): GeneratedAudio
 
 
     private external fun generateWithConfigImpl(
@@ -248,7 +232,7 @@ class OfflineTts(
         text: String,
         config: GenerationConfig,
         callback: ((samples: FloatArray) -> Int)?
-    ): Array<Any>
+    ): GeneratedAudio
 
     companion object {
         init {

@@ -6,7 +6,7 @@ fun main() {
 
 fun testPocketTts() {
   // see https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  var config = OfflineTtsConfig(
+  val config = OfflineTtsConfig(
     model=OfflineTtsModelConfig(
       pocket=OfflineTtsPocketModelConfig(
         lmFlow="./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx",
@@ -47,7 +47,7 @@ fun testPocketTts() {
 }
 
 fun callback(samples: FloatArray): Int {
-  println("callback got called with ${samples.size} samples");
+  println("callback got called with ${samples.size} samples")
 
   // 1 means to continue
   // 0 means to stop

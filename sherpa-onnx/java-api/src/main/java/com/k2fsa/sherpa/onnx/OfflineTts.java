@@ -2,7 +2,6 @@
 
 package com.k2fsa.sherpa.onnx;
 
-
 public class OfflineTts {
     private long ptr = 0;
 
@@ -11,38 +10,36 @@ public class OfflineTts {
         ptr = newFromFile(config);
     }
 
+    /** Returns the sample rate of the TTS engine. */
     public int getSampleRate() {
         return getSampleRate(ptr);
     }
 
+    /** Generates audio for the given text using the default speaker (sid=0) and speed=1.0. */
     public GeneratedAudio generate(String text) {
         return generate(text, 0, 1.0f);
     }
 
+    /** Generates audio for the given text using a specific speaker ID. */
     public GeneratedAudio generate(String text, int sid) {
         return generate(text, sid, 1.0f);
     }
 
+    /** Generates audio for the given text using a specific speaker ID and speed multiplier. */
     public GeneratedAudio generate(String text, int sid, float speed) {
-        Object[] arr = generateImpl(ptr, text, sid, speed);
-        float[] samples = (float[]) arr[0];
-        int sampleRate = (int) arr[1];
-        return new GeneratedAudio(samples, sampleRate);
+        return generateImpl(ptr, text, sid, speed);
     }
 
-    public GeneratedAudio generateWithCallback(String text, OfflineTtsCallback callback) {
+    public GeneratedAudio generateWithCallback(String text, Object callback) {
         return generateWithCallback(text, 0, 1.0f, callback);
     }
 
-    public GeneratedAudio generateWithCallback(String text, int sid, OfflineTtsCallback callback) {
+    public GeneratedAudio generateWithCallback(String text, int sid, Object callback) {
         return generateWithCallback(text, sid, 1.0f, callback);
     }
 
-    public GeneratedAudio generateWithCallback(String text, int sid, float speed, OfflineTtsCallback callback) {
-        Object[] arr = generateWithCallbackImpl(ptr, text, sid, speed, callback);
-        float[] samples = (float[]) arr[0];
-        int sampleRate = (int) arr[1];
-        return new GeneratedAudio(samples, sampleRate);
+    public GeneratedAudio generateWithCallback(String text, int sid, float speed, Object callback) {
+        return generateWithCallbackImpl(ptr, text, sid, speed, callback);
     }
 
     /**
@@ -56,12 +53,9 @@ public class OfflineTts {
     public GeneratedAudio generateWithConfigAndCallback(
             String text,
             GenerationConfig config,
-            OfflineTtsCallback callback
+            Object callback
     ) {
-        Object[] arr = generateWithConfigImpl(ptr, text, config, callback);
-        float[] samples = (float[]) arr[0];
-        int sampleRate = (int) arr[1];
-        return new GeneratedAudio(samples, sampleRate);
+        return generateWithConfigImpl(ptr, text, config, callback);
     }
 
 
@@ -84,24 +78,15 @@ public class OfflineTts {
 
     private native int getNumSpeakers(long ptr);
 
-    private native Object[] generateImpl(long ptr, String text, int sid, float speed);
+    private native GeneratedAudio generateImpl(long ptr, String text, int sid, float speed);
 
-    private native Object[] generateWithCallbackImpl(long ptr, String text, int sid, float speed, OfflineTtsCallback callback);
+    private native GeneratedAudio generateWithCallbackImpl(long ptr, String text, int sid, float speed, Object callback);
 
-    /**
-     * Native method to call C++: Generate using GenerationConfig and callback.
-     *
-     * @param ptr Pointer to native OfflineTts.
-     * @param text Text to synthesize.
-     * @param config GenerationConfig object.
-     * @param callback Callback that receives float[] samples and returns int.
-     * @return Object[] where index 0 is float[] samples, index 1 is int sampleRate.
-     */
-    private native Object[] generateWithConfigImpl(
+    private native GeneratedAudio generateWithConfigImpl(
             long ptr,
             String text,
             GenerationConfig config,
-            OfflineTtsCallback callback
+            Object callback
     );
 
     private native long newFromFile(OfflineTtsConfig config);
