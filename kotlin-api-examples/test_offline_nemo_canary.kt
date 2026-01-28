@@ -26,7 +26,7 @@ fun main() {
   recognizer.setConfig(config)
 
   stream = recognizer.createStream()
-  stream.acceptWaveform(samples, sampleRate=sampleRate)
+  stream.acceptWaveform(waveData.samples, sampleRate=waveData.sampleRate)
   recognizer.decode(stream)
 
   result = recognizer.getResult(stream)
