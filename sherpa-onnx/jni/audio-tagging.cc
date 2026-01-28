@@ -134,36 +134,35 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_compute(
   std::vector<sherpa_onnx::AudioEvent> events = tagger->Compute(stream, top_k);
 
   // Find the AudioEvent class
-  jclass audioEventCls = env->FindClass("com/k2fsa/sherpa/onnx/AudioEvent");
-  if (audioEventCls == nullptr) {
+  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/AudioEvent");
+  if (cls == nullptr) {
     SHERPA_ONNX_LOGE("Failed to find class com/k2fsa/sherpa/onnx/AudioEvent");
     return nullptr;
   }
 
   // Get the constructor: AudioEvent(String name, int index, float prob)
-  jmethodID ctor =
-      env->GetMethodID(audioEventCls, "<init>", "(Ljava/lang/String;IF)V");
+  jmethodID ctor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;IF)V");
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get AudioEvent constructor");
     return nullptr;
   }
 
   // Create a jobjectArray of AudioEvent
-  jobjectArray obj_arr =
-      env->NewObjectArray(events.size(), audioEventCls, nullptr);
+  jobjectArray obj_arr = env->NewObjectArray(events.size(), cls, nullptr);
 
   for (size_t i = 0; i < events.size(); ++i) {
     const auto &e = events[i];
 
     jstring name = env->NewStringUTF(e.name.c_str());
-    jobject event_obj =
-        env->NewObject(audioEventCls, ctor, name, e.index, e.prob);
+    jobject event_obj = env->NewObject(cls, ctor, name, e.index, e.prob);
 
     env->SetObjectArrayElement(obj_arr, i, event_obj);
 
     env->DeleteLocalRef(name);
     env->DeleteLocalRef(event_obj);
   }
+
+  env->DeleteLocalRef(cls);
 
   return obj_arr;
 }

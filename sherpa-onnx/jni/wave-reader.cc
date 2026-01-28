@@ -38,6 +38,8 @@ static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
   jmethodID ctor = env->GetMethodID(cls, "<init>", "([FI)V");
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get WaveData constructor");
+
+    env->DeleteLocalRef(cls);
     return nullptr;
   }
 
@@ -46,6 +48,7 @@ static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
 
   // Clean up local refs
   env->DeleteLocalRef(samples_arr);
+  env->DeleteLocalRef(cls);
 
   return obj;
 }

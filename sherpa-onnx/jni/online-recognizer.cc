@@ -394,8 +394,9 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
   jobjectArray tokens = env->NewObjectArray(
       result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
   for (size_t i = 0; i < result.tokens.size(); ++i) {
-    env->SetObjectArrayElement(tokens, i,
-                               env->NewStringUTF(result.tokens[i].c_str()));
+    jstring token_str = env->NewStringUTF(result.tokens[i].c_str());
+    env->SetObjectArrayElement(tokens, i, token_str);
+    env->DeleteLocalRef(token_str);
   }
 
   // timestamps

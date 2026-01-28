@@ -519,7 +519,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
       env->GetMethodID(cls, "<init>",
                        "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
                        "String;Ljava/lang/String;Ljava/lang/String;[F)V");
-
   jstring jtext = env->NewStringUTF(result.text.c_str());
 
   jobjectArray jtokens = env->NewObjectArray(

@@ -5,11 +5,11 @@ import java.util.Arrays;
 
 public class WaveData {
     private final float[] samples;
-    private final int sample_rate;
+    private final int sampleRate;
 
-    public WaveData(float[] samples, int sample_rate) {
+    public WaveData(float[] samples, int sampleRate) {
         this.samples = samples;
-        this.sample_rate = sample_rate;
+        this.sampleRate = sampleRate;
     }
 
     public float[] getSamples() {
@@ -17,7 +17,7 @@ public class WaveData {
     }
 
     public int getSampleRate() {
-        return sample_rate;
+        return sampleRate;
     }
 
     @Override
@@ -25,13 +25,13 @@ public class WaveData {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         WaveData other = (WaveData) obj;
-        return sample_rate == other.sample_rate && Arrays.equals(samples, other.samples);
+        return sampleRate == other.sampleRate && Arrays.equals(samples, other.samples);
     }
 
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(samples);
-        result = 31 * result + sample_rate;
+        result = 31 * result + sampleRate;
         return result;
     }
 }
