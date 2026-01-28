@@ -378,6 +378,11 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   int32_t num_steps = config.num_steps > 0 ? config.num_steps
                                            : config_.model.supertonic.num_steps;
   std::vector<std::string> text_list = SplitStringAndTrim(text, '|');
+  if (text_list.empty()) {
+    SHERPA_ONNX_LOGE("Input text is empty");
+    SHERPA_ONNX_EXIT(-1);
+  }
+
   std::vector<std::string> lang_list;
   std::string lang_str = config.GetExtraString("lang", "");
   std::string batch_str = config.GetExtraString("batch", "");

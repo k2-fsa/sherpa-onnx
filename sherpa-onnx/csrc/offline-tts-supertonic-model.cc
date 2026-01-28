@@ -135,21 +135,41 @@ class OfflineTtsSupertonicModel::Impl {
   void LoadModels() {
     {
       auto buf = ReadFile(config_.supertonic.duration_predictor);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read duration_predictor model: %s",
+                         config_.supertonic.duration_predictor.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
                                                 sess_opts_);
     }
     {
       auto buf = ReadFile(config_.supertonic.text_encoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read text_encoder model: %s",
+                         config_.supertonic.text_encoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                       buf.size(), sess_opts_);
     }
     {
       auto buf = ReadFile(config_.supertonic.vector_estimator);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read vector_estimator model: %s",
+                         config_.supertonic.vector_estimator.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                         buf.size(), sess_opts_);
     }
     {
       auto buf = ReadFile(config_.supertonic.vocoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read vocoder model: %s",
+                         config_.supertonic.vocoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                      buf.size(), sess_opts_);
     }
@@ -159,21 +179,41 @@ class OfflineTtsSupertonicModel::Impl {
   void LoadModels(Manager *mgr) {
     {
       auto buf = ReadFile(mgr, config_.supertonic.duration_predictor);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read duration_predictor model: %s",
+                         config_.supertonic.duration_predictor.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
                                                 sess_opts_);
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.text_encoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read text_encoder model: %s",
+                         config_.supertonic.text_encoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                       buf.size(), sess_opts_);
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.vector_estimator);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read vector_estimator model: %s",
+                         config_.supertonic.vector_estimator.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                         buf.size(), sess_opts_);
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.vocoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read vocoder model: %s",
+                         config_.supertonic.vocoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
       vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
                                                      buf.size(), sess_opts_);
     }

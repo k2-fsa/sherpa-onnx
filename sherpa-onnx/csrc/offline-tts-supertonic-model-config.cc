@@ -105,8 +105,11 @@ bool OfflineTtsSupertonicModelConfig::Validate() const {
   size_t pos;
   while ((pos = voice_style.find(',', start)) != std::string::npos) {
     std::string path = voice_style.substr(start, pos - start);
-    while (!path.empty() && std::isspace(path[0])) path.erase(0, 1);
-    while (!path.empty() && std::isspace(path.back())) path.pop_back();
+    while (!path.empty() && std::isspace(static_cast<unsigned char>(path[0])))
+      path.erase(0, 1);
+    while (!path.empty() &&
+           std::isspace(static_cast<unsigned char>(path.back())))
+      path.pop_back();
     if (!path.empty()) {
       std::string abs_path = ResolveAbsolutePath(path);
       if (!FileExists(abs_path)) {
@@ -119,8 +122,11 @@ bool OfflineTtsSupertonicModelConfig::Validate() const {
   }
   if (start < voice_style.length()) {
     std::string path = voice_style.substr(start);
-    while (!path.empty() && std::isspace(path[0])) path.erase(0, 1);
-    while (!path.empty() && std::isspace(path.back())) path.pop_back();
+    while (!path.empty() && std::isspace(static_cast<unsigned char>(path[0])))
+      path.erase(0, 1);
+    while (!path.empty() &&
+           std::isspace(static_cast<unsigned char>(path.back())))
+      path.pop_back();
     if (!path.empty()) {
       std::string abs_path = ResolveAbsolutePath(path);
       if (!FileExists(abs_path)) {
