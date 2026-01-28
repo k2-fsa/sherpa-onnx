@@ -125,6 +125,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
   int32_t tokens_this_frame = 0;
 
   int32_t skip = 0;
+  std::vector<float> token_logits_copy(vocab_size);  // Reusable buffer for LogSoftmax
   for (int32_t t = 0; t < num_rows; t += skip) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
         memory_info, const_cast<float *>(p) + t * num_cols, num_cols,
@@ -152,8 +153,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
         std::max_element(token_logits, token_logits + vocab_size)));
 
     // Apply LogSoftmax to token logits and get log probability
-    // Note: Need to make a copy since token_logits is const
-    std::vector<float> token_logits_copy(token_logits, token_logits + vocab_size);
+    std::copy(token_logits, token_logits + vocab_size, token_logits_copy.begin());
     LogSoftmax(token_logits_copy.data(), vocab_size);
     float log_prob = token_logits_copy[y];
 
