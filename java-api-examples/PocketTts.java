@@ -1,7 +1,7 @@
 // Copyright 2026 Xiaomi Corporation
 
 // This file shows how to use a PocketTTS English model
-// to voice cloning.
+// for voice cloning.
 import com.k2fsa.sherpa.onnx.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,19 +60,48 @@ public class PocketTts {
     genConfig.setExtra(extra);
 
     long start = System.currentTimeMillis();
-    GeneratedAudio audio =
-        tts.generateWithConfigAndCallback(
-            text,
-            genConfig,
-            new OfflineTtsCallback() {
-              @Override
-              public Integer invoke(float[] samples) {
-                // you can play the generated samples in a separate thread
-                System.out.println("callback got called with " + samples.length + " samples");
-                // 1 = continue, 0 = stop
-                return 1;
-              }
-            });
+    GeneratedAudio audio = null;
+
+    // You can choose one of the following callback style
+    // ---------------------------------------------------
+    // 1. Anonymous class implementing OfflineTtsCallback
+    // ---------------------------------------------------
+    if (true) {
+      audio =
+          tts.generateWithConfigAndCallback(
+              text,
+              genConfig,
+              new OfflineTtsCallback() {
+                @Override
+                public Integer invoke(float[] samples) {
+                  // you can play the generated samples in a separate thread
+                  System.out.println("callback got called with " + samples.length + " samples");
+                  // 1 = continue, 0 = stop
+                  return 1;
+                }
+              });
+    }
+
+    // -------------------------------
+    // 2. Lambda implementing OfflineTtsCallback
+    // -------------------------------
+    if (false) {
+      audio =
+          tts.generateWithConfigAndCallback(
+              text,
+              genConfig,
+              (OfflineTtsCallback)
+                  samples -> {
+                    System.out.println("Lambda Integer callback: " + samples.length);
+                    return 1; // continue
+                  });
+    }
+
+    if (audio == null) {
+      System.err.println("No audio was generated. Please enable at least one callback branch.");
+      return;
+    }
+
     long stop = System.currentTimeMillis();
 
     float timeElapsedSeconds = (stop - start) / 1000.0f;

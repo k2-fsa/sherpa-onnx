@@ -11,31 +11,24 @@
 
 namespace sherpa_onnx {
 
+// ------------------ JNI Config Helpers ------------------
+
 static GenerationConfig GetGenerationConfig(JNIEnv *env, jobject config_obj) {
   GenerationConfig ans;
 
-  if (config_obj == nullptr) {
+  if (!config_obj) {
     SHERPA_ONNX_LOGE("GenerationConfig is null");
     return ans;
   }
 
   jclass cls = env->GetObjectClass(config_obj);
-  jfieldID fid;
 
-  // silenceScale
-  fid = env->GetFieldID(cls, "silenceScale", "F");
-  if (fid != nullptr) ans.silence_scale = env->GetFloatField(config_obj, fid);
-
-  // speed
-  fid = env->GetFieldID(cls, "speed", "F");
-  if (fid != nullptr) ans.speed = env->GetFloatField(config_obj, fid);
-
-  // sid
-  fid = env->GetFieldID(cls, "sid", "I");
-  if (fid != nullptr) ans.sid = env->GetIntField(config_obj, fid);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.silence_scale, silenceScale, cls, config_obj);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.speed, speed, cls, config_obj);
+  SHERPA_ONNX_JNI_READ_INT(ans.sid, sid, cls, config_obj);
 
   // referenceAudio
-  fid = env->GetFieldID(cls, "referenceAudio", "[F");
+  jfieldID fid = env->GetFieldID(cls, "referenceAudio", "[F");
   if (fid != nullptr) {
     jfloatArray arr = (jfloatArray)env->GetObjectField(config_obj, fid);
     if (arr != nullptr) {
@@ -43,28 +36,18 @@ static GenerationConfig GetGenerationConfig(JNIEnv *env, jobject config_obj) {
       jfloat *elems = env->GetFloatArrayElements(arr, nullptr);
       ans.reference_audio.assign(elems, elems + len);
       env->ReleaseFloatArrayElements(arr, elems, JNI_ABORT);
+      env->DeleteLocalRef(arr);
     }
   }
 
-  // referenceSampleRate
-  fid = env->GetFieldID(cls, "referenceSampleRate", "I");
-  if (fid != nullptr)
-    ans.reference_sample_rate = env->GetIntField(config_obj, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.reference_sample_rate, referenceSampleRate, cls,
+                           config_obj);
 
   // referenceText
-  fid = env->GetFieldID(cls, "referenceText", "Ljava/lang/String;");
-  if (fid != nullptr) {
-    jstring str = (jstring)env->GetObjectField(config_obj, fid);
-    if (str != nullptr) {
-      const char *chars = env->GetStringUTFChars(str, nullptr);
-      ans.reference_text = chars;
-      env->ReleaseStringUTFChars(str, chars);
-    }
-  }
+  SHERPA_ONNX_JNI_READ_STRING(ans.reference_text, referenceText, cls,
+                              config_obj);
 
-  // numSteps
-  fid = env->GetFieldID(cls, "numSteps", "I");
-  if (fid != nullptr) ans.num_steps = env->GetIntField(config_obj, fid);
+  SHERPA_ONNX_JNI_READ_INT(ans.num_steps, numSteps, cls, config_obj);
 
   // extra Map<String, String>
   fid = env->GetFieldID(cls, "extra", "Ljava/util/Map;");
@@ -94,20 +77,36 @@ static GenerationConfig GetGenerationConfig(JNIEnv *env, jobject config_obj) {
 
       while (env->CallBooleanMethod(iterator, hasNextMid)) {
         jobject entry = env->CallObjectMethod(iterator, nextMid);
+        if (!entry) {
+          continue;
+        }
+
         jstring key = (jstring)env->CallObjectMethod(entry, getKeyMid);
         jstring value = (jstring)env->CallObjectMethod(entry, getValueMid);
 
         const char *keyChars = env->GetStringUTFChars(key, nullptr);
         const char *valueChars = env->GetStringUTFChars(value, nullptr);
-
         ans.extra[std::string(keyChars)] = std::string(valueChars);
 
         env->ReleaseStringUTFChars(key, keyChars);
         env->ReleaseStringUTFChars(value, valueChars);
+
+        env->DeleteLocalRef(key);
+        env->DeleteLocalRef(value);
+        env->DeleteLocalRef(entry);
       }
+
+      env->DeleteLocalRef(entry_set);
+      env->DeleteLocalRef(iterator);
+      env->DeleteLocalRef(entry_cls);
+      env->DeleteLocalRef(iter_cls);
+      env->DeleteLocalRef(set_cls);
+      env->DeleteLocalRef(map_cls);
+      env->DeleteLocalRef(map_obj);
     }
   }
 
+  env->DeleteLocalRef(cls);
   return ans;
 }
 
@@ -261,11 +260,76 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_FLOAT(ans.silence_scale, silenceScale, cls, config);
 
+  env->DeleteLocalRef(model);
+  env->DeleteLocalRef(vits);
+  env->DeleteLocalRef(vits_cls);
+  env->DeleteLocalRef(matcha);
+  env->DeleteLocalRef(matcha_cls);
+  env->DeleteLocalRef(kokoro);
+  env->DeleteLocalRef(kokoro_cls);
+  env->DeleteLocalRef(kitten);
+  env->DeleteLocalRef(kitten_cls);
+  env->DeleteLocalRef(pocket);
+  env->DeleteLocalRef(pocket_cls);
+  env->DeleteLocalRef(model_config_cls);
+  env->DeleteLocalRef(cls);
+
   *ok = true;
   return ans;
 }
 
 }  // namespace sherpa_onnx
+
+// Convert audio samples and sample rate to a Java Object[]
+static jobjectArray CreateAudioObject(JNIEnv *env,
+                                      const std::vector<float> &samples,
+                                      int32_t sample_rate) {
+  jfloatArray samples_arr = env->NewFloatArray(samples.size());
+  env->SetFloatArrayRegion(samples_arr, 0, samples.size(), samples.data());
+
+  jclass obj_cls = reinterpret_cast<jclass>(env->FindClass("java/lang/Object"));
+
+  jobjectArray obj_arr = env->NewObjectArray(2, obj_cls, nullptr);
+
+  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
+  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, sample_rate));
+
+  env->DeleteLocalRef(samples_arr);
+  env->DeleteLocalRef(obj_cls);
+
+  return obj_arr;
+}
+
+static int32_t CallCallback(JNIEnv *env, jobject callback,
+                            jfloatArray samples_arr) {
+  if (!callback) return 1;
+
+  jclass cls = env->GetObjectClass(callback);
+
+  // 1. Check OfflineTtsCallback
+  jmethodID mid_invoke =
+      env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
+  if (mid_invoke != nullptr) {
+    jobject result = env->CallObjectMethod(callback, mid_invoke, samples_arr);
+    if (!result) {
+      env->DeleteLocalRef(cls);
+      return 1;
+    }
+    jclass integer_cls = env->GetObjectClass(result);
+    jmethodID int_val_mid = env->GetMethodID(integer_cls, "intValue", "()I");
+    int32_t ret = env->CallIntMethod(result, int_val_mid);
+    env->DeleteLocalRef(integer_cls);
+    env->DeleteLocalRef(result);
+    env->DeleteLocalRef(cls);
+
+    return ret;
+  }
+
+  SHERPA_ONNX_LOGE("Invalid callback. Ignore it");
+
+  env->DeleteLocalRef(cls);
+  return 1;  // fallback: continue
+}
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
@@ -297,7 +361,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
 #endif
       config);
 
-  return (jlong)tts;
+  return reinterpret_cast<jlong>(tts);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -354,19 +418,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
       p_text, sid, speed);
 
-  jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
-  env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),
-                           audio.samples.data());
-
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      2, env->FindClass("java/lang/Object"), nullptr);
-
-  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
-  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, audio.sample_rate));
-
   env->ReleaseStringUTFChars(text, p_text);
 
-  return obj_arr;
+  return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -376,65 +430,21 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     jfloat speed, jobject callback) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
 
-  std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n,
-                      float /*progress*/) -> int {
-    if (!callback) return 1;
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
+  std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
+      [env, callback](const float *samples, int32_t n, float) -> int32_t {
     jfloatArray samples_arr = env->NewFloatArray(n);
     env->SetFloatArrayRegion(samples_arr, 0, n, samples);
-
-    jclass cls = env->GetObjectClass(callback);
-
-    // Try Kotlin-style lambda first (boxed Int)
-    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
-    if (mid != nullptr) {
-      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
-      if (result != nullptr) {
-        jclass int_cls = env->GetObjectClass(result);
-        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
-        return env->CallIntMethod(result, int_value_mid);
-      }
-      return 1;
-    }
-
-    // Optional: Java primitive int apply([F)I fallback for pure Java callbacks
-    mid = env->GetMethodID(cls, "apply", "([F)I");
-    if (mid != nullptr) {
-      return env->CallIntMethod(callback, mid, samples_arr);
-    }
-
-    // Optional: Java boxed Integer apply([F)Integer fallback
-    mid = env->GetMethodID(cls, "apply", "([F)Ljava/lang/Integer;");
-    if (mid != nullptr) {
-      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
-      if (result != nullptr) {
-        jclass int_cls = env->GetObjectClass(result);
-        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
-        return env->CallIntMethod(result, int_value_mid);
-      }
-      return 1;
-    }
-
-    return 1;  // default
+    int32_t ret = CallCallback(env, callback, samples_arr);
+    env->DeleteLocalRef(samples_arr);
+    return ret;
   };
 
-  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
   auto audio = tts->Generate(p_text, sid, speed, callback_wrapper);
-
-  jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
-  env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),
-                           audio.samples.data());
-
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      2, env->FindClass("java/lang/Object"), nullptr);
-
-  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
-  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, audio.sample_rate));
-
   env->ReleaseStringUTFChars(text, p_text);
 
-  return obj_arr;
+  return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -444,66 +454,21 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
     jobject callback) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
   auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n,
-                      float /*progress*/) -> int {
-    if (!callback) return 1;
-
+      [env, callback](const float *samples, int32_t n, float) -> int {
     jfloatArray samples_arr = env->NewFloatArray(n);
     env->SetFloatArrayRegion(samples_arr, 0, n, samples);
-
-    jclass cls = env->GetObjectClass(callback);
-
-    // Try Kotlin-style lambda first (boxed Int)
-    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
-    if (mid != nullptr) {
-      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
-      if (result != nullptr) {
-        jclass int_cls = env->GetObjectClass(result);
-        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
-        return env->CallIntMethod(result, int_value_mid);
-      }
-      return 1;
-    }
-
-    // Optional: Java primitive int apply([F)I fallback for pure Java callbacks
-    mid = env->GetMethodID(cls, "apply", "([F)I");
-    if (mid != nullptr) {
-      return env->CallIntMethod(callback, mid, samples_arr);
-    }
-
-    // Optional: Java boxed Integer apply([F)Integer fallback
-    mid = env->GetMethodID(cls, "apply", "([F)Ljava/lang/Integer;");
-    if (mid != nullptr) {
-      jobject result = env->CallObjectMethod(callback, mid, samples_arr);
-      if (result != nullptr) {
-        jclass int_cls = env->GetObjectClass(result);
-        jmethodID int_value_mid = env->GetMethodID(int_cls, "intValue", "()I");
-        return env->CallIntMethod(result, int_value_mid);
-      }
-      return 1;
-    }
-
-    return 1;  // default
+    int ret = CallCallback(env, callback, samples_arr);
+    env->DeleteLocalRef(samples_arr);
+    return ret;
   };
 
-  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
   auto audio = tts->Generate(p_text, gen_config, callback_wrapper);
-
-  // Convert to Java array
-  jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
-  env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),
-                           audio.samples.data());
-
-  jobjectArray obj_arr =
-      env->NewObjectArray(2, env->FindClass("java/lang/Object"), nullptr);
-
-  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
-  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, audio.sample_rate));
-
   env->ReleaseStringUTFChars(text, p_text);
-  return obj_arr;
+
+  return CreateAudioObject(env, audio.samples, audio.sample_rate);
 }
 
 SHERPA_ONNX_EXTERN_C

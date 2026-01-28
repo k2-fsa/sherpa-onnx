@@ -55,10 +55,6 @@ function testPocketTts() {
   ls -lh $out_filename
 
   java -Djava.library.path=../build/lib -jar $out_filename
-
-  ls -lh $out_filename
-
-  java -Djava.library.path=../build/lib -jar $out_filename
 }
 
 function testSpeakerEmbeddingExtractor() {

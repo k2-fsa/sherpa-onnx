@@ -35,6 +35,14 @@ if [ ! -f ./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx ]; then
   rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 fi
 
+if false; then
+  javac \
+    -cp ../sherpa-onnx/java-api/build/sherpa-onnx.jar \
+    PocketTts.java
+  javap -p -s PocketTts.class
+  javap -p -s PocketTts$1.class
+fi
+
 java \
   -Djava.library.path=$PWD/../build/lib \
   -cp ../sherpa-onnx/java-api/build/sherpa-onnx.jar \

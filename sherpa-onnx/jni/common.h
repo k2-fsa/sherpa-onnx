@@ -51,18 +51,22 @@
           "LATEST code and the latest library");                              \
       if (env->ExceptionCheck()) {                                            \
         env->ExceptionDescribe();                                             \
+        env->ExceptionClear();                                                \
       }                                                                       \
-      env->ExceptionClear();                                                  \
       jclass exClass = env->FindClass("java/lang/RuntimeException");          \
       if (exClass) {                                                          \
         env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field);  \
+        env->DeleteLocalRef(exClass);                                         \
       }                                                                       \
       return ans;                                                             \
     }                                                                         \
     jstring s = (jstring)env->GetObjectField(config, fid);                    \
-    const char *p = env->GetStringUTFChars(s, nullptr);                       \
-    cpp_field = p;                                                            \
-    env->ReleaseStringUTFChars(s, p);                                         \
+    if (s != nullptr) {                                                       \
+      const char *p = env->GetStringUTFChars(s, nullptr);                     \
+      cpp_field = p;                                                          \
+      env->ReleaseStringUTFChars(s, p);                                       \
+      env->DeleteLocalRef(s);                                                 \
+    }                                                                         \
   } while (0)
 
 #define SHERPA_ONNX_JNI_READ_FLOAT(cpp_field, kotlin_field, cls, config)     \
@@ -76,11 +80,12 @@
           "LATEST code and the latest library");                             \
       if (env->ExceptionCheck()) {                                           \
         env->ExceptionDescribe();                                            \
+        env->ExceptionClear();                                               \
       }                                                                      \
-      env->ExceptionClear();                                                 \
       jclass exClass = env->FindClass("java/lang/RuntimeException");         \
       if (exClass) {                                                         \
         env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+        env->DeleteLocalRef(exClass);                                        \
       }                                                                      \
       return ans;                                                            \
     }                                                                        \
@@ -98,11 +103,12 @@
           "LATEST code and the latest library");                             \
       if (env->ExceptionCheck()) {                                           \
         env->ExceptionDescribe();                                            \
+        env->ExceptionClear();                                               \
       }                                                                      \
-      env->ExceptionClear();                                                 \
       jclass exClass = env->FindClass("java/lang/RuntimeException");         \
       if (exClass) {                                                         \
         env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+        env->DeleteLocalRef(exClass);                                        \
       }                                                                      \
       return ans;                                                            \
     }                                                                        \
@@ -120,11 +126,12 @@
           "LATEST code and the latest library");                             \
       if (env->ExceptionCheck()) {                                           \
         env->ExceptionDescribe();                                            \
+        env->ExceptionClear();                                               \
       }                                                                      \
-      env->ExceptionClear();                                                 \
       jclass exClass = env->FindClass("java/lang/RuntimeException");         \
       if (exClass) {                                                         \
         env->ThrowNew(exClass, "Failed to get field ID for " #kotlin_field); \
+        env->DeleteLocalRef(exClass);                                        \
       }                                                                      \
       return ans;                                                            \
     }                                                                        \
@@ -146,6 +153,7 @@ ReturnType SafeJNI(JNIEnv *env, const char *functionName, Func func,
     if (exClass != nullptr) {
       std::string errorMessage = std::string(functionName) + ": " + e.what();
       env->ThrowNew(exClass, errorMessage.c_str());
+      env->DeleteLocalRef(exClass);
     }
   } catch (...) {
     jclass exClass = env->FindClass("java/lang/RuntimeException");
@@ -153,6 +161,7 @@ ReturnType SafeJNI(JNIEnv *env, const char *functionName, Func func,
       std::string errorMessage = std::string(functionName) +
                                  ": Native exception: caught unknown exception";
       env->ThrowNew(exClass, errorMessage.c_str());
+      env->DeleteLocalRef(exClass);
     }
   }
   return defaultValue;
@@ -168,6 +177,7 @@ void SafeJNI(JNIEnv *env, const char *functionName, Func func) {
     if (exClass != nullptr) {
       std::string errorMessage = std::string(functionName) + ": " + e.what();
       env->ThrowNew(exClass, errorMessage.c_str());
+      env->DeleteLocalRef(exClass);
     }
   } catch (...) {
     jclass exClass = env->FindClass("java/lang/RuntimeException");
@@ -175,6 +185,7 @@ void SafeJNI(JNIEnv *env, const char *functionName, Func func) {
       std::string errorMessage = std::string(functionName) +
                                  ": Native exception: caught unknown exception";
       env->ThrowNew(exClass, errorMessage.c_str());
+      env->DeleteLocalRef(exClass);
     }
   }
 }
@@ -187,6 +198,7 @@ inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName,
     if (exClass != nullptr) {
       std::string errorMessage = std::string(functionName) + ": " + message;
       env->ThrowNew(exClass, errorMessage.c_str());
+      env->DeleteLocalRef(exClass);
     }
     return false;
   }
