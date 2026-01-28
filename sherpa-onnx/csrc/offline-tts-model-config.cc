@@ -78,6 +78,7 @@ std::string OfflineTtsModelConfig::ToString() const {
   os << "zipvoice=" << zipvoice.ToString() << ", ";
   os << "kitten=" << kitten.ToString() << ", ";
   os << "supertonic=" << supertonic.ToString() << ", ";
+  os << "pocket=" << pocket.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";
