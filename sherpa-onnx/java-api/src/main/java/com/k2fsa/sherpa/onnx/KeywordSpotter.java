@@ -33,11 +33,7 @@ public class KeywordSpotter {
     }
 
     public KeywordSpotterResult getResult(OnlineStream s) {
-        Object[] arr = getResult(ptr, s.getPtr());
-        String keyword = (String) arr[0];
-        String[] tokens = (String[]) arr[1];
-        float[] timestamps = (float[]) arr[2];
-        return new KeywordSpotterResult(keyword, tokens, timestamps);
+        return getResult(ptr, s.getPtr());
     }
 
     protected void finalize() throws Throwable {
@@ -65,5 +61,5 @@ public class KeywordSpotter {
 
     private native boolean isReady(long ptr, long streamPtr);
 
-    private native Object[] getResult(long ptr, long streamPtr);
+    private native KeywordSpotterResult getResult(long ptr, long streamPtr);
 }

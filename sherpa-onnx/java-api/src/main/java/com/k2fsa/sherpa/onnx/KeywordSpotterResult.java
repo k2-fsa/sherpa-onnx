@@ -2,6 +2,8 @@
 
 package com.k2fsa.sherpa.onnx;
 
+import java.util.Arrays;
+
 public class KeywordSpotterResult {
     private final String keyword;
     private final String[] tokens;
@@ -23,5 +25,14 @@ public class KeywordSpotterResult {
 
     public float[] getTimestamps() {
         return timestamps;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Keyword: ").append(keyword).append("\n");
+        sb.append("Tokens: ").append(Arrays.toString(tokens)).append("\n");
+        sb.append("Timestamps: ").append(Arrays.toString(timestamps));
+        return sb.toString();
     }
 }

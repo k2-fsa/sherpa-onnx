@@ -182,41 +182,45 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_isReady(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
-Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(JNIEnv *env,
-                                                    jobject /*obj*/, jlong ptr,
-                                                    jlong stream_ptr) {
+JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto kws = reinterpret_cast<sherpa_onnx::KeywordSpotter *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
 
   sherpa_onnx::KeywordResult result = kws->GetResult(stream);
 
-  // [0]: keyword, jstring
-  // [1]: tokens, array of jstring
-  // [2]: timestamps, array of float
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      3, env->FindClass("java/lang/Object"), nullptr);
+  jstring j_keyword = env->NewStringUTF(result.keyword.c_str());
 
-  jstring keyword = env->NewStringUTF(result.keyword.c_str());
-  env->SetObjectArrayElement(obj_arr, 0, keyword);
+  // Convert tokens (std::vector<std::string> -> String[])
+  jclass string_cls = env->FindClass("java/lang/String");
+  jobjectArray j_tokens =
+      env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
 
-  jobjectArray tokens_arr = (jobjectArray)env->NewObjectArray(
-      result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
-
-  int32_t i = 0;
-  for (const auto &t : result.tokens) {
-    jstring jtext = env->NewStringUTF(t.c_str());
-    env->SetObjectArrayElement(tokens_arr, i, jtext);
-    i += 1;
+  for (size_t i = 0; i < result.tokens.size(); ++i) {
+    jstring t = env->NewStringUTF(result.tokens[i].c_str());
+    env->SetObjectArrayElement(j_tokens, i, t);
+    env->DeleteLocalRef(t);
   }
 
-  env->SetObjectArrayElement(obj_arr, 1, tokens_arr);
-
-  jfloatArray timestamps_arr = env->NewFloatArray(result.timestamps.size());
-  env->SetFloatArrayRegion(timestamps_arr, 0, result.timestamps.size(),
+  // Convert timestamps (std::vector<float> -> float[])
+  jfloatArray j_timestamps = env->NewFloatArray(result.timestamps.size());
+  env->SetFloatArrayRegion(j_timestamps, 0, result.timestamps.size(),
                            result.timestamps.data());
 
-  env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+  // Find KeywordSpotterResult class
+  jclass result_cls =
+      env->FindClass("com/k2fsa/sherpa/onnx/KeywordSpotterResult");
 
-  return obj_arr;
+  jmethodID ctor = env->GetMethodID(
+      result_cls, "<init>", "(Ljava/lang/String;[Ljava/lang/String;[F)V");
+
+  // Create the KeywordSpotterResult object
+  jobject result_obj =
+      env->NewObject(result_cls, ctor, j_keyword, j_tokens, j_timestamps);
+
+  env->DeleteLocalRef(j_keyword);
+  env->DeleteLocalRef(j_tokens);
+  env->DeleteLocalRef(j_timestamps);
+
+  return result_obj;
 }
