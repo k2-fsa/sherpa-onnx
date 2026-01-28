@@ -120,14 +120,7 @@ class OnlineRecognizer(
     fun isEndpoint(stream: OnlineStream) = isEndpoint(ptr, stream.ptr)
     fun isReady(stream: OnlineStream) = isReady(ptr, stream.ptr)
     fun getResult(stream: OnlineStream): OnlineRecognizerResult {
-        val objArray = getResult(ptr, stream.ptr)
-
-        val text = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
-        val ysProbs = objArray[3] as FloatArray
-
-        return OnlineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps, ysProbs = ysProbs)
+        return getResult(ptr, stream.ptr)
     }
 
     private external fun delete(ptr: Long)
@@ -146,7 +139,7 @@ class OnlineRecognizer(
     private external fun decode(ptr: Long, streamPtr: Long)
     private external fun isEndpoint(ptr: Long, streamPtr: Long): Boolean
     private external fun isReady(ptr: Long, streamPtr: Long): Boolean
-    private external fun getResult(ptr: Long, streamPtr: Long): Array<Any>
+    private external fun getResult(ptr: Long, streamPtr: Long): OnlineRecognizerResult
 
     companion object {
         init {

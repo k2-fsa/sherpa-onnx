@@ -24,14 +24,12 @@ fun testSpokenLanguageIdentifcation() {
   )
 
   for (waveFilename in testFiles) {
-    val objArray = WaveReader.readWaveFromFile(
+    val waveData = WaveReader.readWaveFromFile(
         filename = waveFilename,
     )
-    val samples: FloatArray = objArray[0] as FloatArray
-    val sampleRate: Int = objArray[1] as Int
 
     val stream = slid.createStream()
-    stream.acceptWaveform(samples, sampleRate = sampleRate)
+    stream.acceptWaveform(waveData.samples, sampleRate=waveData.sampleRate)
     val lang = slid.compute(stream)
     stream.release()
     println(waveFilename)

@@ -4,14 +4,12 @@ fun main() {
   val recognizer = createOfflineRecognizer()
   val waveFilename = "./test-hr.wav"
 
-  val objArray = WaveReader.readWaveFromFile(
+  val waveData = WaveReader.readWaveFromFile(
       filename = waveFilename,
   )
-  val samples: FloatArray = objArray[0] as FloatArray
-  val sampleRate: Int = objArray[1] as Int
 
   val stream = recognizer.createStream()
-  stream.acceptWaveform(samples, sampleRate=sampleRate)
+  stream.acceptWaveform(waveData.samples, sampleRate=waveData.sampleRate)
   recognizer.decode(stream)
 
   val result = recognizer.getResult(stream)

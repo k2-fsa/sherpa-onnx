@@ -166,24 +166,7 @@ class OfflineRecognizer(
     }
 
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
-        val objArray = getResult(stream.ptr)
-
-        val text = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
-        val lang = objArray[3] as String
-        val emotion = objArray[4] as String
-        val event = objArray[5] as String
-        val durations = objArray[6] as FloatArray
-        return OfflineRecognizerResult(
-            text = text,
-            tokens = tokens,
-            timestamps = timestamps,
-            lang = lang,
-            emotion = emotion,
-            event = event,
-            durations = durations,
-        )
+        return getResult(stream.ptr)
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
@@ -207,7 +190,7 @@ class OfflineRecognizer(
 
     private external fun decode(ptr: Long, streamPtr: Long)
 
-    private external fun getResult(streamPtr: Long): Array<Any>
+    private external fun getResult(streamPtr: Long): OfflineRecognizerResult
 
     companion object {
         init {

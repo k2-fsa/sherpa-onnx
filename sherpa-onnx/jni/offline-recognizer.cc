@@ -506,62 +506,55 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decodeStreams(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
                                                        jobject /*obj*/,
                                                        jlong streamPtr) {
   auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
   sherpa_onnx::OfflineRecognitionResult result = stream->GetResult();
 
-  // [0]: text, jstring
-  // [1]: tokens, array of jstring
-  // [2]: timestamps, array of float
-  // [3]: lang, jstring
-  // [4]: emotion, jstring
-  // [5]: event, jstring
-  // [6]: durations, array of float
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      7, env->FindClass("java/lang/Object"), nullptr);
+  // 2. Find the Java class and constructor
+  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/OfflineRecognizerResult");
+  jmethodID ctor =
+      env->GetMethodID(cls, "<init>",
+                       "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
+                       "String;Ljava/lang/String;Ljava/lang/String;[F)V");
+  jstring jtext = env->NewStringUTF(result.text.c_str());
 
-  jstring text = env->NewStringUTF(result.text.c_str());
-  env->SetObjectArrayElement(obj_arr, 0, text);
-
-  jobjectArray tokens_arr = (jobjectArray)env->NewObjectArray(
+  jobjectArray jtokens = env->NewObjectArray(
       result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
 
-  int32_t i = 0;
-  for (const auto &t : result.tokens) {
-    jstring jtext = env->NewStringUTF(t.c_str());
-    env->SetObjectArrayElement(tokens_arr, i, jtext);
-    i += 1;
+  for (size_t i = 0; i < result.tokens.size(); ++i) {
+    jstring token_str = env->NewStringUTF(result.tokens[i].c_str());
+    env->SetObjectArrayElement(jtokens, i, token_str);
+    env->DeleteLocalRef(token_str);
   }
 
-  env->SetObjectArrayElement(obj_arr, 1, tokens_arr);
-
-  jfloatArray timestamps_arr = env->NewFloatArray(result.timestamps.size());
-  env->SetFloatArrayRegion(timestamps_arr, 0, result.timestamps.size(),
+  jfloatArray jtimestamps = env->NewFloatArray(result.timestamps.size());
+  env->SetFloatArrayRegion(jtimestamps, 0, result.timestamps.size(),
                            result.timestamps.data());
 
-  env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+  jstring jlang = env->NewStringUTF(result.lang.c_str());
+  jstring jemotion = env->NewStringUTF(result.emotion.c_str());
+  jstring jevent = env->NewStringUTF(result.event.c_str());
 
-  // [3]: lang, jstring
-  // [4]: emotion, jstring
-  // [5]: event, jstring
-  env->SetObjectArrayElement(obj_arr, 3,
-                             env->NewStringUTF(result.lang.c_str()));
-  env->SetObjectArrayElement(obj_arr, 4,
-                             env->NewStringUTF(result.emotion.c_str()));
-  env->SetObjectArrayElement(obj_arr, 5,
-                             env->NewStringUTF(result.event.c_str()));
-
-  // [6]: durations, array of float
-  jfloatArray durations_arr = env->NewFloatArray(result.durations.size());
-  env->SetFloatArrayRegion(durations_arr, 0, result.durations.size(),
+  jfloatArray jdurations = env->NewFloatArray(result.durations.size());
+  env->SetFloatArrayRegion(jdurations, 0, result.durations.size(),
                            result.durations.data());
 
-  env->SetObjectArrayElement(obj_arr, 6, durations_arr);
+  jobject jresult = env->NewObject(cls, ctor, jtext, jtokens, jtimestamps,
+                                   jlang, jemotion, jevent, jdurations);
 
-  return obj_arr;
+  env->DeleteLocalRef(jtext);
+  env->DeleteLocalRef(jtokens);
+  env->DeleteLocalRef(jtimestamps);
+  env->DeleteLocalRef(jlang);
+  env->DeleteLocalRef(jemotion);
+  env->DeleteLocalRef(jevent);
+  env->DeleteLocalRef(jdurations);
+  env->DeleteLocalRef(cls);
+
+  return jresult;  // returned object is safe
 }
 
 SHERPA_ONNX_EXTERN_C

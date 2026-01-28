@@ -10,6 +10,7 @@ java_files := LibraryUtils.java
 java_files += LibraryLoader.java
 
 java_files += VersionInfo.java
+java_files += WaveData.java
 java_files += WaveReader.java
 java_files += WaveWriter.java
 java_files += EndpointRule.java
