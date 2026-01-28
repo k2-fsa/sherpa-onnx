@@ -25,11 +25,17 @@ static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
   }
 
   jfloatArray samples_arr = env->NewFloatArray(samples.size());
+  if (samples_arr == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to allocate samples array");
+    return nullptr;
+  }
+
   env->SetFloatArrayRegion(samples_arr, 0, samples.size(), samples.data());
 
   // Find WaveData class
   jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/WaveData");
   if (cls == nullptr) {
+    env->DeleteLocalRef(samples_arr);
     SHERPA_ONNX_LOGE("Failed to find class com/k2fsa/sherpa/onnx/WaveData");
     return nullptr;
   }
@@ -39,12 +45,18 @@ static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get WaveData constructor");
 
+    env->DeleteLocalRef(samples_arr);
     env->DeleteLocalRef(cls);
     return nullptr;
   }
 
   // Create WaveData object
   jobject obj = env->NewObject(cls, ctor, samples_arr, sampling_rate);
+  if (obj == nullptr) {
+    env->DeleteLocalRef(samples_arr);
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
 
   // Clean up local refs
   env->DeleteLocalRef(samples_arr);
