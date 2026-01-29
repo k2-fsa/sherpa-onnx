@@ -316,68 +316,10 @@ static jobject CreateAudioObject(JNIEnv *env, const std::vector<float> &samples,
   return gen_audio_obj;
 }
 
-// ----------------- Consumer<float[]> -----------------
-static int32_t CallConsumerCallback(JNIEnv *env, jobject callback,
-                                    jfloatArray samples_arr) {
-  jclass consumer_cls = env->FindClass("java/util/function/Consumer");
-  if (env->ExceptionCheck() || !env->IsInstanceOf(callback, consumer_cls)) {
-    env->DeleteLocalRef(consumer_cls);
-    return -1;  // not a Consumer
-  }
+static int32_t CallCallback(JNIEnv *env, jobject callback,
+                            jfloatArray samples_arr) {
+  if (!callback) return 1;
 
-  jmethodID accept_mid =
-      env->GetMethodID(consumer_cls, "accept", "(Ljava/lang/Object;)V");
-  if (env->ExceptionCheck()) {
-    env->DeleteLocalRef(consumer_cls);
-    return -1;
-  }
-
-  env->CallVoidMethod(callback, accept_mid, samples_arr);
-  if (env->ExceptionCheck()) {
-    env->DeleteLocalRef(consumer_cls);
-    return 1;  // exception occurred, continue
-  }
-
-  env->DeleteLocalRef(consumer_cls);
-  return 1;  // continue
-}
-
-// ----------------- Function<float[], Integer> -----------------
-static int32_t CallFunctionCallback(JNIEnv *env, jobject callback,
-                                    jfloatArray samples_arr) {
-  jclass function_cls = env->FindClass("java/util/function/Function");
-  if (env->ExceptionCheck() || !env->IsInstanceOf(callback, function_cls)) {
-    env->DeleteLocalRef(function_cls);
-    return -1;  // not a Function
-  }
-
-  jmethodID apply_mid = env->GetMethodID(
-      function_cls, "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
-  if (env->ExceptionCheck()) {
-    env->DeleteLocalRef(function_cls);
-    return -1;
-  }
-
-  jobject result = env->CallObjectMethod(callback, apply_mid, samples_arr);
-  if (env->ExceptionCheck() || !result) {
-    env->DeleteLocalRef(function_cls);
-    return 1;  // exception or null → continue
-  }
-
-  jclass integer_cls = env->FindClass("java/lang/Integer");
-  jmethodID int_val_mid = env->GetMethodID(integer_cls, "intValue", "()I");
-  jint ret = env->CallIntMethod(result, int_val_mid);
-
-  env->DeleteLocalRef(integer_cls);
-  env->DeleteLocalRef(result);
-  env->DeleteLocalRef(function_cls);
-
-  return ret;
-}
-
-// ----------------- OfflineTtsCallback.invoke -----------------
-static int32_t CallInvokeCallback(JNIEnv *env, jobject callback,
-                                  jfloatArray samples_arr) {
   jclass cls = env->GetObjectClass(callback);
   if (env->ExceptionCheck()) {
     env->DeleteLocalRef(cls);
@@ -406,24 +348,6 @@ static int32_t CallInvokeCallback(JNIEnv *env, jobject callback,
   env->DeleteLocalRef(cls);
 
   return ret;
-}
-
-static int32_t CallCallback(JNIEnv *env, jobject callback,
-                            jfloatArray samples_arr) {
-  if (!callback) return 1;
-
-  int32_t ret;
-
-  // Try Consumer
-  ret = CallConsumerCallback(env, callback, samples_arr);
-  if (ret != -1) return ret;
-
-  // Try Function
-  ret = CallFunctionCallback(env, callback, samples_arr);
-  if (ret != -1) return ret;
-
-  // Fallback to invoke()
-  return CallInvokeCallback(env, callback, samples_arr);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -526,16 +450,23 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
-  std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n, float) -> int32_t {
-    jfloatArray samples_arr = env->NewFloatArray(n);
-    env->SetFloatArrayRegion(samples_arr, 0, n, samples);
-    int32_t ret = CallCallback(env, callback, samples_arr);
-    env->DeleteLocalRef(samples_arr);
-    return ret;
-  };
+  sherpa_onnx::GeneratedAudio audio;
 
-  auto audio = tts->Generate(p_text, sid, speed, callback_wrapper);
+  if (callback) {
+    std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
+        [env, callback](const float *samples, int32_t n, float) -> int32_t {
+      jfloatArray samples_arr = env->NewFloatArray(n);
+      env->SetFloatArrayRegion(samples_arr, 0, n, samples);
+      int32_t ret = CallCallback(env, callback, samples_arr);
+      env->DeleteLocalRef(samples_arr);
+      return ret;
+    };
+
+    audio = tts->Generate(p_text, sid, speed, callback_wrapper);
+  } else {
+    audio = tts->Generate(p_text, sid, speed, nullptr);
+  }
+
   env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);
@@ -550,16 +481,23 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithConfigImpl(
   auto gen_config = sherpa_onnx::GetGenerationConfig(env, _gen_config);
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
-  std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n, float) -> int32_t {
-    jfloatArray samples_arr = env->NewFloatArray(n);
-    env->SetFloatArrayRegion(samples_arr, 0, n, samples);
-    int32_t ret = CallCallback(env, callback, samples_arr);
-    env->DeleteLocalRef(samples_arr);
-    return ret;
-  };
+  sherpa_onnx::GeneratedAudio audio;
 
-  auto audio = tts->Generate(p_text, gen_config, callback_wrapper);
+  if (callback) {
+    std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
+        [env, callback](const float *samples, int32_t n, float) -> int32_t {
+      jfloatArray samples_arr = env->NewFloatArray(n);
+      env->SetFloatArrayRegion(samples_arr, 0, n, samples);
+      int32_t ret = CallCallback(env, callback, samples_arr);
+      env->DeleteLocalRef(samples_arr);
+      return ret;
+    };
+
+    audio = tts->Generate(p_text, gen_config, callback_wrapper);
+  } else {
+    audio = tts->Generate(p_text, gen_config, nullptr);
+  }
+
   env->ReleaseStringUTFChars(text, p_text);
 
   return CreateAudioObject(env, audio.samples, audio.sample_rate);

@@ -8,6 +8,9 @@ public class Vad {
     public Vad(VadModelConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid VadModelConfig: failed to create native Vad");
+        }
     }
 
     @Override

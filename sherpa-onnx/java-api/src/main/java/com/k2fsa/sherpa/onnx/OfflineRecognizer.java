@@ -9,6 +9,9 @@ public class OfflineRecognizer {
     public OfflineRecognizer(OfflineRecognizerConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OfflineRecognizerConfig: failed to create native OfflineRecognizer");
+        }
 
         this.config = config;
     }
