@@ -8,6 +8,9 @@ public class AudioTagging {
     public AudioTagging(AudioTaggingConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid AudioTaggingConfig: failed to create native AudioTagging");
+        }
     }
 
     public OfflineStream createStream() {

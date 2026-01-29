@@ -9,6 +9,9 @@ public class OnlineRecognizer {
     public OnlineRecognizer(OnlineRecognizerConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OnlineRecognizerConfig: failed to create native OnlineRecognizer");
+        }
     }
 
     public void decode(OnlineStream s) {

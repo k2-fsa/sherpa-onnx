@@ -8,6 +8,9 @@ public class KeywordSpotter {
     public KeywordSpotter(KeywordSpotterConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid KeywordSpotterConfig: failed to create native KeywordSpotter");
+        }
     }
 
     public OnlineStream createStream(String keywords) {
