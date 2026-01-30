@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-win-crt-md-mt
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -101,12 +100,12 @@ jobs:
       - name: Show exe
         shell: bash
         run: |
-          ls -lh $PWD/build/bin/Release
+          ls -lh $PWD/build/bin/${{ matrix.build_type }}
 
       - name: Dump CRT dependencies
         shell: cmd
         run: |
-          dumpbin /dependents build\bin\Release\sherpa-onnx.exe
+          dumpbin /dependents build\bin\${{ matrix.build_type }}\sherpa-onnx.exe
 
       - name: Test online CTC
         shell: bash

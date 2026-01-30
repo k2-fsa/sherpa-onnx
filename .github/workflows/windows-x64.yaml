@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-win-crt-md-mt-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -26,9 +25,9 @@ on:
 
   workflow_dispatch:
 
-# concurrency:
-#   group: windows-x64-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: windows-x64-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows_x64:
@@ -38,9 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        # shared_lib: [ON, OFF]
-        shared_lib: [OFF]
-        # shared_lib: [ON]
+        shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
         use_static_crt: [ON, OFF]
 
