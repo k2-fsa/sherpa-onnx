@@ -57,6 +57,8 @@ jobs:
         shell: bash
         run: |
           mkdir build
+          cmake --version
+
           cd build
           cmake \
             -A x64 \
@@ -68,14 +70,58 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
+      - name: Check 1
+        shell: bash
+        run: |
+          cd build
+
+          cat sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 2
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" sherpa-onnx\csrc\sherpa-onnx.vcxproj
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-vcxproj-release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
+          path: build/sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 3
+        shell: bash
+        run: |
+          cd build
+
+          cat c-api-examples/vad-whisper-c-api.vcxproj
+
+      - name: Check 4
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" "c-api-examples\vad-whisper-c-api.vcxproj"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vad-whisper-c-api-vcxproj-release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
+          path: build/c-api-examples/vad-whisper-c-api.vcxproj
+
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
+          cmake --version
+
           cmake --build . --config Release  -- -m:2
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Setup tmate session
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
 
       - uses: actions/upload-artifact@v4
         with:
@@ -178,6 +224,11 @@ jobs:
         shell: bash
         run: |
           ls -lh $PWD/build/bin/Release
+
+      - name: Dump CRT dependencies
+        shell: cmd
+        run: |
+          link /dump /dependents "build\bin\Release\sherpa-onnx.exe"
 
       - name: Test offline Moonshine for windows x64
         shell: bash

@@ -4,6 +4,11 @@ endif()
 
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
+# https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+cmake_policy(SET CMP0091 NEW)
+
+message(STATUS "CMake version: ${CMAKE_VERSION}")
+
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
 
 set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
@@ -88,14 +93,32 @@ option(SHERPA_ONNX_USE_STATIC_CRT "For Windows only. ON to use static CRT (/MT /
 #   - Release -> /MT  or /MD
 #   - RelWithDebInfo / MinSizeRel -> /MT or /MD
 if (MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
-  if (SHERPA_ONNX_USE_STATIC_CRT)
-    # Use static CRT: /MT (Release) and /MTd (Debug)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY
-        "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  if(DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE STREQUAL "")
+    if (SHERPA_ONNX_USE_STATIC_CRT)
+      # Use static CRT: /MT (Release) and /MTd (Debug)
+      if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug")
+      else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+      endif()
+    else()
+      # Use dynamic CRT: /MD (Release) and /MDd (Debug)
+      if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+      else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+      endif()
+    endif()
   else()
-    # Use dynamic CRT: /MD (Release) and /MDd (Debug)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY
-        "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    if (SHERPA_ONNX_USE_STATIC_CRT)
+      # Use static CRT: /MT (Release) and /MTd (Debug)
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    else()
+      # Use dynamic CRT: /MD (Release) and /MDd (Debug)
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    endif()
   endif()
 endif()
 
@@ -206,6 +229,10 @@ message(STATUS "SHERPA_ONNX_ENABLE_ASCEND_NPU: ${SHERPA_ONNX_ENABLE_ASCEND_NPU}"
 message(STATUS "SHERPA_ONNX_ENABLE_QNN: ${SHERPA_ONNX_ENABLE_QNN}")
 message(STATUS "SHERPA_ONNX_ENABLE_SPACEMIT: ${SHERPA_ONNX_ENABLE_SPACEMIT}")
 message(STATUS "SHERPA_ONNX_LINK_D3D: ${SHERPA_ONNX_LINK_D3D}")
+message(STATUS "SHERPA_ONNX_USE_STATIC_CRT: ${SHERPA_ONNX_USE_STATIC_CRT}")
+if(MSVC)
+  message(STATUS "CMAKE_MSVC_RUNTIME_LIBRARY ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+endif()
 
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
