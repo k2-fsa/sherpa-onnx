@@ -19,18 +19,29 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
   message(FATAL_ERROR "This file is for building a release version on Windows x64")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2")
-set(onnxruntime_HASH "SHA256=86f2a87c029554bb685e528ff143090b4d4eb1a0b9ff5d08ba9b676d6c79b76c")
+# Determine which CRT flavor to use
+# SHERPA_ONNX_USE_STATIC_CRT = ON -> MT
+# SHERPA_ONNX_USE_STATIC_CRT = OFF -> MD
+if(SHERPA_ONNX_USE_STATIC_CRT)
+  set(onnxruntime_crt "MT")
+  set(onnxruntime_HASH "SHA256=7e19865adc0d6486089638a7431d977a62a02109a8c8cee4b6884b8ba104c193")
+else()
+  set(onnxruntime_crt "MD")
+  set(onnxruntime_HASH "SHA256=1236aeed8aa7f53ec40212ac105d2e2d242c69c85e5bd7314a5518e70134fd32")
+endif()
+
+message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
+
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2
-  /tmp/onnxruntime-win-x64-static_lib-1.23.2.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2
+  /tmp/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -38,7 +49,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -46,7 +56,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 

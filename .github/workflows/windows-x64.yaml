@@ -31,14 +31,16 @@ concurrency:
 
 jobs:
   windows_x64:
-    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
+    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }} static CRT ${{ matrix.use_static_crt }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        shared_lib: [ON, OFF]
+        # shared_lib: [ON, OFF]
+        shared_lib: [OFF]
         with_tts: [ON, OFF]
+        use_static_crt: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +61,7 @@ jobs:
           cmake \
             -A x64 \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -DSHERPA_ONNX_USE_STATIC_CRT=${{ matrix.use_static_crt }} \
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D CMAKE_BUILD_TYPE=Release \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
@@ -76,7 +79,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
+          name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
           path: build/install/*
 
       - name: Copy files
@@ -85,10 +88,19 @@ jobs:
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           shared_lib=${{ matrix.shared_lib }}
+          use_static_crt=${{ matrix.use_static_crt }}
           if [[ $shared_lib == "ON" ]]; then
-            suffix=shared
+            if [[ $use_static_crt == ON ]]; then
+              suffix=shared-MT
+            else
+              suffix=shared-MD
+            fi
           else
-            suffix=static
+            if [[ $use_static_crt == ON ]]; then
+              suffix=static-MT
+            else
+              suffix=static-MD
+            fi
           fi
 
           if [[ ${{ matrix.with_tts }} == ON ]]; then
@@ -104,6 +116,10 @@ jobs:
           cp -a build/install/include $dst/
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+          ls -lh $dst/
+
+          ls -lh *.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -157,6 +173,11 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*-win-x64*.tar.bz2
+
+      - name: Show exe
+        shell: bash
+        run: |
+          ls -lh $PWD/build/bin/Release
 
       - name: Test offline Moonshine for windows x64
         shell: bash
