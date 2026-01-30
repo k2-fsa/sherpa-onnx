@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix-win-crt-md-mt-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -25,9 +26,9 @@ on:
 
   workflow_dispatch:
 
-concurrency:
-  group: windows-x64-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: windows-x64-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   windows_x64:
@@ -39,6 +40,7 @@ jobs:
         os: [windows-2022]
         # shared_lib: [ON, OFF]
         shared_lib: [OFF]
+        # shared_lib: [ON]
         with_tts: [ON, OFF]
         use_static_crt: [ON, OFF]
 
@@ -46,6 +48,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: find dumpbin
+        shell: bash
+        run: |
+          which dumpbin
 
       - name: Update version
         shell: bash
@@ -119,9 +129,9 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
-      - name: Setup tmate session
-        if: failure()
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   if: failure()
+      #   uses: mxschmitt/action-tmate@v3
 
       - uses: actions/upload-artifact@v4
         with:
@@ -160,6 +170,10 @@ jobs:
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
+
+          ls -lh $dst/bin/
+          echo "---"
+          ls -lh $dst/lib/
 
           tar cjvf ${dst}.tar.bz2 $dst
 
@@ -228,7 +242,11 @@ jobs:
       - name: Dump CRT dependencies
         shell: cmd
         run: |
-          link /dump /dependents "build\bin\Release\sherpa-onnx.exe"
+          dumpbin /dependents build\bin\Release\sherpa-onnx.exe
+
+      # - name: Setup tmate session
+      #   if: failure()
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: Test offline Moonshine for windows x64
         shell: bash

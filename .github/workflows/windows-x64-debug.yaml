@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix-win-crt-md-mt
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
@@ -25,7 +26,7 @@ concurrency:
 
 jobs:
   windows_x64_debug:
-    name: Windows x64 ${{ matrix.build_type }}
+    name: Windows x64 ${{ matrix.build_type }} static CRT ${{ matrix.use_static_crt }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -33,6 +34,7 @@ jobs:
         os: [windows-2022]
         shared_lib: [OFF]
         build_type: [Debug, MinSizeRel, RelWithDebInfo]
+        use_static_crt: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,27 +47,66 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: find dumpbin
+        shell: bash
+        run: |
+          which dumpbin
+
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
+
+          cmake --version
+
           cd build
           cmake \
             -A x64 \
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_USE_STATIC_CRT=${{ matrix.use_static_crt }} \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
+      - name: Check 1
+        shell: bash
+        run: |
+          cd build
+
+          cat sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 2
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" sherpa-onnx\csrc\sherpa-onnx.vcxproj
+
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
+
+          cmake --version
+
           cmake --build . --config ${{ matrix.build_type }} -- -m:2
           cmake --build . --config ${{ matrix.build_type }} --target install -- -m:2
 
           ls -lh ./bin/${{ matrix.build_type }}/sherpa-onnx.exe
+
+      - name: Show exe
+        shell: bash
+        run: |
+          ls -lh $PWD/build/bin/Release
+
+      - name: Dump CRT dependencies
+        shell: cmd
+        run: |
+          dumpbin /dependents build\bin\Release\sherpa-onnx.exe
 
       - name: Test online CTC
         shell: bash

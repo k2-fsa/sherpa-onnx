@@ -24,10 +24,10 @@ endif()
 # SHERPA_ONNX_USE_STATIC_CRT = OFF -> MD
 if(SHERPA_ONNX_USE_STATIC_CRT)
   set(onnxruntime_crt "MT")
-  set(onnxruntime_HASH "SHA256=7e19865adc0d6486089638a7431d977a62a02109a8c8cee4b6884b8ba104c193")
+  set(onnxruntime_HASH "SHA256=5a2cb2609aeeba06d76b2b2a5268f5b27b149cf135dd166afea32266ecbbf4bd")
 else()
   set(onnxruntime_crt "MD")
-  set(onnxruntime_HASH "SHA256=1236aeed8aa7f53ec40212ac105d2e2d242c69c85e5bd7314a5518e70134fd32")
+  set(onnxruntime_HASH "SHA256=f14f8cc64fcd4eeae2567c818618da6d62efb2b4bdc695ce9e9e40c2e97d9d05")
 endif()
 
 message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
