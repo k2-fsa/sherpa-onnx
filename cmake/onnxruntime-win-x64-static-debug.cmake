@@ -15,26 +15,39 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(onnxruntime_HASH "SHA256=5990f20c799a01d5397129b3e792c0b0a8e61deea6b46dffef61aa3d7315b6af")
-elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-  set(onnxruntime_HASH "SHA256=1c923107630ffbd045115157b44f2e415cc553d64811a5399009208683ebcf58")
-elseif(CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
-  set(onnxruntime_HASH "SHA256=0ceab7ac41b220d43bbcb0826e8ecd6294669fd3a13b8643e40dd3c9db2ef896")
-else()
+# Hashes for static CRT (/MT)
+set(ONNXRUNTIME_HASH_MT_Debug "SHA256=efd7c3aa9fa10a380e5534ead76627790dd533142307e3fd1de2d1fba533dd90")
+set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=4cf1733121eee79c9f18b048d1f5e9603079931e62af1c878c0d873ecd48900e")
+set(ONNXRUNTIME_HASH_MT_MinSizeRel "SHA256=2d362a781ff98731423688ff5a50a08e1dd0e863e2de5b1d66c6595945a60735")
+
+# Hashes for dynamic CRT (/MD)
+set(ONNXRUNTIME_HASH_MD_Debug "SHA256=68aa603aa25fd1cbe7ebef465395d0b685aa66fc8fd2df0b6d6f5a1e88621c60")
+set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=ba5ae7bf3b5a29ea348f38516e7c46ff49921eb2a2e81e391f36bc932c4a7a20")
+set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=e57978b5811fcf795e07c33eb69f32fac5cac8b848d32acf1154ce13c9cbcfd7")
+
+if(NOT (CMAKE_BUILD_TYPE STREQUAL Debug OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo OR CMAKE_BUILD_TYPE STREQUAL MinSizeRel))
   message(FATAL_ERROR "This file is for building a debug version on Windows x64. Given ${CMAKE_BUILD_TYPE}")
 endif()
+
+if(SHERPA_ONNX_USE_STATIC_CRT)
+  set(onnxruntime_crt "MT")
+else()
+  set(onnxruntime_crt "MD")
+endif()
+
+set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}_${CMAKE_BUILD_TYPE}}")
+message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
+
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  /tmp/onnxruntime-win-x64-static_lib-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  /tmp/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -42,7 +55,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -50,7 +62,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 
