@@ -39,16 +39,31 @@ struct OfflineWhisperModelConfig {
   //   - 300 for multilingual models
   int32_t tail_paddings = -1;
 
+  // If true, use cross-attention weights and DTW to compute token-level
+  // timestamps. This requires ONNX models exported with attention outputs.
+  bool enable_token_timestamps = false;
+
+  // If true, use Whisper's native timestamp token mode to produce segment-level
+  // timestamps. The decoder outputs timestamp tokens like <|0.00|> interleaved
+  // with text, creating segments with start/end times. Does not require
+  // attention outputs. Can be combined with enable_token_timestamps for both
+  // segment-level and token-level timestamps.
+  bool enable_segment_timestamps = false;
+
   OfflineWhisperModelConfig() = default;
   OfflineWhisperModelConfig(const std::string &encoder,
                             const std::string &decoder,
                             const std::string &language,
-                            const std::string &task, int32_t tail_paddings)
+                            const std::string &task, int32_t tail_paddings,
+                            bool enable_token_timestamps = false,
+                            bool enable_segment_timestamps = false)
       : encoder(encoder),
         decoder(decoder),
         language(language),
         task(task),
-        tail_paddings(tail_paddings) {}
+        tail_paddings(tail_paddings),
+        enable_token_timestamps(enable_token_timestamps),
+        enable_segment_timestamps(enable_segment_timestamps) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -56,10 +71,39 @@ struct OfflineWhisperModelConfig {
   std::string ToString() const;
 };
 
+// Represents a segment with start/end timestamps from timestamp tokens
+struct OfflineWhisperSegment {
+  float start_time = 0.0f;
+  float end_time = 0.0f;
+  std::vector<int32_t> token_ids;  // Text token IDs in this segment
+};
+
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
   std::string lang;
+
+  /// Cross-attention weights for token-level timestamps (if enabled)
+  /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D
+  /// Empty if timestamps are not enabled or model doesn't support it
+  std::vector<float> attention_weights;
+
+  /// Dimensions of attention weights
+  int32_t attention_n_heads = 0;
+  int32_t attention_n_tokens = 0;
+  int32_t attention_n_frames = 0;
+
+  /// Number of actual audio feature frames (for clipping attention)
+  /// This is num_feature_frames / 2 (due to encoder downsampling)
+  int32_t num_audio_frames = 0;
+
+  /// Indices of timestamp tokens in the attention weights (0-based, relative
+  /// to the start of the attention sequence which includes initial tokens).
+  /// Used to filter out timestamp tokens before DTW alignment.
+  std::vector<int32_t> timestamp_token_indices;
+
+  /// Segments with timestamps (when using timestamp token mode)
+  std::vector<OfflineWhisperSegment> segments;
 };
 
 // used by ascend/rknn/qnn/axera, etc.

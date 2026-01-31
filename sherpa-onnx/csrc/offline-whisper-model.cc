@@ -150,7 +150,7 @@ class OfflineWhisperModel::Impl {
   }
 
   std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
-             Ort::Value>
+             Ort::Value, Ort::Value>
   ForwardDecoder(Ort::Value tokens, Ort::Value n_layer_self_k_cache,
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset) {
@@ -174,6 +174,9 @@ class OfflineWhisperModel::Impl {
       binding.BindOutput(decoder_output_names_ptr_[0], cpu_mem_info_);
       binding.BindOutput(decoder_output_names_ptr_[1], *cuda_mem_info_);
       binding.BindOutput(decoder_output_names_ptr_[2], *cuda_mem_info_);
+      if (has_attention_output_ && decoder_output_names_ptr_.size() > 3) {
+        binding.BindOutput(decoder_output_names_ptr_[3], cpu_mem_info_);
+      }
 
       binding.SynchronizeInputs();
       decoder_sess_->Run(Ort::RunOptions{nullptr}, binding);
@@ -186,12 +189,24 @@ class OfflineWhisperModel::Impl {
           decoder_output_names_ptr_.size());
     }
 
+    // Handle attention output (4th output) if present
+    // For models without attention output, this remains nullptr
+    Ort::Value attention_weights{nullptr};
+    if (has_attention_output_ && decoder_out.size() > 3) {
+      attention_weights = std::move(decoder_out[3]);
+    }
+
     return std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value,
-                      Ort::Value, Ort::Value>{
+                      Ort::Value, Ort::Value, Ort::Value>{
         std::move(decoder_out[0]),   std::move(decoder_out[1]),
         std::move(decoder_out[2]),   std::move(decoder_input[3]),
-        std::move(decoder_input[4]), std::move(decoder_input[5])};
+        std::move(decoder_input[4]), std::move(decoder_input[5]),
+        std::move(attention_weights)};
   }
+
+  bool HasAttentionOutput() const { return has_attention_output_; }
+
+  int32_t NumAlignmentHeads() const { return n_alignment_heads_; }
 
   int32_t DetectLanguage(Ort::Value &cross_k,    // NOLINT
                          Ort::Value &cross_v) {  // NOLINT
@@ -281,6 +296,15 @@ class OfflineWhisperModel::Impl {
 
   int32_t NoTimeStampsToken() const { return no_timestamps_; }
 
+  // First timestamp token (represents 0.00s)
+  // Timestamp tokens are: timestamp_begin, timestamp_begin+1, ..., timestamp_end
+  // Each token represents 0.02s (20ms) intervals from 0.00s to 30.00s
+  int32_t TimestampBegin() const { return timestamp_begin_; }
+
+  // Last timestamp token (represents 30.00s)
+  // There are 1501 timestamp tokens total (0.00s to 30.00s at 0.02s intervals)
+  int32_t TimestampEnd() const { return timestamp_begin_ + 1500; }
+
   int32_t EOT() const { return eot_; }
 
   int32_t SOT() const { return sot_; }
@@ -339,6 +363,9 @@ class OfflineWhisperModel::Impl {
     SHERPA_ONNX_READ_META_DATA(transcribe_, "transcribe");
     SHERPA_ONNX_READ_META_DATA(is_multilingual_, "is_multilingual");
     SHERPA_ONNX_READ_META_DATA(no_timestamps_, "no_timestamps");
+    // timestamp_begin is the first timestamp token (0.00s)
+    // It's typically no_timestamps + 1 in OpenAI Whisper tokenizer
+    timestamp_begin_ = no_timestamps_ + 1;
     SHERPA_ONNX_READ_META_DATA(no_speech_, "no_speech");
     SHERPA_ONNX_READ_META_DATA_VEC(sot_sequence_, "sot_sequence");
 
@@ -378,6 +405,22 @@ class OfflineWhisperModel::Impl {
 
     GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
                    &decoder_output_names_ptr_);
+
+    // Check if decoder has attention output (4 outputs instead of 3)
+    // Outputs are: logits, self_k_cache, self_v_cache, [cross_attention_weights]
+    has_attention_output_ = (decoder_output_names_.size() >= 4);
+
+    if (has_attention_output_) {
+      // Try to read n_alignment_heads from encoder metadata
+      Ort::AllocatorWithDefaultOptions allocator;
+      Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
+      SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(n_alignment_heads_, "n_alignment_heads", 0);
+
+      if (config_.debug) {
+        SHERPA_ONNX_LOGE("Decoder has attention output with %d alignment heads",
+                         n_alignment_heads_);
+      }
+    }
   }
 
   void InitCudaIOBinding() {
@@ -440,9 +483,14 @@ class OfflineWhisperModel::Impl {
   int32_t translate_ = 0;
   int32_t transcribe_ = 0;
   int32_t no_timestamps_ = 0;
+  int32_t timestamp_begin_ = 0;  // First timestamp token, typically no_timestamps_ + 1
   int32_t no_speech_ = 0;
   int32_t is_multilingual_ = 0;
   std::vector<int64_t> sot_sequence_;
+
+  // For cross-attention token-level timestamps
+  bool has_attention_output_ = false;
+  int32_t n_alignment_heads_ = 0;
 };
 
 OfflineWhisperModel::OfflineWhisperModel(const OfflineModelConfig &config)
@@ -470,7 +518,7 @@ std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::ForwardEncoder(
 }
 
 std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
-           Ort::Value>
+           Ort::Value, Ort::Value>
 OfflineWhisperModel::ForwardDecoder(Ort::Value tokens,
                                     Ort::Value n_layer_self_k_cache,
                                     Ort::Value n_layer_self_v_cache,
@@ -519,6 +567,14 @@ int32_t OfflineWhisperModel::NoTimeStampsToken() const {
   return impl_->NoTimeStampsToken();
 }
 
+int32_t OfflineWhisperModel::TimestampBegin() const {
+  return impl_->TimestampBegin();
+}
+
+int32_t OfflineWhisperModel::TimestampEnd() const {
+  return impl_->TimestampEnd();
+}
+
 int32_t OfflineWhisperModel::EOT() const { return impl_->EOT(); }
 
 int32_t OfflineWhisperModel::SOT() const { return impl_->SOT(); }
@@ -533,6 +589,14 @@ int32_t OfflineWhisperModel::Translate() const { return impl_->Translate(); }
 
 bool OfflineWhisperModel::IsMultiLingual() const {
   return impl_->IsMultiLingual();
+}
+
+bool OfflineWhisperModel::HasAttentionOutput() const {
+  return impl_->HasAttentionOutput();
+}
+
+int32_t OfflineWhisperModel::NumAlignmentHeads() const {
+  return impl_->NumAlignmentHeads();
 }
 
 void OfflineWhisperModel::NormalizeFeatures(float *features, int32_t num_frames,

@@ -45,7 +45,15 @@ struct OfflineRecognitionResult {
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
 
+  // Word IDs from FST decoding (CTC models with FST decoder only).
   std::vector<int32_t> words;
+
+  // Segment-level data (from Whisper with segment timestamps enabled).
+  // These are parallel vectors: segment_timestamps.size() ==
+  // segment_durations.size() == segment_texts.size()
+  std::vector<float> segment_timestamps;  // start time of each segment
+  std::vector<float> segment_durations;   // duration of each segment
+  std::vector<std::string> segment_texts; // text of each segment
 
   std::string AsJsonString() const;
 };
