@@ -15,6 +15,10 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
+if(NOT (CMAKE_BUILD_TYPE STREQUAL Debug OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo OR CMAKE_BUILD_TYPE STREQUAL MinSizeRel OR CMAKE_BUILD_TYPE STREQUAL Release))
+  message(FATAL_ERROR "Please set CMAKE_BUILD_TYPE to Release, Debug, RelWithDebInfo or MinSizeRel")
+endif()
+
 # Hashes for static CRT (/MT)
 set(ONNXRUNTIME_HASH_MT_Debug "SHA256=f63a1dafd63bd911135a47ccc75bd04c06a717de21b96c0d8ddb351714551124")
 set(ONNXRUNTIME_HASH_MT_RelWithDebInfo "SHA256=b5363e34544b1d6bf27161843a72dfc853d80e5f14369242378b2e244d2af632")
@@ -33,17 +37,21 @@ else()
   set(onnxruntime_crt "MD")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
+message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
+
+set(onnxruntime_filename "onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/${onnxruntime_filename}")
 set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}_${CMAKE_BUILD_TYPE}}")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
-  /tmp/onnxruntime-win-x64-${onnxruntime_crt}-${CMAKE_BUILD_TYPE}-1.23.2.tar.bz2
+  $ENV{HOME}/Downloads/${onnxruntime_filename}
+  ${CMAKE_SOURCE_DIR}/${onnxruntime_filename}
+  ${CMAKE_BINARY_DIR}/${onnxruntime_filename}
+  $ENV{TMP}/${onnxruntime_filename}
+  $ENV{TEMP}/${onnxruntime_filename}
 )
 
 foreach(f IN LISTS possible_file_locations)
