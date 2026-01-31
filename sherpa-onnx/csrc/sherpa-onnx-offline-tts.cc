@@ -56,12 +56,22 @@ or details.
 
   sherpa_onnx::GenerationConfig gen_config;
 
+  std::string lang;
+  bool batch = false;
+
   po.Register(
       "num-steps", &gen_config.num_steps,
       "Used by some models, e.g., PocketTTS. Number of flow matching steps");
 
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
+
+  po.Register("lang", &lang,
+              "Language(s) for text(s): en, ko, es, pt, fr (comma-separated "
+              "for batch)");
+
+  po.Register("batch", &batch,
+              "Enable batch mode (disables automatic text chunking)");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "
@@ -82,7 +92,8 @@ or details.
   if (po.NumArgs() > 1) {
     fprintf(stderr,
             "Error: Accept only one positional argument. Please use single "
-            "quotes to wrap your text\n");
+            "quotes to wrap your text. For batch mode, use | to separate texts "
+            "within the quotes.\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -97,6 +108,14 @@ or details.
   }
 
   sherpa_onnx::OfflineTts tts(config);
+
+  // Set extra parameters for supertonic batch processing
+  if (!lang.empty()) {
+    gen_config.extra["lang"] = lang;
+  }
+  if (batch) {
+    gen_config.extra["batch"] = "1";
+  }
 
   const auto begin = std::chrono::steady_clock::now();
   sherpa_onnx::GeneratedAudio audio;
@@ -120,7 +139,14 @@ or details.
 
     audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
   } else {
-    audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
+    // Use GenerationConfig for supertonic to support batch mode
+    if (!lang.empty() || batch) {
+      gen_config.speed = 1.0f;
+      gen_config.sid = sid;
+      audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
+    } else {
+      audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
+    }
   }
 
   const auto end = std::chrono::steady_clock::now();

@@ -143,6 +143,46 @@ void SplitStringToVector(const std::string &full, const char *delim,
   }
 }
 
+std::string Trim(const std::string &str) {
+  size_t start = 0;
+  while (start < str.size() &&
+         std::isspace(static_cast<unsigned char>(str[start]))) {
+    start++;
+  }
+  size_t end = str.size();
+  while (end > start &&
+         std::isspace(static_cast<unsigned char>(str[end - 1]))) {
+    end--;
+  }
+  return str.substr(start, end - start);
+}
+
+std::vector<std::string> SplitStringAndTrim(const std::string &str,
+                                            char delim) {
+  std::vector<std::string> result;
+  std::string delim_str(1, delim);
+  SplitStringToVector(str, delim_str.c_str(), true, &result);
+  // Trim whitespace from each part
+  for (auto &part : result) {
+    size_t start = 0;
+    while (start < part.size() &&
+           std::isspace(static_cast<unsigned char>(part[start]))) {
+      start++;
+    }
+    size_t end = part.size();
+    while (end > start &&
+           std::isspace(static_cast<unsigned char>(part[end - 1]))) {
+      end--;
+    }
+    part = part.substr(start, end - start);
+  }
+  // Remove empty strings after trimming
+  result.erase(std::remove_if(result.begin(), result.end(),
+                              [](const std::string &s) { return s.empty(); }),
+               result.end());
+  return result;
+}
+
 template <class F>
 bool SplitStringToFloats(const std::string &full, const char *delim,
                          bool omit_empty_strings,  // typically false
@@ -862,6 +902,47 @@ float ToFloatOrDefault(const std::string &s, float default_value) {
   }
 
   return value;
+}
+
+void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
+                      int64_t max_len, std::vector<float> *mask_flat,
+                      std::vector<int64_t> *mask_shape) {
+  // Validate input sizes
+  if (lengths.size() != static_cast<size_t>(bsz)) {
+    SHERPA_ONNX_LOGE("LengthToMaskFlat: lengths.size() (%zu) != bsz (%d)",
+                     lengths.size(), bsz);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  // Handle empty batch case
+  if (bsz == 0) {
+    mask_shape->assign({0, 1, 0});
+    mask_flat->clear();
+    return;
+  }
+
+  if (max_len == -1) {
+    max_len = *std::max_element(lengths.begin(), lengths.end());
+  }
+
+  if (max_len < 0) {
+    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%ld) < 0", max_len);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  mask_shape->assign({bsz, 1, max_len});
+
+  // Prevent overflow: use size_t for multiplication
+  size_t total_size = static_cast<size_t>(bsz) * static_cast<size_t>(max_len);
+  mask_flat->resize(total_size);
+
+  for (int b = 0; b < bsz; ++b) {
+    int64_t len = lengths[b];
+    float *batch_mask = mask_flat->data() + b * max_len;
+    for (int64_t i = 0; i < max_len; i++) {
+      batch_mask[i] = (i < len) ? 1.0f : 0.0f;
+    }
+  }
 }
 
 }  // namespace sherpa_onnx
