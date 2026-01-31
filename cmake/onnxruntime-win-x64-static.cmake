@@ -22,17 +22,25 @@ endif()
 # Determine which CRT flavor to use
 # SHERPA_ONNX_USE_STATIC_CRT = ON -> MT
 # SHERPA_ONNX_USE_STATIC_CRT = OFF -> MD
+
+# Hashes for static CRT (/MT)
+set(ONNXRUNTIME_HASH_MT "SHA256=5a2cb2609aeeba06d76b2b2a5268f5b27b149cf135dd166afea32266ecbbf4bd")
+
+# Hashes for static CRT (/MD)
+set(ONNXRUNTIME_HASH_MD "SHA256=5a2cb2609aeeba06d76b2b2a5268f5b27b149cf135dd166afea32266ecbbf4bd")
+
+
+
 if(SHERPA_ONNX_USE_STATIC_CRT)
   set(onnxruntime_crt "MT")
-  set(onnxruntime_HASH "SHA256=5a2cb2609aeeba06d76b2b2a5268f5b27b149cf135dd166afea32266ecbbf4bd")
 else()
   set(onnxruntime_crt "MD")
-  set(onnxruntime_HASH "SHA256=f14f8cc64fcd4eeae2567c818618da6d62efb2b4bdc695ce9e9e40c2e97d9d05")
 endif()
 
 message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-x64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2")
+set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}}")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
