@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   windows_arm64:
-    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
+    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }} static CRT ${{ matrix.use_static_crt }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -27,11 +27,20 @@ jobs:
         os: [windows-2022]
         shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
+        use_static_crt: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: find dumpbin
+        shell: bash
+        run: |
+          which dumpbin
 
       - name: Update version
         shell: bash
@@ -47,12 +56,51 @@ jobs:
           cmake \
             -A ARM64 \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -DSHERPA_ONNX_USE_STATIC_CRT=${{ matrix.use_static_crt }} \
             -D CMAKE_BUILD_TYPE=Release \
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
             -D BUILD_ESPEAK_NG_EXE=OFF \
             ..
+
+      - name: Check 1
+        shell: bash
+        run: |
+          cd build
+
+          cat sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 2
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" sherpa-onnx\csrc\sherpa-onnx.vcxproj
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-vcxproj-release-windows-arm64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
+          path: build/sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 3
+        shell: bash
+        run: |
+          cd build
+
+          cat c-api-examples/vad-whisper-c-api.vcxproj
+
+      - name: Check 4
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" "c-api-examples\vad-whisper-c-api.vcxproj"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vad-whisper-c-api-vcxproj-release-windows-arm64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
+          path: build/c-api-examples/vad-whisper-c-api.vcxproj
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -62,3 +110,114 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-arm64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}
+          path: build/install/*
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          shared_lib=${{ matrix.shared_lib }}
+          use_static_crt=${{ matrix.use_static_crt }}
+          if [[ $shared_lib == "ON" ]]; then
+            if [[ $use_static_crt == ON ]]; then
+              suffix=shared-MT
+            else
+              suffix=shared-MD
+            fi
+          else
+            if [[ $use_static_crt == ON ]]; then
+              suffix=static-MT
+            else
+              suffix=static-MD
+            fi
+          fi
+
+          if [[ ${{ matrix.with_tts }} == ON ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64-$suffix
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64-$suffix-no-tts
+          fi
+
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          ls -lh $dst/bin/
+          echo "---"
+          ls -lh $dst/lib/
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+          ls -lh $dst/
+
+          ls -lh *.tar.bz2
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=win64/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../sherpa-onnx-*.tar.bz2 $dst
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
+
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
+
+      - name: Release pre-compiled binaries and libs for Windows arm64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-win-arm64*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.15
+
+      - name: Release pre-compiled binaries and libs for Windows arm64
+        if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-win-arm64*.tar.bz2
+
+      - name: Show exe
+        shell: bash
+        run: |
+          ls -lh $PWD/build/bin/Release
+
+      - name: Dump CRT dependencies
+        shell: cmd
+        run: |
+          dumpbin /dependents build\bin\Release\sherpa-onnx.exe

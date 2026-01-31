@@ -19,18 +19,33 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
   message(FATAL_ERROR "This file is for building a release version on Windows arm64")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2")
-set(onnxruntime_HASH "SHA256=d3d1a6dd8e886e47f00e17dea521642b029c04936e52673109ef3063b31ad708")
+# Hashes for static CRT (/MT)
+set(ONNXRUNTIME_HASH_MT "SHA256=29c5285da4ca08378ad721822355f4c14a5ebe7e2baf526f95183422c9e239c1")
+
+# Hashes for dynamic CRT (/MD)
+set(ONNXRUNTIME_HASH_MD "SHA256=5ef83f9e478456feb890278393a479e3eed3828493337520cc0bbed6d055a7b3")
+
+if(SHERPA_ONNX_USE_STATIC_CRT)
+  set(onnxruntime_crt "MT")
+else()
+  set(onnxruntime_crt "MD")
+endif()
+
+message(STATUS "Use MSVC CRT: ${onnxruntime_crt}")
+
+set(onnxruntime_filename "onnxruntime-win-arm64-static_lib-${onnxruntime_crt}-1.23.2.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/${onnxruntime_filename}")
+set(onnxruntime_HASH "${ONNXRUNTIME_HASH_${onnxruntime_crt}}")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2
-  /tmp/onnxruntime-win-arm64-static_lib-1.23.2.tar.bz2
+  $ENV{HOME}/Downloads/${onnxruntime_filename}
+  ${CMAKE_SOURCE_DIR}/${onnxruntime_filename}
+  ${CMAKE_BINARY_DIR}/${onnxruntime_filename}
+  $ENV{TMP}/${onnxruntime_filename}
+  $ENV{TEMP}/${onnxruntime_filename}
 )
 
 foreach(f IN LISTS possible_file_locations)
