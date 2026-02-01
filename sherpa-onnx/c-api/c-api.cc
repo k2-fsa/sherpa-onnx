@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "nlohmann/json.hpp"
+
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
@@ -1286,6 +1288,22 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.model.zipvoice.guidance_scale =
       SHERPA_ONNX_OR(config->model.zipvoice.guidance_scale, 1.0f);
 
+  // pocket
+  tts_config.model.pocket.lm_flow =
+      SHERPA_ONNX_OR(config->model.pocket.lm_flow, "");
+  tts_config.model.pocket.lm_main =
+      SHERPA_ONNX_OR(config->model.pocket.lm_main, "");
+  tts_config.model.pocket.encoder =
+      SHERPA_ONNX_OR(config->model.pocket.encoder, "");
+  tts_config.model.pocket.decoder =
+      SHERPA_ONNX_OR(config->model.pocket.decoder, "");
+  tts_config.model.pocket.text_conditioner =
+      SHERPA_ONNX_OR(config->model.pocket.text_conditioner, "");
+  tts_config.model.pocket.vocab_json =
+      SHERPA_ONNX_OR(config->model.pocket.vocab_json, "");
+  tts_config.model.pocket.token_scores_json =
+      SHERPA_ONNX_OR(config->model.pocket.token_scores_json, "");
+
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
@@ -1342,6 +1360,52 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     std::function<int32_t(const float *, int32_t, float)> callback) {
   sherpa_onnx::GeneratedAudio audio =
       tts->impl->Generate(text, sid, speed, callback);
+
+  if (audio.samples.empty()) {
+    return nullptr;
+  }
+
+  SherpaOnnxGeneratedAudio *ans = new SherpaOnnxGeneratedAudio;
+
+  float *samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), samples);
+
+  ans->samples = samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+
+  return ans;
+}
+
+static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
+    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    std::function<int32_t(const float *, int32_t, float)> callback) {
+  sherpa_onnx::GenerationConfig cfg;
+  if (config->reference_audio_len > 0 && config->reference_audio) {
+    cfg.reference_audio.assign(
+        config->reference_audio,
+        config->reference_audio + config->reference_audio_len);
+  }
+  if (config->silence_scale > 0) cfg.silence_scale = config->silence_scale;
+  if (config->speed > 0) cfg.speed = config->speed;
+  cfg.sid = config->sid;
+  if (config->reference_sample_rate > 0)
+    cfg.reference_sample_rate = config->reference_sample_rate;
+  if (config->reference_text)
+    cfg.reference_text = config->reference_text;
+  if (config->num_steps > 0) cfg.num_steps = config->num_steps;
+  if (config->extra) {
+    try {
+      auto json = nlohmann::json::parse(config->extra);
+      for (auto &[k, v] : json.items()) {
+        cfg.extra.insert_or_assign(std::string(k), v.dump());
+      }
+    } catch (const nlohmann::json::parse_error &e) {
+      SHERPA_ONNX_LOGE("Failed to parse extra JSON: %s", e.what());
+    }
+  }
+
+  sherpa_onnx::GeneratedAudio audio = tts->impl->Generate(text, cfg, callback);
 
   if (audio.samples.empty()) {
     return nullptr;
@@ -1444,6 +1508,18 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
   return ans;
 }
 
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
+    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
+  auto wrapper = [callback, arg](const float *samples, int32_t n,
+                                 float progress) {
+    if (!callback) return 1;
+    return callback(samples, n, progress, arg);
+  };
+
+  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, config, std::move(wrapper));
+}
+
 void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
   if (p) {
@@ -1513,6 +1589,14 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
     const SherpaOnnxOfflineTts *tts, const char *text, const char *prompt_text,
     const float *prompt_samples, int32_t n_prompt, int32_t prompt_sr,
     float speed, int32_t num_steps) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
+    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
   return nullptr;
 }
 
@@ -1520,7 +1604,6 @@ void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
 }
-
 #endif  // SHERPA_ONNX_ENABLE_TTS == 1
 
 int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,

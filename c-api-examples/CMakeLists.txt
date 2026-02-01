@@ -28,6 +28,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
   target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
+
+  add_executable(pocket-tts-en-c-api pocket-tts-en-c-api.c)
+  target_link_libraries(pocket-tts-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
