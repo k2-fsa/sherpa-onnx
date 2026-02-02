@@ -491,6 +491,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *tokenizer;
   const char *system_prompt;
   const char *user_prompt;
+  const char *language;
+  int32_t itn;
+  const char *hotwords;
   int32_t max_new_tokens;
   float temperature;
   float top_p;

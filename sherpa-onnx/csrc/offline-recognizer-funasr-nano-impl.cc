@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -27,7 +28,6 @@
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -35,8 +35,9 @@ namespace {
 // Build cache_position tensor from attention_mask.
 // Creates a [S] int64_t tensor where the first element is the starting position
 // (pos0) for writing KV deltas. The remaining elements are consecutive
-// positions [pos0, pos0+1, ..., pos0+S-1]. For prefill: pos0 = 0, S =
-// context_len For decode: pos0 = valid_len - 1, S = 1
+// positions [pos0, pos0+1, ..., pos0+S-1].
+// For prefill: pos0 = 0, S = context_len
+// For decode: pos0 = valid_len, S = 1 (mask_len = valid_len + 1)
 static Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
                                              int32_t seq_len,
                                              OrtAllocator *allocator) {
@@ -64,6 +65,104 @@ static Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
   }
 
   return cache_position;
+}
+
+// Create attention_mask tensor view from pre-allocated buffer.
+// Returns a tensor with shape [1, mask_len] (dynamic length).
+static Ort::Value CreateAttentionMaskView(
+    std::vector<int64_t> *attention_mask_vec, int32_t mask_len,
+    const Ort::MemoryInfo &memory_info, bool update_new_pos = false) {
+  if (update_new_pos && mask_len > 0) {
+    (*attention_mask_vec)[mask_len - 1] = 1;
+  }
+  std::array<int64_t, 2> mask_shape{1, mask_len};
+  return Ort::Value::CreateTensor<int64_t>(
+      memory_info, attention_mask_vec->data(), static_cast<size_t>(mask_len),
+      mask_shape.data(), mask_shape.size());
+}
+
+static inline void TrimInplace(std::string *s) {
+  if (!s) return;
+  auto &str = *s;
+  auto not_space = [](unsigned char c) { return !std::isspace(c); };
+
+  str.erase(str.begin(), std::find_if(str.begin(), str.end(), not_space));
+  str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(), str.end());
+}
+
+static std::vector<std::string> ParseHotwordsCsv(const std::string &csv) {
+  std::vector<std::string> out;
+  std::string cur;
+  cur.reserve(csv.size());
+
+  for (size_t i = 0; i < csv.size(); ++i) {
+    unsigned char ch = static_cast<unsigned char>(csv[i]);
+    // Support both ASCII and Chinese separators
+    // Check for Chinese comma (，) and semicolon (；) - UTF-8 encoding
+    bool is_separator = false;
+    if (ch == ',' || ch == ';' || ch == '\n' || ch == '\r' || ch == '\t') {
+      is_separator = true;
+    } else if (ch == 0xEF) {
+      // Check for UTF-8 encoded Chinese comma (，) = EF BC 8C or semicolon (；) = EF BC 9B
+      if (i + 2 < csv.size()) {
+        unsigned char ch1 = static_cast<unsigned char>(csv[i + 1]);
+        unsigned char ch2 = static_cast<unsigned char>(csv[i + 2]);
+        if (ch1 == 0xBC && (ch2 == 0x8C || ch2 == 0x9B)) {
+          is_separator = true;
+          i += 2;  // Skip the remaining UTF-8 bytes
+        }
+      }
+    }
+
+    if (is_separator) {
+      TrimInplace(&cur);
+      if (!cur.empty()) out.push_back(cur);
+      cur.clear();
+    } else {
+      cur.push_back(csv[i]);
+    }
+  }
+  TrimInplace(&cur);
+  if (!cur.empty()) out.push_back(cur);
+  return out;
+}
+
+static std::string JoinWithComma(const std::vector<std::string> &xs) {
+  std::string s;
+  for (size_t i = 0; i < xs.size(); ++i) {
+    if (i) s += ", ";
+    s += xs[i];
+  }
+  return s;
+}
+
+// Build user prompt based on hotwords, language, and itn settings.
+// Aligned with Python get_prompt() function.
+static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
+                                   const std::string *language,
+                                   bool itn) {
+  std::string prompt;
+
+  if (!hotwords.empty()) {
+    std::string hw = JoinWithComma(hotwords);
+    prompt =
+        "请结合上下文信息，更加准确地完成语音转写任务。如果没有相关信息，我们会留空。\n\n\n"
+        "**上下文信息：**\n\n\n";
+    prompt += "热词列表：[" + hw + "]\n";
+  }
+
+  if (!language || language->empty()) {
+    prompt += "语音转写";
+  } else {
+    prompt += "语音转写成" + *language;
+  }
+
+  if (!itn) {
+    prompt += "，不进行文本规整";
+  }
+
+  prompt += "：";
+  return prompt;
 }
 
 }  // namespace
@@ -204,20 +303,17 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
     return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
   }
 
-  // top_p <= 0: treat as greedy (minimal candidate set)
   if (!std::isfinite(top_p) || top_p <= 0.0f) {
     return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
   }
   if (top_p > 1.0f) top_p = 1.0f;
 
-  // Reuse buffers to avoid per-token allocations
   thread_local std::vector<float> probs;
   thread_local std::vector<int32_t> idx;
 
   probs.resize(vocab_size);
   idx.resize(vocab_size);
 
-  // Scale logits & find max for numerical stability
   float max_logit = -std::numeric_limits<float>::infinity();
   bool found_valid = false;
 
@@ -253,7 +349,6 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
 
   if (!found_valid) return 0;
 
-  // Compute softmax probabilities
   float sum_exp = 0.0f;
   for (int32_t i = 0; i < vocab_size; ++i) {
     float e = std::exp(probs[i] - max_logit);
@@ -265,7 +360,6 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
     probs[i] /= sum_exp;
   }
 
-  // top_p >= 1: sample from full distribution (no sorting)
   if (top_p >= 1.0f) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     float sample = dist(rng_);
@@ -277,10 +371,8 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
     return static_cast<int64_t>(vocab_size - 1);
   }
 
-  // Fast path: partial_sort top-K, increase K only if needed
   int32_t k = std::min<int32_t>(256, vocab_size);
   float cum_k = 0.0f;
-
   while (true) {
     std::partial_sort(
         idx.begin(), idx.begin() + k, idx.end(),
@@ -296,7 +388,6 @@ int64_t OfflineRecognizerFunASRNanoImpl::SampleTokenWithTemperatureAndTopP(
     k = new_k;
   }
 
-  // Find cutoff inside sorted top-K
   float cumsum = 0.0f;
   int32_t cutoff = k;
   for (int32_t i = 0; i < k; ++i) {
@@ -413,8 +504,6 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       model_->ForwardEmbedding(std::move(input_ids_tensor));
 
   auto te_info = text_embeds.GetTensorTypeAndShapeInfo();
-  auto te_shape = te_info.GetShape();
-
   const auto te_type = te_info.GetElementType();
   const bool te_fp16 = (te_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 
@@ -472,8 +561,10 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   }
 
   // Pre-allocate attention_mask buffer to avoid per-step allocations
-  // All values are 1, we'll use a slice of this buffer for each step
-  std::vector<int64_t> attention_mask(static_cast<size_t>(max_seq_len), 1);
+  std::vector<int64_t> attention_mask_vec(static_cast<size_t>(max_seq_len), 0);
+  // Initialize first context_len positions to 1 for prefill
+  std::fill(attention_mask_vec.begin(),
+            attention_mask_vec.begin() + context_len, 1);
 
   // Pre-allocate reusable buffer for decode step embeddings (hidden_size)
   std::vector<float> next_embed_fp32(static_cast<size_t>(hidden_size));
@@ -511,17 +602,16 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
           static_cast<size_t>(context_len) * hidden_size, embeds_shape.data(),
           embeds_shape.size());
 
-      // Use pre-allocated attention_mask buffer (first context_len elements)
-      std::array<int64_t, 2> mask_shape{1, context_len};
-      Ort::Value attention_mask_tensor = Ort::Value::CreateTensor<int64_t>(
-          memory_info, attention_mask.data(), static_cast<size_t>(context_len),
-          mask_shape.data(), mask_shape.size());
+      // Use pre-allocated attention_mask buffer (first context_len positions
+      // already set to 1)
+      Ort::Value attention_mask_view = CreateAttentionMaskView(
+          &attention_mask_vec, context_len, memory_info, false);
 
       Ort::Value cache_position = BuildCachePositionFromMask(
-          attention_mask_tensor, context_len, model_->Allocator());
+          attention_mask_view, context_len, model_->Allocator());
 
       auto tmp = model_->ForwardLLM(std::move(inputs_embeds_tensor),
-                                    std::move(attention_mask_tensor),
+                                    std::move(attention_mask_view),
                                     cache_position, cache_kv);
       logits = std::move(tmp.first);
       auto kv_outputs = std::move(tmp.second);
@@ -532,7 +622,7 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
 
     } else {
-      // Decode: seq = 1, mask_len = valid_len (= past + 1).
+      // Decode: seq = 1, mask_len = valid_len + 1 (past + current)
       int64_t last_token_id = generated_ids.back();
       std::vector<int64_t> one_id{last_token_id};
       std::array<int64_t, 2> one_shape{1, 1};
@@ -562,18 +652,17 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
           memory_info, next_embed_fp32.data(), static_cast<size_t>(hidden_size),
           embeds_shape.data(), embeds_shape.size());
 
-      // mask_len must equal kv_seq_len (= past + current).
-      // Use pre-allocated attention_mask buffer (first valid_len elements)
-      std::array<int64_t, 2> mask_shape{1, valid_len};
-      Ort::Value attention_mask_tensor = Ort::Value::CreateTensor<int64_t>(
-          memory_info, attention_mask.data(), static_cast<size_t>(valid_len),
-          mask_shape.data(), mask_shape.size());
+      // mask_len must equal kv_seq_len (= past + current = valid_len + 1).
+      // Use pre-allocated attention_mask buffer, update new position to 1
+      int32_t mask_len = valid_len + 1;
+      Ort::Value attention_mask_view = CreateAttentionMaskView(
+          &attention_mask_vec, mask_len, memory_info, true);
 
       Ort::Value cache_position = BuildCachePositionFromMask(
-          attention_mask_tensor, 1, model_->Allocator());
+          attention_mask_view, 1, model_->Allocator());
 
       auto tmp = model_->ForwardLLM(std::move(inputs_embeds_tensor),
-                                    std::move(attention_mask_tensor),
+                                    std::move(attention_mask_view),
                                     cache_position, cache_kv);
       logits = std::move(tmp.first);
       auto kv_outputs = std::move(tmp.second);
@@ -635,8 +724,11 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
   }
 
   result.text = tokenizer_->Decode(generated_ids);
-  result.text = ApplyInverseTextNormalization(std::move(result.text));
-  result.text = ApplyHomophoneReplacer(std::move(result.text));
+
+  if (funasr_config.itn) {
+    result.text = ApplyInverseTextNormalization(std::move(result.text));
+    result.text = ApplyHomophoneReplacer(std::move(result.text));
+  }
 
   if (config_.model_config.debug) {
     SHERPA_ONNX_LOGE("GenerateText: generated %zu tokens: %s",
@@ -673,31 +765,33 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
       result.tokens.back().append(replacement_chars);
     }
 
-    auto enc_shape2 = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
-    int32_t audio_token_len2 = static_cast<int32_t>(enc_shape2[1]);
-    int32_t lfr_window_size = model_->LfrWindowSize();
-    int32_t lfr_window_shift = model_->LfrWindowShift();
-
-    int32_t original_feature_frames =
-        (audio_token_len2 > 0)
-            ? ((audio_token_len2 - 1) * lfr_window_shift + lfr_window_size)
-            : 0;
-
-    float frame_shift_ms = config_.feat_config.frame_shift_ms;
-    float audio_duration = (original_feature_frames > 0 && frame_shift_ms > 0)
-                               ? static_cast<float>(original_feature_frames) *
-                                     frame_shift_ms / 1000.0f
-                               : 0.0f;
-
+    // Calculate timestamps based on effective audio coverage duration
+    // Use copy_len (actual injected audio token count) to determine
     result.timestamps.reserve(generated_ids.size());
-    if (generated_ids.size() > 1 && audio_duration > 0) {
-      float time_per_token =
-          audio_duration / static_cast<float>(generated_ids.size());
-      for (size_t i = 0; i < generated_ids.size(); ++i) {
-        result.timestamps.push_back(static_cast<float>(i) * time_per_token);
+    if (fbank_beg_idx >= 0 && copy_len > 0 && !generated_ids.empty()) {
+      float frame_shift_ms = config_.feat_config.frame_shift_ms;
+
+      int32_t lfr_shift = model_->LfrWindowShift();
+      float token_time_sec =
+          frame_shift_ms * static_cast<float>(lfr_shift) / 1000.0f;
+
+      float effective_audio_duration =
+          static_cast<float>(copy_len) * token_time_sec;
+
+      if (effective_audio_duration > 0) {
+        if (generated_ids.size() == 1) {
+          result.timestamps.push_back(effective_audio_duration / 2.0f);
+        } else {
+          // Distribute timestamps evenly across effective_audio_duration
+          // Use (size - 1) so the last timestamp equals
+          // effective_audio_duration
+          float time_per_token = effective_audio_duration /
+                                 static_cast<float>(generated_ids.size() - 1);
+          for (size_t i = 0; i < generated_ids.size(); ++i) {
+            result.timestamps.push_back(static_cast<float>(i) * time_per_token);
+          }
+        }
       }
-    } else if (generated_ids.size() == 1 && audio_duration > 0) {
-      result.timestamps.push_back(audio_duration / 2.0f);
     }
   }
 
@@ -732,9 +826,29 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
 
     Ort::Value encoder_out = model_->ForwardEncoderAdaptor(std::move(features));
 
+    // Parse hotwords parameter
+    std::vector<std::string> hotwords = ParseHotwordsCsv(funasr_config.hotwords);
+
+    // language is empty means None
+    const std::string *lang_ptr =
+        funasr_config.language.empty() ? nullptr : &funasr_config.language;
+
+    // Build dynamic user prompt
+    std::string user_prompt_dyn =
+        BuildUserPrompt(hotwords, lang_ptr, funasr_config.itn);
+
+    if (config_.model_config.debug) {
+      SHERPA_ONNX_LOGE("DecodeStreams: hotwords=%zu, language=%s, itn=%d",
+                       hotwords.size(),
+                       funasr_config.language.empty() ? "(empty)" : funasr_config.language.c_str(),
+                       funasr_config.itn ? 1 : 0);
+      SHERPA_ONNX_LOGE("DecodeStreams: user_prompt_dyn=%s",
+                       user_prompt_dyn.c_str());
+    }
+
     OfflineRecognitionResult r =
         GenerateText(std::move(encoder_out), funasr_config.system_prompt,
-                     funasr_config.user_prompt);
+                     user_prompt_dyn);
 
     ss[i]->SetResult(r);
   }

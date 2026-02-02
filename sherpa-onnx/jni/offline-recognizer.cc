@@ -294,6 +294,15 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               userPrompt, funasr_nano_config_cls,
                               funasr_nano_config);
 
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.language, language,
+                              funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.funasr_nano.itn, itn,
+                            funasr_nano_config_cls, funasr_nano_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.funasr_nano.hotwords, hotwords,
+                              funasr_nano_config_cls, funasr_nano_config);
+
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.funasr_nano.max_new_tokens,
                            maxNewTokens, funasr_nano_config_cls,
                            funasr_nano_config);

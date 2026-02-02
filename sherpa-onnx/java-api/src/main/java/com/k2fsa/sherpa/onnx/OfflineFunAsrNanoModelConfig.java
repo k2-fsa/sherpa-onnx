@@ -7,6 +7,9 @@ public class OfflineFunAsrNanoModelConfig {
     private final String tokenizer;
     private final String systemPrompt;
     private final String userPrompt;
+    private final String language;
+    private final boolean itn;
+    private final String hotwords;
     private final int maxNewTokens;
     private final float temperature;
     private final float topP;
@@ -19,6 +22,9 @@ public class OfflineFunAsrNanoModelConfig {
         this.tokenizer = builder.tokenizer;
         this.systemPrompt = builder.systemPrompt;
         this.userPrompt = builder.userPrompt;
+        this.language = builder.language;
+        this.itn = builder.itn;
+        this.hotwords = builder.hotwords;
         this.maxNewTokens = builder.maxNewTokens;
         this.temperature = builder.temperature;
         this.topP = builder.topP;
@@ -53,6 +59,18 @@ public class OfflineFunAsrNanoModelConfig {
         return userPrompt;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public boolean getItn() {
+        return itn;
+    }
+
+    public String getHotwords() {
+        return hotwords;
+    }
+
     public int getMaxNewTokens() {
         return maxNewTokens;
     }
@@ -76,6 +94,9 @@ public class OfflineFunAsrNanoModelConfig {
         private String tokenizer = "";
         private String systemPrompt = "You are a helpful assistant.";
         private String userPrompt = "语音转写：";
+        private String language = "";
+        private boolean itn = true;
+        private String hotwords = "";
         private int maxNewTokens = 512;
         private float temperature = 1e-6f;
         private float topP = 0.8f;
@@ -112,6 +133,21 @@ public class OfflineFunAsrNanoModelConfig {
 
         public Builder setUserPrompt(String userPrompt) {
             this.userPrompt = userPrompt;
+            return this;
+        }
+
+        public Builder setLanguage(String language) {
+            this.language = language;
+            return this;
+        }
+
+        public Builder setItn(boolean itn) {
+            this.itn = itn;
+            return this;
+        }
+
+        public Builder setHotwords(String hotwords) {
+            this.hotwords = hotwords;
             return this;
         }
 

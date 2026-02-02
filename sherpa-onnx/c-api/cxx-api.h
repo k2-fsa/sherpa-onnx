@@ -290,6 +290,9 @@ struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   std::string tokenizer;
   std::string system_prompt = "You are a helpful assistant.";
   std::string user_prompt = "语音转写：";
+  std::string language;
+  bool itn = true;
+  std::string hotwords;
   int32_t max_new_tokens = 512;
   float temperature = 1e-6f;
   float top_p = 0.8f;

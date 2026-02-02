@@ -30,6 +30,15 @@ struct OfflineFunASRNanoModelConfig {
   // User prompt template (will be filled with audio tokens)
   std::string user_prompt = "语音转写：";
 
+  // Language for transcription (empty string means None)
+  std::string language;
+
+  // Whether to apply inverse text normalization (ITN)
+  bool itn = true;
+
+  // Hotwords
+  std::string hotwords;
+
   // Maximum number of new tokens to generate
   int32_t max_new_tokens = 512;
 

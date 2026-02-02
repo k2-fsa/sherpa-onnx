@@ -42,6 +42,15 @@ void OfflineFunASRNanoModelConfig::Register(ParseOptions *po) {
                "Top-p (nucleus) sampling threshold for FunASR-nano");
 
   po->Register("funasr-nano-seed", &seed, "Random seed for FunASR-nano");
+
+  po->Register("funasr-nano-language", &language,
+               "Language for transcription (empty string means None)");
+
+  po->Register("funasr-nano-itn", &itn,
+               "Whether to apply inverse text normalization (default: true)");
+
+  po->Register("funasr-nano-hotwords", &hotwords,
+               "Hotwords (comma-separated, e.g., \"Sherpa,FunASR\")");
 }
 
 bool OfflineFunASRNanoModelConfig::Validate() const {
@@ -138,7 +147,10 @@ std::string OfflineFunASRNanoModelConfig::ToString() const {
   os << "max_new_tokens=" << max_new_tokens << ", ";
   os << "temperature=" << temperature << ", ";
   os << "top_p=" << top_p << ", ";
-  os << "seed=" << seed << ")";
+  os << "seed=" << seed << ", ";
+  os << "language=\"" << language << "\", ";
+  os << "itn=" << (itn ? "true" : "false") << ", ";
+  os << "hotwords=\"" << hotwords << "\")";
 
   return os.str();
 }
