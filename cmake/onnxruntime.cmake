@@ -79,7 +79,7 @@ function(download_onnxruntime)
       if(BUILD_SHARED_LIBS)
         include(onnxruntime-win-x86)
       else()
-        include(onnxruntime-win-x86-static-debug)
+        include(onnxruntime-win-x86-static)
       endif()
 
       if(SHERPA_ONNX_ENABLE_GPU)
