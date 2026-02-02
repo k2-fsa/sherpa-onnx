@@ -27,7 +27,7 @@ set(ONNXRUNTIME_HASH_MD_Debug "SHA256=f3e6d4550ac00c9f8f7ef647974087627f41d063e9
 set(ONNXRUNTIME_HASH_MD_RelWithDebInfo "SHA256=ddef98c48243b0d7209edb9d416566405fd793551f63962fbb4f049b899136b0")
 set(ONNXRUNTIME_HASH_MD_MinSizeRel "SHA256=4b28704e04f25b0839004ca828306f387814ada953750c4103f7076768fcf8a1")
 
-if(NOT (CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL Debug OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo OR CMAKE_BUILD_TYPE STREQUAL MinSizeRel))
+if(NOT CMAKE_BUILD_TYPE MATCHES "^(Release|Debug|RelWithDebInfo|MinSizeRel)$")
   message(FATAL_ERROR "Supported CMAKE_BUILD_TYPE values are: Release, Debug, RelWithDebInfo, MinSizeRel. Given ${CMAKE_BUILD_TYPE}")
 endif()
 
@@ -59,7 +59,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -67,7 +66,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 
