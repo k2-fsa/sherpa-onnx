@@ -90,7 +90,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-vcxproj-release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          name: sherpa-onnx-vcxproj-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
           path: build/sherpa-onnx/csrc/sherpa-onnx.vcxproj
 
       - name: Check 3
@@ -109,7 +109,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vad-whisper-c-api-vcxproj-release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          name: vad-whisper-c-api-vcxproj-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
           path: build/c-api-examples/vad-whisper-c-api.vcxproj
 
       - name: Build sherpa-onnx for windows
@@ -136,7 +136,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          name: windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
           path: build/install/*
 
       - name: Copy files
@@ -238,7 +238,7 @@ jobs:
       - name: Test offline Moonshine for windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-moonshine.sh
@@ -246,7 +246,7 @@ jobs:
       - name: Test C++ API
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api.exe
           export CXX_WHISPER_EXE=whisper-cxx-api.exe
           export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api.exe
@@ -256,7 +256,7 @@ jobs:
       - name: Test offline speaker diarization
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-speaker-diarization.exe
 
           .github/scripts/test-speaker-diarization.sh
@@ -264,7 +264,7 @@ jobs:
       - name: Test online punctuation
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-online-punctuation.exe
 
           .github/scripts/test-online-punctuation.sh
@@ -272,7 +272,7 @@ jobs:
       - name: Test offline punctuation
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-punctuation.exe
 
           .github/scripts/test-offline-punctuation.sh
@@ -280,7 +280,7 @@ jobs:
       - name: Test C API
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export SLID_EXE=spoken-language-identification-c-api.exe
           export SID_EXE=speaker-identification-c-api.exe
           export AT_EXE=audio-tagging-c-api.exe
@@ -291,7 +291,7 @@ jobs:
       - name: Test Audio tagging
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-audio-tagging.exe
 
           .github/scripts/test-audio-tagging.sh
@@ -299,7 +299,7 @@ jobs:
       - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-language-identification.exe
 
           .github/scripts/test-spoken-language-identification.sh
@@ -307,7 +307,7 @@ jobs:
       - name: Test online CTC
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-ctc.sh
@@ -316,7 +316,7 @@ jobs:
         if: matrix.with_tts == 'ON'
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline-tts.exe
 
           .github/scripts/test-offline-tts.sh
@@ -324,7 +324,7 @@ jobs:
       - name: Test online paraformer for windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-paraformer.sh
@@ -332,7 +332,7 @@ jobs:
       - name: Test offline Whisper for windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-whisper.sh
@@ -340,7 +340,7 @@ jobs:
       - name: Test offline CTC for windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-ctc.sh
@@ -348,7 +348,7 @@ jobs:
       - name: Test offline transducer for Windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-transducer.sh
@@ -356,7 +356,7 @@ jobs:
       - name: Test online transducer for Windows x64
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-transducer.sh
@@ -364,7 +364,7 @@ jobs:
       - name: Test online transducer (C API)
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=decode-file-c-api.exe
 
           .github/scripts/test-online-transducer.sh
