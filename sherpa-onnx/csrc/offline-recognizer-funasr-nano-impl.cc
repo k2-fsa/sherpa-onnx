@@ -87,7 +87,8 @@ static inline void TrimInplace(std::string *s) {
   auto not_space = [](unsigned char c) { return !std::isspace(c); };
 
   str.erase(str.begin(), std::find_if(str.begin(), str.end(), not_space));
-  str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(), str.end());
+  str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(),
+            str.end());
 }
 
 static std::vector<std::string> ParseHotwordsCsv(const std::string &csv) {
@@ -103,7 +104,8 @@ static std::vector<std::string> ParseHotwordsCsv(const std::string &csv) {
     if (ch == ',' || ch == ';' || ch == '\n' || ch == '\r' || ch == '\t') {
       is_separator = true;
     } else if (ch == 0xEF) {
-      // Check for UTF-8 encoded Chinese comma (，) = EF BC 8C or semicolon (；) = EF BC 9B
+      // Check for UTF-8 encoded Chinese comma (，) = EF BC 8C or semicolon (；)
+      // = EF BC 9B
       if (i + 2 < csv.size()) {
         unsigned char ch1 = static_cast<unsigned char>(csv[i + 1]);
         unsigned char ch2 = static_cast<unsigned char>(csv[i + 2]);
@@ -139,14 +141,14 @@ static std::string JoinWithComma(const std::vector<std::string> &xs) {
 // Build user prompt based on hotwords, language, and itn settings.
 // Aligned with Python get_prompt() function.
 static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
-                                   const std::string *language,
-                                   bool itn) {
+                                   const std::string *language, bool itn) {
   std::string prompt;
 
   if (!hotwords.empty()) {
     std::string hw = JoinWithComma(hotwords);
     prompt =
-        "请结合上下文信息，更加准确地完成语音转写任务。如果没有相关信息，我们会留空。\n\n\n"
+        "请结合上下文信息，更加准确地完成语音转写任务。如果没有相关信息，我们会"
+        "留空。\n\n\n"
         "**上下文信息：**\n\n\n";
     prompt += "热词列表：[" + hw + "]\n";
   }
@@ -455,6 +457,22 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
           "exceed capacity. "
           "Falling back to keep last %d tokens.",
           context_len, max_seq_len, max_seq_len);
+      SHERPA_ONNX_LOGE(
+          "The model max_total_len (%d) limits total context (prompt + audio "
+          "tokens). Suggestions:",
+          max_seq_len);
+      SHERPA_ONNX_LOGE(
+          "  1) Reduce hotwords: fewer or shorter hotwords shorten the "
+          "prompt.");
+      SHERPA_ONNX_LOGE(
+          "  2) Shorten audio: use shorter clips so audio_token_len "
+          "decreases.");
+      SHERPA_ONNX_LOGE(
+          "  3) Use a model with larger max_total_len: export with "
+          "max_total_len>%d via scripts in "
+          "https://github.com/Wasser1462/FunASR-nano-onnx , or download "
+          "from https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx/",
+          max_seq_len);
       // Fallback: keep the suffix.
       source_ids.erase(source_ids.begin(), source_ids.end() - max_seq_len);
       // Audio alignment is no longer controllable, skip injecting audio
@@ -471,6 +489,22 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
           "audio_token_len=%d -> keep_audio=%d (before=%d after=%d).",
           context_len, max_seq_len, audio_token_len, keep_audio, before_len,
           after_len);
+      SHERPA_ONNX_LOGE(
+          "The model max_total_len (%d) limits total context (prompt + audio "
+          "tokens). Suggestions:",
+          max_seq_len);
+      SHERPA_ONNX_LOGE(
+          "  1) Reduce hotwords: fewer or shorter hotwords shorten the "
+          "prompt.");
+      SHERPA_ONNX_LOGE(
+          "  2) Shorten audio: use shorter clips so audio_token_len "
+          "decreases.");
+      SHERPA_ONNX_LOGE(
+          "  3) Use a model with larger max_total_len: export with "
+          "max_total_len>%d via scripts in "
+          "https://github.com/Wasser1462/FunASR-nano-onnx , or download "
+          "from https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx/",
+          max_seq_len);
 
       // Rebuild ids_before/ids_after using slices.
       std::vector<int64_t> ids_before(source_ids.begin(),
@@ -827,7 +861,8 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
     Ort::Value encoder_out = model_->ForwardEncoderAdaptor(std::move(features));
 
     // Parse hotwords parameter
-    std::vector<std::string> hotwords = ParseHotwordsCsv(funasr_config.hotwords);
+    std::vector<std::string> hotwords =
+        ParseHotwordsCsv(funasr_config.hotwords);
 
     // language is empty means None
     const std::string *lang_ptr =
@@ -838,17 +873,17 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
         BuildUserPrompt(hotwords, lang_ptr, funasr_config.itn);
 
     if (config_.model_config.debug) {
-      SHERPA_ONNX_LOGE("DecodeStreams: hotwords=%zu, language=%s, itn=%d",
-                       hotwords.size(),
-                       funasr_config.language.empty() ? "(empty)" : funasr_config.language.c_str(),
-                       funasr_config.itn ? 1 : 0);
+      SHERPA_ONNX_LOGE(
+          "DecodeStreams: hotwords=%zu, language=%s, itn=%d", hotwords.size(),
+          funasr_config.language.empty() ? "(empty)"
+                                         : funasr_config.language.c_str(),
+          funasr_config.itn ? 1 : 0);
       SHERPA_ONNX_LOGE("DecodeStreams: user_prompt_dyn=%s",
                        user_prompt_dyn.c_str());
     }
 
-    OfflineRecognitionResult r =
-        GenerateText(std::move(encoder_out), funasr_config.system_prompt,
-                     user_prompt_dyn);
+    OfflineRecognitionResult r = GenerateText(
+        std::move(encoder_out), funasr_config.system_prompt, user_prompt_dyn);
 
     ss[i]->SetResult(r);
   }
