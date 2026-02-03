@@ -529,8 +529,11 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
       config->model_config.funasr_nano.user_prompt, "语音转写：");
   recognizer_config.model_config.funasr_nano.language =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.language, "");
-  recognizer_config.model_config.funasr_nano.itn =
-      SHERPA_ONNX_OR(config->model_config.funasr_nano.itn, 1) != 0;
+  {
+    int32_t itn_cfg = config->model_config.funasr_nano.itn;
+    recognizer_config.model_config.funasr_nano.itn =
+        (itn_cfg == -1) ? true : (itn_cfg != 0);
+  }
   recognizer_config.model_config.funasr_nano.hotwords =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.hotwords, "");
   recognizer_config.model_config.funasr_nano.max_new_tokens =

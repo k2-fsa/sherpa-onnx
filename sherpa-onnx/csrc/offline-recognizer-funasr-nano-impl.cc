@@ -105,13 +105,19 @@ static std::vector<std::string> ParseHotwordsCsv(const std::string &csv) {
       is_separator = true;
     } else if (ch == 0xEF) {
       // Check for UTF-8 encoded Chinese comma (，) = EF BC 8C or semicolon (；)
-      // = EF BC 9B
+      // = EF BC 9B. Otherwise consume full 3-byte sequence to avoid corrupting
+      // other UTF-8 chars (e.g. 0xEF 0xBE 0xAD).
       if (i + 2 < csv.size()) {
         unsigned char ch1 = static_cast<unsigned char>(csv[i + 1]);
         unsigned char ch2 = static_cast<unsigned char>(csv[i + 2]);
         if (ch1 == 0xBC && (ch2 == 0x8C || ch2 == 0x9B)) {
           is_separator = true;
           i += 2;  // Skip the remaining UTF-8 bytes
+        } else if (ch1 >= 0x80 && ch1 <= 0xBF && ch2 >= 0x80 && ch2 <= 0xBF) {
+          cur.push_back(csv[i]);
+          cur.push_back(csv[i + 1]);
+          cur.push_back(csv[i + 2]);
+          i += 2;
         }
       }
     }
@@ -139,32 +145,33 @@ static std::string JoinWithComma(const std::vector<std::string> &xs) {
 }
 
 // Build user prompt based on hotwords, language, and itn settings.
-// Aligned with Python get_prompt() function.
 static std::string BuildUserPrompt(const std::vector<std::string> &hotwords,
-                                   const std::string *language, bool itn) {
-  std::string prompt;
+                                   const std::string *language, bool itn,
+                                   const std::string *user_prompt) {
+  const bool has_override =
+      !hotwords.empty() || (language && !language->empty()) || !itn;
+  if (user_prompt && !user_prompt->empty() && !has_override) {
+    return *user_prompt;
+  }
 
+  std::string prefix;
   if (!hotwords.empty()) {
     std::string hw = JoinWithComma(hotwords);
-    prompt =
+    prefix =
         "请结合上下文信息，更加准确地完成语音转写任务。如果没有相关信息，我们会"
         "留空。\n\n\n"
         "**上下文信息：**\n\n\n";
-    prompt += "热词列表：[" + hw + "]\n";
+    prefix += "热词列表：[" + hw + "]\n";
   }
 
-  if (!language || language->empty()) {
-    prompt += "语音转写";
-  } else {
-    prompt += "语音转写成" + *language;
-  }
-
+  std::string task =
+      (!language || language->empty()) ? "语音转写" : "语音转写成" + *language;
   if (!itn) {
-    prompt += "，不进行文本规整";
+    task += "，不进行文本规整";
   }
+  task += "：";
 
-  prompt += "：";
-  return prompt;
+  return prefix + task;
 }
 
 }  // namespace
@@ -868,9 +875,10 @@ void OfflineRecognizerFunASRNanoImpl::DecodeStreams(OfflineStream **ss,
     const std::string *lang_ptr =
         funasr_config.language.empty() ? nullptr : &funasr_config.language;
 
-    // Build dynamic user prompt
-    std::string user_prompt_dyn =
-        BuildUserPrompt(hotwords, lang_ptr, funasr_config.itn);
+    // Build user prompt: respect funasr_config.user_prompt; merge with
+    // hotwords/language/itn when provided.
+    std::string user_prompt_dyn = BuildUserPrompt(
+        hotwords, lang_ptr, funasr_config.itn, &funasr_config.user_prompt);
 
     if (config_.model_config.debug) {
       SHERPA_ONNX_LOGE(
