@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models-2
+      - upload-models
   workflow_dispatch:
 
 concurrency:
@@ -40,6 +40,29 @@ jobs:
         run: |
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
+
+      - name: WenetSpeech Wu
+        if: true
+        shell: bash
+        run: |
+          git lfs install
+          git clone https://huggingface.co/csukuangfj2/sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03
+          git clone https://huggingface.co/csukuangfj2/sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03
+
+          d=sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03
+          rm -rf $d/.git*
+
+          tar cjfv $d.tar.bz2 $d
+
+          rm -rf $d
+
+          d=sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03
+          rm -rf $d/.git*
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -lh *.tar.bz2
 
       - name: Setup tmate session
         if: false
@@ -172,7 +195,7 @@ jobs:
           tar cjvf $d.tar.bz2 $d
 
       - name: Collect funasr-nano with LLM float32
-        if: true
+        if: false
         shell: bash
         run: |
           d=sherpa-onnx-funasr-nano-2025-12-30
@@ -804,7 +827,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface
-        if: true
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -864,16 +887,7 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
-            models=(
-              sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-              sherpa-onnx-funasr-nano-fp16-2025-12-30.tar.bz2
-              sherpa-onnx-funasr-nano-2025-12-30.tar.bz2
-            )
-            for m in ${models[@]}; do
-              if [ ! -f $m ]; then
-                continue;
-              fi
-
+            for m in *.tar.bz2; do
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
 
