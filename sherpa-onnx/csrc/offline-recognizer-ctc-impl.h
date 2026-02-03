@@ -151,6 +151,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false
       config_.feat_config.normalize_samples = false;
+      config_.feat_config.dither = 1;
     }
 
     if (!config_.model_config.medasr.model.empty()) {
