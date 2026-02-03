@@ -118,6 +118,7 @@ static std::vector<std::string> ParseHotwordsCsv(const std::string &csv) {
           cur.push_back(csv[i + 1]);
           cur.push_back(csv[i + 2]);
           i += 2;
+          continue;
         }
       }
     }
