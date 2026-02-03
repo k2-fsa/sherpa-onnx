@@ -779,6 +779,26 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             )
         }
 
+        47 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        48 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
         9000 -> {
             val modelDir =
                 "sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"
