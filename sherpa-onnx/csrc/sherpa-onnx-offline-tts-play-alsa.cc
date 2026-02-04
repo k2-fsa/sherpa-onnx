@@ -22,6 +22,7 @@
 #include "sherpa-onnx/csrc/alsa-play.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
 static std::condition_variable g_cv;
@@ -129,8 +130,19 @@ or details.
   std::string output_filename = "./generated.wav";
   int32_t sid = 0;
 
+  std::string reference_audio;
+  po.Register(
+      "reference-audio", &reference_audio,
+      "Path to reference audio if you are using a TTS model supporting that");
+
+  sherpa_onnx::GenerationConfig gen_config;
+
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
+
+  po.Register(
+      "num-steps", &gen_config.num_steps,
+      "Used by some models, e.g., PocketTTS. Number of flow matching steps");
 
   po.Register("device-name", &device_name,
               "Name of the device to play the generated audio");
@@ -179,7 +191,31 @@ or details.
 
   fprintf(stderr, "Generating ...\n");
   const auto begin = std::chrono::steady_clock::now();
-  auto audio = tts.Generate(po.GetArg(1), sid, speed, AudioGeneratedCallback);
+
+  sherpa_onnx::GeneratedAudio audio;
+
+  if (!config.model.pocket.lm_flow.empty()) {
+    if (reference_audio.empty()) {
+      fprintf(stderr, "You need to provide --reference-audio for Pocket TTS");
+      exit(EXIT_FAILURE);
+    }
+
+    int32_t sample_rate;
+    bool is_ok = false;
+    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    if (!is_ok) {
+      fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
+      exit(EXIT_FAILURE);
+    }
+
+    gen_config.reference_audio = std::move(samples);
+    gen_config.reference_sample_rate = sample_rate;
+
+    audio = tts.Generate(po.GetArg(1), gen_config, AudioGeneratedCallback);
+  } else {
+    audio = tts.Generate(po.GetArg(1), sid, speed, AudioGeneratedCallback);
+  }
+
   const auto end = std::chrono::steady_clock::now();
   g_stopped = true;
   g_cv.notify_all();

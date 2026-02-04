@@ -8,6 +8,9 @@ public class Vad {
     public Vad(VadModelConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid VadModelConfig: failed to create native Vad");
+        }
     }
 
     @Override
@@ -52,11 +55,7 @@ public class Vad {
     }
 
     public SpeechSegment front() {
-        Object[] arr = front(this.ptr);
-        int start = (int) arr[0];
-        float[] samples = (float[]) arr[1];
-
-        return new SpeechSegment(start, samples);
+        return front(this.ptr);
     }
 
     public boolean isSpeechDetected() {
@@ -77,7 +76,7 @@ public class Vad {
 
     private native void clear(long ptr);
 
-    private native Object[] front(long ptr);
+    private native SpeechSegment front(long ptr);
 
     private native boolean isSpeechDetected(long ptr);
 

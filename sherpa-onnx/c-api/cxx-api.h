@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "sherpa-onnx/c-api/c-api.h"
@@ -110,7 +111,7 @@ struct OnlineRecognizerResult {
 
 struct Wave {
   std::vector<float> samples;
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 SHERPA_ONNX_API Wave ReadWave(const std::string &filename);
@@ -462,16 +463,41 @@ struct OfflineTtsZipvoiceModelConfig {
   float guidance_scale = 1.0;
 };
 
+struct OfflineTtsPocketModelConfig {
+  std::string lm_flow;
+  std::string lm_main;
+  std::string encoder;
+  std::string decoder;
+  std::string text_conditioner;
+
+  std::string vocab_json;
+  std::string token_scores_json;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
   OfflineTtsZipvoiceModelConfig zipvoice;
+  OfflineTtsPocketModelConfig pocket;
 
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
+};
+
+struct GenerationConfig {
+  float silence_scale = 0.2;
+  float speed = 1.0;  // used only by some models.
+  int32_t sid = 0;    // used only by models support multi-speakers
+  std::vector<float> reference_audio;  // mono, [-1, 1]
+  int32_t reference_sample_rate = 0;   // sample rate of reference_audio
+  std::string reference_text;          // not all models require this
+  int32_t num_steps = 5;               // number of steps in flow matching
+
+  // extra attrs , model specific
+  std::unordered_map<std::string, std::string> extra;
 };
 
 struct OfflineTtsConfig {
@@ -484,7 +510,7 @@ struct OfflineTtsConfig {
 
 struct GeneratedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 // Return 1 to continue generating
@@ -521,11 +547,20 @@ class SHERPA_ONNX_API OfflineTts
                           OfflineTtsCallback callback = nullptr,
                           void *arg = nullptr) const;
 
+  GeneratedAudio Generate(const std::string &text,
+                          const GenerationConfig &config,
+                          OfflineTtsCallback callback = nullptr,
+                          void *arg = nullptr) const;
+
   // Like Generate, but return a smart pointer.
   //
   // See also https://github.com/k2-fsa/sherpa-onnx/issues/2347
   std::shared_ptr<GeneratedAudio> Generate2(
       const std::string &text, int32_t sid = 0, float speed = 1.0,
+      OfflineTtsCallback callback = nullptr, void *arg = nullptr) const;
+
+  std::shared_ptr<GeneratedAudio> Generate2(
+      const std::string &text, const GenerationConfig &config,
       OfflineTtsCallback callback = nullptr, void *arg = nullptr) const;
 
  private:

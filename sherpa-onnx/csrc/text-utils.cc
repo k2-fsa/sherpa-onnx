@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <charconv>
 #include <codecvt>
 #include <cstdint>
+#include <cstdlib>
 #include <cwctype>
 #include <limits>
 #include <locale>
@@ -827,6 +829,54 @@ bool IsPunct(const std::string &s) {
       "。", "！", "？", "“", "”", "‘",  "’",
   };
   return puncts.count(s);
+}
+
+int32_t ToIntOrDefault(const std::string &s, int32_t default_value) {
+  if (s.empty()) return default_value;
+
+  std::string str = s;
+
+  // Remove surrounding quotes if present
+  if (str.size() >= 2 && str.front() == '"' && str.back() == '"') {
+    str = str.substr(1, str.size() - 2);
+  }
+
+  int32_t value = default_value;
+  auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+
+  // Check for conversion errors or trailing characters
+  if (ec != std::errc() || ptr != str.data() + str.size()) {
+    return default_value;
+  }
+
+  return value;
+}
+
+float ToFloatOrDefault(const std::string &s, float default_value) {
+  if (s.empty()) return default_value;
+
+  std::string str = s;
+
+  // Remove surrounding quotes if present
+  if (str.size() >= 2 && str.front() == '"' && str.back() == '"') {
+    str = str.substr(1, str.size() - 2);
+  }
+
+  char *end = nullptr;
+  errno = 0;
+  float value = std::strtof(str.c_str(), &end);
+
+  // No conversion or out of range
+  if (end == str.c_str() || errno == ERANGE) {
+    return default_value;
+  }
+
+  // Reject trailing garbage
+  if (*end != '\0') {
+    return default_value;
+  }
+
+  return value;
 }
 
 }  // namespace sherpa_onnx

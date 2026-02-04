@@ -8,6 +8,9 @@ public class OfflineSpeechDenoiser {
     public OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OfflineSpeechDenoiserConfig: failed to create native OfflineSpeechDenoiser");
+        }
     }
 
     public int getSampleRate() {

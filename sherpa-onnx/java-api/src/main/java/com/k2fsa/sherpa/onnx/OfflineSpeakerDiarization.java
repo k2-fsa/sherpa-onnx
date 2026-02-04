@@ -8,6 +8,9 @@ public class OfflineSpeakerDiarization {
     public OfflineSpeakerDiarization(OfflineSpeakerDiarizationConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OfflineSpeakerDiarizationConfig: failed to create native OfflineSpeakerDiarization");
+        }
     }
 
     public int getSampleRate() {

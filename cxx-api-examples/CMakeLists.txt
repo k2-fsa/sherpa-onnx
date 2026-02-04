@@ -161,6 +161,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(kitten-tts-en-cxx-api ./kitten-tts-en-cxx-api.cc)
   target_link_libraries(kitten-tts-en-cxx-api sherpa-onnx-cxx-api)
 
+  add_executable(pocket-tts-en-cxx-api ./pocket-tts-en-cxx-api.cc)
+  target_link_libraries(pocket-tts-en-cxx-api sherpa-onnx-cxx-api)
+
   add_executable(kokoro-tts-zh-en-cxx-api ./kokoro-tts-zh-en-cxx-api.cc)
   target_link_libraries(kokoro-tts-zh-en-cxx-api sherpa-onnx-cxx-api)
 endif()

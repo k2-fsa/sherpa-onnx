@@ -191,6 +191,10 @@ bool IsPunct(const std::string &s);
 #define SHERPA_ONNX_TO_ORT_PATH(s) ((s).c_str())
 #endif
 
+int32_t ToIntOrDefault(const std::string &s, int32_t default_value);
+
+float ToFloatOrDefault(const std::string &s, float default_value);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

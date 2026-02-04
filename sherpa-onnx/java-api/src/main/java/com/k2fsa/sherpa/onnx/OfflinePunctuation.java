@@ -8,6 +8,9 @@ public class OfflinePunctuation {
     public OfflinePunctuation(OfflinePunctuationConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OfflinePunctuationConfig: failed to create native OfflinePunctuation");
+        }
     }
 
     public String addPunctuation(String text) {

@@ -196,7 +196,6 @@ if(SHERPA_ONNX_ENABLE_RKNN)
     ./rknn/transducer-keyword-decoder-rknn.cc
     ./rknn/utils.cc
   )
-
 endif()
 
 if(SHERPA_ONNX_ENABLE_AXERA)
@@ -271,12 +270,15 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-matcha-model-config.cc
     offline-tts-matcha-model.cc
     offline-tts-model-config.cc
+    offline-tts-pocket-model-config.cc
+    offline-tts-pocket-model.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc
     offline-tts-zipvoice-model-config.cc
     offline-tts-zipvoice-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    sentence-piece-tokenizer.cc
     vocoder.cc
     vocos-vocoder.cc
   )
@@ -796,6 +798,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
+      sentence-piece-tokenizer-test.cc
       piper-phonemize-test.cc
     )
   endif()

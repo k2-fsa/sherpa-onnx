@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 if [ ! -d sherpa-onnx-streaming-zipformer-en-2023-06-26 ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
   tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2

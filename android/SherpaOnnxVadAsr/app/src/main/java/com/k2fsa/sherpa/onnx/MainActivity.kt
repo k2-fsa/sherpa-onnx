@@ -195,12 +195,6 @@ class MainActivity : AppCompatActivity() {
 
                     vad.pop();
                 }
-
-                val isSpeechDetected = vad.isSpeechDetected()
-
-                runOnUiThread {
-                    textView.text = lastText.lowercase()
-                }
             }
         }
 

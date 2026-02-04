@@ -9,6 +9,9 @@ public class OnlineRecognizer {
     public OnlineRecognizer(OnlineRecognizerConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OnlineRecognizerConfig: failed to create native OnlineRecognizer");
+        }
     }
 
     public void decode(OnlineStream s) {
@@ -62,14 +65,8 @@ public class OnlineRecognizer {
     }
 
     public OnlineRecognizerResult getResult(OnlineStream s) {
-        Object[] arr = getResult(ptr, s.getPtr());
-        String text = (String) arr[0];
-        String[] tokens = (String[]) arr[1];
-        float[] timestamps = (float[]) arr[2];
-        float[] ysProbs = (float[]) arr[3];
-        return new OnlineRecognizerResult(text, tokens, timestamps, ysProbs);
+        return getResult(ptr, s.getPtr());
     }
-
 
     private native void delete(long ptr);
 
@@ -87,5 +84,5 @@ public class OnlineRecognizer {
 
     private native boolean isReady(long ptr, long streamPtr);
 
-    private native Object[] getResult(long ptr, long streamPtr);
+    private native OnlineRecognizerResult getResult(long ptr, long streamPtr);
 }

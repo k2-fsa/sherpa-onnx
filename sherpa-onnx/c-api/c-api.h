@@ -1101,6 +1101,16 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsZipvoiceModelConfig {
   float guidance_scale;
 } SherpaOnnxOfflineTtsZipvoiceModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsPocketModelConfig {
+  const char *lm_flow;
+  const char *lm_main;
+  const char *encoder;
+  const char *decoder;
+  const char *text_conditioner;
+  const char *vocab_json;
+  const char *token_scores_json;
+} SherpaOnnxOfflineTtsPocketModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   int32_t num_threads;
@@ -1110,6 +1120,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
   SherpaOnnxOfflineTtsKittenModelConfig kitten;
   SherpaOnnxOfflineTtsZipvoiceModelConfig zipvoice;
+  SherpaOnnxOfflineTtsPocketModelConfig pocket;
 } SherpaOnnxOfflineTtsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
@@ -1202,6 +1213,27 @@ SherpaOnnxOfflineTtsGenerateWithZipvoice(const SherpaOnnxOfflineTts *tts,
                                          const float *prompt_samples,
                                          int32_t n_prompt, int32_t prompt_sr,
                                          float speed, int32_t num_steps);
+
+SHERPA_ONNX_API typedef struct SherpaOnnxGenerationConfig {
+  float silence_scale;
+  float speed;                    // used only by some models.
+  int32_t sid;                    // used only by models support multi-speakers
+  const float *reference_audio;   // mono, [-1, 1]
+  int32_t reference_audio_len;    // length in samples
+  int32_t reference_sample_rate;  // sample rate of reference_audio
+  const char *reference_text;     // not all models require this
+  int32_t num_steps;              // number of steps in flow matching
+  const char *extra;              // extra attrs in JSON object, model specific
+} SherpaOnnxGenerationConfig;
+
+// Generate audio from the given text with config params.
+// The user has to use SherpaOnnxDestroyOfflineTtsGeneratedAudio() to free the
+// returned pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithConfig(
+    const SherpaOnnxOfflineTts *tts, const char *text,
+    const SherpaOnnxGenerationConfig *config,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p);

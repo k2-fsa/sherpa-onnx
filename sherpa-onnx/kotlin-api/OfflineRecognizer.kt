@@ -169,24 +169,7 @@ class OfflineRecognizer(
     }
 
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
-        val objArray = getResult(stream.ptr)
-
-        val text = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
-        val lang = objArray[3] as String
-        val emotion = objArray[4] as String
-        val event = objArray[5] as String
-        val durations = objArray[6] as FloatArray
-        return OfflineRecognizerResult(
-            text = text,
-            tokens = tokens,
-            timestamps = timestamps,
-            lang = lang,
-            emotion = emotion,
-            event = event,
-            durations = durations,
-        )
+        return getResult(stream.ptr)
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
@@ -210,7 +193,7 @@ class OfflineRecognizer(
 
     private external fun decode(ptr: Long, streamPtr: Long)
 
-    private external fun getResult(streamPtr: Long): Array<Any>
+    private external fun getResult(streamPtr: Long): OfflineRecognizerResult
 
     companion object {
         init {
@@ -796,6 +779,26 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     tokenizer = "$modelDir/Qwen3-0.6B",
                 ),
                 tokens = "",
+            )
+        }
+
+        47 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        48 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
 
