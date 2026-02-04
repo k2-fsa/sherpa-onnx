@@ -22,19 +22,18 @@ class OfflineTts {
    * @param {OfflineTtsConfig|Object} configOrInternal
    */
   constructor(configOrInternal) {
-    // ----- async factory path -----
     if (configOrInternal && typeof configOrInternal === 'object' &&
         configOrInternal[kFromAsyncFactory]) {
+      // ----- async factory path -----
       this.handle = configOrInternal.handle;
       this.config = configOrInternal.config;
-      this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
-      this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
-      return;
+    } else {
+      // ----- sync constructor path -----
+      this.config = configOrInternal;
+      this.handle = addon.createOfflineTts(this.config);
     }
 
-    // ----- sync constructor path -----
-    this.config = configOrInternal;
-    this.handle = addon.createOfflineTts(this.config);
+    // Common initialization
     this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
     this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
   }
