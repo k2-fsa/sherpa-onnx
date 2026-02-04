@@ -4,16 +4,53 @@
 
 const addon = require('./addon.js');
 
+/**
+ * Internal symbol to mark async-created TTS instances.
+ */
+const kFromAsyncFactory = Symbol('OfflineTts.fromAsync');
+
+
 class OfflineTts {
   /**
-   * @param {OfflineTtsConfig} config
+   * Constructor (sync path).
+   *
+   * Users call:
+   *   new OfflineTts(config)
+   *
+   * Async factory calls this with an internal descriptor.
+   *
+   * @param {OfflineTtsConfig|Object} configOrInternal
    */
-  constructor(config) {
-    this.handle = addon.createOfflineTts(config);
-    this.config = config;
+  constructor(configOrInternal) {
+    // ----- async factory path -----
+    if (configOrInternal && typeof configOrInternal === 'object' &&
+        configOrInternal[kFromAsyncFactory]) {
+      this.handle = configOrInternal.handle;
+      this.config = configOrInternal.config;
+      this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
+      this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
+      return;
+    }
 
+    // ----- sync constructor path -----
+    this.config = configOrInternal;
+    this.handle = addon.createOfflineTts(this.config);
     this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
     this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
+  }
+
+  /**
+   * Create an OfflineTts asynchronously (non-blocking).
+   * @param {OfflineTtsConfig} config
+   * @returns {Promise<OfflineTts>}
+   */
+  static async createAsync(config) {
+    const handle = await addon.createOfflineTtsAsync(config);
+    return new OfflineTts({
+      [kFromAsyncFactory]: true,
+      handle,
+      config,
+    });
   }
 
   /**
