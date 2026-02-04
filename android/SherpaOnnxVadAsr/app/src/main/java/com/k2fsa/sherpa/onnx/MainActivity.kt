@@ -83,19 +83,27 @@ class MainActivity : AppCompatActivity() {
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
-        Log.i(TAG, "Start to initialize model")
-        initVadModel()
-        Log.i(TAG, "Finished initializing model")
-
-        Log.i(TAG, "Start to initialize non-streaimng recognizer")
-        initOfflineRecognizer()
-        Log.i(TAG, "Finished initializing non-streaming recognizer")
-
-        recordButton = findViewById(R.id.record_button)
-        recordButton.setOnClickListener { onclick() }
-
         textView = findViewById(R.id.my_text)
         textView.movementMethod = ScrollingMovementMethod()
+
+        recordButton = findViewById(R.id.record_button)
+        recordButton.isEnabled = false
+        recordButton.setOnClickListener { onclick() }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            Log.i(TAG, "Start to initialize model")
+            initVadModel()
+            Log.i(TAG, "Finished initializing model")
+
+            Log.i(TAG, "Start to initialize non-streaming recognizer")
+            initOfflineRecognizer()
+            Log.i(TAG, "Finished initializing non-streaming recognizer")
+
+            withContext(Dispatchers.Main) {
+                recordButton.isEnabled = true
+                Log.i(TAG, "Model initialization completed, button enabled")
+            }
+        }
     }
 
     private fun onclick() {
