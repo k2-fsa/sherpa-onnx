@@ -496,7 +496,6 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   float top_p;
   int32_t seed;
   const char *language;
-  /** 0: ITN off, 1: on, -1: default (on). Explicit 0 is preserved. */
   int32_t itn;
   const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;

@@ -7,13 +7,13 @@ public class OfflineFunAsrNanoModelConfig {
     private final String tokenizer;
     private final String systemPrompt;
     private final String userPrompt;
-    private final String language;
-    private final boolean itn;
-    private final String hotwords;
     private final int maxNewTokens;
     private final float temperature;
     private final float topP;
     private final int seed;
+    private final String language;
+    private final boolean itn;
+    private final String hotwords;
 
     private OfflineFunAsrNanoModelConfig(Builder builder) {
         this.encoderAdaptor = builder.encoderAdaptor;
@@ -22,13 +22,13 @@ public class OfflineFunAsrNanoModelConfig {
         this.tokenizer = builder.tokenizer;
         this.systemPrompt = builder.systemPrompt;
         this.userPrompt = builder.userPrompt;
-        this.language = builder.language;
-        this.itn = builder.itn;
-        this.hotwords = builder.hotwords;
         this.maxNewTokens = builder.maxNewTokens;
         this.temperature = builder.temperature;
         this.topP = builder.topP;
         this.seed = builder.seed;
+        this.language = builder.language;
+        this.itn = builder.itn;
+        this.hotwords = builder.hotwords;
     }
 
     public static Builder builder() {
@@ -94,13 +94,13 @@ public class OfflineFunAsrNanoModelConfig {
         private String tokenizer = "";
         private String systemPrompt = "You are a helpful assistant.";
         private String userPrompt = "语音转写：";
-        private String language = "";
-        private boolean itn = true;
-        private String hotwords = "";
         private int maxNewTokens = 512;
         private float temperature = 1e-6f;
         private float topP = 0.8f;
         private int seed = 42;
+        private String language = "";
+        private boolean itn = true;
+        private String hotwords = "";
 
         public OfflineFunAsrNanoModelConfig build() {
             return new OfflineFunAsrNanoModelConfig(this);

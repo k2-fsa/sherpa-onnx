@@ -493,13 +493,13 @@ func sherpaOnnxOfflineFunASRNanoModelConfig(
   tokenizer: String = "",
   systemPrompt: String = "You are a helpful assistant.",
   userPrompt: String = "语音转写：",
-  language: String = "",
-  itn: Bool = true,
-  hotwords: String = "",
   maxNewTokens: Int = 512,
   temperature: Float = 1e-6,
   topP: Float = 0.8,
-  seed: Int = 42
+  seed: Int = 42,
+  language: String = "",
+  itn: Bool = true,
+  hotwords: String = ""
 ) -> SherpaOnnxOfflineFunASRNanoModelConfig {
   return SherpaOnnxOfflineFunASRNanoModelConfig(
     encoder_adaptor: toCPointer(encoderAdaptor),
@@ -508,13 +508,13 @@ func sherpaOnnxOfflineFunASRNanoModelConfig(
     tokenizer: toCPointer(tokenizer),
     system_prompt: toCPointer(systemPrompt),
     user_prompt: toCPointer(userPrompt),
-    language: toCPointer(language),
-    itn: itn ? 1 : 0,
-    hotwords: toCPointer(hotwords),
     max_new_tokens: Int32(maxNewTokens),
     temperature: temperature,
     top_p: topP,
-    seed: Int32(seed)
+    seed: Int32(seed),
+    language: toCPointer(language),
+    itn: itn ? 1 : 0,
+    hotwords: toCPointer(hotwords)
   )
 }
 

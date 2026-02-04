@@ -57,13 +57,13 @@ data class OfflineFunAsrNanoModelConfig(
     var tokenizer: String = "",
     var systemPrompt: String = "You are a helpful assistant.",
     var userPrompt: String = "语音转写：",
-    var language: String = "",
-    var itn: Boolean = true,
-    var hotwords: String = "",
     var maxNewTokens: Int = 512,
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
     var seed: Int = 42,
+    var language: String = "",
+    var itn: Boolean = true,
+    var hotwords: String = "",
 )
 
 data class OfflineWhisperModelConfig(
