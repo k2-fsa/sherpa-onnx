@@ -1,6 +1,6 @@
 class PocketTtsProgressHandler {
   func progress(samples: [Float], progress: Float) {
-    print(String(format: "Progress: %.2f%%", progress * 100))
+    print(String(format: "Received %d samples, Progress: %.2f%%", samples.count, progress * 100))
   }
 }
 
@@ -38,23 +38,10 @@ func runPocketTtsDemo() {
     The easiest thing in the world was to lose touch with someone.
     """
 
-  if true {
-    // with callback
-    let progressHandler = PocketTtsProgressHandler()
-    let arg = Unmanaged.passUnretained(progressHandler).toOpaque()
-
-    let callback: TtsProgressCallbackWithArg = { samples, n, progress, arg in
-      let handler = Unmanaged<PocketTtsProgressHandler>.fromOpaque(arg!).takeUnretainedValue()
-      var buffer: [Float] = []
-      if let samples {
-        for i in 0..<n {
-          buffer.append(samples[Int(i)])
-        }
-      }
-      handler.progress(samples: buffer, progress: progress)
-      return 1  // continue generating
-    }
-
+  func generateAndSave(
+    outputFile: String, callback: TtsProgressCallbackWithArg? = nil,
+    arg: UnsafeMutableRawPointer? = nil
+  ) {
     let audio = tts.generateWithConfig(
       text: text,
       config: genConfig,
@@ -62,28 +49,36 @@ func runPocketTtsDemo() {
       arg: arg
     )
 
-    let outputFile = "generated-pocket-callback.wav"
     if audio.save(filename: outputFile) == 1 {
       print("Saved to: \(outputFile)")
     } else {
       print("Failed to save to \(outputFile)")
     }
+  }
 
+  // -------------------------
+  // Option 1: with callback
+  // -------------------------
+  let useCallback = true
+  if useCallback {
+    let progressHandler = PocketTtsProgressHandler()
+    let arg = Unmanaged.passUnretained(progressHandler).toOpaque()
+
+    let callback: TtsProgressCallbackWithArg = { samples, n, progress, arg in
+      let handler = Unmanaged<PocketTtsProgressHandler>.fromOpaque(arg!).takeUnretainedValue()
+
+      let buffer: [Float] =
+        samples != nil ? Array(UnsafeBufferPointer(start: samples, count: Int(n))) : []
+      handler.progress(samples: buffer, progress: progress)
+      return 1  // continue generating
+    }
+
+    generateAndSave(outputFile: "generated-pocket-callback.wav", callback: callback, arg: arg)
   } else {
-    // no callback
-    let audio = tts.generateWithConfig(
-      text: text,
-      config: genConfig,
-      callback: nil,
-      arg: nil
-    )
-
-    let outputFile = "generated-pocket-direct.wav"
-    if audio.save(filename: outputFile) == 1 {
-      print("Saved to: \(outputFile)")
-    } else {
-      print("Failed to save to \(outputFile)")
-    }
+    // -------------------------
+    // Option 2: direct generation
+    // -------------------------
+    generateAndSave(outputFile: "generated-pocket-direct.wav")
   }
 }
 

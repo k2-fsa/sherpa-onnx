@@ -1136,7 +1136,6 @@ typealias TtsProgressCallbackWithArg =
     UnsafePointer<Float>?, Int32, Float, UnsafeMutableRawPointer?
   ) -> Int32
 
-/// Swift representation of the generation config for Pocket TTS
 struct SherpaOnnxGenerationConfigSwift {
   var silenceScale: Float = 0.2
   var speed: Float = 1.0
