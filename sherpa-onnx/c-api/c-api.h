@@ -491,13 +491,14 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *tokenizer;
   const char *system_prompt;
   const char *user_prompt;
-  const char *language;
-  int32_t itn;
-  const char *hotwords;
   int32_t max_new_tokens;
   float temperature;
   float top_p;
   int32_t seed;
+  const char *language;
+  /** 0: ITN off, 1: on, -1: default (on). Explicit 0 is preserved. */
+  int32_t itn;
+  const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {

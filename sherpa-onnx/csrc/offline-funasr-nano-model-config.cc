@@ -149,7 +149,7 @@ std::string OfflineFunASRNanoModelConfig::ToString() const {
   os << "top_p=" << top_p << ", ";
   os << "seed=" << seed << ", ";
   os << "language=\"" << language << "\", ";
-  os << "itn=" << (itn ? "true" : "false") << ", ";
+  os << "itn=" << (itn ? "True" : "False") << ", ";
   os << "hotwords=\"" << hotwords << "\")";
 
   return os.str();
