@@ -295,6 +295,9 @@ struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   float temperature = 1e-6f;
   float top_p = 0.8f;
   int32_t seed = 42;
+  std::string language;
+  bool itn = true;
+  std::string hotwords;
 };
 
 struct SHERPA_ONNX_API OfflineModelConfig {

@@ -108,6 +108,34 @@ def get_args():
     )
 
     parser.add_argument(
+        "--language",
+        type=str,
+        default="",
+        help="Language for transcription (empty string means None)",
+    )
+
+    parser.add_argument(
+        "--itn",
+        action="store_true",
+        default=True,
+        help="Whether to apply inverse text normalization (default: True)",
+    )
+
+    parser.add_argument(
+        "--no-itn",
+        dest="itn",
+        action="store_false",
+        help="Disable inverse text normalization",
+    )
+
+    parser.add_argument(
+        "--hotwords",
+        type=str,
+        default="",
+        help="Hotwords (comma-separated, e.g., 'Sherpa,FunASR')",
+    )
+
+    parser.add_argument(
         "--num-threads",
         type=int,
         default=2,
@@ -155,6 +183,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         temperature=args.temperature,
         top_p=args.top_p,
         seed=args.seed,
+        language=args.language,
+        itn=args.itn,
+        hotwords=args.hotwords,
     )
 
 

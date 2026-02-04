@@ -495,6 +495,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   float temperature;
   float top_p;
   int32_t seed;
+  const char *language;
+  int32_t itn;
+  const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {

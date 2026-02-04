@@ -61,6 +61,9 @@ data class OfflineFunAsrNanoModelConfig(
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
     var seed: Int = 42,
+    var language: String = "",
+    var itn: Boolean = true,
+    var hotwords: String = "",
 )
 
 data class OfflineWhisperModelConfig(

@@ -316,6 +316,9 @@ class OfflineRecognizer(object):
         temperature: float = 1e-6,
         top_p: float = 0.8,
         seed: int = 42,
+        language: str = "",
+        itn: bool = True,
+        hotwords: str = "",
     ):
         """
         Create an offline recognizer for FunASR-nano models.
@@ -353,6 +356,12 @@ class OfflineRecognizer(object):
             Top-p (nucleus) sampling threshold.
           seed:
             Random seed.
+          language:
+            Language for transcription (empty string means None).
+          itn:
+            Whether to apply inverse text normalization (default: True).
+          hotwords:
+            Hotwords (comma-separated, e.g., "Sherpa,FunASR").
         """
         self = cls.__new__(cls)
         # Create OfflineFunASRNanoModelConfig and set attributes
@@ -367,6 +376,9 @@ class OfflineRecognizer(object):
         funasr_nano_config.temperature = temperature
         funasr_nano_config.top_p = top_p
         funasr_nano_config.seed = seed
+        funasr_nano_config.language = language
+        funasr_nano_config.itn = itn
+        funasr_nano_config.hotwords = hotwords
 
         model_config = OfflineModelConfig(
             funasr_nano=funasr_nano_config,

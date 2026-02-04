@@ -496,7 +496,10 @@ func sherpaOnnxOfflineFunASRNanoModelConfig(
   maxNewTokens: Int = 512,
   temperature: Float = 1e-6,
   topP: Float = 0.8,
-  seed: Int = 42
+  seed: Int = 42,
+  language: String = "",
+  itn: Bool = true,
+  hotwords: String = ""
 ) -> SherpaOnnxOfflineFunASRNanoModelConfig {
   return SherpaOnnxOfflineFunASRNanoModelConfig(
     encoder_adaptor: toCPointer(encoderAdaptor),
@@ -508,7 +511,10 @@ func sherpaOnnxOfflineFunASRNanoModelConfig(
     max_new_tokens: Int32(maxNewTokens),
     temperature: temperature,
     top_p: topP,
-    seed: Int32(seed)
+    seed: Int32(seed),
+    language: toCPointer(language),
+    itn: itn ? 1 : 0,
+    hotwords: toCPointer(hotwords)
   )
 }
 
