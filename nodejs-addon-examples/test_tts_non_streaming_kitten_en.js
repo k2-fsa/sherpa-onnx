@@ -53,7 +53,7 @@ async function main() {
           (progress * 100).toFixed(1)}% (chunk length: ${samples.length})`);
 
       // Return 0 or false to cancel, any other value to continue
-      return false;
+      return true;
     },
   });
 

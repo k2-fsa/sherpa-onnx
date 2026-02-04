@@ -3,6 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -402,8 +403,8 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
 struct TtsCallbackData {
   std::vector<float> samples;
   float progress;
-  bool processed = false;
-  bool cancelled = false;
+  std::atomic<bool> processed = {false};
+  std::atomic<bool> cancelled = {false};
 };
 
 // see
