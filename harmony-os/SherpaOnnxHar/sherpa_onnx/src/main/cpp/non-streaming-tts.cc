@@ -427,12 +427,15 @@ static void InvokeJsCallback(Napi::Env env, Napi::Function callback,
       arg.Set(Napi::String::New(env, "progress"), data->progress);
 
       auto v = callback.Call(context->Value(), {arg});
-      data->processed = true;
-      if (v.IsNumber() && v.As<Napi::Number>().Int32Value()) {
-        data->cancelled = false;
-      } else {
+
+      if ((v.IsBoolean() && !v.As<Napi::Boolean>().Value()) ||
+          (v.IsNumber() && v.As<Napi::Number>().Int32Value() == 0)) {
         data->cancelled = true;
+      } else {
+        data->cancelled = false;
       }
+
+      data->processed = true;
     }
   }
 }
@@ -467,6 +470,16 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
     auto callback = [](const float *samples, int32_t n, float progress,
                        void *arg) -> int32_t {
       TtsGenerateWorker *_this = reinterpret_cast<TtsGenerateWorker *>(arg);
+
+      for (auto it = _this->data_list_.begin();
+           it != _this->data_list_.end();) {
+        if ((*it)->processed) {
+          delete *it;
+          it = _this->data_list_.erase(it);
+        } else {
+          ++it;
+        }
+      }
 
       for (auto d : _this->data_list_) {
         if (d->cancelled) {
