@@ -1228,7 +1228,8 @@ SHERPA_ONNX_API typedef struct GenerationConfig {
 // returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithConfig(
-    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    const SherpaOnnxOfflineTts *tts, const char *text,
+    const GenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
