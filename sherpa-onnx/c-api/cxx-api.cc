@@ -498,6 +498,11 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   }
 
   GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
   ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
   ans.sample_rate = audio->sample_rate;
 
@@ -510,6 +515,8 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
                                     OfflineTtsCallback callback /*= nullptr*/,
                                     void *arg /*= nullptr*/) const {
   SherpaOnnxGenerationConfig c;
+  memset(&c, 0, sizeof(c));
+
   c.silence_scale = config.silence_scale;
   c.speed = config.speed;
   c.sid = config.sid;
@@ -526,8 +533,12 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerateWithConfig(p_, text.c_str(), &c, callback,
                                              arg);
-
   GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
   ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
   ans.sample_rate = audio->sample_rate;
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);

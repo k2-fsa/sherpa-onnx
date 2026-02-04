@@ -111,7 +111,7 @@ struct OnlineRecognizerResult {
 
 struct Wave {
   std::vector<float> samples;
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 SHERPA_ONNX_API Wave ReadWave(const std::string &filename);
@@ -489,7 +489,7 @@ struct GenerationConfig {
   float speed = 1.0;  // used only by some models.
   int32_t sid = 0;    // used only by models support multi-speakers
   std::vector<float> reference_audio;  // mono, [-1, 1]
-  int32_t reference_sample_rate;       // sample rate of reference_audio
+  int32_t reference_sample_rate = 0;   // sample rate of reference_audio
   std::string reference_text;          // not all models require this
   int32_t num_steps = 5;               // number of steps in flow matching
 
