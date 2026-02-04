@@ -1,9 +1,13 @@
 // Copyright (c)  2025  Xiaomi Corporation
+
 const sherpa_onnx = require('sherpa-onnx-node');
 
-// please refer to
-// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
-// to download model files
+/**
+ * Create an offline TTS instance using the Kitten model.
+ *
+ * Model files can be downloaded from:
+ * https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
+ */
 function createOfflineTts() {
   const config = {
     model: {
@@ -19,29 +23,63 @@ function createOfflineTts() {
     },
     maxNumSentences: 1,
   };
+
   return new sherpa_onnx.OfflineTts(config);
 }
 
-const tts = createOfflineTts();
+async function main() {
+  const tts = createOfflineTts();
 
-const text =
-    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.'
+  const text =
+      'Today as always, men fall into two groups: slaves and free men.' +
+      'Whoever does not have two-thirds of his day for himself, is a slave,' +
+      'whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
+  console.log('Number of speakers:', tts.numSpeakers);
+  console.log('Sample rate:', tts.sampleRate);
 
-let start = Date.now();
-const audio = tts.generate({text: text, sid: 6, speed: 1.0});
-let stop = Date.now();
-const elapsed_seconds = (stop - start) / 1000;
-const duration = audio.samples.length / audio.sampleRate;
-const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
-console.log(
-    `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
+  const start = Date.now();
 
-const filename = 'test-kitten-en-6.wav';
-sherpa_onnx.writeWave(
-    filename, {samples: audio.samples, sampleRate: audio.sampleRate});
+  // Asynchronous generation with progress reporting
+  const audio = await tts.generateAsync({
+    text,
+    sid: 6,
+    speed: 1.0,
 
-console.log(`Saved to ${filename}`);
+    // Progress callback receives audio chunks
+    onProgress({samples, progress}) {
+      // samples is Float32Array for this chunk
+      process.stdout.write(`\rGenerating... ${
+          (progress * 100).toFixed(1)}% (chunk length: ${samples.length})`);
+
+      // Return 0 or false to cancel, any other value to continue
+      return true;
+    },
+  });
+
+  console.log('\nGeneration finished.');
+
+  const stop = Date.now();
+  const elapsedSeconds = (stop - start) / 1000;
+  const durationSeconds = audio.samples.length / audio.sampleRate;
+  const realTimeFactor = elapsedSeconds / durationSeconds;
+
+  console.log('Wave duration:', durationSeconds.toFixed(3), 'seconds');
+  console.log('Elapsed time:', elapsedSeconds.toFixed(3), 'seconds');
+  console.log(
+      `RTF = ${elapsedSeconds.toFixed(3)} / ${durationSeconds.toFixed(3)} =`,
+      realTimeFactor.toFixed(3));
+
+  const filename = 'test-kitten-en-6.wav';
+  sherpa_onnx.writeWave(filename, {
+    samples: audio.samples,
+    sampleRate: audio.sampleRate,
+  });
+
+  console.log(`Saved to ${filename}`);
+}
+
+main().catch((err) => {
+  console.error('TTS failed:', err);
+  process.exit(1);
+});
