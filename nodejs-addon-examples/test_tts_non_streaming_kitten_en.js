@@ -3,12 +3,12 @@
 const sherpa_onnx = require('sherpa-onnx-node');
 
 /**
- * Create an offline TTS instance using the Kitten model.
+ * Create an offline TTS instance asynchronously using the Kitten model.
  *
  * Model files can be downloaded from:
  * https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
  */
-function createOfflineTts() {
+async function createOfflineTtsAsync() {
   const config = {
     model: {
       kitten: {
@@ -24,15 +24,17 @@ function createOfflineTts() {
     maxNumSentences: 1,
   };
 
-  return new sherpa_onnx.OfflineTts(config);
+  // Use the async factory (non-blocking)
+  return await sherpa_onnx.OfflineTts.createAsync(config);
 }
 
 async function main() {
-  const tts = createOfflineTts();
+  // Asynchronously create the OfflineTts instance
+  const tts = await createOfflineTtsAsync();
 
   const text =
-      'Today as always, men fall into two groups: slaves and free men.' +
-      'Whoever does not have two-thirds of his day for himself, is a slave,' +
+      'Today as always, men fall into two groups: slaves and free men. ' +
+      'Whoever does not have two-thirds of his day for himself, is a slave, ' +
       'whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
   console.log('Number of speakers:', tts.numSpeakers);
@@ -79,6 +81,7 @@ async function main() {
   console.log(`Saved to ${filename}`);
 }
 
+// Run the demo
 main().catch((err) => {
   console.error('TTS failed:', err);
   process.exit(1);

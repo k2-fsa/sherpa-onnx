@@ -13,6 +13,45 @@
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
+#define SHERPA_ONNX_ASSIGN_TTS_ATTR()                                  \
+  do {                                                                 \
+    SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);                  \
+    SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences); \
+    SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);                  \
+    SHERPA_ONNX_ASSIGN_ATTR_FLOAT(silence_scale, silenceScale);        \
+  } while (0)
+
+#define SHERPA_ONNX_DELETE_TTS_C_STR()                       \
+  do {                                                       \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.model);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);         \
+                                                             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model); \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);       \
+                                                             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.model);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);       \
+                                                             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);       \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);           \
+                                                             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.provider);              \
+                                                             \
+    SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);                   \
+    SHERPA_ONNX_DELETE_C_STR(c.rule_fars);                   \
+  } while (0)
+
 static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsVitsModelConfig c;
@@ -127,6 +166,73 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   return c;
 }
 
+// Async worker for creating OfflineTts
+class CreateOfflineTtsAsyncWorker : public Napi::AsyncWorker {
+ public:
+  CreateOfflineTtsAsyncWorker(Napi::Env env,
+                              const SherpaOnnxOfflineTtsConfig &config)
+      : Napi::AsyncWorker(env),
+        deferred_(Napi::Promise::Deferred::New(env)),
+        config_(config) {}
+
+  Napi::Promise Promise() { return deferred_.Promise(); }
+
+ protected:
+  void Execute() override {
+    // Create OfflineTts
+    tts_ = SherpaOnnxCreateOfflineTts(&config_);
+    if (!tts_) {
+      SetError("Failed to create OfflineTts. Check your config!");
+    }
+  }
+
+  void OnOK() override {
+    Napi::Env env = Env();
+    deferred_.Resolve(Napi::External<SherpaOnnxOfflineTts>::New(
+        env, const_cast<SherpaOnnxOfflineTts *>(tts_),
+        [](Napi::Env, SherpaOnnxOfflineTts *ptr) {
+          SherpaOnnxDestroyOfflineTts(ptr);
+        }));
+  }
+
+  void OnError(const Napi::Error &e) override { deferred_.Reject(e.Value()); }
+
+  ~CreateOfflineTtsAsyncWorker() override {
+    SherpaOnnxOfflineTtsConfig &c = config_;
+
+    SHERPA_ONNX_DELETE_TTS_C_STR();
+  }
+
+ private:
+  SherpaOnnxOfflineTtsConfig config_;
+  const SherpaOnnxOfflineTts *tts_ = nullptr;
+  Napi::Promise::Deferred deferred_;
+};
+
+// JS wrapper
+static Napi::Value CreateOfflineTtsAsyncWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 1 || !info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expect 1 object argument for config")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  Napi::Object o = info[0].As<Napi::Object>();
+
+  SherpaOnnxOfflineTtsConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.model = GetOfflineTtsModelConfig(o);
+  SHERPA_ONNX_ASSIGN_TTS_ATTR();
+
+  auto *worker = new CreateOfflineTtsAsyncWorker(env, c);
+  worker->Queue();
+  return worker->Promise();
+}
+
 static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
@@ -165,10 +271,7 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 
   c.model = GetOfflineTtsModelConfig(o);
 
-  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
-  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
-  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(silence_scale, silenceScale);
+  SHERPA_ONNX_ASSIGN_TTS_ATTR();
 
 #if __OHOS__
   std::unique_ptr<NativeResourceManager,
@@ -180,33 +283,8 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 #else
   const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 #endif
-  SHERPA_ONNX_DELETE_C_STR(c.model.vits.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);
-  SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);
-  SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);
 
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);
-  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);
-
-  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);
-
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);
-  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);
-
-  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
-
-  SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
-  SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
+  SHERPA_ONNX_DELETE_TTS_C_STR();
 
   if (!tts) {
     Napi::TypeError::New(env, "Please check your config!")
@@ -667,6 +745,9 @@ static Napi::Object OfflineTtsGenerateAsyncWrapper(
 void InitNonStreamingTts(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createOfflineTts"),
               Napi::Function::New(env, CreateOfflineTtsWrapper));
+
+  exports.Set(Napi::String::New(env, "createOfflineTtsAsync"),
+              Napi::Function::New(env, CreateOfflineTtsAsyncWrapper));
 
   exports.Set(Napi::String::New(env, "getOfflineTtsSampleRate"),
               Napi::Function::New(env, OfflineTtsSampleRateWrapper));
