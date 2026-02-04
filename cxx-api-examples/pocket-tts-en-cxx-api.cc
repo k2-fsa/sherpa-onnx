@@ -1,29 +1,28 @@
-// c-api-examples/pocket-tts-en-c-api.c
+// cxx-api-examples/pocket-tts-en-cxx-api.cc
 //
-// Copyright (c)  2026  Xiaoyingtao Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 
-// This file shows how to use sherpa-onnx C API
-// for English TTS with Pocket TTS.
+// This file shows how to use sherpa-onnx CXX API
+// for English TTS with PocketTTS.
 //
 // clang-format off
 /*
 Usage
 
-
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 
-./pocket-tts-en-c-api
+./pocket-tts-en-cxx-api
 
  */
 // clang-format on
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdint>
+#include <cstdio>
+#include <string>
 
-#include "sherpa-onnx/c-api/c-api.h"
+#include "sherpa-onnx/c-api/cxx-api.h"
 
 static int32_t ProgressCallback(const float *samples, int32_t num_samples,
                                 float progress, void *arg) {
@@ -34,8 +33,9 @@ static int32_t ProgressCallback(const float *samples, int32_t num_samples,
 }
 
 int32_t main(int32_t argc, char *argv[]) {
-  SherpaOnnxOfflineTtsConfig config;
-  memset(&config, 0, sizeof(config));
+  using namespace sherpa_onnx::cxx;  // NOLINT
+  OfflineTtsConfig config;
+
   config.model.pocket.lm_flow =
       "./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx";
   config.model.pocket.lm_main =
@@ -56,56 +56,37 @@ int32_t main(int32_t argc, char *argv[]) {
   // If you don't want to see debug messages, please set it to 0
   config.model.debug = 1;
 
-  const char *filename = "./generated-pocket-en.wav";
-  const char *text =
+  std::string filename = "./generated-pocket-en-cxx.wav";
+  std::string text =
       "Today as always, men fall into two groups: slaves and free men. Whoever "
       "does not have two-thirds of his day for himself, is a slave, whatever "
       "he may be: a statesman, a businessman, an official, or a scholar. "
       "Friends fell out often because life was changing so fast. The easiest "
       "thing in the world was to lose touch with someone.";
 
-  const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
-  if (!tts) {
-    fprintf(stderr, "Error create Offline TTS\n");
-    return -1;
-  }
-  float speed = 1.0;  // larger -> faster in speech speed
-  SherpaOnnxGenerationConfig cfg = {0};
-  const char *reference_audio_file =
+  auto tts = OfflineTts::Create(config);
+  GenerationConfig cfg;
+  cfg.speed = 1.0;
+
+  std::string reference_audio_file =
       "./sherpa-onnx-pocket-tts-int8-2026-01-26/test_wavs/bria.wav";
-  const SherpaOnnxWave *wave = NULL;
-  wave = SherpaOnnxReadWave(reference_audio_file);
-  if (!wave) {
-    fprintf(stderr, "Failed to read %s\n", reference_audio_file);
-    SherpaOnnxDestroyOfflineTts(tts);
-    return -1;
-  }
-  cfg.reference_audio = wave->samples;
-  cfg.reference_audio_len = wave->num_samples;
-  cfg.reference_sample_rate = wave->sample_rate;
-  cfg.extra = "{\"max_reference_audio_len\": 10.0}";
+
+  Wave wave = ReadWave(reference_audio_file);
+  cfg.reference_audio = std::move(wave.samples);
+  cfg.reference_sample_rate = wave.sample_rate;
+  cfg.extra["max_reference_audio_len"] = "10";
 
 #if 0
   // If you don't want to use a callback, then please enable this branch
-  const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg, NULL, NULL);
+  GeneratedAudio audio = tts.Generate(text, cfg);
 #else
-  const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg, ProgressCallback,
-                                             NULL);
+  GeneratedAudio audio = tts.Generate(text, cfg, ProgressCallback);
 #endif
 
-  if (wave) SherpaOnnxFreeWave(wave);
+  WriteWave(filename, {audio.samples, audio.sample_rate});
 
-  fprintf(stderr, "Input text is: %s\n", text);
-
-  if (audio) {
-    SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate, filename);
-    fprintf(stderr, "Saved to: %s\n", filename);
-    SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
-  }
-
-  SherpaOnnxDestroyOfflineTts(tts);
+  fprintf(stderr, "Input text is: %s\n", text.c_str());
+  fprintf(stderr, "Saved to: %s\n", filename.c_str());
 
   return 0;
 }

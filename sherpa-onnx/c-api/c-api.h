@@ -1211,7 +1211,7 @@ SherpaOnnxOfflineTtsGenerateWithZipvoice(const SherpaOnnxOfflineTts *tts,
                                          int32_t n_prompt, int32_t prompt_sr,
                                          float speed, int32_t num_steps);
 
-SHERPA_ONNX_API typedef struct GenerationConfig {
+SHERPA_ONNX_API typedef struct SherpaOnnxGenerationConfig {
   float silence_scale;
   float speed;                    // used only by some models.
   int32_t sid;                    // used only by models support multi-speakers
@@ -1221,7 +1221,7 @@ SHERPA_ONNX_API typedef struct GenerationConfig {
   const char *reference_text;     // not all models require this
   int32_t num_steps;              // number of steps in flow matching
   const char *extra;              // extra attrs in JSON object, model specific
-} GenerationConfig;
+} SherpaOnnxGenerationConfig;
 
 // Generate audio from the given text with config params.
 // The user has to use SherpaOnnxDestroyOfflineTtsGeneratedAudio() to free the
@@ -1229,7 +1229,7 @@ SHERPA_ONNX_API typedef struct GenerationConfig {
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithConfig(
     const SherpaOnnxOfflineTts *tts, const char *text,
-    const GenerationConfig *config,
+    const SherpaOnnxGenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
