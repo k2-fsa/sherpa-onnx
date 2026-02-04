@@ -91,7 +91,6 @@ class MainActivity : AppCompatActivity() {
         recordButton.isEnabled = false
         recordButton.setOnClickListener { onclick() }
 
-        // 변경된 부분: lifecycleScope 사용
         lifecycleScope.launch(Dispatchers.IO) {
             Log.i(TAG, "Start to initialize model")
             initVadModel()
