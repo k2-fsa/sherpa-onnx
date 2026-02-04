@@ -507,7 +507,7 @@ struct OfflineTtsConfig {
 
 struct GeneratedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 // Return 1 to continue generating

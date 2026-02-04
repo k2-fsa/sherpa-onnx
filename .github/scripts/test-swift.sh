@@ -9,6 +9,10 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-tts-pocket-en.sh
+ls -lh
+rm -rf sherpa-onnx-pocket-*
+
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 

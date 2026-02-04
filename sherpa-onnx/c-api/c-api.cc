@@ -1403,7 +1403,7 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
   cfg.reference_text = SHERPA_ONNX_OR(config->reference_text, "");
   cfg.num_steps = SHERPA_ONNX_OR(config->num_steps, 5);
 
-  if (config->extra) {
+  if (config->extra && !std::string(config->extra).empty()) {
     try {
       auto json = nlohmann::json::parse(config->extra);
       for (auto &[k, v] : json.items()) {
