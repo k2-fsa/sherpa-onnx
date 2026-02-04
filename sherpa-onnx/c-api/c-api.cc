@@ -1381,22 +1381,18 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     const SherpaOnnxOfflineTts *tts, const char *text,
     const GenerationConfig *config,
     std::function<int32_t(const float *, int32_t, float)> callback) {
-  if (!config->reference_audio) {
-    SHERPA_ONNX_LOGE("Reference audio is nullptr");
-    return nullptr;
-  }
-
-  if (config->reference_audio_len <= 0) {
-    SHERPA_ONNX_LOGE("Invalid reference audio len: %d",
-                     config->reference_audio_len);
-    return nullptr;
-  }
-
   sherpa_onnx::GenerationConfig cfg;
+  if (config->reference_audio) {
+    if (config->reference_audio_len <= 0) {
+      SHERPA_ONNX_LOGE("Invalid reference audio len: %d",
+                       config->reference_audio_len);
+      return nullptr;
+    }
 
-  cfg.reference_audio.assign(
-      config->reference_audio,
-      config->reference_audio + config->reference_audio_len);
+    cfg.reference_audio.assign(
+        config->reference_audio,
+        config->reference_audio + config->reference_audio_len);
+  }
 
   cfg.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
   cfg.speed = SHERPA_ONNX_OR(config->speed, 1.0);
@@ -1628,7 +1624,6 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
   if (callback) {
     auto wrapper = [callback, arg](const float *samples, int32_t n,
                                    float progress) {
-      if (!callback) return 1;
       return callback(samples, n, progress, arg);
     };
 
