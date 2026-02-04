@@ -91,6 +91,8 @@ class MainActivity : AppCompatActivity() {
         recordButton.isEnabled = false
         recordButton.setOnClickListener { onclick() }
 
+        textView.text = "Initializing models... Please wait."
+
         lifecycleScope.launch(Dispatchers.IO) {
             Log.i(TAG, "Start to initialize model")
             initVadModel()
@@ -102,6 +104,7 @@ class MainActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 recordButton.isEnabled = true
+                textView.text = "" 
                 Log.i(TAG, "Model initialization completed, button enabled")
             }
         }
