@@ -13,6 +13,23 @@ project(sherpa-onnx)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(NOT WIN32)
+  set(CMAKE_SKIP_BUILD_RPATH FALSE)
+  set(BUILD_RPATH_USE_ORIGIN TRUE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
+if(NOT APPLE)
+  set(SHERPA_ONNX_RPATH_ORIGIN "$ORIGIN")
+else()
+  set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
+endif()
+
+if(NOT WIN32)
+  set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+  set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+endif()
+
 include_directories(${CMAKE_JS_INC})
 
 set(srcs
@@ -70,8 +87,8 @@ target_link_libraries(${PROJECT_NAME}
   sherpa-onnx-c-api
   onnxruntime
   -Wl,-rpath,$ENV{SHERPA_ONNX_INSTALL_DIR}/lib
+  -Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}
 )
-
 
 if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
   # Generate node.lib
