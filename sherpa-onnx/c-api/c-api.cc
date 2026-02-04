@@ -1378,22 +1378,31 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
 }
 
 static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
-    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    const SherpaOnnxOfflineTts *tts, const char *text,
+    const GenerationConfig *config,
     std::function<int32_t(const float *, int32_t, float)> callback) {
   sherpa_onnx::GenerationConfig cfg;
-  if (config->reference_audio_len > 0 && config->reference_audio) {
+  if (config->reference_audio) {
+    if (config->reference_audio_len <= 0) {
+      SHERPA_ONNX_LOGE("Invalid reference audio len: %d",
+                       config->reference_audio_len);
+      return nullptr;
+    }
+
     cfg.reference_audio.assign(
         config->reference_audio,
         config->reference_audio + config->reference_audio_len);
   }
-  if (config->silence_scale > 0) cfg.silence_scale = config->silence_scale;
-  if (config->speed > 0) cfg.speed = config->speed;
+
+  cfg.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
+  cfg.speed = SHERPA_ONNX_OR(config->speed, 1.0);
   cfg.sid = config->sid;
-  if (config->reference_sample_rate > 0)
-    cfg.reference_sample_rate = config->reference_sample_rate;
-  if (config->reference_text)
-    cfg.reference_text = config->reference_text;
-  if (config->num_steps > 0) cfg.num_steps = config->num_steps;
+
+  cfg.reference_sample_rate = config->reference_sample_rate;
+
+  cfg.reference_text = SHERPA_ONNX_OR(config->reference_text, "");
+  cfg.num_steps = SHERPA_ONNX_OR(config->num_steps, 5);
+
   if (config->extra) {
     try {
       auto json = nlohmann::json::parse(config->extra);
@@ -1401,7 +1410,8 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
         cfg.extra.insert_or_assign(std::string(k), v.dump());
       }
     } catch (const nlohmann::json::parse_error &e) {
-      SHERPA_ONNX_LOGE("Failed to parse extra JSON: %s", e.what());
+      SHERPA_ONNX_LOGE("Failed to parse extra JSON: '%s'", e.what());
+      SHERPA_ONNX_LOGE("Ignore the extra opt");
     }
   }
 
@@ -1426,50 +1436,120 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
     float speed) {
+  if (!tts) {
+    SHERPA_ONNX_LOGE("tts is nullptr");
+    return nullptr;
+  }
+
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, nullptr);
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallback callback) {
-  auto wrapper = [callback](const float *samples, int32_t n,
-                            float /*progress*/) {
-    return callback(samples, n);
-  };
+  if (!tts) {
+    SHERPA_ONNX_LOGE("tts is nullptr");
+    return nullptr;
+  }
 
-  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (callback) {
+    auto wrapper = [callback](const float *samples, int32_t n,
+                              float /*progress*/) {
+      return callback(samples, n);
+    };
+
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed,
+                                                std::move(wrapper));
+  } else {
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, nullptr);
+  }
 }
 
 const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithProgressCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioProgressCallback callback) {
-  auto wrapper = [callback](const float *samples, int32_t n, float progress) {
-    return callback(samples, n, progress);
-  };
-  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
+  if (!tts) {
+    SHERPA_ONNX_LOGE("tts is nullptr");
+    return nullptr;
+  }
+
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (callback) {
+    auto wrapper = [callback](const float *samples, int32_t n, float progress) {
+      return callback(samples, n, progress);
+    };
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed,
+                                                std::move(wrapper));
+  } else {
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, nullptr);
+  }
 }
 
 const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
-  auto wrapper = [callback, arg](const float *samples, int32_t n,
-                                 float progress) {
-    return callback(samples, n, progress, arg);
-  };
-  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
+  if (!tts) {
+    SHERPA_ONNX_LOGE("tts is nullptr");
+    return nullptr;
+  }
+
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (callback) {
+    auto wrapper = [callback, arg](const float *samples, int32_t n,
+                                   float progress) {
+      return callback(samples, n, progress, arg);
+    };
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed,
+                                                std::move(wrapper));
+  } else {
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, nullptr);
+  }
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg) {
-  auto wrapper = [callback, arg](const float *samples, int32_t n,
-                                 float /*progress*/) {
-    return callback(samples, n, arg);
-  };
+  if (!tts) {
+    SHERPA_ONNX_LOGE("tts is nullptr");
+    return nullptr;
+  }
 
-  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (callback) {
+    auto wrapper = [callback, arg](const float *samples, int32_t n,
+                                   float /*progress*/) {
+      return callback(samples, n, arg);
+    };
+
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed,
+                                                std::move(wrapper));
+  } else {
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, nullptr);
+  }
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
@@ -1480,8 +1560,23 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
     return nullptr;
   }
 
-  std::string text_s = text ? text : "";
-  std::string ptext_s = prompt_text ? prompt_text : "";
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (!prompt_text) {
+    SHERPA_ONNX_LOGE("prompt_text is nullptr");
+    return nullptr;
+  }
+
+  if (!prompt_samples) {
+    SHERPA_ONNX_LOGE("prompt_samples is nullptr");
+    return nullptr;
+  }
+
+  std::string text_s = text;
+  std::string ptext_s = prompt_text;
 
   std::vector<float> prompt_vec;
   if (prompt_samples && n_prompt > 0) {
@@ -1509,15 +1604,34 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
-    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    const SherpaOnnxOfflineTts *tts, const char *text,
+    const GenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
-  auto wrapper = [callback, arg](const float *samples, int32_t n,
-                                 float progress) {
-    if (!callback) return 1;
-    return callback(samples, n, progress, arg);
-  };
+  if (!tts) {
+    return nullptr;
+  }
 
-  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, config, std::move(wrapper));
+  if (!text) {
+    SHERPA_ONNX_LOGE("text is nullptr");
+    return nullptr;
+  }
+
+  if (!config) {
+    SHERPA_ONNX_LOGE("config is nullptr");
+    return nullptr;
+  }
+
+  if (callback) {
+    auto wrapper = [callback, arg](const float *samples, int32_t n,
+                                   float progress) {
+      return callback(samples, n, progress, arg);
+    };
+
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, config,
+                                                std::move(wrapper));
+  } else {
+    return SherpaOnnxOfflineTtsGenerateInternal(tts, text, config, nullptr);
+  }
 }
 
 void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
@@ -1594,7 +1708,8 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
-    const SherpaOnnxOfflineTts *tts, const char *text, GenerationConfig *config,
+    const SherpaOnnxOfflineTts *tts, const char *text,
+    const GenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
   return nullptr;
