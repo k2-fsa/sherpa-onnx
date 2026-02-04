@@ -459,12 +459,24 @@ struct OfflineTtsZipvoiceModelConfig {
   float guidance_scale = 1.0;
 };
 
+struct OfflineTtsPocketModelConfig {
+  std::string lm_flow;
+  std::string lm_main;
+  std::string encoder;
+  std::string decoder;
+  std::string text_conditioner;
+
+  std::string vocab_json;
+  std::string token_scores_json;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
   OfflineTtsZipvoiceModelConfig zipvoice;
+  OfflineTtsPocketModelConfig pocket;
 
   int32_t num_threads = 1;
   bool debug = false;
