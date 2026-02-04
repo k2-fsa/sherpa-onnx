@@ -1379,7 +1379,7 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
 
 static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     const SherpaOnnxOfflineTts *tts, const char *text,
-    const GenerationConfig *config,
+    const SherpaOnnxGenerationConfig *config,
     std::function<int32_t(const float *, int32_t, float)> callback) {
   sherpa_onnx::GenerationConfig cfg;
   if (config->reference_audio) {
@@ -1605,7 +1605,7 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
     const SherpaOnnxOfflineTts *tts, const char *text,
-    const GenerationConfig *config,
+    const SherpaOnnxGenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
   if (!tts) {
     return nullptr;
@@ -1709,7 +1709,7 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
     const SherpaOnnxOfflineTts *tts, const char *text,
-    const GenerationConfig *config,
+    const SherpaOnnxGenerationConfig *config,
     SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
   return nullptr;
