@@ -9,7 +9,6 @@
 /*
 Usage
 
-
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2

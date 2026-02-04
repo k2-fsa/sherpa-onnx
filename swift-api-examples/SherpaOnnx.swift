@@ -1007,7 +1007,7 @@ func sherpaOnnxOfflineTtsPocketModelConfig(
     lm_main: toCPointer(lmMain),
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
-    text_conditioner: textConditioner(vocoder),
+    text_conditioner: toCPointer(textConditioner),
     vocab_json: toCPointer(vocabJson),
     token_scores_json: toCPointer(tokenScoresJson)
   )
@@ -1131,6 +1131,102 @@ typealias TtsCallbackWithArg = (
   ) -> Int32
 )?
 
+typealias TtsProgressCallbackWithArg =
+  @convention(c) (
+    UnsafePointer<Float>?, Int32, Float, UnsafeMutableRawPointer?
+  ) -> Int32
+
+struct SherpaOnnxGenerationConfigSwift {
+  var silenceScale: Float = 0.2
+  var speed: Float = 1.0
+  var sid: Int = 0
+
+  /// mono audio in [-1, 1]
+  var referenceAudio: [Float] = []
+  var referenceSampleRate: Int = 0
+  var referenceText: String = ""
+
+  var numSteps: Int = 5
+
+  /// Model-specific extra options
+  var extra: [String: String] = [:]
+}
+
+extension SherpaOnnxGenerationConfigSwift {
+  func extraAsJsonString() -> String {
+    guard !extra.isEmpty else {
+      return ""
+    }
+
+    let data = try? JSONSerialization.data(
+      withJSONObject: extra,
+      options: []
+    )
+
+    return data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+  }
+}
+
+final class SherpaOnnxGenerationConfigC {
+  /// The underlying C struct
+  var cConfig: SherpaOnnxGenerationConfig
+
+  /// Storage for reference audio so the pointer stays valid
+  private let referenceAudioStorage: [Float]
+
+  init(
+    silenceScale: Float = 0.2,
+    speed: Float = 1.0,
+    sid: Int = 0,
+    referenceAudio: [Float] = [],
+    referenceSampleRate: Int = 16000,
+    referenceText: String = "",
+    numSteps: Int = 1,
+    extra: [String: String] = [:]
+  ) {
+    // First, initialize referenceAudioStorage
+    self.referenceAudioStorage = referenceAudio
+
+    // Prepare extra JSON string
+    let extraJSON: String
+    if let data = try? JSONSerialization.data(withJSONObject: extra, options: []),
+      let s = String(data: data, encoding: .utf8)
+    {
+      extraJSON = s
+    } else {
+      extraJSON = "{}"
+    }
+
+    // Now safely create cConfig
+    let buffer = referenceAudioStorage.withUnsafeBufferPointer { $0 }
+    self.cConfig = SherpaOnnxGenerationConfig(
+      silence_scale: silenceScale,
+      speed: speed,
+      sid: Int32(sid),
+      reference_audio: buffer.baseAddress,
+      reference_audio_len: Int32(referenceAudioStorage.count),
+      reference_sample_rate: Int32(referenceSampleRate),
+      reference_text: toCPointer(referenceText),
+      num_steps: Int32(numSteps),
+      extra: toCPointer(extraJSON)
+    )
+  }
+
+  /// Convenience initializer that accepts the Swift struct
+  convenience init(_ swiftConfig: SherpaOnnxGenerationConfigSwift) {
+    self.init(
+      silenceScale: swiftConfig.silenceScale,
+      speed: swiftConfig.speed,
+      sid: swiftConfig.sid,
+      referenceAudio: swiftConfig.referenceAudio,
+      referenceSampleRate: swiftConfig.referenceSampleRate,
+      referenceText: swiftConfig.referenceText,
+      numSteps: swiftConfig.numSteps,
+      extra: swiftConfig.extra
+    )
+  }
+}
+
 class SherpaOnnxOfflineTtsWrapper {
   /// A pointer to the underlying counterpart in C
   let tts: OpaquePointer!
@@ -1165,6 +1261,29 @@ class SherpaOnnxOfflineTtsWrapper {
 
     return SherpaOnnxGeneratedAudioWrapper(audio: audio)
   }
+
+  func generateWithConfig(
+    text: String,
+    config: SherpaOnnxGenerationConfigSwift,
+    callback: TtsProgressCallbackWithArg?,
+    arg: UnsafeMutableRawPointer?
+  ) -> SherpaOnnxGeneratedAudioWrapper {
+    let bridge = SherpaOnnxGenerationConfigC(config)
+
+    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? =
+      withUnsafePointer(to: &bridge.cConfig) { configPtr in
+        SherpaOnnxOfflineTtsGenerateWithConfig(
+          tts,
+          toCPointer(text),
+          configPtr,
+          callback,
+          arg
+        )
+      }
+
+    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+  }
+
 }
 
 // spoken language identification
