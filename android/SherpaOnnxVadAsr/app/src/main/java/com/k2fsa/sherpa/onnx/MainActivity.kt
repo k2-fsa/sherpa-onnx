@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
+import androidx.lifecycle.lifecycleScope
 
 
 private const val TAG = "sherpa-onnx"
@@ -90,7 +91,8 @@ class MainActivity : AppCompatActivity() {
         recordButton.isEnabled = false
         recordButton.setOnClickListener { onclick() }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        // 변경된 부분: lifecycleScope 사용
+        lifecycleScope.launch(Dispatchers.IO) {
             Log.i(TAG, "Start to initialize model")
             initVadModel()
             Log.i(TAG, "Finished initializing model")
