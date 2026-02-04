@@ -1136,94 +1136,77 @@ typealias TtsProgressCallbackWithArg =
     UnsafePointer<Float>?, Int32, Float, UnsafeMutableRawPointer?
   ) -> Int32
 
+/// Swift representation of the generation config for Pocket TTS
 struct SherpaOnnxGenerationConfigSwift {
   var silenceScale: Float = 0.2
   var speed: Float = 1.0
   var sid: Int = 0
-
-  /// mono audio in [-1, 1]
   var referenceAudio: [Float] = []
-  var referenceSampleRate: Int = 0
+  var referenceSampleRate: Int = 16000
   var referenceText: String = ""
+  var numSteps: Int = 1
+  var extra: [String: Any] = [:]  // Any can be String, Int, Float, Double
 
-  var numSteps: Int = 5
+  /// Convert the extra dictionary into a JSON string
+  func extraJsonString() -> String {
+    var jsonCompatible: [String: Any] = [:]
 
-  /// Model-specific extra options
-  var extra: [String: String] = [:]
-}
-
-extension SherpaOnnxGenerationConfigSwift {
-  func extraAsJsonString() -> String {
-    guard !extra.isEmpty else {
-      return ""
+    for (key, value) in extra {
+      switch value {
+      case let v as String:
+        jsonCompatible[key] = v
+      case let v as Int:
+        jsonCompatible[key] = v
+      case let v as Float:
+        jsonCompatible[key] = v
+      case let v as Double:
+        jsonCompatible[key] = v
+      default:
+        // ignore unsupported types
+        print("Warning: unsupported type for key '\(key)' in extra")
+      }
     }
 
-    let data = try? JSONSerialization.data(
-      withJSONObject: extra,
-      options: []
-    )
+    guard let data = try? JSONSerialization.data(withJSONObject: jsonCompatible, options: []),
+      let json = String(data: data, encoding: .utf8)
+    else {
+      return "{}"
+    }
 
-    return data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+    return json
   }
 }
-
 final class SherpaOnnxGenerationConfigC {
   /// The underlying C struct
   var cConfig: SherpaOnnxGenerationConfig
 
-  /// Storage for reference audio so the pointer stays valid
+  /// Storage for reference audio so the pointer stays valid during the C call
   private let referenceAudioStorage: [Float]
 
-  init(
-    silenceScale: Float = 0.2,
-    speed: Float = 1.0,
-    sid: Int = 0,
-    referenceAudio: [Float] = [],
-    referenceSampleRate: Int = 16000,
-    referenceText: String = "",
-    numSteps: Int = 1,
-    extra: [String: String] = [:]
-  ) {
-    // First, initialize referenceAudioStorage
+  /// Extra JSON string for C API
+  let extraJson: String
+
+  init(_ swiftConfig: SherpaOnnxGenerationConfigSwift) {
+    let referenceAudio = swiftConfig.referenceAudio
+
+    let extraJson = swiftConfig.extraJsonString()
+    self.extraJson = extraJson
+
     self.referenceAudioStorage = referenceAudio
 
-    // Prepare extra JSON string
-    let extraJSON: String
-    if let data = try? JSONSerialization.data(withJSONObject: extra, options: []),
-      let s = String(data: data, encoding: .utf8)
-    {
-      extraJSON = s
-    } else {
-      extraJSON = "{}"
+    self.cConfig = self.referenceAudioStorage.withUnsafeBufferPointer { buffer in
+      SherpaOnnxGenerationConfig(
+        silence_scale: swiftConfig.silenceScale,
+        speed: swiftConfig.speed,
+        sid: Int32(swiftConfig.sid),
+        reference_audio: buffer.baseAddress,
+        reference_audio_len: Int32(buffer.count),
+        reference_sample_rate: Int32(swiftConfig.referenceSampleRate),
+        reference_text: toCPointer(swiftConfig.referenceText),
+        num_steps: Int32(swiftConfig.numSteps),
+        extra: toCPointer(extraJson)
+      )
     }
-
-    // Now safely create cConfig
-    let buffer = referenceAudioStorage.withUnsafeBufferPointer { $0 }
-    self.cConfig = SherpaOnnxGenerationConfig(
-      silence_scale: silenceScale,
-      speed: speed,
-      sid: Int32(sid),
-      reference_audio: buffer.baseAddress,
-      reference_audio_len: Int32(referenceAudioStorage.count),
-      reference_sample_rate: Int32(referenceSampleRate),
-      reference_text: toCPointer(referenceText),
-      num_steps: Int32(numSteps),
-      extra: toCPointer(extraJSON)
-    )
-  }
-
-  /// Convenience initializer that accepts the Swift struct
-  convenience init(_ swiftConfig: SherpaOnnxGenerationConfigSwift) {
-    self.init(
-      silenceScale: swiftConfig.silenceScale,
-      speed: swiftConfig.speed,
-      sid: swiftConfig.sid,
-      referenceAudio: swiftConfig.referenceAudio,
-      referenceSampleRate: swiftConfig.referenceSampleRate,
-      referenceText: swiftConfig.referenceText,
-      numSteps: swiftConfig.numSteps,
-      extra: swiftConfig.extra
-    )
   }
 }
 
