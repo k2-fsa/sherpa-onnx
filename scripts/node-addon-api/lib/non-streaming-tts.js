@@ -10,6 +10,13 @@ const addon = require('./addon.js');
 const kFromAsyncFactory = Symbol('OfflineTts.fromAsync');
 
 
+class GenerationConfig {
+  constructor(opts = {}) {
+    Object.assign(this, opts);
+  }
+}
+
+
 class OfflineTts {
   /**
    * Constructor (sync path).
@@ -58,33 +65,41 @@ class OfflineTts {
    * @returns {GeneratedAudio}
    */
   generate(obj) {
+    if (!obj || typeof obj !== 'object') {
+      throw new TypeError('generate() expects an object');
+    }
+
+    // If generationConfig is present, use new API
+    if (obj.generationConfig !== undefined) {
+      return addon.offlineTtsGenerateWithConfig(this.handle, obj);
+    }
+
+    // Fallback to legacy path
     return addon.offlineTtsGenerate(this.handle, obj);
   }
   /**
-   * Asynchronous generation with progress callback
+   * Generate audio asynchronously with optional generationConfig and progress
+   * callback
    *
    * The progress callback receives streaming audio chunks.
    *
-   * @param {TtsRequest & {
-   *   /**
-   *    * Optional progress callback called multiple times with partial audio
-   *    * @param {{ samples: Float32Array, progress: number }} info
-   *    * `progress` in [0,1]
-   *    * Return `0` or `false` to cancel, anything else to continue
-   *    *\/
-   *   onProgress?: (info: { samples: Float32Array, progress: number }) =>
-   * number | boolean | void
-   * }} obj
+   * @param {TtsRequest & { generationConfig?: object, onProgress?: (info: {
+   *     samples: Float32Array, progress: number }) => number | boolean | void
+   *     }} obj
    * @returns {Promise<GeneratedAudio>}
    */
   generateAsync(obj) {
     const {onProgress, ...rest} = obj;
 
-    return addon.offlineTtsGenerateAsync(this.handle, {
+    const hasConfig = obj.generationConfig !== undefined;
+
+    const fn = hasConfig ? addon.offlineTtsGenerateAsyncWithConfig :
+                           addon.offlineTtsGenerateAsync;
+
+    return fn(this.handle, {
       ...rest,
       callback: typeof onProgress === 'function' ?
           (info) => {
-            // JS contract: 0 or false = cancel, else continue
             const ret = onProgress(info);
             return ret === 0 || ret === false ? 0 : 1;
           } :
@@ -96,4 +111,5 @@ class OfflineTts {
 
 module.exports = {
   OfflineTts,
+  GenerationConfig,
 }

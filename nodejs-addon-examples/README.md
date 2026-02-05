@@ -153,6 +153,8 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
+|[./test_tts_non_streaming_pocket_en.js](./test_tts_non_streaming_pocket_en.js)| Zero-shot text-to-speech with a PocketTTS English Model|
+|[./test_tts_non_streaming_pocket_en_async.js](./test_tts_non_streaming_pocket_en_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API|
 |[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
 |[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
 |[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
@@ -523,6 +525,26 @@ node ./test_asr_non_streaming_sense_voice.js
 # To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_sense_voice_microphone.js
+```
+
+### Zero-shot text-to-speech with PocketTTS models (English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test_tts_non_streaming_pocket_en_async.js
+```
+
+### Zero-shot text-to-speech with PocketTTS models (English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test_tts_non_streaming_pocket_en.js
 ```
 
 ### Text-to-speech with KittenTTS models (English TTS)

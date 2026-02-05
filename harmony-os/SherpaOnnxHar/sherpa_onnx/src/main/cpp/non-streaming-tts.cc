@@ -21,36 +21,96 @@
     SHERPA_ONNX_ASSIGN_ATTR_FLOAT(silence_scale, silenceScale);        \
   } while (0)
 
-#define SHERPA_ONNX_DELETE_TTS_C_STR()                       \
-  do {                                                       \
-    SHERPA_ONNX_DELETE_C_STR(c.model.vits.model);            \
-    SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);          \
-    SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);           \
-    SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);         \
-                                                             \
-    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model); \
-    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);        \
-    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);        \
-    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);         \
-    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);       \
-                                                             \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.model);          \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);         \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);         \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);       \
-                                                             \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);          \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);         \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);         \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);       \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);        \
-    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);           \
-                                                             \
-    SHERPA_ONNX_DELETE_C_STR(c.model.provider);              \
-                                                             \
-    SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);                   \
-    SHERPA_ONNX_DELETE_C_STR(c.rule_fars);                   \
+#define SHERPA_ONNX_DELETE_TTS_C_STR()                          \
+  do {                                                          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.model);               \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);              \
+    SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);            \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model);    \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);          \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.model);             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);          \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lexicon);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.lang);              \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.lm_flow);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.lm_main);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.encoder);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.decoder);           \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.text_conditioner);  \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.vocab_json);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.pocket.token_scores_json); \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.model.provider);                 \
+                                                                \
+    SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);                      \
+    SHERPA_ONNX_DELETE_C_STR(c.rule_fars);                      \
   } while (0)
+
+#define SHERPA_ONNX_DELETE_GENERATION_C_STR(c)  \
+  do {                                          \
+    SHERPA_ONNX_DELETE_C_STR(c.reference_text); \
+    SHERPA_ONNX_DELETE_C_STR(c.extra);          \
+    if (c.reference_audio) {                    \
+      delete[] c.reference_audio;               \
+    }                                           \
+  } while (0)
+
+static std::string JsObjectToJson(Napi::Env env, const Napi::Object &obj) {
+  Napi::Object json = env.Global().Get("JSON").As<Napi::Object>();
+  Napi::Function stringify = json.Get("stringify").As<Napi::Function>();
+  return stringify.Call(json, {obj}).As<Napi::String>().Utf8Value();
+}
+
+static SherpaOnnxGenerationConfig GetGenerationConfig(Napi::Object o) {
+  SherpaOnnxGenerationConfig c;
+  memset(&c, 0, sizeof(c));
+
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(silence_scale, silenceScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(speed, speed);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(sid, sid);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_steps, numSteps);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(reference_text, referenceText);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(reference_sample_rate, referenceSampleRate);
+
+  if (o.Has("referenceAudio") && o.Get("referenceAudio").IsTypedArray()) {
+    auto arr = o.Get("referenceAudio").As<Napi::Float32Array>();
+    int32_t n = arr.ElementLength();
+
+    if (n > 0) {
+      float *buf = new float[n];
+      std::copy(arr.Data(), arr.Data() + n, buf);
+
+      c.reference_audio = buf;
+      c.reference_audio_len = n;
+    }
+  }
+
+  if (o.Has("extra") && o.Get("extra").IsObject()) {
+    std::string s = JsObjectToJson(o.Env(), o.Get("extra").As<Napi::Object>());
+
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = '\0';
+
+    c.extra = p;
+  }
+
+  return c;
+}
 
 static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
     Napi::Object obj) {
@@ -134,6 +194,28 @@ static SherpaOnnxOfflineTtsKittenModelConfig GetOfflineTtsKittenModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsPocketModelConfig GetOfflineTtsPocketModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineTtsPocketModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("pocket") || !obj.Get("pocket").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("pocket").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lm_flow, lmFlow);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lm_main, lmMain);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(text_conditioner, textConditioner);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vocab_json, vocabJson);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(token_scores_json, tokenScoresJson);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsModelConfig c;
@@ -149,6 +231,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   c.matcha = GetOfflineTtsMatchaModelConfig(o);
   c.kokoro = GetOfflineTtsKokoroModelConfig(o);
   c.kitten = GetOfflineTtsKittenModelConfig(o);
+  c.pocket = GetOfflineTtsPocketModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -357,6 +440,94 @@ static Napi::Number OfflineTtsNumSpeakersWrapper(
 }
 
 // synchronous version
+static Napi::Object OfflineTtsGenerateWithConfigWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "Expect 2 arguments")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 must be OfflineTts handle")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  if (!info[1].IsObject()) {
+    Napi::TypeError::New(env, "Argument 1 must be an object")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  const SherpaOnnxOfflineTts *tts =
+      info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
+
+  Napi::Object obj = info[1].As<Napi::Object>();
+
+  if (!obj.Has("text") || !obj.Get("text").IsString()) {
+    Napi::TypeError::New(env, "obj.text must be a string")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  std::string text = obj.Get("text").As<Napi::String>().Utf8Value();
+
+  bool enable_external_buffer = true;
+  if (obj.Has("enableExternalBuffer") &&
+      obj.Get("enableExternalBuffer").IsBoolean()) {
+    enable_external_buffer =
+        obj.Get("enableExternalBuffer").As<Napi::Boolean>().Value();
+  }
+
+  Napi::Object genObj =
+      obj.Has("generationConfig") && obj.Get("generationConfig").IsObject()
+          ? obj.Get("generationConfig").As<Napi::Object>()
+          : Napi::Object::New(env);
+
+  SherpaOnnxGenerationConfig gen_config = GetGenerationConfig(genObj);
+
+  const SherpaOnnxGeneratedAudio *audio =
+      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text.c_str(), &gen_config,
+                                             nullptr, nullptr);
+
+  SHERPA_ONNX_DELETE_GENERATION_C_STR(gen_config);
+
+  if (!audio) {
+    Napi::Error::New(env, "TTS generation failed").ThrowAsJavaScriptException();
+    return {};
+  }
+
+  Napi::Object result = Napi::Object::New(env);
+
+  if (enable_external_buffer) {
+    Napi::ArrayBuffer buffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(audio->samples), sizeof(float) * audio->n,
+        [](Napi::Env, void *, const SherpaOnnxGeneratedAudio *hint) {
+          SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
+        },
+        audio);
+
+    result.Set("samples", Napi::Float32Array::New(env, audio->n, buffer, 0));
+  } else {
+    Napi::ArrayBuffer buffer =
+        Napi::ArrayBuffer::New(env, sizeof(float) * audio->n);
+
+    auto arr = Napi::Float32Array::New(env, audio->n, buffer, 0);
+
+    std::copy(audio->samples, audio->samples + audio->n, arr.Data());
+
+    SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+
+    result.Set("samples", arr);
+  }
+
+  result.Set("sampleRate", audio->sample_rate);
+  return result;
+}
+
 static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -742,6 +913,160 @@ static Napi::Object OfflineTtsGenerateAsyncWrapper(
   return worker->Promise();
 }
 
+// Async worker for TTS generation with generationConfig
+class TtsGenerateWithConfigWorker : public Napi::AsyncWorker {
+ public:
+  TtsGenerateWithConfigWorker(const Napi::Env &env, TSFN tsfn,
+                              const SherpaOnnxOfflineTts *tts,
+                              const std::string &text,
+                              const SherpaOnnxGenerationConfig &gen_config,
+                              bool use_external_buffer)
+      : tsfn_(tsfn),
+        Napi::AsyncWorker(env, "TtsGenerateWithConfigWorker"),
+        deferred_(env),
+        tts_(tts),
+        text_(text),
+        gen_config_(gen_config),
+        use_external_buffer_(use_external_buffer) {}
+
+  Napi::Promise Promise() { return deferred_.Promise(); }
+
+  ~TtsGenerateWithConfigWorker() {
+    SHERPA_ONNX_DELETE_GENERATION_C_STR(gen_config_);
+    for (auto d : data_list_) delete d;
+  }
+
+ protected:
+  void Execute() override {
+    auto callback = [](const float *samples, int32_t n, float progress,
+                       void *arg) -> int32_t {
+      TtsGenerateWithConfigWorker *_this =
+          reinterpret_cast<TtsGenerateWithConfigWorker *>(arg);
+
+      // Clean up processed chunks
+      for (auto it = _this->data_list_.begin();
+           it != _this->data_list_.end();) {
+        if ((*it)->processed) {
+          delete *it;
+          it = _this->data_list_.erase(it);
+        } else {
+          ++it;
+        }
+      }
+
+      // Cancel check
+      for (auto d : _this->data_list_) {
+        if (d->cancelled) return 0;
+      }
+
+      auto data = new TtsCallbackData;
+      data->samples = std::vector<float>{samples, samples + n};
+      data->progress = progress;
+      _this->data_list_.push_back(data);
+
+      _this->tsfn_.NonBlockingCall(data);
+
+      return 1;
+    };
+
+    audio_ = SherpaOnnxOfflineTtsGenerateWithConfig(
+        tts_, text_.c_str(), &gen_config_, callback, this);
+
+    tsfn_.Release();
+  }
+
+  void OnOK() override {
+    Napi::Env env = deferred_.Env();
+    Napi::Object ans = Napi::Object::New(env);
+    if (use_external_buffer_) {
+      Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+          env, const_cast<float *>(audio_->samples), sizeof(float) * audio_->n,
+          [](Napi::Env, void *, const SherpaOnnxGeneratedAudio *hint) {
+            SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
+          },
+          audio_);
+      Napi::Float32Array float32Array =
+          Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
+      ans.Set("samples", float32Array);
+      ans.Set("sampleRate", audio_->sample_rate);
+    } else {
+      Napi::ArrayBuffer arrayBuffer =
+          Napi::ArrayBuffer::New(env, sizeof(float) * audio_->n);
+      Napi::Float32Array float32Array =
+          Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
+      std::copy(audio_->samples, audio_->samples + audio_->n,
+                float32Array.Data());
+      ans.Set("samples", float32Array);
+      ans.Set("sampleRate", audio_->sample_rate);
+      SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio_);
+    }
+    deferred_.Resolve(ans);
+  }
+
+ private:
+  TSFN tsfn_;
+  Napi::Promise::Deferred deferred_;
+  const SherpaOnnxOfflineTts *tts_;
+  std::string text_;
+  SherpaOnnxGenerationConfig gen_config_;
+  bool use_external_buffer_;
+  const SherpaOnnxGeneratedAudio *audio_;
+  std::vector<TtsCallbackData *> data_list_;
+};
+
+static Napi::Object OfflineTtsGenerateAsyncWithConfigWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2 || !info[0].IsExternal() || !info[1].IsObject()) {
+    Napi::TypeError::New(env, "Expect (External<OfflineTts>, Object)")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  const SherpaOnnxOfflineTts *tts =
+      info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
+  Napi::Object obj = info[1].As<Napi::Object>();
+
+  if (!obj.Has("text") || !obj.Get("text").IsString()) {
+    Napi::TypeError::New(env, "obj.text must be a string")
+        .ThrowAsJavaScriptException();
+    return {};
+  }
+
+  std::string text = obj.Get("text").As<Napi::String>().Utf8Value();
+
+  bool enable_external_buffer = true;
+  if (obj.Has("enableExternalBuffer") &&
+      obj.Get("enableExternalBuffer").IsBoolean()) {
+    enable_external_buffer =
+        obj.Get("enableExternalBuffer").As<Napi::Boolean>().Value();
+  }
+
+  Napi::Function cb;
+  if (obj.Has("callback") && obj.Get("callback").IsFunction()) {
+    cb = obj.Get("callback").As<Napi::Function>();
+  }
+
+  auto context =
+      new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
+  TSFN tsfn = TSFN::New(
+      env, cb, "TtsGenerateWithConfig", 0, 1, context,
+      [](Napi::Env, void *, Napi::Reference<Napi::Value> *ctx) { delete ctx; });
+
+  SherpaOnnxGenerationConfig gen_config;
+  memset(&gen_config, 0, sizeof(gen_config));
+  if (obj.Has("generationConfig") && obj.Get("generationConfig").IsObject()) {
+    gen_config =
+        GetGenerationConfig(obj.Get("generationConfig").As<Napi::Object>());
+  }
+
+  TtsGenerateWithConfigWorker *worker = new TtsGenerateWithConfigWorker(
+      env, tsfn, tts, text, gen_config, enable_external_buffer);
+  worker->Queue();
+  return worker->Promise();
+}
+
 void InitNonStreamingTts(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createOfflineTts"),
               Napi::Function::New(env, CreateOfflineTtsWrapper));
@@ -758,6 +1083,13 @@ void InitNonStreamingTts(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "offlineTtsGenerate"),
               Napi::Function::New(env, OfflineTtsGenerateWrapper));
 
+  exports.Set(Napi::String::New(env, "offlineTtsGenerateWithConfig"),
+              Napi::Function::New(env, OfflineTtsGenerateWithConfigWrapper));
+
   exports.Set(Napi::String::New(env, "offlineTtsGenerateAsync"),
               Napi::Function::New(env, OfflineTtsGenerateAsyncWrapper));
+
+  exports.Set(
+      Napi::String::New(env, "offlineTtsGenerateAsyncWithConfig"),
+      Napi::Function::New(env, OfflineTtsGenerateAsyncWithConfigWrapper));
 }
