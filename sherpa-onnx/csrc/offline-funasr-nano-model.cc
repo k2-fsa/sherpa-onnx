@@ -851,7 +851,7 @@ class OfflineFunASRNanoModel::Impl {
                                llm_output_names_ptr_.size());
     }
 
-    Ort::Value logits;
+    Ort::Value logits{nullptr};
     if (use_cpu_decode_buffers) {
       // For decode step with pre-allocated buffer, create a view to return
       // (outputs will be destroyed but buffer persists)
