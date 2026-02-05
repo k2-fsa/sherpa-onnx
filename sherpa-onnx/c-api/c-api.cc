@@ -787,6 +787,65 @@ const char *SherpaOnnxGetOfflineStreamResultAsJson(
 
 void SherpaOnnxDestroyOfflineStreamResultJson(const char *s) { delete[] s; }
 
+const struct SherpaOnnxVocabLogProbs *SherpaOnnxOnlineStreamGetVocabLogProbs(
+    const SherpaOnnxOnlineStream *stream) {
+  const auto &result = stream->impl->GetResult();
+
+  if (result.vocab_log_probs.empty()) {
+    return nullptr;
+  }
+
+  auto vocab_probs = new SherpaOnnxVocabLogProbs;
+  vocab_probs->num_tokens = result.vocab_log_probs.size();
+  vocab_probs->vocab_size = result.vocab_log_probs[0].size();
+
+  // Flatten the 2D vector into a 1D array
+  float *flat_probs =
+      new float[vocab_probs->num_tokens * vocab_probs->vocab_size];
+  for (int32_t i = 0; i < vocab_probs->num_tokens; ++i) {
+    std::copy(result.vocab_log_probs[i].begin(),
+              result.vocab_log_probs[i].end(),
+              flat_probs + i * vocab_probs->vocab_size);
+  }
+  vocab_probs->log_probs = flat_probs;
+
+  return vocab_probs;
+}
+
+const struct SherpaOnnxVocabLogProbs *SherpaOnnxOfflineStreamGetVocabLogProbs(
+    const SherpaOnnxOfflineStream *stream) {
+  const sherpa_onnx::OfflineRecognitionResult &result =
+      stream->impl->GetResult();
+
+  if (result.vocab_log_probs.empty()) {
+    return nullptr;
+  }
+
+  auto vocab_probs = new SherpaOnnxVocabLogProbs;
+  vocab_probs->num_tokens = result.vocab_log_probs.size();
+  vocab_probs->vocab_size = result.vocab_log_probs[0].size();
+
+  // Flatten the 2D vector into a 1D array
+  float *flat_probs =
+      new float[vocab_probs->num_tokens * vocab_probs->vocab_size];
+  for (int32_t i = 0; i < vocab_probs->num_tokens; ++i) {
+    std::copy(result.vocab_log_probs[i].begin(),
+              result.vocab_log_probs[i].end(),
+              flat_probs + i * vocab_probs->vocab_size);
+  }
+  vocab_probs->log_probs = flat_probs;
+
+  return vocab_probs;
+}
+
+void SherpaOnnxDestroyVocabLogProbs(
+    const struct SherpaOnnxVocabLogProbs *log_probs) {
+  if (log_probs) {
+    delete[] log_probs->log_probs;
+    delete log_probs;
+  }
+}
+
 // ============================================================
 // For Keyword Spot
 // ============================================================

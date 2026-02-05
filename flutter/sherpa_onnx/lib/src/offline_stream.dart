@@ -33,5 +33,40 @@ class OfflineStream {
     calloc.free(p);
   }
 
+  Map<String, List<double>>? getVocabLogProbs() {
+    final getFunc = SherpaOnnxBindings.getOfflineStreamVocabLogProbs;
+    final destroyFunc = SherpaOnnxBindings.destroyVocabLogProbs;
+
+    if (getFunc == null || destroyFunc == null) {
+      return null;
+    }
+
+    final vocabPtr = getFunc(ptr);
+    if (vocabPtr == nullptr) {
+      return null;
+    }
+
+    final vocabLogProbs = vocabPtr.ref;
+    final numTokens = vocabLogProbs.numTokens;
+    final vocabSize = vocabLogProbs.vocabSize;
+
+    final Map<String, List<double>> result = {};
+
+    for (int tokenIdx = 0; tokenIdx < numTokens; tokenIdx++) {
+      final List<double> tokenProbs = [];
+
+      for (int vocabIdx = 0; vocabIdx < vocabSize; vocabIdx++) {
+        final index = tokenIdx * vocabSize + vocabIdx;
+        final logProb = vocabLogProbs.logProbs[index];
+        tokenProbs.add(logProb);
+      }
+
+      result['token_$tokenIdx'] = tokenProbs;
+    }
+
+    destroyFunc(vocabPtr);
+    return result;
+  }
+
   Pointer<SherpaOnnxOfflineStream> ptr;
 }

@@ -56,12 +56,6 @@ struct OfflineWhisperModelConfig {
   std::string ToString() const;
 };
 
-struct OfflineWhisperDecoderResult {
-  /// The decoded token IDs
-  std::vector<int32_t> tokens;
-  std::string lang;
-};
-
 // used by ascend/rknn/qnn/axera, etc.
 enum class WhisperModelType {
   Tiny,

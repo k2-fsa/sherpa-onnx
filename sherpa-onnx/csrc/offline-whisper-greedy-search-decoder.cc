@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -87,40 +88,71 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   *(std::get<5>(decoder_out).GetTensorMutableData<int64_t>()) =
       initial_tokens.size();
 
-  const auto &logits = std::get<0>(decoder_out);
-  const float *p_logits = logits.GetTensorData<float>();
+  const auto &logits_tensor = std::get<0>(decoder_out);
+  const float *p_logits = logits_tensor.GetTensorData<float>();
 
-  auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
+  auto logits_shape = logits_tensor.GetTensorTypeAndShapeInfo().GetShape();
   int32_t vocab_size = logits_shape[2];
 
-  const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
+  // Get logits for the first token
+  const float *current_logits = p_logits + (logits_shape[1] - 1) * vocab_size;
 
-  int32_t max_token_id = static_cast<int32_t>(
-      std::distance(p_start, std::max_element(p_start, p_start + vocab_size)));
+  auto max_iter = std::max_element(current_logits, current_logits + vocab_size);
+  float max_logit = *max_iter;
+  int32_t current_token_id =
+      static_cast<int32_t>(std::distance(current_logits, max_iter));
 
   int32_t n_text_ctx = model_->TextCtx();
-
-  std::vector<int32_t> predicted_tokens;
 
   // assume at most 6 tokens per second
   int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
+  std::vector<int32_t> predicted_tokens;
+  // Log probabilities.
+  std::vector<float> predicted_log_probs;
+  std::vector<std::vector<float>> predicted_vocab_log_probs;
+
+  // Reserve capacity to avoid reallocations
+  predicted_tokens.reserve(num_possible_tokens);
+  predicted_log_probs.reserve(num_possible_tokens);
+  predicted_vocab_log_probs.reserve(num_possible_tokens);
+
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
-    if (max_token_id == model_->EOT()) {
+    if (current_token_id == model_->EOT()) {
       break;
     }
 
-    predicted_tokens.push_back(max_token_id);
+    // Calculate log-softmax for the full vocabulary
+    // Allocate vector for this token (moved into result, so new allocation needed)
+    // Reuse max_logit already found when determining current_token_id
+    std::vector<float> full_vocab_probs(vocab_size);
+    double sum_exp = 0.0;
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      sum_exp += std::exp(current_logits[j] - max_logit);
+    }
+    // Calculate log_sum once (optimization: avoid recalculating log() in loop)
+    float log_sum = max_logit + std::log(sum_exp);
+    // Compute each probability
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      full_vocab_probs[j] = current_logits[j] - log_sum;
+    }
 
-    std::array<int64_t, 2> token_shape{1, 1};
-    Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
-        model_->Allocator(), token_shape.data(), token_shape.size());
+    // Extract log probability for the selected token
+    float log_prob = full_vocab_probs[current_token_id];
 
-    int64_t *p_tokens = tokens.GetTensorMutableData<int64_t>();
-    p_tokens[0] = max_token_id;
+    predicted_tokens.push_back(current_token_id);
+    predicted_log_probs.push_back(log_prob);
+    predicted_vocab_log_probs.push_back(std::move(full_vocab_probs));
 
-    decoder_out = model_->ForwardDecoder(std::move(tokens),
+    std::array<int64_t, 2> token_input_shape{1, 1};
+    Ort::Value tokens_input = Ort::Value::CreateTensor<int64_t>(
+        model_->Allocator(), token_input_shape.data(),
+        token_input_shape.size());
+    int64_t *p_tokens = tokens_input.GetTensorMutableData<int64_t>();
+    p_tokens[0] = current_token_id;
+
+    decoder_out = model_->ForwardDecoder(std::move(tokens_input),
                                          std::move(std::get<1>(decoder_out)),
                                          std::move(std::get<2>(decoder_out)),
                                          std::move(std::get<3>(decoder_out)),
@@ -135,23 +167,28 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       break;
     }
 
-    const auto &logits = std::get<0>(decoder_out);
-    const float *p_logits = logits.GetTensorData<float>();
+    const auto &next_logits_tensor = std::get<0>(decoder_out);
+    current_logits = next_logits_tensor.GetTensorData<float>();
 
-    max_token_id = static_cast<int64_t>(std::distance(
-        p_logits, std::max_element(p_logits, p_logits + vocab_size)));
+    auto next_max_iter =
+        std::max_element(current_logits, current_logits + vocab_size);
+    max_logit = *next_max_iter;
+    current_token_id =
+        static_cast<int32_t>(std::distance(current_logits, next_max_iter));
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);
 
   const auto &id2lang = model_->GetID2Lang();
-  if (id2lang.count(initial_tokens[1])) {
+  if (model_->IsMultiLingual() && id2lang.count(initial_tokens[1])) {
     ans[0].lang = id2lang.at(initial_tokens[1]);
   } else {
     ans[0].lang = "";
   }
 
   ans[0].tokens = std::move(predicted_tokens);
+  ans[0].token_log_probs = std::move(predicted_log_probs);
+  ans[0].vocab_log_probs = std::move(predicted_vocab_log_probs);
 
   return ans;
 }

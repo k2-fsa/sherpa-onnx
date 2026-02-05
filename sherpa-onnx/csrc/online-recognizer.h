@@ -42,6 +42,7 @@ struct OnlineRecognizerResult {
                                 //
   /// log-domain scores from "hot-phrase" contextual boosting
   std::vector<float> context_scores;
+  std::vector<std::vector<float>> vocab_log_probs;
 
   std::vector<int32_t> words;
 

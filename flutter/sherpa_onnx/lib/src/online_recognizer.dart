@@ -327,7 +327,7 @@ class OnlineRecognizerConfig {
 
 class OnlineRecognizerResult {
   OnlineRecognizerResult(
-      {required this.text, required this.tokens, required this.timestamps});
+      {required this.text, required this.tokens, required this.timestamps, this.ysProbs = const <double>[]});
 
   factory OnlineRecognizerResult.fromJson(Map<String, dynamic> json) {
     return OnlineRecognizerResult(
@@ -336,23 +336,28 @@ class OnlineRecognizerResult {
       timestamps: (json['timestamps'] as List)
           .map<double>((e) => (e as num).toDouble())
           .toList(),
+      ysProbs: (json['ys_probs'] as List?)
+          ?.map<double>((e) => (e as num).toDouble())
+          .toList() ?? const <double>[],
     );
   }
 
   @override
   String toString() {
-    return 'OnlineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps)';
+    return 'OnlineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps, ysProbs: $ysProbs)';
   }
 
   Map<String, dynamic> toJson() => {
         'text': text,
         'tokens': tokens,
         'timestamps': timestamps,
+        'ys_probs': ysProbs,
       };
 
   final String text;
   final List<String> tokens;
   final List<double> timestamps;
+  final List<double> ysProbs;
 }
 
 class OnlineRecognizer {
@@ -499,7 +504,10 @@ class OnlineRecognizer {
     return OnlineRecognizerResult(
         text: parsedJson['text'],
         tokens: List<String>.from(parsedJson['tokens']),
-        timestamps: List<double>.from(parsedJson['timestamps']));
+        timestamps: List<double>.from(parsedJson['timestamps']),
+        ysProbs: (parsedJson['ys_probs'] as List<dynamic>?)
+    	    ?.map<double>((e) => (e as num).toDouble())
+    	    .toList() ?? <double>[]);
   }
 
   void reset(OnlineStream stream) {
