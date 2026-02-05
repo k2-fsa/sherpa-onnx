@@ -10,6 +10,13 @@ const addon = require('./addon.js');
 const kFromAsyncFactory = Symbol('OfflineTts.fromAsync');
 
 
+class GenerationConfig {
+  constructor(opts = {}) {
+    Object.assign(this, opts)
+  }
+}
+
+
 class OfflineTts {
   /**
    * Constructor (sync path).
@@ -58,6 +65,16 @@ class OfflineTts {
    * @returns {GeneratedAudio}
    */
   generate(obj) {
+    if (!obj || typeof obj !== 'object') {
+      throw new TypeError('generate() expects an object');
+    }
+
+    // If generationConfig is present, use new API
+    if (obj.generationConfig !== undefined) {
+      return addon.offlineTtsGenerateWithConfig(this.handle, obj);
+    }
+
+    // Fallback to legacy path
     return addon.offlineTtsGenerate(this.handle, obj);
   }
   /**
@@ -96,4 +113,5 @@ class OfflineTts {
 
 module.exports = {
   OfflineTts,
+  GenerationConfig,
 }
