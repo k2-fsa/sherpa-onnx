@@ -1,6 +1,5 @@
 // Copyright (c)  2026  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const fs = require('fs');
 
 async function createOfflineTts() {
   const config = {
@@ -46,7 +45,7 @@ async function generateAudioAsync(tts, text) {
 
   console.log('Starting generation...');
 
-  const audio = await tts.generateAsyncWithConfig({
+  const audio = await tts.generateAsync({
     text,
     enableExternalBuffer: true,
     generationConfig,

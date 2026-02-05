@@ -12,7 +12,7 @@ const kFromAsyncFactory = Symbol('OfflineTts.fromAsync');
 
 class GenerationConfig {
   constructor(opts = {}) {
-    Object.assign(this, opts)
+    Object.assign(this, opts);
   }
 }
 
@@ -78,39 +78,25 @@ class OfflineTts {
     return addon.offlineTtsGenerate(this.handle, obj);
   }
   /**
-   * Asynchronous generation with progress callback
+   * Generate audio asynchronously with optional generationConfig and progress
+   * callback
    *
    * The progress callback receives streaming audio chunks.
    *
-   * @param {TtsRequest & { onProgress?: (info: { samples: Float32Array,
-   *     progress: number }) => number | boolean | void }} obj
+   * @param {TtsRequest & { generationConfig?: object, onProgress?: (info: {
+   *     samples: Float32Array, progress: number }) => number | boolean | void
+   *     }} obj
    * @returns {Promise<GeneratedAudio>}
    */
   generateAsync(obj) {
     const {onProgress, ...rest} = obj;
 
-    return addon.offlineTtsGenerateAsync(this.handle, {
-      ...rest,
-      callback: typeof onProgress === 'function' ?
-          (info) => {
-            const ret = onProgress(info);
-            return ret === 0 || ret === false ? 0 : 1;
-          } :
-          undefined,
-    });
-  }
+    const hasConfig = obj.generationConfig !== undefined;
 
+    const fn = hasConfig ? addon.offlineTtsGenerateAsyncWithConfig :
+                           addon.offlineTtsGenerateAsync;
 
-  /**
-   * Async generation with generationConfig and progress callback
-   * @param {TtsRequest & { generationConfig?: object, onProgress?: function }}
-   *     obj
-   * @returns {Promise<GeneratedAudio>}
-   */
-  generateAsyncWithConfig(obj) {
-    const {onProgress, ...rest} = obj;
-
-    return addon.offlineTtsGenerateAsyncWithConfig(this.handle, {
+    return fn(this.handle, {
       ...rest,
       callback: typeof onProgress === 'function' ?
           (info) => {

@@ -378,7 +378,7 @@
  * @property {number=} referenceSampleRate
  * @property {string=} referenceText
  *
- * @property {{[key: string]: number | string}=} extra
+ * @property {{[key: string]: number | string}} [extra]
  */
 
 
@@ -389,9 +389,8 @@
  * @property {number} sid - Speaker id (integer).
  * @property {number} speed - Playback speed (float).
  * @property {boolean} [enableExternalBuffer=true] - Whether to use an external
- *           buffer
+ *           buffer.
  * @property {GenerationConfig=} generationConfig - Optional
- * buffer.
  */
 
 /**
