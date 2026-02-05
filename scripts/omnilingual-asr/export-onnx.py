@@ -19,7 +19,7 @@ def get_args():
         "--model-card",
         type=str,
         required=True,
-        help="omniASR_CTC_300M, or omniASR_CTC_1B",
+        help="omniASR_CTC_300M, omniASR_CTC_300M_v2, omniASR_CTC_1B, or omniASR_CTC_1B_v2",
     )
     return parser.parse_args()
 
