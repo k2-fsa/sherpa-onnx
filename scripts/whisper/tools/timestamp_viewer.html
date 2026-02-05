@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper Timestamp Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .controls input[type="file"] {
+            margin-bottom: 15px;
+        }
+        .player-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        audio {
+            width: 100%;
+        }
+        .current-time {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+        .columns-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+        }
+        .column {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .column-header {
+            background: #4a90d9;
+            color: white;
+            padding: 10px 15px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .column-content {
+        }
+        .token-row {
+            display: flex;
+            padding: 6px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            transition: background-color 0.1s;
+            cursor: pointer;
+        }
+        .token-row:hover {
+            background: #f0f0f0;
+        }
+        .token-row:active {
+            background: #e0e0e0;
+        }
+        .token-row:focus {
+            outline: 2px solid #4a90d9;
+            outline-offset: -2px;
+            background: #e8f0fa;
+        }
+        .token-row.active {
+            background: #fff3cd;
+        }
+        .token-row.past {
+            background: #e8f5e9;
+        }
+        .token-text {
+            flex: 1;
+            font-family: monospace;
+            white-space: pre;
+        }
+        .token-time {
+            color: #666;
+            font-family: monospace;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+        .csv-list {
+            margin-top: 10px;
+        }
+        .csv-item {
+            display: inline-flex;
+            align-items: center;
+            background: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+        }
+        .csv-item button {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 16px;
+        }
+        .csv-item button:hover {
+            color: #c00;
+        }
+    </style>
+</head>
+<body>
+    <h1>Whisper Timestamp Viewer</h1>
+
+    <div class="instructions">
+        <strong>Instructions:</strong> Upload a WAV file and one or more CSV files containing token timestamps.
+        CSV files should have columns: token, timestamp, duration.
+        <br><br>
+        <strong>Click</strong> a token to play just that token's audio.
+        <strong>Shift+click</strong> to play continuously from that point.
+    </div>
+
+    <div class="controls">
+        <label>
+            Audio File (WAV):
+            <input type="file" id="audioInput" accept=".wav,.mp3,.ogg,.m4a">
+        </label>
+
+        <label>
+            CSV Files (can select multiple):
+            <input type="file" id="csvInput" accept=".csv" multiple>
+        </label>
+
+        <div class="csv-list" id="csvList"></div>
+    </div>
+
+    <div class="player-container" id="playerContainer" style="display: none;">
+        <audio id="audioPlayer" controls></audio>
+        <div class="current-time" id="currentTime">0.000s</div>
+    </div>
+
+    <div class="columns-container" id="columnsContainer"></div>
+
+    <script>
+        const audioInput = document.getElementById('audioInput');
+        const csvInput = document.getElementById('csvInput');
+        const csvList = document.getElementById('csvList');
+        const playerContainer = document.getElementById('playerContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const columnsContainer = document.getElementById('columnsContainer');
+
+        let csvData = [];  // Array of {name, tokens: [{token, timestamp, duration}]}
+
+        // Handle audio file
+        audioInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Revoke previous URL if exists
+                if (audioPlayer.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(audioPlayer.src);
+                }
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+                playerContainer.style.display = 'block';
+            }
+        });
+
+        // Handle CSV files
+        csvInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            for (const file of files) {
+                const text = await file.text();
+                const tokens = parseCSV(text);
+                csvData.push({name: file.name, tokens});
+            }
+            updateCsvList();
+            renderColumns();
+        });
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const tokens = [];
+
+            // Skip header
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                // Handle CSV properly (quoted strings may contain commas)
+                let token, rest;
+
+                if (line.startsWith('"')) {
+                    // Token is quoted
+                    const endQuote = line.indexOf('",', 1);
+                    if (endQuote !== -1) {
+                        token = line.substring(1, endQuote);
+                        rest = line.substring(endQuote + 2);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    // Token is not quoted
+                    const firstComma = line.indexOf(',');
+                    if (firstComma !== -1) {
+                        token = line.substring(0, firstComma);
+                        rest = line.substring(firstComma + 1);
+                    } else {
+                        continue;
+                    }
+                }
+
+                const [timestamp, duration] = rest.split(',').map(s => parseFloat(s.trim()));
+                if (!isNaN(timestamp) && !isNaN(duration)) {
+                    tokens.push({token, timestamp, duration});
+                }
+            }
+
+            return tokens;
+        }
+
+        function updateCsvList() {
+            csvList.innerHTML = csvData.map((csv, i) => `
+                <span class="csv-item">
+                    ${escapeHtml(csv.name)}
+                    <button onclick="removeCSV(${i})">&times;</button>
+                </span>
+            `).join('');
+        }
+
+        function removeCSV(index) {
+            csvData.splice(index, 1);
+            updateCsvList();
+            renderColumns();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Play a segment from start to end time, then pause and seek back to start
+        let segmentStartTime = null;
+        let segmentEndTime = null;
+        let isPlayingSegment = false;
+
+        function playSegment(start, end) {
+            isPlayingSegment = true;
+            segmentStartTime = start;
+            segmentEndTime = end;
+            audioPlayer.currentTime = start;
+            audioPlayer.play();
+        }
+
+        function checkSegmentEnd() {
+            if (segmentEndTime !== null && audioPlayer.currentTime >= segmentEndTime) {
+                audioPlayer.pause();
+                const seekBackTo = segmentStartTime;
+                segmentStartTime = null;
+                segmentEndTime = null;
+                if (seekBackTo !== null) {
+                    audioPlayer.currentTime = seekBackTo;
+                }
+            }
+        }
+
+        function renderColumns() {
+            columnsContainer.innerHTML = csvData.map((csv, colIndex) => `
+                <div class="column">
+                    <div class="column-header">${escapeHtml(csv.name)}</div>
+                    <div class="column-content" id="column-${colIndex}">
+                        ${csv.tokens.map((t, i) => `
+                            <div class="token-row" data-col="${colIndex}" data-idx="${i}"
+                                 data-start="${t.timestamp}" data-end="${t.timestamp + t.duration}"
+                                 tabindex="0" role="button">
+                                <span class="token-text">${escapeHtml(t.token)}</span>
+                                <span class="token-time">${t.timestamp.toFixed(2)}s</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click and keyboard handlers to play just that token's timespan
+            // Shift+click plays continuously from that point
+            document.querySelectorAll('.token-row').forEach(row => {
+                function activateRow(e) {
+                    const start = parseFloat(row.dataset.start);
+                    const end = parseFloat(row.dataset.end);
+                    if (e.shiftKey) {
+                        // Shift+click: play continuously from this point
+                        segmentEndTime = null;
+                        audioPlayer.currentTime = start;
+                        audioPlayer.play();
+                    } else {
+                        // Regular click: play just this token
+                        playSegment(start, end);
+                    }
+                }
+
+                row.addEventListener('click', activateRow);
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        activateRow(e);
+                    }
+                });
+            });
+        }
+
+        // Update highlighting during playback
+        audioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = audioPlayer.currentTime;
+            currentTimeDisplay.textContent = currentTime.toFixed(3) + 's';
+
+            document.querySelectorAll('.token-row').forEach(row => {
+                const start = parseFloat(row.dataset.start);
+                const end = parseFloat(row.dataset.end);
+
+                row.classList.remove('active', 'past');
+
+                if (currentTime >= start && currentTime < end) {
+                    row.classList.add('active');
+                } else if (currentTime >= end) {
+                    row.classList.add('past');
+                }
+            });
+        });
+
+        // More frequent updates for smoother highlighting
+        let animationFrame;
+        let lastScrolledToken = null;
+
+        audioPlayer.addEventListener('play', () => {
+            function update() {
+                const currentTime = audioPlayer.currentTime;
+                currentTimeDisplay.textContent = currentTime.toFixed(3) + 's';
+
+                let firstActiveRow = null;
+                document.querySelectorAll('.token-row').forEach(row => {
+                    const start = parseFloat(row.dataset.start);
+                    const end = parseFloat(row.dataset.end);
+
+                    row.classList.remove('active', 'past');
+
+                    if (currentTime >= start && currentTime < end) {
+                        row.classList.add('active');
+                        if (!firstActiveRow) {
+                            firstActiveRow = row;
+                        }
+                    } else if (currentTime >= end) {
+                        row.classList.add('past');
+                    }
+                });
+
+                // Auto-scroll to keep active token visible
+                if (firstActiveRow && firstActiveRow !== lastScrolledToken) {
+                    const rect = firstActiveRow.getBoundingClientRect();
+                    const playerHeight = playerContainer.offsetHeight;
+                    // If active token is below the visible area or too close to player
+                    if (rect.top < playerHeight + 20 || rect.bottom > window.innerHeight - 50) {
+                        firstActiveRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        lastScrolledToken = firstActiveRow;
+                    }
+                }
+
+                // Check if we should stop at segment end
+                checkSegmentEnd();
+
+                if (!audioPlayer.paused) {
+                    animationFrame = requestAnimationFrame(update);
+                }
+            }
+            update();
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            cancelAnimationFrame(animationFrame);
+        });
+
+        audioPlayer.addEventListener('seeked', () => {
+            // Clear segment on manual seek (but not if triggered by playSegment)
+            if (!isPlayingSegment && segmentEndTime !== null) {
+                segmentStartTime = null;
+                segmentEndTime = null;
+            }
+            // Clear the flag now that seek has completed
+            isPlayingSegment = false;
+            // Update highlighting immediately after seek
+            const currentTime = audioPlayer.currentTime;
+            lastScrolledToken = null;  // Reset so we scroll to new position
+            let firstActiveRow = null;
+
+            document.querySelectorAll('.token-row').forEach(row => {
+                const start = parseFloat(row.dataset.start);
+                const end = parseFloat(row.dataset.end);
+
+                row.classList.remove('active', 'past');
+
+                if (currentTime >= start && currentTime < end) {
+                    row.classList.add('active');
+                    if (!firstActiveRow) {
+                        firstActiveRow = row;
+                    }
+                } else if (currentTime >= end) {
+                    row.classList.add('past');
+                }
+            });
+
+            // Scroll to active token on seek
+            if (firstActiveRow) {
+                firstActiveRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        });
+    </script>
+</body>
+</html>

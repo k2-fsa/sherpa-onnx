@@ -1014,6 +1014,8 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         tail_paddings: int = -1,
+        enable_token_timestamps: bool = False,
+        enable_segment_timestamps: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
         hr_dict_dir: str = "",
@@ -1055,6 +1057,17 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          enable_token_timestamps:
+            True to enable token-level timestamps using cross-attention alignment
+            and DTW. Requires ONNX models exported with attention outputs.
+            When enabled, result.timestamps will contain token-level start times.
+            Defaults to False.
+          enable_segment_timestamps:
+            True to enable segment-level timestamps using Whisper's native
+            timestamp token mode. The decoder outputs timestamp tokens like
+            <|0.00|> to mark segment boundaries. Does not require attention
+            outputs. Can be combined with enable_token_timestamps for both
+            segment and token-level timestamps. Defaults to False.
           rule_fsts:
             If not empty, it specifies fsts for inverse text normalization.
             If there are multiple fsts, they are separated by a comma.
@@ -1070,6 +1083,8 @@ class OfflineRecognizer(object):
                 language=language,
                 task=task,
                 tail_paddings=tail_paddings,
+                enable_token_timestamps=enable_token_timestamps,
+                enable_segment_timestamps=enable_segment_timestamps,
             ),
             tokens=tokens,
             num_threads=num_threads,
