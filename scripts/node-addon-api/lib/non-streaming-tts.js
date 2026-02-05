@@ -82,16 +82,8 @@ class OfflineTts {
    *
    * The progress callback receives streaming audio chunks.
    *
-   * @param {TtsRequest & {
-   *   /**
-   *    * Optional progress callback called multiple times with partial audio
-   *    * @param {{ samples: Float32Array, progress: number }} info
-   *    * `progress` in [0,1]
-   *    * Return `0` or `false` to cancel, anything else to continue
-   *    *\/
-   *   onProgress?: (info: { samples: Float32Array, progress: number }) =>
-   * number | boolean | void
-   * }} obj
+   * @param {TtsRequest & { onProgress?: (info: { samples: Float32Array,
+   *     progress: number }) => number | boolean | void }} obj
    * @returns {Promise<GeneratedAudio>}
    */
   generateAsync(obj) {
@@ -101,7 +93,27 @@ class OfflineTts {
       ...rest,
       callback: typeof onProgress === 'function' ?
           (info) => {
-            // JS contract: 0 or false = cancel, else continue
+            const ret = onProgress(info);
+            return ret === 0 || ret === false ? 0 : 1;
+          } :
+          undefined,
+    });
+  }
+
+
+  /**
+   * Async generation with generationConfig and progress callback
+   * @param {TtsRequest & { generationConfig?: object, onProgress?: function }}
+   *     obj
+   * @returns {Promise<GeneratedAudio>}
+   */
+  generateAsyncWithConfig(obj) {
+    const {onProgress, ...rest} = obj;
+
+    return addon.offlineTtsGenerateAsyncWithConfig(this.handle, {
+      ...rest,
+      callback: typeof onProgress === 'function' ?
+          (info) => {
             const ret = onProgress(info);
             return ret === 0 || ret === false ? 0 : 1;
           } :

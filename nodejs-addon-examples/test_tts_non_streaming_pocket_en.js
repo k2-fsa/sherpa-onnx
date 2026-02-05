@@ -1,4 +1,4 @@
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
 
 // please refer to
@@ -19,7 +19,7 @@ function createOfflineTts() {
             './sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json',
       },
       debug: true,
-      numThreads: 1,
+      numThreads: 2,
       provider: 'cpu',
     },
     maxNumSentences: 1,
