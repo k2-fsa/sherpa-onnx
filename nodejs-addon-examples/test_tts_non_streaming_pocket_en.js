@@ -2,7 +2,7 @@
 const sherpa_onnx = require('sherpa-onnx-node');
 
 // please refer to
-// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
+// https://k2-fsa.github.io/sherpa/onnx/tts/pocket.html
 // to download model files
 function createOfflineTts() {
   const config = {
