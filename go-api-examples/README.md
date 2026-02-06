@@ -19,7 +19,7 @@ for details.
   model to convert text to speech
 
 - [./offline-tts-play](./offline-tts-play) It shows how to use a non-streaming TTS
-  model to convert text to speech. It plays the audio back as it is beging generated.
+  model to convert text to speech. It plays the audio back as it is being generated.
 
 - [./zero-shot-pocket-tts](./zero-shot-pocket-tts) It shows how to use a PocketTTS
   model for zero-shot TTS.
