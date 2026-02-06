@@ -101,9 +101,9 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
-            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
-            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-medasr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-funasr-nano-decode-files
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-medasr-ctc-decode-files
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-omnilingual-asr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
@@ -115,6 +115,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-asr-whisper
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-speaker-identification
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-spoken-language-identification
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/zero-shot-pocket-tts
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
@@ -142,6 +143,20 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test ZeroShot TTS with PocketTTS
+        shell: bash
+        run: |
+          cd scripts/go/_internal/zero-shot-pocket-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-*
+          ls -lh *.wav
 
       - name: Test non-streaming decoding files with FunASR Nano
         shell: bash

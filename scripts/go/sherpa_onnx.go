@@ -45,6 +45,7 @@ package sherpa_onnx
 // extern int32_t _cgoGeneratedAudioProgressCallback(float *samples, int32_t n, float p, void *arg);
 import "C"
 import (
+	"encoding/json"
 	"runtime/cgo"
 	"unsafe"
 )
@@ -865,6 +866,16 @@ type OfflineTtsKittenModelConfig struct {
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
+type OfflineTtsPocketModelConfig struct {
+	LmFlow          string // lm_flow
+	LmMain          string // lm_main
+	Encoder         string // encoder
+	Decoder         string // decoder
+	TextConditioner string // text_conditioner
+	VocabJson       string // vocab_json
+	TokenScoresJson string // token_scores_json
+}
+
 type OfflineTtsZipvoiceModelConfig struct {
 	Tokens  string // Path to tokens.txt for ZipVoice
 	Encoder string // Path to text encoder (e.g. encoder.onnx)
@@ -885,6 +896,7 @@ type OfflineTtsModelConfig struct {
 	Kokoro   OfflineTtsKokoroModelConfig
 	Kitten   OfflineTtsKittenModelConfig
 	Zipvoice OfflineTtsZipvoiceModelConfig
+	Pocket   OfflineTtsPocketModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -909,6 +921,21 @@ type GeneratedAudio struct {
 	Samples []float32
 
 	SampleRate int
+}
+
+type GenerationConfig struct {
+	SilenceScale float32
+	Speed        float32
+	Sid          int
+
+	ReferenceAudio      []float32
+	ReferenceSampleRate int
+	ReferenceText       string
+
+	NumSteps int
+
+	// Opaque JSON passed directly to C
+	Extra json.RawMessage
 }
 
 // The offline tts class. It wraps a pointer from C.
@@ -1109,6 +1136,28 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.zipvoice.target_rms = C.float(config.Model.Zipvoice.TargetRms)
 	c.model.zipvoice.guidance_scale = C.float(config.Model.Zipvoice.GuidanceScale)
 
+	// pocket
+	c.model.pocket.lm_flow = C.CString(config.Model.Pocket.LmFlow)
+	defer C.free(unsafe.Pointer(c.model.pocket.lm_flow))
+
+	c.model.pocket.lm_main = C.CString(config.Model.Pocket.LmMain)
+	defer C.free(unsafe.Pointer(c.model.pocket.lm_main))
+
+	c.model.pocket.encoder = C.CString(config.Model.Pocket.Encoder)
+	defer C.free(unsafe.Pointer(c.model.pocket.encoder))
+
+	c.model.pocket.decoder = C.CString(config.Model.Pocket.Decoder)
+	defer C.free(unsafe.Pointer(c.model.pocket.decoder))
+
+	c.model.pocket.text_conditioner = C.CString(config.Model.Pocket.TextConditioner)
+	defer C.free(unsafe.Pointer(c.model.pocket.text_conditioner))
+
+	c.model.pocket.vocab_json = C.CString(config.Model.Pocket.VocabJson)
+	defer C.free(unsafe.Pointer(c.model.pocket.vocab_json))
+
+	c.model.pocket.token_scores_json = C.CString(config.Model.Pocket.TokenScoresJson)
+	defer C.free(unsafe.Pointer(c.model.pocket.token_scores_json))
+
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
 
@@ -1222,17 +1271,31 @@ func (tts *OfflineTts) GenerateWithCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	h := cgo.NewHandle(cb)
-	defer h.Delete()
+	var audio *C.struct_SherpaOnnxGeneratedAudio
 
-	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-		tts.impl,
-		s,
-		C.int(sid),
-		C.float(speed),
-		C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
-		unsafe.Pointer(&h),
-	)
+	if cb != nil {
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			nil,
+			nil,
+		)
+	}
+
 	if audio == nil {
 		return nil
 	}
@@ -1262,19 +1325,33 @@ func (tts *OfflineTts) GenerateWithProgressCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	h := cgo.NewHandle(cb)
-	defer h.Delete()
+	var audio *C.struct_SherpaOnnxGeneratedAudio
 
-	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
-		tts.impl,
-		s,
-		C.int(sid),
-		C.float(speed),
-		C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
-			C._cgoGeneratedAudioProgressCallback,
-		),
-		unsafe.Pointer(&h),
-	)
+	if cb != nil {
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
+				C._cgoGeneratedAudioProgressCallback,
+			),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			nil,
+			nil,
+		)
+	}
+
 	if audio == nil {
 		return nil
 	}
@@ -1291,6 +1368,96 @@ func (tts *OfflineTts) GenerateWithProgressCallback(
 		Samples:    make([]float32, n),
 	}
 	copy(ans.Samples, samples)
+
+	return ans
+}
+
+func (tts *OfflineTts) GenerateWithConfig(
+	text string,
+	cfg *GenerationConfig,
+	cb sherpaOnnxGeneratedAudioProgressCallbackWithArg,
+) *GeneratedAudio {
+	if cfg == nil {
+		cfg = &GenerationConfig{}
+	}
+
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
+
+	var cCfg C.struct_SherpaOnnxGenerationConfig
+	cCfg.silence_scale = C.float(cfg.SilenceScale)
+	cCfg.speed = C.float(cfg.Speed)
+	cCfg.sid = C.int(cfg.Sid)
+	cCfg.num_steps = C.int(cfg.NumSteps)
+
+	var cReferenceAudio *C.float
+	if len(cfg.ReferenceAudio) > 0 {
+		cReferenceAudio = (*C.float)(C.malloc(C.size_t(len(cfg.ReferenceAudio)) * C.size_t(unsafe.Sizeof(C.float(0)))))
+		slice := (*[1 << 30]C.float)(unsafe.Pointer(cReferenceAudio))[:len(cfg.ReferenceAudio):len(cfg.ReferenceAudio)]
+		for i, v := range cfg.ReferenceAudio {
+			slice[i] = C.float(v)
+		}
+		cCfg.reference_audio = cReferenceAudio
+		cCfg.reference_audio_len = C.int(len(cfg.ReferenceAudio))
+		cCfg.reference_sample_rate = C.int(cfg.ReferenceSampleRate)
+		defer C.free(unsafe.Pointer(cReferenceAudio)) // free after use
+	}
+
+	// Reference text
+	if cfg.ReferenceText != "" {
+		cCfg.reference_text = C.CString(cfg.ReferenceText)
+		defer C.free(unsafe.Pointer(cCfg.reference_text))
+	}
+
+	var cExtra *C.char
+
+	if len(cfg.Extra) > 0 {
+		cExtra = C.CString(string(cfg.Extra)) // copy Go slice to C memory
+		defer C.free(unsafe.Pointer(cExtra))  // free after use
+	}
+
+	cCfg.extra = cExtra
+
+	var audio *C.struct_SherpaOnnxGeneratedAudio
+	if cb != nil {
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
+			tts.impl,
+			cText,
+			&cCfg,
+			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
+				C._cgoGeneratedAudioProgressCallback,
+			),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
+			tts.impl,
+			cText,
+			&cCfg,
+			nil,
+			nil,
+		)
+	}
+
+	if audio == nil {
+		return nil
+	}
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	n := int(audio.n)
+	arr := unsafe.Slice(
+		(*float32)(unsafe.Pointer(audio.samples)),
+		n,
+	)
+
+	ans := &GeneratedAudio{
+		SampleRate: int(audio.sample_rate),
+		Samples:    make([]float32, n),
+	}
+	copy(ans.Samples, arr)
 
 	return ans
 }
