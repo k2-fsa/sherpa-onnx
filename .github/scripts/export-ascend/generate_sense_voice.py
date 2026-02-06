@@ -10,7 +10,7 @@ from generate_zipformer_ctc_20250703 import get_image, get_soc_version, get_cann
 
 @dataclass
 class Config:
-    # 7.0, 8.0, 8.2
+    # 7.0, 8.0, 8.1, 8.2
     cann: str
 
     # 910B, 910B2, 910B3, 310P3

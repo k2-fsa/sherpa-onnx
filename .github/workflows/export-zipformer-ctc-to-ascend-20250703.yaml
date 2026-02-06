@@ -3,7 +3,7 @@ name: export-zipformer-ctc-to-ascend-npu-20250703
 on:
   push:
     branches:
-      - ci-export-whisper-ascend-npu-2
+      - fix-ascend-2
   workflow_dispatch:
 
 concurrency:
@@ -196,7 +196,7 @@ jobs:
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
 
               d=asr-models/ascend-npu/zipformer-ctc
               mkdir -p huggingface/$d
@@ -214,7 +214,7 @@ jobs:
               git add .
 
               git commit -m "add $m"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main
               popd
             done
             rm -rf huggingface
