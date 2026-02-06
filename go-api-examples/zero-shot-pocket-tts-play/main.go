@@ -99,7 +99,7 @@ func main() {
 Whoever does not have two-thirds of his day for himself, is a slave,
 whatever he may be: a statesman, a businessman, an official, or a scholar.`
 
-	flag.StringVar(&referenceAudio, "reference-audio", "", "Path to the reference audio")
+	flag.StringVar(&referenceAudio, "reference-audio", referenceAudio, "Path to the reference audio")
 	flag.StringVar(&text, "text", text, "Text to be synthesized")
 	flag.StringVar(&outputFilename, "output-filename", outputFilename, "File to save the generated audio")
 	flag.Parse()
@@ -144,7 +144,7 @@ whatever he may be: a statesman, a businessman, an official, or a scholar.`
 
 	cfg.Extra = json.RawMessage(`{
   "max_reference_audio_len": 10,
-	"temperature": 0.7,
+	"temperature": 0.7
 	}`)
 
 	log.Println("Start generating")

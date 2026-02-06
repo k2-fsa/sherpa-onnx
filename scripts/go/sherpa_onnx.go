@@ -1271,17 +1271,31 @@ func (tts *OfflineTts) GenerateWithCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	h := cgo.NewHandle(cb)
-	defer h.Delete()
+	var audio *C.struct_SherpaOnnxGeneratedAudio
 
-	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-		tts.impl,
-		s,
-		C.int(sid),
-		C.float(speed),
-		C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
-		unsafe.Pointer(&h),
-	)
+	if cb != nil {
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			nil,
+			nil,
+		)
+	}
+
 	if audio == nil {
 		return nil
 	}
@@ -1311,19 +1325,33 @@ func (tts *OfflineTts) GenerateWithProgressCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	h := cgo.NewHandle(cb)
-	defer h.Delete()
+	var audio *C.struct_SherpaOnnxGeneratedAudio
 
-	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
-		tts.impl,
-		s,
-		C.int(sid),
-		C.float(speed),
-		C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
-			C._cgoGeneratedAudioProgressCallback,
-		),
-		unsafe.Pointer(&h),
-	)
+	if cb != nil {
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
+				C._cgoGeneratedAudioProgressCallback,
+			),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+			tts.impl,
+			s,
+			C.int(sid),
+			C.float(speed),
+			nil,
+			nil,
+		)
+	}
+
 	if audio == nil {
 		return nil
 	}
@@ -1387,18 +1415,30 @@ func (tts *OfflineTts) GenerateWithConfig(
 
 	cCfg.extra = cExtra
 
-	h := cgo.NewHandle(cb)
-	defer h.Delete()
+	var audio *C.struct_SherpaOnnxGeneratedAudio
+	if cb != nil {
 
-	audio := C.SherpaOnnxOfflineTtsGenerateWithConfig(
-		tts.impl,
-		cText,
-		&cCfg,
-		C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
-			C._cgoGeneratedAudioProgressCallback,
-		),
-		unsafe.Pointer(&h),
-	)
+		h := cgo.NewHandle(cb)
+		defer h.Delete()
+
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
+			tts.impl,
+			cText,
+			&cCfg,
+			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
+				C._cgoGeneratedAudioProgressCallback,
+			),
+			unsafe.Pointer(&h),
+		)
+	} else {
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
+			tts.impl,
+			cText,
+			&cCfg,
+			nil,
+			nil,
+		)
+	}
 
 	if audio == nil {
 		return nil

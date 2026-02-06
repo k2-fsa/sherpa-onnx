@@ -8,7 +8,7 @@
 // to download pre-trained models
 //
 // Note that you need a speaker to run this file since it will play
-// the generated audio as it is generating.
+// the generated audio back as it is being generated.
 
 using CommandLine;
 using CommandLine.Text;

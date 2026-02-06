@@ -52,7 +52,7 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-tts-vits-zh.sh
 ```
 
-## Non-Streaming text-to-speech (Play as it is generating)
+## Non-Streaming text-to-speech (Playback the audio as it is being generated)
 
 ```bash
 ./run-non-streaming-tts-piper-en-with-callback.sh

@@ -133,8 +133,8 @@ func main() {
 	flag.StringVar(&config.RuleFars, "tts-rule-fars", "", "Path to rule.far")
 	flag.IntVar(&config.MaxNumSentences, "tts-max-num-sentences", 1, "Batch size")
 
-	flag.IntVar(&sid, "sid", 0, "Speaker ID. Used only for multi-speaker models")
-	flag.StringVar(&filename, "output-filename", "./generated.wav", "Output wav filename")
+	flag.IntVar(&sid, "sid", sid, "Speaker ID. Used only for multi-speaker models")
+	flag.StringVar(&filename, "output-filename", filename, "Output wav filename")
 
 	flag.Parse()
 
