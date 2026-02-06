@@ -919,15 +919,35 @@ type OfflineTts struct {
 type sherpaOnnxGeneratedAudioCallbackWithArg func(samples []float32) bool
 
 //export _cgoGeneratedAudioCallback
-func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointer) C.int32_t {
+func _cgoGeneratedAudioCallback(
+	samples *C.float,
+	n C.int32_t,
+	arg unsafe.Pointer,
+) C.int32_t {
+
 	h := *(*cgo.Handle)(arg)
-	val := h.Value().(sherpaOnnxGeneratedAudioCallbackWithArg)
-	all := make([]float32, n)
-	arr := unsafe.Slice(samples, n)
-	for i := 0; i < int(n); i++ {
-		all[i] = float32(arr[i])
-	}
-	ret := val(all)
+	cb := h.Value().(sherpaOnnxGeneratedAudioCallbackWithArg)
+
+	nn := int(n)
+	arr := unsafe.Slice(
+		(*float32)(unsafe.Pointer(samples)),
+		nn,
+	)
+
+	all := make([]float32, nn)
+	copy(all, arr)
+
+	// Prevent panics from crossing the C boundary
+	var ret bool
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				ret = false
+			}
+		}()
+		ret = cb(all)
+	}()
+
 	if ret {
 		return 1
 	}
@@ -937,16 +957,36 @@ func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointe
 type sherpaOnnxGeneratedAudioProgressCallbackWithArg func(samples []float32, p float32) bool
 
 //export _cgoGeneratedAudioProgressCallback
-func _cgoGeneratedAudioProgressCallback(samples *C.float, n C.int32_t, p C.float, arg unsafe.Pointer) C.int32_t {
-	h := *(*cgo.Handle)(arg)
-	val := h.Value().(sherpaOnnxGeneratedAudioProgressCallbackWithArg)
-	all := make([]float32, n)
-	arr := unsafe.Slice(samples, n)
-	for i := 0; i < int(n); i++ {
-		all[i] = float32(arr[i])
-	}
+func _cgoGeneratedAudioProgressCallback(
+	samples *C.float,
+	n C.int32_t,
+	p C.float,
+	arg unsafe.Pointer,
+) C.int32_t {
 
-	ret := val(all, float32(p))
+	h := *(*cgo.Handle)(arg)
+	cb := h.Value().(sherpaOnnxGeneratedAudioProgressCallbackWithArg)
+
+	nn := int(n)
+	arr := unsafe.Slice(
+		(*float32)(unsafe.Pointer(samples)),
+		nn,
+	)
+
+	all := make([]float32, nn)
+	copy(all, arr)
+
+	// Prevent panics from crossing the C boundary
+	var ret bool
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				ret = false
+			}
+		}()
+		ret = cb(all, float32(p))
+	}()
+
 	if ret {
 		return 1
 	}
@@ -1097,6 +1137,11 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	defer C.free(unsafe.Pointer(s))
 
 	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid), C.float(speed))
+
+	if audio == nil {
+		return nil
+	}
+
 	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 
 	ans := &GeneratedAudio{}
@@ -1106,10 +1151,12 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 
 	// see https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo
 	// :n:n means 0:n:n, means low:high:capacity
-	samples := unsafe.Slice(audio.samples, n)
-	for i := 0; i < n; i++ {
-		ans.Samples[i] = float32(samples[i])
-	}
+	samples := unsafe.Slice(
+		(*float32)(unsafe.Pointer(audio.samples)),
+		n,
+	)
+
+	copy(ans.Samples, samples)
 
 	return ans
 }
@@ -1121,6 +1168,7 @@ func (tts *OfflineTts) GenerateWithZipvoice(
 	speed float32,
 	numSteps int,
 ) *GeneratedAudio {
+
 	cText := C.CString(text)
 	defer C.free(unsafe.Pointer(cText))
 
@@ -1130,7 +1178,7 @@ func (tts *OfflineTts) GenerateWithZipvoice(
 	var p *C.float
 	var n C.int
 	if len(promptSamples) > 0 {
-		p = (*C.float)(&promptSamples[0])
+		p = (*C.float)(unsafe.Pointer(&promptSamples[0]))
 		n = C.int(len(promptSamples))
 	}
 
@@ -1149,35 +1197,102 @@ func (tts *OfflineTts) GenerateWithZipvoice(
 	}
 	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 
+	nn := int(audio.n)
+	arr := unsafe.Slice(
+		(*float32)(unsafe.Pointer(audio.samples)),
+		nn,
+	)
+
 	ans := &GeneratedAudio{
 		SampleRate: int(audio.sample_rate),
-		Samples:    make([]float32, int(audio.n)),
+		Samples:    make([]float32, nn),
 	}
-	samples := unsafe.Slice(audio.samples, int(audio.n))
-	for i := 0; i < int(audio.n); i++ {
-		ans.Samples[i] = float32(samples[i])
-	}
+	copy(ans.Samples, arr)
+
 	return ans
 }
 
-func (tts *OfflineTts) GenerateWithCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioCallbackWithArg) {
+func (tts *OfflineTts) GenerateWithCallback(
+	text string,
+	sid int,
+	speed float32,
+	cb sherpaOnnxGeneratedAudioCallbackWithArg,
+) *GeneratedAudio {
+
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
 	h := cgo.NewHandle(cb)
 	defer h.Delete()
-	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback), unsafe.Pointer(&h))
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+		tts.impl,
+		s,
+		C.int(sid),
+		C.float(speed),
+		C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
+		unsafe.Pointer(&h),
+	)
+	if audio == nil {
+		return nil
+	}
 	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	n := int(audio.n)
+	samples := unsafe.Slice(
+		(*float32)(unsafe.Pointer(audio.samples)),
+		n,
+	)
+
+	ans := &GeneratedAudio{
+		SampleRate: int(audio.sample_rate),
+		Samples:    make([]float32, n),
+	}
+	copy(ans.Samples, samples)
+
+	return ans
 }
 
-func (tts *OfflineTts) GenerateWithProgressCallback(text string, sid int, speed float32, cb sherpaOnnxGeneratedAudioProgressCallbackWithArg) {
+func (tts *OfflineTts) GenerateWithProgressCallback(
+	text string,
+	sid int,
+	speed float32,
+	cb sherpaOnnxGeneratedAudioProgressCallbackWithArg,
+) *GeneratedAudio {
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
 	h := cgo.NewHandle(cb)
 	defer h.Delete()
-	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(tts.impl, s, C.int(sid), C.float(speed), C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(C._cgoGeneratedAudioProgressCallback), unsafe.Pointer(&h))
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+		tts.impl,
+		s,
+		C.int(sid),
+		C.float(speed),
+		C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
+			C._cgoGeneratedAudioProgressCallback,
+		),
+		unsafe.Pointer(&h),
+	)
+	if audio == nil {
+		return nil
+	}
 	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	n := int(audio.n)
+	samples := unsafe.Slice(
+		(*float32)(unsafe.Pointer(audio.samples)),
+		n,
+	)
+
+	ans := &GeneratedAudio{
+		SampleRate: int(audio.sample_rate),
+		Samples:    make([]float32, n),
+	}
+	copy(ans.Samples, samples)
+
+	return ans
 }
 
 func (audio *GeneratedAudio) Save(filename string) bool {
