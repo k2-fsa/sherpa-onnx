@@ -1,1 +1,1 @@
-../../../../go-api-examples/non-streaming-tts/run-vits-piper-en_US-lessac-medium.sh
+../../../../go-api-examples/offline-tts-play/run-vits-piper-en_US-lessac-medium.sh

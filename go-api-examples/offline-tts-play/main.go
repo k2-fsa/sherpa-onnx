@@ -1,8 +1,16 @@
 package main
 
 import (
+	"encoding/binary"
+	"io"
 	"log"
+	"math"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	oto "github.com/ebitengine/oto/v3"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 )
@@ -71,12 +79,62 @@ func main() {
 
 	log.Println("Model created!")
 
-	log.Println("Start generating!")
-
-	tts.GenerateWithCallback(text, sid, 1.0, func(samples []float32) {
-		log.Printf("data len(%d)", len(samples))
+	ctx, ready, err := oto.NewContext(&oto.NewContextOptions{
+		SampleRate:   tts.SampleRate(),
+		ChannelCount: 1,
+		Format:       oto.FormatSignedInt16LE,
 	})
-	log.Println("")
 
-	log.Println("Done!")
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-ready
+
+	// Pipe: TTS writes → Oto reads
+	pr, pw := io.Pipe()
+	player := ctx.NewPlayer(pr)
+	player.Play()
+	defer player.Close()
+
+	// Ctrl+C handling
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	log.Println("Start generating & playing audio")
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		tts.GenerateWithCallback(text, sid, 1.0, func(samples []float32) bool {
+			buf := make([]byte, len(samples)*2)
+
+			for i, s := range samples {
+				if s > 1 {
+					s = 1
+				} else if s < -1 {
+					s = -1
+				}
+				v := int16(math.Round(float64(s * 32767)))
+				binary.LittleEndian.PutUint16(buf[i*2:], uint16(v))
+			}
+
+			_, err := pw.Write(buf)
+			if err != nil {
+				log.Println("audio pipe write error:", err)
+				return false
+			}
+			return true
+		})
+		pw.Close()
+	}()
+
+	select {
+	case <-stop:
+		log.Println("Interrupted, stopping...")
+	case <-done:
+		log.Println("TTS finished")
+	}
+
+	log.Println("Done")
 }

@@ -916,7 +916,7 @@ type OfflineTts struct {
 	impl *C.struct_SherpaOnnxOfflineTts
 }
 
-type sherpaOnnxGeneratedAudioCallbackWithArg func(samples []float32)
+type sherpaOnnxGeneratedAudioCallbackWithArg func(samples []float32) bool
 
 //export _cgoGeneratedAudioCallback
 func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointer) C.int32_t {
@@ -927,11 +927,14 @@ func _cgoGeneratedAudioCallback(samples *C.float, n C.int32_t, arg unsafe.Pointe
 	for i := 0; i < int(n); i++ {
 		all[i] = float32(arr[i])
 	}
-	val(all)
-	return 1
+	ret := val(all)
+	if ret {
+		return 1
+	}
+	return 0
 }
 
-type sherpaOnnxGeneratedAudioProgressCallbackWithArg func(samples []float32, p float32)
+type sherpaOnnxGeneratedAudioProgressCallbackWithArg func(samples []float32, p float32) bool
 
 //export _cgoGeneratedAudioProgressCallback
 func _cgoGeneratedAudioProgressCallback(samples *C.float, n C.int32_t, p C.float, arg unsafe.Pointer) C.int32_t {
@@ -942,8 +945,12 @@ func _cgoGeneratedAudioProgressCallback(samples *C.float, n C.int32_t, p C.float
 	for i := 0; i < int(n); i++ {
 		all[i] = float32(arr[i])
 	}
-	val(all, float32(p))
-	return 1
+
+	ret := val(all, float32(p))
+	if ret {
+		return 1
+	}
+	return 0
 }
 
 // Free the internal pointer inside the tts to avoid memory leak.
@@ -1075,6 +1082,14 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	tts := &OfflineTts{}
 	tts.impl = impl
 	return tts
+}
+
+func (tts *OfflineTts) NumSpeakers() int {
+	return int(C.SherpaOnnxOfflineTtsNumSpeakers(tts.impl))
+}
+
+func (tts *OfflineTts) SampleRate() int {
+	return int(C.SherpaOnnxOfflineTtsSampleRate(tts.impl))
 }
 
 func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedAudio {

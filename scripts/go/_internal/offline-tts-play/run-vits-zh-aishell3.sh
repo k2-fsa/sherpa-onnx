@@ -1,1 +1,1 @@
-../../../../go-api-examples/non-streaming-tts/run-vits-zh-aishell3.sh
+../../../../go-api-examples/offline-tts-play/run-vits-zh-aishell3.sh
