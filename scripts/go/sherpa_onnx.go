@@ -1377,6 +1377,9 @@ func (tts *OfflineTts) GenerateWithConfig(
 	cfg *GenerationConfig,
 	cb sherpaOnnxGeneratedAudioProgressCallbackWithArg,
 ) *GeneratedAudio {
+	if cfg == nil {
+		cfg = &GenerationConfig{}
+	}
 
 	cText := C.CString(text)
 	defer C.free(unsafe.Pointer(cText))
@@ -1417,7 +1420,6 @@ func (tts *OfflineTts) GenerateWithConfig(
 
 	var audio *C.struct_SherpaOnnxGeneratedAudio
 	if cb != nil {
-
 		h := cgo.NewHandle(cb)
 		defer h.Delete()
 
