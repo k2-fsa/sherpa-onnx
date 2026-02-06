@@ -136,7 +136,5 @@ func main() {
 		log.Println("TTS finished")
 	}
 
-	// let remaining audio drain
-	time.Sleep(500 * time.Millisecond)
 	log.Println("Done")
 }
