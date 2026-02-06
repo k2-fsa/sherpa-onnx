@@ -19,10 +19,13 @@ for details.
   model to convert text to speech
 
 - [./offline-tts-play](./offline-tts-play) It shows how to use a non-streaming TTS
-  model to convert text to speech. It plays the audio back as it is generating
+  model to convert text to speech. It plays the audio back as it is generating.
 
 - [./zero-shot-pocket-tts](./zero-shot-pocket-tts) It shows how to use a PocketTTS
   model for zero-shot TTS.
+
+- [./zero-shot-pocket-tts-play](./zero-shot-pocket-tts-play) It shows how to use a PocketTTS
+  model for zero-shot TTS. It plays the audio back as it is generating.
 
 - [./real-time-speech-recognition-from-microphone](./real-time-speech-recognition-from-microphone)
   It shows how to use a streaming ASR model to recognize speech from a microphone in real-time
