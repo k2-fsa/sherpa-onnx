@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
+#include <cinttypes>
 #include <codecvt>
 #include <cstdint>
 #include <cstdlib>
@@ -916,15 +917,16 @@ void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
   }
 
   if (max_len < 0) {
-    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%ld) < 0", max_len);
+    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%" PRId64 ") < 0", max_len);
     SHERPA_ONNX_EXIT(-1);
   }
 
   mask_shape->assign({bsz, 1, max_len});
 
-  // Prevent overflow: use size_t for multiplication
+  // Prevent overflow: use size_t for multiplication. Zero entire buffer so
+  // padding positions are 0 when vector is reused.
   size_t total_size = static_cast<size_t>(bsz) * static_cast<size_t>(max_len);
-  mask_flat->resize(total_size);
+  mask_flat->assign(total_size, 0.0f);
 
   for (int b = 0; b < bsz; ++b) {
     int64_t len = lengths[b];

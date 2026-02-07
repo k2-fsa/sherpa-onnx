@@ -257,7 +257,7 @@ def main():
         for i, cfg in enumerate(configs):
             print(f"\n[{i+1}/{len(configs)}] voice={cfg['voice'].split('/')[-1]}, lang={cfg['lang']}")
             voice = load_voice_style([cfg["voice"]])
-            wav, duration = tts(cfg["text"], cfg["lang"], voice, args.total_step, args.speed)
+            _wav, _duration = tts(cfg["text"], cfg["lang"], voice, args.total_step, args.speed)
     else:
         # Validate inputs for non-batch mode
         if args.batch:

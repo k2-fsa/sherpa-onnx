@@ -49,6 +49,11 @@ static int64_t ComputeDimsProduct(const std::vector<int64_t> &dims,
                                   const char *name_for_error) {
   int64_t product = 1;
   for (int64_t d : dims) {
+    if (d <= 0) {
+      SHERPA_ONNX_LOGE("Invalid voice style: %s dim %ld <= 0", name_for_error,
+                       d);
+      SHERPA_ONNX_EXIT(-1);
+    }
     if (product > INT64_MAX / d) {
       SHERPA_ONNX_LOGE("Invalid voice style: %s product overflow (dim=%ld)",
                        name_for_error, d);
@@ -215,17 +220,36 @@ static SupertonicStyle LoadVoiceStylesImpl(
         first_style.ttl_shape.size(), first_style.dp_shape.size());
     SHERPA_ONNX_EXIT(-1);
   }
+  if (first_style.ttl_shape[0] != 1 || first_style.dp_shape[0] != 1) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style: expected batch dim 1, got ttl_shape[0]=%ld, "
+        "dp_shape[0]=%ld",
+        first_style.ttl_shape[0], first_style.dp_shape[0]);
+    SHERPA_ONNX_EXIT(-1);
+  }
   int64_t ttl_dim1 = first_style.ttl_shape[1];
   int64_t ttl_dim2 = first_style.ttl_shape[2];
   int64_t dp_dim1 = first_style.dp_shape[1];
   int64_t dp_dim2 = first_style.dp_shape[2];
+  size_t expected_first_ttl =
+      static_cast<size_t>(ttl_dim1) * static_cast<size_t>(ttl_dim2);
+  size_t expected_first_dp =
+      static_cast<size_t>(dp_dim1) * static_cast<size_t>(dp_dim2);
+  if (first_style.ttl_data.size() != expected_first_ttl ||
+      first_style.dp_data.size() != expected_first_dp) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style: ttl_data size (%zu) or dp_data size (%zu) "
+        "mismatch expected (%zu, %zu)",
+        first_style.ttl_data.size(), first_style.dp_data.size(),
+        expected_first_ttl, expected_first_dp);
+    SHERPA_ONNX_EXIT(-1);
+  }
   size_t ttl_size = static_cast<size_t>(bsz) * static_cast<size_t>(ttl_dim1) *
                     static_cast<size_t>(ttl_dim2);
   size_t dp_size = static_cast<size_t>(bsz) * static_cast<size_t>(dp_dim1) *
                    static_cast<size_t>(dp_dim2);
   std::vector<float> ttl_flat(ttl_size);
   std::vector<float> dp_flat(dp_size);
-  // Copy first style data
   std::copy(first_style.ttl_data.begin(), first_style.ttl_data.end(),
             ttl_flat.begin());
   std::copy(first_style.dp_data.begin(), first_style.dp_data.end(),
@@ -233,11 +257,17 @@ static SupertonicStyle LoadVoiceStylesImpl(
   // Load and concatenate remaining styles
   for (int32_t i = 1; i < bsz; ++i) {
     SupertonicStyle style = load_style_fn(voice_style_paths[i]);
-    // Verify dims[1] and dims[2] match the first file
     if (style.ttl_shape.size() != 3 || style.dp_shape.size() != 3) {
       SHERPA_ONNX_LOGE(
           "Invalid voice style[%d]: ttl_shape.size()=%zu, dp_shape.size()=%zu",
           i, style.ttl_shape.size(), style.dp_shape.size());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (style.ttl_shape[0] != 1 || style.dp_shape[0] != 1) {
+      SHERPA_ONNX_LOGE(
+          "Invalid voice style[%d]: expected batch dim 1, got "
+          "ttl_shape[0]=%ld, dp_shape[0]=%ld",
+          i, style.ttl_shape[0], style.dp_shape[0]);
       SHERPA_ONNX_EXIT(-1);
     }
     if (style.ttl_shape[1] != ttl_dim1 || style.ttl_shape[2] != ttl_dim2) {

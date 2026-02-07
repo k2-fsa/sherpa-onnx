@@ -86,7 +86,7 @@ def main():
         try:
             print(f"Converting {json_file.name} -> {bin_file.name}...")
             json_to_binary(json_file, bin_file)
-            print(f"Success !")
+            print("Success !")
         except Exception as e:
             print(f"Error converting {json_file.name}: {e}")
 
