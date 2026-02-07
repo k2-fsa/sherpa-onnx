@@ -931,7 +931,7 @@ void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
   for (int b = 0; b < bsz; ++b) {
     int64_t len = lengths[b];
     float *batch_mask = mask_flat->data() + b * max_len;
-    std::fill_n(batch_mask, len, 1);
+    std::fill_n(batch_mask, len, 1.0f);
   }
 }
 
