@@ -10,9 +10,11 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -28,15 +30,8 @@ void OfflineTtsSupertonicModelConfig::Register(ParseOptions *po) {
                "Path to Supertonic model directory (for config files: "
                "tts.json and unicode_indexer.json)");
   po->Register("supertonic-voice-style", &voice_style,
-               "Path to Supertonic voice style JSON file");
-  po->Register("supertonic-num-steps", &num_steps,
-               "Number of denoising steps (default: 5)");
-  po->Register("supertonic-speed", &speed,
-               "Speech speed factor (default: 1.05)");
-  po->Register("supertonic-max-len-korean", &max_len_korean,
-               "Maximum text chunk length for Korean (default: 120)");
-  po->Register("supertonic-max-len-other", &max_len_other,
-               "Maximum text chunk length for other languages (default: 300)");
+               "Path to Supertonic voice style .bin file(s). For batch "
+               "inference, multiple files separated by comma");
 }
 
 bool OfflineTtsSupertonicModelConfig::Validate() const {
@@ -101,56 +96,15 @@ bool OfflineTtsSupertonicModelConfig::Validate() const {
     SHERPA_ONNX_LOGE("Please provide --supertonic-voice-style");
     return false;
   }
-  size_t start = 0;
-  size_t pos;
-  while ((pos = voice_style.find(',', start)) != std::string::npos) {
-    std::string path = voice_style.substr(start, pos - start);
-    while (!path.empty() && std::isspace(static_cast<unsigned char>(path[0])))
-      path.erase(0, 1);
-    while (!path.empty() &&
-           std::isspace(static_cast<unsigned char>(path.back())))
-      path.pop_back();
-    if (!path.empty()) {
-      std::string abs_path = ResolveAbsolutePath(path);
-      if (!FileExists(abs_path)) {
-        SHERPA_ONNX_LOGE("Voice style file does not exist: '%s'",
-                         abs_path.c_str());
-        return false;
-      }
+  std::vector<std::string> files;
+  SplitStringToVector(voice_style, ",", false, &files);
+  for (const auto &f : files) {
+    std::string abs_path = ResolveAbsolutePath(f);
+    if (!FileExists(abs_path)) {
+      SHERPA_ONNX_LOGE("Voice style file does not exist: '%s'",
+                       abs_path.c_str());
+      return false;
     }
-    start = pos + 1;
-  }
-  if (start < voice_style.length()) {
-    std::string path = voice_style.substr(start);
-    while (!path.empty() && std::isspace(static_cast<unsigned char>(path[0])))
-      path.erase(0, 1);
-    while (!path.empty() &&
-           std::isspace(static_cast<unsigned char>(path.back())))
-      path.pop_back();
-    if (!path.empty()) {
-      std::string abs_path = ResolveAbsolutePath(path);
-      if (!FileExists(abs_path)) {
-        SHERPA_ONNX_LOGE("Voice style file does not exist: '%s'",
-                         abs_path.c_str());
-        return false;
-      }
-    }
-  }
-  if (num_steps < 1) {
-    SHERPA_ONNX_LOGE("num_steps must be >= 1, given: %d", num_steps);
-    return false;
-  }
-  if (speed <= 0) {
-    SHERPA_ONNX_LOGE("speed must be > 0, given: %f", speed);
-    return false;
-  }
-  if (max_len_korean < 1) {
-    SHERPA_ONNX_LOGE("max_len_korean must be >= 1, given: %d", max_len_korean);
-    return false;
-  }
-  if (max_len_other < 1) {
-    SHERPA_ONNX_LOGE("max_len_other must be >= 1, given: %d", max_len_other);
-    return false;
   }
   return true;
 }
@@ -163,11 +117,7 @@ std::string OfflineTtsSupertonicModelConfig::ToString() const {
   os << "vector_estimator=\"" << vector_estimator << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
   os << "model_dir=\"" << model_dir << "\", ";
-  os << "voice_style=\"" << voice_style << "\", ";
-  os << "num_steps=" << num_steps << ", ";
-  os << "speed=" << speed << ", ";
-  os << "max_len_korean=" << max_len_korean << ", ";
-  os << "max_len_other=" << max_len_other << ")";
+  os << "voice_style=\"" << voice_style << "\")";
   return os.str();
 }
 

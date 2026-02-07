@@ -8,7 +8,6 @@
 
 #include "sherpa-onnx/csrc/offline-tts-supertonic-model.h"
 
-#include <fstream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -28,6 +27,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -67,19 +67,44 @@ class OfflineTtsSupertonicModel::Impl {
   const SupertonicConfig &GetConfig() const { return cfg_; }
   int32_t GetSampleRate() const { return cfg_.ae.sample_rate; }
 
-  Ort::Session *GetDurationPredictorSession() const { return dp_sess_.get(); }
-  Ort::Session *GetTextEncoderSession() const { return text_enc_sess_.get(); }
-  Ort::Session *GetVectorEstimatorSession() const {
-    return vector_est_sess_.get();
-  }
-  Ort::Session *GetVocoderSession() const { return vocoder_sess_.get(); }
-
   bool UseCudaIOBinding() const { return use_cuda_iobinding_; }
   const Ort::MemoryInfo &GetCpuMemoryInfo() const { return cpu_mem_info_; }
   const Ort::MemoryInfo *GetCudaMemoryInfo() const {
     return cuda_mem_info_.get();
   }
   std::string GetProvider() const { return config_.provider; }
+
+  Ort::Value RunDurationPredictor(std::vector<Ort::Value> inputs) const {
+    auto outputs =
+        dp_sess_->Run(Ort::RunOptions{nullptr}, dp_input_names_ptr_.data(),
+                      inputs.data(), inputs.size(), dp_output_names_ptr_.data(),
+                      dp_output_names_ptr_.size());
+    return std::move(outputs[0]);
+  }
+
+  Ort::Value RunTextEncoder(std::vector<Ort::Value> inputs) const {
+    auto outputs = text_enc_sess_->Run(
+        Ort::RunOptions{nullptr}, text_enc_input_names_ptr_.data(),
+        inputs.data(), inputs.size(), text_enc_output_names_ptr_.data(),
+        text_enc_output_names_ptr_.size());
+    return std::move(outputs[0]);
+  }
+
+  Ort::Value RunVectorEstimator(std::vector<Ort::Value> inputs) const {
+    auto outputs = vector_est_sess_->Run(
+        Ort::RunOptions{nullptr}, vector_est_input_names_ptr_.data(),
+        inputs.data(), inputs.size(), vector_est_output_names_ptr_.data(),
+        vector_est_output_names_ptr_.size());
+    return std::move(outputs[0]);
+  }
+
+  Ort::Value RunVocoder(std::vector<Ort::Value> inputs) const {
+    auto outputs = vocoder_sess_->Run(
+        Ort::RunOptions{nullptr}, vocoder_input_names_ptr_.data(),
+        inputs.data(), inputs.size(), vocoder_output_names_ptr_.data(),
+        vocoder_output_names_ptr_.size());
+    return std::move(outputs[0]);
+  }
 
  private:
   void PrintModelInfo(Ort::Session *sess, const std::string &name) const {
@@ -132,47 +157,87 @@ class OfflineTtsSupertonicModel::Impl {
     PrintModelInfo(vocoder_sess_.get(), "vocoder");
   }
 
+  void InitDurationPredictor(void *model_data, size_t model_data_length) {
+    if (model_data) {
+      dp_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                model_data_length, sess_opts_);
+    } else if (!dp_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize duration predictor session "
+          "outside of this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    GetInputNames(dp_sess_.get(), &dp_input_names_, &dp_input_names_ptr_);
+    GetOutputNames(dp_sess_.get(), &dp_output_names_, &dp_output_names_ptr_);
+  }
+
+  void InitTextEncoder(void *model_data, size_t model_data_length) {
+    if (model_data) {
+      text_enc_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!text_enc_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize text encoder session outside "
+          "of this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    GetInputNames(text_enc_sess_.get(), &text_enc_input_names_,
+                  &text_enc_input_names_ptr_);
+    GetOutputNames(text_enc_sess_.get(), &text_enc_output_names_,
+                   &text_enc_output_names_ptr_);
+  }
+
+  void InitVectorEstimator(void *model_data, size_t model_data_length) {
+    if (model_data) {
+      vector_est_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!vector_est_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize vector estimator session "
+          "outside of this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    GetInputNames(vector_est_sess_.get(), &vector_est_input_names_,
+                  &vector_est_input_names_ptr_);
+    GetOutputNames(vector_est_sess_.get(), &vector_est_output_names_,
+                   &vector_est_output_names_ptr_);
+  }
+
+  void InitVocoder(void *model_data, size_t model_data_length) {
+    if (model_data) {
+      vocoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!vocoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize vocoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    GetInputNames(vocoder_sess_.get(), &vocoder_input_names_,
+                  &vocoder_input_names_ptr_);
+    GetOutputNames(vocoder_sess_.get(), &vocoder_output_names_,
+                   &vocoder_output_names_ptr_);
+  }
+
   void LoadModels() {
-    {
-      auto buf = ReadFile(config_.supertonic.duration_predictor);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read duration_predictor model: %s",
-                         config_.supertonic.duration_predictor.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
-                                                sess_opts_);
-    }
-    {
-      auto buf = ReadFile(config_.supertonic.text_encoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read text_encoder model: %s",
-                         config_.supertonic.text_encoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                      buf.size(), sess_opts_);
-    }
-    {
-      auto buf = ReadFile(config_.supertonic.vector_estimator);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read vector_estimator model: %s",
-                         config_.supertonic.vector_estimator.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                        buf.size(), sess_opts_);
-    }
-    {
-      auto buf = ReadFile(config_.supertonic.vocoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read vocoder model: %s",
-                         config_.supertonic.vocoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                     buf.size(), sess_opts_);
-    }
+    dp_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.supertonic.duration_predictor),
+        sess_opts_);
+    InitDurationPredictor(nullptr, 0);
+
+    text_enc_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.supertonic.text_encoder),
+        sess_opts_);
+    InitTextEncoder(nullptr, 0);
+
+    vector_est_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.supertonic.vector_estimator),
+        sess_opts_);
+    InitVectorEstimator(nullptr, 0);
+
+    vocoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.supertonic.vocoder), sess_opts_);
+    InitVocoder(nullptr, 0);
   }
 
   template <typename Manager>
@@ -184,8 +249,7 @@ class OfflineTtsSupertonicModel::Impl {
                          config_.supertonic.duration_predictor.c_str());
         SHERPA_ONNX_EXIT(-1);
       }
-      dp_sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
-                                                sess_opts_);
+      InitDurationPredictor(buf.data(), buf.size());
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.text_encoder);
@@ -194,8 +258,7 @@ class OfflineTtsSupertonicModel::Impl {
                          config_.supertonic.text_encoder.c_str());
         SHERPA_ONNX_EXIT(-1);
       }
-      text_enc_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                      buf.size(), sess_opts_);
+      InitTextEncoder(buf.data(), buf.size());
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.vector_estimator);
@@ -204,8 +267,7 @@ class OfflineTtsSupertonicModel::Impl {
                          config_.supertonic.vector_estimator.c_str());
         SHERPA_ONNX_EXIT(-1);
       }
-      vector_est_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                        buf.size(), sess_opts_);
+      InitVectorEstimator(buf.data(), buf.size());
     }
     {
       auto buf = ReadFile(mgr, config_.supertonic.vocoder);
@@ -214,8 +276,7 @@ class OfflineTtsSupertonicModel::Impl {
                          config_.supertonic.vocoder.c_str());
         SHERPA_ONNX_EXIT(-1);
       }
-      vocoder_sess_ = std::make_unique<Ort::Session>(env_, buf.data(),
-                                                     buf.size(), sess_opts_);
+      InitVocoder(buf.data(), buf.size());
     }
   }
 
@@ -269,36 +330,14 @@ class OfflineTtsSupertonicModel::Impl {
   }
 
   void LoadConfig(const std::string &config_path) {
-    AssertFileExists(config_path);
-    std::ifstream file(config_path);
-    if (!file.is_open()) {
-      SHERPA_ONNX_LOGE("Failed to open config file: %s", config_path.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    json j;
-    try {
-      file >> j;
-    } catch (const std::exception &e) {
-      SHERPA_ONNX_LOGE("Failed to parse JSON config: %s", e.what());
-      SHERPA_ONNX_EXIT(-1);
-    }
+    json j = LoadJsonFromFile(config_path);
     ParseConfig(j);
   }
 
   template <typename Manager>
   void LoadConfig(Manager *mgr, const std::string &config_path) {
     auto buf = ReadFile(mgr, config_path);
-    if (buf.empty()) {
-      SHERPA_ONNX_LOGE("Failed to read config file: %s", config_path.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    json j;
-    try {
-      j = json::parse(buf.begin(), buf.end());
-    } catch (const std::exception &e) {
-      SHERPA_ONNX_LOGE("Failed to parse JSON config: %s", e.what());
-      SHERPA_ONNX_EXIT(-1);
-    }
+    json j = LoadJsonFromBuffer(buf);
     ParseConfig(j);
   }
 
@@ -324,6 +363,26 @@ class OfflineTtsSupertonicModel::Impl {
   std::unique_ptr<Ort::Session> text_enc_sess_;
   std::unique_ptr<Ort::Session> vector_est_sess_;
   std::unique_ptr<Ort::Session> vocoder_sess_;
+
+  std::vector<std::string> dp_input_names_;
+  std::vector<const char *> dp_input_names_ptr_;
+  std::vector<std::string> dp_output_names_;
+  std::vector<const char *> dp_output_names_ptr_;
+
+  std::vector<std::string> text_enc_input_names_;
+  std::vector<const char *> text_enc_input_names_ptr_;
+  std::vector<std::string> text_enc_output_names_;
+  std::vector<const char *> text_enc_output_names_ptr_;
+
+  std::vector<std::string> vector_est_input_names_;
+  std::vector<const char *> vector_est_input_names_ptr_;
+  std::vector<std::string> vector_est_output_names_;
+  std::vector<const char *> vector_est_output_names_ptr_;
+
+  std::vector<std::string> vocoder_input_names_;
+  std::vector<const char *> vocoder_input_names_ptr_;
+  std::vector<std::string> vocoder_output_names_;
+  std::vector<const char *> vocoder_output_names_ptr_;
 };
 
 const SupertonicConfig &OfflineTtsSupertonicModel::GetConfig() const {
@@ -334,20 +393,24 @@ int32_t OfflineTtsSupertonicModel::GetSampleRate() const {
   return impl_->GetSampleRate();
 }
 
-Ort::Session *OfflineTtsSupertonicModel::GetDurationPredictorSession() const {
-  return impl_->GetDurationPredictorSession();
+Ort::Value OfflineTtsSupertonicModel::RunDurationPredictor(
+    std::vector<Ort::Value> inputs) const {
+  return impl_->RunDurationPredictor(std::move(inputs));
 }
 
-Ort::Session *OfflineTtsSupertonicModel::GetTextEncoderSession() const {
-  return impl_->GetTextEncoderSession();
+Ort::Value OfflineTtsSupertonicModel::RunTextEncoder(
+    std::vector<Ort::Value> inputs) const {
+  return impl_->RunTextEncoder(std::move(inputs));
 }
 
-Ort::Session *OfflineTtsSupertonicModel::GetVectorEstimatorSession() const {
-  return impl_->GetVectorEstimatorSession();
+Ort::Value OfflineTtsSupertonicModel::RunVectorEstimator(
+    std::vector<Ort::Value> inputs) const {
+  return impl_->RunVectorEstimator(std::move(inputs));
 }
 
-Ort::Session *OfflineTtsSupertonicModel::GetVocoderSession() const {
-  return impl_->GetVocoderSession();
+Ort::Value OfflineTtsSupertonicModel::RunVocoder(
+    std::vector<Ort::Value> inputs) const {
+  return impl_->RunVocoder(std::move(inputs));
 }
 
 bool OfflineTtsSupertonicModel::UseCudaIOBinding() const {

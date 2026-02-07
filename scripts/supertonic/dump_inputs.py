@@ -15,40 +15,16 @@ import onnxruntime as ort
 from helper import (
     UnicodeProcessor,
     Style,
+    TextToSpeech,
     load_onnx_all,
     load_cfgs,
     load_text_processor,
     load_voice_style,
-    chunk_text,
-    length_to_mask,
+    chunk_text
 )
 
 
-def get_latent_mask(
-    wav_lengths: np.ndarray, base_chunk_size: int, chunk_compress_factor: int
-) -> np.ndarray:
-    latent_size = base_chunk_size * chunk_compress_factor
-    latent_lengths = (wav_lengths + latent_size - 1) // latent_size
-    latent_mask = length_to_mask(latent_lengths)
-    return latent_mask
-
-
-def sample_noisy_latent(
-    duration: np.ndarray, sample_rate: int, base_chunk_size: int, chunk_compress_factor: int, ldim: int
-) -> tuple[np.ndarray, np.ndarray]:
-    bsz = len(duration)
-    wav_len_max = duration.max() * sample_rate
-    wav_lengths = (duration * sample_rate).astype(np.int64)
-    chunk_size = base_chunk_size * chunk_compress_factor
-    latent_len = ((wav_len_max + chunk_size - 1) / chunk_size).astype(np.int32)
-    latent_dim = ldim * chunk_compress_factor
-    noisy_latent = np.random.randn(bsz, latent_dim, latent_len).astype(np.float32)
-    latent_mask = get_latent_mask(wav_lengths, base_chunk_size, chunk_compress_factor)
-    noisy_latent = noisy_latent * latent_mask
-    return noisy_latent, latent_mask
-
-
-class DumpTextToSpeech:
+class DumpTextToSpeech(TextToSpeech):
     """TTS with input dumping capability."""
 
     def __init__(
@@ -61,16 +37,9 @@ class DumpTextToSpeech:
         vocoder_ort: ort.InferenceSession,
         dump_dir: str = "calib",
     ):
-        self.cfgs = cfgs
-        self.text_processor = text_processor
-        self.dp_ort = dp_ort
-        self.text_enc_ort = text_enc_ort
-        self.vector_est_ort = vector_est_ort
-        self.vocoder_ort = vocoder_ort
-        self.sample_rate = cfgs["ae"]["sample_rate"]
-        self.base_chunk_size = cfgs["ae"]["base_chunk_size"]
-        self.chunk_compress_factor = cfgs["ttl"]["chunk_compress_factor"]
-        self.ldim = cfgs["ttl"]["latent_dim"]
+        super().__init__(
+            cfgs, text_processor, dp_ort, text_enc_ort, vector_est_ort, vocoder_ort
+        )
         self.dump_dir = dump_dir
 
         self.dump_dirs = {
@@ -127,10 +96,7 @@ class DumpTextToSpeech:
             "style_ttl": style.ttl,
             "text_mask": text_mask,
         })
-        xt, latent_mask = sample_noisy_latent(
-            dur_onnx, self.sample_rate, self.base_chunk_size,
-            self.chunk_compress_factor, self.ldim
-        )
+        xt, latent_mask = self.sample_noisy_latent(dur_onnx)
         total_step_np = np.array([total_step] * bsz, dtype=np.float32)
 
         # dump vector_estimator inputs at last step (most informative)

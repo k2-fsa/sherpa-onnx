@@ -49,11 +49,11 @@ class OfflineTtsSupertonicModel {
   const SupertonicConfig &GetConfig() const;
   int32_t GetSampleRate() const;
 
-  // Get ONNX sessions for inference
-  Ort::Session *GetDurationPredictorSession() const;
-  Ort::Session *GetTextEncoderSession() const;
-  Ort::Session *GetVectorEstimatorSession() const;
-  Ort::Session *GetVocoderSession() const;
+  // Forward methods for inference
+  Ort::Value RunDurationPredictor(std::vector<Ort::Value> inputs) const;
+  Ort::Value RunTextEncoder(std::vector<Ort::Value> inputs) const;
+  Ort::Value RunVectorEstimator(std::vector<Ort::Value> inputs) const;
+  Ort::Value RunVocoder(std::vector<Ort::Value> inputs) const;
 
   // GPU IO Binding support
   bool UseCudaIOBinding() const;

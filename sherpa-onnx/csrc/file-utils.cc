@@ -171,18 +171,7 @@ nlohmann::json LoadJsonFromFile(const std::string &path) {
 #if __ANDROID_API__ >= 9
 nlohmann::json LoadJsonFromFile(AAssetManager *mgr, const std::string &path) {
   auto buf = ReadFile(mgr, path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read file: %s", path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  nlohmann::json j;
-  try {
-    j = nlohmann::json::parse(buf.begin(), buf.end());
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
+  return LoadJsonFromBuffer(buf);
 }
 #endif
 
@@ -190,18 +179,7 @@ nlohmann::json LoadJsonFromFile(AAssetManager *mgr, const std::string &path) {
 nlohmann::json LoadJsonFromFile(NativeResourceManager *mgr,
                                 const std::string &path) {
   auto buf = ReadFile(mgr, path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read file: %s", path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  nlohmann::json j;
-  try {
-    j = nlohmann::json::parse(buf.begin(), buf.end());
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
+  return LoadJsonFromBuffer(buf);
 }
 #endif
 

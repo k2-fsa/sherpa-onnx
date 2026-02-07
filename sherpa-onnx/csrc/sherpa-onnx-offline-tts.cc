@@ -68,10 +68,11 @@ or details.
 
   po.Register("lang", &lang,
               "Language(s) for text(s): en, ko, es, pt, fr (comma-separated "
-              "for batch)");
+              "for batch). Used only for Supertonic TTS models.");
 
   po.Register("batch", &batch,
-              "Enable batch mode (disables automatic text chunking)");
+              "Enable batch mode (disables automatic text chunking). Used "
+              "only for Supertonic TTS models.");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "
@@ -109,44 +110,47 @@ or details.
 
   sherpa_onnx::OfflineTts tts(config);
 
-  // Set extra parameters for supertonic batch processing
-  if (!lang.empty()) {
-    gen_config.extra["lang"] = lang;
-  }
-  if (batch) {
-    gen_config.extra["batch"] = "1";
-  }
-
   const auto begin = std::chrono::steady_clock::now();
   sherpa_onnx::GeneratedAudio audio;
 
-  if (!config.model.pocket.lm_flow.empty()) {
-    if (reference_audio.empty()) {
-      fprintf(stderr, "You need to provide --reference-audio for Pocket TTS");
-      exit(EXIT_FAILURE);
+  bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
+  bool is_supertonic_tts = !config.model.supertonic.model_dir.empty();
+
+  if (is_pocket_tts || is_supertonic_tts) {
+    if (is_supertonic_tts) {
+      if (!lang.empty()) {
+        gen_config.extra["lang"] = lang;
+      }
+      if (batch) {
+        gen_config.extra["batch"] = "1";
+      }
+      gen_config.speed = 1.0f;
+      gen_config.sid = sid;
     }
 
-    int32_t sample_rate;
-    bool is_ok = false;
-    auto samples = sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
-    if (!is_ok) {
-      fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
-      exit(EXIT_FAILURE);
-    }
+    // Set reference audio for PocketTTS
+    if (is_pocket_tts) {
+      if (reference_audio.empty()) {
+        fprintf(stderr, "You need to provide --reference-audio for Pocket TTS");
+        exit(EXIT_FAILURE);
+      }
 
-    gen_config.reference_audio = std::move(samples);
-    gen_config.reference_sample_rate = sample_rate;
+      int32_t sample_rate;
+      bool is_ok = false;
+      auto samples =
+          sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+      if (!is_ok) {
+        fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
+        exit(EXIT_FAILURE);
+      }
+
+      gen_config.reference_audio = std::move(samples);
+      gen_config.reference_sample_rate = sample_rate;
+    }
 
     audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
   } else {
-    // Use GenerationConfig for supertonic to support batch mode
-    if (!lang.empty() || batch) {
-      gen_config.speed = 1.0f;
-      gen_config.sid = sid;
-      audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
-    } else {
-      audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
-    }
+    audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
   }
 
   const auto end = std::chrono::steady_clock::now();

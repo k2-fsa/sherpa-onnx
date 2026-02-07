@@ -11,9 +11,17 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
-#include <fstream>
 #include <unordered_map>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -24,8 +32,8 @@ namespace sherpa_onnx {
 
 using json = nlohmann::json;
 
-const std::vector<std::string> kSupertonicAvailableLangs = {"en", "ko", "es",
-                                                            "pt", "fr"};
+static const std::vector<std::string> kSupertonicAvailableLangs = {
+    "en", "ko", "es", "pt", "fr"};
 
 namespace {
 
@@ -143,12 +151,16 @@ static void ReplaceString(std::string *text, const std::string &from,
     pos += to.length();
   }
 }
+
+static std::vector<int64_t> ParseIndexerFromJson(const json &j) {
+  return j.get<std::vector<int64_t>>();
+}
 }  // namespace
 
 SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     const std::string &unicode_indexer_path) {
-  json j = sherpa_onnx::LoadJsonFromFile(unicode_indexer_path);
-  indexer_ = j.get<std::vector<int64_t>>();
+  json j = LoadJsonFromFile(unicode_indexer_path);
+  indexer_ = ParseIndexerFromJson(j);
 }
 
 template <typename Manager>
@@ -160,8 +172,8 @@ SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
                      unicode_indexer_path.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
-  json j = sherpa_onnx::LoadJsonFromBuffer(buf);
-  indexer_ = j.get<std::vector<int64_t>>();
+  json j = LoadJsonFromBuffer(buf);
+  indexer_ = ParseIndexerFromJson(j);
 }
 
 std::string SupertonicUnicodeProcessor::PreprocessText(
@@ -290,7 +302,7 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
       last_was_space = false;
     }
   }
-  result = sherpa_onnx::Trim(spaces_fixed);
+  result = Trim(spaces_fixed);
 
   // Add period if text doesn't end with punctuation
   if (!result.empty()) {
@@ -375,33 +387,20 @@ std::vector<uint16_t> SupertonicUnicodeProcessor::TextToUnicodeValues(
   return unicode_values;
 }
 
-std::vector<std::vector<std::vector<float>>>
-SupertonicUnicodeProcessor::GetTextMask(
-    const std::vector<int64_t> &text_ids_lengths) const {
-  // Convert flat vector + shape back to nested format for compatibility
-  std::vector<float> mask_flat;
-  std::vector<int64_t> mask_shape;
+void SupertonicUnicodeProcessor::GetTextMask(
+    const std::vector<int64_t> &text_ids_lengths, std::vector<float> *mask_flat,
+    std::vector<int64_t> *mask_shape) const {
   int bsz = static_cast<int>(text_ids_lengths.size());
-  sherpa_onnx::LengthToMaskFlat(text_ids_lengths, bsz, static_cast<int64_t>(-1),
-                                &mask_flat, &mask_shape);
-
-  int max_len = static_cast<int>(mask_shape[2]);
-  std::vector<std::vector<std::vector<float>>> mask;
-  mask.resize(bsz);
-  for (int b = 0; b < bsz; ++b) {
-    mask[b].resize(1);
-    mask[b][0].resize(max_len);
-    std::memcpy(mask[b][0].data(), mask_flat.data() + b * max_len,
-                max_len * sizeof(float));
-  }
-  return mask;
+  LengthToMaskFlat(text_ids_lengths, bsz, static_cast<int64_t>(-1), mask_flat,
+                   mask_shape);
 }
 
 void SupertonicUnicodeProcessor::Process(
     const std::vector<std::string> &text_list,
     const std::vector<std::string> &lang_list,
     std::vector<std::vector<int64_t>> *text_ids,
-    std::vector<std::vector<std::vector<float>>> *text_mask) const {
+    std::vector<float> *text_mask_flat,
+    std::vector<int64_t> *text_mask_shape) const {
   // Validate input sizes
   if (text_list.size() != lang_list.size()) {
     SHERPA_ONNX_LOGE(
@@ -413,7 +412,7 @@ void SupertonicUnicodeProcessor::Process(
   // Handle empty batch case to avoid UB with std::max_element
   if (text_list.empty()) {
     text_ids->clear();
-    *text_mask = GetTextMask(std::vector<int64_t>());
+    GetTextMask(std::vector<int64_t>(), text_mask_flat, text_mask_shape);
     return;
   }
 
@@ -446,7 +445,7 @@ void SupertonicUnicodeProcessor::Process(
     }
   }
 
-  *text_mask = GetTextMask(text_ids_lengths);
+  GetTextMask(text_ids_lengths, text_mask_flat, text_mask_shape);
 }
 
 #if __ANDROID_API__ >= 9

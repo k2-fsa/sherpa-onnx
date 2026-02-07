@@ -164,17 +164,7 @@ std::vector<std::string> SplitStringAndTrim(const std::string &str,
   SplitStringToVector(str, delim_str.c_str(), true, &result);
   // Trim whitespace from each part
   for (auto &part : result) {
-    size_t start = 0;
-    while (start < part.size() &&
-           std::isspace(static_cast<unsigned char>(part[start]))) {
-      start++;
-    }
-    size_t end = part.size();
-    while (end > start &&
-           std::isspace(static_cast<unsigned char>(part[end - 1]))) {
-      end--;
-    }
-    part = part.substr(start, end - start);
+    part = Trim(part);
   }
   // Remove empty strings after trimming
   result.erase(std::remove_if(result.begin(), result.end(),
@@ -939,9 +929,7 @@ void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
   for (int b = 0; b < bsz; ++b) {
     int64_t len = lengths[b];
     float *batch_mask = mask_flat->data() + b * max_len;
-    for (int64_t i = 0; i < max_len; i++) {
-      batch_mask[i] = (i < len) ? 1.0f : 0.0f;
-    }
+    std::fill_n(batch_mask, len, 1);
   }
 }
 

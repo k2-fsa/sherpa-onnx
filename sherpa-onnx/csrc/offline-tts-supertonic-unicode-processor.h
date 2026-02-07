@@ -14,9 +14,6 @@
 
 namespace sherpa_onnx {
 
-// Available languages for multilingual TTS
-extern const std::vector<std::string> kSupertonicAvailableLangs;
-
 // Unicode text processor for Supertonic TTS
 class SupertonicUnicodeProcessor {
  public:
@@ -30,14 +27,16 @@ class SupertonicUnicodeProcessor {
   void Process(const std::vector<std::string> &text_list,
                const std::vector<std::string> &lang_list,
                std::vector<std::vector<int64_t>> *text_ids,
-               std::vector<std::vector<std::vector<float>>> *text_mask) const;
+               std::vector<float> *text_mask_flat,
+               std::vector<int64_t> *text_mask_shape) const;
 
  private:
   std::string PreprocessText(const std::string &text,
                              const std::string &lang) const;
   std::vector<uint16_t> TextToUnicodeValues(const std::string &text) const;
-  std::vector<std::vector<std::vector<float>>> GetTextMask(
-      const std::vector<int64_t> &text_ids_lengths) const;
+  void GetTextMask(const std::vector<int64_t> &text_ids_lengths,
+                   std::vector<float> *mask_flat,
+                   std::vector<int64_t> *mask_shape) const;
 
   std::vector<int64_t> indexer_;
 };

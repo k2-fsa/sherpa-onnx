@@ -1,21 +1,18 @@
 # Supertonic TTS INT8 Quantization
 
-Quantize [Supertonic](https://github.com/supertone-inc/supertonic) TTS ONNX models (duration_predictor, text_encoder, vector_estimator, vocoder) to INT8 for on-device deployment.
+Quantize [Supertonic](https://github.com/supertone-inc/supertonic) TTS ONNX models to INT8 for on-device deployment.
 
 ## Overview
 
-- **Three scripts**: `gen_calib_configs` → `dump_inputs` → `convert`
-- Static INT8 needs real activations, so we dump them first; dynamic INT8 does not
-- **Quantization**: duration_predictor & text_encoder → dynamic INT8; vector_estimator → dynamic INT8; vocoder → static INT8 on Conv (last few convs stay FP32 for quality)
-- Dynamic INT8: scales per inference, no calibration. Static INT8: fixed scales from calibration data.
-- Calibration uses percentile-based pad/crop for variable-length sequences.
-- Vocoder calibration derived from vector_estimator output to avoid extra inference.
-- W8-DQ (weight-only int8 + dequant at runtime) on some Conv layers for extra compression.
+- **Pipeline**: `gen_calib_configs` → `dump_inputs` → `convert`; voice style JSON → `.bin` via `generate_voices_bin.py`.
+- **Quantization**: duration_predictor, text_encoder, vector_estimator → dynamic INT8; vocoder → static INT8 (calibration from dumped data).
+- **Voice style**: Runtime loads only `.bin`; use `generate_voices_bin.py` to convert JSON to `.bin` (run.sh stage 4).
 
 ## Usage
 
 ```bash
-./run.sh              # Run all stages (0–3)
+./run.sh              # Run all stages (0–4)
+./run.sh 4            # Only generate voice style .bin files
 ```
 
-Stages: 0 = download models, 1 = gen calib configs, 2 = dump calib data, 3 = quantize.
+**Stages:** 0 = download models, 1 = gen calib configs, 2 = dump calib data, 3 = quantize, 4 = generate voice .bin.
