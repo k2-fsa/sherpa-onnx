@@ -18,6 +18,8 @@ def get_image(cann: str, soc_version: str):
         "8.0": "gpustack/ascendai-cann:8.0.RC3-910b-ubuntu20.04-py3.9",
         "8.1": "gpustack/devel-ascendai-cann:8.1.rc1.beta1-910b-ubuntu20.04-v2",
         "8.2": "gpustack/devel-ascendai-cann:8.2.rc1-910b-ubuntu20.04-v2",
+        "8.3": "quay.io/ascend/cann:8.3.rc2-910b-ubuntu22.04-py3.11",
+        "8.5": "quay.io/ascend/cann:8.5.0-910b-ubuntu22.04-py3.11",
     }
 
     cann2image_310 = {
@@ -25,7 +27,10 @@ def get_image(cann: str, soc_version: str):
         "8.0": "gpustack/devel-ascendai-cann:8.0.rc3.beta1-310p-ubuntu20.04-v2",
         "8.1": "gpustack/devel-ascendai-cann:8.1.rc1.beta1-310p-ubuntu20.04-v2",
         "8.2": "gpustack/devel-ascendai-cann:8.2.rc1-310p-ubuntu20.04-v2",
+        "8.3": "quay.io/ascend/cann:8.3.rc2-310p-ubuntu22.04-py3.11",
+        "8.5": "quay.io/ascend/cann:8.5.0-310p-ubuntu22.04-py3.11",
     }
+
     if "910" in soc_version:
         return cann2image_910[cann]
     elif "310" in soc_version:
@@ -40,7 +45,7 @@ def get_soc_version():
 
 
 def get_cann_version():
-    cann_version = ["7.0", "8.0", "8.1", "8.2"]
+    cann_version = ["7.0", "8.0", "8.1", "8.2", "8.3", "8.5"]
     return cann_version
 
 
