@@ -2468,7 +2468,12 @@ function TSherpaOnnxVoiceActivityDetector.Front: TSherpaOnnxSpeechSegment;
 var
   P: PSherpaOnnxSpeechSegment;
 begin
+  Result := Default(TSherpaOnnxSpeechSegment);
+
   P := SherpaOnnxVoiceActivityDetectorFront(Self.Handle);
+  if P = nil then
+    Exit;
+
   Result.Start := P^.Start;
   Result.Samples := nil;
   SetLength(Result.Samples, P^.N);
@@ -2860,6 +2865,9 @@ var
 begin
   Result := Default(TSherpaOnnxSamplesArray);
   P := SherpaOnnxLinearResamplerResample(Self.Handle, Samples, N, Ord(Flush));
+  if P = nil then
+    Exit;
+
   SetLength(Result, P^.N);
 
   if P^.N > 0 then
