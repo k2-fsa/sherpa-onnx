@@ -33,7 +33,7 @@ type
     function Resample(Samples: pcfloat;
       N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray; overload;
 
-    function Resample(Samples: array of Single;
+    function Resample(const Samples: array of Single;
       Flush: Boolean): TSherpaOnnxSamplesArray; overload;
 
     procedure Reset;
@@ -317,7 +317,7 @@ type
   public
     constructor Create(P: Pointer);
     destructor Destroy; override;
-    procedure AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+    procedure AcceptWaveform(const Samples: array of Single; SampleRate: Integer);
     procedure InputFinished;
     property GetHandle: Pointer Read Handle;
   end;
@@ -509,7 +509,7 @@ type
   public
     constructor Create(P: Pointer);
     destructor Destroy; override;
-    procedure AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+    procedure AcceptWaveform(const Samples: array of Single; SampleRate: Integer);
     property GetHandle: Pointer Read Handle;
   end;
 
@@ -590,8 +590,8 @@ type
   public
     constructor Create(Config: TSherpaOnnxVadModelConfig; BufferSizeInSeconds: Single);
     destructor Destroy; override;
-    procedure AcceptWaveform(Samples: array of Single); overload;
-    procedure AcceptWaveform(Samples: array of Single; Offset: Integer; N: Integer); overload;
+    procedure AcceptWaveform(const Samples: array of Single); overload;
+    procedure AcceptWaveform(const Samples: array of Single; Offset: Integer; N: Integer); overload;
     function IsEmpty: Boolean;
     function IsDetected: Boolean;
     procedure Pop;
@@ -668,8 +668,8 @@ type
     constructor Create(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
     destructor Destroy; override;
     procedure SetConfig(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
-    function Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
-    function Process(Samples: array of Single; Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
+    function Process(const Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
+    function Process(const Samples: array of Single; Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
   end;
@@ -707,7 +707,7 @@ type
     constructor Create(Config: TSherpaOnnxOfflineSpeechDenoiserConfig);
     destructor Destroy; override;
 
-    function Run(Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+    function Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
 
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
@@ -719,7 +719,7 @@ type
   function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
 
   function SherpaOnnxWriteWave(Filename: AnsiString;
-    Samples: array of Single; SampleRate: Integer): Boolean;
+    const Samples: array of Single; SampleRate: Integer): Boolean;
 
   function SherpaOnnxGetVersionStr(): AnsiString;
   function SherpaOnnxGetGitSha1(): AnsiString;
@@ -1462,7 +1462,7 @@ procedure SherpaOnnxFreeWaveWrapper(P: PSherpaOnnxWave); cdecl;
   external SherpaOnnxLibName name 'SherpaOnnxFreeWave';
 
 function SherpaOnnxWriteWave(Filename: AnsiString;
-    Samples: array of Single; SampleRate: Integer): Boolean;
+    const Samples: array of Single; SampleRate: Integer): Boolean;
 begin
   Result := SherpaOnnxWriteWaveWrapper(pcfloat(Samples), Length(Samples),
     SampleRate, PAnsiChar(Filename)) = 1;
@@ -1470,27 +1470,21 @@ end;
 
 function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
 var
-  PFilename: PAnsiChar;
   PWave: PSherpaOnnxWave;
-  I: Integer;
 begin
   Result.Samples := nil;
   Result.SampleRate := 0;
 
-  PFilename := PAnsiChar(Filename);
-
-  PWave := SherpaOnnxReadWaveWrapper(PFilename);
+  PWave := SherpaOnnxReadWaveWrapper(PAnsiChar(Filename));
 
   if PWave = nil then
     Exit;
 
-
+  Result.SampleRate := PWave^.SampleRate;
   SetLength(Result.Samples, PWave^.NumSamples);
 
-  Result.SampleRate := PWave^.SampleRate;
-
-  for I := Low(Result.Samples) to High(Result.Samples) do
-    Result.Samples[I] := PWave^.Samples[I];
+  if PWave^.NumSamples > 0 then
+    Move(PWave^.Samples[0], Result.Samples[0], PWave^.NumSamples * SizeOf(Single));
 
   SherpaOnnxFreeWaveWrapper(PWave);
 end;
@@ -1770,7 +1764,7 @@ begin
   Self.Handle := nil;
 end;
 
-procedure TSherpaOnnxOnlineStream.AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+procedure TSherpaOnnxOnlineStream.AcceptWaveform(const Samples: array of Single; SampleRate: Integer);
 begin
   SherpaOnnxOnlineStreamAcceptWaveform(Self.Handle, SampleRate,
     pcfloat(Samples), Length(Samples));
@@ -2150,7 +2144,7 @@ begin
   Self.Handle := nil;
 end;
 
-procedure TSherpaOnnxOfflineStream.AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+procedure TSherpaOnnxOfflineStream.AcceptWaveform(const Samples: array of Single; SampleRate: Integer);
 begin
   SherpaOnnxAcceptWaveformOffline(Self.Handle, SampleRate, pcfloat(Samples),
     Length(Samples));
@@ -2359,16 +2353,19 @@ end;
 function TSherpaOnnxCircularBuffer.Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
 var
   P: pcfloat;
-  I: Integer;
 begin
-  P := SherpaOnnxCircularBufferGet(Self.Handle, StartIndex, N);
-
   Result := nil;
+
+  if N <= 0 then
+    Exit;
+
+  P := SherpaOnnxCircularBufferGet(Self.Handle, StartIndex, N);
+  if P = nil then
+    Exit;
 
   SetLength(Result, N);
 
-  for I := Low(Result) to High(Result) do
-    Result[I] := P[I];
+  Move(P[0], Result[0], N * SizeOf(Single));
 
   SherpaOnnxCircularBufferFree(P);
 end;
@@ -2428,12 +2425,12 @@ begin
   Self.Handle := nil;
 end;
 
-procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(Samples: array of Single);
+procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(const Samples: array of Single);
 begin
   SherpaOnnxVoiceActivityDetectorAcceptWaveform(Self.Handle, pcfloat(Samples), Length(Samples));
 end;
 
-procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(Samples: array of Single; Offset: Integer; N: Integer);
+procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(const Samples: array of Single; Offset: Integer; N: Integer);
 begin
   if Offset + N > Length(Samples) then
     begin
@@ -2470,15 +2467,19 @@ end;
 function TSherpaOnnxVoiceActivityDetector.Front: TSherpaOnnxSpeechSegment;
 var
   P: PSherpaOnnxSpeechSegment;
-  I: Integer;
 begin
+  Result := Default(TSherpaOnnxSpeechSegment);
+
   P := SherpaOnnxVoiceActivityDetectorFront(Self.Handle);
+  if P = nil then
+    Exit;
+
   Result.Start := P^.Start;
   Result.Samples := nil;
   SetLength(Result.Samples, P^.N);
 
-  for I := Low(Result.Samples) to High(Result.Samples) do
-    Result.Samples[I] := P^.Samples[I];
+  if P^.N > 0 then
+    Move(P^.Samples[0], Result.Samples[0], P^.N * SizeOf(Single));
 
   SherpaOnnxDestroySpeechSegment(P);
 end;
@@ -2753,19 +2754,19 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  I: Integer;
 begin
   Result := Default(TSherpaOnnxGeneratedAudio);
 
   Audio := SherpaOnnxOfflineTtsGenerate(Self.Handle, PAnsiChar(Text), SpeakerId, Speed);
 
+  if Audio = nil then
+    Exit;
+
   SetLength(Result.Samples, Audio^.N);
   Result.SampleRate := Audio^.SampleRate;
 
-  for I := Low(Result.Samples) to High(Result.Samples) do
-  begin
-    Result.Samples[I] := Audio^.Samples[I];
-  end;
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 end;
@@ -2777,20 +2778,20 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  I: Integer;
 begin
   Result := Default(TSherpaOnnxGeneratedAudio);
 
   Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
     SpeakerId, Speed, Callback, Arg);
 
+  if Audio = nil then
+    Exit;
+
   SetLength(Result.Samples, Audio^.N);
   Result.SampleRate := Audio^.SampleRate;
 
-  for I := Low(Result.Samples) to High(Result.Samples) do
-  begin
-    Result.Samples[I] := Audio^.Samples[I];
-  end;
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 end;
@@ -2802,7 +2803,6 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString;
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
-  I: Integer;
   C: SherpaOnnxGenerationConfig;
 begin
   C := Default(SherpaOnnxGenerationConfig);
@@ -2821,13 +2821,14 @@ begin
   Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
     @C, Callback, Arg);
 
+  if Audio = nil then
+    Exit;
+
   SetLength(Result.Samples, Audio^.N);
   Result.SampleRate := Audio^.SampleRate;
 
-  for I := Low(Result.Samples) to High(Result.Samples) do
-  begin
-    Result.Samples[I] := Audio^.Samples[I];
-  end;
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 end;
@@ -2861,19 +2862,21 @@ function TSherpaOnnxLinearResampler.Resample(Samples: pcfloat;
   N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray;
 var
   P: PSherpaOnnxResampleOut;
-  I: Integer;
 begin
   Result := Default(TSherpaOnnxSamplesArray);
   P := SherpaOnnxLinearResamplerResample(Self.Handle, Samples, N, Ord(Flush));
+  if P = nil then
+    Exit;
+
   SetLength(Result, P^.N);
 
-  for I := Low(Result) to High(Result) do
-    Result[I] := P^.Samples[I];
+  if P^.N > 0 then
+    Move(P^.Samples[0], Result[0], P^.N * SizeOf(Single));
 
   SherpaOnnxLinearResamplerResampleFree(P);
 end;
 
-function TSherpaOnnxLinearResampler.Resample(Samples: array of Single; Flush: Boolean): TSherpaOnnxSamplesArray;
+function TSherpaOnnxLinearResampler.Resample(const Samples: array of Single; Flush: Boolean): TSherpaOnnxSamplesArray;
 begin
   Result := Self.Resample(pcfloat(Samples), Length(Samples), Flush);
 end;
@@ -3013,7 +3016,7 @@ begin
   SherpaOnnxOfflineSpeakerDiarizationSetConfig(Self.Handle, @C);
 end;
 
-function TSherpaOnnxOfflineSpeakerDiarization.Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
+function TSherpaOnnxOfflineSpeakerDiarization.Process(const Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
 var
   R: Pointer;
   NumSegments: Integer;
@@ -3043,7 +3046,7 @@ begin
   SherpaOnnxOfflineSpeakerDiarizationDestroyResult(R);
 end;
 
-function TSherpaOnnxOfflineSpeakerDiarization.Process(Samples: array of Single;
+function TSherpaOnnxOfflineSpeakerDiarization.Process(const Samples: array of Single;
   callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
 var
   R: Pointer;
@@ -3129,22 +3132,22 @@ begin
   Self.Handle := nil;
 end;
 
-function TSherpaOnnxOfflineSpeechDenoiser.Run(Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+function TSherpaOnnxOfflineSpeechDenoiser.Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
 var
   Audio: PSherpaOnnxDenoisedAudio;
-  I: Integer;
 begin
   Result := Default(TSherpaOnnxDenoisedAudio);
 
   Audio := SherpaOnnxOfflineSpeechDenoiserRun(Self.Handle, pcfloat(Samples), Length(Samples), InputSampleRate);
 
+  if Audio = nil then
+    Exit;
+
   SetLength(Result.Samples, Audio^.N);
   Result.SampleRate := Audio^.SampleRate;
 
-  for I := Low(Result.Samples) to High(Result.Samples) do
-  begin
-    Result.Samples[I] := Audio^.Samples[I];
-  end;
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
 
   SherpaOnnxDestroyDenoisedAudio(audio);
 end;
