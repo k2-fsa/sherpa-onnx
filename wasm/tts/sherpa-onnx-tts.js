@@ -595,13 +595,13 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
 
 /*
 const genConfig = {
-  silence_scale: 0.2,
+  silenceScale: 0.2,
   speed: 1.0,
   sid: 1,
-  reference_audio: myFloat32Array, // optional
-  reference_sample_rate: 16000,
-  reference_text: "Hello world",
-  num_steps: 20,
+  referenceAudio: myFloat32Array, // optional
+  referenceSample_rate: 16000, // used if referenceAudio is required
+  referenceText: "Hello world", // optional
+  numSteps: 5, // optional
   extra: { bar: "ok", foo: 0.8, foobar: 10}
 };
 };
@@ -610,25 +610,19 @@ const genConfig = {
 
 // Allocate a SherpaOnnxGenerationConfig in WASM
 function initSherpaOnnxGenerationConfig(config, Module) {
-  console.log(`here config: ${config}`);
-  // Allocate memory for the struct itself (size = 7 * 4 bytes + pointer sizes)
-  // Assuming 32-bit system, each float/int32 = 4 bytes, each pointer = 4 bytes
-  const len = 8 * 4;  // 8 fields in your struct
+  const len = 9 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
 
   // float silence_scale
-  Module.setValue(ptr + offset, config.silenceScale || 0.2, 'float');
-  offset += 4;
+  Module.setValue(ptr + 0 * 4, config.silenceScale || 0.2, 'float');
 
   // float speed
-  Module.setValue(ptr + offset, config.speed || 1.0, 'float');
-  offset += 4;
+  Module.setValue(ptr + 1 * 4, config.speed || 1.0, 'float');
 
   // int32_t sid
-  Module.setValue(ptr + offset, config.sid || 0, 'i32');
-  offset += 4;
+  Module.setValue(ptr + 2 * 4, config.sid || 0, 'i32');
 
   // const float* reference_audio
   let referenceAudioPtr = 0;
@@ -636,18 +630,15 @@ function initSherpaOnnxGenerationConfig(config, Module) {
     referenceAudioPtr = Module._malloc(config.referenceAudio.length * 4);
     Module.HEAPF32.set(config.referenceAudio, referenceAudioPtr / 4);
   }
-  Module.setValue(ptr + offset, referenceAudioPtr, 'i8*');
-  offset += 4;
+  Module.setValue(ptr + 3 * 4, referenceAudioPtr, 'i8*');
 
   // int32_t reference_audio_len
   Module.setValue(
-      ptr + offset, config.referenceAudio ? config.referenceAudio.length : 0,
+      ptr + 4 * 4, config.referenceAudio ? config.referenceAudio.length : 0,
       'i32');
-  offset += 4;
 
   // int32_t reference_sample_rate
-  Module.setValue(ptr + offset, config.referenceSampleRate || 0, 'i32');
-  offset += 4;
+  Module.setValue(ptr + 5 * 4, config.referenceSampleRate || 0, 'i32');
 
   // const char* reference_text
   let referenceTextPtr = 0;
@@ -656,22 +647,23 @@ function initSherpaOnnxGenerationConfig(config, Module) {
     referenceTextPtr = Module._malloc(textLen);
     Module.stringToUTF8(config.referenceText, referenceTextPtr, textLen);
   }
-  Module.setValue(ptr + offset, referenceTextPtr, 'i8*');
-  offset += 4;
+  Module.setValue(ptr + 6 * 4, referenceTextPtr, 'i8*');
 
   // int32_t num_steps
-  Module.setValue(ptr + offset, config.numSteps || 5, 'i32');
-  offset += 4;
+  Module.setValue(ptr + 7 * 4, config.numSteps || 5, 'i32');
 
   // const char* extra
   let extraPtr = 0;
 
   if (config.extra && typeof config.extra === 'object') {
     config.extra = JSON.stringify(config.extra);
+
+    const extraLen = Module.lengthBytesUTF8(config.extra) + 1;
+    extraPtr = Module._malloc(extraLen);
+    Module.stringToUTF8(config.extra, extraPtr, extraLen);
   }
 
-  Module.setValue(ptr + offset, extraPtr, 'i8*');
-  offset += 4;
+  Module.setValue(ptr + 8 * 4, extraPtr, 'i8*');
 
   return {
     ptr,
@@ -694,12 +686,8 @@ function freeSherpaOnnxGenerationConfig(cfg, Module) {
 
 class OfflineTts {
   constructor(configObj, Module) {
-    console.log('creating');
-    console.log(configObj)
     const config = initSherpaOnnxOfflineTtsConfig(configObj, Module)
-    console.log('config:');
     const handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
-    console.log('created');
 
     freeConfig(config, Module);
 
@@ -726,7 +714,6 @@ class OfflineTts {
 
     const h = this.Module._SherpaOnnxOfflineTtsGenerate(
         this.handle, textPtr, config.sid, config.speed);
-    console.log(this.Module);
 
     const numSamples = this.Module.HEAP32[h / 4 + 1];
     const sampleRate = this.Module.HEAP32[h / 4 + 2];
@@ -742,7 +729,6 @@ class OfflineTts {
   }
 
   generateWithConfig(text, genConfig) {
-    console.log('started');
     // 1️⃣ Allocate SherpaOnnxGenerationConfig in WASM
     const cfgWasm = initSherpaOnnxGenerationConfig(genConfig, this.Module);
 
