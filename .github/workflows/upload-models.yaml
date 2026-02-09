@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models-2
+      - upload-models
   workflow_dispatch:
 
 concurrency:
@@ -41,8 +41,31 @@ jobs:
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
-      - name: WenetSpeech Wu
+      - name: vosk-model-small-streaming-bn
         if: true
+        shell: bash
+        run: |
+          git lfs install
+          repo=vosk-model-small-streaming-bn
+          git clone https://huggingface.co/alphacep/$repo
+
+          d=sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
+          mkdir $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/alphacep/vosk-model-small-streaming-bn
+          EOF
+
+          mv $repo/am-onnx/*.onnx $d/
+          mv $repo/lang/* $d/
+          mkdir $d/test_wavs
+          mv $repo/*.wav $d/test_wavs
+
+          tar cfjv $d.tar.bz2 $d
+
+      - name: WenetSpeech Wu
+        if: false
         shell: bash
         run: |
           git lfs install
@@ -827,7 +850,7 @@ jobs:
           mv models/* .
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -844,6 +867,7 @@ jobs:
               sherpa-onnx-funasr-nano-int8-2025-12-30
               sherpa-onnx-funasr-nano-fp16-2025-12-30
               sherpa-onnx-funasr-nano-2025-12-30
+              sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
@@ -853,7 +877,7 @@ jobs:
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
 
               rm -rf huggingface/*.onnx
               rm -rf huggingface/*/*.wav
@@ -870,7 +894,7 @@ jobs:
               git add .
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main
 
               popd
             done
