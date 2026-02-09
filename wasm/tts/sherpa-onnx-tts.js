@@ -24,6 +24,10 @@ function freeConfig(config, Module) {
     freeConfig(config.zipvoice, Module)
   }
 
+  if ('pocket' in config) {
+    freeConfig(config.pocket, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -336,6 +340,79 @@ function initSherpaOnnxOfflineTtsZipVoiceModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
+  const lmFlowLen = Module.lengthBytesUTF8(config.lmFlow || '') + 1;
+  const lmMainLen = Module.lengthBytesUTF8(config.lmMain || '') + 1;
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
+  const textConditionerLen =
+      Module.lengthBytesUTF8(config.textConditioner || '') + 1;
+  const vocabJsonLen = Module.lengthBytesUTF8(config.vocabJson || '') + 1;
+  const tokenScoresJsonLen =
+      Module.lengthBytesUTF8(config.tokenScoresJson || '') + 1;
+
+
+  const n = lmFlowLen + lmMainLen + encoderLen + decoderLen +
+      textConditionerLen + vocabJsonLen + tokenScoresJsonLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 7 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.lmFlow || '', buffer + offset, lmFlowLen);
+  offset += lmFlowLen;
+
+  Module.stringToUTF8(config.lmMain || '', buffer + offset, lmMainLen);
+  offset += lmMainLen;
+
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(
+      config.textConditioner || '', buffer + offset, textConditionerLen);
+  offset += textConditionerLen;
+
+  Module.stringToUTF8(config.vocabJson || '', buffer + offset, vocabJsonLen);
+  offset += vocabJsonLen;
+
+  Module.stringToUTF8(
+      config.tokenScoresJson || '', buffer + offset, tokenScoresJsonLen);
+  offset += tokenScoresJsonLen;
+
+  offset = 0;
+  Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
+  offset += lmFlowLen;
+
+  Module.setValue(ptr + 1 * 4, buffer + offset, 'i8*');
+  offset += lmMainLen;
+
+  Module.setValue(ptr + 2 * 4, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 3 * 4, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 4 * 4, buffer + offset, 'i8*');
+  offset += textConditionerLen;
+
+  Module.setValue(ptr + 5 * 4, buffer + offset, 'i8*');
+  offset += vocabJsonLen;
+
+  Module.setValue(ptr + 6 * 4, buffer + offset, 'i8*');
+  offset += tokenScoresJsonLen;
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
@@ -397,6 +474,18 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     };
   }
 
+  if (!('offlineTtsPocketModelConfig' in config)) {
+    config.offlineTtsPocketModelConfig = {
+      lmFlow: '',
+      lmMain: '',
+      encoder: '',
+      decoder: '',
+      textConditioner: '',
+      vocabJson: '',
+      tokenScoresJson: '',
+    };
+  }
+
 
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
@@ -413,9 +502,12 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const zipVoiceModelConfig = initSherpaOnnxOfflineTtsZipVoiceModelConfig(
       config.offlineTtsZipVoiceModelConfig, Module);
 
+  const pocketModelConfig = initSherpaOnnxOfflineTtsPocketModelConfig(
+      config.offlineTtsPocketModelConfig, Module);
+
   const len = vitsModelConfig.len + matchaModelConfig.len +
       kokoroModelConfig.len + kittenModelConfig.len + zipVoiceModelConfig.len +
-      3 * 4;
+      pocketModelConfig.len + 3 * 4;
 
   const ptr = Module._malloc(len);
 
@@ -448,6 +540,9 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       zipVoiceModelConfig.ptr, zipVoiceModelConfig.len, ptr + offset);
   offset += zipVoiceModelConfig.len;
 
+  Module._CopyHeap(pocketModelConfig.ptr, pocketModelConfig.len, ptr + offset);
+  offset += pocketModelConfig.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -457,6 +552,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     kokoro: kokoroModelConfig,
     kitten: kittenModelConfig,
     zipvoice: zipVoiceModelConfig,
+    pocket: pocketModelConfig,
   };
 }
 
@@ -497,11 +593,113 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   };
 }
 
+/*
+const genConfig = {
+  silence_scale: 0.2,
+  speed: 1.0,
+  sid: 1,
+  reference_audio: myFloat32Array, // optional
+  reference_sample_rate: 16000,
+  reference_text: "Hello world",
+  num_steps: 20,
+  extra: { bar: "ok", foo: 0.8, foobar: 10}
+};
+};
+
+ */
+
+// Allocate a SherpaOnnxGenerationConfig in WASM
+function initSherpaOnnxGenerationConfig(config, Module) {
+  console.log(`here config: ${config}`);
+  // Allocate memory for the struct itself (size = 7 * 4 bytes + pointer sizes)
+  // Assuming 32-bit system, each float/int32 = 4 bytes, each pointer = 4 bytes
+  const len = 8 * 4;  // 8 fields in your struct
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+
+  // float silence_scale
+  Module.setValue(ptr + offset, config.silenceScale || 0.2, 'float');
+  offset += 4;
+
+  // float speed
+  Module.setValue(ptr + offset, config.speed || 1.0, 'float');
+  offset += 4;
+
+  // int32_t sid
+  Module.setValue(ptr + offset, config.sid || 0, 'i32');
+  offset += 4;
+
+  // const float* reference_audio
+  let referenceAudioPtr = 0;
+  if (config.referenceAudio && config.referenceAudio.length > 0) {
+    referenceAudioPtr = Module._malloc(config.referenceAudio.length * 4);
+    Module.HEAPF32.set(config.referenceAudio, referenceAudioPtr / 4);
+  }
+  Module.setValue(ptr + offset, referenceAudioPtr, 'i8*');
+  offset += 4;
+
+  // int32_t reference_audio_len
+  Module.setValue(
+      ptr + offset, config.referenceAudio ? config.referenceAudio.length : 0,
+      'i32');
+  offset += 4;
+
+  // int32_t reference_sample_rate
+  Module.setValue(ptr + offset, config.referenceSampleRate || 0, 'i32');
+  offset += 4;
+
+  // const char* reference_text
+  let referenceTextPtr = 0;
+  if (config.referenceText) {
+    const textLen = Module.lengthBytesUTF8(config.referenceText) + 1;
+    referenceTextPtr = Module._malloc(textLen);
+    Module.stringToUTF8(config.referenceText, referenceTextPtr, textLen);
+  }
+  Module.setValue(ptr + offset, referenceTextPtr, 'i8*');
+  offset += 4;
+
+  // int32_t num_steps
+  Module.setValue(ptr + offset, config.numSteps || 5, 'i32');
+  offset += 4;
+
+  // const char* extra
+  let extraPtr = 0;
+
+  if (config.extra && typeof config.extra === 'object') {
+    config.extra = JSON.stringify(config.extra);
+  }
+
+  Module.setValue(ptr + offset, extraPtr, 'i8*');
+  offset += 4;
+
+  return {
+    ptr,
+    referenceAudioPtr,
+    referenceTextPtr,
+    extraPtr,
+  };
+}
+
+// Free the memory allocated for a SherpaOnnxGenerationConfig
+function freeSherpaOnnxGenerationConfig(cfg, Module) {
+  if (!cfg) return;
+
+  if (cfg.referenceAudioPtr) Module._free(cfg.referenceAudioPtr);
+  if (cfg.referenceTextPtr) Module._free(cfg.referenceTextPtr);
+  if (cfg.extraPtr) Module._free(cfg.extraPtr);
+  if (cfg.ptr) Module._free(cfg.ptr);
+}
+
+
 class OfflineTts {
   constructor(configObj, Module) {
+    console.log('creating');
     console.log(configObj)
     const config = initSherpaOnnxOfflineTtsConfig(configObj, Module)
+    console.log('config:');
     const handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
+    console.log('created');
 
     freeConfig(config, Module);
 
@@ -528,6 +726,7 @@ class OfflineTts {
 
     const h = this.Module._SherpaOnnxOfflineTtsGenerate(
         this.handle, textPtr, config.sid, config.speed);
+    console.log(this.Module);
 
     const numSamples = this.Module.HEAP32[h / 4 + 1];
     const sampleRate = this.Module.HEAP32[h / 4 + 2];
@@ -541,6 +740,51 @@ class OfflineTts {
     this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(h);
     return {samples: samples, sampleRate: sampleRate};
   }
+
+  generateWithConfig(text, genConfig) {
+    console.log('started');
+    // 1️⃣ Allocate SherpaOnnxGenerationConfig in WASM
+    const cfgWasm = initSherpaOnnxGenerationConfig(genConfig, this.Module);
+
+    // 2️⃣ Allocate text in WASM
+    const textLen = this.Module.lengthBytesUTF8(text) + 1;
+    const textPtr = this.Module._malloc(textLen);
+    this.Module.stringToUTF8(text, textPtr, textLen);
+
+    // 3️⃣ Call the C API
+    const audioPtr = this.Module._SherpaOnnxOfflineTtsGenerateWithConfig(
+        this.handle, textPtr, cfgWasm.ptr,
+        0,  // callback
+        0   // callback arg
+    );
+
+    if (!audioPtr) {
+      this.Module._free(textPtr);
+      freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
+      throw new Error('Failed to generate audio');
+    }
+
+    // 4️⃣ Read SherpaOnnxGeneratedAudio struct
+    const samplesPtr = this.Module.HEAP32[audioPtr / 4];  // float* samples
+    const numSamples =
+        this.Module.HEAP32[audioPtr / 4 + 1];  // int32 num_samples
+    const sampleRate =
+        this.Module.HEAP32[audioPtr / 4 + 2];  // int32 sample_rate
+
+    // 5️⃣ Copy samples to Float32Array
+    const samples = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      samples[i] = this.Module.HEAPF32[samplesPtr / 4 + i];
+    }
+
+    // 6️⃣ Free WASM memory
+    this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(audioPtr);
+    this.Module._free(textPtr);
+    freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
+
+    return {samples, sampleRate};
+  }
+
   save(filename, audio) {
     const samples = audio.samples;
     const sampleRate = audio.sampleRate;
