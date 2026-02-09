@@ -8,6 +8,8 @@ namespace SherpaOnnx
     // IntPtr is actually a `const float*` from C++
     public delegate int OfflineTtsCallback(IntPtr samples, int n);
     public delegate int OfflineTtsCallbackProgress(IntPtr samples, int n, float progress);
+    public delegate int OfflineTtsCallbackProgressWithArg(IntPtr samples, int n, float progress, IntPtr arg);
+
 
     public class OfflineTts : IDisposable
     {
@@ -44,6 +46,20 @@ namespace SherpaOnnx
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
             utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
             IntPtr p = SherpaOnnxOfflineTtsGenerateWithProgressCallback(_handle.Handle, utf8BytesWithNull, speakerId, speed, callback);
+            return new OfflineTtsGeneratedAudio(p);
+        }
+
+        public OfflineTtsGeneratedAudio GenerateWithConfig(String text, OfflineTtsGenerationConfig confi, OfflineTtsCallbackProgressWithArg callback)
+        {
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
+            utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
+
+            OfflineTtsGenerationConfig.NativeStruct nativeConfig = config.ToNative();
+
+
+            IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(_handle.Handle, utf8BytesWithNull, ref nativeConfig, callback, IntPtr.Zero);
             return new OfflineTtsGeneratedAudio(p);
         }
 
@@ -106,5 +122,8 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr SherpaOnnxOfflineTtsGenerateWithProgressCallback(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text, int sid, float speed, OfflineTtsCallbackProgress callback);
+
+        [DllImport(Dll.Filename, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr SherpaOnnxOfflineTtsGenerateWithConfig(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text, ref OfflineTtsGenerationConfig.NativeStruct config, OfflineTtsCallbackProgressWithArg callback, IntPtr arg);
     }
 }
