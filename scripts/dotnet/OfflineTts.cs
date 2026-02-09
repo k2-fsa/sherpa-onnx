@@ -67,7 +67,9 @@ namespace SherpaOnnx
         public OfflineTtsGeneratedAudio GenerateWithConfig(string text, OfflineTtsGenerationConfig config, OfflineTtsCallbackProgressWithArg callback)
         {
             _callbackWithArgRef = callback;
-            byte[] utf8BytesWithNull = GetUtf8BytesWithNull(text);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
 
             GCHandle? audioHandle = null;
             IntPtr p;

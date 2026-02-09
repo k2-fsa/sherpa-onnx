@@ -1,4 +1,4 @@
-/// Copyright (c)  2026  Xiaomi Corporation (authors: Fangjun Kuang)
+﻿/// Copyright (c)  2026  Xiaomi Corporation (authors: Fangjun Kuang)
 
 using System;
 using System.Collections;
@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 #if !NET20
-using System.Web.Script.Serialization;
+using System.Text.Json;
 #endif
 
 namespace SherpaOnnx
@@ -88,6 +88,8 @@ namespace SherpaOnnx
                         val = JsonEscape((string)kv.Value);
                     else if (kv.Value is float || kv.Value is double)
                         val = ((IFormattable)kv.Value).ToString(null, System.Globalization.CultureInfo.InvariantCulture);
+                    else if (kv.Value is bool)
+                        val = (bool)kv.Value ? "true" : "false";
                     else
                         val = kv.Value.ToString();
 
@@ -100,8 +102,12 @@ namespace SherpaOnnx
 #else
             if (Extra != null && Extra.Count > 0)
             {
-                var serializer = new JavaScriptSerializer();
-                native.Extra = serializer.Serialize(Extra);
+                native.Extra = JsonSerializer.Serialize(
+                    Extra,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
             }
             else
             {
