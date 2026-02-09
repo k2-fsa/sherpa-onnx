@@ -48,6 +48,11 @@ jobs:
           git lfs install
           repo=vosk-model-small-streaming-bn
           git clone https://huggingface.co/alphacep/$repo
+          cd $repo
+          mv test.wav 0.wav
+          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/bn.wav
+          mv bn.wav 1.wav
+          cd ..
 
           d=sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
           mkdir $d
