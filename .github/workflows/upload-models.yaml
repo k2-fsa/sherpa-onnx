@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models
+      - upload-models-2
   workflow_dispatch:
 
 concurrency:
