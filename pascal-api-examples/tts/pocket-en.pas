@@ -1,13 +1,10 @@
 { Copyright (c)  2026  Xiaomi Corporation }
-program kitten_en;
+program pocket_en;
 {
 This file shows how to use the text to speech API of sherpa-onnx
-with Kitten TTS models.
+with Pocket TTS models.
 
 It generates speech from text and saves it to a wave file.
-
-If you want to play it while it is generating, please see
-./kitten-en-playback.pas
 }
 
 {$mode objfpc}
@@ -42,8 +39,6 @@ var
   Audio: TSherpaOnnxGeneratedAudio;
 
   Text: AnsiString;
-  Speed: Single = 1.0;  {Use a larger value to speak faster}
-  SpeakerId: Integer = 0;
 
 begin
   Tts := GetOfflineTts;
