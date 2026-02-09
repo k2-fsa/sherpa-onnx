@@ -42,10 +42,9 @@ class PocketTtsDemo
 
     genConfig.ReferenceAudio = reader.Samples;
     genConfig.ReferenceSampleRate= reader.SampleRate;
-
+    genConfig.Extra["max_reference_audio_len"] = 12;
 
     var tts = new OfflineTts(config);
-    var speed = 1.0f;
     var text = "Today as always, men fall into two groups: slaves and free men. Whoever " +
       "does not have two-thirds of his day for himself, is a slave, whatever " +
       "he may be: a statesman, a businessman, an official, or a scholar. " +
