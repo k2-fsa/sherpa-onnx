@@ -74,7 +74,7 @@ class KittenTtsPlayDemo
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    var myCallback = (IntPtr samples, int n, float progress) =>
     {
       Console.WriteLine($"Progress {progress*100}%");
 
@@ -166,7 +166,7 @@ class KittenTtsPlayDemo
 
     stream.Start();
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgress(myCallback);
 
     var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
     var outputFilename = "./generated-kitten-0.wav";

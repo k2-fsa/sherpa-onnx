@@ -84,7 +84,7 @@ class PocketTtsDemo
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
+    var myCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       Console.WriteLine($"Progress {progress*100}%");
 
@@ -178,11 +178,11 @@ class PocketTtsDemo
 
     stream.Start();
 
-    var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
 
     var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
-    var outputFilename = "./generated-pocket-en-paly.wav";
+    var outputFilename = "./generated-pocket-en-play.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)

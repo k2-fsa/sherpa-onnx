@@ -3,6 +3,11 @@
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Text;
+
+#if !NET20
+using System.Web.Script.Serialization;
+#endif
 
 namespace SherpaOnnx
 {
@@ -30,10 +35,13 @@ namespace SherpaOnnx
         public int NumSteps;
 
         /// <summary>
-        /// Extra attributes serialized as JSON manually
+        /// Extra attributes stored as key/value pairs
         /// </summary>
         public Hashtable Extra;
 
+        /// <summary>
+        /// Convert to native struct for P/Invoke
+        /// </summary>
         internal NativeStruct ToNative(out GCHandle? audioHandle)
         {
             NativeStruct native = new NativeStruct();
@@ -41,6 +49,7 @@ namespace SherpaOnnx
             native.Speed = Speed;
             native.Sid = Sid;
 
+            // Handle ReferenceAudio
             audioHandle = null;
             if (ReferenceAudio != null && ReferenceAudio.Length > 0)
             {
@@ -58,28 +67,84 @@ namespace SherpaOnnx
             native.ReferenceText = ReferenceText ?? "";
             native.NumSteps = NumSteps;
 
+            // Handle Extra JSON
+#if NET20
             native.Extra = "{}";
             if (Extra != null && Extra.Count > 0)
             {
-                string json = "{";
+                StringBuilder json = new StringBuilder();
+                json.Append("{");
                 bool first = true;
-                foreach (System.Collections.DictionaryEntry kv in Extra)
+
+                foreach (DictionaryEntry kv in Extra)
                 {
-                    if (!first) json += ",";
-                    string key = kv.Key.ToString();
-                    string val = kv.Value is string ? "\"" + kv.Value.ToString() + "\"" : kv.Value.ToString();
-                    json += "\"" + key + "\":" + val;
+                    if (!first) json.Append(",");
                     first = false;
+
+                    string key = JsonEscape(kv.Key.ToString());
+                    string val;
+
+                    if (kv.Value is string)
+                        val = JsonEscape((string)kv.Value);
+                    else if (kv.Value is float || kv.Value is double)
+                        val = ((IFormattable)kv.Value).ToString(null, System.Globalization.CultureInfo.InvariantCulture);
+                    else
+                        val = kv.Value.ToString();
+
+                    json.AppendFormat("{0}:{1}", key, val);
                 }
-                json += "}";
-                native.Extra = json;
+
+                json.Append("}");
+                native.Extra = json.ToString();
             }
+#else
+            if (Extra != null && Extra.Count > 0)
+            {
+                var serializer = new JavaScriptSerializer();
+                native.Extra = serializer.Serialize(Extra);
+            }
+            else
+            {
+                native.Extra = "{}";
+            }
+#endif
 
             return native;
         }
 
+#if NET20
+        /// <summary>
+        /// Escapes a string for JSON (for .NET 2.0)
+        /// </summary>
+        private static string JsonEscape(string s)
+        {
+            if (s == null) return "\"\"";
 
-
+            StringBuilder sb = new StringBuilder();
+            sb.Append('"');
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < 32 || c > 126)
+                            sb.AppendFormat("\\u{0:X4}", (int)c);
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            sb.Append('"');
+            return sb.ToString();
+        }
+#endif
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NativeStruct
@@ -88,7 +153,7 @@ namespace SherpaOnnx
             public float Speed;
             public int Sid;
 
-            public IntPtr ReferenceAudio;   // Use IntPtr for dynamic array
+            public IntPtr ReferenceAudio;
             public int ReferenceAudioLen;
             public int ReferenceSampleRate;
 
@@ -100,7 +165,6 @@ namespace SherpaOnnx
             [MarshalAs(UnmanagedType.LPStr)]
             public string Extra;
         }
-
     }
 }
 
