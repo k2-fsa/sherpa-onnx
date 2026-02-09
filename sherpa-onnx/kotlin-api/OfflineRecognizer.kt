@@ -802,6 +802,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             )
         }
 
+        49 -> {
+            val modelDir = "sherpa-onnx-zipformer-vi-30M-int8-2026-02-09"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+            )
+        }
+
         9000 -> {
             val modelDir =
                 "sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64"

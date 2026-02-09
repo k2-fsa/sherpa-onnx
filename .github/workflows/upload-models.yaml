@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models
+      - upload-models-2
   workflow_dispatch:
 
 concurrency:
@@ -42,7 +42,7 @@ jobs:
           git config --global user.name "Fangjun Kuang"
 
       - name: Zipformer-30M-RNNT-6000h
-        if: true
+        if: false
         shell: bash
         run: |
           git lfs install
