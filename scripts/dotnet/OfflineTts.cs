@@ -49,17 +49,25 @@ namespace SherpaOnnx
             return new OfflineTtsGeneratedAudio(p);
         }
 
-        public OfflineTtsGeneratedAudio GenerateWithConfig(String text, OfflineTtsGenerationConfig confi, OfflineTtsCallbackProgressWithArg callback)
+        public OfflineTtsGeneratedAudio GenerateWithConfig(String text, OfflineTtsGenerationConfig config, OfflineTtsCallbackProgressWithArg callback)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
             byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
             utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
 
-            OfflineTtsGenerationConfig.NativeStruct nativeConfig = config.ToNative();
+            GCHandle? audioHandle;
+
+            OfflineTtsGenerationConfig.NativeStruct nativeConfig = config.ToNative(out audioHandle);
 
 
             IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(_handle.Handle, utf8BytesWithNull, ref nativeConfig, callback, IntPtr.Zero);
+
+            if (audioHandle.HasValue)
+            {
+                audioHandle.Value.Free();
+            }
+
             return new OfflineTtsGeneratedAudio(p);
         }
 
