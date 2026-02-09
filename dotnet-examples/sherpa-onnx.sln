@@ -53,6 +53,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vad-non-streaming-funasr-na
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pocket-tts-zero-shot", "pocket-tts-zero-shot\pocket-tts-zero-shot.csproj", "{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pocket-tts-zero-shot-play", "pocket-tts-zero-shot-play\pocket-tts-zero-shot-play.csproj", "{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

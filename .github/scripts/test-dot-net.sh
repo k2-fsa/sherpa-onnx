@@ -4,7 +4,12 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./vad-non-streaming-funasr-nano
+cd ./pocket-tts-zero-shot
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-pocket-*
+
+cd ../vad-non-streaming-funasr-nano
 ./run-ten-vad.sh
 rm -fv *.onnx
 
