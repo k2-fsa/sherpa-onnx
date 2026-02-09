@@ -825,6 +825,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-vi-30M-int8-2026-02-09",
+            idx=49,
+            lang="vi",
+            lang2="Vietnamese",
+            short_name="zipformer_vi_30M_int8_2026_02_09",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

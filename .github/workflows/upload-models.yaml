@@ -41,8 +41,58 @@ jobs:
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
+      - name: Zipformer-30M-RNNT-6000h
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          repo=Zipformer-30M-RNNT-6000h
+          git clone https://huggingface.co/hynt/$repo
+          pushd $repo
+          mkdir test_wavs
+          cd test_wavs
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/0.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/1.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/2.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/README.md
+          popd
+
+          d=sherpa-onnx-zipformer-vi-30M-2026-02-09
+          mkdir -p $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/hynt/Zipformer-30M-RNNT-6000h
+          EOF
+
+          cp -v $repo/encoder-epoch-20-avg-10.onnx $d/encoder.onnx
+          cp -v $repo/decoder-epoch-20-avg-10.onnx $d/decoder.onnx
+          cp -v $repo/joiner-epoch-20-avg-10.onnx $d/joiner.onnx
+          cp -v $repo/bpe.model $d/
+          cp -v $repo/config.json $d/tokens.txt
+          cp -av $repo/test_wavs $d/
+
+          tar cjfv $d.tar.bz2 $d
+
+          d=sherpa-onnx-zipformer-vi-30M-int8-2026-02-09
+          mkdir -p $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/hynt/Zipformer-30M-RNNT-6000h
+          EOF
+
+          cp -v $repo/encoder-epoch-20-avg-10.int8.onnx $d/encoder.int8.onnx
+          cp -v $repo/decoder-epoch-20-avg-10.onnx $d/decoder.onnx
+          cp -v $repo/joiner-epoch-20-avg-10.int8.onnx $d/joiner.int8.onnx
+          cp -v $repo/bpe.model $d/
+          cp -v $repo/config.json $d/tokens.txt
+          cp -av $repo/test_wavs $d/
+
+          tar cjfv $d.tar.bz2 $d
+
       - name: vosk-model-small-streaming-bn
-        if: true
+        if: false
         shell: bash
         run: |
           git lfs install
@@ -873,6 +923,8 @@ jobs:
               sherpa-onnx-funasr-nano-fp16-2025-12-30
               sherpa-onnx-funasr-nano-2025-12-30
               sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
+              sherpa-onnx-zipformer-vi-30M-int8-2026-02-09
+              sherpa-onnx-zipformer-vi-30M-2026-02-09
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
