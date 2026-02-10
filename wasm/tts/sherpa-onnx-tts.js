@@ -613,7 +613,8 @@ function initSherpaOnnxGenerationConfig(config, Module) {
   const len = 9 * 4;
   const ptr = Module._malloc(len);
 
-  let offset = 0;
+  // Zero-init for safety
+  Module.HEAPU8.fill(0, ptr, ptr + len);
 
   // float silence_scale
   Module.setValue(ptr + 0 * 4, config.silenceScale || 0.2, 'float');
@@ -652,15 +653,22 @@ function initSherpaOnnxGenerationConfig(config, Module) {
   // int32_t num_steps
   Module.setValue(ptr + 7 * 4, config.numSteps || 5, 'i32');
 
-  // const char* extra
+  // const char* extra (JSON string)
   let extraPtr = 0;
+  let extraStr = null;
 
-  if (config.extra && typeof config.extra === 'object') {
-    config.extra = JSON.stringify(config.extra);
+  if (config.extra) {
+    if (typeof config.extra === 'object') {
+      extraStr = JSON.stringify(config.extra);
+    } else if (typeof config.extra === 'string') {
+      extraStr = config.extra;
+    }
+  }
 
-    const extraLen = Module.lengthBytesUTF8(config.extra) + 1;
+  if (extraStr !== null) {
+    const extraLen = Module.lengthBytesUTF8(extraStr) + 1;
     extraPtr = Module._malloc(extraLen);
-    Module.stringToUTF8(config.extra, extraPtr, extraLen);
+    Module.stringToUTF8(extraStr, extraPtr, extraLen);
   }
 
   Module.setValue(ptr + 8 * 4, extraPtr, 'i8*');
@@ -672,6 +680,7 @@ function initSherpaOnnxGenerationConfig(config, Module) {
     extraPtr,
   };
 }
+
 
 // Free the memory allocated for a SherpaOnnxGenerationConfig
 function freeSherpaOnnxGenerationConfig(cfg, Module) {
