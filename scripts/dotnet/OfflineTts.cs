@@ -18,12 +18,6 @@ namespace SherpaOnnx
 
     public class OfflineTts : IDisposable
     {
-        // Keep delegates alive
-        private OfflineTtsCallback _callbackRef;
-        private OfflineTtsCallbackProgress _callbackProgressRef;
-        private OfflineTtsCallbackProgressWithArg _callbackWithArgRef;
-
-
         public OfflineTts(OfflineTtsConfig config)
         {
             IntPtr h = SherpaOnnxCreateOfflineTts(ref config);
@@ -40,57 +34,111 @@ namespace SherpaOnnx
             return new OfflineTtsGeneratedAudio(p);
         }
 
-        public OfflineTtsGeneratedAudio GenerateWithCallback(String text, float speed, int speakerId, OfflineTtsCallback callback)
+        public OfflineTtsGeneratedAudio GenerateWithCallback(
+            String text,
+            float speed,
+            int speakerId,
+            OfflineTtsCallback callback)
         {
-            _callbackRef = callback;
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
-            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1];
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
-            utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
-            IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(_handle.Handle, utf8BytesWithNull, speakerId, speed, _callbackRef);
-             _callbackRef = null;
-            return new OfflineTtsGeneratedAudio(p);
+            utf8BytesWithNull[utf8Bytes.Length] = 0;
+
+            GCHandle callbackHandle = default(GCHandle);
+            try
+            {
+                callbackHandle = GCHandle.Alloc(callback);
+
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(
+                    _handle.Handle,
+                    utf8BytesWithNull,
+                    speakerId,
+                    speed,
+                    callback
+                );
+
+                return new OfflineTtsGeneratedAudio(p);
+            }
+            finally
+            {
+                if (callbackHandle.IsAllocated)
+                    callbackHandle.Free();
+            }
         }
 
-        public OfflineTtsGeneratedAudio GenerateWithCallbackProgress(String text, float speed, int speakerId, OfflineTtsCallbackProgress callback)
+        public OfflineTtsGeneratedAudio GenerateWithCallbackProgress(
+            String text,
+            float speed,
+            int speakerId,
+            OfflineTtsCallbackProgress callback)
         {
-            _callbackProgressRef = callback;
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
-            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1];
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
-            utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
-            IntPtr p = SherpaOnnxOfflineTtsGenerateWithProgressCallback(_handle.Handle, utf8BytesWithNull, speakerId, speed, _callbackProgressRef);
-            _callbackProgressRef = null;
-            return new OfflineTtsGeneratedAudio(p);
+            utf8BytesWithNull[utf8Bytes.Length] = 0;
+
+            GCHandle callbackHandle = default(GCHandle);
+            try
+            {
+                callbackHandle = GCHandle.Alloc(callback);
+
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithProgressCallback(
+                    _handle.Handle,
+                    utf8BytesWithNull,
+                    speakerId,
+                    speed,
+                    callback
+                );
+
+                return new OfflineTtsGeneratedAudio(p);
+            }
+            finally
+            {
+                if (callbackHandle.IsAllocated)
+                    callbackHandle.Free();
+            }
         }
 
-        public OfflineTtsGeneratedAudio GenerateWithConfig(string text, OfflineTtsGenerationConfig config, OfflineTtsCallbackProgressWithArg callback)
-        {
-            _callbackWithArgRef = callback;
-            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
-            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
-            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
 
+        public OfflineTtsGeneratedAudio GenerateWithConfig(
+            string text,
+            OfflineTtsGenerationConfig config,
+            OfflineTtsCallbackProgressWithArg callback)
+        {
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1];
+            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
+            utf8BytesWithNull[utf8Bytes.Length] = 0;
+
+            GCHandle callbackHandle = default(GCHandle);
             GCHandle? audioHandle = null;
-            IntPtr p;
 
             var nativeConfig = config.ToNative(out audioHandle);
 
             try
             {
-                p = SherpaOnnxOfflineTtsGenerateWithConfig(_handle.Handle, utf8BytesWithNull, ref nativeConfig, _callbackWithArgRef, IntPtr.Zero);
+                callbackHandle = GCHandle.Alloc(callback);
+
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(
+                    _handle.Handle,
+                    utf8BytesWithNull,
+                    ref nativeConfig,
+                    callback,
+                    IntPtr.Zero
+                );
+
+                return new OfflineTtsGeneratedAudio(p);
             }
             finally
             {
-                // Ensure the pinned handle is freed even if P/Invoke throws
+                if (callbackHandle.IsAllocated)
+                    callbackHandle.Free();
+
                 if (audioHandle.HasValue)
                     audioHandle.Value.Free();
             }
-
-            _callbackWithArgRef = null; // safe: blocking call
-            return new OfflineTtsGeneratedAudio(p);
         }
-
 
         public void Dispose()
         {

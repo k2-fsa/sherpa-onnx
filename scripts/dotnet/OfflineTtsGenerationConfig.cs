@@ -100,19 +100,14 @@ namespace SherpaOnnx
                 native.Extra = json.ToString();
             }
 #else
-            if (Extra != null && Extra.Count > 0)
-            {
-                native.Extra = JsonSerializer.Serialize(
-                    Extra,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    });
-            }
-            else
-            {
-                native.Extra = "{}";
-            }
+          native.Extra = (Extra != null && Extra.Count > 0)
+              ? JsonSerializer.Serialize(
+                  Extra,
+                  new JsonSerializerOptions
+                  {
+                      PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                  })
+              : "{}";
 #endif
 
             return native;
