@@ -1,0 +1,53 @@
+name: export-pocket-to-onnx
+
+on:
+  push:
+    branches:
+      - export-pocket-tts-2
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-pocket-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-pocket-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export PocketTTS ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile \
+            torch==2.6.0 -f https://download.pytorch.org/whl/torch
+
+      - name: Run
+        shell: bash
+        run: |
+          git clone https://github.com/KevinAHM/pocket-tts-onnx-export
+          cd pocket-tts-onnx-export
+          git grep 'opset_version'
+          echo "---"
+          sed -i '' 's/opset_version=17/opset_version=14/g' scripts/*.py
+          echo "---"
+          git grep 'opset_version'
+
+      - name: Setup tmate session
+        if: true
+        uses: mxschmitt/action-tmate@v3
+
