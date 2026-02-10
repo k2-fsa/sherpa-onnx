@@ -170,6 +170,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*osx-universal2*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.12.24
 
       - name: Test offline CTC
         shell: bash
