@@ -133,8 +133,17 @@ jobs:
 
               ls -lh ./sherpa-onnx-node
 
-              cd ./sherpa-onnx-node
-              cp -v /shared/.npmrc ./
-              # https://docs.npmjs.com/trusted-publishers
-              ls -lh
-              npm publish --access public
+              tar czvf sherpa-onnx-linux-arm64.tgz sherpa-onnx-node
+
+      - name: Publish
+        shell: bash
+        run: |
+          cd sherpa-onnx-node
+          ls -lh
+          npm publish --access public
+
+          # cd ./sherpa-onnx-node
+          # cp -v /shared/.npmrc ./
+          # # https://docs.npmjs.com/trusted-publishers
+          # ls -lh
+          # npm publish --access public
