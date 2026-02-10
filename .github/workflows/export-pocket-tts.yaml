@@ -25,6 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install ffmpeg
+        shell: bash
+        run: brew install ffmpeg
+
+      - name: Verify ffmpeg
+        shell: bash
+        run: ffmpeg -version
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -42,7 +50,7 @@ jobs:
           git clone https://github.com/KevinAHM/pocket-tts-onnx-export
           cd pocket-tts-onnx-export
           pip install -r requirements.txt
-          pip install -y onnx==1.17.0 torch==2.5.0
+          pip install onnx==1.17.0 torch==2.5.0
           pip list
 
           git grep 'opset_version'
