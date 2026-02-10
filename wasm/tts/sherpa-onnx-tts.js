@@ -599,11 +599,10 @@ const genConfig = {
   speed: 1.0,
   sid: 1,
   referenceAudio: myFloat32Array, // optional
-  referenceSample_rate: 16000, // used if referenceAudio is required
+  referenceSampleRate: 16000, // used if referenceAudio is required
   referenceText: "Hello world", // optional
   numSteps: 5, // optional
   extra: { bar: "ok", foo: 0.8, foobar: 10}
-};
 };
 
  */
@@ -738,15 +737,12 @@ class OfflineTts {
   }
 
   generateWithConfig(text, genConfig) {
-    // 1️⃣ Allocate SherpaOnnxGenerationConfig in WASM
     const cfgWasm = initSherpaOnnxGenerationConfig(genConfig, this.Module);
 
-    // 2️⃣ Allocate text in WASM
     const textLen = this.Module.lengthBytesUTF8(text) + 1;
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(text, textPtr, textLen);
 
-    // 3️⃣ Call the C API
     const audioPtr = this.Module._SherpaOnnxOfflineTtsGenerateWithConfig(
         this.handle, textPtr, cfgWasm.ptr,
         0,  // callback
@@ -759,7 +755,6 @@ class OfflineTts {
       throw new Error('Failed to generate audio');
     }
 
-    // 4️⃣ Read SherpaOnnxGeneratedAudio struct
     const samplesPtr = this.Module.HEAP32[audioPtr / 4];  // float* samples
     const numSamples =
         this.Module.HEAP32[audioPtr / 4 + 1];  // int32 num_samples
@@ -772,7 +767,6 @@ class OfflineTts {
       samples[i] = this.Module.HEAPF32[samplesPtr / 4 + i];
     }
 
-    // 6️⃣ Free WASM memory
     this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(audioPtr);
     this.Module._free(textPtr);
     freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
