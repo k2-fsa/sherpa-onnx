@@ -1471,6 +1471,17 @@ func (audio *GeneratedAudio) Save(filename string) bool {
 	return ok == 1
 }
 
+func (audio *GeneratedAudio) ToBuffer() []byte {
+	// Similar to Save(): it writes the wave to an allocated buffer; 
+	// Uses the C API: SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples, int32_t n, int32_t sample_rate, char *buffer);
+	n := len(audio.Samples)
+	if n == 0 { return nil }
+	fs := C.SherpaOnnxWaveFileSize(C.int(n)) // SHERPA_ONNX_API int64_t SherpaOnnxWaveFileSize(int32_t n_samples);
+	buf := make([]byte, fs)
+	C.SherpaOnnxWriteWaveToBuffer((*C.float)(&audio.Samples[0]), C.int(n), C.int(audio.SampleRate), (*C.char)(unsafe.Pointer(&buf[0])))
+	return buf
+}
+
 // ============================================================
 // For VAD
 // ============================================================
