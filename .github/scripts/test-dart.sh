@@ -4,6 +4,35 @@ set -ex
 
 cd dart-api-examples
 
+pushd tts
+
+echo '----------tts----------'
+./run-pocket-en.sh
+./run-kitten-en.sh
+./run-kokoro-zh-en.sh
+./run-kokoro-en.sh
+./run-matcha-zh.sh
+./run-matcha-en.sh
+ls -lh *.wav
+rm -rf matcha-icefall-*
+rm *.onnx
+
+echo '----------piper tts----------'
+./run-piper.sh
+rm -rf vits-piper-*
+
+echo '----------coqui tts----------'
+./run-coqui.sh
+rm -rf vits-coqui-*
+
+echo '----------zh tts----------'
+./run-vits-zh.sh
+rm -rf sherpa-onnx-*
+
+ls -lh *.wav
+
+popd # tts
+
 pushd spoken-language-identification
 ./run-whisper.sh
 popd
@@ -109,34 +138,6 @@ echo '----------streaming paraformer----------'
 rm -rf sherpa-onnx-*
 
 popd # streaming-asr
-
-pushd tts
-
-echo '----------matcha tts----------'
-./run-kitten-en.sh
-./run-kokoro-zh-en.sh
-./run-kokoro-en.sh
-./run-matcha-zh.sh
-./run-matcha-en.sh
-ls -lh *.wav
-rm -rf matcha-icefall-*
-rm *.onnx
-
-echo '----------piper tts----------'
-./run-piper.sh
-rm -rf vits-piper-*
-
-echo '----------coqui tts----------'
-./run-coqui.sh
-rm -rf vits-coqui-*
-
-echo '----------zh tts----------'
-./run-vits-zh.sh
-rm -rf sherpa-onnx-*
-
-ls -lh *.wav
-
-popd # tts
 
 pushd vad
 ./run-ten-vad.sh
