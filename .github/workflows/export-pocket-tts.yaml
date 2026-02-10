@@ -41,16 +41,18 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile \
-            torch==2.5.0
+          pip install "numpy<=1.26.4" onnx==1.17.0 onnxruntime==1.17.1 librosa soundfile \
+            torch==2.8.0
 
       - name: Run
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
         run: |
-          git clone https://github.com/KevinAHM/pocket-tts-onnx-export
+          git clone https://github.com/csukuangfj/pocket-tts-onnx-export
           cd pocket-tts-onnx-export
           pip install -r requirements.txt
-          pip install onnx==1.17.0 torch==2.5.0
+          pip install onnx==1.17.0 torch==2.8.0
           pip list
 
           git grep 'opset_version'
@@ -63,6 +65,29 @@ jobs:
           python export.py --quantize
 
           ls -lh onnx/
+
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/flow_lm_flow.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/flow_lm_main.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/mimi_encoder.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/mimi_decoder.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/text_conditioner.onnx
+
+          cd onnx
+          mv flow_lm_flow_int8.onnx lm_flow.int8.onnx
+          mv flow_lm_flow.onnx lm_flow.onnx
+
+          mv flow_lm_main_int8.onnx lm_main.int8.onnx
+          mv flow_lm_main.onnx lm_main.onnx
+
+          mv mimi_encoder_int8.onnx encoder.int8.onnx
+          mv mimi_encoder.onnx encoder.onnx
+
+          mv mimi_decoder_int8.onnx decoder.int8.onnx
+          mv mimi_decoder.onnx decoder.onnx
+
+          mv text_conditioner_int8.onnx text_conditioner.int8.onnx
+          cd ..
+
           mv onnx ..
 
           # bash-3.2$ ls -lh onnx/
@@ -79,10 +104,12 @@ jobs:
           # -rw-r--r--  1 runner  staff    16M Feb 10 09:29 text_conditioner.onnx
 
       - name: Setup tmate session
-        if: false
+        # if: true
+        if: failure()
         uses: mxschmitt/action-tmate@v3
 
       - name: Generate json files
+        if: true
         shell: bash
         run: |
           cp -v onnx/*.onnx scripts/pocket-tts
@@ -109,12 +136,13 @@ jobs:
           # Introduction
           See also https://github.com/kyutai-labs/pocket-tts
           Onnx files are exported using https://github.com/KevinAHM/pocket-tts-onnx-export
-          Files in `test_wav` are from https://github.com/kyutai-labs/delayed-streams-modeling/tree/main/audio
+          Files in test_wav are from https://github.com/kyutai-labs/delayed-streams-modeling/tree/main/audio
           Before you use it, please read its [LICENSE](https://huggingface.co/KevinAHM/pocket-tts-onnx/blob/main/onnx/LICENSE)
           It is for non-commercial.
           EOF
 
       - name: Collect results
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-pocket-tts-2026-01-26
@@ -132,6 +160,7 @@ jobs:
           ls -lh $d.tar.bz2
 
       - name: Collect results (int8)
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-pocket-tts-int8-2026-01-26
@@ -142,6 +171,8 @@ jobs:
           rm $d/lm_flow.onnx
           rm $d/lm_main.onnx
           rm $d/decoder.onnx
+          rm $d/encoder.int8.onnx
+          rm $d/text_conditioner.int8.onnx
           cp -v $src/README.md $d
           cp -v $src/LICENSE $d
           cp -v $src/*.json $d
@@ -207,6 +238,7 @@ jobs:
               rm -rf ./*
 
               git lfs track "*.onnx"
+              git lfs track "*.wav"
 
               cp -a ../$d/* ./
 
@@ -218,6 +250,7 @@ jobs:
 
               git commit -m "add models"
               git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main || true
+              cd ..
             done
 
       - name: Publish to modelscope
