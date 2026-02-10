@@ -19,7 +19,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.12.23")
+set(SHERPA_ONNX_VERSION "1.12.24")
 
 # Disable warning about
 #
