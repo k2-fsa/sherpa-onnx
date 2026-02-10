@@ -5,7 +5,9 @@
 
 import os
 import platform
+import shlex
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -186,20 +188,22 @@ class BuildExtension(build_ext):
                 """
 
             print(f"build command is:\n{build_cmd}")
-            ret = os.system(
-                f"cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}"
-            )
+            
+            # Build cmake command as a list to prevent command injection
+            # Use shlex.split() for safer parsing of user-provided arguments
+            cmake_configure_cmd = ["cmake"] + shlex.split(cmake_args) + ["-B", str(self.build_temp), "-S", str(sherpa_onnx_dir)]
+            ret = subprocess.run(cmake_configure_cmd, shell=False).returncode
+            
             if ret != 0:
                 raise Exception("Failed to configure sherpa")
 
             if not need_split_package():
-                ret = os.system(
-                    f"cmake --build {self.build_temp} --target install --config Release -- -m:2"  # noqa
-                )
+                cmake_build_cmd = ["cmake", "--build", str(self.build_temp), "--target", "install", "--config", "Release", "--", "-m:2"]
+                ret = subprocess.run(cmake_build_cmd, shell=False).returncode
             else:
-                ret = os.system(
-                    f"cmake --build {self.build_temp} --target _sherpa_onnx --config Release -- -m:2"  # noqa
-                )
+                cmake_build_cmd = ["cmake", "--build", str(self.build_temp), "--target", "_sherpa_onnx", "--config", "Release", "--", "-m:2"]
+                ret = subprocess.run(cmake_build_cmd, shell=False).returncode
+            
             if ret != 0:
                 raise Exception("Failed to build and install sherpa")
         else:
@@ -241,7 +245,38 @@ class BuildExtension(build_ext):
                     """
             print(f"build command is:\n{build_cmd}")
 
-            ret = os.system(build_cmd)
+            # Parse cmake_args and make_args into lists for safer execution
+            # Use shlex.split() for safer parsing of user-provided arguments
+            cmake_args_list = shlex.split(cmake_args)
+            make_args_list = shlex.split(make_args) if make_args else []
+            
+            # Change to build_temp directory and execute commands
+            original_dir = os.getcwd()
+            try:
+                os.chdir(self.build_temp)
+                
+                # Run cmake configuration
+                cmake_cmd = ["cmake"] + cmake_args_list + [str(sherpa_onnx_dir)]
+                ret = subprocess.run(cmake_cmd, shell=False).returncode
+                if ret != 0:
+                    raise Exception("Failed to configure sherpa")
+                
+                # Run build command
+                if "-G Ninja" in cmake_args:
+                    if not need_split_package():
+                        build_cmd_list = ["ninja"] + make_args_list + ["install"]
+                    else:
+                        build_cmd_list = ["ninja"] + make_args_list + ["_sherpa_onnx"]
+                else:
+                    if not need_split_package():
+                        build_cmd_list = ["make"] + make_args_list + ["install/strip"]
+                    else:
+                        build_cmd_list = ["make"] + make_args_list + ["_sherpa_onnx"]
+                
+                ret = subprocess.run(build_cmd_list, shell=False).returncode
+            finally:
+                os.chdir(original_dir)
+            
             if ret != 0:
                 raise Exception(
                     "\nBuild sherpa-onnx failed. Please check the error message.\n"
@@ -251,8 +286,14 @@ class BuildExtension(build_ext):
 
         if need_split_package():
             dst = os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib")
-            os.system(f"mkdir {dst}")
-            os.system(f"dir {dst}")
+            os.makedirs(dst, exist_ok=True)
+            # Directory listing for debugging - safe with shell=False
+            if is_windows():
+                # On Windows, use PowerShell's Get-ChildItem or just skip the listing
+                # since 'dir' is a shell built-in. For safety, we'll just skip it.
+                pass
+            else:
+                subprocess.run(["ls", "-la", dst], shell=False)
 
             ext = "pyd" if sys.platform.startswith("win") else "so"
             pattern = os.path.join(self.build_temp, "**", f"_sherpa_onnx.*.{ext}")
@@ -262,7 +303,13 @@ class BuildExtension(build_ext):
             for f in matches:
                 print(f, os.path.join(f"{self.build_lib}", "sherpa_onnx", "lib"))
                 shutil.copy(f"{f}", dst)
-                os.system(f"dir {dst}")
+                # Directory listing for debugging - safe with shell=False
+                if is_windows():
+                    # On Windows, use PowerShell's Get-ChildItem or just skip the listing
+                    # since 'dir' is a shell built-in. For safety, we'll just skip it.
+                    pass
+                else:
+                    subprocess.run(["ls", "-la", dst], shell=False)
 
             return
 
