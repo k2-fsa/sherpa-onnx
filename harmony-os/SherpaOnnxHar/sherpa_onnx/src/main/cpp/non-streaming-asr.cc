@@ -131,6 +131,9 @@ static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(temperature, temperature);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(top_p, topP);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(seed, seed);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(itn, itn);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords, hotwords);
 
   return c;
 }
@@ -204,6 +207,9 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
   SHERPA_ONNX_ASSIGN_ATTR_STR(task, task);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(tail_paddings, tailPaddings);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(enable_token_timestamps, enableTokenTimestamps);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(enable_segment_timestamps,
+                                enableSegmentTimestamps);
 
   return c;
 }
@@ -399,6 +405,8 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.omnilingual.model);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.medasr.model);
 
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.hotwords);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.language);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.user_prompt);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.system_prompt);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.tokenizer);

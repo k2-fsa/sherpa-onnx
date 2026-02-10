@@ -394,6 +394,9 @@ type
     Temperature: Single;
     TopP: Single;
     Seed: Integer;
+    Language: AnsiString;
+    UseItn: Boolean;
+    Hotwords: AnsiString;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineFunAsrNanoModelConfig);
   end;
@@ -404,6 +407,8 @@ type
     Language: AnsiString;
     Task: AnsiString;
     TailPaddings: Integer;
+    EnableTokenTimestamps: Boolean;
+    EnableSegmentTimestamps: Boolean;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineWhisperModelConfig);
   end;
@@ -902,6 +907,9 @@ type
     Temperature: cfloat;
     TopP: cfloat;
     Seed: cint32;
+    Language: PAnsiChar;
+    UseItn: cint32;
+    Hotwords: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
@@ -909,6 +917,8 @@ type
     Language: PAnsiChar;
     Task: PAnsiChar;
     TailPaddings: cint32;
+    EnableTokenTimestamps: cint32;
+    EnableSegmentTimestamps: cint32;
   end;
   SherpaOnnxOfflineCanaryModelConfig = record
     Encoder: PAnsiChar;
@@ -1840,10 +1850,13 @@ begin
     ', Temperature := %.3f' +
     ', TopP := %.3f' +
     ', Seed := %d' +
+    ', Language := %s' +
+    ', UseItn := %s' +
+    ', Hotwords := %s' +
     ')',
     [Self.EncoderAdaptor, Self.LLM, Self.Embedding, Self.Tokenizer,
-    Self.SystemPrompt, Self.UserPrompt, Self.MaxNewTokens, Self.Temperature,
-    Self.TopP, Self.Seed]);
+     Self.SystemPrompt, Self.UserPrompt, Self.MaxNewTokens, Self.Temperature,
+     Self.TopP, Self.Seed, Self.Language, Self.UseItn.ToString, Self.Hotwords]);
 end;
 
 function TSherpaOnnxOfflineWhisperModelConfig.ToString: AnsiString;
@@ -1853,9 +1866,13 @@ begin
     'Decoder := %s, ' +
     'Language := %s, ' +
     'Task := %s, ' +
-    'TailPaddings := %d' +
+    'TailPaddings := %d, ' +
+    'EnableTokenTimestamps := %s, ' +
+    'EnableSegmentTimestamps := %s' +
     ')',
-    [Self.Encoder, Self.Decoder, Self.Language, Self.Task, Self.TailPaddings]);
+    [Self.Encoder, Self.Decoder, Self.Language, Self.Task, Self.TailPaddings,
+     Self.EnableTokenTimestamps.ToString,
+     Self.EnableSegmentTimestamps.ToString]);
 end;
 
 function TSherpaOnnxOfflineCanaryModelConfig.ToString: AnsiString;
@@ -1995,6 +2012,8 @@ begin
   C.ModelConfig.Whisper.Language := PAnsiChar(Config.ModelConfig.Whisper.Language);
   C.ModelConfig.Whisper.Task := PAnsiChar(Config.ModelConfig.Whisper.Task);
   C.ModelConfig.Whisper.TailPaddings := Config.ModelConfig.Whisper.TailPaddings;
+  C.ModelConfig.Whisper.EnableTokenTimestamps := Ord(Config.ModelConfig.Whisper.EnableTokenTimestamps);
+  C.ModelConfig.Whisper.EnableSegmentTimestamps := Ord(Config.ModelConfig.Whisper.EnableSegmentTimestamps);
 
   C.ModelConfig.Tdnn.Model := PAnsiChar(Config.ModelConfig.Tdnn.Model);
 
@@ -2042,6 +2061,9 @@ begin
   C.ModelConfig.FunAsrNano.Temperature := Config.ModelConfig.FunAsrNano.Temperature;
   C.ModelConfig.FunAsrNano.TopP := Config.ModelConfig.FunAsrNano.TopP;
   C.ModelConfig.FunAsrNano.Seed := Config.ModelConfig.FunAsrNano.Seed;
+  C.ModelConfig.FunAsrNano.Language := PAnsiChar(Config.ModelConfig.FunAsrNano.Language);
+  C.ModelConfig.FunAsrNano.UseItn := Ord(Config.ModelConfig.FunAsrNano.UseItn);
+  C.ModelConfig.FunAsrNano.Hotwords := PAnsiChar(Config.ModelConfig.FunAsrNano.Hotwords);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
@@ -2219,6 +2241,7 @@ begin
   Dest.Temperature := 1e-6;
   Dest.TopP := 0.8;
   Dest.Seed := 42;
+  Dest.UseItn := False;
 end;
 
 class operator TSherpaOnnxSileroVadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
@@ -2295,6 +2318,8 @@ class operator TSherpaOnnxOfflineWhisperModelConfig.Initialize({$IFDEF FPC}var{$
 begin
   Dest.Task := 'transcribe';
   Dest.TailPaddings := -1;
+  Dest.EnableTokenTimestamps := False;
+  Dest.EnableSegmentTimestamps := False;
 end;
 
 class operator TSherpaOnnxOfflineCanaryModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCanaryModelConfig);

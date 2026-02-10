@@ -433,11 +433,13 @@ type OfflineDolphinModelConfig struct {
 }
 
 type OfflineWhisperModelConfig struct {
-	Encoder      string
-	Decoder      string
-	Language     string
-	Task         string
-	TailPaddings int
+	Encoder                 string
+	Decoder                 string
+	Language                string
+	Task                    string
+	TailPaddings            int
+	EnableTokenTimestamps   int
+	EnableSegmentTimestamps int
 }
 
 type OfflineCanaryModelConfig struct {
@@ -454,16 +456,19 @@ type OfflineFireRedAsrModelConfig struct {
 }
 
 type OfflineFunASRNanoModelConfig struct {
-	EncoderAdaptor string
-	LLM            string
-	Embedding      string
-	Tokenizer      string
-	SystemPrompt   string
-	UserPrompt     string
-	MaxNewTokens   int
-	Temperature    float32
-	TopP           float32
-	Seed           int
+	EncoderAdaptor              string
+	LLM                         string
+	Embedding                   string
+	Tokenizer                   string
+	SystemPrompt                string
+	UserPrompt                  string
+	MaxNewTokens                int
+	Temperature                 float32
+	TopP                        float32
+	Seed                        int
+	Language                    string
+	UseInverseTextNormalization int
+	Hotwords                    string
 }
 
 type OfflineMoonshineModelConfig struct {
@@ -582,6 +587,8 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.whisper.language = C.CString(config.ModelConfig.Whisper.Language)
 	c.model_config.whisper.task = C.CString(config.ModelConfig.Whisper.Task)
 	c.model_config.whisper.tail_paddings = C.int(config.ModelConfig.Whisper.TailPaddings)
+	c.model_config.whisper.enable_token_timestamps = C.int(config.ModelConfig.Whisper.EnableTokenTimestamps)
+	c.model_config.whisper.enable_segment_timestamps = C.int(config.ModelConfig.Whisper.EnableSegmentTimestamps)
 
 	c.model_config.tdnn.model = C.CString(config.ModelConfig.Tdnn.Model)
 
@@ -607,6 +614,9 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.funasr_nano.temperature = C.float(config.ModelConfig.FunAsrNano.Temperature)
 	c.model_config.funasr_nano.top_p = C.float(config.ModelConfig.FunAsrNano.TopP)
 	c.model_config.funasr_nano.seed = C.int(config.ModelConfig.FunAsrNano.Seed)
+	c.model_config.funasr_nano.language = C.CString(config.ModelConfig.FunAsrNano.Language)
+	c.model_config.funasr_nano.itn = C.int(config.ModelConfig.FunAsrNano.UseInverseTextNormalization)
+	c.model_config.funasr_nano.hotwords = C.CString(config.ModelConfig.FunAsrNano.Hotwords)
 
 	c.model_config.dolphin.model = C.CString(config.ModelConfig.Dolphin.Model)
 	c.model_config.zipformer_ctc.model = C.CString(config.ModelConfig.ZipformerCtc.Model)
@@ -683,6 +693,8 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.funasr_nano.tokenizer,
 		&c.model_config.funasr_nano.system_prompt,
 		&c.model_config.funasr_nano.user_prompt,
+		&c.model_config.funasr_nano.language,
+		&c.model_config.funasr_nano.hotwords,
 		&c.model_config.dolphin.model,
 		&c.model_config.zipformer_ctc.model,
 		&c.model_config.canary.encoder,
@@ -1472,10 +1484,12 @@ func (audio *GeneratedAudio) Save(filename string) bool {
 }
 
 func (audio *GeneratedAudio) ToBuffer() []byte {
-	// Similar to Save(): it writes the wave to an allocated buffer; 
+	// Similar to Save(): it writes the wave to an allocated buffer;
 	// Uses the C API: SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples, int32_t n, int32_t sample_rate, char *buffer);
 	n := len(audio.Samples)
-	if n == 0 { return nil }
+	if n == 0 {
+		return nil
+	}
 	fs := C.SherpaOnnxWaveFileSize(C.int(n)) // SHERPA_ONNX_API int64_t SherpaOnnxWaveFileSize(int32_t n_samples);
 	buf := make([]byte, fs)
 	C.SherpaOnnxWriteWaveToBuffer((*C.float)(&audio.Samples[0]), C.int(n), C.int(audio.SampleRate), (*C.char)(unsafe.Pointer(&buf[0])))
