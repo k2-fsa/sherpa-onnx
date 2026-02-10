@@ -1,9 +1,9 @@
-﻿// Copyright (c)  2025  Xiaomi Corporation
+﻿// Copyright (c)  2026  Xiaomi Corporation
 //
-// This file shows how to use a non-streaming Kitten TTS model
+// This file shows how to use a non-streaming PocketTTS model
 // for text-to-speech
 // Please refer to
-// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
+// https://k2-fsa.github.io/sherpa/onnx/tts/pocket.html
 // and
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 // to download pre-trained models
@@ -12,34 +12,44 @@ using SherpaOnnx;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
-class KittenTtsPlayDemo
+class PocketTtsDemo
 {
   static void Main(string[] args)
   {
+
+    TestEn();
+  }
+
+  static void TestEn()
+  {
     var config = new OfflineTtsConfig();
-    config.Model.Kitten.Model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
-    config.Model.Kitten.Voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
-    config.Model.Kitten.Tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
-    config.Model.Kitten.DataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+    config.Model.Pocket.LmFlow = "./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx";
+    config.Model.Pocket.LmMain = "./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx";
+    config.Model.Pocket.Encoder = "./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx";
+    config.Model.Pocket.Decoder = "./sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx";
+    config.Model.Pocket.TextConditioner = "./sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx";
+    config.Model.Pocket.VocabJson = "./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json";
+    config.Model.Pocket.TokenScoresJson = "./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;
     config.Model.Provider = "cpu";
 
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+
+    var referenceWaveFilename = "./sherpa-onnx-pocket-tts-int8-2026-01-26/test_wavs/bria.wav";
+    var reader = new WaveReader(referenceWaveFilename);
+
+    genConfig.ReferenceAudio = reader.Samples;
+    genConfig.ReferenceSampleRate= reader.SampleRate;
+    genConfig.Extra["max_reference_audio_len"] = 12;
+
     var tts = new OfflineTts(config);
-    var speed = 1.0f;
     var text = "Today as always, men fall into two groups: slaves and free men. Whoever " +
       "does not have two-thirds of his day for himself, is a slave, whatever " +
       "he may be: a statesman, a businessman, an official, or a scholar. " +
       "Friends fell out often because life was changing so fast. The easiest " +
       "thing in the world was to lose touch with someone.";
-
-    // mapping of sid to voice name
-    // 0->expr-voice-2-m, 1->expr-voice-2-f, 2->expr-voice-3-m
-    // 3->expr-voice-3-f, 4->expr-voice-4-m, 5->expr-voice-4-f
-    // 6->expr-voice-5-m, 7->expr-voice-5-f
-    var sid = 0;
-
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -74,7 +84,7 @@ class KittenTtsPlayDemo
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var myCallback = (IntPtr samples, int n, float progress) =>
+    var myCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       Console.WriteLine($"Progress {progress*100}%");
 
@@ -87,7 +97,9 @@ class KittenTtsPlayDemo
       // 1 means to keep generating
       // 0 means to stop generating
       return 1;
+
     };
+
 
     var playFinished = false;
 
@@ -166,10 +178,11 @@ class KittenTtsPlayDemo
 
     stream.Start();
 
-    var callback = new OfflineTtsCallbackProgress(myCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
-    var outputFilename = "./generated-kitten-0.wav";
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
+
+    var outputFilename = "./generated-pocket-en-play.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 
     if (ok)
@@ -180,6 +193,7 @@ class KittenTtsPlayDemo
     {
       Console.WriteLine($"Failed to write {outputFilename}");
     }
+
     dataItems.CompleteAdding();
 
     while (!playFinished)
@@ -188,3 +202,4 @@ class KittenTtsPlayDemo
     }
   }
 }
+
