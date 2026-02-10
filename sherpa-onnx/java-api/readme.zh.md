@@ -41,14 +41,14 @@ Sherpa-ONNX 并不包含 ONNX Runtime，需要手动下载并配置：
 1. 从微软官方 GitHub Releases 下载 Linux 64 位二进制包：
 
    ```bash
-   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz
-   tar -xzf onnxruntime-linux-x64-1.17.1.tgz
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-linux-x64-1.23.2.tgz
+   tar -xzf onnxruntime-linux-x64-1.23.2.tgz
    ```
 2. 将解压后的 `libonnxruntime.so` 文件复制到系统库目录，并创建软链接：
 
    ```bash
-   sudo cp onnxruntime-linux-x64-1.17.1/lib/libonnxruntime.so* /usr/local/lib/
-   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.17.1 /usr/local/lib/libonnxruntime.so
+   sudo cp onnxruntime-linux-x64-1.23.2/lib/libonnxruntime.so* /usr/local/lib/
+   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.23.2 /usr/local/lib/libonnxruntime.so
    ```
 3. 更新共享库缓存并验证安装：
 
@@ -64,13 +64,13 @@ Sherpa-ONNX 同样不包含 ONNX Runtime，需要从官方获取并配置：
 1. 下载 macOS ARM64 版本二进制包：
 
    ```bash
-   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-arm64-1.17.1.tgz
-   tar -xzf onnxruntime-osx-arm64-1.17.1.tgz
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-osx-arm64-1.23.2.tgz
+   tar -xzf onnxruntime-osx-arm64-1.23.2.tgz
    ```
-2. 将 `libonnxruntime.1.17.1.dylib` 复制到 `/usr/local/lib`：
+2. 将 `libonnxruntime.1.23.2.dylib` 复制到 `/usr/local/lib`：
 
    ```bash
-   sudo cp onnxruntime-osx-arm64-1.17.1/lib/libonnxruntime.1.17.1.dylib /usr/local/lib/
+   sudo cp onnxruntime-osx-arm64-1.23.2/lib/libonnxruntime.1.23.2.dylib /usr/local/lib/
    ```
 3. 将 `/usr/local/lib` 添加到 `dyld` 的搜索路径：
 

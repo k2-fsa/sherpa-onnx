@@ -68,28 +68,6 @@ rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 node ./test-offline-tts-pocket-en.js
 ```
 
-Note: Since our current version of onnxruntime is 1.17.1, you need to run
-
-```python3
-# Switch to ./sherpa-onnx-pocket-tts-int8-2026-01-26 and run
-
-import onnx
-
-for filename in [
-    "./lm_flow.int8.onnx",
-    "./lm_main.int8.onnx",
-    "./encoder.onnx",
-    "./decoder.int8.onnx",
-    "./text_conditioner.onnx",
-]:
-    model = onnx.load(filename)
-    print("old", model.ir_version)
-    model.ir_version = 9
-    print("new", model.ir_version)
-    onnx.save(model, filename)
-```
-to modify the models.
-
 ## ./test-offline-tts-kitten-en.js
 
 [./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use

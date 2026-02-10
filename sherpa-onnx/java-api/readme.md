@@ -42,15 +42,15 @@ Sherpa-ONNX does **not** bundle ONNX Runtime. To install it manually:
 1. Download the Linux x64 binary from Microsoft’s GitHub Releases:
 
    ```bash
-   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz
-   tar -xzf onnxruntime-linux-x64-1.17.1.tgz
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-linux-x64-1.23.2.tgz
+   tar -xzf onnxruntime-linux-x64-1.23.2.tgz
    ```
 
 2. Copy and symlink the library into a system directory:
 
    ```bash
-   sudo cp onnxruntime-linux-x64-1.17.1/lib/libonnxruntime.so* /usr/local/lib/
-   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.17.1 /usr/local/lib/libonnxruntime.so
+   sudo cp onnxruntime-linux-x64-1.23.2/lib/libonnxruntime.so* /usr/local/lib/
+   sudo ln -sf /usr/local/lib/libonnxruntime.so.1.23.2 /usr/local/lib/libonnxruntime.so
    ```
 
 3. Update the shared-library cache and verify:
@@ -67,14 +67,14 @@ Sherpa-ONNX also requires you to install ONNX Runtime on macOS:
 1. Download the macOS ARM64 binary:
 
    ```bash
-   wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-arm64-1.17.1.tgz
-   tar -xzf onnxruntime-osx-arm64-1.17.1.tgz
+   wget https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-osx-arm64-1.23.2.tgz
+   tar -xzf onnxruntime-osx-arm64-1.23.2.tgz
    ```
 
 2. Copy the dylib into `/usr/local/lib`:
 
    ```bash
-   sudo cp onnxruntime-osx-arm64-1.17.1/lib/libonnxruntime.1.17.1.dylib /usr/local/lib/
+   sudo cp onnxruntime-osx-arm64-1.23.2/lib/libonnxruntime.1.23.2.dylib /usr/local/lib/
    ```
 
 3. Add `/usr/local/lib` to `dyld`’s search path:
