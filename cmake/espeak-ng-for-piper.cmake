@@ -73,11 +73,6 @@ function(download_espeak_ng_for_piper)
   set(espeak_ng_SOURCE_DIR ${espeak_ng_SOURCE_DIR} PARENT_SCOPE)
 
   if(WIN32 AND MSVC)
-
-    if(SHERPA_ONNX_ENABLE_PORTAUDIO)
-      set_target_properties(espeak-ng PROPERTIES LINK_FLAGS "/NODEFAULTLIB:uuid.lib")
-    endif()
-
     target_compile_options(ucd PUBLIC
       /wd4309
     )
