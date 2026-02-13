@@ -315,7 +315,7 @@ jobs:
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_BEFORE_ALL: |
             git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib

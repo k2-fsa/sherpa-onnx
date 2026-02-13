@@ -274,7 +274,7 @@ jobs:
         run: echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: >
