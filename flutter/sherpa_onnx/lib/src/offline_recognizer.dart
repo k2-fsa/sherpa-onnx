@@ -180,6 +180,9 @@ class OfflineFunAsrNanoModelConfig {
     this.temperature = 1e-6,
     this.topP = 0.8,
     this.seed = 42,
+    this.language = '',
+    this.itn = 1,
+    this.hotwords = '',
   });
 
   factory OfflineFunAsrNanoModelConfig.fromJson(Map<String, dynamic> json) {
@@ -194,12 +197,15 @@ class OfflineFunAsrNanoModelConfig {
       temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
       topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
       seed: json['seed'] as int? ?? 42,
+      language: json['language'] as String? ?? '',
+      itn: json['itn'] as int? ?? 1,
+      hotwords: json['hotwords'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineFunAsrNanoModelConfig(encoderAdaptor: $encoderAdaptor, llm: $llm, embedding: $embedding, tokenizer: $tokenizer, systemPrompt: $systemPrompt, userPrompt: $userPrompt, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
+    return 'OfflineFunAsrNanoModelConfig(encoderAdaptor: $encoderAdaptor, llm: $llm, embedding: $embedding, tokenizer: $tokenizer, systemPrompt: $systemPrompt, userPrompt: $userPrompt, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, language: $language, itn: $itn, hotwords: $hotwords)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -213,6 +219,9 @@ class OfflineFunAsrNanoModelConfig {
     'temperature': temperature,
     'topP': topP,
     'seed': seed,
+    'language': language,
+    'itn': itn,
+    'hotwords': hotwords,
   };
 
   final String encoderAdaptor;
@@ -225,6 +234,9 @@ class OfflineFunAsrNanoModelConfig {
   final double temperature;
   final double topP;
   final int seed;
+  final String language;
+  final int itn;
+  final String hotwords;
 }
 
 class OfflineWhisperModelConfig {
@@ -234,6 +246,8 @@ class OfflineWhisperModelConfig {
     this.language = '',
     this.task = '',
     this.tailPaddings = -1,
+    this.enableTokenTimestamps = false,
+    this.enableSegmentTimestamps = false,
   });
 
   factory OfflineWhisperModelConfig.fromJson(Map<String, dynamic> json) {
@@ -243,12 +257,15 @@ class OfflineWhisperModelConfig {
       language: json['language'] as String? ?? '',
       task: json['task'] as String? ?? '',
       tailPaddings: json['tailPaddings'] as int? ?? -1,
+      enableTokenTimestamps: json['enableTokenTimestamps'] as bool? ?? false,
+      enableSegmentTimestamps:
+          json['enableSegmentTimestamps'] as bool? ?? false,
     );
   }
 
   @override
   String toString() {
-    return 'OfflineWhisperModelConfig(encoder: $encoder, decoder: $decoder, language: $language, task: $task, tailPaddings: $tailPaddings)';
+    return 'OfflineWhisperModelConfig(encoder: $encoder, decoder: $decoder, language: $language, task: $task, tailPaddings: $tailPaddings, enableTokenTimestamps: $enableTokenTimestamps, enableSegmentTimestamps: $enableSegmentTimestamps)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -257,6 +274,8 @@ class OfflineWhisperModelConfig {
     'language': language,
     'task': task,
     'tailPaddings': tailPaddings,
+    'enableTokenTimestamps': enableTokenTimestamps,
+    'enableSegmentTimestamps': enableSegmentTimestamps,
   };
 
   final String encoder;
@@ -264,6 +283,8 @@ class OfflineWhisperModelConfig {
   final String language;
   final String task;
   final int tailPaddings;
+  final bool enableTokenTimestamps;
+  final bool enableSegmentTimestamps;
 }
 
 class OfflineCanaryModelConfig {
@@ -796,6 +817,10 @@ class OfflineRecognizer {
     c.ref.model.whisper.task = config.model.whisper.task.toNativeUtf8();
 
     c.ref.model.whisper.tailPaddings = config.model.whisper.tailPaddings;
+    c.ref.model.whisper.enableTokenTimestamps =
+        config.model.whisper.enableTokenTimestamps ? 1 : 0;
+    c.ref.model.whisper.enableSegmentTimestamps =
+        config.model.whisper.enableSegmentTimestamps ? 1 : 0;
 
     c.ref.model.tdnn.model = config.model.tdnn.model.toNativeUtf8();
 
@@ -858,6 +883,11 @@ class OfflineRecognizer {
     c.ref.model.funasrNano.temperature = config.model.funasrNano.temperature;
     c.ref.model.funasrNano.topP = config.model.funasrNano.topP;
     c.ref.model.funasrNano.seed = config.model.funasrNano.seed;
+    c.ref.model.funasrNano.language = config.model.funasrNano.language
+        .toNativeUtf8();
+    c.ref.model.funasrNano.itn = config.model.funasrNano.itn;
+    c.ref.model.funasrNano.hotwords = config.model.funasrNano.hotwords
+        .toNativeUtf8();
 
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
@@ -903,6 +933,8 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.funasrNano.hotwords);
+    calloc.free(c.ref.model.funasrNano.language);
     calloc.free(c.ref.model.funasrNano.userPrompt);
     calloc.free(c.ref.model.funasrNano.systemPrompt);
     calloc.free(c.ref.model.funasrNano.tokenizer);
