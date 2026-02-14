@@ -1,3 +1,13 @@
+## 1.12.25
+
+* Fix building without tts (#3168)
+* Fix publishing npm packages for Linux aarch64 and wheels for macOS (#3169)
+* Export PocketTTS for earlier versions of onnxruntime (#3170)
+* Fix building wheels for Python 3.14 (#3182)
+* Update Eigen from 3.4.0 to 3.4.1 (#3178)
+* fix(flutter): add missing FFI struct fields for OfflineWhisper and FunAsrNano (#3186)
+* Fix building wheels for Windows (#3187)
+
 ## 1.12.24
 
 * Fix UnicodeDecodeError when accessing tokens in FunASR-nano tokenizer (#3058)
