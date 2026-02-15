@@ -50,7 +50,6 @@ jobs:
           node --version
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
         shell: bash
         run: |
           docker run --rm \
