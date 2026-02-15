@@ -639,8 +639,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     // Cache the embedding in shared LRU cache
     auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
-    size_t total = 1;
-    for (auto s : result_shape) total *= s;
+    size_t total = std::accumulate(result_shape.begin(), result_shape.end(), 1,
+                                   std::multiplies<size_t>());
     const float *result_data = result.GetTensorData<float>();
 
     GetCache().Put(
@@ -794,8 +794,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       }
     }
 
-    void Put(size_t key, const std::vector<float> &in_data,
-             const std::vector<int64_t> &in_shape) {
+    void Put(size_t key, std::vector<float> in_data,
+             std::vector<int64_t> in_shape) {
       std::lock_guard<std::mutex> lock(mutex);
       if (capacity == 0) {
         return;
@@ -804,7 +804,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       auto it = data.find(key);
       if (it != data.end()) {
         // Update existing entry
-        it->second = {in_data, in_shape};
+        it->second = {std::move(in_data), std::move(in_shape)};
         lru_list.splice(lru_list.begin(), lru_list, map_iters[key]);
         return;
       }
@@ -819,7 +819,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
       // Insert new entry
       lru_list.push_front(key);
-      data[key] = {in_data, in_shape};
+      data[key] = {std::move(in_data), std::move(in_shape)};
       map_iters[key] = lru_list.begin();
     }
   };
