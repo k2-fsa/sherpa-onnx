@@ -88,13 +88,12 @@ jobs:
           du -h -d1 .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux2014_x86_64 \
+            bash -c '
               uname -a
               gcc --version
 
@@ -103,7 +102,7 @@ jobs:
               # See https://github.com/nealef/clefos/issues/9
               echo "multilib_policy=best" >> /etc/yum.conf
               echo "skip_missing_names_on_install=False" >> /etc/yum.conf
-              sed -i '/^override_install_langs=/d' /etc/yum.conf
+              sed -i "/^override_install_langs=/d" /etc/yum.conf
               yum -y update
               yum -y install yum-utils curl
               yum-config-manager --enable extras
@@ -115,10 +114,10 @@ jobs:
 
               source /opt/rh/devtoolset-11/enable
 
-              echo 'which gcc'
+              echo "which gcc"
               which gcc
 
-              echo 'gcc --version'
+              echo "gcc --version"
               gcc --version
 
               cmake --version
@@ -162,6 +161,7 @@ jobs:
 
               echo "----"
               ls -lh install/bin
+            '
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
@@ -232,7 +232,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.45
+          # tag: v1.12.25
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
