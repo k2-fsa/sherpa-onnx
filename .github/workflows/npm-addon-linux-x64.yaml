@@ -53,8 +53,8 @@ jobs:
         shell: bash
         run: |
           docker run --rm \
-            --volume ${{ github.workspace }}/:/shared/
-            image: quay.io/pypa/manylinux2014_x86_64
+            --volume ${{ github.workspace }}/:/shared/ \
+            image: quay.io/pypa/manylinux2014_x86_64 \
             bash '
               uname -a
               gcc --version
