@@ -63,17 +63,17 @@ jobs:
 
               cd /workspace
 
-              echo "pwd"
+              echo pwd
               echo $PWD
 
               find /opt -name 'python*'
 
               echo '--------------------'
-              PYBIN_DIR=$(find /opt/_internal -type d -path '*/cpython-3.10.*/bin' -print -quit)
-              echo "PYBIN_DIR: $PYBIN_DIR"
+              PYBIN_DIR=/opt/_internal/cpython-3.10.19/bin
+              echo 'PYBIN_DIR:' $PYBIN_DIR
+
               export PATH=$PYBIN_DIR:$PATH
 
-              echo "PATH: $PATH"
               which python3
               python3 --version
 
