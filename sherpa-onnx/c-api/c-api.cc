@@ -762,15 +762,14 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
 
   // Copy segment-level timestamps (from Whisper with segment timestamps)
   auto segment_count = result.segment_texts.size();
-  if (segment_count > 0 &&
-      result.segment_timestamps.size() == segment_count &&
+  if (segment_count > 0 && result.segment_timestamps.size() == segment_count &&
       result.segment_durations.size() == segment_count) {
     r->segment_count = segment_count;
 
     // Copy segment timestamps
     float *timestamps = new float[segment_count];
-    std::copy(result.segment_timestamps.begin(), result.segment_timestamps.end(),
-              timestamps);
+    std::copy(result.segment_timestamps.begin(),
+              result.segment_timestamps.end(), timestamps);
     r->segment_timestamps = timestamps;
 
     // Copy segment durations
@@ -1363,8 +1362,12 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.pocket.vocab_json, "");
   tts_config.model.pocket.token_scores_json =
       SHERPA_ONNX_OR(config->model.pocket.token_scores_json, "");
-  tts_config.model.pocket.voice_embedding_cache_capacity =
-      SHERPA_ONNX_OR(config->model.pocket.voice_embedding_cache_capacity, 50);
+  if (config->model.pocket.voice_embedding_cache_capacity >= 0) {
+    tts_config.model.pocket.voice_embedding_cache_capacity =
+        config->model.pocket.voice_embedding_cache_capacity;
+  } else {
+    tts_config.model.pocket.voice_embedding_cache_capacity = 50;
+  }
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;

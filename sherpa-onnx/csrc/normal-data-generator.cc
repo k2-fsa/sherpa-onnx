@@ -32,15 +32,18 @@ NormalDataGenerator::NormalDataGenerator(float mean /* = 0.0f */,
     : mean_(mean), stddev_(stddev), seed_(-1) {}
 
 NormalDataGenerator::NormalDataGenerator(float mean, float stddev, int32_t seed)
-    : mean_(mean), stddev_(stddev), seed_(seed) {}
+    : mean_(mean), stddev_(stddev), seed_(seed) {
+  if (seed_ >= 0) {
+    rng_.seed(static_cast<unsigned>(seed_));
+  }
+}
 
 void NormalDataGenerator::Fill(float *data, std::size_t size) const {
   if (seed_ >= 0) {
-    // Deterministic mode: use fixed seed for reproducible noise
-    std::mt19937 rng(static_cast<unsigned>(seed_));
+    // Deterministic mode: use instance-level RNG
     std::normal_distribution<float> dist(mean_, stddev_);
     for (std::size_t i = 0; i < size; ++i) {
-      data[i] = dist(rng);
+      data[i] = dist(rng_);
     }
   } else {
     // Original behavior: thread-local random device

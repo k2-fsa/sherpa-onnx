@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <random>
 
 namespace sherpa_onnx {
 
@@ -23,7 +24,8 @@ class NormalDataGenerator {
  private:
   float mean_;
   float stddev_;
-  int32_t seed_ = -1;  // -1 = use thread-local random device (default)
+  int32_t seed_ = -1;         // -1 = use thread-local random device (default)
+  mutable std::mt19937 rng_;  // used if seed_ >= 0
 };
 
 }  // namespace sherpa_onnx

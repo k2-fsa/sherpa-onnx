@@ -542,7 +542,13 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     // Compute hash of reference audio for cache lookup (sample every 100th)
+    // We mix in the sample rate and length to avoid collisions.
     size_t audio_hash = gen_config.reference_audio.size();
+    audio_hash ^= std::hash<int32_t>{}(gen_config.reference_sample_rate) +
+                  0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
+    audio_hash ^= std::hash<int32_t>{}(gen_config.reference_audio.size()) +
+                  0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
+
     for (size_t i = 0; i < gen_config.reference_audio.size(); i += 100) {
       audio_hash ^= std::hash<float>{}(gen_config.reference_audio[i]) +
                     0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
@@ -554,12 +560,13 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     std::vector<int64_t> shape_copy;
     if (GetCache().Get(audio_hash, data_copy, shape_copy)) {
       auto cache_start = std::chrono::high_resolution_clock::now();
-      auto memory_info =
-          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-      auto result = Ort::Value::CreateTensor(
-          memory_info, data_copy.data(), data_copy.size(), shape_copy.data(),
-          shape_copy.size());
+      // Create an owned tensor and copy data to avoid use-after-free
+      Ort::AllocatorWithDefaultOptions allocator;
+      auto result = Ort::Value::CreateTensor<float>(
+          allocator, shape_copy.data(), shape_copy.size());
+      std::copy(data_copy.begin(), data_copy.end(),
+                result.GetTensorMutableData<float>());
       auto cache_us =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now() - cache_start)
