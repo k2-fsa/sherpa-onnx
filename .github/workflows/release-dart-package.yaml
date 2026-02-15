@@ -81,6 +81,7 @@ jobs:
           path: ./*.tar.bz2
 
   build_linux_libs_aarch64:
+    if: false
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -147,7 +148,8 @@ jobs:
           path: ./*.tar.bz2
 
   sherpa_onnx_linux:
-    needs: [build_linux_libs_x64, build_linux_libs_aarch64]
+    # needs: [build_linux_libs_x64, build_linux_libs_aarch64]
+    needs: [build_linux_libs_x64]
     # if: false
     permissions:
       id-token: write # Required for authentication using OIDC
