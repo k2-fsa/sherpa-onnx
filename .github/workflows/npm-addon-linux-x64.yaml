@@ -55,7 +55,7 @@ jobs:
           docker run --rm \
             --volume ${{ github.workspace }}/:/shared/ \
             quay.io/pypa/manylinux2014_x86_64 \
-            bash '
+            bash -c '
               uname -a
               gcc --version
               cmake --version
