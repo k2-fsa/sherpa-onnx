@@ -196,10 +196,12 @@ class BuildExtension(build_ext):
                 + shlex.split(cmake_args)
                 + ["-B", str(self.build_temp), "-S", str(sherpa_onnx_dir)]
             )
+            print("cmake_configure_cmd", cmake_configure_cmd)
+
             ret = subprocess.run(cmake_configure_cmd, shell=False).returncode
 
             if ret != 0:
-                raise Exception("Failed to configure sherpa")
+                raise Exception("Failed to configure sherpa-onnx")
 
             if not need_split_package():
                 cmake_build_cmd = [
@@ -213,6 +215,7 @@ class BuildExtension(build_ext):
                     "--",
                     "-m:2",
                 ]
+                print("cmake_build_cmd", cmake_build_cmd)
                 ret = subprocess.run(cmake_build_cmd, shell=False).returncode
             else:
                 cmake_build_cmd = [
@@ -226,6 +229,7 @@ class BuildExtension(build_ext):
                     "--",
                     "-m:2",
                 ]
+                print("cmake_build_cmd", cmake_build_cmd)
                 ret = subprocess.run(cmake_build_cmd, shell=False).returncode
 
             if ret != 0:
