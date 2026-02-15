@@ -68,12 +68,6 @@ jobs:
           cat /home/runner/work/_temp/.npmrc
           cp -v /home/runner/work/_temp/.npmrc ./
 
-      - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-
       - name: Build sherpa-onnx (docker manually)
         shell: bash
         run: |
