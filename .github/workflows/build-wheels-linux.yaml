@@ -53,7 +53,7 @@ jobs:
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             quay.io/pypa/manylinux2014_x86_64 \
-            bash -c "
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -66,16 +66,15 @@ jobs:
               echo pwd
               echo $PWD
 
-              find /opt -name 'python*'
+              find /opt -name "python*"
 
-              echo '--------------------'
-              PYBIN_DIR=/opt/_internal/cpython-3.10.19/bin
+              echo "--------------------"
+              PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
+              echo "PY_PATH: $PY_PATH"
 
-              echo 'PYBIN_DIR:' $PYBIN_DIR
-              echo $PYBIN_DIR
+              export PATH=$PY_PATH:$PATH
 
-              export PATH=$PYBIN_DIR:$PATH
-              echo $PATH
+              echo "path $PATH"
 
               which python3
               python3 --version
@@ -112,12 +111,12 @@ jobs:
               ls -lh lib
               ls -lh bin
 
-              echo '----'
+              echo "----"
               ls -lh install/lib
 
               rm -fv install/lib/libcargs.so
 
-              echo '----'
+              echo "----"
               ls -lh install/bin
 
               echo sherpa-onnx-core
@@ -135,7 +134,7 @@ jobs:
 
               popd
 
-              echo 'sherpa-onnx-bin'
+              echo "sherpa-onnx-bin"
 
               mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
@@ -147,7 +146,7 @@ jobs:
               unzip -l dist/*.whl
 
               popd
-            "
+            '
 
       - name: Collect wheels
         shell: bash
