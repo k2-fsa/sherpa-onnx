@@ -886,6 +886,7 @@ type OfflineTtsPocketModelConfig struct {
 	TextConditioner string // text_conditioner
 	VocabJson       string // vocab_json
 	TokenScoresJson string // token_scores_json
+	VoiceEmbeddingCacheCapacity int    // voice_embedding_cache_capacity
 }
 
 type OfflineTtsZipvoiceModelConfig struct {
@@ -1169,6 +1170,8 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.pocket.token_scores_json = C.CString(config.Model.Pocket.TokenScoresJson)
 	defer C.free(unsafe.Pointer(c.model.pocket.token_scores_json))
+
+	c.model.pocket.voice_embedding_cache_capacity = C.int(config.Model.Pocket.VoiceEmbeddingCacheCapacity)
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)

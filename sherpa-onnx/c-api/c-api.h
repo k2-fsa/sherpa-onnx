@@ -1139,6 +1139,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsPocketModelConfig {
   const char *text_conditioner;
   const char *vocab_json;
   const char *token_scores_json;
+  int32_t voice_embedding_cache_capacity;
 } SherpaOnnxOfflineTtsPocketModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {

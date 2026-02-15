@@ -23,6 +23,10 @@ void OfflineTtsPocketModelConfig::Register(ParseOptions *po) {
                "Path to PocketTTS vocab.json");
   po->Register("pocket-token-scores-json", &token_scores_json,
                "Path to PocketTTS token_scores.json");
+  po->Register("pocket-voice-embedding-cache-capacity",
+               &voice_embedding_cache_capacity,
+               "Capacity of the voice embedding cache (number of items). "
+               "Default: 50. 0 disables caching.");
 }
 
 bool OfflineTtsPocketModelConfig::Validate() const {
@@ -99,6 +103,13 @@ bool OfflineTtsPocketModelConfig::Validate() const {
     return false;
   }
 
+  if (voice_embedding_cache_capacity < 0) {
+    SHERPA_ONNX_LOGE(
+        "voice_embedding_cache_capacity must be non-negative. Given: %d",
+        voice_embedding_cache_capacity);
+    return false;
+  }
+
   return true;
 }
 
@@ -112,7 +123,9 @@ std::string OfflineTtsPocketModelConfig::ToString() const {
   os << "decoder=\"" << decoder << "\", ";
   os << "text_conditioner=\"" << text_conditioner << "\", ";
   os << "vocab_json=\"" << vocab_json << "\", ";
-  os << "token_scores_json=\"" << token_scores_json << "\")";
+  os << "token_scores_json=\"" << token_scores_json << "\", ";
+  os << "voice_embedding_cache_capacity=" << voice_embedding_cache_capacity
+     << ")";
 
   return os.str();
 }
