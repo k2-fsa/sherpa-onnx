@@ -10,6 +10,7 @@
 namespace sherpa_onnx {
 
 // Helper type hidden in translation unit
+namespace {
 struct RNGHolder {
   std::mt19937 rng;
   std::normal_distribution<float> dist;
@@ -24,20 +25,33 @@ struct RNGHolder {
         }()),
         dist() {}
 };
+}  // namespace
 
 NormalDataGenerator::NormalDataGenerator(float mean /* = 0.0f */,
                                          float stddev /* = 1.0f */)
-    : mean_(mean), stddev_(stddev) {}
+    : mean_(mean), stddev_(stddev), seed_(-1) {}
+
+NormalDataGenerator::NormalDataGenerator(float mean, float stddev, int32_t seed)
+    : mean_(mean), stddev_(stddev), seed_(seed) {}
 
 void NormalDataGenerator::Fill(float *data, std::size_t size) const {
-  // One RNGHolder per thread
-  static thread_local RNGHolder holder;
+  if (seed_ >= 0) {
+    // Deterministic mode: use fixed seed for reproducible noise
+    std::mt19937 rng(static_cast<unsigned>(seed_));
+    std::normal_distribution<float> dist(mean_, stddev_);
+    for (std::size_t i = 0; i < size; ++i) {
+      data[i] = dist(rng);
+    }
+  } else {
+    // Original behavior: thread-local random device
+    static thread_local RNGHolder holder;
 
-  holder.dist.param(
-      std::normal_distribution<float>::param_type(mean_, stddev_));
+    holder.dist.param(
+        std::normal_distribution<float>::param_type(mean_, stddev_));
 
-  for (std::size_t i = 0; i < size; ++i) {
-    data[i] = holder.dist(holder.rng);
+    for (std::size_t i = 0; i < size; ++i) {
+      data[i] = holder.dist(holder.rng);
+    }
   }
 }
 

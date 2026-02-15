@@ -1363,6 +1363,8 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.pocket.vocab_json, "");
   tts_config.model.pocket.token_scores_json =
       SHERPA_ONNX_OR(config->model.pocket.token_scores_json, "");
+  tts_config.model.pocket.voice_embedding_cache_capacity =
+      SHERPA_ONNX_OR(config->model.pocket.voice_embedding_cache_capacity, 50);
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;

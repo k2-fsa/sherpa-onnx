@@ -5,14 +5,19 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_POCKET_IMPL_H_
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <ios>
 #include <limits>
+#include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <strstream>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -92,6 +97,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsPocketModel>(mgr, config.model)) {
     InitTokenizer(mgr);
+    GetCache().SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
 
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
@@ -398,8 +404,9 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     int32_t frames_after_eos = gen_config.GetExtraInt("frames_after_eos", 3);
     float temperature = gen_config.GetExtraFloat("temperature", 0.7f);
     float stddev = std::sqrt(temperature);
+    int32_t seed = gen_config.GetExtraInt("seed", -1);
 
-    NormalDataGenerator normal_gen(0, stddev);
+    NormalDataGenerator normal_gen(0, stddev, seed);
     std::vector<float> noise(32, 0);
     std::array<int64_t, 2> noise_shape = {1, 32};
 
@@ -534,6 +541,36 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       return Ort::Value{nullptr};
     }
 
+    // Compute hash of reference audio for cache lookup (sample every 100th)
+    size_t audio_hash = gen_config.reference_audio.size();
+    for (size_t i = 0; i < gen_config.reference_audio.size(); i += 100) {
+      audio_hash ^= std::hash<float>{}(gen_config.reference_audio[i]) +
+                    0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
+    }
+
+    // Check cache
+    // Check shared LRU cache
+    std::vector<float> data_copy;
+    std::vector<int64_t> shape_copy;
+    if (GetCache().Get(audio_hash, data_copy, shape_copy)) {
+      auto cache_start = std::chrono::high_resolution_clock::now();
+      auto memory_info =
+          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+      auto result = Ort::Value::CreateTensor(
+          memory_info, data_copy.data(), data_copy.size(), shape_copy.data(),
+          shape_copy.size());
+      auto cache_us =
+          std::chrono::duration_cast<std::chrono::microseconds>(
+              std::chrono::high_resolution_clock::now() - cache_start)
+              .count();
+      SHERPA_ONNX_LOGE(
+          "CACHE HIT: voice embedding (hash=%zu) returned in %lld us (Mimi "
+          "encoder SKIPPED)",
+          audio_hash, (long long)cache_us);
+      return result;
+    }
+
     std::vector<float> reference_audio;
 
     const float *p_audio;
@@ -587,7 +624,27 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     Ort::Value x =
         Ort::Value::CreateTensor(memory_info, const_cast<float *>(p_audio),
                                  num_samples, shape.data(), shape.size());
-    return model_->RunMimiEncoder(std::move(x));
+    auto embed_start = std::chrono::high_resolution_clock::now();
+    Ort::Value result = model_->RunMimiEncoder(std::move(x));
+    auto embed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::high_resolution_clock::now() - embed_start)
+                        .count();
+
+    // Cache the embedding in shared LRU cache
+    auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
+    size_t total = 1;
+    for (auto s : result_shape) total *= s;
+    const float *result_data = result.GetTensorData<float>();
+
+    GetCache().Put(
+        audio_hash, std::vector<float>(result_data, result_data + total),
+        std::vector<int64_t>(result_shape.begin(), result_shape.end()));
+    SHERPA_ONNX_LOGE(
+        "CACHE MISS: Mimi encoder took %lld ms → cached embedding (hash=%zu, "
+        "%zu floats)",
+        (long long)embed_ms, audio_hash, total);
+
+    return result;
   }
 
   Ort::Value GetTextEmbedding(const std::string &text) const {
@@ -688,6 +745,82 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
   std::unique_ptr<OfflineTtsPocketModel> model_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<SentencePieceTokenizer> tokenizer_;
+
+  // Shared Thread-Safe LRU Cache for Voice Embeddings
+  struct VoiceEmbeddingCache {
+    std::mutex mutex;
+    size_t capacity;
+    std::list<size_t> lru_list;  // List of hashes, most recently used at front
+    std::unordered_map<size_t,
+                       std::pair<std::vector<float>, std::vector<int64_t>>>
+        data;
+    std::unordered_map<size_t, std::list<size_t>::iterator> map_iters;
+
+    static constexpr size_t kDefaultCapacity = 50;
+
+    VoiceEmbeddingCache(size_t cap = kDefaultCapacity) : capacity(cap) {}
+
+    bool Get(size_t key, std::vector<float> &out_data,
+             std::vector<int64_t> &out_shape) {
+      std::lock_guard<std::mutex> lock(mutex);
+      auto it = data.find(key);
+      if (it == data.end()) {
+        return false;
+      }
+
+      // Move to front of LRU list
+      lru_list.splice(lru_list.begin(), lru_list, map_iters[key]);
+
+      out_data = it->second.first;
+      out_shape = it->second.second;
+      return true;
+    }
+
+    void SetCapacity(size_t cap) {
+      std::lock_guard<std::mutex> lock(mutex);
+      capacity = cap;
+      while (data.size() > capacity) {
+        size_t last = lru_list.back();
+        data.erase(last);
+        map_iters.erase(last);
+        lru_list.pop_back();
+      }
+    }
+
+    void Put(size_t key, const std::vector<float> &in_data,
+             const std::vector<int64_t> &in_shape) {
+      std::lock_guard<std::mutex> lock(mutex);
+      if (capacity == 0) {
+        return;
+      }
+
+      auto it = data.find(key);
+      if (it != data.end()) {
+        // Update existing entry
+        it->second = {in_data, in_shape};
+        lru_list.splice(lru_list.begin(), lru_list, map_iters[key]);
+        return;
+      }
+
+      // Evict if necessary
+      if (data.size() >= capacity && !lru_list.empty()) {
+        size_t last = lru_list.back();
+        data.erase(last);
+        map_iters.erase(last);
+        lru_list.pop_back();
+      }
+
+      // Insert new entry
+      lru_list.push_front(key);
+      data[key] = {in_data, in_shape};
+      map_iters[key] = lru_list.begin();
+    }
+  };
+
+  static VoiceEmbeddingCache &GetCache() {
+    static VoiceEmbeddingCache cache;
+    return cache;
+  }
 };
 
 }  // namespace sherpa_onnx
