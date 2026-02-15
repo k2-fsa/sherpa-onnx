@@ -61,13 +61,18 @@ jobs:
               id
               pwd
 
-              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+              cd /workspace
+
+              echo "pwd"
+              echo $PWD
 
               find /opt -name 'python*'
 
               echo '--------------------'
               PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
+              echo "PY_PATH: $PY_PATH"
               export PATH=$PY_PATH:$PATH
+              echo "PATH: $PATH"
               which python3
               python3 --version
 
