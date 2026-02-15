@@ -69,9 +69,10 @@ jobs:
               find /opt -name 'python*'
 
               echo '--------------------'
-              PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
-              echo "PY_PATH: $PY_PATH"
-              export PATH=$PY_PATH:$PATH
+              PYBIN_DIR=$(find /opt/_internal -type d -path '*/cpython-3.10.*/bin' -print -quit)
+              echo "PYBIN_DIR: $PYBIN_DIR"
+              export PATH=$PYBIN_DIR:$PATH
+
               echo "PATH: $PATH"
               which python3
               python3 --version
