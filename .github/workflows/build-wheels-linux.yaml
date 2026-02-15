@@ -70,9 +70,12 @@ jobs:
 
               echo '--------------------'
               PYBIN_DIR=/opt/_internal/cpython-3.10.19/bin
+
               echo 'PYBIN_DIR:' $PYBIN_DIR
+              echo $PYBIN_DIR
 
               export PATH=$PYBIN_DIR:$PATH
+              echo $PATH
 
               which python3
               python3 --version
