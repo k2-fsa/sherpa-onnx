@@ -23,13 +23,13 @@ uv pip install \
   onnxscript \
   soundfile
 
-python3 ./export_onnx_180m_flash.py
+python3 ./export_onnx_1b_flash.py
 ls -lh *.onnx
 
 
 log "-----fp32------"
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.onnx \
   --decoder ./decoder.onnx \
   --source-lang en \
@@ -37,7 +37,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./en.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.onnx \
   --decoder ./decoder.onnx \
   --source-lang en \
@@ -45,7 +45,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./en.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.onnx \
   --decoder ./decoder.onnx \
   --source-lang de \
@@ -53,7 +53,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./de.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.onnx \
   --decoder ./decoder.onnx \
   --source-lang de \
@@ -64,7 +64,7 @@ python3 ./test_180m_flash.py \
 
 log "-----int8------"
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.int8.onnx \
   --decoder ./decoder.int8.onnx \
   --source-lang en \
@@ -72,7 +72,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./en.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.int8.onnx \
   --decoder ./decoder.int8.onnx \
   --source-lang en \
@@ -80,7 +80,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./en.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.int8.onnx \
   --decoder ./decoder.int8.onnx \
   --source-lang de \
@@ -88,7 +88,7 @@ python3 ./test_180m_flash.py \
   --tokens ./tokens.txt \
   --wav ./de.wav
 
-python3 ./test_180m_flash.py \
+python3 ./test_1b_flash.py \
   --encoder ./encoder.int8.onnx \
   --decoder ./decoder.int8.onnx \
   --source-lang de \
