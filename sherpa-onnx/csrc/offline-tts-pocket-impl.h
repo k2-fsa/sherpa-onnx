@@ -15,7 +15,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <strstream>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -25,6 +24,7 @@
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/normal-data-generator.h"
@@ -41,6 +41,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsPocketModel>(config.model)) {
     InitTokenizer();
+
+    cache_.SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
 
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
@@ -97,7 +99,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       : config_(config),
         model_(std::make_unique<OfflineTtsPocketModel>(mgr, config.model)) {
     InitTokenizer(mgr);
-    GetCache().SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
+    cache_.SetCapacity(config.model.pocket.voice_embedding_cache_capacity);
 
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
@@ -549,33 +551,50 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     audio_hash ^= std::hash<int32_t>{}(gen_config.reference_audio.size()) +
                   0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
 
-    for (size_t i = 0; i < gen_config.reference_audio.size(); i += 100) {
-      audio_hash ^= std::hash<float>{}(gen_config.reference_audio[i]) +
-                    0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
+    for (float s : gen_config.reference_audio) {
+      audio_hash ^= std::hash<float>{}(s) + 0x9e3779b9 + (audio_hash << 6) +
+                    (audio_hash >> 2);
     }
+
+    // Include max_reference_audio_len in hash to distinguish between same audio
+    // but different truncation settings.
+    float max_reference_audio_len =
+        gen_config.GetExtraFloat("max_reference_audio_len", 10);
+    audio_hash ^= std::hash<float>{}(max_reference_audio_len) + 0x9e3779b9 +
+                  (audio_hash << 6) + (audio_hash >> 2);
 
     // Check cache
     // Check shared LRU cache
     std::vector<float> data_copy;
     std::vector<int64_t> shape_copy;
-    if (GetCache().Get(audio_hash, data_copy, shape_copy)) {
-      auto cache_start = std::chrono::high_resolution_clock::now();
+    if (cache_.Get(audio_hash, data_copy, shape_copy)) {
+      if (config_.model.debug) {
+        auto cache_start = std::chrono::high_resolution_clock::now();
 
-      // Create an owned tensor and copy data to avoid use-after-free
-      Ort::AllocatorWithDefaultOptions allocator;
-      auto result = Ort::Value::CreateTensor<float>(
-          allocator, shape_copy.data(), shape_copy.size());
-      std::copy(data_copy.begin(), data_copy.end(),
-                result.GetTensorMutableData<float>());
-      auto cache_us =
-          std::chrono::duration_cast<std::chrono::microseconds>(
-              std::chrono::high_resolution_clock::now() - cache_start)
-              .count();
-      SHERPA_ONNX_LOGE(
-          "CACHE HIT: voice embedding (hash=%zu) returned in %lld us (Mimi "
-          "encoder SKIPPED)",
-          audio_hash, (long long)cache_us);
-      return result;
+        // Create an owned tensor and copy data to avoid use-after-free
+        Ort::AllocatorWithDefaultOptions allocator;
+        auto result = Ort::Value::CreateTensor<float>(
+            allocator, shape_copy.data(), shape_copy.size());
+        std::copy(data_copy.begin(), data_copy.end(),
+                  result.GetTensorMutableData<float>());
+        auto cache_us =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now() - cache_start)
+                .count();
+        SHERPA_ONNX_LOG(INFO)
+            << "CACHE HIT: voice embedding (hash=" << audio_hash
+            << ") returned in " << (long long)cache_us
+            << " us (Mimi encoder SKIPPED)";
+        return result;
+      } else {
+        // Create an owned tensor and copy data to avoid use-after-free
+        Ort::AllocatorWithDefaultOptions allocator;
+        auto result = Ort::Value::CreateTensor<float>(
+            allocator, shape_copy.data(), shape_copy.size());
+        std::copy(data_copy.begin(), data_copy.end(),
+                  result.GetTensorMutableData<float>());
+        return result;
+      }
     }
 
     std::vector<float> reference_audio;
@@ -609,18 +628,20 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     // in seconds
-    float max_reference_audio_len =
-        gen_config.GetExtraFloat("max_reference_audio_len", 10);
+    // max_reference_audio_len is already computed above for the hash.
 
     int32_t max_len =
         static_cast<int32_t>(max_reference_audio_len * SampleRate());
 
     if (num_samples > max_len) {
-      SHERPA_ONNX_LOGE(
-          "max_reference_audio_len is %.3f seconds. Given reference audio of "
-          "%.3f seconds. Only the first %.3f seconds are used",
-          max_reference_audio_len, num_samples * 1.0f / SampleRate(),
-          max_reference_audio_len);
+      if (config_.model.debug) {
+        SHERPA_ONNX_LOG(INFO)
+            << "max_reference_audio_len is " << max_reference_audio_len
+            << " seconds. Given reference audio of "
+            << (num_samples * 1.0f / SampleRate())
+            << " seconds. Only the first " << max_reference_audio_len
+            << " seconds are used";
+      }
       num_samples = max_len;
     }
 
@@ -631,25 +652,45 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     Ort::Value x =
         Ort::Value::CreateTensor(memory_info, const_cast<float *>(p_audio),
                                  num_samples, shape.data(), shape.size());
-    auto embed_start = std::chrono::high_resolution_clock::now();
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> embed_start;
+    if (config_.model.debug) {
+      embed_start = std::chrono::high_resolution_clock::now();
+    }
+
     Ort::Value result = model_->RunMimiEncoder(std::move(x));
-    auto embed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::high_resolution_clock::now() - embed_start)
-                        .count();
 
-    // Cache the embedding in shared LRU cache
-    auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
-    size_t total = std::accumulate(result_shape.begin(), result_shape.end(), 1,
-                                   std::multiplies<size_t>());
-    const float *result_data = result.GetTensorData<float>();
+    if (config_.model.debug) {
+      auto embed_ms =
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::high_resolution_clock::now() - embed_start)
+              .count();
 
-    GetCache().Put(
-        audio_hash, std::vector<float>(result_data, result_data + total),
-        std::vector<int64_t>(result_shape.begin(), result_shape.end()));
-    SHERPA_ONNX_LOGE(
-        "CACHE MISS: Mimi encoder took %lld ms → cached embedding (hash=%zu, "
-        "%zu floats)",
-        (long long)embed_ms, audio_hash, total);
+      // Cache the embedding in shared LRU cache
+      auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
+      size_t total = std::accumulate(result_shape.begin(), result_shape.end(),
+                                     1, std::multiplies<size_t>());
+      const float *result_data = result.GetTensorData<float>();
+
+      cache_.Put(
+          audio_hash, std::vector<float>(result_data, result_data + total),
+          std::vector<int64_t>(result_shape.begin(), result_shape.end()));
+
+      SHERPA_ONNX_LOG(INFO)
+          << "CACHE MISS: Mimi encoder took " << (long long)embed_ms
+          << " ms → cached embedding (hash=" << audio_hash << ", " << total
+          << " floats)";
+    } else {
+      // Cache the embedding in shared LRU cache (no logging)
+      auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
+      size_t total = std::accumulate(result_shape.begin(), result_shape.end(),
+                                     1, std::multiplies<size_t>());
+      const float *result_data = result.GetTensorData<float>();
+
+      cache_.Put(
+          audio_hash, std::vector<float>(result_data, result_data + total),
+          std::vector<int64_t>(result_shape.begin(), result_shape.end()));
+    }
 
     return result;
   }
@@ -824,10 +865,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
   };
 
-  static VoiceEmbeddingCache &GetCache() {
-    static VoiceEmbeddingCache cache;
-    return cache;
-  }
+  mutable VoiceEmbeddingCache cache_;
 };
 
 }  // namespace sherpa_onnx

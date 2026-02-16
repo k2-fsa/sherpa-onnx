@@ -27,10 +27,6 @@ struct RNGHolder {
 };
 }  // namespace
 
-NormalDataGenerator::NormalDataGenerator(float mean /* = 0.0f */,
-                                         float stddev /* = 1.0f */)
-    : mean_(mean), stddev_(stddev), seed_(-1) {}
-
 NormalDataGenerator::NormalDataGenerator(float mean, float stddev, int32_t seed)
     : mean_(mean), stddev_(stddev), seed_(seed) {
   if (seed_ >= 0) {

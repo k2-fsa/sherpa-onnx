@@ -472,6 +472,7 @@ struct OfflineTtsPocketModelConfig {
 
   std::string vocab_json;
   std::string token_scores_json;
+  int32_t voice_embedding_cache_capacity = 50;
 };
 
 struct OfflineTtsModelConfig {
