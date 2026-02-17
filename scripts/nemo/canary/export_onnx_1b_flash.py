@@ -377,7 +377,7 @@ def main():
         print("new", model.ir_version)
         onnx.save(model, filename)
 
-    os.system("ls -lh *.onnx")
+subprocess.run(["ls", "-lh", "*.onnx"], check=True)
 
 
 if __name__ == "__main__":
