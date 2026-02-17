@@ -27,7 +27,7 @@ struct RNGHolder {
 };
 }  // namespace
 
-NormalDataGenerator::NormalDataGenerator(float mean, float stddev, int32_t seed)
+NormalDataGenerator::NormalDataGenerator(float mean = /*0.0f*/, float stddev = /*1.0f*/, int32_t seed = /*-1*/)
     : mean_(mean), stddev_(stddev), seed_(seed) {
   if (seed_ >= 0) {
     rng_.seed(static_cast<unsigned>(seed_));
