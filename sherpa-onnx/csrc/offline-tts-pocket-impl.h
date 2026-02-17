@@ -24,7 +24,6 @@
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/normal-data-generator.h"
@@ -167,6 +166,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
    *  - max_reference_audio_len, float, default 10, in seconds
    *  - max_char_in_sentence, int, default 200
    *  - min_char_in_sentence, int, default 30
+   *  - seed, int, default -1
    */
   GeneratedAudio Generate(
       const std::string &_text, const GenerationConfig &gen_config,
@@ -369,6 +369,15 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     return sentences;
   }
 
+  static size_t ComputeHash(const float *p, int32_t n) {
+    size_t hash = n;
+    hash ^= std::hash<int32_t>{}(n) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    for (int32_t i = 0; i < n; ++i) {
+      hash ^= std::hash<float>{}(p[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    return hash;
+  }
+
   GeneratedAudio GenerateSingleSentence(
       const std::string &text, const GenerationConfig &gen_config,
       Ort::Value voice_embedding, bool &should_continue,
@@ -543,60 +552,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       return Ort::Value{nullptr};
     }
 
-    // Compute hash of reference audio for cache lookup (sample every 100th)
-    // We mix in the sample rate and length to avoid collisions.
-    size_t audio_hash = gen_config.reference_audio.size();
-    audio_hash ^= std::hash<int32_t>{}(gen_config.reference_sample_rate) +
-                  0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
-    audio_hash ^= std::hash<int32_t>{}(gen_config.reference_audio.size()) +
-                  0x9e3779b9 + (audio_hash << 6) + (audio_hash >> 2);
-
-    for (float s : gen_config.reference_audio) {
-      audio_hash ^= std::hash<float>{}(s) + 0x9e3779b9 + (audio_hash << 6) +
-                    (audio_hash >> 2);
-    }
-
-    // Include max_reference_audio_len in hash to distinguish between same audio
-    // but different truncation settings.
-    float max_reference_audio_len =
-        gen_config.GetExtraFloat("max_reference_audio_len", 10);
-    audio_hash ^= std::hash<float>{}(max_reference_audio_len) + 0x9e3779b9 +
-                  (audio_hash << 6) + (audio_hash >> 2);
-
-    // Check cache
-    // Check shared LRU cache
-    std::vector<float> data_copy;
-    std::vector<int64_t> shape_copy;
-    if (cache_.Get(audio_hash, data_copy, shape_copy)) {
-      if (config_.model.debug) {
-        auto cache_start = std::chrono::high_resolution_clock::now();
-
-        // Create an owned tensor and copy data to avoid use-after-free
-        Ort::AllocatorWithDefaultOptions allocator;
-        auto result = Ort::Value::CreateTensor<float>(
-            allocator, shape_copy.data(), shape_copy.size());
-        std::copy(data_copy.begin(), data_copy.end(),
-                  result.GetTensorMutableData<float>());
-        auto cache_us =
-            std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::high_resolution_clock::now() - cache_start)
-                .count();
-        SHERPA_ONNX_LOG(INFO)
-            << "CACHE HIT: voice embedding (hash=" << audio_hash
-            << ") returned in " << (long long)cache_us
-            << " us (Mimi encoder SKIPPED)";
-        return result;
-      } else {
-        // Create an owned tensor and copy data to avoid use-after-free
-        Ort::AllocatorWithDefaultOptions allocator;
-        auto result = Ort::Value::CreateTensor<float>(
-            allocator, shape_copy.data(), shape_copy.size());
-        std::copy(data_copy.begin(), data_copy.end(),
-                  result.GetTensorMutableData<float>());
-        return result;
-      }
-    }
-
     std::vector<float> reference_audio;
 
     const float *p_audio;
@@ -627,6 +582,45 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       num_samples = gen_config.reference_audio.size();
     }
 
+    // Compute hash of reference audio for cache lookup
+    size_t audio_hash = ComputeHash(p_audio, num_samples);
+
+    // Include max_reference_audio_len in hash to distinguish between same audio
+    // but different truncation settings.
+    float max_reference_audio_len =
+        gen_config.GetExtraFloat("max_reference_audio_len", 10);
+    audio_hash ^= std::hash<float>{}(max_reference_audio_len) + 0x9e3779b9 +
+                  (audio_hash << 6) + (audio_hash >> 2);
+
+    // Check cache
+    // Check shared LRU cache
+    auto cached_embedding = cache_.Get(audio_hash);
+    if (cached_embedding) {
+      if (config_.model.debug) {
+        // Create an owned tensor and copy data to avoid use-after-free
+        Ort::AllocatorWithDefaultOptions allocator;
+        auto result = Ort::Value::CreateTensor<float>(
+            allocator, cached_embedding->second.data(),
+            cached_embedding->second.size());
+        std::copy(cached_embedding->first.begin(),
+                  cached_embedding->first.end(),
+                  result.GetTensorMutableData<float>());
+
+        SHERPA_ONNX_LOGE("CACHE HIT: voice embedding (hash=%zu)", audio_hash);
+        return result;
+      } else {
+        // Create an owned tensor and copy data to avoid use-after-free
+        Ort::AllocatorWithDefaultOptions allocator;
+        auto result = Ort::Value::CreateTensor<float>(
+            allocator, cached_embedding->second.data(),
+            cached_embedding->second.size());
+        std::copy(cached_embedding->first.begin(),
+                  cached_embedding->first.end(),
+                  result.GetTensorMutableData<float>());
+        return result;
+      }
+    }
+
     // in seconds
     // max_reference_audio_len is already computed above for the hash.
 
@@ -635,12 +629,11 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     if (num_samples > max_len) {
       if (config_.model.debug) {
-        SHERPA_ONNX_LOG(INFO)
-            << "max_reference_audio_len is " << max_reference_audio_len
-            << " seconds. Given reference audio of "
-            << (num_samples * 1.0f / SampleRate())
-            << " seconds. Only the first " << max_reference_audio_len
-            << " seconds are used";
+        SHERPA_ONNX_LOGE(
+            "max_reference_audio_len is %.3f seconds. Given reference audio of "
+            "%.3f seconds. Only the first %.3f seconds are used",
+            max_reference_audio_len, num_samples * 1.0f / SampleRate(),
+            max_reference_audio_len);
       }
       num_samples = max_len;
     }
@@ -653,19 +646,9 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         Ort::Value::CreateTensor(memory_info, const_cast<float *>(p_audio),
                                  num_samples, shape.data(), shape.size());
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> embed_start;
-    if (config_.model.debug) {
-      embed_start = std::chrono::high_resolution_clock::now();
-    }
-
     Ort::Value result = model_->RunMimiEncoder(std::move(x));
 
     if (config_.model.debug) {
-      auto embed_ms =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              std::chrono::high_resolution_clock::now() - embed_start)
-              .count();
-
       // Cache the embedding in shared LRU cache
       auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
       size_t total = std::accumulate(result_shape.begin(), result_shape.end(),
@@ -676,10 +659,8 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
           audio_hash, std::vector<float>(result_data, result_data + total),
           std::vector<int64_t>(result_shape.begin(), result_shape.end()));
 
-      SHERPA_ONNX_LOG(INFO)
-          << "CACHE MISS: Mimi encoder took " << (long long)embed_ms
-          << " ms → cached embedding (hash=" << audio_hash << ", " << total
-          << " floats)";
+      SHERPA_ONNX_LOGE("CACHE MISS: cached embedding (hash=%zu, %zu floats)",
+                       audio_hash, total);
     } else {
       // Cache the embedding in shared LRU cache (no logging)
       auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
@@ -796,72 +777,102 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
   // Shared Thread-Safe LRU Cache for Voice Embeddings
   struct VoiceEmbeddingCache {
-    std::mutex mutex;
-    size_t capacity;
-    std::list<size_t> lru_list;  // List of hashes, most recently used at front
-    std::unordered_map<size_t,
-                       std::pair<std::vector<float>, std::vector<int64_t>>>
-        data;
-    std::unordered_map<size_t, std::list<size_t>::iterator> map_iters;
+    using Embedding = std::pair<std::vector<float>, std::vector<int64_t>>;
+    using EmbeddingPtr = std::shared_ptr<Embedding>;
 
+   private:
+    using ListNode = std::pair<size_t, EmbeddingPtr>;
+    using ListIt = std::list<ListNode>::iterator;
+
+    mutable std::mutex mutex_;
+    size_t capacity_;
+
+    // Front = most recently used
+    std::list<ListNode> lru_list_;
+
+    // Key -> iterator into lru_list_
+    std::unordered_map<size_t, ListIt> map_;
+
+   public:
     static constexpr size_t kDefaultCapacity = 50;
 
-    VoiceEmbeddingCache(size_t cap = kDefaultCapacity) : capacity(cap) {}
+    explicit VoiceEmbeddingCache(size_t cap = kDefaultCapacity)
+        : capacity_(cap) {}
 
-    bool Get(size_t key, std::vector<float> &out_data,
-             std::vector<int64_t> &out_shape) {
-      std::lock_guard<std::mutex> lock(mutex);
-      auto it = data.find(key);
-      if (it == data.end()) {
-        return false;
+    EmbeddingPtr Get(size_t key) {
+      std::lock_guard<std::mutex> lock(mutex_);
+
+      auto it = map_.find(key);
+      if (it == map_.end()) {
+        return nullptr;  // cache miss
       }
 
-      // Move to front of LRU list
-      lru_list.splice(lru_list.begin(), lru_list, map_iters[key]);
+      // Move to front (most recently used)
+      if (it->second != lru_list_.begin()) {
+        lru_list_.splice(lru_list_.begin(), lru_list_, it->second);
+      }
 
-      out_data = it->second.first;
-      out_shape = it->second.second;
-      return true;
+      return it->second->second;  // copy shared_ptr
+    }
+
+    void Put(size_t key, std::vector<float> data, std::vector<int64_t> shape) {
+      std::lock_guard<std::mutex> lock(mutex_);
+
+      if (capacity_ == 0) {
+        return;
+      }
+
+      auto it = map_.find(key);
+
+      // If exists, update and move to front
+      if (it != map_.end()) {
+        it->second->second =
+            std::make_shared<Embedding>(std::move(data), std::move(shape));
+
+        if (it->second != lru_list_.begin()) {
+          lru_list_.splice(lru_list_.begin(), lru_list_, it->second);
+        }
+        return;
+      }
+
+      // Evict if full
+      if (lru_list_.size() >= capacity_) {
+        auto &last = lru_list_.back();
+        size_t last_key = last.first;
+
+        map_.erase(last_key);
+        lru_list_.pop_back();  // shared_ptr released here
+      }
+
+      // Insert new at front
+      lru_list_.emplace_front(
+          key, std::make_shared<Embedding>(std::move(data), std::move(shape)));
+
+      map_[key] = lru_list_.begin();
     }
 
     void SetCapacity(size_t cap) {
-      std::lock_guard<std::mutex> lock(mutex);
-      capacity = cap;
-      while (data.size() > capacity) {
-        size_t last = lru_list.back();
-        data.erase(last);
-        map_iters.erase(last);
-        lru_list.pop_back();
+      std::lock_guard<std::mutex> lock(mutex_);
+      capacity_ = cap;
+
+      while (lru_list_.size() > capacity_) {
+        auto &last = lru_list_.back();
+        size_t last_key = last.first;
+
+        map_.erase(last_key);
+        lru_list_.pop_back();
       }
     }
 
-    void Put(size_t key, std::vector<float> in_data,
-             std::vector<int64_t> in_shape) {
-      std::lock_guard<std::mutex> lock(mutex);
-      if (capacity == 0) {
-        return;
-      }
+    size_t Size() const {
+      std::lock_guard<std::mutex> lock(mutex_);
+      return lru_list_.size();
+    }
 
-      auto it = data.find(key);
-      if (it != data.end()) {
-        // Update existing entry
-        it->second = {std::move(in_data), std::move(in_shape)};
-        lru_list.splice(lru_list.begin(), lru_list, map_iters[key]);
-        return;
-      }
-
-      // Evict if necessary
-      if (data.size() >= capacity && !lru_list.empty()) {
-        size_t last = lru_list.back();
-        data.erase(last);
-        map_iters.erase(last);
-        lru_list.pop_back();
-      }
-
-      // Insert new entry
-      lru_list.push_front(key);
-      data[key] = {std::move(in_data), std::move(in_shape)};
-      map_iters[key] = lru_list.begin();
+    void Clear() {
+      std::lock_guard<std::mutex> lock(mutex_);
+      map_.clear();
+      lru_list_.clear();
     }
   };
 
