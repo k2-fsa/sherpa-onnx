@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+# (author: ssteo)
 
 set -ex
 
