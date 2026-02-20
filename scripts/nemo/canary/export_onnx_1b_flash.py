@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+# (author: ssteo)
 
 """
 <|en|>
@@ -10,6 +10,7 @@
 """
 
 import os
+import subprocess
 from typing import Dict, Tuple
 
 import nemo
@@ -80,7 +81,7 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
       meta_data:
         Key-value pairs.
     """
-    model = onnx.load(filename)
+    model = onnx.load(filename, load_external_data=False)
     while len(model.metadata_props):
         model.metadata_props.pop()
 
@@ -309,7 +310,7 @@ def export_tokens(canary_model):
 
 @torch.no_grad()
 def main():
-    canary_model = EncDecMultiTaskModel.from_pretrained("nvidia/canary-180m-flash")
+    canary_model = EncDecMultiTaskModel.from_pretrained("nvidia/canary-1b-flash")
     canary_model = canary_model.cpu()
     canary_model.eval()
 
@@ -352,7 +353,7 @@ def main():
         "model_type": "EncDecMultiTaskModel",
         "version": "1",
         "model_author": "NeMo",
-        "url": "https://huggingface.co/nvidia/canary-180m-flash",
+        "url": "https://huggingface.co/nvidia/canary-1b-flash",
         "feat_dim": features,
     }
 
@@ -371,13 +372,13 @@ def main():
         "./decoder.onnx",
         "./decoder.int8.onnx",
     ]:
-        model = onnx.load(filename)
+        model = onnx.load(filename, load_external_data=False)
         print("old", model.ir_version)
         model.ir_version = 9
         print("new", model.ir_version)
         onnx.save(model, filename)
 
-    os.system("ls -lh *.onnx")
+subprocess.run(["ls", "-lh", "*.onnx"], check=True)
 
 
 if __name__ == "__main__":
