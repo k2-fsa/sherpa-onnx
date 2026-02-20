@@ -615,8 +615,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     // Compute hash of reference audio for cache lookup
     size_t audio_hash = ComputeHash(p_audio, num_samples);
 
-    // Check cache
-    // Check shared LRU cache
     auto cached_embedding = cache_.Get(audio_hash);
     if (cached_embedding) {
       if (config_.model.debug) {
