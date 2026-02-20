@@ -830,7 +830,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       map_[key] = lru_list_.begin();
     }
 
-    void SetCapacity(size_t cap) {
+    void SetCapacity(int32_t cap) {
       std::lock_guard<std::mutex> lock(mutex_);
       capacity_ = cap;
 
