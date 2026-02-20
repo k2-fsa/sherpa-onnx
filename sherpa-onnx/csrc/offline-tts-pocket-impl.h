@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <functional>
 #include <iomanip>
 #include <ios>
@@ -369,12 +371,21 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     return sentences;
   }
 
-  static size_t ComputeHash(const float *p, int32_t n) {
-    size_t hash = n;
-    hash ^= std::hash<int32_t>{}(n) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    for (int32_t i = 0; i < n; ++i) {
-      hash ^= std::hash<float>{}(p[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  static size_t ComputeHash(const float *p, size_t n) {
+    size_t hash = 0;
+
+    auto hash_combine = [](size_t &seed, size_t value) {
+      seed ^= value + 0x9e3779b97f4a7c15ull + (seed << 6) + (seed >> 2);
+    };
+
+    hash_combine(hash, n);
+
+    for (size_t i = 0; i < n; ++i) {
+      uint32_t bits;
+      std::memcpy(&bits, &p[i], sizeof(float));
+      hash_combine(hash, bits);
     }
+
     return hash;
   }
 
@@ -582,47 +593,10 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       num_samples = gen_config.reference_audio.size();
     }
 
-    // Compute hash of reference audio for cache lookup
-    size_t audio_hash = ComputeHash(p_audio, num_samples);
-
-    // Include max_reference_audio_len in hash to distinguish between same audio
-    // but different truncation settings.
     float max_reference_audio_len =
         gen_config.GetExtraFloat("max_reference_audio_len", 10);
-    audio_hash ^= std::hash<float>{}(max_reference_audio_len) + 0x9e3779b9 +
-                  (audio_hash << 6) + (audio_hash >> 2);
-
-    // Check cache
-    // Check shared LRU cache
-    auto cached_embedding = cache_.Get(audio_hash);
-    if (cached_embedding) {
-      if (config_.model.debug) {
-        // Create an owned tensor and copy data to avoid use-after-free
-        Ort::AllocatorWithDefaultOptions allocator;
-        auto result = Ort::Value::CreateTensor<float>(
-            allocator, cached_embedding->second.data(),
-            cached_embedding->second.size());
-        std::copy(cached_embedding->first.begin(),
-                  cached_embedding->first.end(),
-                  result.GetTensorMutableData<float>());
-
-        SHERPA_ONNX_LOGE("CACHE HIT: voice embedding (hash=%zu)", audio_hash);
-        return result;
-      } else {
-        // Create an owned tensor and copy data to avoid use-after-free
-        Ort::AllocatorWithDefaultOptions allocator;
-        auto result = Ort::Value::CreateTensor<float>(
-            allocator, cached_embedding->second.data(),
-            cached_embedding->second.size());
-        std::copy(cached_embedding->first.begin(),
-                  cached_embedding->first.end(),
-                  result.GetTensorMutableData<float>());
-        return result;
-      }
-    }
 
     // in seconds
-    // max_reference_audio_len is already computed above for the hash.
 
     int32_t max_len =
         static_cast<int32_t>(max_reference_audio_len * SampleRate());
@@ -638,6 +612,25 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
       num_samples = max_len;
     }
 
+    // Compute hash of reference audio for cache lookup
+    size_t audio_hash = ComputeHash(p_audio, num_samples);
+
+    // Check cache
+    // Check shared LRU cache
+    auto cached_embedding = cache_.Get(audio_hash);
+    if (cached_embedding) {
+      if (config_.model.debug) {
+        SHERPA_ONNX_LOGE("CACHE HIT: voice embedding (hash=%zu)", audio_hash);
+      }
+      // Create an owned tensor and copy data to avoid use-after-free
+      auto result = Ort::Value::CreateTensor<float>(
+          model_->Allocator(), cached_embedding->second.data(),
+          cached_embedding->second.size());
+      std::copy(cached_embedding->first.begin(), cached_embedding->first.end(),
+                result.GetTensorMutableData<float>());
+      return result;
+    }
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -648,29 +641,17 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 
     Ort::Value result = model_->RunMimiEncoder(std::move(x));
 
+    auto info = result.GetTensorTypeAndShapeInfo();
+    auto result_shape = info.GetShape();
+    size_t total = info.GetElementCount();
+    const float *result_data = result.GetTensorData<float>();
+
+    cache_.Put(audio_hash, std::vector<float>(result_data, result_data + total),
+               std::move(result_shape));
+
     if (config_.model.debug) {
-      // Cache the embedding in shared LRU cache
-      auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
-      size_t total = std::accumulate(result_shape.begin(), result_shape.end(),
-                                     1, std::multiplies<size_t>());
-      const float *result_data = result.GetTensorData<float>();
-
-      cache_.Put(
-          audio_hash, std::vector<float>(result_data, result_data + total),
-          std::vector<int64_t>(result_shape.begin(), result_shape.end()));
-
       SHERPA_ONNX_LOGE("CACHE MISS: cached embedding (hash=%zu, %zu floats)",
                        audio_hash, total);
-    } else {
-      // Cache the embedding in shared LRU cache (no logging)
-      auto result_shape = result.GetTensorTypeAndShapeInfo().GetShape();
-      size_t total = std::accumulate(result_shape.begin(), result_shape.end(),
-                                     1, std::multiplies<size_t>());
-      const float *result_data = result.GetTensorData<float>();
-
-      cache_.Put(
-          audio_hash, std::vector<float>(result_data, result_data + total),
-          std::vector<int64_t>(result_shape.begin(), result_shape.end()));
     }
 
     return result;
