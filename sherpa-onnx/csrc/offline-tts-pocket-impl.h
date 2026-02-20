@@ -831,6 +831,12 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     void SetCapacity(int32_t cap) {
+      if (cap < 0) {
+        SHERPA_ONNX_LOGE(
+            "voice_embedding_cache_capacity must be >= 0. Given: %d", cap);
+        SHERPA_ONNX_EXIT(-1);
+      }
+
       std::lock_guard<std::mutex> lock(mutex_);
       capacity_ = cap;
 
