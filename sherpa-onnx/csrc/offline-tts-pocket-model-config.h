@@ -22,6 +22,7 @@ struct OfflineTtsPocketModelConfig {
   std::string token_scores_json;
 
   OfflineTtsPocketModelConfig() = default;
+  int32_t voice_embedding_cache_capacity = 50;
 
   OfflineTtsPocketModelConfig(const std::string &lm_flow,
                               const std::string &lm_main,

@@ -467,6 +467,9 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.pocket.token_scores_json =
       config.model.pocket.token_scores_json.c_str();
 
+  c.model.pocket.voice_embedding_cache_capacity =
+      config.model.pocket.voice_embedding_cache_capacity;
+
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();
