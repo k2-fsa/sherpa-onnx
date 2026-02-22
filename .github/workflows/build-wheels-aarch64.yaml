@@ -47,13 +47,12 @@ jobs:
           du -h -d1 .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -110,7 +109,7 @@ jobs:
               echo "----"
               ls -lh install/bin
 
-              echo 'sherpa-onnx-core'
+              echo "sherpa-onnx-core"
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
               cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
 
@@ -124,7 +123,7 @@ jobs:
 
               popd
 
-              echo 'sherpa-onnx-bin'
+              echo "sherpa-onnx-bin"
 
               mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
@@ -135,6 +134,7 @@ jobs:
               ls -lh dist
 
               popd
+            '
 
       - name: Collect wheels
         shell: bash
