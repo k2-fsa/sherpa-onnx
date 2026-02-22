@@ -9,6 +9,7 @@ public class OfflineTtsPocketModelConfig {
     private final String textConditioner;
     private final String vocabJson;
     private final String tokenScoresJson;
+    private final int voiceEmbeddingCacheCapacity;
 
     private OfflineTtsPocketModelConfig(Builder builder) {
         this.lmFlow = builder.lmFlow;
@@ -18,6 +19,7 @@ public class OfflineTtsPocketModelConfig {
         this.textConditioner = builder.textConditioner;
         this.vocabJson = builder.vocabJson;
         this.tokenScoresJson = builder.tokenScoresJson;
+        this.voiceEmbeddingCacheCapacity = builder.voiceEmbeddingCacheCapacity;
     }
 
     public String getLmFlow() {
@@ -48,6 +50,10 @@ public class OfflineTtsPocketModelConfig {
         return tokenScoresJson;
     }
 
+    public int getVoiceEmbeddingCacheCapacity() {
+        return voiceEmbeddingCacheCapacity;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -60,6 +66,7 @@ public class OfflineTtsPocketModelConfig {
         private String textConditioner = "";
         private String vocabJson = "";
         private String tokenScoresJson = "";
+        private int voiceEmbeddingCacheCapacity = 50;
 
         public OfflineTtsPocketModelConfig build() {
             return new OfflineTtsPocketModelConfig(this);
@@ -97,6 +104,11 @@ public class OfflineTtsPocketModelConfig {
 
         public Builder setTokenScoresJson(String tokenScoresJson) {
             this.tokenScoresJson = tokenScoresJson;
+            return this;
+        }
+
+        public Builder setVoiceEmbeddingCacheCapacity(int voiceEmbeddingCacheCapacity) {
+            this.voiceEmbeddingCacheCapacity = voiceEmbeddingCacheCapacity;
             return this;
         }
     }
