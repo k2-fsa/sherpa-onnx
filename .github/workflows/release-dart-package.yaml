@@ -32,13 +32,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux2014_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -65,6 +64,7 @@ jobs:
               make install
 
               ls -lh ./install/lib
+            '
 
       - name: Create tar file
         shell: bash
@@ -81,6 +81,7 @@ jobs:
           path: ./*.tar.bz2
 
   build_linux_libs_aarch64:
+    # if: false
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -98,13 +99,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -131,6 +131,7 @@ jobs:
               make install
 
               ls -lh ./install/lib
+            '
 
       - name: Create tar file
         shell: bash

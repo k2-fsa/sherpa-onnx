@@ -5,10 +5,6 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.Text;
 
-#if !NET20
-using System.Text.Json;
-#endif
-
 namespace SherpaOnnx
 {
     public class OfflineTtsGenerationConfig
@@ -68,7 +64,6 @@ namespace SherpaOnnx
             native.NumSteps = NumSteps;
 
             // Handle Extra JSON
-#if NET20
             native.Extra = "{}";
             if (Extra != null && Extra.Count > 0)
             {
@@ -99,21 +94,9 @@ namespace SherpaOnnx
                 json.Append("}");
                 native.Extra = json.ToString();
             }
-#else
-          native.Extra = (Extra != null && Extra.Count > 0)
-              ? JsonSerializer.Serialize(
-                  Extra,
-                  new JsonSerializerOptions
-                  {
-                      PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                  })
-              : "{}";
-#endif
-
             return native;
         }
 
-#if NET20
         /// <summary>
         /// Escapes a string for JSON (for .NET 2.0)
         /// </summary>
@@ -145,7 +128,6 @@ namespace SherpaOnnx
             sb.Append('"');
             return sb.ToString();
         }
-#endif
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NativeStruct

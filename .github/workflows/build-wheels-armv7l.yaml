@@ -52,14 +52,13 @@ jobs:
           du -h -d1 .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux_2_35_armv7l
-            options: |
-              --platform linux/arm/v7
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --platform linux/arm/v7 \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux_2_35_armv7l \
+            bash -c '
               find / -name "*gcc*" 2>/dev/null
 
               uname -a
@@ -124,7 +123,7 @@ jobs:
 
               ./install/bin/sherpa-onnx --help
 
-              echo 'sherpa-onnx-core'
+              echo "sherpa-onnx-core"
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
               cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
 
@@ -138,7 +137,7 @@ jobs:
 
               popd
 
-              echo 'sherpa-onnx-bin'
+              echo "sherpa-onnx-bin"
 
               mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
@@ -149,6 +148,7 @@ jobs:
               ls -lh dist
 
               popd
+            '
 
       - name: Collect wheels
         shell: bash
@@ -302,14 +302,13 @@ jobs:
           platforms: arm
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux_2_35_armv7l
-            options: |
-              --platform linux/arm/v7
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --platform linux/arm/v7 \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux_2_35_armv7l \
+            bash -c '
               find / -name "*gcc*" 2>/dev/null
 
               uname -a
@@ -339,7 +338,7 @@ jobs:
                 exit 1
               elif [[ ${#matches[@]} -gt 1 ]]; then
                 echo "Multiple Python installations found for version $python_version:"
-                printf '  %s\n' "${matches[@]}"
+                printf "  %s\n" "${matches[@]}"
                 echo "Using the first one: ${matches[0]}"
               fi
 
@@ -384,6 +383,7 @@ jobs:
 
               mkdir wheelhouse
               cp -v dist/* wheelhouse/
+            '
 
       - uses: actions/upload-artifact@v4
         with:

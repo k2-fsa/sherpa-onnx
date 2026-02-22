@@ -46,14 +46,14 @@ jobs:
           ls -lh
           du -h -d1 .
 
-      - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+      - name: Build sherpa-onnx (docker manually)
+        shell: bash
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            quay.io/pypa/manylinux2014_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -61,13 +61,21 @@ jobs:
               id
               pwd
 
-              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+              cd /workspace
+
+              echo pwd
+              echo $PWD
 
               find /opt -name "python*"
 
               echo "--------------------"
               PY_PATH=$(echo /opt/_internal/cpython-3.10*/bin)
+              echo "PY_PATH: $PY_PATH"
+
               export PATH=$PY_PATH:$PATH
+
+              echo "path $PATH"
+
               which python3
               python3 --version
 
@@ -111,7 +119,7 @@ jobs:
               echo "----"
               ls -lh install/bin
 
-              echo 'sherpa-onnx-core'
+              echo sherpa-onnx-core
               mkdir -p ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
               cp -v ./install/lib/lib*.so ../scripts/wheel/sherpa-onnx-core/sherpa_onnx/lib
 
@@ -126,7 +134,7 @@ jobs:
 
               popd
 
-              echo 'sherpa-onnx-bin'
+              echo "sherpa-onnx-bin"
 
               mkdir -p ../scripts/wheel/sherpa-onnx-bin/bin
               cp -v ./install/bin/sherpa-onnx* ../scripts/wheel/sherpa-onnx-bin/bin
@@ -138,6 +146,7 @@ jobs:
               unzip -l dist/*.whl
 
               popd
+            '
 
       - name: Collect wheels
         shell: bash
