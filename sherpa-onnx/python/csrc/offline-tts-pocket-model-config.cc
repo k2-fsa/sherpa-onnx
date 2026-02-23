@@ -18,10 +18,11 @@ void PybindOfflineTtsPocketModelConfig(py::module *m) {
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, const std::string &,
                     const std::string &, const std::string &,
-                    const std::string &>(),
+                    const std::string &, int32_t>(),
            py::arg("lm_flow"), py::arg("lm_main"), py::arg("encoder"),
            py::arg("decoder"), py::arg("text_conditioner"),
-           py::arg("vocab_json"), py::arg("token_scores_json"))
+           py::arg("vocab_json"), py::arg("token_scores_json"),
+           py::arg("voice_embedding_cache_capacity") = 50)
       .def_readwrite("lm_flow", &PyClass::lm_flow)
       .def_readwrite("lm_main", &PyClass::lm_main)
       .def_readwrite("encoder", &PyClass::encoder)
@@ -29,6 +30,8 @@ void PybindOfflineTtsPocketModelConfig(py::module *m) {
       .def_readwrite("text_conditioner", &PyClass::text_conditioner)
       .def_readwrite("vocab_json", &PyClass::vocab_json)
       .def_readwrite("token_scores_json", &PyClass::token_scores_json)
+      .def_readwrite("voice_embedding_cache_capacity",
+                     &PyClass::voice_embedding_cache_capacity)
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }

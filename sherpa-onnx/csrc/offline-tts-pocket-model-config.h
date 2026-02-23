@@ -30,14 +30,16 @@ struct OfflineTtsPocketModelConfig {
                               const std::string &decoder,
                               const std::string &text_conditioner,
                               const std::string &vocab_json,
-                              const std::string &token_scores_json)
+                              const std::string &token_scores_json,
+                              int32_t voice_embedding_cache_capacity = 50)
       : lm_flow(lm_flow),
         lm_main(lm_main),
         encoder(encoder),
         decoder(decoder),
         text_conditioner(text_conditioner),
         vocab_json(vocab_json),
-        token_scores_json(token_scores_json) {}
+        token_scores_json(token_scores_json),
+        voice_embedding_cache_capacity(voice_embedding_cache_capacity) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
