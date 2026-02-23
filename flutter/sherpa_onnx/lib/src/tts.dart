@@ -352,6 +352,7 @@ class OfflineTtsPocketModelConfig {
     this.textConditioner = '',
     this.vocabJson = '',
     this.tokenScoresJson = '',
+    this.voiceEmbeddingCacheCapacity = 50,
   });
 
   factory OfflineTtsPocketModelConfig.fromJson(Map<String, dynamic> json) {
@@ -363,6 +364,8 @@ class OfflineTtsPocketModelConfig {
       textConditioner: json['textConditioner'] as String? ?? '',
       vocabJson: json['vocabJson'] as String? ?? '',
       tokenScoresJson: json['tokenScoresJson'] as String? ?? '',
+      voiceEmbeddingCacheCapacity:
+          json['voiceEmbeddingCacheCapacity'] as int? ?? 50,
     );
   }
 
@@ -374,11 +377,12 @@ class OfflineTtsPocketModelConfig {
     'textConditioner': textConditioner,
     'vocabJson': vocabJson,
     'tokenScoresJson': tokenScoresJson,
+    'voiceEmbeddingCacheCapacity': voiceEmbeddingCacheCapacity,
   };
 
   @override
   String toString() {
-    return 'OfflineTtsPocketModelConfig(lmFlow: $lmFlow, lmMain: $lmMain, encoder: $encoder, decoder: $decoder, textConditioner: $textConditioner, vocabJson: $vocabJson, tokenScoresJson: $tokenScoresJson)';
+    return 'OfflineTtsPocketModelConfig(lmFlow: $lmFlow, lmMain: $lmMain, encoder: $encoder, decoder: $decoder, textConditioner: $textConditioner, vocabJson: $vocabJson, tokenScoresJson: $tokenScoresJson, voiceEmbeddingCacheCapacity: $voiceEmbeddingCacheCapacity)';
   }
 
   final String lmFlow;
@@ -388,6 +392,7 @@ class OfflineTtsPocketModelConfig {
   final String textConditioner;
   final String vocabJson;
   final String tokenScoresJson;
+  final int voiceEmbeddingCacheCapacity;
 }
 
 class OfflineTtsModelConfig {
@@ -569,6 +574,8 @@ class OfflineTts {
     c.ref.model.pocket.vocabJson = config.model.pocket.vocabJson.toNativeUtf8();
     c.ref.model.pocket.tokenScoresJson = config.model.pocket.tokenScoresJson
         .toNativeUtf8();
+    c.ref.model.pocket.voiceEmbeddingCacheCapacity =
+        config.model.pocket.voiceEmbeddingCacheCapacity;
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;

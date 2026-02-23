@@ -20,6 +20,8 @@ func main() {
 	config.ModelConfig.FunAsrNano.LLM = "./sherpa-onnx-funasr-nano-int8-2025-12-30/llm.int8.onnx"
 	config.ModelConfig.FunAsrNano.Embedding = "./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx"
 	config.ModelConfig.FunAsrNano.Tokenizer = "./sherpa-onnx-funasr-nano-int8-2025-12-30/Qwen3-0.6B"
+	// Seed for reproducibility (default: 42)
+	config.ModelConfig.FunAsrNano.Seed = 42
 
 	config.ModelConfig.Tokens = ""
 

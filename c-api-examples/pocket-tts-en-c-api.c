@@ -49,6 +49,10 @@ int32_t main(int32_t argc, char *argv[]) {
       "./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json";
   config.model.pocket.token_scores_json =
       "./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json";
+  // Voice embedding cache capacity (default: 50)
+  // Increase this if you have many different reference audios to avoid
+  // recomputing voice embeddings
+  config.model.pocket.voice_embedding_cache_capacity = 50;
 
   config.model.num_threads = 2;
 
@@ -82,7 +86,10 @@ int32_t main(int32_t argc, char *argv[]) {
   cfg.reference_audio = wave->samples;
   cfg.reference_audio_len = wave->num_samples;
   cfg.reference_sample_rate = wave->sample_rate;
-  cfg.extra = "{\"max_reference_audio_len\": 10.0}";
+  // Extra parameters passed as JSON string
+  // - max_reference_audio_len: maximum length of reference audio in seconds
+  // - seed: random seed for reproducibility (optional, -1 for random)
+  cfg.extra = "{\"max_reference_audio_len\": 10.0, \"seed\": 42}";
 
 #if 0
   // If you don't want to use a callback, then please enable this branch

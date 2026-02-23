@@ -13,6 +13,8 @@ func main() {
 
 	var referenceAudio string = "./sherpa-onnx-pocket-tts-int8-2026-01-26/test_wavs/bria.wav"
 	var outputFilename string = "./generated.wav"
+	var voiceEmbeddingCacheCapacity int = 50
+	var seed int = -1
 
 	text := `Today as always, men fall into two groups: slaves and free men.
 Whoever does not have two-thirds of his day for himself, is a slave,
@@ -21,6 +23,8 @@ whatever he may be: a statesman, a businessman, an official, or a scholar.`
 	flag.StringVar(&referenceAudio, "reference-audio", referenceAudio, "Path to the reference audio")
 	flag.StringVar(&text, "text", text, "Text to be synthesized")
 	flag.StringVar(&outputFilename, "output-filename", outputFilename, "File to save the generated audio")
+	flag.IntVar(&voiceEmbeddingCacheCapacity, "voice-embedding-cache-capacity", voiceEmbeddingCacheCapacity, "Voice embedding cache capacity (default: 50)")
+	flag.IntVar(&seed, "seed", seed, "Random seed for reproducibility (default: -1, random)")
 	flag.Parse()
 
 	// ---------------- config ----------------
@@ -40,6 +44,7 @@ whatever he may be: a statesman, a businessman, an official, or a scholar.`
 		"./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json"
 	config.Model.Pocket.TokenScoresJson =
 		"./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json"
+	config.Model.Pocket.VoiceEmbeddingCacheCapacity = voiceEmbeddingCacheCapacity
 
 	config.Model.NumThreads = 2
 	config.Model.Debug = 0
@@ -61,10 +66,16 @@ whatever he may be: a statesman, a businessman, an official, or a scholar.`
 	cfg.ReferenceAudio = wave.Samples
 	cfg.ReferenceSampleRate = wave.SampleRate
 
-	cfg.Extra = json.RawMessage(`{
-  "max_reference_audio_len": 10,
-	"temperature": 0.7
-	}`)
+	// Build extra config with optional seed
+	extraMap := map[string]interface{}{
+		"max_reference_audio_len": 10,
+		"temperature":             0.7,
+	}
+	if seed >= 0 {
+		extraMap["seed"] = seed
+	}
+	extraBytes, _ := json.Marshal(extraMap)
+	cfg.Extra = json.RawMessage(extraBytes)
 
 	log.Println("Start generating")
 
