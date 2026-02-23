@@ -245,6 +245,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.token_scores_json,
                               tokenScoresJson, pocket_cls, pocket);
+  
+  SHERPA_ONNX_JNI_READ_INT(ans.model.pocket.voice_embedding_cache_capacity,
+                           voiceEmbeddingCacheCapacity, pocket_cls, pocket);                           
 
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
