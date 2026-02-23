@@ -243,6 +243,9 @@ final class SherpaOnnxOfflineTtsPocketModelConfig extends Struct {
   external Pointer<Utf8> textConditioner;
   external Pointer<Utf8> vocabJson;
   external Pointer<Utf8> tokenScoresJson;
+
+  @Int32()
+  external int voiceEmbeddingCacheCapacity;
 }
 
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {

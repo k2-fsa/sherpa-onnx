@@ -19,7 +19,17 @@ void main(List<String> arguments) async {
     ..addOption('token-scores-json', help: 'Path to the token_scores.json file')
     ..addOption('reference-audio', help: 'Path to reference audio (wav)')
     ..addOption('text', help: 'Text to generate TTS for')
-    ..addOption('output-wav', help: 'Filename to save the generated audio');
+    ..addOption('output-wav', help: 'Filename to save the generated audio')
+    ..addOption(
+      'voice-embedding-cache-capacity',
+      help: 'Voice embedding cache capacity (default: 50)',
+      defaultsTo: '50',
+    )
+    ..addOption(
+      'seed',
+      help: 'Random seed for reproducibility (default: -1, random)',
+      defaultsTo: '-1',
+    );
 
   final res = parser.parse(arguments);
 
@@ -47,6 +57,10 @@ void main(List<String> arguments) async {
   final referenceAudioPath = res['reference-audio'] as String;
   final text = res['text'] as String;
   final outputWav = res['output-wav'] as String;
+  final voiceEmbeddingCacheCapacity = int.parse(
+    res['voice-embedding-cache-capacity'] as String,
+  );
+  final seed = int.parse(res['seed'] as String);
 
   // ---------------- Pocket model config ----------------
   final pocket = sherpa_onnx.OfflineTtsPocketModelConfig(
@@ -57,6 +71,7 @@ void main(List<String> arguments) async {
     textConditioner: textConditioner,
     vocabJson: vocabJson,
     tokenScoresJson: tokenScoresJson,
+    voiceEmbeddingCacheCapacity: voiceEmbeddingCacheCapacity,
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
@@ -80,7 +95,7 @@ void main(List<String> arguments) async {
     speed: 1.0,
     referenceAudio: wave.samples,
     referenceSampleRate: wave.sampleRate,
-    extra: {"max_reference_audio_len": 12},
+    extra: {"max_reference_audio_len": 12, if (seed >= 0) "seed": seed},
   );
 
   // If you don't want to use a callback
