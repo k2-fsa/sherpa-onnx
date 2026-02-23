@@ -65,6 +65,7 @@ data class OfflineTtsPocketModelConfig(
   var textConditioner: String = "",
   var vocabJson: String = "",
   var tokenScoresJson: String = "",
+  var voiceEmbeddingCacheCapacity: Int = 50,
 )
 
 data class OfflineTtsModelConfig(
