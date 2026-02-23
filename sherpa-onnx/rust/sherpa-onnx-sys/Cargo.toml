@@ -1,0 +1,20 @@
+[package]
+name = "sherpa-onnx-sys"
+version = "0.1.0"
+edition = "2021"
+description = "Raw FFI bindings to the sherpa-onnx C API"
+license = "Apache-2.0"
+repository = "https://github.com/k2-fsa/sherpa-onnx"
+readme = "README.md"
+links = "sherpa-onnx"
+
+keywords = ["ffi", "speech", "sherpa-onnx", "bindings"]
+categories = ["external-ffi-bindings"]
+
+include = [
+    "src/**",
+    "build.rs",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE*",
+]

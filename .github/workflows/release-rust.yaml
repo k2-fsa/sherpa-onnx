@@ -1,0 +1,44 @@
+name: Publish Rust Crates
+
+on:
+  push:
+    branches:
+      - rust-api-2
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Update
+        shell: bash
+        run: |
+          cd sherpa-onnx/rust
+          ./publish.sh
+
+      - name: Login to crates.io
+        run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Publish sherpa-onnx-sys
+        shell: bash
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --allow-dirty --manifest-path=sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml
+          sleep 30  # Wait for crates.io to index
+
+      - name: Publish sherpa-onnx
+        shell: bash
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --allow-dirty --manifest-path=sherpa-onnx/rust/sherpa-onnx/Cargo.toml
