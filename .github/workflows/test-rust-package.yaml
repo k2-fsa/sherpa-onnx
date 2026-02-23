@@ -51,12 +51,10 @@ jobs:
             exit 1
           fi
 
-          LIB_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.25/$d.tar.bz2"
+          LIB_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$d.tar.bz2"
 
           curl -SsL -O  "$LIB_URL"
           tar -xvf $d.tar.bz2
-
-          ls -lh $d/lib
 
           ls -lh $d/lib
 
@@ -71,19 +69,6 @@ jobs:
           ls -lh $SHERPA_ONNX_LIB_DIR
 
           echo "RUSTFLAGS: $RUSTFLAGS"
-
-      # Test using local path dependencies
-      - name: Test Local Packages
-        if: false
-        shell: bash
-        run: |
-          cd rust-api-examples
-          # Uncomment local path dependencies
-          sed -i 's|^# sherpa-onnx = { path|sherpa-onnx = { path|' Cargo.toml
-          sed -i 's|^# sherpa-onnx-sys = { path|sherpa-onnx-sys = { path|' Cargo.toml
-          cargo clean
-          cargo test --all-features
-          cargo run --example version
 
       # Test using published crates.io dependencies
       - name: Test Published Crates

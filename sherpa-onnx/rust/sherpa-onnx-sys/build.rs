@@ -11,11 +11,8 @@ fn main() {
             // Tell Rust/Cargo where to find the libraries at build time
             println!("cargo:rustc-link-search=native={}", path);
 
-            // Add rpath so the dynamic linker can find the libraries at runtime
-            if cfg!(target_os = "linux") {
-                println!("cargo:rustc-link-arg=-Wl,-rpath,{}", path);
-            } else if cfg!(target_os = "macos") {
-                // Use absolute path from env
+            // Add rpath for Linux/macOS
+            if cfg!(any(target_os = "linux", target_os = "macos")) {
                 println!("cargo:rustc-link-arg=-Wl,-rpath,{}", path);
             }
         }
