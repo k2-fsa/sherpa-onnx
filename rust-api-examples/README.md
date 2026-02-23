@@ -43,4 +43,4 @@ to check the RPATH.
 
 # Alternative rust bindings for sherpa-onnx
 
-Please see also to https://github.com/thewh1teagle/sherpa-rs
+Please see also https://github.com/thewh1teagle/sherpa-rs
