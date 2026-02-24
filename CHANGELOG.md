@@ -1,3 +1,19 @@
+## 1.12.26
+
+* Fix CI (#3192)
+* Fix heap-buffer-overflow in ReadWaveImpl when data chunk size is odd (#3195)
+* [PocketTTS] Add seed support and voice embedding caching for consiste… (#3189)
+* Feat/pocket tts cache config (#3200)
+* 3197: enhanced java binding for voice_embedding_cache_capacity (#3201)
+* Dart, flutter, go, c-api blinding and example (#3202)
+* Begin to add Rust API (#3203)
+* Add Rust API for streaming speech recognition (#3204)
+* Add a real-time speech recognition example with microphone for Rust API. (#3205)
+* Add Rust API for offline ASR (#3207)
+* feat: Add PocketTTS cache & seed support to Node.js Addon and WASM APIs (#3206)
+* Add more examples for offline ASR models with Rust API. (#3209)
+* Update C#/Swift/Pascal API for PocketTTS' VoiceEmbeddingCacheCapacity. (#3211)
+
 ## 1.12.25
 
 * Fix building without tts (#3168)
