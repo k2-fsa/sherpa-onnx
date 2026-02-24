@@ -144,8 +144,10 @@ type
     TextConditioner: AnsiString;
     VocabJson: AnsiString;
     TokenScoresJson: AnsiString;
+    VoiceEmbeddingCacheCapacity: Integer;
 
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsPocketModelConfig);
   end;
 
   TSherpaOnnxOfflineTtsModelConfig = record
@@ -1103,6 +1105,7 @@ type
     TextConditioner: PAnsiChar;
     VocabJson: PAnsiChar;
     TokenScoresJson: PAnsiChar;
+    VoiceEmbeddingCacheCapacity: cint32;
   end;
 
   SherpaOnnxOfflineTtsModelConfig = record
@@ -2638,6 +2641,11 @@ begin
   Dest.GuidanceScale := 1.0;
 end;
 
+class operator TSherpaOnnxOfflineTtsPocketModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsPocketModelConfig);
+begin
+  Dest.VoiceEmbeddingCacheCapacity := 50;
+end;
+
 function TSherpaOnnxOfflineTtsPocketModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsPocketModelConfig(' +
@@ -2647,10 +2655,11 @@ begin
     'Decoder := %s, ' +
     'TextConditioner := %s, ' +
     'VocabJson := %s, ' +
-    'TokenScoresJson := %s' +
+    'TokenScoresJson := %s, ' +
+    'VoiceEmbeddingCacheCapacity := %d' +
     ')',
     [Self.LmFlow, Self.LmMain, Self.Encoder, Self.Decoder, Self.TextConditioner,
-     Self.VocabJson, Self.TokenScoresJson]);
+     Self.VocabJson, Self.TokenScoresJson, Self.VoiceEmbeddingCacheCapacity]);
 end;
 
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
@@ -2753,6 +2762,7 @@ begin
   C.Model.Pocket.TextConditioner := PAnsiChar(Config.Model.Pocket.TextConditioner);
   C.Model.Pocket.VocabJson := PAnsiChar(Config.Model.Pocket.VocabJson);
   C.Model.Pocket.TokenScoresJson := PAnsiChar(Config.Model.Pocket.TokenScoresJson);
+  C.Model.Pocket.VoiceEmbeddingCacheCapacity := Config.Model.Pocket.VoiceEmbeddingCacheCapacity;
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
