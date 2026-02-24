@@ -1,15 +1,15 @@
 // Copyright (c) 2026 Xiaomi Corporation
 //
-// This file demonstrates how to use SenseVoice with sherpa-onnx's Rust API
+// This file demonstrates how to use Nemo Parakeet with sherpa-onnx's Rust API
 // for offline speech recognition.
 //
 // See ../README.md for how to run it.
 
 use clap::Parser;
-use sherpa_onnx::{OfflineRecognizer, OfflineRecognizerConfig, OfflineSenseVoiceModelConfig, Wave};
+use sherpa_onnx::{OfflineRecognizer, OfflineRecognizerConfig, OfflineTransducerModelConfig, Wave};
 use std::time::Instant;
 
-/// SenseVoice offline example
+/// Nemo Parakeet offline example
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -17,17 +17,21 @@ struct Args {
     #[arg(long)]
     wav: String,
 
-    /// Path to SenseVoice ONNX model
+    /// Path to encoder ONNX model
     #[arg(long)]
-    model: String,
+    encoder: String,
+
+    /// Path to decoder ONNX model
+    #[arg(long)]
+    decoder: String,
+
+    /// Path to joiner ONNX model
+    #[arg(long)]
+    joiner: String,
 
     /// Path to tokens file
     #[arg(long)]
     tokens: String,
-
-    /// Language, e.g., "auto", "en", "zh"
-    #[arg(long, default_value = "auto")]
-    language: String,
 
     /// Provider (default: cpu)
     #[arg(long, default_value = "cpu")]
@@ -36,10 +40,6 @@ struct Args {
     /// Enable debug logs
     #[arg(long, default_value_t = false)]
     debug: bool,
-
-    /// Enable inverse text normalization
-    #[arg(long, default_value_t = true)]
-    use_itn: bool,
 
     /// Number of threads
     #[arg(long, default_value_t = 2)]
@@ -52,12 +52,14 @@ fn main() {
     let wave = Wave::read(&args.wav).expect("Failed to read WAV file");
     let audio_duration = wave.samples().len() as f64 / wave.sample_rate() as f64;
 
+    // Create default recognizer config
     let mut recognizer_config = OfflineRecognizerConfig::default();
 
-    recognizer_config.model_config.sense_voice = OfflineSenseVoiceModelConfig {
-        model: Some(args.model.clone()),
-        language: Some(args.language.clone()),
-        use_itn: args.use_itn,
+    // Set the transducer model
+    recognizer_config.model_config.transducer = OfflineTransducerModelConfig {
+        encoder: Some(args.encoder.clone()),
+        decoder: Some(args.decoder.clone()),
+        joiner: Some(args.joiner.clone()),
     };
 
     recognizer_config.model_config.tokens = Some(args.tokens.clone());
@@ -85,7 +87,7 @@ fn main() {
     if let Some(result) = stream.get_result() {
         println!("Decoded text: {}", result.text);
 
-        let total_time = creation_elapsed + recognition_elapsed;
+        let total_elapsed = creation_elapsed + recognition_elapsed;
         let rtf = recognition_elapsed / audio_duration;
 
         println!("\n=== Performance Summary ===");
@@ -95,9 +97,8 @@ fn main() {
             "Recognition time        : {:.3} seconds",
             recognition_elapsed
         );
-        println!("Total elapsed time      : {:.3} seconds", total_time);
+        println!("Total elapsed time      : {:.3} seconds", total_elapsed);
 
-        // Detailed RTF computation log
         println!(
             "Real-Time Factor (RTF)  : {:.3} (recognition_elapsed / audio_duration = {:.3} / {:.3})",
             rtf, recognition_elapsed, audio_duration
