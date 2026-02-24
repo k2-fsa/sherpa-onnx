@@ -10,7 +10,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <utility>
 
@@ -164,7 +163,7 @@ template <typename Manager>
 SymbolTable::SymbolTable(Manager *mgr, const std::string &filename) {
   auto buf = ReadFile(mgr, filename);
 
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   Init(is);
 }
 

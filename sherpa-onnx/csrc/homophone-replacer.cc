@@ -9,7 +9,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -112,7 +111,7 @@ class HomophoneReplacer::Impl {
     {
       auto buf = ReadFile(mgr, config.lexicon);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitLexicon(is);
     }
 
@@ -125,7 +124,7 @@ class HomophoneReplacer::Impl {
           SHERPA_ONNX_LOGE("hr rule fst: %s", f.c_str());
         }
         auto buf = ReadFile(mgr, f);
-        std::istrstream is(buf.data(), buf.size());
+        std::istringstream is(std::string(buf.data(), buf.size()));
         replacer_list_.push_back(
             std::make_unique<kaldifst::TextNormalizer>(is));
       }

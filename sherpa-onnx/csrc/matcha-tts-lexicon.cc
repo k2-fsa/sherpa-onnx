@@ -12,7 +12,6 @@
 #include <regex>  // NOLINT
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -174,7 +173,7 @@ class MatchaTtsLexicon::Impl {
 
     {
       auto buf = ReadFile(mgr, tokens);
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
 
       InitTokens(is);
     }
@@ -184,7 +183,7 @@ class MatchaTtsLexicon::Impl {
     for (const auto &f : files) {
       auto buf = ReadFile(mgr, f);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitLexicon(is);
     }
 

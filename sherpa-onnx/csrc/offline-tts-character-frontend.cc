@@ -10,7 +10,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -96,7 +95,7 @@ OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
     const OfflineTtsVitsModelMetaData &meta_data)
     : meta_data_(meta_data) {
   auto buf = ReadFile(mgr, tokens);
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   token2id_ = ReadTokens(is);
 }
 

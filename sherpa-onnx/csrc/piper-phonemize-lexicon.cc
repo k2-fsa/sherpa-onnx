@@ -11,7 +11,6 @@
 #include <mutex>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -347,7 +346,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     : vits_meta_data_(vits_meta_data) {
   {
     auto buf = ReadFile(mgr, tokens);
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
     token2id_ = ReadTokens(is);
   }
 
@@ -400,7 +399,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     : matcha_meta_data_(matcha_meta_data), is_matcha_(true) {
   {
     auto buf = ReadFile(mgr, tokens);
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
     token2id_ = ReadTokens(is);
   }
 
@@ -417,7 +416,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     : kokoro_meta_data_(kokoro_meta_data), is_kokoro_(true) {
   {
     auto buf = ReadFile(mgr, tokens);
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
     token2id_ = ReadTokens(is);
   }
 
@@ -434,7 +433,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     : kitten_meta_data_(kitten_meta_data), is_kitten_(true) {
   {
     auto buf = ReadFile(mgr, tokens);
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
     token2id_ = ReadTokens(is);
   }
 

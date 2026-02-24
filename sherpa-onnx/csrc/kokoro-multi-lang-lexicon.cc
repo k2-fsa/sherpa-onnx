@@ -9,7 +9,6 @@
 #include <regex>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -438,7 +437,7 @@ class KokoroMultiLangLexicon::Impl {
   void InitTokens(Manager *mgr, const std::string &tokens) {
     auto buf = ReadFile(mgr, tokens);
 
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
     InitTokens(is);
   }
 
@@ -491,7 +490,7 @@ class KokoroMultiLangLexicon::Impl {
     for (const auto &f : files) {
       auto buf = ReadFile(mgr, f);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitLexicon(is);
     }
   }

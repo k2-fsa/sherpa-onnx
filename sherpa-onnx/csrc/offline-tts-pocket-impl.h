@@ -16,6 +16,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -115,7 +116,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
 #endif
         }
         auto buf = ReadFile(mgr, f);
-        std::istrstream is(buf.data(), buf.size());
+        std::istringstream is(std::string(buf.data(), buf.size()));
         tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
       }
     }
@@ -137,7 +138,7 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
         auto buf = ReadFile(mgr, f);
 
         std::unique_ptr<std::istream> s(
-            new std::istrstream(buf.data(), buf.size()));
+            new std::istringstream(std::string(buf.data(), buf.size())));
 
         std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
             fst::FarReader<fst::StdArc>::Open(std::move(s)));
