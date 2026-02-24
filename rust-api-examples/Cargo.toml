@@ -1,0 +1,9 @@
+[package]
+name = "rust-api-examples"
+version = "0.1.1"
+edition = "2021"
+
+
+[dependencies]
+sherpa-onnx = "0.1.1"
+# sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }
