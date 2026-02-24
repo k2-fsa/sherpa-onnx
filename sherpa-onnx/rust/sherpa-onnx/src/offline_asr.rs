@@ -3,21 +3,13 @@ use serde::Deserialize;
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineTransducerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
     pub joiner: Option<String>,
 }
-impl Default for OfflineTransducerModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-            joiner: None,
-        }
-    }
-}
+
 impl OfflineTransducerModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineTransducerModelConfig {
         sys::OfflineTransducerModelConfig {
@@ -28,15 +20,11 @@ impl OfflineTransducerModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineParaformerModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineParaformerModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineParaformerModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineParaformerModelConfig {
         sys::OfflineParaformerModelConfig {
@@ -45,15 +33,11 @@ impl OfflineParaformerModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineNemoEncDecCtcModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineNemoEncDecCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineNemoEncDecCtcModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineNemoEncDecCtcModelConfig {
         sys::OfflineNemoEncDecCtcModelConfig {
@@ -62,7 +46,7 @@ impl OfflineNemoEncDecCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineWhisperModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -72,19 +56,7 @@ pub struct OfflineWhisperModelConfig {
     pub enable_token_timestamps: bool,
     pub enable_segment_timestamps: bool,
 }
-impl Default for OfflineWhisperModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-            language: None,
-            task: None,
-            tail_paddings: 0,
-            enable_token_timestamps: false,
-            enable_segment_timestamps: false,
-        }
-    }
-}
+
 impl OfflineWhisperModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineWhisperModelConfig {
         sys::OfflineWhisperModelConfig {
@@ -99,7 +71,7 @@ impl OfflineWhisperModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineCanaryModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -107,17 +79,7 @@ pub struct OfflineCanaryModelConfig {
     pub tgt_lang: Option<String>,
     pub use_pnc: bool,
 }
-impl Default for OfflineCanaryModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-            src_lang: None,
-            tgt_lang: None,
-            use_pnc: false,
-        }
-    }
-}
+
 impl OfflineCanaryModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineCanaryModelConfig {
         sys::OfflineCanaryModelConfig {
@@ -130,19 +92,12 @@ impl OfflineCanaryModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineFireRedAsrModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
 }
-impl Default for OfflineFireRedAsrModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-        }
-    }
-}
+
 impl OfflineFireRedAsrModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineFireRedAsrModelConfig {
         sys::OfflineFireRedAsrModelConfig {
@@ -152,23 +107,14 @@ impl OfflineFireRedAsrModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineMoonshineModelConfig {
     pub preprocessor: Option<String>,
     pub encoder: Option<String>,
     pub uncached_decoder: Option<String>,
     pub cached_decoder: Option<String>,
 }
-impl Default for OfflineMoonshineModelConfig {
-    fn default() -> Self {
-        Self {
-            preprocessor: None,
-            encoder: None,
-            uncached_decoder: None,
-            cached_decoder: None,
-        }
-    }
-}
+
 impl OfflineMoonshineModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineMoonshineModelConfig {
         sys::OfflineMoonshineModelConfig {
@@ -180,15 +126,11 @@ impl OfflineMoonshineModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineTdnnModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineTdnnModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineTdnnModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineTdnnModelConfig {
         sys::OfflineTdnnModelConfig {
@@ -219,21 +161,13 @@ impl OfflineLMConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineSenseVoiceModelConfig {
     pub model: Option<String>,
     pub language: Option<String>,
     pub use_itn: bool,
 }
-impl Default for OfflineSenseVoiceModelConfig {
-    fn default() -> Self {
-        Self {
-            model: None,
-            language: None,
-            use_itn: false,
-        }
-    }
-}
+
 impl OfflineSenseVoiceModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSenseVoiceModelConfig {
         sys::OfflineSenseVoiceModelConfig {
@@ -244,15 +178,11 @@ impl OfflineSenseVoiceModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineDolphinModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineDolphinModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineDolphinModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineDolphinModelConfig {
         sys::OfflineDolphinModelConfig {
@@ -261,15 +191,11 @@ impl OfflineDolphinModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineZipformerCtcModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineZipformerCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineZipformerCtcModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineZipformerCtcModelConfig {
         sys::OfflineZipformerCtcModelConfig {
@@ -278,15 +204,11 @@ impl OfflineZipformerCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineWenetCtcModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineWenetCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineWenetCtcModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineWenetCtcModelConfig {
         sys::OfflineWenetCtcModelConfig {
@@ -295,15 +217,11 @@ impl OfflineWenetCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineOmnilingualAsrCtcModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineOmnilingualAsrCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineOmnilingualAsrCtcModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineOmnilingualAsrCtcModelConfig {
         sys::OfflineOmnilingualAsrCtcModelConfig {
@@ -312,15 +230,11 @@ impl OfflineOmnilingualAsrCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OfflineMedAsrCtcModelConfig {
     pub model: Option<String>,
 }
-impl Default for OfflineMedAsrCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
-}
+
 impl OfflineMedAsrCtcModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineMedAsrCtcModelConfig {
         sys::OfflineMedAsrCtcModelConfig {
