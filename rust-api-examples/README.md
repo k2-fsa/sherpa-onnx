@@ -43,7 +43,7 @@ otool -l target/debug/examples/version | grep -A2 LC_RPATH
 ```
 to check the RPATH.
 
-### Example 2: ASR with streaming zipformer
+### Example 2: ASR with streaming zipformer (with a file)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
@@ -57,6 +57,22 @@ cargo run --example streaming_zipformer -- \
     --decoder sherpa-onnx-streaming-zipformer-en-2023-06-21/decoder-epoch-99-avg-1.onnx \
     --joiner sherpa-onnx-streaming-zipformer-en-2023-06-21/joiner-epoch-99-avg-1.int8.onnx \
     --tokens sherpa-onnx-streaming-zipformer-en-2023-06-21/tokens.txt \
+    --provider cpu \
+    --debug
+```
+
+### Example 3: ASR with streaming zipformer (with a microphone, real-time ASR)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+cargo run --example streaming_zipformer_microphone --features mic -- \
+    --encoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx \
+    --decoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
+    --joiner sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx \
+    --tokens sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt \
     --provider cpu \
     --debug
 ```

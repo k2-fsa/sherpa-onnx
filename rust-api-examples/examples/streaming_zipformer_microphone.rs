@@ -5,14 +5,14 @@
 //
 // See ../README.md for how to run it
 //
-// See ./streaming_zipformer.rs for how to recongize a wave file.
+// See ./streaming_zipformer.rs for how to recognize a wave file.
 
 use anyhow::Result;
 use clap::Parser;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::SampleFormat;
 use sherpa_onnx::{DisplayManager, OnlineRecognizer, OnlineRecognizerConfig};
 use std::sync::mpsc;
-use std::time::{Duration, Instant};
 
 /// Command-line arguments
 #[derive(Parser, Debug)]
@@ -38,6 +38,7 @@ struct Args {
 fn list_input_devices(host: &cpal::Host) -> Result<cpal::Device> {
     let default_input = host.default_input_device();
     let default_name = default_input.as_ref().map(|d| d.name().unwrap_or_default());
+
     println!("Available input devices:");
     for device in host.input_devices()? {
         let name = device.name().unwrap_or("<unknown>".to_string());
@@ -48,7 +49,9 @@ fn list_input_devices(host: &cpal::Host) -> Result<cpal::Device> {
         };
         println!("{} {}", mark, name);
     }
+
     let device = default_input.ok_or_else(|| anyhow::anyhow!("No default input device"))?;
+
     println!("\nUsing default device: {}", device.name()?);
     Ok(device)
 }
@@ -70,19 +73,64 @@ fn setup_recognizer(args: &Args) -> OnlineRecognizer {
 
 /// Build the audio input stream (producer)
 fn build_input_stream(device: &cpal::Device, tx: mpsc::Sender<Vec<f32>>) -> Result<cpal::Stream> {
-    let config = device.default_input_config()?.config();
+    let supported = device.default_input_config()?;
+    let config = supported.config();
+    let sample_format = supported.sample_format();
+
     let err_fn = |err| eprintln!("Audio stream error: {:?}", err);
 
-    let stream = device.build_input_stream(
-        &config,
-        move |data: &[f32], _: &cpal::InputCallbackInfo| {
-            if !data.is_empty() {
-                let _ = tx.send(data.to_vec());
-            }
-        },
-        err_fn,
-        None,
-    )?;
+    let stream = match sample_format {
+        SampleFormat::F32 => device.build_input_stream(
+            &config,
+            move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                if !data.is_empty() {
+                    // Already expected to be in [-1.0, 1.0]
+                    let _ = tx.send(data.to_vec());
+                }
+            },
+            err_fn,
+            None,
+        )?,
+
+        SampleFormat::I16 => device.build_input_stream(
+            &config,
+            move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                if !data.is_empty() {
+                    // Normalize i16 -> [-1.0, 1.0]
+                    let samples: Vec<f32> =
+                        data.iter().map(|&s| s as f32 / i16::MAX as f32).collect();
+
+                    let _ = tx.send(samples);
+                }
+            },
+            err_fn,
+            None,
+        )?,
+
+        SampleFormat::U16 => device.build_input_stream(
+            &config,
+            move |data: &[u16], _: &cpal::InputCallbackInfo| {
+                if !data.is_empty() {
+                    // Convert unsigned [0, 65535]
+                    // to signed [-1.0, 1.0]
+                    let samples: Vec<f32> = data
+                        .iter()
+                        .map(|&s| {
+                            let centered = s as f32 - 32768.0;
+                            centered / 32768.0
+                        })
+                        .collect();
+
+                    let _ = tx.send(samples);
+                }
+            },
+            err_fn,
+            None,
+        )?,
+
+        other => anyhow::bail!("Unsupported sample format: {:?}", other),
+    };
+
     Ok(stream)
 }
 
@@ -96,11 +144,17 @@ fn run_recognition_loop(
 ) {
     let mut display = DisplayManager::new();
     let mut buffer = Vec::<f32>::new();
-    let mut last_render = Instant::now();
 
     loop {
-        let samples = rx.recv().unwrap_or_default();
-        buffer.extend_from_slice(&samples);
+        match rx.recv() {
+            Ok(samples) => {
+                buffer.extend_from_slice(&samples);
+            }
+            Err(_) => {
+                println!("\nAudio stream closed. Exiting.");
+                break;
+            }
+        }
 
         while buffer.len() >= chunk_size {
             let chunk: Vec<f32> = buffer.drain(..chunk_size).collect();
@@ -127,24 +181,18 @@ fn run_recognition_loop(
             }
         }
 
-        if last_render.elapsed() > Duration::from_millis(200) {
-            display.render();
-            last_render = Instant::now();
-        }
+        display.render();
     }
 }
 
 fn main() -> Result<()> {
-    #[cfg(not(feature = "mic"))]
-    panic!(
-        "Feature `mic` is not enabled. Please build with `--features mic` to use the microphone example."
-    );
-
     let args = Args::parse();
     let host = cpal::default_host();
 
     let device = list_input_devices(&host)?;
-    let sample_rate = device.default_input_config()?.sample_rate().0 as i32;
+
+    let supported = device.default_input_config()?;
+    let sample_rate = supported.sample_rate().0 as i32;
     println!("Mic sample rate: {sample_rate}");
 
     let recognizer = setup_recognizer(&args);
@@ -153,8 +201,10 @@ fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel::<Vec<f32>>();
     let audio_stream = build_input_stream(&device, tx)?;
     audio_stream.play()?;
+
     println!("Streaming microphone ASR... Press Ctrl+C to stop.");
 
     run_recognition_loop(rx, &recognizer, &mut stream, args.chunk_size, sample_rate);
+
     Ok(())
 }

@@ -17,3 +17,7 @@ default = []
 
 # Feature for using microphone
 mic = ["cpal"]
+
+[[example]]
+name = "streaming_zipformer_microphone"
+required-features = ["mic"]
