@@ -10,3 +10,9 @@ extern "C" {
     pub fn SherpaOnnxGetGitDate() -> *const c_char;
     pub fn SherpaOnnxFileExists(filename: *const c_char) -> c_int;
 }
+
+pub mod online_asr;
+pub mod wave;
+
+pub use online_asr::*;
+pub use wave::*;
