@@ -17,6 +17,7 @@ namespace SherpaOnnx
             TextConditioner = "";
             VocabJson = "";
             TokenScoresJson = "";
+            VoiceEmbeddingCacheCapacity = 50;
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -39,6 +40,8 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string TokenScoresJson;
+
+        public int VoiceEmbeddingCacheCapacity;
     }
 }
 

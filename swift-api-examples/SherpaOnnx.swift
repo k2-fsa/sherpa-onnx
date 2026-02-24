@@ -1035,6 +1035,7 @@ func sherpaOnnxOfflineTtsPocketModelConfig(
   textConditioner: String = "",
   vocabJson: String = "",
   tokenScoresJson: String = "",
+  voiceEmbeddingCacheCapacity: Int = 50
 ) -> SherpaOnnxOfflineTtsPocketModelConfig {
   return SherpaOnnxOfflineTtsPocketModelConfig(
     lm_flow: toCPointer(lmFlow),
@@ -1043,7 +1044,8 @@ func sherpaOnnxOfflineTtsPocketModelConfig(
     decoder: toCPointer(decoder),
     text_conditioner: toCPointer(textConditioner),
     vocab_json: toCPointer(vocabJson),
-    token_scores_json: toCPointer(tokenScoresJson)
+    token_scores_json: toCPointer(tokenScoresJson),
+    voice_embedding_cache_capacity: Int32(voiceEmbeddingCacheCapacity)
   )
 }
 
