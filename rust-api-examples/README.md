@@ -31,6 +31,8 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 
 ## Run it
 
+### Example 1: Show sherpa-onnx version
+
 ```bash
 cargo run --example version
 ```
@@ -40,6 +42,17 @@ For macOS, you can run
 otool -l target/debug/examples/version | grep -A2 LC_RPATH
 ```
 to check the RPATH.
+
+### Example 2: ASR with streaming zipformer
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+
+tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+rm sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+
+cargo run --example streaming_zipformer
+```
 
 # Alternative rust bindings for sherpa-onnx
 

@@ -88,8 +88,12 @@ jobs:
 
           sed -i.bak 's|^sherpa-onnx *=.*|sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }|' Cargo.toml
 
-
           git diff .
 
           cargo clean
           cargo run --example version
+
+      - name: Run test
+        shell: bash
+        run: |
+          ./.github/scripts/test-rust.sh

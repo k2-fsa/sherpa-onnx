@@ -70,12 +70,7 @@ jobs:
 
           echo "RUSTFLAGS: $RUSTFLAGS"
 
-      # Test using published crates.io dependencies
-      - name: Test Published Crates
+      - name: Run test
         shell: bash
         run: |
-          cd rust-api-examples
-          git checkout Cargo.toml
-          cargo clean
-          # cargo test --locked --all-features
-          cargo run --example version
+          ./.github/scripts/test-rust.sh
