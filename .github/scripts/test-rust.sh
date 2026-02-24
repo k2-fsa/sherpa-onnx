@@ -6,6 +6,8 @@ cd rust-api-examples
 
 ./run-version.sh
 
+./run-nemo-parakeet.sh
+
 ./run-sense-voice.sh
 
 ./run-streaming-zipformer-en.sh
