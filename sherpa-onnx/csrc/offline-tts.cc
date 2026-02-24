@@ -325,6 +325,10 @@ int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
 int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
 
+void OfflineTts::SetMedibunnyPhonemeIds(const std::vector<int64_t> &ids) {
+  impl_->SetMedibunnyPhonemeIds(ids);
+}
+
 #if __ANDROID_API__ >= 9
 template OfflineTts::OfflineTts(AAssetManager *mgr,
                                 const OfflineTtsConfig &config);

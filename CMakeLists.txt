@@ -59,6 +59,7 @@ option(SHERPA_ONNX_ENABLE_WASM_NODEJS "Whether to enable WASM for NodeJS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_SPEECH_ENHANCEMENT "Whether to enable WASM for speech enhancement" OFF)
 option(SHERPA_ONNX_ENABLE_BINARY "Whether to build binaries" ${SUGGEST_BUILD_BINARIES})
 option(SHERPA_ONNX_ENABLE_TTS "Whether to build TTS related code" ON)
+option(SHERPA_ONNX_ENABLE_ESPEAK "Enable espeak-ng phonemization (GPL-3.0). Default OFF for Medibunny fork — our Rust G2P pipeline replaces espeak via MedibunnyPhonemizerFrontend." OFF)
 option(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION "Whether to build speaker diarization related code" ON)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
 option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-installed onnxruntime if available" ON)
@@ -542,11 +543,16 @@ endif()
 
 include(json)
 
-if(SHERPA_ONNX_ENABLE_TTS)
+if(SHERPA_ONNX_ENABLE_TTS AND SHERPA_ONNX_ENABLE_ESPEAK)
+  # espeak-ng is GPL-3.0. Only include when explicitly opted in.
+  # Medibunny fork disables this and uses MedibunnyPhonemizerFrontend instead.
   include(espeak-ng-for-piper)
   set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
   message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
   include(piper-phonemize)
+elseif(SHERPA_ONNX_ENABLE_TTS)
+  message(STATUS "SHERPA_ONNX_ENABLE_ESPEAK=OFF: espeak-ng disabled. "
+    "TTS phonemization uses MedibunnyPhonemizerFrontend (pre-computed phoneme IDs from Rust G2P).")
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)

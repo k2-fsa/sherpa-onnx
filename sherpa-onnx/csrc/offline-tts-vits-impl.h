@@ -22,7 +22,12 @@
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
+#if defined(SHERPA_ONNX_ENABLE_ESPEAK) && SHERPA_ONNX_ENABLE_ESPEAK == 1
 #include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
+#else
+// Medibunny fork: espeak replaced by our GPL-free Rust G2P pipeline.
+#include "sherpa-onnx/csrc/medibunny-phonemizer-frontend.h"
+#endif
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -357,9 +362,16 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
+#if defined(SHERPA_ONNX_ENABLE_ESPEAK) && SHERPA_ONNX_ENABLE_ESPEAK == 1
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
           meta_data);
+#else
+      // Medibunny fork: phoneme IDs come from our Rust G2P pipeline via
+      // SetMedibunnyPhonemeIds(). data_dir is not needed.
+      medibunny_frontend_ = new MedibunnyPhonemizerFrontend();
+      frontend_.reset(medibunny_frontend_);
+#endif
     } else {
       if (config_.model.vits.lexicon.empty()) {
         SHERPA_ONNX_LOGE(
@@ -395,9 +407,16 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
+#if defined(SHERPA_ONNX_ENABLE_ESPEAK) && SHERPA_ONNX_ENABLE_ESPEAK == 1
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.vits.tokens, config_.model.vits.data_dir,
           model_->GetMetaData());
+#else
+      // Medibunny fork: phoneme IDs come from our Rust G2P pipeline via
+      // SetMedibunnyPhonemeIds(). data_dir is not needed.
+      medibunny_frontend_ = new MedibunnyPhonemizerFrontend();
+      frontend_.reset(medibunny_frontend_);
+#endif
     } else {
       if (config_.model.vits.lexicon.empty()) {
         SHERPA_ONNX_LOGE(
@@ -478,11 +497,28 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return ans;
   }
 
+  // Medibunny fork: forward pre-computed phoneme IDs to our GPL-free frontend.
+  void SetMedibunnyPhonemeIds(const std::vector<int64_t>& ids) override {
+#if !defined(SHERPA_ONNX_ENABLE_ESPEAK) || SHERPA_ONNX_ENABLE_ESPEAK == 0
+    if (medibunny_frontend_ != nullptr) {
+      medibunny_frontend_->SetPhonemeIds(ids);
+    }
+#else
+    (void)ids;  // espeak path — no-op
+#endif
+  }
+
  private:
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsVitsModel> model_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<OfflineTtsFrontend> frontend_;
+  // Non-owning pointer into frontend_ when MedibunnyPhonemizerFrontend is used.
+  // Only non-null when SHERPA_ONNX_ENABLE_ESPEAK=OFF and the model uses
+  // espeak/piper data_dir (is_piper || is_coqui || is_icefall).
+#if !defined(SHERPA_ONNX_ENABLE_ESPEAK) || SHERPA_ONNX_ENABLE_ESPEAK == 0
+  MedibunnyPhonemizerFrontend* medibunny_frontend_ = nullptr;
+#endif
 };
 
 }  // namespace sherpa_onnx
