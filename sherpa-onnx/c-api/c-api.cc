@@ -1706,6 +1706,17 @@ void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     delete p;
   }
 }
+
+void SherpaOnnxMedibunnySetPhonemeIds(const SherpaOnnxOfflineTts *tts,
+                                      const int64_t *ids, int32_t n) {
+  if (!tts || !ids || n <= 0) {
+    return;
+  }
+  std::vector<int64_t> id_vec(ids, ids + n);
+  const_cast<SherpaOnnxOfflineTts *>(tts)->impl->SetMedibunnyPhonemeIds(
+      id_vec);
+}
+
 #else
 const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
     const SherpaOnnxOfflineTtsConfig *config) {
@@ -1782,6 +1793,12 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithConfig(
 
 void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+}
+
+void SherpaOnnxMedibunnySetPhonemeIds(const SherpaOnnxOfflineTts * /*tts*/,
+                                      const int64_t * /*ids*/,
+                                      int32_t /*n*/) {
   SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
 }
 #endif  // SHERPA_ONNX_ENABLE_TTS == 1

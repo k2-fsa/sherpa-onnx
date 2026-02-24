@@ -1269,6 +1269,27 @@ SherpaOnnxOfflineTtsGenerateWithConfig(
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p);
 
+// Medibunny fork: set pre-computed phoneme IDs for the next TTS synthesis call.
+//
+// This function is only meaningful when sherpa-onnx was built with
+// -DSHERPA_ONNX_ENABLE_ESPEAK=OFF (the Medibunny default).  In that build the
+// TTS frontend is MedibunnyPhonemizerFrontend, which returns whatever IDs are
+// stored here instead of calling espeak-ng.
+//
+// Typical call sequence from Rust:
+//
+//   1. Run Medibunny G2P pipeline → Vec<i64> phoneme_ids
+//   2. SherpaOnnxMedibunnySetPhonemeIds(tts, ids.as_ptr(), ids.len() as i32)
+//   3. SherpaOnnxOfflineTtsGenerate(tts, text, sid, speed)
+//      (the `text` argument is ignored by MedibunnyPhonemizerFrontend)
+//
+// Thread safety: the stored IDs are protected by an internal mutex; however
+// the intended usage is single-threaded (set then synthesise in the same call).
+//
+// When built with SHERPA_ONNX_ENABLE_ESPEAK=ON this function is a no-op.
+SHERPA_ONNX_API void SherpaOnnxMedibunnySetPhonemeIds(
+    const SherpaOnnxOfflineTts *tts, const int64_t *ids, int32_t n);
+
 // Write the generated audio to a wave file.
 // The saved wave file contains a single channel and has 16-bit samples.
 //

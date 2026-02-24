@@ -153,6 +153,17 @@ class OfflineTts {
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
 
+  // Medibunny fork: set pre-computed phoneme IDs for the next Generate() call.
+  //
+  // Only meaningful when sherpa-onnx is built with
+  // -DSHERPA_ONNX_ENABLE_ESPEAK=OFF (the Medibunny default). The Rust G2P
+  // pipeline computes phoneme IDs and passes them here before calling
+  // Generate(). MedibunnyPhonemizerFrontend returns these IDs from
+  // ConvertTextToTokenIds(), bypassing espeak entirely.
+  //
+  // When SHERPA_ONNX_ENABLE_ESPEAK=ON this is a no-op (standard espeak path).
+  void SetMedibunnyPhonemeIds(const std::vector<int64_t> &ids);
+
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;
 };

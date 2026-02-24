@@ -280,11 +280,20 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-zipvoice-model-config.cc
     offline-tts-zipvoice-model.cc
     offline-tts.cc
-    piper-phonemize-lexicon.cc
     sentence-piece-tokenizer.cc
     vocoder.cc
     vocos-vocoder.cc
   )
+
+  if(SHERPA_ONNX_ENABLE_ESPEAK)
+    # piper-phonemize-lexicon.cc includes espeak-ng/speak_lib.h and phonemize.hpp
+    # (from piper-phonemize). Only compiled when espeak is explicitly enabled.
+    list(APPEND sources piper-phonemize-lexicon.cc)
+  else()
+    # Medibunny fork: use our GPL-free custom frontend instead of espeak.
+    # MedibunnyPhonemizerFrontend receives pre-computed phoneme IDs from Rust G2P.
+    list(APPEND sources medibunny-phonemizer-frontend.cc)
+  endif()
 endif()
 
 list(APPEND sources
@@ -431,7 +440,8 @@ endif()
 
 target_link_libraries(sherpa-onnx-core fstfar fst)
 
-if(SHERPA_ONNX_ENABLE_TTS)
+if(SHERPA_ONNX_ENABLE_TTS AND SHERPA_ONNX_ENABLE_ESPEAK)
+  # piper_phonemize bundles espeak-ng. Only link when espeak is explicitly enabled.
   target_link_libraries(sherpa-onnx-core
     piper_phonemize)
 endif()

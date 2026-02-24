@@ -55,6 +55,14 @@ class OfflineTtsImpl {
   // If it supports only a single speaker, then it return 0 or 1.
   virtual int32_t NumSpeakers() const { return 1; }
 
+  // Medibunny fork: set pre-computed phoneme IDs for the next Generate() call.
+  //
+  // Used when sherpa-onnx is built with SHERPA_ONNX_ENABLE_ESPEAK=OFF.
+  // Concrete impls that use MedibunnyPhonemizerFrontend override this to
+  // forward the IDs to their frontend. All other impls silently ignore it.
+  virtual void SetMedibunnyPhonemeIds(
+      const std::vector<int64_t>& /*ids*/) {}
+
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;
 };
