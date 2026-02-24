@@ -14,6 +14,7 @@ async function createOfflineTts() {
         vocabJson: './sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json',
         tokenScoresJson:
             './sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json',
+        voiceEmbeddingCacheCapacity: 50,
       },
       debug: false,  // set to true to see verbose logs
       numThreads: 2,
@@ -40,7 +41,7 @@ async function generateAudioAsync(tts, text) {
     referenceAudio: referenceWave.samples,
     referenceSampleRate: referenceWave.sampleRate,
     numSteps: 5,
-    extra: {max_reference_audio_len: 12},
+    extra: {max_reference_audio_len: 12, seed: 42},
   });
 
   console.log('Starting generation...');

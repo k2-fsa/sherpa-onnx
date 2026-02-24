@@ -18,7 +18,7 @@ static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 10 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineTtsPocketModelConfig) == 7 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsPocketModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
@@ -99,6 +99,8 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "text_conditioner: %s\n", pocket->text_conditioner);
   fprintf(stdout, "vocab_json: %s\n", pocket->vocab_json);
   fprintf(stdout, "token_scores_json: %s\n", pocket->token_scores_json);
+  fprintf(stdout, "voice_embedding_cache_capacity: %d\n",
+          pocket->voice_embedding_cache_capacity);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);

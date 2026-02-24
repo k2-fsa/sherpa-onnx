@@ -213,6 +213,13 @@ static SherpaOnnxOfflineTtsPocketModelConfig GetOfflineTtsPocketModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(vocab_json, vocabJson);
   SHERPA_ONNX_ASSIGN_ATTR_STR(token_scores_json, tokenScoresJson);
 
+  if (o.Has("voiceEmbeddingCacheCapacity")) {
+    c.voice_embedding_cache_capacity =
+        o.Get("voiceEmbeddingCacheCapacity").As<Napi::Number>().Int32Value();
+  } else {
+    c.voice_embedding_cache_capacity = 50;
+  }
+
   return c;
 }
 

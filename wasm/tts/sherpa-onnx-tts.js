@@ -357,7 +357,7 @@ function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
 
   const buffer = Module._malloc(n);
 
-  const len = 7 * 4;
+  const len = 8 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -405,6 +405,8 @@ function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
 
   Module.setValue(ptr + 6 * 4, buffer + offset, 'i8*');
   offset += tokenScoresJsonLen;
+  
+  Module.setValue(ptr + 7 * 4, config.voiceEmbeddingCacheCapacity !== undefined ? config.voiceEmbeddingCacheCapacity : 50, 'i32');
 
   return {
     buffer: buffer,
@@ -483,6 +485,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
       textConditioner: '',
       vocabJson: '',
       tokenScoresJson: '',
+      voiceEmbeddingCacheCapacity: 50,
     };
   }
 
