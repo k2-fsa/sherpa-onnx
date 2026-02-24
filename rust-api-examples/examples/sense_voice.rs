@@ -40,6 +40,10 @@ struct Args {
     /// Enable inverse text normalization
     #[arg(long, default_value_t = true)]
     use_itn: bool,
+
+    /// Number of threads
+    #[arg(long, default_value_t = 2)]
+    num_threads: i32,
 }
 
 fn main() {
@@ -59,7 +63,7 @@ fn main() {
     recognizer_config.model_config.tokens = Some(args.tokens.clone());
     recognizer_config.model_config.provider = Some(args.provider.clone());
     recognizer_config.model_config.debug = args.debug;
-    recognizer_config.model_config.num_threads = 2;
+    recognizer_config.model_config.num_threads = args.num_threads;
 
     // Measure recognizer creation time
     println!("Creating recognizer ...");
