@@ -135,6 +135,11 @@ fn run_recognition_loop(
 }
 
 fn main() -> Result<()> {
+    #[cfg(not(feature = "mic"))]
+    panic!(
+        "Feature `mic` is not enabled. Please build with `--features mic` to use the microphone example."
+    );
+
     let args = Args::parse();
     let host = cpal::default_host();
 
