@@ -86,3 +86,9 @@ impl DisplayManager {
         &self.current_text
     }
 }
+
+impl Default for DisplayManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

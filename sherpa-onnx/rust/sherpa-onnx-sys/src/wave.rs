@@ -2,15 +2,15 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use std::os::raw::{c_char, c_int};
+use std::os::raw::c_char;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SherpaOnnxWave {
     /// Samples normalized to [-1, 1]
     pub samples: *const f32,
-    pub sample_rate: c_int,
-    pub num_samples: c_int,
+    pub sample_rate: i32,
+    pub num_samples: i32,
 }
 
 extern "C" {

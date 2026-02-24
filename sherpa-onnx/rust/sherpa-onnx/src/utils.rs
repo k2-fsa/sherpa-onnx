@@ -1,6 +1,7 @@
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::ptr;
 
 /// Safely convert a C string pointer to a `'static` Rust string slice.
 ///
@@ -46,4 +47,15 @@ pub fn file_exists(filename: &str) -> bool {
     };
 
     unsafe { sys::SherpaOnnxFileExists(cstr.as_ptr()) != 0 }
+}
+
+pub(crate) fn to_c_ptr(opt: &Option<String>, storage: &mut Vec<CString>) -> *const c_char {
+    if let Some(s) = opt {
+        let c = CString::new(s.as_str()).unwrap();
+        let ptr = c.as_ptr();
+        storage.push(c);
+        ptr
+    } else {
+        ptr::null()
+    }
 }

@@ -1,25 +1,15 @@
+use crate::utils::to_c_ptr;
 use serde::Deserialize;
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use std::ptr;
 
 use sherpa_onnx_sys as sys;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OnlineTransducerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
     pub joiner: Option<String>,
-}
-
-impl Default for OnlineTransducerModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-            joiner: None,
-        }
-    }
 }
 
 impl OnlineTransducerModelConfig {
@@ -32,19 +22,10 @@ impl OnlineTransducerModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OnlineParaformerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
-}
-
-impl Default for OnlineParaformerModelConfig {
-    fn default() -> Self {
-        Self {
-            encoder: None,
-            decoder: None,
-        }
-    }
 }
 
 impl OnlineParaformerModelConfig {
@@ -56,15 +37,9 @@ impl OnlineParaformerModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OnlineZipformer2CtcModelConfig {
     pub model: Option<String>,
-}
-
-impl Default for OnlineZipformer2CtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
 }
 
 impl OnlineZipformer2CtcModelConfig {
@@ -75,15 +50,9 @@ impl OnlineZipformer2CtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OnlineNemoCtcModelConfig {
     pub model: Option<String>,
-}
-
-impl Default for OnlineNemoCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
 }
 
 impl OnlineNemoCtcModelConfig {
@@ -94,15 +63,9 @@ impl OnlineNemoCtcModelConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct OnlineToneCtcModelConfig {
     pub model: Option<String>,
-}
-
-impl Default for OnlineToneCtcModelConfig {
-    fn default() -> Self {
-        Self { model: None }
-    }
 }
 
 impl OnlineToneCtcModelConfig {
@@ -206,7 +169,7 @@ impl Default for OnlineCtcFstDecoderConfig {
     fn default() -> Self {
         Self {
             graph: None,
-            max_active: 0,
+            max_active: 4,
         }
     }
 }
@@ -221,19 +184,10 @@ impl OnlineCtcFstDecoderConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct HomophoneReplacerConfig {
     pub lexicon: Option<String>,
     pub rule_fsts: Option<String>,
-}
-
-impl Default for HomophoneReplacerConfig {
-    fn default() -> Self {
-        Self {
-            lexicon: None,
-            rule_fsts: None,
-        }
-    }
 }
 
 impl HomophoneReplacerConfig {
@@ -455,16 +409,5 @@ impl OnlineStream {
 impl Drop for OnlineStream {
     fn drop(&mut self) {
         unsafe { sys::SherpaOnnxDestroyOnlineStream(self.ptr) }
-    }
-}
-
-fn to_c_ptr(opt: &Option<String>, storage: &mut Vec<CString>) -> *const c_char {
-    if let Some(s) = opt {
-        let c = CString::new(s.as_str()).unwrap();
-        let ptr = c.as_ptr();
-        storage.push(c);
-        ptr
-    } else {
-        ptr::null()
     }
 }
