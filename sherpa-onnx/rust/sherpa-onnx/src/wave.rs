@@ -35,7 +35,12 @@ impl Wave {
         unsafe {
             let ptr = (*self.inner).samples;
             let len = (*self.inner).num_samples as usize;
-            slice::from_raw_parts(ptr, len)
+
+            if ptr.is_null() || len == 0 {
+                &[]
+            } else {
+                slice::from_raw_parts(ptr, len)
+            }
         }
     }
 }

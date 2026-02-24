@@ -43,8 +43,8 @@ fn main() {
 
     let mut segment_id = 0;
 
-    // use an use any postive value you like
-    const N: usize = 3200; // chunk size for streaming
+    // use any positive value as you like
+    const CHUNK_SIZE: usize = 3200;
 
     println!(
         "Sample rate: {}, num samples: {}, duration: {:.2}s",
@@ -53,13 +53,7 @@ fn main() {
         wave.num_samples() as f32 / wave.sample_rate() as f32
     );
 
-    let samples = wave.samples();
-    let mut k = 0;
-    while k < samples.len() {
-        let end = (k + N).min(samples.len());
-        let chunk = &samples[k..end];
-        k = end;
-
+    for chunk in wave.samples().chunks(CHUNK_SIZE) {
         stream.accept_waveform(wave.sample_rate(), chunk);
 
         while recognizer.is_ready(&stream) {
@@ -78,8 +72,10 @@ fn main() {
         }
     }
 
-    // Tail padding (0.3s)
-    let tail_padding = vec![0.0f32; 4800];
+    // Tail padding (~0.3s)
+    let tail_padding_len = (wave.sample_rate() as f32 * 0.3).round() as usize;
+    let tail_padding = vec![0.0f32; tail_padding_len];
+
     stream.accept_waveform(wave.sample_rate(), &tail_padding);
 
     stream.input_finished();

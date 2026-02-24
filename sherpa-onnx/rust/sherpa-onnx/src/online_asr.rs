@@ -223,7 +223,6 @@ impl OnlineCtcFstDecoderConfig {
 
 #[derive(Clone, Debug)]
 pub struct HomophoneReplacerConfig {
-    pub dict_dir: Option<String>, // currently unused
     pub lexicon: Option<String>,
     pub rule_fsts: Option<String>,
 }
@@ -231,7 +230,6 @@ pub struct HomophoneReplacerConfig {
 impl Default for HomophoneReplacerConfig {
     fn default() -> Self {
         Self {
-            dict_dir: None,
             lexicon: None,
             rule_fsts: None,
         }
@@ -241,7 +239,7 @@ impl Default for HomophoneReplacerConfig {
 impl HomophoneReplacerConfig {
     pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::HomophoneReplacerConfig {
         sys::HomophoneReplacerConfig {
-            dict_dir: to_c_ptr(&self.dict_dir, cstrings),
+            dict_dir: ptr::null(), // not used any more internally
             lexicon: to_c_ptr(&self.lexicon, cstrings),
             rule_fsts: to_c_ptr(&self.rule_fsts, cstrings),
         }
