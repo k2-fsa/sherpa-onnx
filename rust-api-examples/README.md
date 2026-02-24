@@ -77,6 +77,21 @@ cargo run --example streaming_zipformer_microphone --features mic -- \
     --debug
 ```
 
+### Example 4: ASR with non-streaming SenseVoice
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
+
+cargo run --example sense_voice -- \
+    --wav ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/test_wavs/en.wav \
+    --model ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx \
+    --tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt
+```
+
 # Alternative rust bindings for sherpa-onnx
 
 Please see also https://github.com/thewh1teagle/sherpa-rs
