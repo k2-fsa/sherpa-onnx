@@ -76,17 +76,31 @@ fn build_input_stream(device: &cpal::Device, tx: mpsc::Sender<Vec<f32>>) -> Resu
     let supported = device.default_input_config()?;
     let config = supported.config();
     let sample_format = supported.sample_format();
+    let channels = config.channels as usize;
 
     let err_fn = |err| eprintln!("Audio stream error: {:?}", err);
+
+    println!(
+        "Input format: {:?}, channels: {}, sample_rate: {}",
+        sample_format, channels, config.sample_rate.0
+    );
 
     let stream = match sample_format {
         SampleFormat::F32 => device.build_input_stream(
             &config,
-            move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                if !data.is_empty() {
-                    // Already expected to be in [-1.0, 1.0]
-                    let _ = tx.send(data.to_vec());
+            move |data: &[f32], _| {
+                if data.is_empty() {
+                    return;
                 }
+
+                let mono: Vec<f32> = data
+                    .chunks(channels)
+                    .map(|frame| {
+                        let sum: f32 = frame.iter().copied().sum();
+                        sum / channels as f32
+                    })
+                    .collect();
+                let _ = tx.send(mono);
             },
             err_fn,
             None,
@@ -94,14 +108,20 @@ fn build_input_stream(device: &cpal::Device, tx: mpsc::Sender<Vec<f32>>) -> Resu
 
         SampleFormat::I16 => device.build_input_stream(
             &config,
-            move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                if !data.is_empty() {
-                    // Normalize i16 -> [-1.0, 1.0]
-                    let samples: Vec<f32> =
-                        data.iter().map(|&s| s as f32 / i16::MAX as f32).collect();
-
-                    let _ = tx.send(samples);
+            move |data: &[i16], _| {
+                if data.is_empty() {
+                    return;
                 }
+
+                let mono: Vec<f32> = data
+                    .chunks(channels)
+                    .map(|frame| {
+                        let sum: f32 = frame.iter().map(|&s| s as f32 / i16::MAX as f32).sum();
+                        sum / channels as f32
+                    })
+                    .collect();
+
+                let _ = tx.send(mono);
             },
             err_fn,
             None,
@@ -109,20 +129,26 @@ fn build_input_stream(device: &cpal::Device, tx: mpsc::Sender<Vec<f32>>) -> Resu
 
         SampleFormat::U16 => device.build_input_stream(
             &config,
-            move |data: &[u16], _: &cpal::InputCallbackInfo| {
-                if !data.is_empty() {
-                    // Convert unsigned [0, 65535]
-                    // to signed [-1.0, 1.0]
-                    let samples: Vec<f32> = data
-                        .iter()
-                        .map(|&s| {
-                            let centered = s as f32 - 32768.0;
-                            centered / 32768.0
-                        })
-                        .collect();
-
-                    let _ = tx.send(samples);
+            move |data: &[u16], _| {
+                if data.is_empty() {
+                    return;
                 }
+
+                let mono: Vec<f32> = data
+                    .chunks(channels)
+                    .map(|frame| {
+                        let sum: f32 = frame
+                            .iter()
+                            .map(|&s| {
+                                let centered = s as f32 - 32768.0;
+                                centered / 32768.0
+                            })
+                            .sum();
+                        sum / channels as f32
+                    })
+                    .collect();
+
+                let _ = tx.send(mono);
             },
             err_fn,
             None,
@@ -193,7 +219,6 @@ fn main() -> Result<()> {
 
     let supported = device.default_input_config()?;
     let sample_rate = supported.sample_rate().0 as i32;
-    println!("Mic sample rate: {sample_rate}");
 
     let recognizer = setup_recognizer(&args);
     let mut stream = recognizer.create_stream();
