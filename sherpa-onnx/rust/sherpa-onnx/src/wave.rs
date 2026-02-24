@@ -20,6 +20,21 @@ impl Wave {
         }
     }
 
+    /// Write the WAV to a file using SherpaOnnx C API.
+    ///
+    /// Returns true if succeeded, false otherwise.
+    pub fn write(&self, filename: &str) -> bool {
+        let c_filename = CString::new(filename).unwrap();
+        unsafe {
+            sys::SherpaOnnxWriteWave(
+                (*self.inner).samples,
+                (*self.inner).num_samples,
+                (*self.inner).sample_rate,
+                c_filename.as_ptr(),
+            ) == 1
+        }
+    }
+
     /// Get sample rate
     pub fn sample_rate(&self) -> i32 {
         unsafe { (*self.inner).sample_rate }
@@ -55,5 +70,20 @@ impl Drop for Wave {
                 sys::SherpaOnnxFreeWave(self.inner);
             }
         }
+    }
+}
+
+/// Write samples directly to a WAV file without creating a Wave object.
+///
+/// Returns true on success, false otherwise.
+pub fn write(filename: &str, samples: &[f32], sample_rate: i32) -> bool {
+    let c_filename = CString::new(filename).unwrap();
+    unsafe {
+        sys::SherpaOnnxWriteWave(
+            samples.as_ptr(),
+            samples.len() as i32,
+            sample_rate,
+            c_filename.as_ptr(),
+        ) == 1
     }
 }

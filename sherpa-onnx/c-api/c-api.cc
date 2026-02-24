@@ -1128,7 +1128,7 @@ struct SherpaOnnxVoiceActivityDetector {
   std::unique_ptr<sherpa_onnx::VoiceActivityDetector> impl;
 };
 
-sherpa_onnx::VadModelConfig GetVadModelConfig(
+static sherpa_onnx::VadModelConfig GetVadModelConfig(
     const SherpaOnnxVadModelConfig *config) {
   sherpa_onnx::VadModelConfig vad_config;
 
@@ -1185,6 +1185,11 @@ sherpa_onnx::VadModelConfig GetVadModelConfig(
 
 const SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
     const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds) {
+  if (!config) {
+    SHERPA_ONNX_LOGE("vad config is nullptr");
+    return nullptr;
+  }
+
   auto vad_config = GetVadModelConfig(config);
 
   if (!vad_config.Validate()) {
@@ -1206,31 +1211,70 @@ void SherpaOnnxDestroyVoiceActivityDetector(
 
 void SherpaOnnxVoiceActivityDetectorAcceptWaveform(
     const SherpaOnnxVoiceActivityDetector *p, const float *samples, int32_t n) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return;
+  }
+
+  if (!samples) {
+    SHERPA_ONNX_LOGE("samples is nullptr");
+    return;
+  }
+
   p->impl->AcceptWaveform(samples, n);
 }
 
 int32_t SherpaOnnxVoiceActivityDetectorEmpty(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return 1;  // 1 means it is empty
+  }
+
   return p->impl->Empty();
 }
 
 int32_t SherpaOnnxVoiceActivityDetectorDetected(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return 0;
+  }
+
   return p->impl->IsSpeechDetected();
 }
 
 void SherpaOnnxVoiceActivityDetectorPop(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return;
+  }
+
   p->impl->Pop();
 }
 
 void SherpaOnnxVoiceActivityDetectorClear(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return;
+  }
+
   p->impl->Clear();
 }
 
 const SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return nullptr;
+  }
+
+  if (SherpaOnnxVoiceActivityDetectorEmpty(p)) {
+    return nullptr;
+  }
+
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 
   SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
@@ -1251,11 +1295,21 @@ void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
 
 void SherpaOnnxVoiceActivityDetectorReset(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return;
+  }
+
   p->impl->Reset();
 }
 
 void SherpaOnnxVoiceActivityDetectorFlush(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (!p) {
+    SHERPA_ONNX_LOGE("vad is nullptr");
+    return;
+  }
+
   p->impl->Flush();
 }
 

@@ -19,4 +19,12 @@ extern "C" {
 
     /// Free memory allocated by SherpaOnnxReadWave
     pub fn SherpaOnnxFreeWave(wave: *const SherpaOnnxWave);
+
+    /// Write a WAV file. Returns 1 on success, 0 on failure.
+    pub fn SherpaOnnxWriteWave(
+        samples: *const f32,
+        n: i32,
+        sample_rate: i32,
+        filename: *const c_char,
+    ) -> i32;
 }

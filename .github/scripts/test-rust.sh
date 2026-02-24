@@ -6,6 +6,8 @@ cd rust-api-examples
 
 ./run-version.sh
 
+./run-silero-vad-remove-silence.sh
+
 ./run-nemo-parakeet-en.sh
 ./run-zipformer-vi.sh
 ./run-zipformer-zh-en.sh

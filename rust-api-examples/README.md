@@ -92,6 +92,19 @@ cargo run --example sense_voice -- \
     --tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt
 ```
 
+### Example 5: Remove silences from a file using SileroVAD
+
+```bash
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+
+cargo run --example silero_vad_remove_silence -- \
+    --input ./lei-jun-test.wav \
+    --output ./no-silence.wav \
+    --silero-vad-model ./silero_vad.onnx
+```
+
 # Alternative rust bindings for sherpa-onnx
 
 Please see also https://github.com/thewh1teagle/sherpa-rs
