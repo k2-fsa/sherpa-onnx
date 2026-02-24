@@ -17,6 +17,7 @@ function createOfflineTts() {
         vocabJson: './sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json',
         tokenScoresJson:
             './sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json',
+        voiceEmbeddingCacheCapacity: 50,
       },
       debug: true,
       numThreads: 2,
@@ -41,7 +42,7 @@ const generationConfig = new sherpa_onnx.GenerationConfig({
   referenceAudio: referenceWave.samples,
   referenceSampleRate: referenceWave.sampleRate,
   numSteps: 5,
-  extra: {max_reference_audio_len: 12}
+  extra: {max_reference_audio_len: 12, seed: 42}
 });
 
 

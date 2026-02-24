@@ -502,12 +502,25 @@
  */
 
 /**
+ * @typedef {Object} OfflineTtsPocketModelConfig
+ * @property {string} [lmFlow]
+ * @property {string} [lmMain]
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [textConditioner]
+ * @property {string} [vocabJson]
+ * @property {string} [tokenScoresJson]
+ * @property {number} [voiceEmbeddingCacheCapacity]
+ */
+
+/**
  * Offline TTS model config
  * @typedef {Object} OfflineTtsModelConfig
  * @property {OfflineTtsVitsModelConfig} [vits]
  * @property {OfflineTtsMatchaModelConfig} [matcha]
  * @property {OfflineTtsKokoroModelConfig} [kokoro]
  * @property {OfflineTtsKittenModelConfig} [kitten]
+ * @property {OfflineTtsPocketModelConfig} [pocket]
  */
 
 /**
