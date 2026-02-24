@@ -51,7 +51,14 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-o
 tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
 rm sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
 
-cargo run --example streaming_zipformer
+cargo run --example streaming_zipformer -- \
+    --wav sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/1.wav \
+    --encoder sherpa-onnx-streaming-zipformer-en-2023-06-21/encoder-epoch-99-avg-1.int8.onnx \
+    --decoder sherpa-onnx-streaming-zipformer-en-2023-06-21/decoder-epoch-99-avg-1.onnx \
+    --joiner sherpa-onnx-streaming-zipformer-en-2023-06-21/joiner-epoch-99-avg-1.int8.onnx \
+    --tokens sherpa-onnx-streaming-zipformer-en-2023-06-21/tokens.txt \
+    --provider cpu \
+    --debug
 ```
 
 # Alternative rust bindings for sherpa-onnx

@@ -1,9 +1,11 @@
 [package]
 name = "rust-api-examples"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
-
 [dependencies]
-sherpa-onnx = "0.1.1"
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+cpal = "0.16"          # cross-platform audio I/O
+sherpa-onnx = "0.1.2"
 # sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }
