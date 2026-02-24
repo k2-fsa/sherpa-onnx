@@ -160,6 +160,9 @@ std::u32string Utf8ToUtf32(const std::string &str);
 // Converts a UTF-32 std::u32string to a UTF-8 std::string
 std::string Utf32ToUtf8(const std::u32string &str);
 
+// Converts a single UTF-32 codepoint to a UTF-8 std::string
+std::string Utf32ToUtf8(char32_t cp);
+
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
 // unchanged)
 std::string ToUpperAscii(const std::string &str);

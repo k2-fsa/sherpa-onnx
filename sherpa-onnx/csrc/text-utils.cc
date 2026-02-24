@@ -9,7 +9,7 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
-#include <codecvt>
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 #include <cwctype>
@@ -690,17 +690,69 @@ std::string Gb2312ToUtf8(const std::string &text) {
 #endif
 
 std::wstring ToWideString(const std::string &s) {
-  // see
-  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  return converter.from_bytes(s);
+  std::u32string u32 = Utf8ToUtf32(s);
+  std::wstring result;
+  result.reserve(u32.size());
+
+#if WCHAR_MAX > 0xFFFF
+  // wchar_t is 32-bit (Linux, macOS) — direct copy
+  for (char32_t cp : u32) {
+    result.push_back(static_cast<wchar_t>(cp));
+  }
+#else
+  // wchar_t is 16-bit (Windows) — encode surrogate pairs
+  for (char32_t cp : u32) {
+    if (cp <= 0xFFFF) {
+      result.push_back(static_cast<wchar_t>(cp));
+    } else {
+      cp -= 0x10000;
+      result.push_back(static_cast<wchar_t>(0xD800 + (cp >> 10)));
+      result.push_back(static_cast<wchar_t>(0xDC00 + (cp & 0x3FF)));
+    }
+  }
+#endif
+
+  return result;
 }
 
 std::string ToString(const std::wstring &s) {
-  // see
-  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  return converter.to_bytes(s);
+  std::u32string u32;
+  u32.reserve(s.size());
+
+#if WCHAR_MAX > 0xFFFF
+  // wchar_t is 32-bit — direct copy
+  for (wchar_t wc : s) {
+    u32.push_back(static_cast<char32_t>(wc));
+  }
+#else
+  // wchar_t is 16-bit — decode surrogate pairs
+  for (size_t i = 0; i < s.size(); ++i) {
+    auto wc = static_cast<uint16_t>(s[i]);
+    if (wc >= 0xD800 && wc <= 0xDBFF) {
+      // High surrogate — look for matching low surrogate
+      if (i + 1 < s.size()) {
+        auto wc2 = static_cast<uint16_t>(s[i + 1]);
+        if (wc2 >= 0xDC00 && wc2 <= 0xDFFF) {
+          char32_t cp =
+              0x10000 + ((static_cast<char32_t>(wc - 0xD800) << 10) |
+                         (wc2 - 0xDC00));
+          u32.push_back(cp);
+          ++i;
+          continue;
+        }
+      }
+      // Unpaired high surrogate
+      u32.push_back(0xFFFD);
+    } else if (wc >= 0xDC00 && wc <= 0xDFFF) {
+      // Lone low surrogate
+      u32.push_back(0xFFFD);
+    } else {
+      u32.push_back(static_cast<char32_t>(wc));
+    }
+  }
+#endif
+
+  return Utf32ToUtf8(u32);
 }
 
 bool EndsWith(const std::string &haystack, const std::string &needle) {
@@ -746,14 +798,191 @@ std::string Join(const std::vector<std::string> &ss, const std::string &delim) {
   return oss.str();
 }
 
+std::string Utf32ToUtf8(char32_t cp) {
+  // Clamp surrogates and out-of-range codepoints to U+FFFD
+  if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+    cp = 0xFFFD;
+  }
+
+  std::string out;
+
+  if (cp <= 0x7F) {
+    out.push_back(static_cast<char>(cp));
+  } else if (cp <= 0x7FF) {
+    out.push_back(static_cast<char>(0xC0 | (cp >> 6)));
+    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+  } else if (cp <= 0xFFFF) {
+    out.push_back(static_cast<char>(0xE0 | (cp >> 12)));
+    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+  } else {
+    out.push_back(static_cast<char>(0xF0 | (cp >> 18)));
+    out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+  }
+
+  return out;
+}
+
 std::u32string Utf8ToUtf32(const std::string &str) {
-  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-  return conv.from_bytes(str);
+  std::u32string out;
+  out.reserve(str.size());
+
+  const auto *p = reinterpret_cast<const uint8_t *>(str.data());
+  const auto *end = p + str.size();
+
+  // RFC 3629 / Unicode Table 3-7 validation with U+FFFD replacement
+  // for maximal subpart of ill-formed subsequence (Unicode 3.9)
+  while (p < end) {
+    uint8_t b0 = *p;
+    if (b0 <= 0x7F) {
+      // ASCII
+      out.push_back(static_cast<char32_t>(b0));
+      ++p;
+    } else if (InRange(b0, 0xC2, 0xDF)) {
+      // 2-byte: U+0080..U+07FF (C2..DF starts at C2 to reject overlongs)
+      if (p + 1 < end && InRange(p[1], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x1F) << 6) |
+                      (p[1] & 0x3F);
+        out.push_back(cp);
+        p += 2;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (b0 == 0xE0) {
+      // 3-byte: U+0800..U+0FFF — second byte must be A0..BF (reject overlongs)
+      if (p + 2 < end && InRange(p[1], 0xA0, 0xBF) &&
+          InRange(p[2], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x0F) << 12) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 6) |
+                      (p[2] & 0x3F);
+        out.push_back(cp);
+        p += 3;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (InRange(b0, 0xE1, 0xEC)) {
+      // 3-byte: U+1000..U+CFFF
+      if (p + 2 < end && InRange(p[1], 0x80, 0xBF) &&
+          InRange(p[2], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x0F) << 12) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 6) |
+                      (p[2] & 0x3F);
+        out.push_back(cp);
+        p += 3;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (b0 == 0xED) {
+      // 3-byte: U+D000..U+D7FF — second byte must be 80..9F (reject surrogates)
+      if (p + 2 < end && InRange(p[1], 0x80, 0x9F) &&
+          InRange(p[2], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x0F) << 12) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 6) |
+                      (p[2] & 0x3F);
+        out.push_back(cp);
+        p += 3;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (InRange(b0, 0xEE, 0xEF)) {
+      // 3-byte: U+E000..U+FFFF
+      if (p + 2 < end && InRange(p[1], 0x80, 0xBF) &&
+          InRange(p[2], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x0F) << 12) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 6) |
+                      (p[2] & 0x3F);
+        out.push_back(cp);
+        p += 3;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (b0 == 0xF0) {
+      // 4-byte: U+10000..U+3FFFF — second byte must be 90..BF (reject overlongs)
+      if (p + 3 < end && InRange(p[1], 0x90, 0xBF) &&
+          InRange(p[2], 0x80, 0xBF) && InRange(p[3], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x07) << 18) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 12) |
+                      (static_cast<char32_t>(p[2] & 0x3F) << 6) |
+                      (p[3] & 0x3F);
+        out.push_back(cp);
+        p += 4;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (InRange(b0, 0xF1, 0xF3)) {
+      // 4-byte: U+40000..U+FFFFF
+      if (p + 3 < end && InRange(p[1], 0x80, 0xBF) &&
+          InRange(p[2], 0x80, 0xBF) && InRange(p[3], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x07) << 18) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 12) |
+                      (static_cast<char32_t>(p[2] & 0x3F) << 6) |
+                      (p[3] & 0x3F);
+        out.push_back(cp);
+        p += 4;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else if (b0 == 0xF4) {
+      // 4-byte: U+100000..U+10FFFF — second byte must be 80..8F (reject > U+10FFFF)
+      if (p + 3 < end && InRange(p[1], 0x80, 0x8F) &&
+          InRange(p[2], 0x80, 0xBF) && InRange(p[3], 0x80, 0xBF)) {
+        char32_t cp = (static_cast<char32_t>(b0 & 0x07) << 18) |
+                      (static_cast<char32_t>(p[1] & 0x3F) << 12) |
+                      (static_cast<char32_t>(p[2] & 0x3F) << 6) |
+                      (p[3] & 0x3F);
+        out.push_back(cp);
+        p += 4;
+      } else {
+        out.push_back(0xFFFD);
+        ++p;
+      }
+    } else {
+      // Invalid lead byte (C0, C1, F5..FF, or bare continuation 80..BF)
+      out.push_back(0xFFFD);
+      ++p;
+    }
+  }
+
+  return out;
 }
 
 std::string Utf32ToUtf8(const std::u32string &str) {
-  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-  return conv.to_bytes(str);
+  std::string out;
+  out.reserve(str.size() * 2);  // rough estimate
+
+  for (char32_t cp : str) {
+    // Clamp surrogates and out-of-range codepoints to U+FFFD
+    if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+      cp = 0xFFFD;
+    }
+
+    if (cp <= 0x7F) {
+      out.push_back(static_cast<char>(cp));
+    } else if (cp <= 0x7FF) {
+      out.push_back(static_cast<char>(0xC0 | (cp >> 6)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else if (cp <= 0xFFFF) {
+      out.push_back(static_cast<char>(0xE0 | (cp >> 12)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    } else {
+      out.push_back(static_cast<char>(0xF0 | (cp >> 18)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+      out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    }
+  }
+
+  return out;
 }
 
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
