@@ -1,7 +1,7 @@
+use crate::utils::to_c_ptr;
 use serde::Deserialize;
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
-use std::ptr;
 
 #[derive(Clone, Debug)]
 pub struct OfflineTransducerModelConfig {
@@ -626,16 +626,5 @@ impl OfflineStream {
 impl Drop for OfflineStream {
     fn drop(&mut self) {
         unsafe { sys::SherpaOnnxDestroyOfflineStream(self.ptr) }
-    }
-}
-
-fn to_c_ptr(opt: &Option<String>, storage: &mut Vec<CString>) -> *const i8 {
-    if let Some(s) = opt {
-        let c = CString::new(s.as_str()).unwrap();
-        let ptr = c.as_ptr();
-        storage.push(c);
-        ptr
-    } else {
-        ptr::null()
     }
 }
