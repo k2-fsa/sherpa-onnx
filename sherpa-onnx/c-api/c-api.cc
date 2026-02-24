@@ -1231,6 +1231,10 @@ void SherpaOnnxVoiceActivityDetectorClear(
 
 const SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
     const SherpaOnnxVoiceActivityDetector *p) {
+  if (SherpaOnnxVoiceActivityDetectorEmpty(p)) {
+    return nullptr;
+  }
+
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 
   SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
