@@ -99,6 +99,8 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "text_conditioner: %s\n", pocket->text_conditioner);
   fprintf(stdout, "vocab_json: %s\n", pocket->vocab_json);
   fprintf(stdout, "token_scores_json: %s\n", pocket->token_scores_json);
+  fprintf(stdout, "voice_embedding_cache_capacity: %d\n",
+          pocket->voice_embedding_cache_capacity);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
