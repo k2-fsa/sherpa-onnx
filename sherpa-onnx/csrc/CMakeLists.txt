@@ -74,12 +74,15 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  offline-transducer-modified-beam-search-nemo-decoder.cc
   offline-transducer-nemo-model.cc
   offline-wenet-ctc-model-config.cc
   offline-wenet-ctc-model.cc
+  offline-whisper-dtw.cc
   offline-whisper-greedy-search-decoder.cc
   offline-whisper-model-config.cc
   offline-whisper-model.cc
+  offline-whisper-timestamp-rules.cc
   offline-zipformer-ctc-model-config.cc
   offline-zipformer-ctc-model.cc
   online-conformer-transducer-model.cc
@@ -788,6 +791,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     circular-buffer-test.cc
     context-graph-test.cc
     math-test.cc
+    offline-whisper-timestamp-rules-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
     regex-lang-test.cc

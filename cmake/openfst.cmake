@@ -90,7 +90,7 @@ function(download_openfst)
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
 
-  if(LINUX)
+  if(LINUX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
     target_compile_options(fst PUBLIC -Wno-missing-template-keyword)
   endif()
 

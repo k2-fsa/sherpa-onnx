@@ -50,13 +50,12 @@ jobs:
           node --version
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/shared/
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/shared/ \
+            quay.io/pypa/manylinux2014_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -71,7 +70,8 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
                 -DSHERPA_ONNX_ENABLE_BINARY=OFF \
                 ..
-              make -j install
+              make -j1 install
+            '
 
       - name: Build sherpa-onnx node-addon
         shell: bash

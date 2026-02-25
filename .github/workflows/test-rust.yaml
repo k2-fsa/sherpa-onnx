@@ -1,0 +1,99 @@
+name: Test rust
+
+on:
+  push:
+    branches:
+      - rust-api
+  workflow_dispatch:
+
+concurrency:
+  group: test-rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-rust:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
+
+    env:
+      # Placeholder, will be overwritten per OS
+      SHERPA_ONNX_LIB_DIR: ""
+      RUSTFLAGS: ""
+
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-rust
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: Configure sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          cmake \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          cd build
+          make -j2
+          make install
+          ls -lh install/lib
+
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/install/lib" >> $GITHUB_ENV
+
+      # Install Rust stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Show libs
+        shell: bash
+        run: |
+          echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
+          ls -lh $SHERPA_ONNX_LIB_DIR
+
+          echo "RUSTFLAGS: $RUSTFLAGS"
+
+      - name: Test locally
+        shell: bash
+        run: |
+          cd rust-api-examples
+
+          sed -i.bak 's|^sherpa-onnx *=.*|sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }|' Cargo.toml
+
+          git diff .
+
+          cargo clean
+          cargo run --example version
+
+      - name: Run test
+        shell: bash
+        run: |
+          ./.github/scripts/test-rust.sh

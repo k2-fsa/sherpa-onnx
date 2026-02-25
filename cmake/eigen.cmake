@@ -1,18 +1,18 @@
 function(download_eigen)
   include(FetchContent)
 
-  set(eigen_URL  "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz")
-  set(eigen_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/eigen-3.4.0.tar.gz")
-  set(eigen_HASH "SHA256=8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72")
+  set(eigen_URL  "https://gitlab.com/libeigen/eigen/-/archive/3.4.1/eigen-3.4.1.tar.gz")
+  set(eigen_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/eigen-3.4.1.tar.gz")
+  set(eigen_HASH "SHA256=b93c667d1b69265cdb4d9f30ec21f8facbbe8b307cf34c0b9942834c6d4fdbe2")
 
   # If you don't have access to the Internet,
   # please pre-download eigen
   set(possible_file_locations
-    $ENV{HOME}/Downloads/eigen-3.4.0.tar.gz
-    ${CMAKE_SOURCE_DIR}/eigen-3.4.0.tar.gz
-    ${CMAKE_BINARY_DIR}/eigen-3.4.0.tar.gz
-    /tmp/eigen-3.4.0.tar.gz
-    /star-fj/fangjun/download/github/eigen-3.4.0.tar.gz
+    $ENV{HOME}/Downloads/eigen-3.4.1.tar.gz
+    ${CMAKE_SOURCE_DIR}/eigen-3.4.1.tar.gz
+    ${CMAKE_BINARY_DIR}/eigen-3.4.1.tar.gz
+    /tmp/eigen-3.4.1.tar.gz
+    /star-fj/fangjun/download/github/eigen-3.4.1.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

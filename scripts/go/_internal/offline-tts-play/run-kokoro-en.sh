@@ -1,1 +1,1 @@
-../../../../go-api-examples/non-streaming-tts/run-kokoro-en.sh
+../../../../go-api-examples/offline-tts-play/run-kokoro-en.sh

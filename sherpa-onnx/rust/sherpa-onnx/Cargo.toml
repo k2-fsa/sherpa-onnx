@@ -1,0 +1,25 @@
+[package]
+name = "sherpa-onnx"
+version = "0.1.7"
+edition = "2021"
+description = "Safe Rust wrapper for sherpa-onnx speech recognition toolkit"
+license = "Apache-2.0"
+repository = "https://github.com/k2-fsa/sherpa-onnx"
+documentation = "https://docs.rs/sherpa-onnx"
+readme = "README.md"  # make sure this is inside the crate folder
+
+keywords = ["speech", "speech-to-text", "stt", "onnx", "asr"]
+categories = ["api-bindings", "multimedia::audio"]
+
+# Explicitly list files to include in crates.io
+include = [
+    "src/**",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE*",
+]
+
+[dependencies]
+sherpa-onnx-sys = { path = "../sherpa-onnx-sys", version = "0.1.7" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

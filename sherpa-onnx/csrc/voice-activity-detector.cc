@@ -141,7 +141,18 @@ class VoiceActivityDetector::Impl {
 
   void Clear() { std::queue<SpeechSegment>().swap(segments_); }
 
-  const SpeechSegment &Front() const { return segments_.front(); }
+  const SpeechSegment &Front() const {
+    static SpeechSegment tmp;
+
+    if (Empty()) {
+      SHERPA_ONNX_LOGE(
+          "Make sure you call this method only when Empty() returns false; "
+          "Return an empty segment");
+      return tmp;
+    }
+
+    return segments_.front();
+  }
 
   void Reset() {
     std::queue<SpeechSegment>().swap(segments_);

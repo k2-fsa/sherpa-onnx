@@ -8,7 +8,7 @@
 // to download pre-trained models
 //
 // Note that you need a speaker to run this file since it will play
-// the generated audio as it is generating.
+// the generated audio back as it is being generated.
 
 using CommandLine;
 using CommandLine.Text;
@@ -224,7 +224,7 @@ to download more models.
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var MyCallback = (IntPtr samples, int n) =>
+    var myCallback = (IntPtr samples, int n) =>
     {
       float[] data = new float[n];
 
@@ -314,7 +314,7 @@ to download more models.
 
     stream.Start();
 
-    var callback = new OfflineTtsCallback(MyCallback);
+    var callback = new OfflineTtsCallback(myCallback);
 
     var audio = tts.GenerateWithCallback(options.Text, speed, sid, callback);
     var ok = audio.SaveToWaveFile(options.OutputFilename);

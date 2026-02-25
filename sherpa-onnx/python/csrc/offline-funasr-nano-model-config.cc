@@ -24,6 +24,9 @@ void PybindOfflineFunASRNanoModelConfig(py::module *m) {
       .def_readwrite("temperature", &PyClass::temperature)
       .def_readwrite("top_p", &PyClass::top_p)
       .def_readwrite("seed", &PyClass::seed)
+      .def_readwrite("language", &PyClass::language)
+      .def_readwrite("itn", &PyClass::itn)
+      .def_readwrite("hotwords", &PyClass::hotwords)
       .def("__str__", &PyClass::ToString);
 }
 

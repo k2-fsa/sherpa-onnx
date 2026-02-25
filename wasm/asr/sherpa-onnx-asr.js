@@ -849,13 +849,15 @@ function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
       1;
   const userPromptLen =
       Module.lengthBytesUTF8(config.userPrompt || '语音转写：') + 1;
+  const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
+  const hotwordsLen = Module.lengthBytesUTF8(config.hotwords || '') + 1;
 
   const n = encoderAdaptorLen + llmLen + embeddingLen + tokenizerLen +
-      systemPromptLen + userPromptLen;
+      systemPromptLen + userPromptLen + languageLen + hotwordsLen;
 
   const buffer = Module._malloc(n);
 
-  const len = 10 * 4;  // 6 pointers + 2 int + 2 float
+  const len = 13 * 4;  // 8 pointers + 3 int + 2 float
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -881,6 +883,12 @@ function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
       config.userPrompt || '语音转写：', buffer + offset, userPromptLen);
   offset += userPromptLen;
 
+  Module.stringToUTF8(config.language || '', buffer + offset, languageLen);
+  offset += languageLen;
+
+  Module.stringToUTF8(config.hotwords || '', buffer + offset, hotwordsLen);
+  offset += hotwordsLen;
+
   offset = 0;
   Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
   offset += encoderAdaptorLen;
@@ -904,6 +912,11 @@ function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
   Module.setValue(ptr + 7 * 4, config.temperature || 1e-6, 'float');
   Module.setValue(ptr + 8 * 4, config.topP || 0.8, 'float');
   Module.setValue(ptr + 9 * 4, config.seed || 42, 'i32');
+  Module.setValue(ptr + 10 * 4, buffer + offset, 'i8*');
+  offset += languageLen;
+  Module.setValue(ptr + 11 * 4, config.itn || 0, 'i32');
+  Module.setValue(ptr + 12 * 4, buffer + offset, 'i8*');
+  offset += hotwordsLen;
 
   return {
     buffer: buffer,
@@ -921,7 +934,7 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const n = encoderLen + decoderLen + languageLen + taskLen;
   const buffer = Module._malloc(n);
 
-  const len = 5 * 4;  // 4 pointers + 1 int32
+  const len = 7 * 4;  // 4 pointers + 3 int32
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -950,6 +963,8 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   offset += taskLen;
 
   Module.setValue(ptr + 16, config.tailPaddings || 2000, 'i32');
+  Module.setValue(ptr + 20, config.enableTokenTimestamps || 0, 'i32');
+  Module.setValue(ptr + 24, config.enableSegmentTimestamps || 0, 'i32');
 
   return {
     buffer: buffer,
@@ -1220,6 +1235,9 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       temperature: 1e-6,
       topP: 0.8,
       seed: 42,
+      language: '',
+      itn: 0,
+      hotwords: '',
     };
   }
 
@@ -1230,6 +1248,8 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       language: '',
       task: '',
       tailPaddings: -1,
+      enableTokenTimestamps: 0,
+      enableSegmentTimestamps: 0,
     };
   }
 

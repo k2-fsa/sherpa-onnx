@@ -64,8 +64,7 @@ class Vad(
     fun pop() = pop(ptr)
 
     fun front(): SpeechSegment {
-        val segment = front(ptr)
-        return SpeechSegment(segment[0] as Int, segment[1] as FloatArray)
+        return front(ptr)
     }
 
     fun clear() = clear(ptr)
@@ -93,7 +92,7 @@ class Vad(
     private external fun empty(ptr: Long): Boolean
     private external fun pop(ptr: Long)
     private external fun clear(ptr: Long)
-    private external fun front(ptr: Long): Array<Any>
+    private external fun front(ptr: Long): SpeechSegment
     private external fun isSpeechDetected(ptr: Long): Boolean
     private external fun reset(ptr: Long)
     private external fun flush(ptr: Long)

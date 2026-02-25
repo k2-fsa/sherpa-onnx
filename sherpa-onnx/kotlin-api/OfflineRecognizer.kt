@@ -61,6 +61,9 @@ data class OfflineFunAsrNanoModelConfig(
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
     var seed: Int = 42,
+    var language: String = "",
+    var itn: Boolean = true,
+    var hotwords: String = "",
 )
 
 data class OfflineWhisperModelConfig(
@@ -69,6 +72,8 @@ data class OfflineWhisperModelConfig(
     var language: String = "en", // Used with multilingual model
     var task: String = "transcribe", // transcribe or translate
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
+    var enableTokenTimestamps: Boolean = false,
+    var enableSegmentTimestamps: Boolean = false,
 )
 
 data class OfflineCanaryModelConfig(
@@ -166,24 +171,7 @@ class OfflineRecognizer(
     }
 
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
-        val objArray = getResult(stream.ptr)
-
-        val text = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
-        val lang = objArray[3] as String
-        val emotion = objArray[4] as String
-        val event = objArray[5] as String
-        val durations = objArray[6] as FloatArray
-        return OfflineRecognizerResult(
-            text = text,
-            tokens = tokens,
-            timestamps = timestamps,
-            lang = lang,
-            emotion = emotion,
-            event = event,
-            durations = durations,
-        )
+        return getResult(stream.ptr)
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
@@ -207,7 +195,7 @@ class OfflineRecognizer(
 
     private external fun decode(ptr: Long, streamPtr: Long)
 
-    private external fun getResult(streamPtr: Long): Array<Any>
+    private external fun getResult(streamPtr: Long): OfflineRecognizerResult
 
     companion object {
         init {
@@ -793,6 +781,39 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     tokenizer = "$modelDir/Qwen3-0.6B",
                 ),
                 tokens = "",
+            )
+        }
+
+        47 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        48 -> {
+            val modelDir = "sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03"
+            return OfflineModelConfig(
+                wenetCtc = OfflineWenetCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        49 -> {
+            val modelDir = "sherpa-onnx-zipformer-vi-30M-int8-2026-02-09"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
             )
         }
 

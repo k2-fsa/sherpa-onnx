@@ -22,7 +22,9 @@ zipformer-ctc-asr
 wenet-ctc-asr
 dolphin-ctc-asr
 tts-kitten-en
+tts-pocket-en
 compute-speaker-embeddings
 decode-file-t-one-streaming
 omnilingual-asr-ctc
 medasr-ctc
+funasr-nano

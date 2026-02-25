@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04-arm]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,15 +42,12 @@ jobs:
           git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux_2_28_aarch64
-            # image: quay.io/pypa/manylinux2014_aarch64 # it does not provide GLIBCXX 3.4.21+
-            options: |
-              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
-            shell: bash
-            run: |
-              echo "config: ${{ matrix.config }}"
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              quay.io/pypa/manylinux_2_28_aarch64 \
+            bash -c '
               uname -a
               which gcc
 
@@ -95,7 +92,6 @@ jobs:
 
               cmake --version
 
-              echo "config: ${{ matrix.config }}"
               uname -a
               echo "pwd"
 
@@ -124,6 +120,7 @@ jobs:
               python3 setup.py bdist_wheel
 
               mv dist wheelhouse
+            '
 
       - name: Display results
         shell: bash

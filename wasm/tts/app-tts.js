@@ -10,17 +10,49 @@ speedValue.innerHTML = speedInput.value;
 
 let index = 0;
 
-let tts = null;
-
 let audioCtx = null;
+const worker = new Worker("/sherpa-onnx-tts.worker.js");
+let ttsInstanceInfo = {
+  numSpeakers: 0,
+  isReady: false,
+};
+worker.onmessage = (e) => {
+  if (e.data.type === "sherpa-onnx-tts-progress") {
+    Module.setStatus(e.data.status);
+  }
+  if (e.data.type === "sherpa-onnx-tts-ready") {
+    ttsInstanceInfo.numSpeakers = e.data.numSpeakers;
+    ttsInstanceInfo.isReady = true;
+    generateBtn.disabled = false;
+    speakerIdLabel.innerHTML = `Speaker ID (0 - ${e.data.numSpeakers - 1}):`;
+    return;
+  }
+  if (e.data.type === "sherpa-onnx-tts-result") {
+    let audio = e.data;
+
+    console.log(audio.samples.length, audio.sampleRate);
+
+    if (!audioCtx) {
+      audioCtx = new AudioContext({ sampleRate: audio.sampleRate });
+    }
+
+    const buffer = audioCtx.createBuffer(
+      1,
+      audio.samples.length,
+      audio.sampleRate,
+    );
+
+    buffer.getChannelData(0).set(audio.samples); // 使用 .set() 比 for 循环快得多
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start();
+
+    createAudioTag(audio);
+  }
+};
 
 Module = {};
-
-// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
-Module.locateFile = function(path, scriptDirectory = '') {
-  console.log(`path: ${path}, scriptDirectory: ${scriptDirectory}`);
-  return scriptDirectory + path;
-};
 
 // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
 Module.setStatus = function(status) {
@@ -56,19 +88,6 @@ Module.setStatus = function(status) {
     });
   }
 };
-
-Module.onRuntimeInitialized = function() {
-  console.log('Model files downloaded!');
-
-  console.log('Initializing tts ......');
-  tts = createOfflineTts(Module)
-  if (tts.numSpeakers > 1) {
-    speakerIdLabel.innerHTML = `Speaker ID (0 - ${tts.numSpeakers - 1}):`;
-  }
-
-  generateBtn.disabled = false;
-};
-
 speedInput.oninput = function() {
   speedValue.innerHTML = this.value;
 };
@@ -83,12 +102,12 @@ generateBtn.onclick = function() {
   if (!speakerId.match(/^\d+$/)) {
     alert(`Input speakerID ${
         speakerId} is not a number.\nPlease enter a number between 0 and ${
-        tts.numSpeakers - 1}`);
+        ttsInstanceInfo.numSpeakers - 1}`);
     return;
   }
   speakerId = parseInt(speakerId, 10);
-  if (speakerId > tts.numSpeakers - 1) {
-    alert(`Pleaser enter a number between 0 and ${tts.numSpeakers - 1}`);
+  if (speakerId > ttsInstanceInfo.numSpeakers - 1) {
+    alert(`Pleaser enter a number between 0 and ${ttsInstanceInfo.numSpeakers - 1}`);
     return;
   }
 
@@ -101,28 +120,12 @@ generateBtn.onclick = function() {
   console.log('speakerId', speakerId);
   console.log('speed', speedInput.value);
   console.log('text', text);
-
-  let audio =
-      tts.generate({text: text, sid: speakerId, speed: speedInput.value});
-
-  console.log(audio.samples.length, audio.sampleRate);
-
-  if (!audioCtx) {
-    audioCtx = new AudioContext({sampleRate: tts.sampleRate});
-  }
-
-  const buffer = audioCtx.createBuffer(1, audio.samples.length, tts.sampleRate);
-
-  const ptr = buffer.getChannelData(0);
-  for (let i = 0; i < audio.samples.length; i++) {
-    ptr[i] = audio.samples[i];
-  }
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(audioCtx.destination);
-  source.start();
-
-  createAudioTag(audio);
+  worker.postMessage({
+    text,
+    sid: speakerId,
+    speed: speedInput.value,
+    type: "generate",
+  });
 };
 
 function createAudioTag(generateAudio) {

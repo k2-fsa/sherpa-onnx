@@ -14,6 +14,7 @@ namespace SherpaOnnx
             Kokoro = new OfflineTtsKokoroModelConfig();
             Kitten = new OfflineTtsKittenModelConfig();
             ZipVoice = new OfflineTtsZipVoiceModelConfig();
+            Pocket = new OfflineTtsPocketModelConfig();
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
@@ -30,5 +31,6 @@ namespace SherpaOnnx
         public OfflineTtsKokoroModelConfig Kokoro;
         public OfflineTtsKittenModelConfig Kitten;
         public OfflineTtsZipVoiceModelConfig ZipVoice;
+        public OfflineTtsPocketModelConfig Pocket;
     }
 }

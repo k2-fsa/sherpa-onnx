@@ -54,6 +54,20 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
+## ./test-offline-tts-pocket-en.js
+
+[./test-offline-tts-pocket-en.js](./test-offline-tts-pocket-en.js)
+shows how to use PocketTTS for Zero-shot TTS.
+
+You can use the following command to run it:
+```
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test-offline-tts-pocket-en.js
+```
+
 ## ./test-offline-tts-kitten-en.js
 
 [./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use

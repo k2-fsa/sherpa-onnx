@@ -4,16 +4,59 @@
 
 const addon = require('./addon.js');
 
+/**
+ * Internal symbol to mark async-created TTS instances.
+ */
+const kFromAsyncFactory = Symbol('OfflineTts.fromAsync');
+
+
+class GenerationConfig {
+  constructor(opts = {}) {
+    Object.assign(this, opts);
+  }
+}
+
+
 class OfflineTts {
   /**
-   * @param {OfflineTtsConfig} config
+   * Constructor (sync path).
+   *
+   * Users call:
+   *   new OfflineTts(config)
+   *
+   * Async factory calls this with an internal descriptor.
+   *
+   * @param {OfflineTtsConfig|Object} configOrInternal
    */
-  constructor(config) {
-    this.handle = addon.createOfflineTts(config);
-    this.config = config;
+  constructor(configOrInternal) {
+    if (configOrInternal && typeof configOrInternal === 'object' &&
+        configOrInternal[kFromAsyncFactory]) {
+      // ----- async factory path -----
+      this.handle = configOrInternal.handle;
+      this.config = configOrInternal.config;
+    } else {
+      // ----- sync constructor path -----
+      this.config = configOrInternal;
+      this.handle = addon.createOfflineTts(this.config);
+    }
 
+    // Common initialization
     this.numSpeakers = addon.getOfflineTtsNumSpeakers(this.handle);
     this.sampleRate = addon.getOfflineTtsSampleRate(this.handle);
+  }
+
+  /**
+   * Create an OfflineTts asynchronously (non-blocking).
+   * @param {OfflineTtsConfig} config
+   * @returns {Promise<OfflineTts>}
+   */
+  static async createAsync(config) {
+    const handle = await addon.createOfflineTtsAsync(config);
+    return new OfflineTts({
+      [kFromAsyncFactory]: true,
+      handle,
+      config,
+    });
   }
 
   /**
@@ -22,10 +65,51 @@ class OfflineTts {
    * @returns {GeneratedAudio}
    */
   generate(obj) {
+    if (!obj || typeof obj !== 'object') {
+      throw new TypeError('generate() expects an object');
+    }
+
+    // If generationConfig is present, use new API
+    if (obj.generationConfig !== undefined) {
+      return addon.offlineTtsGenerateWithConfig(this.handle, obj);
+    }
+
+    // Fallback to legacy path
     return addon.offlineTtsGenerate(this.handle, obj);
+  }
+  /**
+   * Generate audio asynchronously with optional generationConfig and progress
+   * callback
+   *
+   * The progress callback receives streaming audio chunks.
+   *
+   * @param {TtsRequest & { generationConfig?: object, onProgress?: (info: {
+   *     samples: Float32Array, progress: number }) => number | boolean | void
+   *     }} obj
+   * @returns {Promise<GeneratedAudio>}
+   */
+  generateAsync(obj) {
+    const {onProgress, ...rest} = obj;
+
+    const hasConfig = obj.generationConfig !== undefined;
+
+    const fn = hasConfig ? addon.offlineTtsGenerateAsyncWithConfig :
+                           addon.offlineTtsGenerateAsync;
+
+    return fn(this.handle, {
+      ...rest,
+      callback: typeof onProgress === 'function' ?
+          (info) => {
+            const ret = onProgress(info);
+            return ret === 0 || ret === false ? 0 : 1;
+          } :
+          undefined,
+    });
   }
 }
 
+
 module.exports = {
   OfflineTts,
-} 
+  GenerationConfig,
+}

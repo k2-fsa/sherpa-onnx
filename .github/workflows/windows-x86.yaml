@@ -14,12 +14,6 @@ on:
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-online-ctc.sh'
-      - '.github/scripts/test-audio-tagging.sh'
-      - '.github/scripts/test-offline-punctuation.sh'
-      - '.github/scripts/test-online-punctuation.sh'
-      - '.github/scripts/test-speaker-diarization.sh'
-      - '.github/scripts/test-c-api.sh'
-      - '.github/scripts/test-cxx-api.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
 
@@ -31,14 +25,16 @@ concurrency:
 
 jobs:
   windows_x86:
-    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
+    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }} static CRT ${{ matrix.use_static_crt }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        shared_lib: [ON, OFF]
+        build_type: [Release, Debug, MinSizeRel, RelWithDebInfo]
+        shared_lib: [OFF, ON]
         with_tts: [ON, OFF]
+        use_static_crt: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +47,14 @@ jobs:
           ./new-release.sh
           git diff .
 
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: find dumpbin
+        shell: bash
+        run: |
+          which dumpbin
+
       - name: Configure CMake
         shell: bash
         run: |
@@ -59,24 +63,74 @@ jobs:
           cmake \
             -A Win32 \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
-            -D CMAKE_BUILD_TYPE=Release \
+            -DSHERPA_ONNX_USE_STATIC_CRT=${{ matrix.use_static_crt }} \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
+            -D BUILD_ESPEAK_NG_EXE=OFF \
             ..
+
+      - name: Check 1
+        shell: bash
+        run: |
+          cd build
+
+          cat sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 2
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" sherpa-onnx\csrc\sherpa-onnx.vcxproj
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-vcxproj-release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          path: build/sherpa-onnx/csrc/sherpa-onnx.vcxproj
+
+      - name: Check 3
+        shell: bash
+        run: |
+          cd build
+
+          cat c-api-examples/vad-whisper-c-api.vcxproj
+
+      - name: Check 4
+        shell: cmd
+        run: |
+          cd build
+
+          findstr /R /C:"<RuntimeLibrary>" "c-api-examples\vad-whisper-c-api.vcxproj"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vad-whisper-c-api-vcxproj-release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
+          path: build/c-api-examples/vad-whisper-c-api.vcxproj
 
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
-          cmake --build . --config Release
-          cmake --build . --config Release --target install
+          cmake --build . --config ${{ matrix.build_type }} -- -m:2
+          cmake --build . --config ${{ matrix.build_type }} --target install -- -m:2
 
-          ls -lh ./bin/Release/sherpa-onnx.exe
+          ls -lh ./bin/${{ matrix.build_type }}/sherpa-onnx.exe
+
+      - name: Show exe
+        shell: bash
+        run: |
+          ls -lh $PWD/build/bin/${{ matrix.build_type }}
+
+      - name: Dump CRT dependencies
+        shell: cmd
+        run: |
+          dumpbin /dependents build\bin\${{ matrix.build_type }}\sherpa-onnx.exe
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
+          name: release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}-static-crt-${{ matrix.use_static_crt }}-${{ matrix.build_type }}
           path: build/install/*
 
       - name: Copy files
@@ -84,14 +138,20 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86
-
           shared_lib=${{ matrix.shared_lib }}
-
+          use_static_crt=${{ matrix.use_static_crt }}
           if [[ $shared_lib == "ON" ]]; then
-            suffix=shared
+            if [[ $use_static_crt == ON ]]; then
+              suffix=shared-MT-${{ matrix.build_type }}
+            else
+              suffix=shared-MD-${{ matrix.build_type }}
+            fi
           else
-            suffix=static
+            if [[ $use_static_crt == ON ]]; then
+              suffix=static-MT-${{ matrix.build_type }}
+            else
+              suffix=static-MD-${{ matrix.build_type }}
+            fi
           fi
 
           if [[ ${{ matrix.with_tts }} == ON ]]; then
@@ -106,7 +166,15 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
+          ls -lh $dst/bin/
+          echo "---"
+          ls -lh $dst/lib/
+
           tar cjvf ${dst}.tar.bz2 $dst
+
+          ls -lh $dst/
+
+          ls -lh *.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -128,7 +196,7 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
-            dst=win32/$SHERPA_ONNX_VERSION
+            dst=win64/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
             cp -v ../sherpa-onnx-*.tar.bz2 $dst
@@ -154,142 +222,17 @@ jobs:
           tag: v1.12.15
 
       - name: Release pre-compiled binaries and libs for Windows x86
-        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*-win-x86*.tar.bz2
 
-      - name: Test offline Moonshine for windows x86
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline.exe
-
-          .github/scripts/test-offline-moonshine.sh
-
-      - name: Test C++ API
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api.exe
-          export CXX_WHISPER_EXE=whisper-cxx-api.exe
-          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api.exe
-
-          .github/scripts/test-cxx-api.sh
-
-      - name: Test offline speaker diarization
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline-speaker-diarization.exe
-
-          .github/scripts/test-speaker-diarization.sh
-
-      - name: Test online punctuation
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-online-punctuation.exe
-
-          .github/scripts/test-online-punctuation.sh
-
-      - name: Test offline punctuation
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline-punctuation.exe
-
-          .github/scripts/test-offline-punctuation.sh
-
-      - name: Test spoken language identification (C API)
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export SLID_EXE=spoken-language-identification-c-api.exe
-          export SID_EXE=speaker-identification-c-api.exe
-          export AT_EXE=audio-tagging-c-api.exe
-          export PUNCT_EXE=add-punctuation-c-api.exe
-
-          .github/scripts/test-c-api.sh
-
-      # - name: Test spoken language identification
-      #   shell: bash
-      #   run: |
-      #     export PATH=$PWD/build/bin/Release:$PATH
-      #     export EXE=sherpa-onnx-offline-language-identification.exe
-      #
-      #     .github/scripts/test-spoken-language-identification.sh
-      - name: Test Audio tagging
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline-audio-tagging.exe
-
-          .github/scripts/test-audio-tagging.sh
-
       - name: Test online CTC
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Release:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-ctc.sh
-
-      - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline-tts.exe
-
-          .github/scripts/test-offline-tts.sh
-
-      - name: Test online paraformer for windows x86
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx.exe
-
-          .github/scripts/test-online-paraformer.sh
-
-      # - name: Test offline Whisper for windows x86
-      #   shell: bash
-      #   run: |
-      #     export PATH=$PWD/build/bin/Release:$PATH
-      #     export EXE=sherpa-onnx-offline.exe
-      #
-      #     .github/scripts/test-offline-whisper.sh
-
-      - name: Test offline CTC for windows x86
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline.exe
-
-          .github/scripts/test-offline-ctc.sh
-
-      # - name: Test offline transducer for Windows x86
-      #   shell: bash
-      #   run: |
-      #     export PATH=$PWD/build/bin/Release:$PATH
-      #     export EXE=sherpa-onnx-offline.exe
-      #
-      #     .github/scripts/test-offline-transducer.sh
-
-      - name: Test online transducer for Windows x86
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx.exe
-
-          .github/scripts/test-online-transducer.sh
-
-      - name: Test online transducer (C API)
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=decode-file-c-api.exe
-
-          .github/scripts/test-online-transducer.sh

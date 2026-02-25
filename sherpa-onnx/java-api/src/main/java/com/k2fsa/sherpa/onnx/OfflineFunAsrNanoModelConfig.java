@@ -11,6 +11,9 @@ public class OfflineFunAsrNanoModelConfig {
     private final float temperature;
     private final float topP;
     private final int seed;
+    private final String language;
+    private final boolean itn;
+    private final String hotwords;
 
     private OfflineFunAsrNanoModelConfig(Builder builder) {
         this.encoderAdaptor = builder.encoderAdaptor;
@@ -23,6 +26,9 @@ public class OfflineFunAsrNanoModelConfig {
         this.temperature = builder.temperature;
         this.topP = builder.topP;
         this.seed = builder.seed;
+        this.language = builder.language;
+        this.itn = builder.itn;
+        this.hotwords = builder.hotwords;
     }
 
     public static Builder builder() {
@@ -53,6 +59,18 @@ public class OfflineFunAsrNanoModelConfig {
         return userPrompt;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public boolean getItn() {
+        return itn;
+    }
+
+    public String getHotwords() {
+        return hotwords;
+    }
+
     public int getMaxNewTokens() {
         return maxNewTokens;
     }
@@ -80,6 +98,9 @@ public class OfflineFunAsrNanoModelConfig {
         private float temperature = 1e-6f;
         private float topP = 0.8f;
         private int seed = 42;
+        private String language = "";
+        private boolean itn = true;
+        private String hotwords = "";
 
         public OfflineFunAsrNanoModelConfig build() {
             return new OfflineFunAsrNanoModelConfig(this);
@@ -112,6 +133,21 @@ public class OfflineFunAsrNanoModelConfig {
 
         public Builder setUserPrompt(String userPrompt) {
             this.userPrompt = userPrompt;
+            return this;
+        }
+
+        public Builder setLanguage(String language) {
+            this.language = language;
+            return this;
+        }
+
+        public Builder setItn(boolean itn) {
+            this.itn = itn;
+            return this;
+        }
+
+        public Builder setHotwords(String hotwords) {
+            this.hotwords = hotwords;
             return this;
         }
 

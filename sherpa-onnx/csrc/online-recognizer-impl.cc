@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <string>
-#include <strstream>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -217,7 +217,7 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(Manager *mgr,
         SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
       }
       auto buf = ReadFile(mgr, f);
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       itn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
     }
   }
@@ -235,7 +235,7 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(Manager *mgr,
       auto buf = ReadFile(mgr, f);
 
       std::unique_ptr<std::istream> s(
-          new std::istrstream(buf.data(), buf.size()));
+          new std::istringstream(std::string(buf.data(), buf.size())));
 
       std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
           fst::FarReader<fst::StdArc>::Open(std::move(s)));

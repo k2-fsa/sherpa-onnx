@@ -47,7 +47,13 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("durations",
         [](const PyClass &self) { return self.durations; })
       .def_property_readonly("ys_log_probs",
-        [](const PyClass &self) { return self.ys_log_probs; });
+        [](const PyClass &self) { return self.ys_log_probs; })
+      .def_property_readonly("segment_timestamps",
+        [](const PyClass &self) { return self.segment_timestamps; })
+      .def_property_readonly("segment_durations",
+        [](const PyClass &self) { return self.segment_durations; })
+      .def_property_readonly("segment_texts",
+        [](const PyClass &self) { return self.segment_texts; });
 }
 
 void PybindOfflineStream(py::module *m) {

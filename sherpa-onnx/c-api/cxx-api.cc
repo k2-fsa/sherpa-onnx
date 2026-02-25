@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "nlohmann/json.hpp"
+
 namespace sherpa_onnx::cxx {
 
 Wave ReadWave(const std::string &filename) {
@@ -274,8 +276,7 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
 
   c.model_config.funasr_nano.encoder_adaptor =
       config.model_config.funasr_nano.encoder_adaptor.c_str();
-  c.model_config.funasr_nano.llm =
-      config.model_config.funasr_nano.llm.c_str();
+  c.model_config.funasr_nano.llm = config.model_config.funasr_nano.llm.c_str();
   c.model_config.funasr_nano.embedding =
       config.model_config.funasr_nano.embedding.c_str();
   c.model_config.funasr_nano.tokenizer =
@@ -292,6 +293,14 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.funasr_nano.top_p;
   c.model_config.funasr_nano.seed =
       config.model_config.funasr_nano.seed;
+  c.model_config.funasr_nano.language =
+      config.model_config.funasr_nano.language.c_str();
+  c.model_config.funasr_nano.itn =
+      config.model_config.funasr_nano.itn ? 1 : 0;
+  c.model_config.funasr_nano.hotwords =
+      config.model_config.funasr_nano.hotwords.c_str();
+  c.model_config.funasr_nano.top_p = config.model_config.funasr_nano.top_p;
+  c.model_config.funasr_nano.seed = config.model_config.funasr_nano.seed;
   c.model_config.medasr.model = config.model_config.medasr.model.c_str();
 
   c.lm_config.model = config.lm_config.model.c_str();
@@ -446,6 +455,21 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.zipvoice.target_rms = config.model.zipvoice.target_rms;
   c.model.zipvoice.guidance_scale = config.model.zipvoice.guidance_scale;
 
+  c.model.pocket.lm_flow = config.model.pocket.lm_flow.c_str();
+  c.model.pocket.lm_main = config.model.pocket.lm_main.c_str();
+  c.model.pocket.encoder = config.model.pocket.encoder.c_str();
+  c.model.pocket.decoder = config.model.pocket.decoder.c_str();
+  c.model.pocket.text_conditioner =
+      config.model.pocket.text_conditioner.c_str();
+
+  c.model.pocket.vocab_json = config.model.pocket.vocab_json.c_str();
+
+  c.model.pocket.token_scores_json =
+      config.model.pocket.token_scores_json.c_str();
+
+  c.model.pocket.voice_embedding_cache_capacity =
+      config.model.pocket.voice_embedding_cache_capacity;
+
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();
@@ -487,9 +511,49 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   }
 
   GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
   ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
   ans.sample_rate = audio->sample_rate;
 
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  return ans;
+}
+
+GeneratedAudio OfflineTts::Generate(const std::string &text,
+                                    const GenerationConfig &config,
+                                    OfflineTtsCallback callback /*= nullptr*/,
+                                    void *arg /*= nullptr*/) const {
+  SherpaOnnxGenerationConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.silence_scale = config.silence_scale;
+  c.speed = config.speed;
+  c.sid = config.sid;
+  c.reference_audio = config.reference_audio.data();
+  c.reference_audio_len = config.reference_audio.size();
+  c.reference_sample_rate = config.reference_sample_rate;
+  c.reference_text = config.reference_text.c_str();
+  c.num_steps = config.num_steps;
+
+  nlohmann::json j = config.extra;
+  std::string s = j.dump();
+  c.extra = s.c_str();
+
+  const SherpaOnnxGeneratedAudio *audio =
+      SherpaOnnxOfflineTtsGenerateWithConfig(p_, text.c_str(), &c, callback,
+                                             arg);
+  GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
+  ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
+  ans.sample_rate = audio->sample_rate;
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   return ans;
 }
@@ -498,6 +562,18 @@ std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
     const std::string &text, int32_t sid /*= 0*/, float speed /*= 1.0*/,
     OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
   auto audio = Generate(text, sid, speed, callback, arg);
+
+  GeneratedAudio *ans = new GeneratedAudio;
+  ans->samples = std::move(audio.samples);
+  ans->sample_rate = audio.sample_rate;
+
+  return std::shared_ptr<GeneratedAudio>(ans);
+}
+
+std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
+    const std::string &text, const GenerationConfig &config,
+    OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
+  auto audio = Generate(text, config, callback, arg);
 
   GeneratedAudio *ans = new GeneratedAudio;
   ans->samples = std::move(audio.samples);
