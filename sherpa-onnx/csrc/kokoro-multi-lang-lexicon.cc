@@ -4,7 +4,6 @@
 
 #include "sherpa-onnx/csrc/kokoro-multi-lang-lexicon.h"
 
-#include <codecvt>
 #include <fstream>
 #include <regex>
 #include <sstream>
@@ -377,12 +376,10 @@ class KokoroMultiLangLexicon::Impl {
         // Note phonemes[i] contains a vector of unicode codepoints;
         // we need to convert them to utf8
 
-        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-
         std::vector<int32_t> ids;
         for (const auto &v : phonemes) {
           for (const auto p : v) {
-            auto token = conv.to_bytes(p);
+            auto token = Utf32ToUtf8(p);
             if (token2id_.count(token)) {
               ids.push_back(token2id_.at(token));
             } else {
@@ -450,10 +447,9 @@ class KokoroMultiLangLexicon::Impl {
       }
     }
 
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     std::u32string s;
     for (const auto &p : token2id_) {
-      s = conv.from_bytes(p.first);
+      s = Utf8ToUtf32(p.first);
 
       if (s.size() != 1) {
         SHERPA_ONNX_LOGE("Error for token %s with id %d", p.first.c_str(),

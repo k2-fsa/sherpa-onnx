@@ -4,7 +4,6 @@
 
 #include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 
-#include <codecvt>
 #include <fstream>
 #include <locale>
 #include <map>
@@ -29,6 +28,7 @@
 #include "phonemize.hpp"    // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -70,7 +70,6 @@ void CallPhonemizeEspeak(const std::string &text,
 }
 
 static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
-  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
   std::unordered_map<char32_t, int32_t> token2id;
 
   std::string line;
@@ -95,7 +94,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    s = conv.from_bytes(sym);
+    s = Utf8ToUtf32(sym);
     if (s.size() != 1) {
       // for tokens.txt from coqui-ai/TTS, the last token is <BLNK>
       if (s.size() == 6 && s[0] == '<' && s[1] == 'B' && s[2] == 'L' &&
