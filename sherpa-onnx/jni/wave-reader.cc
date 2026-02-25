@@ -101,7 +101,7 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
   }
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
-  std::istrstream is(buffer.data(), buffer.size());
+  std::istringstream is(std::string(buffer.data(), buffer.size()));
 #else
   std::ifstream is(p_filename, std::ios::binary);
 #endif
