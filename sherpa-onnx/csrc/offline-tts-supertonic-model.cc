@@ -241,43 +241,28 @@ class OfflineTtsSupertonicModel::Impl {
   }
 
   template <typename Manager>
+  void LoadOneModel(Manager *mgr, const std::string &path,
+                   const char *model_name,
+                   const std::function<void(void *, size_t)> &init) {
+    auto buf = ReadFile(mgr, path);
+    if (buf.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read %s model: %s", model_name, path.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    init(buf.data(), buf.size());
+  }
+
+  template <typename Manager>
   void LoadModels(Manager *mgr) {
-    {
-      auto buf = ReadFile(mgr, config_.supertonic.duration_predictor);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read duration_predictor model: %s",
-                         config_.supertonic.duration_predictor.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitDurationPredictor(buf.data(), buf.size());
-    }
-    {
-      auto buf = ReadFile(mgr, config_.supertonic.text_encoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read text_encoder model: %s",
-                         config_.supertonic.text_encoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitTextEncoder(buf.data(), buf.size());
-    }
-    {
-      auto buf = ReadFile(mgr, config_.supertonic.vector_estimator);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read vector_estimator model: %s",
-                         config_.supertonic.vector_estimator.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitVectorEstimator(buf.data(), buf.size());
-    }
-    {
-      auto buf = ReadFile(mgr, config_.supertonic.vocoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read vocoder model: %s",
-                         config_.supertonic.vocoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitVocoder(buf.data(), buf.size());
-    }
+    LoadOneModel(mgr, config_.supertonic.duration_predictor,
+                 "duration_predictor",
+                 [this](void *p, size_t len) { InitDurationPredictor(p, len); });
+    LoadOneModel(mgr, config_.supertonic.text_encoder, "text_encoder",
+                 [this](void *p, size_t len) { InitTextEncoder(p, len); });
+    LoadOneModel(mgr, config_.supertonic.vector_estimator, "vector_estimator",
+                 [this](void *p, size_t len) { InitVectorEstimator(p, len); });
+    LoadOneModel(mgr, config_.supertonic.vocoder, "vocoder",
+                 [this](void *p, size_t len) { InitVocoder(p, len); });
   }
 
   void Init() {
@@ -337,6 +322,10 @@ class OfflineTtsSupertonicModel::Impl {
   template <typename Manager>
   void LoadConfig(Manager *mgr, const std::string &config_path) {
     auto buf = ReadFile(mgr, config_path);
+    if (buf.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read config: %s", config_path.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
     json j = LoadJsonFromBuffer(buf);
     ParseConfig(j);
   }

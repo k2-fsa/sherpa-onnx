@@ -29,7 +29,7 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
 
   int32_t SampleRate() const override;
 
-  int32_t NumSpeakers() const override { return 0; }
+  int32_t NumSpeakers() const override { return num_speakers_; }
 
   GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
@@ -50,22 +50,14 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
       const SupertonicStyle &style, int32_t num_steps, float speed,
       float silence_duration, GeneratedAudioCallback callback) const;
 
-  SupertonicStyle LoadVoiceStyle(const std::string &voice_style_path) const;
-
-  SupertonicStyle LoadVoiceStyles(
-      const std::vector<std::string> &voice_style_paths) const;
-
-  template <typename Manager>
-  SupertonicStyle LoadVoiceStyle(Manager *mgr,
-                                 const std::string &voice_style_path) const;
-
-  template <typename Manager>
-  SupertonicStyle LoadVoiceStyles(
-      Manager *mgr, const std::vector<std::string> &voice_style_paths) const;
+  void InitVoiceStyle(const std::vector<char> &buf);
+  SupertonicStyle GetStyleForSid(int64_t sid) const;
 
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsSupertonicModel> model_;
   std::unique_ptr<SupertonicUnicodeProcessor> text_processor_;
+  int32_t num_speakers_ = 0;
+  SupertonicStyle full_style_;  // shape [num_speakers_, ...]
 };
 
 }  // namespace sherpa_onnx

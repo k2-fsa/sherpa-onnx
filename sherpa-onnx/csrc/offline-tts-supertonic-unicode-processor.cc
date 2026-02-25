@@ -10,7 +10,9 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstring>
+#include <cinttypes>
+#include <climits>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
@@ -152,9 +154,21 @@ static void ReplaceString(std::string *text, const std::string &from,
   }
 }
 
-static std::vector<int64_t> ParseIndexerFromJson(const json &j) {
-  return j.get<std::vector<int64_t>>();
+static std::vector<int32_t> ParseIndexerFromJson(const json &j) {
+  std::vector<int64_t> raw = j.get<std::vector<int64_t>>();
+  std::vector<int32_t> out;
+  out.reserve(raw.size());
+  for (int64_t v : raw) {
+    if (v < INT32_MIN || v > INT32_MAX) {
+      SHERPA_ONNX_LOGE("Unicode indexer value %" PRId64 " out of int32_t range",
+                       v);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    out.push_back(static_cast<int32_t>(v));
+  }
+  return out;
 }
+
 }  // namespace
 
 SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
@@ -168,7 +182,7 @@ SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     Manager *mgr, const std::string &unicode_indexer_path) {
   auto buf = ReadFile(mgr, unicode_indexer_path);
   if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read unicode_indexer.json: %s",
+    SHERPA_ONNX_LOGE("Failed to read unicode indexer: %s",
                      unicode_indexer_path.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
@@ -440,7 +454,7 @@ void SupertonicUnicodeProcessor::Process(
     const auto &unicode_vals = all_unicode_vals[i];
     for (size_t j = 0; j < unicode_vals.size(); j++) {
       if (unicode_vals[j] < indexer_.size()) {
-        (*text_ids)[i][j] = indexer_[unicode_vals[j]];
+        (*text_ids)[i][j] = static_cast<int64_t>(indexer_[unicode_vals[j]]);
       }
     }
   }

@@ -38,7 +38,7 @@ class SupertonicUnicodeProcessor {
                    std::vector<float> *mask_flat,
                    std::vector<int64_t> *mask_shape) const;
 
-  std::vector<int64_t> indexer_;
+  std::vector<int32_t> indexer_;
 };
 
 }  // namespace sherpa_onnx

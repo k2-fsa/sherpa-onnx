@@ -13,7 +13,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <numeric>
 #include <random>
 #include <regex>
@@ -97,9 +96,8 @@ static std::vector<std::string> ChunkText(const std::string &text,
     std::vector<std::string> sentences;
     std::sregex_iterator match_iter(paragraph.begin(), paragraph.end(),
                                     sentence_regex);
-    std::sregex_iterator match_end;
     size_t last_pos = 0;
-    for (; match_iter != match_end; ++match_iter) {
+    for (; match_iter != std::sregex_iterator(); ++match_iter) {
       size_t match_pos = match_iter->position(0);
       std::string sentence = paragraph.substr(last_pos, match_pos - last_pos);
       // Include the punctuation (match_iter->str(1) is the punctuation)
@@ -145,6 +143,15 @@ static std::vector<std::string> ChunkText(const std::string &text,
   return chunks;
 }
 
+static std::string GetVoicePath(const std::string &voice_style) {
+  std::string path = Trim(voice_style);
+  if (path.empty()) {
+    SHERPA_ONNX_LOGE("No voice style path in config");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  return path;
+}
+
 static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   constexpr size_t kHeaderSize = 6 * sizeof(int64_t);
   if (buf.size() < kHeaderSize) {
@@ -184,140 +191,6 @@ static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   style.dp_shape = std::move(dp_shape);
   return style;
 }
-
-static SupertonicStyle LoadVoiceStyleFromFile(const std::string &path) {
-  std::vector<char> buf = ReadFile(path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read voice style file: %s", path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return ParseVoiceStyleFromBinary(buf);
-}
-
-template <typename Manager>
-static SupertonicStyle LoadVoiceStyleFromFile(Manager *mgr,
-                                              const std::string &path) {
-  std::vector<char> buf = ReadFile(mgr, path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read voice style file: %s", path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return ParseVoiceStyleFromBinary(buf);
-}
-
-static SupertonicStyle LoadVoiceStylesImpl(
-    const std::vector<std::string> &voice_style_paths,
-    std::function<SupertonicStyle(const std::string &)> load_style_fn) {
-  if (voice_style_paths.empty()) {
-    SHERPA_ONNX_LOGE("Empty voice style paths");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  int32_t bsz = static_cast<int32_t>(voice_style_paths.size());
-  SupertonicStyle first_style = load_style_fn(voice_style_paths[0]);
-  if (first_style.ttl_shape.size() != 3 || first_style.dp_shape.size() != 3) {
-    SHERPA_ONNX_LOGE(
-        "Invalid voice style dimensions: ttl_shape=%zu, dp_shape=%zu",
-        first_style.ttl_shape.size(), first_style.dp_shape.size());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  if (first_style.ttl_shape[0] != 1 || first_style.dp_shape[0] != 1) {
-    SHERPA_ONNX_LOGE(
-        "Invalid voice style: expected batch dim 1, got ttl_shape[0]=%ld, "
-        "dp_shape[0]=%ld",
-        first_style.ttl_shape[0], first_style.dp_shape[0]);
-    SHERPA_ONNX_EXIT(-1);
-  }
-  int64_t ttl_dim1 = first_style.ttl_shape[1];
-  int64_t ttl_dim2 = first_style.ttl_shape[2];
-  int64_t dp_dim1 = first_style.dp_shape[1];
-  int64_t dp_dim2 = first_style.dp_shape[2];
-  size_t expected_first_ttl =
-      static_cast<size_t>(ttl_dim1) * static_cast<size_t>(ttl_dim2);
-  size_t expected_first_dp =
-      static_cast<size_t>(dp_dim1) * static_cast<size_t>(dp_dim2);
-  if (first_style.ttl_data.size() != expected_first_ttl ||
-      first_style.dp_data.size() != expected_first_dp) {
-    SHERPA_ONNX_LOGE(
-        "Invalid voice style: ttl_data size (%zu) or dp_data size (%zu) "
-        "mismatch expected (%zu, %zu)",
-        first_style.ttl_data.size(), first_style.dp_data.size(),
-        expected_first_ttl, expected_first_dp);
-    SHERPA_ONNX_EXIT(-1);
-  }
-  size_t ttl_size = static_cast<size_t>(bsz) * static_cast<size_t>(ttl_dim1) *
-                    static_cast<size_t>(ttl_dim2);
-  size_t dp_size = static_cast<size_t>(bsz) * static_cast<size_t>(dp_dim1) *
-                   static_cast<size_t>(dp_dim2);
-  std::vector<float> ttl_flat(ttl_size);
-  std::vector<float> dp_flat(dp_size);
-  std::copy(first_style.ttl_data.begin(), first_style.ttl_data.end(),
-            ttl_flat.begin());
-  std::copy(first_style.dp_data.begin(), first_style.dp_data.end(),
-            dp_flat.begin());
-  // Load and concatenate remaining styles
-  for (int32_t i = 1; i < bsz; ++i) {
-    SupertonicStyle style = load_style_fn(voice_style_paths[i]);
-    if (style.ttl_shape.size() != 3 || style.dp_shape.size() != 3) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: ttl_shape.size()=%zu, dp_shape.size()=%zu",
-          i, style.ttl_shape.size(), style.dp_shape.size());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (style.ttl_shape[0] != 1 || style.dp_shape[0] != 1) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: expected batch dim 1, got "
-          "ttl_shape[0]=%ld, dp_shape[0]=%ld",
-          i, style.ttl_shape[0], style.dp_shape[0]);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (style.ttl_shape[1] != ttl_dim1 || style.ttl_shape[2] != ttl_dim2) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: ttl_shape[1,2]={%ld,%ld} != expected "
-          "{%ld,%ld}",
-          i, style.ttl_shape[1], style.ttl_shape[2], ttl_dim1, ttl_dim2);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (style.dp_shape[1] != dp_dim1 || style.dp_shape[2] != dp_dim2) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: dp_shape[1,2]={%ld,%ld} != expected "
-          "{%ld,%ld}",
-          i, style.dp_shape[1], style.dp_shape[2], dp_dim1, dp_dim2);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    // Verify data size matches expected dimensions
-    size_t expected_ttl_size =
-        static_cast<size_t>(ttl_dim1) * static_cast<size_t>(ttl_dim2);
-    if (style.ttl_data.size() != expected_ttl_size) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: ttl_data size (%zu) != expected (%zu)", i,
-          style.ttl_data.size(), expected_ttl_size);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    size_t expected_dp_size =
-        static_cast<size_t>(dp_dim1) * static_cast<size_t>(dp_dim2);
-    if (style.dp_data.size() != expected_dp_size) {
-      SHERPA_ONNX_LOGE(
-          "Invalid voice style[%d]: dp_data size (%zu) != expected (%zu)", i,
-          style.dp_data.size(), expected_dp_size);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    size_t ttl_offset = static_cast<size_t>(i) * static_cast<size_t>(ttl_dim1) *
-                        static_cast<size_t>(ttl_dim2);
-    std::copy(style.ttl_data.begin(), style.ttl_data.end(),
-              ttl_flat.begin() + ttl_offset);
-    size_t dp_offset = static_cast<size_t>(i) * static_cast<size_t>(dp_dim1) *
-                       static_cast<size_t>(dp_dim2);
-    std::copy(style.dp_data.begin(), style.dp_data.end(),
-              dp_flat.begin() + dp_offset);
-  }
-  SupertonicStyle style;
-  style.ttl_data = std::move(ttl_flat);
-  style.dp_data = std::move(dp_flat);
-  style.ttl_shape = {bsz, ttl_dim1, ttl_dim2};
-  style.dp_shape = {bsz, dp_dim1, dp_dim2};
-  return style;
-}
-
 }  // namespace
 
 OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
@@ -326,7 +199,15 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
       model_(std::make_unique<OfflineTtsSupertonicModel>(config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
           ResolveAbsolutePath(config.model.supertonic.model_dir) +
-          "/unicode_indexer.json")) {}
+          "/unicode_indexer.json")) {
+  std::string voice_path = GetVoicePath(config.model.supertonic.voice_style);
+  std::vector<char> buf = ReadFile(ResolveAbsolutePath(voice_path));
+  if (buf.empty()) {
+    SHERPA_ONNX_LOGE("Failed to read voice style file: %s", voice_path.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+  InitVoiceStyle(buf);
+}
 
 template <typename Manager>
 OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
@@ -334,7 +215,15 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     : config_(config),
       model_(std::make_unique<OfflineTtsSupertonicModel>(mgr, config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
-          mgr, config.model.supertonic.model_dir + "/unicode_indexer.json")) {}
+          mgr, config.model.supertonic.model_dir + "/unicode_indexer.json")) {
+  std::string voice_path = GetVoicePath(config.model.supertonic.voice_style);
+  std::vector<char> buf = ReadFile(mgr, voice_path);
+  if (buf.empty()) {
+    SHERPA_ONNX_LOGE("Failed to read voice style file: %s", voice_path.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+  InitVoiceStyle(buf);
+}
 
 int32_t OfflineTtsSupertonicImpl::SampleRate() const {
   return model_->GetSampleRate();
@@ -355,85 +244,42 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   // Supported extra options in config.extra:
   //   - "speed" (float): Speech speed factor (default: 1.05)
   //   - "num_steps" (int): Number of denoising steps (default: 5)
-  //   - "lang" (string): Language(s) for text(s), comma-separated for batch
-  //                      (default: "en" for all texts)
-  //   - "batch" (string): Enable batch mode, set to "1" or "true" to disable
-  //                       automatic text chunking (default: auto-detect)
-  //   - "voice_style" (string): Path to voice style .bin file(s),
-  //                            comma-separated for batch (default: model
-  //                            config)
-  //   - "max_len_korean" (int): Maximum text chunk length for Korean
-  //                             (default: 120, used in non-batch mode)
-  //   - "max_len_other" (int): Maximum text chunk length for other languages
-  //                            (default: 300, used in non-batch mode)
-  if (config.sid != 0 && config_.model.debug) {
-    SHERPA_ONNX_LOGE(
-        "Supertonic model doesn't support speaker ID, ignoring sid=%d",
-        config.sid);
-  }
+  //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en")
+  //   - sid selects speaker from voice.bin (0 .. NumSpeakers()-1).
+  //   - "max_len_korean" (int): Max chunk length for Korean (default: 120)
+  //   - "max_len_other" (int): Max chunk length for other languages (default: 300)
   float speed = config.GetExtraFloat("speed", 1.05f);
   int32_t num_steps = config.GetExtraInt("num_steps", 5);
-  std::vector<std::string> text_list = SplitStringAndTrim(text, '|');
-  if (text_list.empty()) {
+  std::string text_single = Trim(text);
+  if (text_single.empty()) {
     SHERPA_ONNX_LOGE("Input text is empty");
     SHERPA_ONNX_EXIT(-1);
   }
 
-  std::vector<std::string> lang_list;
-  std::string lang_str = config.GetExtraString("lang", "");
-  std::string batch_str = config.GetExtraString("batch", "");
-  bool batch_mode_flag = (batch_str == "1" || batch_str == "true");
-  if (!lang_str.empty()) {
-    lang_list = SplitStringAndTrim(lang_str, ',');
-  } else {
-    lang_list.resize(text_list.size(), "en");
-  }
-  if (lang_list.size() != text_list.size()) {
-    if (lang_list.size() == 1) {
-      lang_list.resize(text_list.size(), lang_list[0]);
-    } else {
-      SHERPA_ONNX_LOGE(
-          "Number of languages (%zu) must match number of texts (%zu)",
-          lang_list.size(), text_list.size());
-      SHERPA_ONNX_EXIT(-1);
-    }
-  }
-  std::string voice_style_str = config.GetExtraString(
-      "voice_style", config_.model.supertonic.voice_style);
-  std::vector<std::string> voice_style_paths =
-      SplitStringAndTrim(voice_style_str, ',');
-  if (voice_style_paths.empty()) {
+  int64_t sid = config.sid;
+  if (num_speakers_ > 0 && (sid >= num_speakers_ || sid < 0)) {
     SHERPA_ONNX_LOGE(
-        "No voice style specified. Please provide --supertonic-voice-style "
-        "or set voice_style in GenerationConfig.extra");
-    SHERPA_ONNX_EXIT(-1);
+        "Model has %d speaker(s). sid must be in [0, %d]. Given sid=%d, "
+        "using 0",
+        num_speakers_, num_speakers_ - 1, static_cast<int32_t>(sid));
+    sid = 0;
   }
-  if (voice_style_paths.size() != text_list.size()) {
-    if (voice_style_paths.size() == 1) {
-      voice_style_paths.resize(text_list.size(), voice_style_paths[0]);
-    } else {
-      SHERPA_ONNX_LOGE(
-          "Number of voice styles (%zu) must match number of texts (%zu)",
-          voice_style_paths.size(), text_list.size());
-      SHERPA_ONNX_EXIT(-1);
-    }
+  SupertonicStyle style = GetStyleForSid(sid);
+
+  std::string lang_str = config.GetExtraString("lang", "");
+  std::string lang =
+      lang_str.empty() ? "en" : Trim(lang_str.substr(0, lang_str.find(',')));
+  if (lang.empty()) {
+    lang = "en";
   }
-  bool batch_mode = (text_list.size() > 1) || batch_mode_flag;
-  if (batch_mode) {
-    SupertonicStyle style = LoadVoiceStyles(voice_style_paths);
-    return Process(text_list, lang_list, style, num_steps, speed);
-  } else {
-    std::string lang = lang_list[0];
-    float silence_duration = 0.3f;
-    size_t max_len =
-        (lang == "ko")
-            ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
-            : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
-    auto text_chunks = ChunkText(text_list[0], max_len);
-    SupertonicStyle style = LoadVoiceStyle(voice_style_paths[0]);
-    return ProcessChunksAndConcatenate(text_chunks, lang, style, num_steps,
-                                       speed, silence_duration, callback);
-  }
+  float silence_duration = 0.3f;
+  size_t max_len =
+      (lang == "ko")
+          ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
+          : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
+  auto text_chunks = ChunkText(text_single, max_len);
+  return ProcessChunksAndConcatenate(text_chunks, lang, style, num_steps, speed,
+                                     silence_duration, callback);
 }
 
 GeneratedAudio OfflineTtsSupertonicImpl::Process(
@@ -446,8 +292,10 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
   int32_t bsz = static_cast<int32_t>(text_list.size());
   if (bsz != static_cast<int32_t>(style.ttl_shape[0])) {
     SHERPA_ONNX_LOGE(
-        "Number of texts (%d) must match number of style vectors (%d)", bsz,
-        static_cast<int32_t>(style.ttl_shape[0]));
+        "Number of texts (%d) must match number of style vectors (%d). "
+        "When using a multi-speaker voice.bin, pass style from "
+        "GetStyleForSid(sid) with one row per text.",
+        bsz, static_cast<int32_t>(style.ttl_shape[0]));
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -689,9 +537,8 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(
       result.samples.insert(result.samples.end(), batch_wav,
                             batch_wav + actual_len);
     }
-  } else if (wav_shape.size() == 1) {
-    result.samples.assign(wav_data, wav_data + wav_size);
-  } else if (wav_shape.size() == 2 && wav_shape[0] == 1) {
+  } else if (wav_shape.size() == 1 ||
+             (wav_shape.size() == 2 && wav_shape[0] == 1)) {
     result.samples.assign(wav_data, wav_data + wav_size);
   } else {
     std::ostringstream os;
@@ -750,50 +597,59 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
   return result;
 }
 
-SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
-    const std::string &voice_style_path) const {
-  return LoadVoiceStyleFromFile(voice_style_path);
+void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
+  SupertonicStyle style = ParseVoiceStyleFromBinary(buf);
+  int32_t n = static_cast<int32_t>(style.ttl_shape[0]);
+  if (n <= 0) {
+    SHERPA_ONNX_LOGE("Invalid voice style: ttl_shape[0]=%d (expected >= 1)", n);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  num_speakers_ = n;
+  full_style_ = std::move(style);
 }
 
-SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
-    const std::vector<std::string> &voice_style_paths) const {
-  return LoadVoiceStylesImpl(voice_style_paths, [](const std::string &path) {
-    return LoadVoiceStyleFromFile(path);
-  });
-}
-
-template <typename Manager>
-SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
-    Manager *mgr, const std::string &voice_style_path) const {
-  return LoadVoiceStyleFromFile(mgr, voice_style_path);
-}
-
-template <typename Manager>
-SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
-    Manager *mgr, const std::vector<std::string> &voice_style_paths) const {
-  return LoadVoiceStylesImpl(voice_style_paths, [mgr](const std::string &path) {
-    return LoadVoiceStyleFromFile(mgr, path);
-  });
+SupertonicStyle OfflineTtsSupertonicImpl::GetStyleForSid(int64_t sid) const {
+  if (num_speakers_ == 0) {
+    SHERPA_ONNX_LOGE("No voice style loaded");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (num_speakers_ == 1) {
+    return full_style_;
+  }
+  int32_t s = static_cast<int32_t>(sid);
+  if (s < 0) {
+    s = 0;
+  }
+  if (s >= num_speakers_) {
+    s = num_speakers_ - 1;
+  }
+  const SupertonicStyle &full = full_style_;
+  int64_t ttl_d1 = full.ttl_shape[1];
+  int64_t ttl_d2 = full.ttl_shape[2];
+  int64_t dp_d1 = full.dp_shape[1];
+  int64_t dp_d2 = full.dp_shape[2];
+  size_t ttl_slice = static_cast<size_t>(ttl_d1 * ttl_d2);
+  size_t dp_slice = static_cast<size_t>(dp_d1 * dp_d2);
+  size_t ttl_offset = static_cast<size_t>(s) * ttl_slice;
+  size_t dp_offset = static_cast<size_t>(s) * dp_slice;
+  SupertonicStyle out;
+  out.ttl_shape = {1, ttl_d1, ttl_d2};
+  out.dp_shape = {1, dp_d1, dp_d2};
+  out.ttl_data.assign(full.ttl_data.begin() + ttl_offset,
+                      full.ttl_data.begin() + ttl_offset + ttl_slice);
+  out.dp_data.assign(full.dp_data.begin() + dp_offset,
+                     full.dp_data.begin() + dp_offset + dp_slice);
+  return out;
 }
 
 #if __ANDROID_API__ >= 9
 template OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     AAssetManager *mgr, const OfflineTtsConfig &config);
-template SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
-    AAssetManager *mgr, const std::string &voice_style_path) const;
-template SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
-    AAssetManager *mgr,
-    const std::vector<std::string> &voice_style_paths) const;
 #endif
 
 #if __OHOS__
 template OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     NativeResourceManager *mgr, const OfflineTtsConfig &config);
-template SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyle(
-    NativeResourceManager *mgr, const std::string &voice_style_path) const;
-template SupertonicStyle OfflineTtsSupertonicImpl::LoadVoiceStyles(
-    NativeResourceManager *mgr,
-    const std::vector<std::string> &voice_style_paths) const;
 #endif
 
 }  // namespace sherpa_onnx

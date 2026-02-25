@@ -30,8 +30,8 @@ void OfflineTtsSupertonicModelConfig::Register(ParseOptions *po) {
                "Path to Supertonic model directory (for config files: "
                "tts.json and unicode_indexer.json)");
   po->Register("supertonic-voice-style", &voice_style,
-               "Path to Supertonic voice style .bin file(s). For batch "
-               "inference, multiple files separated by comma");
+               "Path to Supertonic voice.bin (multi-speaker: single file with "
+               "multiple speakers; use sid 0..NumSpeakers()-1 to select)");
 }
 
 bool OfflineTtsSupertonicModelConfig::Validate() const {

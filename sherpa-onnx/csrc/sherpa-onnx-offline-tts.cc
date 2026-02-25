@@ -93,8 +93,7 @@ or details.
   if (po.NumArgs() > 1) {
     fprintf(stderr,
             "Error: Accept only one positional argument. Please use single "
-            "quotes to wrap your text. For batch mode, use | to separate texts "
-            "within the quotes.\n");
+            "quotes to wrap your text.\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }

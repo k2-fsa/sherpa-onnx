@@ -34,14 +34,14 @@ usage() {
     echo "  1: Generate calibration configs"
     echo "  2: Dump calibration data"
     echo "  3: Quantize ONNX models to INT8"
-    echo "  4: Generate binary voice style files"
+    echo "  4: Generate voice.bin (from assets/voice_styles/*.json)"
     echo ""
     echo "Examples:"
     echo "  ./run.sh              # Run all stages (0-4)"
     echo "  ./run.sh 1 2         # Run stages 1-2 only"
     echo "  ./run.sh 3            # Only run stage 3"
     echo "  ./run.sh 0 0         # Only download models"
-    echo "  ./run.sh 4            # Only generate binary files"
+    echo "  ./run.sh 4            # Only generate voice.bin"
 }
 
 case "${1:-}" in
@@ -110,10 +110,10 @@ if [ ${STAGE} -le 3 ] && [ ${STOP_STAGE} -ge 3 ]; then
     echo ""
 fi
 
-# Stage 4: Generate binary voice style files
+# Stage 4: Generate voice.bin (merge all JSONs in assets/voice_styles)
 if [ ${STAGE} -le 4 ] && [ ${STOP_STAGE} -ge 4 ]; then
     echo ""
-    echo "Stage 4: Generate Binary Voice Style Files"
+    echo "Stage 4: Generate voice.bin"
     python3 generate_voices_bin.py
     echo "Stage 4 Completed"
     echo ""
