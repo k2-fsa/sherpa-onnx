@@ -515,7 +515,23 @@ typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
 
+<<<<<<< HEAD
 typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
+=======
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
+  const char *conv_frontend;
+  const char *encoder;
+  const char *decoder;
+  const char *tokenizer;
+  int32_t max_total_len;
+  int32_t max_new_tokens;
+  float temperature;
+  float top_p;
+  int32_t seed;
+} SherpaOnnxOfflineQwen3ASRModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
+>>>>>>> 3507d0aa (qwen3-asr offline recognizer)
   const char *model;
 } SherpaOnnxOfflineMedAsrCtcModelConfig;
 
@@ -548,7 +564,11 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
   SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
   SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
+<<<<<<< HEAD
   SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
+=======
+  SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
+>>>>>>> 3507d0aa (qwen3-asr offline recognizer)
 } SherpaOnnxOfflineModelConfig;
 
 typedef struct SherpaOnnxOfflineRecognizerConfig {

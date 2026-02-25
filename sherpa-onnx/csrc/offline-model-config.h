@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
+#include "sherpa-onnx/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model-config.h"
@@ -42,6 +43,7 @@ struct OfflineModelConfig {
   OfflineFunASRNanoModelConfig funasr_nano;
   OfflineMedAsrCtcModelConfig medasr;
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
+  OfflineQwen3ASRModelConfig qwen3_asr;
   std::string telespeech_ctc;
 
   std::string tokens;

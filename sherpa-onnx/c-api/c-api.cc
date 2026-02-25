@@ -560,8 +560,29 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.funasr_nano.seed =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.seed, 42);
 
+<<<<<<< HEAD
   recognizer_config.model_config.fire_red_asr_ctc.model =
       SHERPA_ONNX_OR(config->model_config.fire_red_asr_ctc.model, "");
+=======
+  recognizer_config.model_config.qwen3_asr.conv_frontend =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.conv_frontend, "");
+  recognizer_config.model_config.qwen3_asr.encoder =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.encoder, "");
+  recognizer_config.model_config.qwen3_asr.decoder =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.decoder, "");
+  recognizer_config.model_config.qwen3_asr.tokenizer =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.tokenizer, "");
+  recognizer_config.model_config.qwen3_asr.max_total_len =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.max_total_len, 512);
+  recognizer_config.model_config.qwen3_asr.max_new_tokens =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.max_new_tokens, 64);
+  recognizer_config.model_config.qwen3_asr.temperature =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.temperature, 1e-6f);
+  recognizer_config.model_config.qwen3_asr.top_p =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.top_p, 0.8f);
+  recognizer_config.model_config.qwen3_asr.seed =
+      SHERPA_ONNX_OR(config->model_config.qwen3_asr.seed, 42);
+>>>>>>> 3507d0aa (qwen3-asr offline recognizer)
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");

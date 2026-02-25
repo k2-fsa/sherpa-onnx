@@ -31,6 +31,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-v2-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-qwen3-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
@@ -217,6 +218,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.funasr_nano.encoder_adaptor.empty()) {
     return std::make_unique<OfflineRecognizerFunASRNanoImpl>(config);
+  }
+
+  if (!config.model_config.qwen3_asr.conv_frontend.empty()) {
+    return std::make_unique<OfflineRecognizerQwen3ASRImpl>(config);
   }
 
   if (!config.model_config.paraformer.model.empty()) {
