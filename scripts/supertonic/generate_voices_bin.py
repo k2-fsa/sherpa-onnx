@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # Copyright    2026  zengyw
-# Convert Supertonic voice style JSONs in assets/voice_styles to one voice.bin
+# Merge Supertonic voice style JSONs from a directory into one voice.bin
 # (multi-speaker; use --sid 0..N-1 at runtime).
+# Usage: python3 generate_voices_bin.py [input_dir] [output_bin]
 
 import json
 import struct
+import sys
 from pathlib import Path
 
 
@@ -91,15 +93,21 @@ def merge_jsons_to_binary(json_paths, output_path):
 
 
 def main():
-    voice_styles_dir = Path(__file__).parent / "assets" / "voice_styles"
-    if not voice_styles_dir.exists():
-        print(f"Error: {voice_styles_dir} does not exist")
+    script_dir = Path(__file__).parent
+    default_input = script_dir / "assets" / "voice_styles"
+    input_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else default_input
+    if len(sys.argv) > 2:
+        output_path = Path(sys.argv[2])
+    else:
+        output_path = input_dir / "voice.bin"
+
+    if not input_dir.exists() or not input_dir.is_dir():
+        print(f"Error: input dir does not exist or not a directory: {input_dir}")
         return 1
-    json_files = sorted(voice_styles_dir.glob("*.json"))
+    json_files = sorted(input_dir.glob("*.json"))
     if not json_files:
-        print(f"No JSON files found in {voice_styles_dir}")
+        print(f"No JSON files found in {input_dir}")
         return 1
-    output_path = voice_styles_dir / "voice.bin"
     try:
         merge_jsons_to_binary([str(p) for p in json_files], str(output_path))
     except Exception as e:

@@ -163,7 +163,7 @@ static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   }
 
   int64_t dims[6];
-  std::memcpy(dims, buf.data(), kHeaderSizer);
+  std::memcpy(dims, buf.data(), kHeaderSize);
   std::vector<int64_t> ttl_shape = {dims[0], dims[1], dims[2]};
   std::vector<int64_t> dp_shape = {dims[3], dims[4], dims[5]};
   int64_t ttl_expected_size = ComputeDimsProduct(ttl_shape, "ttl_shape");
@@ -200,8 +200,7 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     : config_(config),
       model_(std::make_unique<OfflineTtsSupertonicModel>(config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
-          ResolveAbsolutePath(config.model.supertonic.model_dir) +
-          "/unicode_indexer.json")) {
+          ResolveAbsolutePath(config.model.supertonic.unicode_indexer))) {
   std::string voice_path = GetVoicePath(config.model.supertonic.voice_style);
   std::vector<char> buf = ReadFile(ResolveAbsolutePath(voice_path));
   if (buf.empty()) {
@@ -217,7 +216,7 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     : config_(config),
       model_(std::make_unique<OfflineTtsSupertonicModel>(mgr, config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
-          mgr, config.model.supertonic.model_dir + "/unicode_indexer.json")) {
+          mgr, config.model.supertonic.unicode_indexer)) {
   std::string voice_path = GetVoicePath(config.model.supertonic.voice_style);
   std::vector<char> buf = ReadFile(mgr, voice_path);
   if (buf.empty()) {
@@ -291,7 +290,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
           ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
           : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
   if (max_len_cfg <= 0) {
-    SHERPA_ONNX_LOGE("Max length must be > 0. Given: %d", max_len_cfg);
+    SHERPA_ONNX_LOGE("Max length must be > 0. Given: %zu", max_len_cfg);
     SHERPA_ONNX_EXIT(-1);
   }
   size_t max_len = static_cast<size_t>(max_len_cfg);
@@ -631,10 +630,12 @@ void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
   }
   if (style.ttl_shape[0] != style.dp_shape[0]) {
     SHERPA_ONNX_LOGE(
-        "Invalid voice style: ttl_shape[0] != dp_shape[0]. Given: %d != %d",
-        style.ttl_shape[0], style.dp_shape[0]);
+        "Invalid voice style: ttl_shape[0] != dp_shape[0]. Given: %ld != %ld",
+        static_cast<long>(style.ttl_shape[0]),
+        static_cast<long>(style.dp_shape[0]));
     SHERPA_ONNX_EXIT(-1);
   }
+  num_speakers_ = num_speakers;
   full_style_ = std::move(style);
 }
 

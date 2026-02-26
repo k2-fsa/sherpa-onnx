@@ -22,10 +22,13 @@ struct OfflineTtsSupertonicModelConfig {
   std::string vector_estimator;
   std::string vocoder;
 
-  // Directory containing config files (tts.json and unicode_indexer.json)
-  std::string model_dir;
+  // Path to TTS config file (binary; sample_rate, base_chunk_size, etc.)
+  std::string tts_config;
 
-  // Path to voice style .bin file(s);
+  // Path to unicode_indexer.bin (raw int32 array)
+  std::string unicode_indexer;
+
+  // Path to voice.bin
   std::string voice_style;
 
   OfflineTtsSupertonicModelConfig() = default;
@@ -34,13 +37,15 @@ struct OfflineTtsSupertonicModelConfig {
                                   const std::string &text_encoder,
                                   const std::string &vector_estimator,
                                   const std::string &vocoder,
-                                  const std::string &model_dir,
+                                  const std::string &tts_config,
+                                  const std::string &unicode_indexer,
                                   const std::string &voice_style)
       : duration_predictor(duration_predictor),
         text_encoder(text_encoder),
         vector_estimator(vector_estimator),
         vocoder(vocoder),
-        model_dir(model_dir),
+        tts_config(tts_config),
+        unicode_indexer(unicode_indexer),
         voice_style(voice_style) {}
 
   void Register(ParseOptions *po);

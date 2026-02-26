@@ -53,7 +53,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsKittenImpl>(config);
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(config);
-  } else if (!config.model.supertonic.model_dir.empty()) {
+  } else if (!config.model.supertonic.tts_config.empty()) {
     return std::make_unique<OfflineTtsSupertonicImpl>(config);
   }
 
@@ -78,7 +78,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsKittenImpl>(mgr, config);
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(mgr, config);
-  } else if (!config.model.supertonic.model_dir.empty()) {
+  } else if (!config.model.supertonic.tts_config.empty()) {
     return std::make_unique<OfflineTtsSupertonicImpl>(mgr, config);
   }
 

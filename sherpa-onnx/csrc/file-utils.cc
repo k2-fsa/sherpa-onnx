@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "nlohmann/json.hpp"
-
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -148,54 +146,6 @@ std::string ResolveAbsolutePath(const std::string &path) {
 
   return path;  // fallback on failure
 #endif
-}
-
-nlohmann::json LoadJsonFromFile(const std::string &path) {
-  std::string abs_path = ResolveAbsolutePath(path);
-  AssertFileExists(abs_path);
-  std::ifstream file(abs_path);
-  if (!file.is_open()) {
-    SHERPA_ONNX_LOGE("Failed to open file: %s", abs_path.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  nlohmann::json j;
-  try {
-    file >> j;
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
-}
-
-#if __ANDROID_API__ >= 9
-nlohmann::json LoadJsonFromFile(AAssetManager *mgr, const std::string &path) {
-  auto buf = ReadFile(mgr, path);
-  return LoadJsonFromBuffer(buf);
-}
-#endif
-
-#if __OHOS__
-nlohmann::json LoadJsonFromFile(NativeResourceManager *mgr,
-                                const std::string &path) {
-  auto buf = ReadFile(mgr, path);
-  return LoadJsonFromBuffer(buf);
-}
-#endif
-
-nlohmann::json LoadJsonFromBuffer(const std::vector<char> &buf) {
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Empty json buffer");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  nlohmann::json j;
-  try {
-    j = nlohmann::json::parse(buf.begin(), buf.end());
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Failed to parse JSON buffer: %s", e.what());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  return j;
 }
 
 }  // namespace sherpa_onnx

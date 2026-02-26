@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "nlohmann/json.hpp"
-
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -47,23 +45,6 @@ std::vector<char> ReadFile(NativeResourceManager *mgr,
 #endif
 
 std::string ResolveAbsolutePath(const std::string &path);
-
-// Load JSON from file.
-nlohmann::json LoadJsonFromFile(const std::string &path);
-
-#if __ANDROID_API__ >= 9
-// Load JSON from Android asset manager
-nlohmann::json LoadJsonFromFile(AAssetManager *mgr, const std::string &path);
-#endif
-
-#if __OHOS__
-// Load JSON from OHOS resource manager
-nlohmann::json LoadJsonFromFile(NativeResourceManager *mgr,
-                                const std::string &path);
-#endif
-
-// Load JSON from buffer (for Android/OHOS)
-nlohmann::json LoadJsonFromBuffer(const std::vector<char> &buf);
 
 }  // namespace sherpa_onnx
 

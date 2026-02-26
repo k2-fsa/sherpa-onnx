@@ -57,7 +57,6 @@ or details.
   sherpa_onnx::GenerationConfig gen_config;
 
   std::string lang;
-  bool batch = false;
 
   po.Register(
       "num-steps", &gen_config.num_steps,
@@ -67,12 +66,8 @@ or details.
               "Path to save the generated audio");
 
   po.Register("lang", &lang,
-              "Language(s) for text(s): en, ko, es, pt, fr (comma-separated "
-              "for batch). Used only for Supertonic TTS models.");
-
-  po.Register("batch", &batch,
-              "Enable batch mode (disables automatic text chunking). Used "
-              "only for Supertonic TTS models.");
+              "Language for text: en, ko, es, pt, fr. Used only for Supertonic "
+              "TTS models.");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "
@@ -113,15 +108,12 @@ or details.
   sherpa_onnx::GeneratedAudio audio;
 
   bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
-  bool is_supertonic_tts = !config.model.supertonic.model_dir.empty();
+  bool is_supertonic_tts = !config.model.supertonic.tts_config.empty();
 
   if (is_pocket_tts || is_supertonic_tts) {
     if (is_supertonic_tts) {
       if (!lang.empty()) {
         gen_config.extra["lang"] = lang;
-      }
-      if (batch) {
-        gen_config.extra["batch"] = "1";
       }
       gen_config.speed = 1.0f;
       gen_config.sid = sid;

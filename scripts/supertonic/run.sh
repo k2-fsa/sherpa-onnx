@@ -34,7 +34,7 @@ usage() {
     echo "  1: Generate calibration configs"
     echo "  2: Dump calibration data"
     echo "  3: Quantize ONNX models to INT8"
-    echo "  4: Generate voice.bin (from assets/voice_styles/*.json)"
+    echo "  4: Generate voice.bin, unicode_indexer.bin, tts.bin (from JSONs when present)"
     echo ""
     echo "Examples:"
     echo "  ./run.sh              # Run all stages (0-4)"
@@ -110,11 +110,19 @@ if [ ${STAGE} -le 3 ] && [ ${STOP_STAGE} -ge 3 ]; then
     echo ""
 fi
 
-# Stage 4: Generate voice.bin (merge all JSONs in assets/voice_styles)
+# Stage 4: Generate *.bin (voice, unicode_indexer, tts)
 if [ ${STAGE} -le 4 ] && [ ${STOP_STAGE} -ge 4 ]; then
     echo ""
-    echo "Stage 4: Generate voice.bin"
-    python3 generate_voices_bin.py
+    echo "Stage 4: Generate voice.bin, unicode_indexer.bin, tts.bin"
+    if [ -f "./assets/onnx/unicode_indexer.json" ]; then
+        python3 generate_indexer_bin.py ./assets/onnx/unicode_indexer.json ./assets/onnx/unicode_indexer.bin
+    fi
+    if [ -f "./assets/onnx/tts.json" ]; then
+        python3 generate_tts_bin.py ./assets/onnx/tts.json ./assets/onnx/tts.bin
+    fi
+    if [ -d "./assets/voice_styles" ]; then
+        python3 generate_voices_bin.py ./assets/voice_styles ./assets/voice_styles/voice.bin
+    fi
     echo "Stage 4 Completed"
     echo ""
 fi

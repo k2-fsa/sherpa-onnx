@@ -46,7 +46,10 @@ jobs:
           cp -a LICENSE $d/LICENSE
           cp -a $src/README.md $d/README.md
           cp -v $src/onnx_int8/*.int8.onnx $d/
-          cp -v $src/assets/onnx/unicode_indexer.json $d/
+          [ -f $src/assets/onnx/unicode_indexer.json ] && cp -v $src/assets/onnx/unicode_indexer.json $d/
+          [ -f $src/assets/onnx/unicode_indexer.bin ] && cp -v $src/assets/onnx/unicode_indexer.bin $d/
+          [ -f $src/assets/onnx/tts.json ] && cp -v $src/assets/onnx/tts.json $d/
+          [ -f $src/assets/onnx/tts.bin ] && cp -v $src/assets/onnx/tts.bin $d/
           cp -a $src/assets/voice_styles $d/voice_styles
           ls -lh $d/
           tar cjfv $d.tar.bz2 $d

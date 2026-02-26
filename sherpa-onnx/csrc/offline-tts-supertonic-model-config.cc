@@ -26,9 +26,12 @@ void OfflineTtsSupertonicModelConfig::Register(ParseOptions *po) {
   po->Register("supertonic-vector-estimator", &vector_estimator,
                "Path to vector_estimator.onnx");
   po->Register("supertonic-vocoder", &vocoder, "Path to vocoder.onnx");
-  po->Register("supertonic-model-dir", &model_dir,
-               "Path to Supertonic model directory (for config files: "
-               "tts.json and unicode_indexer.json)");
+  po->Register(
+      "supertonic-tts-config", &tts_config,
+      "Path to TTS config file (use generate_tts_bin.py from tts.json)");
+  po->Register("supertonic-unicode-indexer", &unicode_indexer,
+               "Path to unicode_indexer.bin (use generate_indexer_bin.py from "
+               "unicode_indexer.json)");
   po->Register("supertonic-voice-style", &voice_style,
                "Path to Supertonic voice.bin (multi-speaker: single file with "
                "multiple speakers; use sid 0..NumSpeakers()-1 to select)");
@@ -78,19 +81,25 @@ bool OfflineTtsSupertonicModelConfig::Validate() const {
     return false;
   }
 
-  if (model_dir.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --supertonic-model-dir");
+  if (tts_config.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --supertonic-tts-config");
     return false;
   }
-  std::string abs_model_dir = ResolveAbsolutePath(model_dir);
-  const char *required_config_files[] = {"tts.json", "unicode_indexer.json"};
-  for (const char *filename : required_config_files) {
-    std::string filepath = abs_model_dir + "/" + filename;
-    if (!FileExists(filepath)) {
-      SHERPA_ONNX_LOGE("%s does not exist in '%s'", filename,
-                       abs_model_dir.c_str());
-      return false;
-    }
+  std::string abs_tts_config = ResolveAbsolutePath(tts_config);
+  if (!FileExists(abs_tts_config)) {
+    SHERPA_ONNX_LOGE("TTS config file does not exist: '%s'",
+                     tts_config.c_str());
+    return false;
+  }
+  if (unicode_indexer.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --supertonic-unicode-indexer");
+    return false;
+  }
+  std::string abs_indexer = ResolveAbsolutePath(unicode_indexer);
+  if (!FileExists(abs_indexer)) {
+    SHERPA_ONNX_LOGE("unicode_indexer file does not exist: '%s'",
+                     unicode_indexer.c_str());
+    return false;
   }
   if (voice_style.empty()) {
     SHERPA_ONNX_LOGE("Please provide --supertonic-voice-style");
@@ -116,7 +125,8 @@ std::string OfflineTtsSupertonicModelConfig::ToString() const {
   os << "text_encoder=\"" << text_encoder << "\", ";
   os << "vector_estimator=\"" << vector_estimator << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
-  os << "model_dir=\"" << model_dir << "\", ";
+  os << "tts_config=\"" << tts_config << "\", ";
+  os << "unicode_indexer=\"" << unicode_indexer << "\", ";
   os << "voice_style=\"" << voice_style << "\")";
   return os.str();
 }

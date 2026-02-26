@@ -10,9 +10,9 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cinttypes>
 #include <climits>
 #include <cstdint>
+#include <cstring>
 #include <unordered_map>
 #include <vector>
 
@@ -25,14 +25,11 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-using json = nlohmann::json;
 
 static const std::vector<std::string> kSupertonicAvailableLangs = {
     "en", "ko", "es", "pt", "fr"};
@@ -154,40 +151,58 @@ static void ReplaceString(std::string *text, const std::string &from,
   }
 }
 
-static std::vector<int32_t> ParseIndexerFromJson(const json &j) {
-  std::vector<int64_t> raw = j.get<std::vector<int64_t>>();
-  std::vector<int32_t> out;
-  out.reserve(raw.size());
-  for (int64_t v : raw) {
-    if (v < INT32_MIN || v > INT32_MAX) {
-      SHERPA_ONNX_LOGE("Unicode indexer value %" PRId64 " out of int32_t range",
-                       v);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    out.push_back(static_cast<int32_t>(v));
+// Load indexer from raw int32_t binary (from generate_indexer_bin.py).
+static std::vector<int32_t> LoadIndexerFromBinary(const char *data,
+                                                  size_t size) {
+  if (size == 0 || (size % sizeof(int32_t) != 0)) {
+    SHERPA_ONNX_LOGE(
+        "Invalid unicode indexer .bin size: %zu (must be multiple of %zu)",
+        size, sizeof(int32_t));
+    SHERPA_ONNX_EXIT(-1);
   }
+  size_t count = size / sizeof(int32_t);
+  std::vector<int32_t> out(count);
+  std::memcpy(out.data(), data, size);
   return out;
+}
+
+static bool PathEndsWithBin(const std::string &path) {
+  return path.size() >= 4 && path.compare(path.size() - 4, 4, ".bin") == 0;
+}
+
+template <typename PathString>
+static std::vector<int32_t> LoadIndexerFromPathImpl(
+    const std::vector<char> &buf, const PathString &path) {
+  if (buf.empty()) {
+    SHERPA_ONNX_LOGE("Failed to read unicode indexer: %s", path.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+  return LoadIndexerFromBinary(buf.data(), buf.size());
 }
 
 }  // namespace
 
 SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     const std::string &unicode_indexer_path) {
-  json j = LoadJsonFromFile(unicode_indexer_path);
-  indexer_ = ParseIndexerFromJson(j);
+  if (!PathEndsWithBin(unicode_indexer_path)) {
+    SHERPA_ONNX_LOGE("Unicode indexer path must be .bin: %s",
+                     unicode_indexer_path.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+  std::vector<char> buf = ReadFile(unicode_indexer_path);
+  indexer_ = LoadIndexerFromPathImpl(buf, unicode_indexer_path);
 }
 
 template <typename Manager>
 SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
     Manager *mgr, const std::string &unicode_indexer_path) {
-  auto buf = ReadFile(mgr, unicode_indexer_path);
-  if (buf.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read unicode indexer: %s",
+  if (!PathEndsWithBin(unicode_indexer_path)) {
+    SHERPA_ONNX_LOGE("Unicode indexer path must be .bin: %s",
                      unicode_indexer_path.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
-  json j = LoadJsonFromBuffer(buf);
-  indexer_ = ParseIndexerFromJson(j);
+  std::vector<char> buf = ReadFile(mgr, unicode_indexer_path);
+  indexer_ = LoadIndexerFromPathImpl(buf, unicode_indexer_path);
 }
 
 std::string SupertonicUnicodeProcessor::PreprocessText(

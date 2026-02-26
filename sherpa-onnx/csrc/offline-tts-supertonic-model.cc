@@ -22,7 +22,8 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "nlohmann/json.hpp"
+#include <cstring>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -30,8 +31,6 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-using json = nlohmann::json;
 
 namespace {
 static inline bool IsCudaProvider(const std::string &provider) {
@@ -129,13 +128,13 @@ class OfflineTtsSupertonicModel::Impl {
 #endif
   }
 
-  void PrintDebugInfo(const std::string &model_dir) const {
+  void PrintDebugInfo(const std::string &tts_config_path) const {
     if (!config_.debug) {
       return;
     }
     std::ostringstream os;
     os << "---supertonic model---\n";
-    os << "model_dir: " << model_dir << "\n";
+    os << "tts_config: " << tts_config_path << "\n";
     os << "sample_rate: " << cfg_.ae.sample_rate << "\n";
     os << "base_chunk_size: " << cfg_.ae.base_chunk_size << "\n";
     os << "chunk_compress_factor: " << cfg_.ttl.chunk_compress_factor << "\n";
@@ -242,8 +241,8 @@ class OfflineTtsSupertonicModel::Impl {
 
   template <typename Manager>
   void LoadOneModel(Manager *mgr, const std::string &path,
-                   const char *model_name,
-                   const std::function<void(void *, size_t)> &init) {
+                    const char *model_name,
+                    const std::function<void(void *, size_t)> &init) {
     auto buf = ReadFile(mgr, path);
     if (buf.empty()) {
       SHERPA_ONNX_LOGE("Failed to read %s model: %s", model_name, path.c_str());
@@ -254,9 +253,9 @@ class OfflineTtsSupertonicModel::Impl {
 
   template <typename Manager>
   void LoadModels(Manager *mgr) {
-    LoadOneModel(mgr, config_.supertonic.duration_predictor,
-                 "duration_predictor",
-                 [this](void *p, size_t len) { InitDurationPredictor(p, len); });
+    LoadOneModel(
+        mgr, config_.supertonic.duration_predictor, "duration_predictor",
+        [this](void *p, size_t len) { InitDurationPredictor(p, len); });
     LoadOneModel(mgr, config_.supertonic.text_encoder, "text_encoder",
                  [this](void *p, size_t len) { InitTextEncoder(p, len); });
     LoadOneModel(mgr, config_.supertonic.vector_estimator, "vector_estimator",
@@ -266,35 +265,39 @@ class OfflineTtsSupertonicModel::Impl {
   }
 
   void Init() {
-    const std::string &model_dir =
-        ResolveAbsolutePath(config_.supertonic.model_dir);
-    LoadConfig(model_dir + "/tts.json");
-    PrintDebugInfo(model_dir);
+    std::string tts_config_path =
+        ResolveAbsolutePath(config_.supertonic.tts_config);
+    LoadConfig(tts_config_path);
+    PrintDebugInfo(tts_config_path);
     LoadModels();
     PrintModelInfos();
   }
 
   template <typename Manager>
   void Init(Manager *mgr) {
-    const std::string &model_dir =
-        ResolveAbsolutePath(config_.supertonic.model_dir);
-    LoadConfig(mgr, model_dir + "/tts.json");
-    PrintDebugInfo(model_dir);
+    std::string tts_config_path =
+        ResolveAbsolutePath(config_.supertonic.tts_config);
+    LoadConfig(mgr, tts_config_path);
+    PrintDebugInfo(tts_config_path);
     LoadModels(mgr);
     PrintModelInfos();
   }
 
-  // Parse JSON config and populate cfg_. Shared logic for both LoadConfig
-  // variants.
-  void ParseConfig(const json &j) {
-    if (j.find("ae") == j.end() || j.find("ttl") == j.end()) {
-      SHERPA_ONNX_LOGE("Invalid config file: missing 'ae' or 'ttl' section");
+  // Load config from binary (4 x int32 LE: sample_rate, base_chunk_size,
+  // chunk_compress_factor, latent_dim). Shared by both LoadConfig variants.
+  void LoadConfigFromBinary(const char *data, size_t size) {
+    const size_t kExpectedSize = 4 * sizeof(int32_t);
+    if (size < kExpectedSize) {
+      SHERPA_ONNX_LOGE("tts.bin too small: %zu (expected %zu)", size,
+                       kExpectedSize);
       SHERPA_ONNX_EXIT(-1);
     }
-    cfg_.ae.sample_rate = j["ae"]["sample_rate"];
-    cfg_.ae.base_chunk_size = j["ae"]["base_chunk_size"];
-    cfg_.ttl.chunk_compress_factor = j["ttl"]["chunk_compress_factor"];
-    cfg_.ttl.latent_dim = j["ttl"]["latent_dim"];
+    int32_t vals[4];
+    std::memcpy(vals, data, kExpectedSize);
+    cfg_.ae.sample_rate = vals[0];
+    cfg_.ae.base_chunk_size = vals[1];
+    cfg_.ttl.chunk_compress_factor = vals[2];
+    cfg_.ttl.latent_dim = vals[3];
     if (cfg_.ae.sample_rate <= 0) {
       SHERPA_ONNX_LOGE("Invalid sample_rate: %d", cfg_.ae.sample_rate);
       SHERPA_ONNX_EXIT(-1);
@@ -315,19 +318,22 @@ class OfflineTtsSupertonicModel::Impl {
   }
 
   void LoadConfig(const std::string &config_path) {
-    json j = LoadJsonFromFile(config_path);
-    ParseConfig(j);
-  }
-
-  template <typename Manager>
-  void LoadConfig(Manager *mgr, const std::string &config_path) {
-    auto buf = ReadFile(mgr, config_path);
+    std::vector<char> buf = ReadFile(config_path);
     if (buf.empty()) {
       SHERPA_ONNX_LOGE("Failed to read config: %s", config_path.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
-    json j = LoadJsonFromBuffer(buf);
-    ParseConfig(j);
+    LoadConfigFromBinary(buf.data(), buf.size());
+  }
+
+  template <typename Manager>
+  void LoadConfig(Manager *mgr, const std::string &config_path) {
+    std::vector<char> buf = ReadFile(mgr, config_path);
+    if (buf.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read config: %s", config_path.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    LoadConfigFromBinary(buf.data(), buf.size());
   }
 
   void InitCudaIOBinding() {

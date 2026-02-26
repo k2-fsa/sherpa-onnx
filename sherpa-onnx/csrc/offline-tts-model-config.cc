@@ -59,7 +59,7 @@ bool OfflineTtsModelConfig::Validate() const {
     return pocket.Validate();
   }
 
-  if (!supertonic.model_dir.empty()) {
+  if (!supertonic.tts_config.empty()) {
     return supertonic.Validate();
   }
 
