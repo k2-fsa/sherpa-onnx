@@ -384,6 +384,14 @@ func sherpaOnnxOfflineMedAsrCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineFireRedAsrCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineFireRedAsrCtcModelConfig {
+  return SherpaOnnxOfflineFireRedAsrCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -550,7 +558,9 @@ func sherpaOnnxOfflineModelConfig(
   medasr: SherpaOnnxOfflineMedAsrCtcModelConfig =
     sherpaOnnxOfflineMedAsrCtcModelConfig(),
   funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
-    sherpaOnnxOfflineFunASRNanoModelConfig()
+    sherpaOnnxOfflineFunASRNanoModelConfig(),
+  fireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig =
+    sherpaOnnxOfflineFireRedAsrCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -575,7 +585,8 @@ func sherpaOnnxOfflineModelConfig(
     wenet_ctc: wenetCtc,
     omnilingual: omnilingual,
     medasr: medasr,
-    funasr_nano: funasrNano
+    funasr_nano: funasrNano,
+    fire_red_asr_ctc: fireRedAsrCtc
   )
 }
 
