@@ -1,3 +1,14 @@
+## 1.12.27
+
+* Add Rust API for VAD (#3213)
+* Replace deprecated std::istrstream with std::istringstream (#3214)
+* Replace deprecated std::wstring_convert with manual UTF-8 codec (#3215)
+* Fix CMake warnings: optional feature message level + policy version minimum (#3217)
+* Upload FireRedASR2 CTC model (#3220)
+* Bump hclust-cpp to 2026-02-25 release and modernize FetchContent (#3216)
+* Support FireRedASR CTC models (#3221)
+* Update language bindings for FireRedASR CTC models (#3224)
+
 ## 1.12.26
 
 * Fix CI (#3192)
