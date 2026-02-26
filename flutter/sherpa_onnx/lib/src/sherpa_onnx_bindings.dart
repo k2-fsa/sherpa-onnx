@@ -476,6 +476,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
   external SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
   external SherpaOnnxOfflineFunAsrNanoModelConfig funasrNano;
+  external SherpaOnnxOfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
