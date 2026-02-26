@@ -162,7 +162,8 @@ static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
     SHERPA_ONNX_EXIT(-1);
   }
 
-  const int64_t *dims = reinterpret_cast<const int64_t *>(buf.data());
+  int64_t dims[6];
+  std::memcpy(dims, buf.data(), kHeaderSizer);
   std::vector<int64_t> ttl_shape = {dims[0], dims[1], dims[2]};
   std::vector<int64_t> dp_shape = {dims[3], dims[4], dims[5]};
   int64_t ttl_expected_size = ComputeDimsProduct(ttl_shape, "ttl_shape");
@@ -180,10 +181,11 @@ static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
         buf.size(), expected_total_size);
     SHERPA_ONNX_EXIT(-1);
   }
-  const float *ptr = reinterpret_cast<const float *>(buf.data() + kHeaderSize);
-  std::vector<float> ttl_data(ptr, ptr + ttl_expected_size);
-  ptr += ttl_expected_size;
-  std::vector<float> dp_data(ptr, ptr + dp_expected_size);
+  std::vector<float> ttl_data(static_cast<size_t>(ttl_expected_size));
+  std::vector<float> dp_data(static_cast<size_t>(dp_expected_size));
+  std::memcpy(ttl_data.data(), buf.data() + kHeaderSize, ttl_data_size_bytes);
+  std::memcpy(dp_data.data(), buf.data() + kHeaderSize + ttl_data_size_bytes,
+              dp_data_size_bytes);
   SupertonicStyle style;
   style.ttl_data = std::move(ttl_data);
   style.dp_data = std::move(dp_data);
@@ -247,9 +249,20 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en")
   //   - sid selects speaker from voice.bin (0 .. NumSpeakers()-1).
   //   - "max_len_korean" (int): Max chunk length for Korean (default: 120)
-  //   - "max_len_other" (int): Max chunk length for other languages (default: 300)
-  float speed = config.GetExtraFloat("speed", 1.05f);
-  int32_t num_steps = config.GetExtraInt("num_steps", 5);
+  //   - "max_len_other" (int): Max chunk length for other languages (default:
+  //   300)
+  float speed =
+      config.GetExtraFloat("speed", config.speed > 0 ? config.speed : 1.05f);
+  int32_t num_steps = config.GetExtraInt(
+      "num_steps", config.num_steps > 0 ? config.num_steps : 5);
+  if (speed <= 0) {
+    SHERPA_ONNX_LOGE("Speed must be > 0. Given: %f", speed);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (num_steps <= 0) {
+    SHERPA_ONNX_LOGE("Num steps must be > 0. Given: %d", num_steps);
+    SHERPA_ONNX_EXIT(-1);
+  }
   std::string text_single = Trim(text);
   if (text_single.empty()) {
     SHERPA_ONNX_LOGE("Input text is empty");
@@ -273,10 +286,15 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
     lang = "en";
   }
   float silence_duration = 0.3f;
-  size_t max_len =
+  size_t max_len_cfg =
       (lang == "ko")
           ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
           : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
+  if (max_len_cfg <= 0) {
+    SHERPA_ONNX_LOGE("Max length must be > 0. Given: %d", max_len_cfg);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  size_t max_len = static_cast<size_t>(max_len_cfg);
   auto text_chunks = ChunkText(text_single, max_len);
   return ProcessChunksAndConcatenate(text_chunks, lang, style, num_steps, speed,
                                      silence_duration, callback);
@@ -599,12 +617,24 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
 
 void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
   SupertonicStyle style = ParseVoiceStyleFromBinary(buf);
-  int32_t n = static_cast<int32_t>(style.ttl_shape[0]);
-  if (n <= 0) {
-    SHERPA_ONNX_LOGE("Invalid voice style: ttl_shape[0]=%d (expected >= 1)", n);
+  if (style.ttl_shape.size() != 3 || style.dp_shape.size() != 3) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style: ttl_shape or dp_shape must have 3 dimensions");
     SHERPA_ONNX_EXIT(-1);
   }
-  num_speakers_ = n;
+  int32_t num_speakers = static_cast<int32_t>(style.ttl_shape[0]);
+  if (num_speakers <= 0) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style: num_speakers must be >= 1. Given: %d",
+        num_speakers);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (style.ttl_shape[0] != style.dp_shape[0]) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style: ttl_shape[0] != dp_shape[0]. Given: %d != %d",
+        style.ttl_shape[0], style.dp_shape[0]);
+    SHERPA_ONNX_EXIT(-1);
+  }
   full_style_ = std::move(style);
 }
 
