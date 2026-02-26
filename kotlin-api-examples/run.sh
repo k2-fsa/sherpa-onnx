@@ -557,6 +557,28 @@ function testOfflineMedAsrCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineFireRedAsrCtc() {
+  if [ ! -f ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+    tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+    rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+  fi
+
+  out_filename=test_offline_fire_red_asr_ctc.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_fire_red_asr_ctc.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOfflineFunAsrNano() {
   if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
@@ -602,6 +624,7 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
+testOfflineFireRedAsrCtc
 testPocketTts
 testOfflineFunAsrNano
 testOfflineMedAsrCtc

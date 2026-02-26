@@ -841,6 +841,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25",
+            idx=50,
+            lang="zh_en",
+            lang2="中英",
+            short_name="fire_red_asr2_ctc_int8_2026_02_25",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

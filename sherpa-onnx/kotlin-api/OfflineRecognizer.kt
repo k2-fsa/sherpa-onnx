@@ -50,6 +50,10 @@ data class OfflineMedAsrCtcModelConfig(
     var model: String = "",
 )
 
+data class OfflineFireRedAsrCtcModelConfig(
+    var model: String = "",
+)
+
 data class OfflineFunAsrNanoModelConfig(
     var encoderAdaptor: String = "",
     var llm: String = "",
@@ -117,6 +121,7 @@ data class OfflineModelConfig(
     var omnilingual: OfflineOmnilingualAsrCtcModelConfig = OfflineOmnilingualAsrCtcModelConfig(),
     var medasr: OfflineMedAsrCtcModelConfig = OfflineMedAsrCtcModelConfig(),
     var funasrNano: OfflineFunAsrNanoModelConfig = OfflineFunAsrNanoModelConfig(),
+    var fireRedAsrCtc: OfflineFireRedAsrCtcModelConfig = OfflineFireRedAsrCtcModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
@@ -814,6 +819,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "transducer",
+            )
+        }
+
+        50 -> {
+            val modelDir = "sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25"
+            return OfflineModelConfig(
+                fireRedAsrCtc = OfflineFireRedAsrCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
 
