@@ -219,6 +219,10 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-fire-red-asr-ctc.sh
+          rm -rf sherpa-onnx-fire-red-asr*
+          echo "---"
+
           ./run-fire-red-asr.sh
           rm -rf sherpa-onnx-fire-red-asr*
           echo "---"
