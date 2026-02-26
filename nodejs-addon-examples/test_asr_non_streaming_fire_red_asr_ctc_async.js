@@ -4,9 +4,9 @@ const path = require('path');
 const sherpa_onnx = require('sherpa-onnx-node');
 
 /**
- * Create an OfflineRecognizer with FunASR Nano model asynchronously.
+ * Create an OfflineRecognizer with FireRedASR CTC model asynchronously.
  */
-async function createRecognizerAsync(modelDir, numThreads = 2, debug = 1) {
+async function createRecognizerAsync(numThreads = 2, debug = 1) {
   const config = {
     featConfig: {
       sampleRate: 16000,

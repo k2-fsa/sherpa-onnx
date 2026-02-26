@@ -13,6 +13,7 @@ rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
 // clang-format on
 
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 

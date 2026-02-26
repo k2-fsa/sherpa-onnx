@@ -27,10 +27,6 @@ struct Args {
     #[arg(long)]
     tokens: String,
 
-    /// Language, e.g., "auto", "en", "zh"
-    #[arg(long, default_value = "auto")]
-    language: String,
-
     /// Provider (default: cpu)
     #[arg(long, default_value = "cpu")]
     provider: String,
@@ -38,10 +34,6 @@ struct Args {
     /// Enable debug logs
     #[arg(long, default_value_t = false)]
     debug: bool,
-
-    /// Enable inverse text normalization
-    #[arg(long, default_value_t = true)]
-    use_itn: bool,
 
     /// Number of threads
     #[arg(long, default_value_t = 2)]
