@@ -409,11 +409,15 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
   }
 
   if (config.model_config.debug) {
+#if __ANDROID_API__
     // logcat truncates long strings, so we split the string into chunks
     auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
     for (const auto &s : str_vec) {
       SHERPA_ONNX_LOGE("%s", s.c_str());
     }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   auto model = new sherpa_onnx::OfflineRecognizer(
@@ -439,10 +443,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
   }
 
   if (config.model_config.debug) {
+#if __ANDROID_API__
     auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
     for (const auto &s : str_vec) {
       SHERPA_ONNX_LOGE("%s", s.c_str());
     }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   if (!config.Validate()) {
