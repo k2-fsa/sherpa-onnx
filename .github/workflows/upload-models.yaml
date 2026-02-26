@@ -25,12 +25,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install ffmpeg
+        if: false
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
       - name: Verify ffmpeg
+        if: false
         shell: bash
         run: |
           ffmpeg -version
@@ -40,6 +42,140 @@ jobs:
         run: |
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
+
+      - name: FireRedASR2 CTC (int8)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+
+          We export only the encoder and the CTC branch. The attention decoder
+          is not used.
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 CTC (fp32)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+
+          We export only the encoder and the CTC branch. The attention decoder
+          is not used.
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.weights
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 AED (int8)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/decoder.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 AED (fp32)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.weights
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/decoder.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
 
       - name: Zipformer-30M-RNNT-6000h
         if: false
@@ -925,6 +1061,10 @@ jobs:
               sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
               sherpa-onnx-zipformer-vi-30M-int8-2026-02-09
               sherpa-onnx-zipformer-vi-30M-2026-02-09
+              sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+              sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25
+              sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
+              sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
@@ -944,6 +1084,7 @@ jobs:
               pushd huggingface
               git lfs track "*.onnx"
               git lfs track "*.data"
+              git lfs track "*.weights"
               git lfs track "bpe.model"
               git lfs track "*.wav"
               git lfs track "*.json"
@@ -989,11 +1130,6 @@ jobs:
               popd
             done
 
-      - uses: actions/upload-artifact@v4
-        if: false
-        with:
-          name: here
-          path: ./*.tar.bz2
 
       - name: Release
         if: true
