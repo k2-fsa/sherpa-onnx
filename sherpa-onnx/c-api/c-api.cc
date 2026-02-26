@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -549,6 +549,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
       SHERPA_ONNX_OR(config->model_config.funasr_nano.top_p, 0.8f);
   recognizer_config.model_config.funasr_nano.seed =
       SHERPA_ONNX_OR(config->model_config.funasr_nano.seed, 42);
+
+  recognizer_config.model_config.fire_red_asr_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.fire_red_asr_ctc.model, "");
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
