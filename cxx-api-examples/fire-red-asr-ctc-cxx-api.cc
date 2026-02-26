@@ -1,8 +1,8 @@
-// cxx-api-examples/medasr-ctc-cxx-api.cc
+// cxx-api-examples/fire-red-asr-ctc-cxx-api.cc
 // Copyright (c)  2025  Xiaomi Corporation
 
 //
-// This file demonstrates how to use MedASR with sherpa-onnx's C++ API.
+// This file demonstrates how to use FireRedASR CTC with sherpa-onnx's C++ API.
 // clang-format off
 /*
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2

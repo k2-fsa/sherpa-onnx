@@ -81,7 +81,7 @@ jobs:
       - name: Test FireRedASR CTC
         shell: bash
         run: |
-          name=fire-red-asr-ctc-ctc-cxx-api
+          name=fire-red-asr-ctc-cxx-api
           g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
             -I ./build/install/include \
             -L ./build/install/lib/ \

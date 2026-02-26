@@ -7,7 +7,7 @@ cd dotnet-examples/
 cd ./offline-decode-files
 
 ./run-fire-red-asr-ctc.sh
-rm -rf sherpa-onnx-fire-red-asr-ctc-*
+rm -rf sherpa-onnx-fire-*
 
 ./run-medasr-ctc.sh
 rm -rf sherpa-onnx-*
