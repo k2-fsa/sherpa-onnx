@@ -174,3 +174,4 @@ sherpa-onnx-pocket-tts-int8-2026-01-26
 sherpa-onnx-pocket-tts-2026-01-26
 sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
 sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+non-streaming-fire-red-asr-ctc-decode-files
