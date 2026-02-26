@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - upload-models
-      - fire-red-asr-ctc
   workflow_dispatch:
 
 concurrency:
@@ -79,7 +78,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: FireRedASR2 CTC (fp32)
-        if: true
+        if: false
         shell: bash
         run: |
           d=sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25

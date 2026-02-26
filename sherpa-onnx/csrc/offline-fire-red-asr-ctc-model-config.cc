@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-fire-red-asr-ctc-model-config.cc
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-fire-red-asr-ctc-model-config.h"
 
