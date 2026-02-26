@@ -9,6 +9,9 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-fire-red-asr-ctc.sh
+rm -rf sherpa-onnx-fire-red-*
+
 ./run-tts-pocket-en.sh
 ls -lh
 rm -rf sherpa-onnx-pocket-*

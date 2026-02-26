@@ -4,40 +4,11 @@ set -ex
 
 cd dart-api-examples
 
-pushd tts
-
-echo '----------tts----------'
-./run-pocket-en.sh
-./run-kitten-en.sh
-./run-kokoro-zh-en.sh
-./run-kokoro-en.sh
-./run-matcha-zh.sh
-./run-matcha-en.sh
-ls -lh *.wav
-rm -rf matcha-icefall-*
-rm *.onnx
-
-echo '----------piper tts----------'
-./run-piper.sh
-rm -rf vits-piper-*
-
-echo '----------coqui tts----------'
-./run-coqui.sh
-rm -rf vits-coqui-*
-
-echo '----------zh tts----------'
-./run-vits-zh.sh
-rm -rf sherpa-onnx-*
-
-ls -lh *.wav
-
-popd # tts
-
-pushd spoken-language-identification
-./run-whisper.sh
-popd
-
 pushd non-streaming-asr
+
+echo '----------FireRedASR CTC----------'
+./run-fire-red-asr-ctc.sh
+rm -rf sherpa-onnx-*
 
 echo '----------FunASR Nano----------'
 ./run-funasr-nano.sh
@@ -108,6 +79,39 @@ echo '----------VAD with paraformer----------'
 rm -rf sherpa-onnx-*
 
 popd # non-streaming-asr
+
+pushd tts
+
+echo '----------tts----------'
+./run-pocket-en.sh
+./run-kitten-en.sh
+./run-kokoro-zh-en.sh
+./run-kokoro-en.sh
+./run-matcha-zh.sh
+./run-matcha-en.sh
+ls -lh *.wav
+rm -rf matcha-icefall-*
+rm *.onnx
+
+echo '----------piper tts----------'
+./run-piper.sh
+rm -rf vits-piper-*
+
+echo '----------coqui tts----------'
+./run-coqui.sh
+rm -rf vits-coqui-*
+
+echo '----------zh tts----------'
+./run-vits-zh.sh
+rm -rf sherpa-onnx-*
+
+ls -lh *.wav
+
+popd # tts
+
+pushd spoken-language-identification
+./run-whisper.sh
+popd
 
 pushd streaming-asr
 

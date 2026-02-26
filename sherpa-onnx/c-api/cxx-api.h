@@ -247,6 +247,10 @@ struct SHERPA_ONNX_API OfflineFireRedAsrModelConfig {
   std::string decoder;
 };
 
+struct SHERPA_ONNX_API OfflineFireRedAsrCtcModelConfig {
+  std::string model;
+};
+
 struct SHERPA_ONNX_API OfflineTdnnModelConfig {
   std::string model;
 };
@@ -325,6 +329,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineMedAsrCtcModelConfig medasr;
   OfflineFunASRNanoModelConfig funasr_nano;
+  OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {

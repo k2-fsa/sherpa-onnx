@@ -324,6 +324,19 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_INT(ans.model_config.funasr_nano.seed, seed,
                            funasr_nano_config_cls, funasr_nano_config);
+
+  // fire red asr ctc
+  fid = env->GetFieldID(
+      model_config_cls, "fireRedAsrCtc",
+      "Lcom/k2fsa/sherpa/onnx/OfflineFireRedAsrCtcModelConfig;");
+  jobject fire_red_asr_ctc_config = env->GetObjectField(model_config, fid);
+  jclass fire_red_asr_ctc_config_cls =
+      env->GetObjectClass(fire_red_asr_ctc_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.fire_red_asr_ctc.model, model,
+                              fire_red_asr_ctc_config_cls,
+                              fire_red_asr_ctc_config);
+
   // canary
   fid = env->GetFieldID(model_config_cls, "canary",
                         "Lcom/k2fsa/sherpa/onnx/OfflineCanaryModelConfig;");
@@ -396,11 +409,15 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
   }
 
   if (config.model_config.debug) {
+#if __ANDROID_API__
     // logcat truncates long strings, so we split the string into chunks
     auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
     for (const auto &s : str_vec) {
       SHERPA_ONNX_LOGE("%s", s.c_str());
     }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   auto model = new sherpa_onnx::OfflineRecognizer(
@@ -426,10 +443,14 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
   }
 
   if (config.model_config.debug) {
+#if __ANDROID_API__
     auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
     for (const auto &s : str_vec) {
       SHERPA_ONNX_LOGE("%s", s.c_str());
     }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   if (!config.Validate()) {

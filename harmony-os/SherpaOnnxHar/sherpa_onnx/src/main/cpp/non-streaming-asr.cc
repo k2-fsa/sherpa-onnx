@@ -110,6 +110,22 @@ static SherpaOnnxOfflineMedAsrCtcModelConfig GetOfflineMedAsrCtcModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineFireRedAsrCtcModelConfig
+GetOfflineFireRedAsrCtcModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineFireRedAsrCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("fireRedAsrCtc") || !obj.Get("fireRedAsrCtc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("fireRedAsrCtc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineFunASRNanoModelConfig c;
@@ -309,6 +325,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.omnilingual = GetOfflineOmnilingualAsrCtcModelConfig(o);
   c.medasr = GetOfflineMedAsrCtcModelConfig(o);
   c.funasr_nano = GetOfflineFunAsrNanoModelConfig(o);
+  c.fire_red_asr_ctc = GetOfflineFireRedAsrCtcModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -413,6 +430,8 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.embedding);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.llm);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.encoder_adaptor);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr_ctc.model);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

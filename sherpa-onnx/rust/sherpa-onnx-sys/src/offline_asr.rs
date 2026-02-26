@@ -133,6 +133,12 @@ pub struct OfflineMedAsrCtcModelConfig {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct OfflineFireRedAsrCtcModelConfig {
+    pub model: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct OfflineModelConfig {
     pub transducer: OfflineTransducerModelConfig,
     pub paraformer: OfflineParaformerModelConfig,
@@ -159,6 +165,7 @@ pub struct OfflineModelConfig {
     pub omnilingual: OfflineOmnilingualAsrCtcModelConfig,
     pub medasr: OfflineMedAsrCtcModelConfig,
     pub funasr_nano: OfflineFunASRNanoModelConfig,
+    pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
 }
 
 #[repr(C)]

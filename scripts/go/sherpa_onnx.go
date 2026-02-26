@@ -428,6 +428,10 @@ type OfflineMedAsrCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineFireRedAsrCtcModelConfig struct {
+	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
+}
+
 type OfflineDolphinModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
@@ -495,22 +499,23 @@ type OfflineLMConfig struct {
 }
 
 type OfflineModelConfig struct {
-	Transducer   OfflineTransducerModelConfig
-	Paraformer   OfflineParaformerModelConfig
-	NemoCTC      OfflineNemoEncDecCtcModelConfig
-	Whisper      OfflineWhisperModelConfig
-	Tdnn         OfflineTdnnModelConfig
-	SenseVoice   OfflineSenseVoiceModelConfig
-	Moonshine    OfflineMoonshineModelConfig
-	FireRedAsr   OfflineFireRedAsrModelConfig
-	FunAsrNano   OfflineFunASRNanoModelConfig
-	Dolphin      OfflineDolphinModelConfig
-	ZipformerCtc OfflineZipformerCtcModelConfig
-	Canary       OfflineCanaryModelConfig
-	WenetCtc     OfflineWenetCtcModelConfig
-	Omnilingual  OfflineOmnilingualAsrCtcModelConfig
-	MedAsr       OfflineMedAsrCtcModelConfig
-	Tokens       string // Path to tokens.txt
+	Transducer    OfflineTransducerModelConfig
+	Paraformer    OfflineParaformerModelConfig
+	NemoCTC       OfflineNemoEncDecCtcModelConfig
+	Whisper       OfflineWhisperModelConfig
+	Tdnn          OfflineTdnnModelConfig
+	SenseVoice    OfflineSenseVoiceModelConfig
+	Moonshine     OfflineMoonshineModelConfig
+	FireRedAsr    OfflineFireRedAsrModelConfig
+	FunAsrNano    OfflineFunASRNanoModelConfig
+	Dolphin       OfflineDolphinModelConfig
+	ZipformerCtc  OfflineZipformerCtcModelConfig
+	Canary        OfflineCanaryModelConfig
+	WenetCtc      OfflineWenetCtcModelConfig
+	Omnilingual   OfflineOmnilingualAsrCtcModelConfig
+	MedAsr        OfflineMedAsrCtcModelConfig
+	FireRedAsrCtc OfflineFireRedAsrCtcModelConfig
+	Tokens        string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -631,6 +636,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 
 	c.model_config.omnilingual.model = C.CString(config.ModelConfig.Omnilingual.Model)
 	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
+	c.model_config.fire_red_asr_ctc.model = C.CString(config.ModelConfig.FireRedAsrCtc.Model)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -703,6 +709,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.canary.tgt_lang,
 		&c.model_config.wenet_ctc.model,
 		&c.model_config.medasr.model,
+		&c.model_config.fire_red_asr_ctc.model,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,
@@ -879,13 +886,13 @@ type OfflineTtsKittenModelConfig struct {
 }
 
 type OfflineTtsPocketModelConfig struct {
-	LmFlow          string // lm_flow
-	LmMain          string // lm_main
-	Encoder         string // encoder
-	Decoder         string // decoder
-	TextConditioner string // text_conditioner
-	VocabJson       string // vocab_json
-	TokenScoresJson string // token_scores_json
+	LmFlow                      string // lm_flow
+	LmMain                      string // lm_main
+	Encoder                     string // encoder
+	Decoder                     string // decoder
+	TextConditioner             string // text_conditioner
+	VocabJson                   string // vocab_json
+	TokenScoresJson             string // token_scores_json
 	VoiceEmbeddingCacheCapacity int    // voice_embedding_cache_capacity
 }
 

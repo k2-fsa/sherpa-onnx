@@ -12,11 +12,12 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ## Streaming Speech recognition
 
-```
+```bash
 ./run-streaming-asr-from-mic-transducer.sh
-./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-ctc-hlg.sh
+./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-paraformer.sh
+./run-streaming-decode-file-tone-ctc.sh
 ./run-streaming-decode-file-transducer.sh
 ```
 
@@ -24,15 +25,21 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-decode-file-dolphin-ctc.sh
+./run-non-streaming-decode-file-fire-red-asr-ctc.sh
 ./run-non-streaming-decode-file-fire-red-asr.sh
+./run-non-streaming-decode-file-funasr-nano.sh
+./run-non-streaming-decode-file-medasr-ctc.sh
 ./run-non-streaming-decode-file-moonshine.sh
 ./run-non-streaming-decode-file-nemo-canary.sh
 ./run-non-streaming-decode-file-nemo.sh
+./run-non-streaming-decode-file-omnilingual-asr-ctc.sh
 ./run-non-streaming-decode-file-paraformer.sh
+./run-non-streaming-decode-file-sense-voice-with-hr.sh
 ./run-non-streaming-decode-file-sense-voice.sh
 ./run-non-streaming-decode-file-tele-speech-ctc.sh
 ./run-non-streaming-decode-file-transducer-hotwords.sh
 ./run-non-streaming-decode-file-transducer.sh
+./run-non-streaming-decode-file-wenet-ctc.sh
 ./run-non-streaming-decode-file-whisper-multiple.sh
 ./run-non-streaming-decode-file-whisper.sh
 ./run-non-streaming-decode-file-zipformer-ctc.sh
@@ -47,9 +54,16 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ## Non-Streaming text-to-speech
 
 ```bash
-./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-coqui-de.sh
+./run-non-streaming-tts-kitten-en.sh
+./run-non-streaming-tts-kokoro-en.sh
+./run-non-streaming-tts-kokoro-zh-en.sh
+./run-non-streaming-tts-matcha-en.sh
+./run-non-streaming-tts-matcha-zh.sh
+./run-non-streaming-tts-piper-en-with-callback.sh
+./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-vits-zh.sh
+./run-pocket-tts.sh
 ```
 
 ## Non-Streaming text-to-speech (Playback the audio as it is being generated)
@@ -69,7 +83,8 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 The punctuation model supports both English and Chinese.
 
 ```bash
-./run-add-punctuation-zh-en.sh
+./run-offline-add-punctuation-zh-en.sh
+./run-online-add-punctuation-zh-en.sh
 ```
 
 ## Audio tagging

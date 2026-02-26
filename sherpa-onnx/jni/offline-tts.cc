@@ -245,9 +245,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.pocket.token_scores_json,
                               tokenScoresJson, pocket_cls, pocket);
-  
+
   SHERPA_ONNX_JNI_READ_INT(ans.model.pocket.voice_embedding_cache_capacity,
-                           voiceEmbeddingCacheCapacity, pocket_cls, pocket);                           
+                           voiceEmbeddingCacheCapacity, pocket_cls, pocket);
 
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
@@ -372,9 +372,15 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
     return 0;
   }
 
-  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
-  for (const auto &s : str_vec) {
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  if (config.model.debug) {
+#if __ANDROID_API__
+    auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+    for (const auto &s : str_vec) {
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   auto tts = new sherpa_onnx::OfflineTts(

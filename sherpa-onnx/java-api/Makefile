@@ -41,6 +41,7 @@ java_files += OfflineZipformerCtcModelConfig.java
 java_files += OfflineWenetCtcModelConfig.java
 java_files += OfflineOmnilingualAsrCtcModelConfig.java
 java_files += OfflineMedAsrCtcModelConfig.java
+java_files += OfflineFireRedAsrCtcModelConfig.java
 java_files += OfflineFunAsrNanoModelConfig.java
 java_files += OfflineCanaryModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java

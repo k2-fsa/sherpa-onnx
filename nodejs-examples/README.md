@@ -249,6 +249,22 @@ rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 node ./test-offline-medasr-ctc.js
 ```
 
+## ./test-offline-fire-red-asr-ctc.js
+
+[./test-offline-fire-red-asr-ctc.js](./test-offline-fire-red-asr-ctc.js) demonstrates
+how to decode a file with a FireRedASR CTC model. In the code we use
+[sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test-offline-fire-red-asr-ctc.js
+```
+
 ## ./test-offline-omnilingual-asr-ctc.js
 
 [./test-offline-omnilingual-asr-ctc.js](./test-offline-omnilingual-asr-ctc.js) demonstrates

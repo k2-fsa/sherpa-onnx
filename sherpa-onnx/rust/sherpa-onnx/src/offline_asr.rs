@@ -243,6 +243,19 @@ impl OfflineMedAsrCtcModelConfig {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct OfflineFireRedAsrCtcModelConfig {
+    pub model: Option<String>,
+}
+
+impl OfflineFireRedAsrCtcModelConfig {
+    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineFireRedAsrCtcModelConfig {
+        sys::OfflineFireRedAsrCtcModelConfig {
+            model: to_c_ptr(&self.model, cstrings),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct OfflineFunASRNanoModelConfig {
     pub encoder_adaptor: Option<String>,
@@ -315,6 +328,7 @@ pub struct OfflineModelConfig {
     pub omnilingual: OfflineOmnilingualAsrCtcModelConfig,
     pub medasr: OfflineMedAsrCtcModelConfig,
     pub funasr_nano: OfflineFunASRNanoModelConfig,
+    pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
 
     pub tokens: Option<String>,
     pub num_threads: i32,
@@ -373,6 +387,9 @@ impl OfflineModelConfig {
                 .to_sys(cstrings),
             funasr_nano: self
                 .funasr_nano
+                .to_sys(cstrings),
+            fire_red_asr_ctc: self
+                .fire_red_asr_ctc
                 .to_sys(cstrings),
 
             tokens: to_c_ptr(&self.tokens, cstrings),
