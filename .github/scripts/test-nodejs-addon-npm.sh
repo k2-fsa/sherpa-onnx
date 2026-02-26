@@ -38,6 +38,8 @@ tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 
 node ./test_asr_non_streaming_funasr_nano.js
+node ./test_asr_non_streaming_funasr_nano_async.js
+
 rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
 
 echo "----------non-streaming ASR Google MedASR CTC----------"
