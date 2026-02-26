@@ -5,8 +5,8 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -228,6 +228,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
+      !config.model_config.fire_red_asr_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -567,6 +568,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
+      !config.model_config.fire_red_asr_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
