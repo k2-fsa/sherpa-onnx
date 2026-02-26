@@ -68,9 +68,11 @@ class OfflineFireRedAsrCtcModel::Impl {
 
   void NormalizeFeatures(float *features, int32_t num_frames,
                          int32_t feat_dim) const {
-    if (mean_.size() != feat_dim) {
+    if (static_cast<int32_t>(mean_.size()) != feat_dim) {
+      SHERPA_ONNX_LOGE("Bad things happened");
       SHERPA_ONNX_LOGE("Wrong feat dim %d. Expect: %d", feat_dim,
                        static_cast<int32_t>(mean_.size()));
+      SHERPA_ONNX_EXIT(-1);
     }
 
     using RowMajorMat =
