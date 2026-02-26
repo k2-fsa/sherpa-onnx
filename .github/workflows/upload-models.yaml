@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models-2
+      - upload-models
   workflow_dispatch:
 
 concurrency:
@@ -1096,6 +1096,8 @@ jobs:
 
               popd
             done
+
+            rm -rf huggingface
 
       - name: Publish to modelscope
         if: true
