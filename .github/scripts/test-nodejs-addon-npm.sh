@@ -10,6 +10,16 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------FireRedAsr CTC----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test_asr_non_streaming_fire_red_asr_ctc.js
+node ./test_asr_non_streaming_fire_red_asr_ctc_async.js
+
+rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+
 echo "----------PocketTTS----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
