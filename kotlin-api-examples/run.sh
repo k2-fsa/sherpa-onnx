@@ -557,6 +557,28 @@ function testOfflineMedAsrCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineMoonshineAsrV2() {
+  if [ ! -f ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+    tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+    rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+  fi
+
+  out_filename=test_offline_moonshine_asr_v2.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_moonshine_asr_v2.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOfflineFireRedAsrCtc() {
   if [ ! -f ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
@@ -624,6 +646,7 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
+testOfflineMoonshineAsrV2
 testOfflineFireRedAsrCtc
 testPocketTts
 testOfflineFunAsrNano

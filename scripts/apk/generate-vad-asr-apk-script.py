@@ -857,6 +857,166 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-moonshine-tiny-ko-quantized-2026-02-27",
+            idx=51,
+            lang="ko",
+            lang2="Korean",
+            short_name="moonshine_tiny_ko_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27",
+            idx=52,
+            lang="ja",
+            lang2="Japanese",
+            short_name="moonshine_tiny_ja_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27",
+            idx=53,
+            lang="en",
+            lang2="English",
+            short_name="moonshine_tiny_en_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-zh-quantized-2026-02-27",
+            idx=54,
+            lang="zh",
+            lang2="Chinese",
+            short_name="moonshine_base_zh_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-vi-quantized-2026-02-27",
+            idx=55,
+            lang="vi",
+            lang2="Vietnamese",
+            short_name="moonshine_base_vi_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-uk-quantized-2026-02-27",
+            idx=56,
+            lang="uk",
+            lang2="Ukrainian",
+            short_name="moonshine_base_uk_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-ja-quantized-2026-02-27",
+            idx=57,
+            lang="ja",
+            lang2="Japanese",
+            short_name="moonshine_base_ja_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-es-quantized-2026-02-27",
+            idx=58,
+            lang="es",
+            lang2="Spanish",
+            short_name="moonshine_base_es_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-en-quantized-2026-02-27",
+            idx=59,
+            lang="en",
+            lang2="English",
+            short_name="moonshine_base_en_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-ar-quantized-2026-02-27",
+            idx=60,
+            lang="ar",
+            lang2="Arabic",
+            short_name="moonshine_base_ar_2026_02_27",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

@@ -121,6 +121,7 @@ jobs:
           ./run-non-streaming-decode-file-dolphin-ctc.sh
           rm -rf sherpa-onnx-dolphin-*
 
+          ./run-non-streaming-decode-file-moonshine-v2.sh
           ./run-non-streaming-decode-file-moonshine.sh
           rm -rf sherpa-onnx-moonshine-*
 

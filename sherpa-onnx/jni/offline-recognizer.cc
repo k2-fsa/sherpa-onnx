@@ -175,6 +175,10 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
                               cachedDecoder, moonshine_config_cls,
                               moonshine_config);
 
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.moonshine.merged_decoder,
+                              mergedDecoder, moonshine_config_cls,
+                              moonshine_config);
+
   fid = env->GetFieldID(model_config_cls, "senseVoice",
                         "Lcom/k2fsa/sherpa/onnx/OfflineSenseVoiceModelConfig;");
   jobject sense_voice_config = env->GetObjectField(model_config, fid);

@@ -93,11 +93,16 @@ data class OfflineFireRedAsrModelConfig(
     var decoder: String = "",
 )
 
+// For moonshine v1, you need four models.
+// For moonshine v2, you need two models.
+// - v1: preprocessor, encoder, uncachedDecoder, cachedDecoder
+// - v2: encoder, mergedDecoder
 data class OfflineMoonshineModelConfig(
     var preprocessor: String = "",
     var encoder: String = "",
     var uncachedDecoder: String = "",
     var cachedDecoder: String = "",
+    var mergedDecoder: String = "",
 )
 
 data class OfflineSenseVoiceModelConfig(
@@ -827,6 +832,116 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             return OfflineModelConfig(
                 fireRedAsrCtc = OfflineFireRedAsrCtcModelConfig(
                     model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        51 -> {
+            val modelDir = "sherpa-onnx-moonshine-tiny-ko-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        52 -> {
+            val modelDir = "sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        53 -> {
+            val modelDir = "sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        54 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-zh-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        55 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-vi-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        56 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-uk-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        57 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-ja-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        58 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-es-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        59 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-en-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        60 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-ar-quantized-2026-02-27"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    encoder = "$modelDir/encoder_model.ort",
+                    mergedDecoder = "$modelDir/decoder_model_merged.ort",
                 ),
                 tokens = "$modelDir/tokens.txt",
             )
