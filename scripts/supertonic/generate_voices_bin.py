@@ -19,7 +19,6 @@ def flatten_3d_array(data):
 
 
 def load_one_json(json_path):
-    """Load one voice style JSON; return (ttl_dims, ttl_flat, dp_dims, dp_flat)."""
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     style_ttl = data["style_ttl"]
