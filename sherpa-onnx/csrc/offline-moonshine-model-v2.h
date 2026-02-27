@@ -15,7 +15,7 @@
 namespace sherpa_onnx {
 
 // please see
-// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/moonshine/merged/test.py
+// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/moonshine/v2/test.py
 class OfflineMoonshineModelV2 {
  public:
   explicit OfflineMoonshineModelV2(const OfflineModelConfig &config);

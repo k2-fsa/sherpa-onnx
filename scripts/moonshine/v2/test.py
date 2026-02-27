@@ -2,8 +2,6 @@
 # Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
-import math
-
 import librosa
 import numpy as np
 import onnxruntime as ort
@@ -85,7 +83,7 @@ class OnnxModel:
         for i in self.decoder.get_outputs():
             print(i)
 
-        self.need_decoder_attenion_mask = False
+        self.need_decoder_attention_mask = False
 
         for n in self.decoder.get_inputs():
             if "key_values" in n.name and not hasattr(self, "num_head"):
@@ -93,8 +91,8 @@ class OnnxModel:
                 self.head_dim = n.shape[3]
 
             if "encoder_attention_mask" in n.name:
-                self.need_decoder_attenion_mask = True
-        if self.need_decoder_attenion_mask:
+                self.need_decoder_attention_mask = True
+        if self.need_decoder_attention_mask:
             # [ mask, ids, encoder_out, states, use_cache_branch]
             self.num_layers = (len(self.decoder.get_inputs()) - 4) // 4
         else:
@@ -148,7 +146,7 @@ class OnnxModel:
 
     def run_decoder(self, token_id, encoder_out, states):
         inputs = dict()
-        if self.need_decoder_attenion_mask:
+        if self.need_decoder_attention_mask:
             mask = np.ones((1, encoder_out.shape[1]), dtype=np.int64)
             inputs[self.decoder.get_inputs()[0].name] = mask
 

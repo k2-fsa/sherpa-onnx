@@ -29,7 +29,7 @@ void OfflineMoonshineModelConfig::Register(ParseOptions *po) {
       "Path to onnx cached_decoder of moonshine v1, e.g., cached_decode.onnx");
 
   po->Register("moonshine-merged-decoder", &merged_decoder,
-               "Path to onnx cached_decoder of moonshine v2, e.g., "
+               "Path to onnx merged decoder of moonshine v2, e.g., "
                "decoder_model_merged.onnx");
 }
 
@@ -119,7 +119,7 @@ std::string OfflineMoonshineModelConfig::ToString() const {
   os << "encoder=\"" << encoder << "\", ";
   os << "uncached_decoder=\"" << uncached_decoder << "\", ";
   os << "cached_decoder=\"" << cached_decoder << "\", ";
-  os << "merged_decoder=\"" << cached_decoder << "\")";
+  os << "merged_decoder=\"" << merged_decoder << "\")";
 
   return os.str();
 }
