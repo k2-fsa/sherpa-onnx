@@ -12,10 +12,11 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-decoder.h"
-#include "sherpa-onnx/csrc/offline-moonshine-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-v2.h"
+#include "sherpa-onnx/csrc/offline-moonshine-v2-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -23,26 +24,9 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult ConvertV2(
-    const OfflineMoonshineDecoderResult &src, const SymbolTable &sym_table) {
-  OfflineRecognitionResult r;
-  r.tokens.reserve(src.tokens.size());
-
-  std::string text;
-  for (auto i : src.tokens) {
-    if (!sym_table.Contains(i)) {
-      continue;
-    }
-
-    const auto &s = sym_table[i];
-    text += s;
-    r.tokens.push_back(s);
-  }
-
-  r.text = text;
-
-  return r;
-}
+// defined in ./offline-recognizer-moonshine-impl.h
+OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
+                                 const SymbolTable &sym_table);
 
 class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
  public:
@@ -67,14 +51,18 @@ class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
   }
 
   void Init() {
+    // tokens.txt from whisper is base64 encoded, so we need to decode it
+    // See also ../../scripts/moonshine/v2/generate_tokens.py
+    symbol_table_.ApplyBase64Decode();
+
     if (config_.decoding_method == "greedy_search") {
-      // decoder_ =
-      //     std::make_unique<OfflineMoonshineGreedySearchDecoder>(model_.get());
+      decoder_ =
+          std::make_unique<OfflineMoonshineV2GreedySearchDecoder>(model_.get());
     } else {
       SHERPA_ONNX_LOGE(
           "Only greedy_search is supported at present for moonshine. Given %s",
           config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -93,7 +81,34 @@ class OfflineRecognizerMoonshineV2Impl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
-  void DecodeStream(OfflineStream *s) const {}
+  void DecodeStream(OfflineStream *s) const {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<float> audio = s->GetFrames();
+
+    try {
+      std::array<int64_t, 2> shape{1, static_cast<int64_t>(audio.size())};
+
+      Ort::Value audio_tensor = Ort::Value::CreateTensor(
+          memory_info, audio.data(), audio.size(), shape.data(), shape.size());
+
+      Ort::Value encoder_out = model_->ForwardEncoder(std::move(audio_tensor));
+
+      auto results = decoder_->Decode(std::move(encoder_out));
+
+      auto r = Convert(results[0], symbol_table_);
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
+      r.text = ApplyHomophoneReplacer(std::move(r.text));
+      s->SetResult(r);
+    } catch (const Ort::Exception &ex) {
+      SHERPA_ONNX_LOGE(
+          "\n\nCaught exception:\n\n%s\n\nReturn an empty result. Number of "
+          "audio samples: %d",
+          ex.what(), static_cast<int32_t>(audio.size()));
+      return;
+    }
+  }
 
  private:
   OfflineRecognizerConfig config_;

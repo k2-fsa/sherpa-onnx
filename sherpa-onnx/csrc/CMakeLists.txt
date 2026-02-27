@@ -46,6 +46,7 @@ set(sources
   offline-medasr-ctc-model.cc
   offline-model-config.cc
   offline-moonshine-greedy-search-decoder.cc
+  offline-moonshine-v2-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
   offline-moonshine-model-v2.cc
   offline-moonshine-model.cc

@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-decoder.h"
 #include "sherpa-onnx/csrc/offline-moonshine-greedy-search-decoder.h"
@@ -23,8 +24,8 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(
-    const OfflineMoonshineDecoderResult &src, const SymbolTable &sym_table) {
+OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
+                                 const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
 
@@ -73,7 +74,7 @@ class OfflineRecognizerMoonshineImpl : public OfflineRecognizerImpl {
       SHERPA_ONNX_LOGE(
           "Only greedy_search is supported at present for moonshine. Given %s",
           config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

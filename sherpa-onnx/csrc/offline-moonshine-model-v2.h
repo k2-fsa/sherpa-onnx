@@ -53,6 +53,8 @@ class OfflineMoonshineModelV2 {
       Ort::Value token, Ort::Value encoder_out,
       std::vector<Ort::Value> states) const;
 
+  std::vector<Ort::Value> GetDecoderInitStates() const;
+
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;

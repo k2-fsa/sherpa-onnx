@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
 import librosa
@@ -207,7 +208,9 @@ def main():
         #  decoder="./base-zh/decoder_model_merged.ort",
     )
     samples = load_audio("./two_cities.wav")
+    print("samples.shape", samples.shape)
     encoder_out = model.run_encoder(samples)
+    print("encoder_out.shape", encoder_out.shape)
     states = model.get_decoder_init_states()
     tokens = []
 

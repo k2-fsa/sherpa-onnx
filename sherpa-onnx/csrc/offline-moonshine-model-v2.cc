@@ -61,8 +61,27 @@ class OfflineMoonshineModelV2::Impl {
   }
 
   Ort::Value ForwardEncoder(Ort::Value audio) {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> mask;
+    std::vector<Ort::Value> inputs;
+
+    inputs.push_back(std::move(audio));
+
+    if (encoder_input_names_.size() > 1) {
+      std::vector<int64_t> shape =
+          inputs.back().GetTensorTypeAndShapeInfo().GetShape();
+
+      mask.resize(shape[1], 1);
+
+      Ort::Value mask_tensor = Ort::Value::CreateTensor<int64_t>(
+          memory_info, mask.data(), mask.size(), shape.data(), shape.size());
+      inputs.push_back(std::move(mask_tensor));
+    }
+
     auto features = encoder_sess_->Run(
-        {}, encoder_input_names_ptr_.data(), &audio, 1,
+        {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
         encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
 
     return std::move(features[0]);
@@ -70,7 +89,75 @@ class OfflineMoonshineModelV2::Impl {
 
   std::pair<Ort::Value, std::vector<Ort::Value>> ForwardDecoder(
       Ort::Value tokens, Ort::Value encoder_out,
-      std::vector<Ort::Value> states) {}
+      std::vector<Ort::Value> states) {
+    auto encoder_seq_len = states[2].GetTensorTypeAndShapeInfo().GetShape()[2];
+    bool use_cache_branch = encoder_seq_len > 1;
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> mask;
+
+    std::vector<Ort::Value> inputs;
+
+    inputs.reserve(4 + states.size());
+
+    if (decoder_needs_mask_) {
+      mask.resize(encoder_out.GetTensorTypeAndShapeInfo().GetShape()[1], 1);
+      std::array<int64_t, 2> shape = {
+          1, encoder_out.GetTensorTypeAndShapeInfo().GetShape()[1]};
+
+      Ort::Value mask_tensor = Ort::Value::CreateTensor<int64_t>(
+          memory_info, mask.data(), mask.size(), shape.data(), shape.size());
+
+      inputs.push_back(std::move(mask_tensor));
+    }
+
+    inputs.push_back(std::move(tokens));
+    inputs.push_back(std::move(encoder_out));
+
+    for (auto &s : states) {
+      inputs.push_back(View(&s));
+    }
+
+    int64_t shape = 1;
+
+    Ort::Value tensor = Ort::Value::CreateTensor<bool>(
+        memory_info, &use_cache_branch, 1, &shape, 1);
+
+    inputs.push_back(std::move(tensor));
+
+    auto out = decoder_sess_->Run(
+        {}, decoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
+        decoder_output_names_ptr_.data(), decoder_output_names_ptr_.size());
+
+    if (!use_cache_branch) {
+      // update encoder and decoder
+      for (int32_t i = 0; i < static_cast<int32_t>(states_.size()); ++i) {
+        states[i] = std::move(out[1 + i]);
+      }
+    } else {
+      // only update decoder kv
+      for (int32_t i = 0; i < num_layers_; ++i) {
+        states[4 * i + 0] = std::move(out[1 + 4 * i + 0]);
+        states[4 * i + 1] = std::move(out[1 + 4 * i + 1]);
+      }
+    }
+
+    return {std::move(out[0]), std::move(states)};
+  }
+
+  std::vector<Ort::Value> GetDecoderInitStates() {
+    std::vector<Ort::Value> ans;
+
+    ans.reserve(states_.size());
+
+    for (auto &s : states_) {
+      ans.push_back(View(&s));
+    }
+
+    return ans;
+  }
 
   OrtAllocator *Allocator() { return allocator_; }
 
@@ -220,6 +307,10 @@ OfflineMoonshineModelV2::ForwardDecoder(Ort::Value token,
                                         std::vector<Ort::Value> states) const {
   return impl_->ForwardDecoder(std::move(token), std::move(encoder_out),
                                std::move(states));
+}
+
+std::vector<Ort::Value> OfflineMoonshineModelV2::GetDecoderInitStates() const {
+  return impl_->GetDecoderInitStates();
 }
 
 OrtAllocator *OfflineMoonshineModelV2::Allocator() const {
