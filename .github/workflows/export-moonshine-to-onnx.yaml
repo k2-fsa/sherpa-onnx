@@ -3,7 +3,7 @@ name: export-moonshine-to-onnx
 on:
   push:
     branches:
-      - export-moonshine-v2-2
+      - jni-moonshine-v2
   workflow_dispatch:
 
 concurrency:
@@ -83,9 +83,12 @@ jobs:
               sherpa-onnx-moonshine-base-en-quantized-2026-02-27
               sherpa-onnx-moonshine-base-es-quantized-2026-02-27
               sherpa-onnx-moonshine-base-ja-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-uk-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-vi-quantized-2026-02-27
               sherpa-onnx-moonshine-base-zh-quantized-2026-02-27
               sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
               sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27
+              sherpa-onnx-moonshine-tiny-ko-quantized-2026-02-27
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
@@ -133,25 +136,22 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
-            for m in *.tar.bz2; do
-              export GIT_LFS_SKIP_SMUDGE=1
-              export GIT_CLONE_PROTECTION_ACTIVE=false
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
-              rm -rf ms
-              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+            rm -rf ms
+            git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
 
-              cp -av $m ms/
+            cp -av *.tar.bz2 ms/
 
-              pushd ms
-              git lfs track "*.tar.bz2"
-              git status
-              ls -lh
-              git add .
+            pushd ms
+            git lfs track "*.tar.bz2"
+            git status
+            ls -lh
+            git add .
 
-              git commit -m "add models"
-              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
-
-              popd
-            done
+            git commit -m "add models"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+            popd
 
             rm -rf ms

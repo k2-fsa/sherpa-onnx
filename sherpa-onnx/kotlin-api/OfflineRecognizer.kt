@@ -93,11 +93,16 @@ data class OfflineFireRedAsrModelConfig(
     var decoder: String = "",
 )
 
+// For moonshine v1, you need four models.
+// For moonshine v2, you need two models.
+// - v1: preprocessor, encoder, uncachedDecoder, cachedDecoder
+// - v2: encoder, mergedDecoder
 data class OfflineMoonshineModelConfig(
     var preprocessor: String = "",
     var encoder: String = "",
     var uncachedDecoder: String = "",
     var cachedDecoder: String = "",
+    var mergedDecoder: String = "",
 )
 
 data class OfflineSenseVoiceModelConfig(

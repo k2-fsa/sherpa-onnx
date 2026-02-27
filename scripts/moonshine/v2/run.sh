@@ -32,9 +32,12 @@ names=(
   base-en
   base-es
   base-ja
+  base-uk
+  base-vi
   base-zh
   tiny-en
   tiny-ja
+  tiny-ko
 )
 
 for name in ${names[@]}; do
