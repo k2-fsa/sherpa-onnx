@@ -30,6 +30,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-moonshine-v2-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
@@ -243,6 +244,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
     return std::make_unique<OfflineRecognizerMoonshineImpl>(config);
+  }
+
+  if (!config.model_config.moonshine.merged_decoder.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineV2Impl>(config);
   }
 
   if (!config.model_config.canary.encoder.empty()) {
@@ -585,6 +590,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
   }
 
+  if (!config.model_config.moonshine.merged_decoder.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineV2Impl>(mgr, config);
+  }
+
   if (!config.model_config.canary.encoder.empty()) {
     return std::make_unique<OfflineRecognizerCanaryImpl>(mgr, config);
   }
@@ -607,6 +616,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
     } else if (model_type == "moonshine") {
+      // unreachable code
       return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
