@@ -1,6 +1,9 @@
 name: export-moonshine-to-onnx
 
 on:
+  push:
+    branches:
+      - export-moonshine-v2-2
   workflow_dispatch:
 
 concurrency:
@@ -10,13 +13,14 @@ concurrency:
 jobs:
   export-moonshine-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export moonshine models to ONNX
+    name: export moonshine ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
+        version: [v2]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +33,10 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install -q onnx onnxruntime librosa tokenizers soundfile
+          pip install -q onnx onnxruntime librosa tokenizers soundfile moonshine-voice
 
-      - name: Run
+      - name: Run v1
+        if: matrix.version == 'v1'
         shell: bash
         run: |
           pushd scripts/moonshine
@@ -40,6 +45,14 @@ jobs:
 
           mv -v scripts/moonshine/*.tar.bz2 .
           mv -v scripts/moonshine/sherpa-onnx-* ./
+
+      - name: Run v2
+        if: matrix.version == 'v2'
+        shell: bash
+        run: |
+          pushd scripts/moonshine/v2
+          ./run.sh
+          popd
 
       - name: Release
         uses: svenstaro/upload-release-action@v2
@@ -51,7 +64,8 @@ jobs:
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
 
-      - name: Publish to huggingface (tiny)
+      - name: Publish to huggingface
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -62,25 +76,55 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
+            models=(
+              sherpa-onnx-moonshine-tiny-en-int8
+              sherpa-onnx-moonshine-base-en-int8
+              sherpa-onnx-moonshine-base-ar-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-en-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-es-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-ja-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-zh-quantized-2026-02-27
+              sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+              sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27
+            )
+            for d in ${models[@]}; do
+              if [ ! -d $d ]; then
+                continue;
+              fi
 
-            d=sherpa-onnx-moonshine-tiny-en-int8
-            export GIT_LFS_SKIP_SMUDGE=1
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
-            mv -v $d/* ./huggingface
-            cd huggingface
-            git lfs track "*.onnx"
-            git lfs track "*.wav"
-            git status
-            git add .
-            git status
-            git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              rm -rf huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
+
+              rm -rf huggingface/*.onnx
+              rm -rf huggingface/*/*.wav
+
+              cp -av $d/* huggingface
+
+              pushd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.ort"
+              git lfs track "*.data"
+              git lfs track "*.weights"
+              git lfs track "bpe.model"
+              git lfs track "*.wav"
+              git lfs track "*.json"
+              git status
+              git add .
+
+              git commit -m "add models"
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main
+
+              popd
+            done
+
             rm -rf huggingface
 
-      - name: Publish to huggingface (base)
+      - name: Publish to modelscope
+        if: true
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -89,18 +133,25 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
+            for m in *.tar.bz2; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            d=sherpa-onnx-moonshine-base-en-int8
-            export GIT_LFS_SKIP_SMUDGE=1
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
-            mv -v $d/* ./huggingface
-            cd huggingface
-            git lfs track "*.onnx"
-            git lfs track "*.wav"
-            git status
-            git add .
-            git status
-            git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
-            rm -rf huggingface
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              cp -av $m ms/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh
+              git add .
+
+              git commit -m "add models"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
+              popd
+            done
+
+            rm -rf ms

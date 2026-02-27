@@ -17,9 +17,9 @@ void PybindOfflineMoonshineModelConfig(py::module *m) {
       .def(py::init<const std::string &, const std::string &,
                     const std::string &, const std::string &,
                     const std::string &>(),
-           py::arg("preprocessor"), py::arg("encoder"),
-           py::arg("uncached_decoder"), py::arg("cached_decoder"),
-           py::arg("merged_decoder"))
+           py::arg("preprocessor") = {}, py::arg("encoder") = {},
+           py::arg("uncached_decoder") = {}, py::arg("cached_decoder") = {},
+           py::arg("merged_decoder") = {})
       .def_readwrite("preprocessor", &PyClass::preprocessor)
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("uncached_decoder", &PyClass::uncached_decoder)
