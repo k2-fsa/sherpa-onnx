@@ -51,7 +51,7 @@ bool OfflineMoonshineModelConfig::Validate() const {
     if (preprocessor.empty()) {
       SHERPA_ONNX_LOGE(
           "Please provide --moonshine-preprocessor for v1 or "
-          "--moonshine-merged_decoder for v2");
+          "--moonshine-merged-decoder for v2");
       return false;
     }
 
