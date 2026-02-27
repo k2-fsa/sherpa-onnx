@@ -3,7 +3,7 @@ name: export-moonshine-to-onnx
 on:
   push:
     branches:
-      - jni-moonshine-v2
+      - jni-moonshine-v2-2
   workflow_dispatch:
 
 concurrency:

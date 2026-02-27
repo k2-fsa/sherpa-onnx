@@ -30,6 +30,7 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-decode-file-funasr-nano.sh
 ./run-non-streaming-decode-file-medasr-ctc.sh
 ./run-non-streaming-decode-file-moonshine.sh
+./run-non-streaming-decode-file-moonshine-v2.sh
 ./run-non-streaming-decode-file-nemo-canary.sh
 ./run-non-streaming-decode-file-nemo.sh
 ./run-non-streaming-decode-file-omnilingual-asr-ctc.sh
