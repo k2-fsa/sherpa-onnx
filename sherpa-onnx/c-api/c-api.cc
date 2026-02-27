@@ -486,6 +486,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.moonshine.cached_decoder =
       SHERPA_ONNX_OR(config->model_config.moonshine.cached_decoder, "");
 
+  recognizer_config.model_config.moonshine.merged_decoder =
+      SHERPA_ONNX_OR(config->model_config.moonshine.merged_decoder, "");
+
   recognizer_config.model_config.fire_red_asr.encoder =
       SHERPA_ONNX_OR(config->model_config.fire_red_asr.encoder, "");
 

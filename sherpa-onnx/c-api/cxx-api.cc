@@ -252,6 +252,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.moonshine.uncached_decoder.c_str();
   c.model_config.moonshine.cached_decoder =
       config.model_config.moonshine.cached_decoder.c_str();
+  c.model_config.moonshine.merged_decoder =
+      config.model_config.moonshine.merged_decoder.c_str();
 
   c.model_config.fire_red_asr.encoder =
       config.model_config.fire_red_asr.encoder.c_str();

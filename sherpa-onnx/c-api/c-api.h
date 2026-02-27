@@ -466,6 +466,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMoonshineModelConfig {
   const char *encoder;
   const char *uncached_decoder;
   const char *cached_decoder;
+  const char *merged_decoder;
 } SherpaOnnxOfflineMoonshineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTdnnModelConfig {
