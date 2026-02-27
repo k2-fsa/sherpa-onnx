@@ -2,10 +2,11 @@
 # Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
+import math
+
 import librosa
 import numpy as np
 import onnxruntime as ort
-import math
 
 
 class BinTokenizer:

@@ -2,7 +2,6 @@
 # Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 import base64
-
 from test import BinTokenizer
 
 
