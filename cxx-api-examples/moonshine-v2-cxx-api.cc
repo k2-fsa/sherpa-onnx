@@ -22,17 +22,11 @@ int32_t main() {
   using namespace sherpa_onnx::cxx;  // NOLINT
   OfflineRecognizerConfig config;
 
-  // format: off
-
-  config.model_config.moonshine.encoder = config.model_config.moonshine
-                                              .encoder =
-      "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort";
-  config.model_config.moonshine.merged_decoder =
-      "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/"
-      "decoder_model_merged.ort";
-  config.model_config.tokens =
-      "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/tokens.txt";
-  // format: on
+  // clang-format off
+  config.model_config.moonshine.encoder = "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort";
+  config.model_config.moonshine.merged_decoder = "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/decoder_model_merged.ort";
+  config.model_config.tokens = "./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/tokens.txt";
+  // clang-format on
 
   config.model_config.num_threads = 2;
 
