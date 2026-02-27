@@ -8,6 +8,18 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Moonshine v2"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+ls -lh sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
+python3 ./python-api-examples/offline-moonshine-decode-files-v2.py
+
+rm -rf  sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
 log "test FireRedASR CTC"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
