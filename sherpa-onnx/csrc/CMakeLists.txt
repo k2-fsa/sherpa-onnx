@@ -47,6 +47,7 @@ set(sources
   offline-model-config.cc
   offline-moonshine-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
+  offline-moonshine-model-v2.cc
   offline-moonshine-model.cc
   offline-nemo-enc-dec-ctc-model-config.cc
   offline-nemo-enc-dec-ctc-model.cc
