@@ -1335,6 +1335,87 @@ class OfflineRecognizer(object):
         return self
 
     @classmethod
+    def from_moonshine_v2(
+        cls,
+        encoder: str,
+        decoder: str,
+        tokens: str,
+        num_threads: int = 1,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/moonshine/index.html>`_
+        to download pre-trained models for different kinds of moonshine v2 models,
+        e.g., tiny-en, base-zh, etc.
+
+        Args:
+          encoder:
+            Path to the encoder model, e.g., encoder_model.ort
+          decoder:
+            Path to the merged decoder model, e.g., decoder_model_merged.ort,
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            moonshine=OfflineMoonshineModelConfig(
+                encoder=encoder,
+                merged_decoder=decoder,
+            ),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        unused_feat_config = FeatureExtractorConfig(
+            sampling_rate=16000,
+            feature_dim=80,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            model_config=model_config,
+            feat_config=unused_feat_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
     def from_tdnn_ctc(
         cls,
         model: str,

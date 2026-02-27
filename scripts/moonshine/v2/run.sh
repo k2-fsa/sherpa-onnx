@@ -21,6 +21,12 @@ python3 -m moonshine_voice.download --language ko --model-arch 0
 python3 -m moonshine_voice.download --language vi --model-arch 1
 python3 -m moonshine_voice.download --language uk --model-arch 1
 
+sleep 2
+
+ls -lh models/download.moonshine.ai/model/*/*/*
+
+sleep 2
+
 names=(
   base-ar
   base-en
@@ -35,7 +41,7 @@ for name in ${names[@]}; do
   mv -v models/download.moonshine.ai/model/$name/quantized/$name/* .
   python3 ./generate_tokens.py
   rm tokenizer.bin
-  d=sherpa-onnx-moonshine-$name-2026-02-27
+  d=sherpa-onnx-moonshine-$name-quantized-2026-02-27
   mkdir -p $d
   mv *ort $d/
   cp LICENSE $d
@@ -54,7 +60,6 @@ for name in ${names[@]}; do
   mv -v $d.tar.bz2 ../../../
 done
 
-# ls -lh models/download.moonshine.ai/model/*/*/*
 #
 # models/download.moonshine.ai/model/base-ar/quantized/base-ar:
 # total 135M

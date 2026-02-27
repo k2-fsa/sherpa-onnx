@@ -3,7 +3,7 @@ name: export-moonshine-to-onnx
 on:
   push:
     branches:
-      - export-moonshine-v2
+      - export-moonshine-v2-2
   workflow_dispatch:
 
 concurrency:
@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [macos-latest]
         python-version: ["3.10"]
-        version: [v1, v2]
+        version: [v2]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install -q onnx onnxruntime librosa tokenizers soundfile moonshine-voice
 
-      - name: Run ${{ matrix.version }}
+      - name: Run v1
         if: matrix.version == 'v1'
         shell: bash
         run: |
@@ -46,7 +46,7 @@ jobs:
           mv -v scripts/moonshine/*.tar.bz2 .
           mv -v scripts/moonshine/sherpa-onnx-* ./
 
-      - name: Run ${{ matrix.version }}
+      - name: Run v2
         if: matrix.version == 'v2'
         shell: bash
         run: |
@@ -79,6 +79,13 @@ jobs:
             models=(
               sherpa-onnx-moonshine-tiny-en-int8
               sherpa-onnx-moonshine-base-en-int8
+              sherpa-onnx-moonshine-base-ar-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-en-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-es-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-ja-quantized-2026-02-27
+              sherpa-onnx-moonshine-base-zh-quantized-2026-02-27
+              sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+              sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
