@@ -286,6 +286,7 @@ struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
   std::string encoder;
   std::string uncached_decoder;
   std::string cached_decoder;
+  std::string merged_decoder;
 };
 
 struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {

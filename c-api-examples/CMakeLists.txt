@@ -83,6 +83,9 @@ target_link_libraries(dolphin-ctc-c-api sherpa-onnx-c-api)
 add_executable(moonshine-c-api moonshine-c-api.c)
 target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
 
+add_executable(moonshine-v2-c-api moonshine-v2-c-api.c)
+target_link_libraries(moonshine-v2-c-api sherpa-onnx-c-api)
+
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 

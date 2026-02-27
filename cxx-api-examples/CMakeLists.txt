@@ -36,6 +36,9 @@ target_link_libraries(fire-red-asr-ctc-cxx-api sherpa-onnx-cxx-api)
 add_executable(moonshine-cxx-api ./moonshine-cxx-api.cc)
 target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(moonshine-v2-cxx-api ./moonshine-v2-cxx-api.cc)
+target_link_libraries(moonshine-v2-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
 
