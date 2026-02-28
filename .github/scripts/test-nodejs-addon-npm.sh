@@ -10,6 +10,15 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Moonshine v2----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test_asr_non_streaming_moonshine_v2.js
+
+rm -rf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
 echo "----------FireRedAsr CTC----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
 tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
