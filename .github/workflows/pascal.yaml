@@ -215,6 +215,8 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-moonshine-v2.sh
+
           ./run-moonshine.sh
           rm -rf sherpa-onnx-*
           echo "---"

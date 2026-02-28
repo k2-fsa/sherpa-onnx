@@ -435,6 +435,7 @@ type
     Encoder: AnsiString;
     UncachedDecoder: AnsiString;
     CachedDecoder: AnsiString;
+    MergedDecoder: AnsiString;
     function ToString: AnsiString;
   end;
 
@@ -947,6 +948,7 @@ type
     Encoder: PAnsiChar;
     UncachedDecoder: PAnsiChar;
     CachedDecoder: PAnsiChar;
+    MergedDecoder: PAnsiChar;
   end;
   SherpaOnnxOfflineTdnnModelConfig = record
     Model: PAnsiChar;
@@ -1921,8 +1923,10 @@ begin
     'Preprocessor := %s, ' +
     'Encoder := %s, ' +
     'UncachedDecoder := %s, ' +
-    'CachedDecoder := %s)',
-    [Self.Preprocessor, Self.Encoder, Self.UncachedDecoder, Self.CachedDecoder]);
+    'CachedDecoder := %s, ' +
+    'MergedDecoder := %s)',
+    [Self.Preprocessor, Self.Encoder, Self.UncachedDecoder, Self.CachedDecoder,
+     Self.MergedDecoder]);
 end;
 
 function TSherpaOnnxOfflineTdnnModelConfig.ToString: AnsiString;
@@ -2054,6 +2058,7 @@ begin
   C.ModelConfig.Moonshine.Encoder := PAnsiChar(Config.ModelConfig.Moonshine.Encoder);
   C.ModelConfig.Moonshine.UncachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.UncachedDecoder);
   C.ModelConfig.Moonshine.CachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.CachedDecoder);
+  C.ModelConfig.Moonshine.MergedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.MergedDecoder);
 
   C.ModelConfig.FireRedAsr.Encoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Encoder);
   C.ModelConfig.FireRedAsr.Decoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Decoder);
