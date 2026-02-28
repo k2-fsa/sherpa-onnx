@@ -1,7 +1,12 @@
-/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
+/// Copyright (c)  2024-2026  Xiaomi Corporation (authors: Fangjun Kuang)
 
 using System.Runtime.InteropServices;
 
+// For Moonshine v1, you need four models:
+//  - preprocessor, encoder, cached_decoder, uncached_decoder
+//
+// For Moonshine v2, you need 2 models:
+//  - encoder, merged_decoder
 namespace SherpaOnnx
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -25,5 +30,8 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string CachedDecoder;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string MergedDecoder;
     }
 }
