@@ -122,8 +122,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-en-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
             short_name="vad-asr-mooshine-v2-base-en",
             cmd="""
             pushd $model_name
@@ -157,8 +156,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-ja-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
             short_name="vad-asr-mooshine-v2-base-ja",
             cmd="""
             pushd $model_name
@@ -175,8 +173,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-vi-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-vi",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-vi",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-vi",
             short_name="vad-asr-mooshine-v2-base-vi",
             cmd="""
             pushd $model_name
@@ -193,8 +190,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-es-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-es",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-es",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-es",
             short_name="vad-asr-mooshine-v2-base-es",
             cmd="""
             pushd $model_name
@@ -211,8 +207,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-ar-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ar",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ar",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ar",
             short_name="vad-asr-mooshine-v2-base-ar",
             cmd="""
             pushd $model_name
@@ -229,8 +224,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-moonshine-base-uk-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-uk",
-            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-uk",
-            ms="",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-uk",
             short_name="vad-asr-mooshine-v2-base-uk",
             cmd="""
             pushd $model_name
