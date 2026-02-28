@@ -107,11 +107,18 @@ function initOfflineRecognizer() {
   } else if (fileExists('telespeech.onnx')) {
     config.modelConfig.telespeechCtc = './telespeech.onnx';
   } else if (fileExists('moonshine-preprocessor.onnx')) {
+    // moonshine v1
     config.modelConfig.moonshine = {
       preprocessor: './moonshine-preprocessor.onnx',
       encoder: './moonshine-encoder.onnx',
       uncachedDecoder: './moonshine-uncached-decoder.onnx',
       cachedDecoder: './moonshine-cached-decoder.onnx'
+    };
+  } else if (fileExists('moonshine-merged-decoder.ort')) {
+    // moonshine v2
+    config.modelConfig.moonshine = {
+      encoder: './moonshine-encoder.ort',
+      mergedDecoder: './moonshine-merged-decoder.ort'
     };
   } else if (fileExists('dolphin.onnx')) {
     config.modelConfig.dolphin = {model: './dolphin.onnx'};
