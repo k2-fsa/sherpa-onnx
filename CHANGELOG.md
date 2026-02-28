@@ -1,3 +1,20 @@
+## 1.12.28
+
+* Add C++ runtime support for Moonshine v2 (#3232)
+* Export Moonshine v2 models to sherpa-onnx (#3234)
+* Update Python APIs for Moonshine v2 models (#3235)
+* Add Kotlin and Java APIs for Moonshine v2 models (#3237)
+* Add C and C++ API for Moonshine v2 models (#3238)
+* Add Swift API for Moonshine v2 models (#3240)
+* Add JavaScript API (WebAssembly) for Moonshine v2 models (#3241)
+* Add JavaScript API (node-addon) for Moonshine v2 models (#3242)
+* Add C# API for Moonshine v2 (#3243)
+* Add Go API for Moonshine v2 (#3244)
+* Add Dart API for Moonshine v2 (#3245)
+* Add Rust API for Moonshine v2 (#3247)
+* Add Pascal API for Moonshine v2 (#3248)
+* Build huggingface spaces for Moonshine v2 with WebAssembly (#3249)
+
 ## 1.12.27
 
 * Add Rust API for VAD (#3213)
