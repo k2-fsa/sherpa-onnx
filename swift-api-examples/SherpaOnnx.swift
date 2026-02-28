@@ -454,6 +454,9 @@ func sherpaOnnxOfflineFireRedAsrModelConfig(
   )
 }
 
+// there are two versions of Moonshine
+// For v1, you need four models: preprocessor, encoder, uncachedDecoder, cachedDecoder
+// For v2, you need two models: encoder, mergedDecoder
 func sherpaOnnxOfflineMoonshineModelConfig(
   preprocessor: String = "",
   encoder: String = "",
