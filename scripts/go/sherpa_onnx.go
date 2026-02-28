@@ -475,11 +475,17 @@ type OfflineFunASRNanoModelConfig struct {
 	Hotwords                    string
 }
 
+// For Moonshine v1, you need 4 models:
+//   - preprocessor, encoder, uncached_decoder, cached_decoder
+//
+// For Moonshine v2, you need 2 models:
+//   - encoder, merged_decoder
 type OfflineMoonshineModelConfig struct {
 	Preprocessor    string
 	Encoder         string
 	UncachedDecoder string
 	CachedDecoder   string
+	MergedDecoder   string
 }
 
 type OfflineTdnnModelConfig struct {
@@ -605,6 +611,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.moonshine.encoder = C.CString(config.ModelConfig.Moonshine.Encoder)
 	c.model_config.moonshine.uncached_decoder = C.CString(config.ModelConfig.Moonshine.UncachedDecoder)
 	c.model_config.moonshine.cached_decoder = C.CString(config.ModelConfig.Moonshine.CachedDecoder)
+	c.model_config.moonshine.merged_decoder = C.CString(config.ModelConfig.Moonshine.MergedDecoder)
 
 	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
 	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
@@ -691,6 +698,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.moonshine.encoder,
 		&c.model_config.moonshine.uncached_decoder,
 		&c.model_config.moonshine.cached_decoder,
+		&c.model_config.moonshine.merged_decoder,
 		&c.model_config.fire_red_asr.encoder,
 		&c.model_config.fire_red_asr.decoder,
 		&c.model_config.funasr_nano.encoder_adaptor,
