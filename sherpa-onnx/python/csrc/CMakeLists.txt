@@ -92,7 +92,20 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+  list(APPEND srcs online-websocket-server-app.cc)
+endif()
+
 pybind11_add_module(_sherpa_onnx ${srcs})
+
+if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+  target_compile_definitions(_sherpa_onnx PRIVATE ASIO_STANDALONE)
+  target_compile_definitions(_sherpa_onnx PRIVATE _WEBSOCKETPP_CPP11_STL_)
+  target_compile_definitions(_sherpa_onnx PRIVATE SHERPA_ONNX_ENABLE_WEBSOCKET=1)
+  if(NOT WIN32)
+    target_compile_options(_sherpa_onnx PRIVATE -Wno-deprecated-declarations)
+  endif()
+endif()
 
 if(APPLE)
   execute_process(

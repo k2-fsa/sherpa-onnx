@@ -85,3 +85,9 @@ from .keyword_spotter import KeywordSpotter
 from .offline_recognizer import OfflineRecognizer
 from .online_recognizer import OnlineRecognizer
 from .utils import text2token
+
+# Optional websocket server (only available if built with SHERPA_ONNX_ENABLE_WEBSOCKET)
+try:
+    from sherpa_onnx.lib._sherpa_onnx import start_online_websocket_server
+except ImportError:
+    pass

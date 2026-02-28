@@ -316,6 +316,13 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 
+if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+  list(APPEND sources
+    online-websocket-server-impl.cc
+    online-websocket-server-app.cc
+  )
+endif()
+
 # Always static build
 add_library(sherpa-onnx-core STATIC ${sources})
 
@@ -449,6 +456,15 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 
   if(SHERPA_ONNX_HAVE_CXXABI_H)
     target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_CXXABI_H=1)
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+  target_compile_definitions(sherpa-onnx-core PRIVATE ASIO_STANDALONE)
+  target_compile_definitions(sherpa-onnx-core PRIVATE _WEBSOCKETPP_CPP11_STL_)
+  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_WEBSOCKET=1)
+  if(NOT WIN32)
+    target_compile_options(sherpa-onnx-core PRIVATE -Wno-deprecated-declarations)
   endif()
 endif()
 
@@ -721,11 +737,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
 endif()
 
 if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
-  add_definitions(-DASIO_STANDALONE)
-  add_definitions(-D_WEBSOCKETPP_CPP11_STL_)
-
   add_executable(sherpa-onnx-online-websocket-server
-    online-websocket-server-impl.cc
     online-websocket-server.cc
   )
   target_link_libraries(sherpa-onnx-online-websocket-server sherpa-onnx-core)
