@@ -22,8 +22,8 @@ function createOfflineRecognizer() {
   return sherpa_onnx.createOfflineRecognizer(config);
 }
 
-recognizer = createOfflineRecognizer();
-stream = recognizer.createStream();
+const recognizer = createOfflineRecognizer();
+const stream = recognizer.createStream();
 
 const waveFilename = './sherpa-onnx-moonshine-tiny-en-int8/test_wavs/0.wav';
 const wave = sherpa_onnx.readWave(waveFilename);

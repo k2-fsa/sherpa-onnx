@@ -21,8 +21,8 @@ function createOfflineRecognizer() {
   return sherpa_onnx.createOfflineRecognizer(config);
 }
 
-recognizer = createOfflineRecognizer();
-stream = recognizer.createStream();
+const recognizer = createOfflineRecognizer();
+const stream = recognizer.createStream();
 
 const waveFilename =
     './sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs/0.wav';
