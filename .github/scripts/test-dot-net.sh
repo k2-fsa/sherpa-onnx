@@ -4,7 +4,11 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./offline-decode-files
+cd ./non-streaming-moonshine-v2-decode-files
+./run.sh
+rm -rf sherpa-onnx-moonshine-*
+
+cd ../offline-decode-files
 
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-fire-*

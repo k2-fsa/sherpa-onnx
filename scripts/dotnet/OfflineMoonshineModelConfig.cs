@@ -18,6 +18,7 @@ namespace SherpaOnnx
             Encoder = "";
             UncachedDecoder = "";
             CachedDecoder = "";
+            MergedDecoder = "";
         }
         [MarshalAs(UnmanagedType.LPStr)]
         public string Preprocessor;
