@@ -262,6 +262,7 @@ static SherpaOnnxOfflineMoonshineModelConfig GetOfflineMoonshineModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(uncached_decoder, uncachedDecoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(cached_decoder, cachedDecoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(merged_decoder, mergedDecoder);
 
   return c;
 }
@@ -406,6 +407,7 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.uncached_decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.cached_decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.merged_decoder);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.decoder);
