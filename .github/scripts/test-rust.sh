@@ -6,6 +6,8 @@ cd rust-api-examples
 
 ./run-version.sh
 
+./run-moonshine-v2.sh
+
 ./run-fire-red-asr-ctc.sh
 
 ./run-silero-vad-remove-silence.sh
