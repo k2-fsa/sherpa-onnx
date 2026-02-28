@@ -82,7 +82,7 @@ ls -lh
 
 git add .
 git commit -m "update model" || true
-git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/$hf_name main || true
+git push https://csukuangfj2:$HF_TOKEN@huggingface.co/spaces/$hf_name main || true
 cd ..
 rm -rf huggingface
 rm -rf $dst
