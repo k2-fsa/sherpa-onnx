@@ -9,6 +9,16 @@ git status
 ls -lh
 ls -lh node_modules
 
+echo "---test moonshine v2---"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test-offline-moonshine-v2.js
+
+rm -rf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
 echo "---test FireRedASR CTC---"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
 tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2

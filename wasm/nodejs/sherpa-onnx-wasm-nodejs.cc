@@ -23,7 +23,7 @@ static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) == 2 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineMoonshineModelConfig) == 4 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineMoonshineModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineCanaryModelConfig) == 5 * 4, "");
@@ -130,6 +130,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "encoder: %s\n", moonshine->encoder);
   fprintf(stdout, "uncached_decoder: %s\n", moonshine->uncached_decoder);
   fprintf(stdout, "cached_decoder: %s\n", moonshine->cached_decoder);
+  fprintf(stdout, "merged_decoder: %s\n", moonshine->merged_decoder);
 
   fprintf(stdout, "----------offline FireRedAsr model config----------\n");
   fprintf(stdout, "encoder: %s\n", fire_red_asr->encoder);

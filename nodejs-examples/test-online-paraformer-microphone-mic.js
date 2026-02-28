@@ -1,11 +1,15 @@
 // Copyright (c) 2023 Xiaomi Corporation (authors: Fangjun Kuang)
-const mic = require('mic'); // It uses `mic` for better compatibility, do check its [npm](https://www.npmjs.com/package/mic) before running it.
+const mic = require(
+    'mic');  // It uses `mic` for better compatibility, do check its
+             // [npm](https://www.npmjs.com/package/mic) before running it.
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOnlineRecognizer() {
   let onlineParaformerModelConfig = {
-    encoder: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
-    decoder: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
+    encoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
+    decoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
   };
 
   let onlineModelConfig = {
@@ -62,32 +66,32 @@ class SpeechSession {
   }
 
   shouldStartNewSession() {
-    return Date.now() - this.lastUpdateTime > 10000; // 10 seconds of silence
+    return Date.now() - this.lastUpdateTime > 10000;  // 10 seconds of silence
   }
 }
 
 function formatOutput() {
-    clearConsole();
-    console.log('\n=== Automated Speech Recognition ===');
-    console.log(`Current Session #${sessionCount}`);
-    console.log('Time:', new Date().toLocaleTimeString());
+  clearConsole();
+  console.log('\n=== Automated Speech Recognition ===');
+  console.log(`Current Session #${sessionCount}`);
+  console.log('Time:', new Date().toLocaleTimeString());
+  console.log('------------------------');
+
+  // 显示历史句子
+  if (currentSession.sentences.length > 0) {
+    console.log('Recognized Sentences:');
+    currentSession.sentences.forEach((sentence, index) => {
+      console.log(`[${sentence.timestamp}] ${index + 1}. ${sentence.text}`);
+    });
     console.log('------------------------');
-    
-    // 显示历史句子
-    if (currentSession.sentences.length > 0) {
-      console.log('Recognized Sentences:');
-      currentSession.sentences.forEach((sentence, index) => {
-        console.log(`[${sentence.timestamp}] ${index + 1}. ${sentence.text}`);
-      });
-      console.log('------------------------');
-    }
-    
-    // 显示当前正在识别的内容
-    if (currentSession.currentText) {
-      console.log('Recognizing:', currentSession.currentText);
-    }
   }
-  
+
+  // 显示当前正在识别的内容
+  if (currentSession.currentText) {
+    console.log('Recognizing:', currentSession.currentText);
+  }
+}
+
 
 const recognizer = createOnlineRecognizer();
 const stream = recognizer.createStream();
@@ -113,7 +117,7 @@ function exitHandler(options, exitCode) {
 const micInstance = mic({
   rate: recognizer.config.featConfig.sampleRate,
   channels: 1,
-  debug: false, // 关闭调试输出
+  debug: false,  // 关闭调试输出
   device: 'default',
   bitwidth: 16,
   encoding: 'signed-integer',
@@ -129,12 +133,12 @@ function startMic() {
       console.log('Mic phone started.');
       resolve();
     });
-    
+
     micInputStream.once('error', (err) => {
       console.error('Mic phone start error:', err);
       reject(err);
     });
-    
+
     micInstance.start();
   });
 }
@@ -142,7 +146,7 @@ function startMic() {
 micInputStream.on('data', buffer => {
   const int16Array = new Int16Array(buffer.buffer);
   const samples = new Float32Array(int16Array.length);
-  
+
   for (let i = 0; i < int16Array.length; i++) {
     samples[i] = int16Array[i] / 32768.0;
   }
@@ -163,7 +167,7 @@ micInputStream.on('data', buffer => {
       sessionCount++;
       currentSession = new SpeechSession();
     }
-    
+
     currentSession.addOrUpdateText(text);
     formatOutput();
   }
