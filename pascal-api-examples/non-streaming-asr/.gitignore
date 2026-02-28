@@ -8,6 +8,7 @@ paraformer_itn
 sense_voice
 telespeech_ctc
 moonshine
+moonshine_v2
 dolphin_ctc
 zipformer_ctc
 wenet_ctc
