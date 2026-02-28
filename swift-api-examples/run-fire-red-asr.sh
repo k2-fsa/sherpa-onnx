@@ -11,7 +11,7 @@ if [ ! -f ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx ];
   echo "Please download the pre-trained model for testing."
   echo "You can refer to"
   echo ""
-  echo "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/FireRedAsr/index.html"
+  echo "https://k2-fsa.github.io/sherpa/onnx/FireRedAsr/index.html"
   echo ""
   echo "for help"
 

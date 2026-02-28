@@ -458,13 +458,15 @@ func sherpaOnnxOfflineMoonshineModelConfig(
   preprocessor: String = "",
   encoder: String = "",
   uncachedDecoder: String = "",
-  cachedDecoder: String = ""
+  cachedDecoder: String = "",
+  mergedDecoder: String = ""
 ) -> SherpaOnnxOfflineMoonshineModelConfig {
   return SherpaOnnxOfflineMoonshineModelConfig(
     preprocessor: toCPointer(preprocessor),
     encoder: toCPointer(encoder),
     uncached_decoder: toCPointer(uncachedDecoder),
-    cached_decoder: toCPointer(cachedDecoder)
+    cached_decoder: toCPointer(cachedDecoder),
+    merged_decoder: toCPointer(mergedDecoder)
   )
 }
 
