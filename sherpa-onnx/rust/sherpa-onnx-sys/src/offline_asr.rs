@@ -60,6 +60,7 @@ pub struct OfflineMoonshineModelConfig {
     pub encoder: *const c_char,
     pub uncached_decoder: *const c_char,
     pub cached_decoder: *const c_char,
+    pub merged_decoder: *const c_char,
 }
 
 #[repr(C)]

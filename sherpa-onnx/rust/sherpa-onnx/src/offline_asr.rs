@@ -107,12 +107,18 @@ impl OfflineFireRedAsrModelConfig {
     }
 }
 
+/// For Moonshine v1, you need 4 models:
+///  - preprocessor, encoder, uncached_decoder, cached_decoder
+///
+/// For Moonshine v2, you need 2 models:
+///  - encoder, merged_decoder
 #[derive(Clone, Debug, Default)]
 pub struct OfflineMoonshineModelConfig {
     pub preprocessor: Option<String>,
     pub encoder: Option<String>,
     pub uncached_decoder: Option<String>,
     pub cached_decoder: Option<String>,
+    pub merged_decoder: Option<String>,
 }
 
 impl OfflineMoonshineModelConfig {
@@ -122,6 +128,7 @@ impl OfflineMoonshineModelConfig {
             encoder: to_c_ptr(&self.encoder, cstrings),
             uncached_decoder: to_c_ptr(&self.uncached_decoder, cstrings),
             cached_decoder: to_c_ptr(&self.cached_decoder, cstrings),
+            merged_decoder: to_c_ptr(&self.merged_decoder, cstrings),
         }
     }
 }
