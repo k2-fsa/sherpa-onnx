@@ -366,12 +366,18 @@ class OfflineFireRedAsrModelConfig {
   final String decoder;
 }
 
+// For Moonshine v1, you need 4 models:
+//  - preprocessor, encoder, uncachedDecoder, cachedDecoder
+//
+// For Moonshine v2, you need 2 models:
+//  - encoder, mergedDecoder
 class OfflineMoonshineModelConfig {
   const OfflineMoonshineModelConfig({
     this.preprocessor = '',
     this.encoder = '',
     this.uncachedDecoder = '',
     this.cachedDecoder = '',
+    this.mergedDecoder = '',
   });
 
   factory OfflineMoonshineModelConfig.fromJson(Map<String, dynamic> json) {
@@ -380,12 +386,13 @@ class OfflineMoonshineModelConfig {
       encoder: json['encoder'] as String? ?? '',
       uncachedDecoder: json['uncachedDecoder'] as String? ?? '',
       cachedDecoder: json['cachedDecoder'] as String? ?? '',
+      mergedDecoder: json['mergedDecoder'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder)';
+    return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder, mergedDecoder: $mergedDecoder)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -393,12 +400,14 @@ class OfflineMoonshineModelConfig {
     'encoder': encoder,
     'uncachedDecoder': uncachedDecoder,
     'cachedDecoder': cachedDecoder,
+    'mergedDecoder': mergedDecoder,
   };
 
   final String preprocessor;
   final String encoder;
   final String uncachedDecoder;
   final String cachedDecoder;
+  final String mergedDecoder;
 }
 
 class OfflineTdnnModelConfig {
@@ -870,6 +879,8 @@ class OfflineRecognizer {
         .toNativeUtf8();
     c.ref.model.moonshine.cachedDecoder = config.model.moonshine.cachedDecoder
         .toNativeUtf8();
+    c.ref.model.moonshine.mergedDecoder = config.model.moonshine.mergedDecoder
+        .toNativeUtf8();
 
     // FireRedAsr
     c.ref.model.fireRedAsr.encoder = config.model.fireRedAsr.encoder
@@ -983,6 +994,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
     calloc.free(c.ref.model.fireRedAsr.encoder);
+    calloc.free(c.ref.model.moonshine.mergedDecoder);
     calloc.free(c.ref.model.moonshine.cachedDecoder);
     calloc.free(c.ref.model.moonshine.uncachedDecoder);
     calloc.free(c.ref.model.moonshine.encoder);

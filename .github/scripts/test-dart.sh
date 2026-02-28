@@ -6,6 +6,10 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------Moonshine v2----------'
+./run-moonshine-v2.sh
+rm -rf sherpa-onnx-*
+
 echo '----------FireRedASR CTC----------'
 ./run-fire-red-asr-ctc.sh
 rm -rf sherpa-onnx-*

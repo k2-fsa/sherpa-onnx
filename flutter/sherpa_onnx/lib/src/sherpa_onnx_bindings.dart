@@ -418,6 +418,7 @@ final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> uncachedDecoder;
   external Pointer<Utf8> cachedDecoder;
+  external Pointer<Utf8> mergedDecoder;
 }
 
 final class SherpaOnnxOfflineFireRedAsrModelConfig extends Struct {
