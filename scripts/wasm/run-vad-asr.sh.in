@@ -52,22 +52,24 @@ git config --global user.name "Fangjun Kuang"
 export GIT_LFS_SKIP_SMUDGE=1
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
-rm -rf ms
-git clone https://www.modelscope.cn/studios/$ms_name.git ms
+if [ x"$ms_name" != x"" ]; then
+  rm -rf ms
+  git clone https://www.modelscope.cn/studios/$ms_name.git ms
 
-cd ms
-cp -v ../$dst/* .
+  cd ms
+  cp -v ../$dst/* .
 
-git status
-git lfs track "*.data"
-git lfs track "*.wasm"
-ls -lh
+  git status
+  git lfs track "*.data"
+  git lfs track "*.wasm"
+  ls -lh
 
-git add .
-git commit -m "update model" || true
-git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/$ms_name.git || true
-cd ..
-rm -rf ms
+  git add .
+  git commit -m "update model" || true
+  git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/$ms_name.git || true
+  cd ..
+  rm -rf ms
+fi
 
 rm -rf huggingface
 

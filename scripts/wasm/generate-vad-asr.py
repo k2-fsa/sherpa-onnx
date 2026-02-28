@@ -81,7 +81,7 @@ def get_models():
             mv -v LICENSE ../
             popd
             rm -rf $model_name
-            sed -i.bak 's/Zipformer/Moonshine v2 tiny-en supporting English 英文/g' ../index.html
+            sed -i.bak 's/Zipformer/Moonshine v2 tiny-en supporting English 英语/g' ../index.html
             git diff
             """,
         ),
@@ -98,7 +98,7 @@ def get_models():
             mv -v LICENSE ../
             popd
             rm -rf $model_name
-            sed -i.bak 's/Zipformer/Moonshine v2 tiny-ja supporting Japanese 日文/g' ../index.html
+            sed -i.bak 's/Zipformer/Moonshine v2 tiny-ja supporting Japanese 日语/g' ../index.html
             git diff
             """,
         ),
@@ -115,27 +115,28 @@ def get_models():
             mv -v LICENSE ../
             popd
             rm -rf $model_name
-            sed -i.bak 's/Zipformer/Moonshine v2 tiny-ko supporting Korean 日文/g' ../index.html
+            sed -i.bak 's/Zipformer/Moonshine v2 tiny-ko supporting Korean 韩语/g' ../index.html
             git diff
             """,
         ),
-        #  Model(
-        #      model_name="sherpa-onnx-moonshine-base-en-quantized-2026-02-27",
-        #      hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
-        #      ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
-        #      short_name="vad-asr-mooshine-v2-base-en",
-        #      cmd="""
-        #      pushd $model_name
-        #      mv -v encoder_model.ort ../moonshine-encoder.ort
-        #      mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
-        #      mv -v tokens.txt ../
-        #      mv -v LICENSE ../
-        #      popd
-        #      rm -rf $model_name
-        #      sed -i.bak 's/Zipformer/Moonshine v2 base-en supporting English 英文/g' ../index.html
-        #      git diff
-        #      """,
-        #  ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-en-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-en",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-en",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-en supporting English 英语/g' ../index.html
+            git diff
+            """,
+        ),
         Model(
             model_name="sherpa-onnx-moonshine-base-zh-quantized-2026-02-27",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-zh",
@@ -149,27 +150,100 @@ def get_models():
             mv -v LICENSE ../
             popd
             rm -rf $model_name
-            sed -i.bak 's/Zipformer/Moonshine v2 base-zh supporting Chinese 中文/g' ../index.html
+            sed -i.bak 's/Zipformer/Moonshine v2 base-zh supporting Chinese 普通话/g' ../index.html
             git diff
             """,
         ),
-        #  Model(
-        #      model_name="sherpa-onnx-moonshine-base-ja-quantized-2026-02-27",
-        #      hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
-        #      ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
-        #      short_name="vad-asr-mooshine-v2-base-ja",
-        #      cmd="""
-        #      pushd $model_name
-        #      mv -v encoder_model.ort ../moonshine-encoder.ort
-        #      mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
-        #      mv -v tokens.txt ../
-        #      mv -v LICENSE ../
-        #      popd
-        #      rm -rf $model_name
-        #      sed -i.bak 's/Zipformer/Moonshine v2 base-ja supporting Japanese 日文/g' ../index.html
-        #      git diff
-        #      """,
-        #  ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-ja-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ja",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-ja",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-ja supporting Japanese 日文/g' ../index.html
+            git diff
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-vi-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-vi",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-vi",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-vi",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-vi supporting Vietnamese 越南语/g' ../index.html
+            git diff
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-es-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-es",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-es",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-es",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-es supporting Spanish 西班牙语/g' ../index.html
+            git diff
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-ar-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ar",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-ar",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-ar",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-ar supporting Arabic 阿拉伯语/g' ../index.html
+            git diff
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-uk-quantized-2026-02-27",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-uk",
+            #  ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-moonshine-v2-base-uk",
+            ms="",
+            short_name="vad-asr-mooshine-v2-base-uk",
+            cmd="""
+            pushd $model_name
+            mv -v encoder_model.ort ../moonshine-encoder.ort
+            mv -v decoder_model_merged.ort ../moonshine-merged-decoder.ort
+            mv -v tokens.txt ../
+            mv -v LICENSE ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine v2 base-uk supporting Ukrainian 乌克兰语/g' ../index.html
+            git diff
+            """,
+        ),
         Model(
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-ja-ko-cantonese-sense-voice",
