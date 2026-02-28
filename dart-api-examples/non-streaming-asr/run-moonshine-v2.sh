@@ -12,7 +12,7 @@ fi
 
 dart run \
   ./bin/moonshine_v2.dart \
-  --encoder ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort\
+  --encoder ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort \
   --decoder ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/decoder_model_merged.ort \
   --tokens ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/tokens.txt \
   --input-wav ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/test_wavs/0.wav

@@ -1,4 +1,4 @@
-// Copyright (c)  202-2026  Xiaomi Corporation
+// Copyright (c)  2024-2026  Xiaomi Corporation
 import 'dart:io';
 
 import 'package:args/args.dart';
