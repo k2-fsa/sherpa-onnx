@@ -20,6 +20,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-matcha-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-pocket-impl.h"
+#include "sherpa-onnx/csrc/offline-tts-supertonic-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
@@ -52,6 +53,8 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsKittenImpl>(config);
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(config);
+  } else if (!config.model.supertonic.tts_config.empty()) {
+    return std::make_unique<OfflineTtsSupertonicImpl>(config);
   }
 
   SHERPA_ONNX_LOGE("Please provide a tts model.");
@@ -75,6 +78,8 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     return std::make_unique<OfflineTtsKittenImpl>(mgr, config);
   } else if (!config.model.pocket.lm_flow.empty()) {
     return std::make_unique<OfflineTtsPocketImpl>(mgr, config);
+  } else if (!config.model.supertonic.tts_config.empty()) {
+    return std::make_unique<OfflineTtsSupertonicImpl>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please provide a tts model.");

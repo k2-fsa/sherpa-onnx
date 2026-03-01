@@ -9,6 +9,8 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
+#include <cinttypes>
+#include <codecvt>
 #include <climits>
 #include <cstdint>
 #include <cstdlib>
@@ -141,6 +143,36 @@ void SplitStringToVector(const std::string &full, const char *delim,
       out->push_back(full.substr(start, found - start));
     start = found + 1;
   }
+}
+
+std::string Trim(const std::string &str) {
+  size_t start = 0;
+  while (start < str.size() &&
+         std::isspace(static_cast<unsigned char>(str[start]))) {
+    start++;
+  }
+  size_t end = str.size();
+  while (end > start &&
+         std::isspace(static_cast<unsigned char>(str[end - 1]))) {
+    end--;
+  }
+  return str.substr(start, end - start);
+}
+
+std::vector<std::string> SplitStringAndTrim(const std::string &str,
+                                            char delim) {
+  std::vector<std::string> result;
+  std::string delim_str(1, delim);
+  SplitStringToVector(str, delim_str.c_str(), true, &result);
+  // Trim whitespace from each part
+  for (auto &part : result) {
+    part = Trim(part);
+  }
+  // Remove empty strings after trimming
+  result.erase(std::remove_if(result.begin(), result.end(),
+                              [](const std::string &s) { return s.empty(); }),
+               result.end());
+  return result;
 }
 
 template <class F>
@@ -1106,6 +1138,46 @@ float ToFloatOrDefault(const std::string &s, float default_value) {
   }
 
   return value;
+}
+
+void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
+                      int64_t max_len, std::vector<float> *mask_flat,
+                      std::vector<int64_t> *mask_shape) {
+  // Validate input sizes
+  if (lengths.size() != static_cast<size_t>(bsz)) {
+    SHERPA_ONNX_LOGE("LengthToMaskFlat: lengths.size() (%zu) != bsz (%d)",
+                     lengths.size(), bsz);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  // Handle empty batch case
+  if (bsz == 0) {
+    mask_shape->assign({0, 1, 0});
+    mask_flat->clear();
+    return;
+  }
+
+  if (max_len == -1) {
+    max_len = *std::max_element(lengths.begin(), lengths.end());
+  }
+
+  if (max_len < 0) {
+    SHERPA_ONNX_LOGE("LengthToMaskFlat: max_len (%" PRId64 ") < 0", max_len);
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  mask_shape->assign({bsz, 1, max_len});
+
+  // Prevent overflow: use size_t for multiplication. Zero entire buffer so
+  // padding positions are 0 when vector is reused.
+  size_t total_size = static_cast<size_t>(bsz) * static_cast<size_t>(max_len);
+  mask_flat->assign(total_size, 0.0f);
+
+  for (int b = 0; b < bsz; ++b) {
+    int64_t len = lengths[b];
+    float *batch_mask = mask_flat->data() + b * max_len;
+    std::fill_n(batch_mask, len, 1.0f);
+  }
 }
 
 }  // namespace sherpa_onnx
