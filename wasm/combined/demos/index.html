@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherpa-ONNX Demos</title>
+  <link rel="stylesheet" href="common.css">
+  
+  <!-- Load the common JS first -->
+  <script src="common.js"></script>
+  
+  <!-- Load WASM module for validation -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  <script src="../sherpa-onnx-core.js"></script>
+  <script src="../sherpa-onnx-combined.js"></script>
+</head>
+<body>
+  <h1>Sherpa-ONNX Demos</h1>
+  
+  <div id="status">These demos showcase the modular capabilities of Sherpa-ONNX WebAssembly</div>
+  
+  <section>
+    <h2>Available Demos</h2>
+    <ul>
+      <li><a href="asr.html">Automatic Speech Recognition (ASR)</a></li>
+      <li><a href="tts.html">Text-to-Speech (TTS)</a></li>
+      <li><a href="vad.html">Voice Activity Detection (VAD)</a></li>
+      <li><a href="kws.html">Keyword Spotting (KWS)</a></li>
+    </ul>
+    
+    <h3>About These Demos</h3>
+    <p>Each demo uses the unified Sherpa-ONNX combined library but focuses on a single module for easier testing and validation.</p>
+    <p>The combined approach allows using just the modules you need in your own applications.</p>
+    
+    <h3>Memory Management</h3>
+    <p>Each demo includes an "Unload Model" button to demonstrate proper memory management:</p>
+    <ul>
+      <li>Explicit unloading frees WASM memory</li>
+      <li>Resources are tracked and properly cleaned up</li>
+      <li>Prevents memory leaks in long-running applications</li>
+    </ul>
+  </section>
+  
+  <section>
+    <h2>WASM Filesystem Validation</h2>
+    <p>Use this tool to verify that assets are correctly loaded in the WASM virtual filesystem.</p>
+    
+    <div class="controls" id="validation-controls">
+      <!-- Inspect button will be added here -->
+    </div>
+    
+    <div id="fs-validation-output"></div>
+  </section>
+  
+  <script>
+    // Initialize UI for the index page
+    function initializeUI() {
+      // Create filesystem validation button
+      const validationControls = document.getElementById('validation-controls');
+      const validationOutput = document.getElementById('fs-validation-output');
+      
+      if (typeof createInspectAssetsButton === 'function') {
+        createInspectAssetsButton(validationControls, validationOutput);
+      }
+    }
+    
+    // Execute when WASM module is ready
+    if (window.Module && window.Module.ready) {
+      initializeUI();
+    } else if (window.onSherpaOnnxReady) {
+      // Module not ready yet, will be handled by onSherpaOnnxReady
+      document.getElementById('status').textContent = 'Waiting for WASM module to initialize...';
+    }
+  </script>
+</body>
+</html>
