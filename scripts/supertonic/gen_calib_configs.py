@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c)  2026 zengyw
-
-"""
-Generate calibration configs (voice/text/lang) with diverse voices and text.
-See also https://github.com/supertone-inc/supertonic
-"""
+# Generate calibration configs (voice/text/lang) with diverse voices and text.
 
 import json
 import random
@@ -140,16 +136,13 @@ VOICE_STYLES = {
     ],
 }
 
-LANGS = ["en", "es", "pt", "fr", "ko"]
 SAMPLES_PER_LANG = 20
-
 
 def generate_config():
     configs = []
     random.seed(42)
 
-    for lang in LANGS:
-        sentences = SENTENCES[lang]
+    for lang, sentences in SENTENCES.items():
         voice_pool = VOICE_STYLES["M"] + VOICE_STYLES["F"]
         random.shuffle(voice_pool)
 

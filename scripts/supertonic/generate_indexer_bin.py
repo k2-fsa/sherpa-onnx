@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # Copyright    2026  zengyw
-# Generate unicode_indexer.bin from unicode_indexer.json (raw int32 array) for
-# runtime. Usage: python3 generate_indexer_bin.py [json_path] [bin_path]
+# Generate unicode_indexer.bin from unicode_indexer.json.
 
 import json
-import struct
 import sys
 from pathlib import Path
+
+import numpy as np
 
 
 def main():
@@ -20,16 +20,15 @@ def main():
         return 1
     with open(json_path, "r", encoding="utf-8") as f:
         arr = json.load(f)
+
     if not isinstance(arr, list):
         print(f"Error: JSON must be an array of integers, got {type(arr)}")
         return 1
+
+    array = np.array(arr, dtype=np.int32)
+
     with open(bin_path, "wb") as f:
-        for v in arr:
-            vi = int(v)
-            if vi < -(2**31) or vi > 2**31 - 1:
-                print(f"Error: value {vi} out of int32 range")
-                return 1
-            f.write(struct.pack("<i", vi))
+        f.write(array.tobytes())
     print(f"Wrote {len(arr)} int32 -> {bin_path}")
     return 0
 

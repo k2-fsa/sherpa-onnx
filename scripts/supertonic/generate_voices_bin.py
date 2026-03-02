@@ -1,59 +1,43 @@
 #!/usr/bin/env python3
 # Copyright    2026  zengyw
 # Merge Supertonic voice style JSONs from a directory into one voice.bin
-# (multi-speaker; use --sid 0..N-1 at runtime).
-# Usage: python3 generate_voices_bin.py [input_dir] [output_bin]
 
 import json
-import struct
 import sys
 from pathlib import Path
 
-
-def flatten_3d_array(data):
-    result = []
-    for batch in data:
-        for row in batch:
-            result.extend(row)
-    return result
-
+import numpy as np
 
 def load_one_json(json_path):
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     style_ttl = data["style_ttl"]
-    ttl_dims = style_ttl["dims"]
-    ttl_data_flat = flatten_3d_array(style_ttl["data"])
+    ttl_dims = tuple(style_ttl["dims"])
+    ttl_arr = np.array(style_ttl["data"], dtype=np.float32)
+
+    if ttl_arr.shape != ttl_dims:
+        raise ValueError(
+            f"ttl shape {ttl_arr.shape} != ttl_dims {ttl_dims}"
+        )
     style_dp = data["style_dp"]
-    dp_dims = style_dp["dims"]
-    dp_data_flat = flatten_3d_array(style_dp["data"])
-    ttl_size = 1
-    for d in ttl_dims:
-        ttl_size *= d
-    if len(ttl_data_flat) != ttl_size:
+    dp_dims = tuple(style_dp["dims"])
+    dp_arr = np.array(style_dp["data"], dtype=np.float32)
+
+    if dp_arr.shape != dp_dims:
         raise ValueError(
-            f"ttl_dims product ({ttl_size}) != ttl_data size ({len(ttl_data_flat)})"
+            f"dp shape {dp_arr.shape} != dp_dims {dp_dims}"
         )
-    dp_size = 1
-    for d in dp_dims:
-        dp_size *= d
-    if len(dp_data_flat) != dp_size:
-        raise ValueError(
-            f"dp_dims product ({dp_size}) != dp_data size ({len(dp_data_flat)})"
-        )
-    return ttl_dims, ttl_data_flat, dp_dims, dp_data_flat
+    return ttl_dims, ttl_arr, dp_dims, dp_arr
 
 
 def merge_jsons_to_binary(json_paths, output_path):
-    """Merge N JSONs into one voice.bin (shape [N, d1, d2])."""
     if not json_paths:
         raise ValueError("No JSON paths given")
-    ttl_dims_list = []
-    ttl_flat_list = []
-    dp_dims_list = []
-    dp_flat_list = []
+    ttl_arrays = []
+    dp_arrays = []
+    ref_ttl = ref_dp = None
     for p in json_paths:
-        ttl_dims, ttl_flat, dp_dims, dp_flat = load_one_json(p)
+        ttl_dims, ttl_arr, dp_dims, dp_arr = load_one_json(p)
         if len(ttl_dims) != 3 or ttl_dims[0] != 1:
             raise ValueError(
                 f"{p}: expected ttl dims [1, d1, d2], got {ttl_dims}"
@@ -62,32 +46,27 @@ def merge_jsons_to_binary(json_paths, output_path):
             raise ValueError(
                 f"{p}: expected dp dims [1, d1, d2], got {dp_dims}"
             )
-        ttl_dims_list.append(ttl_dims)
-        ttl_flat_list.append(ttl_flat)
-        dp_dims_list.append(dp_dims)
-        dp_flat_list.append(dp_flat)
-    ref_ttl = ttl_dims_list[0]
-    ref_dp = dp_dims_list[0]
-    for i, (ttl, dp) in enumerate(zip(ttl_dims_list, dp_dims_list)):
-        if ttl[1:] != ref_ttl[1:] or dp[1:] != ref_dp[1:]:
+        if ref_ttl is None:
+            ref_ttl, ref_dp = ttl_dims, dp_dims
+        elif ttl_dims[1:] != ref_ttl[1:] or dp_dims[1:] != ref_dp[1:]:
             raise ValueError(
-                f"File {json_paths[i]} has dims ttl{ttl} dp{dp}; "
+                f"File {p} has dims ttl{ttl_dims} dp{dp_dims}; "
                 f"expected ttl[1:]={ref_ttl[1:]}, dp[1:]={ref_dp[1:]}"
             )
+        ttl_arrays.append(ttl_arr)
+        dp_arrays.append(dp_arr)
+
     n = len(json_paths)
-    out_ttl_dims = [n, ref_ttl[1], ref_ttl[2]]
-    out_dp_dims = [n, ref_dp[1], ref_dp[2]]
+    ttl_stack = np.concatenate(ttl_arrays, axis=0)
+    dp_stack = np.concatenate(dp_arrays, axis=0)
+    out_ttl_dims = np.array([n, ref_ttl[1], ref_ttl[2]], dtype=np.int64)
+    out_dp_dims = np.array([n, ref_dp[1], ref_dp[2]], dtype=np.int64)
+
     with open(output_path, "wb") as f:
-        for d in out_ttl_dims:
-            f.write(struct.pack("<q", d))
-        for d in out_dp_dims:
-            f.write(struct.pack("<q", d))
-        for flat in ttl_flat_list:
-            for val in flat:
-                f.write(struct.pack("<f", val))
-        for flat in dp_flat_list:
-            for val in flat:
-                f.write(struct.pack("<f", val))
+        f.write(out_ttl_dims.tobytes())
+        f.write(out_dp_dims.tobytes())
+        f.write(ttl_stack.ravel().tobytes())
+        f.write(dp_stack.ravel().tobytes())
     print(f"Merged {n} voice(s) -> {output_path} (sid 0..{n - 1})")
 
 
@@ -104,14 +83,17 @@ def main():
         print(f"Error: input dir does not exist or not a directory: {input_dir}")
         return 1
     json_files = sorted(input_dir.glob("*.json"))
+
     if not json_files:
         print(f"No JSON files found in {input_dir}")
         return 1
+
     try:
         merge_jsons_to_binary([str(p) for p in json_files], str(output_path))
     except Exception as e:
         print(f"Error: {e}")
         return 1
+
     return 0
 
 

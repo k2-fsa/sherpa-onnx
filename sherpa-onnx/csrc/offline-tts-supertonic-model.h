@@ -49,17 +49,15 @@ class OfflineTtsSupertonicModel {
   const SupertonicConfig &GetConfig() const;
   int32_t GetSampleRate() const;
 
-  // Forward methods for inference
-  Ort::Value RunDurationPredictor(std::vector<Ort::Value> inputs) const;
-  Ort::Value RunTextEncoder(std::vector<Ort::Value> inputs) const;
-  Ort::Value RunVectorEstimator(std::vector<Ort::Value> inputs) const;
-  Ort::Value RunVocoder(std::vector<Ort::Value> inputs) const;
-
-  // GPU IO Binding support
-  bool UseCudaIOBinding() const;
-  const Ort::MemoryInfo &GetCpuMemoryInfo() const;
-  const Ort::MemoryInfo *GetCudaMemoryInfo() const;
-  std::string GetProvider() const;
+  Ort::Value RunDurationPredictor(Ort::Value text_ids, Ort::Value style_dp,
+                                  Ort::Value text_mask) const;
+  Ort::Value RunTextEncoder(Ort::Value text_ids, Ort::Value style_ttl,
+                            Ort::Value text_mask) const;
+  Ort::Value RunVectorEstimator(Ort::Value noisy_latent, Ort::Value text_emb,
+                                Ort::Value style_ttl, Ort::Value latent_mask,
+                                Ort::Value text_mask, Ort::Value current_step,
+                                Ort::Value total_step) const;
+  Ort::Value RunVocoder(Ort::Value latent) const;
 
  private:
   class Impl;

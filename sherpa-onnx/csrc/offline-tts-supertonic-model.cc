@@ -22,8 +22,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include <cstring>
-
+#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -32,22 +31,14 @@
 
 namespace sherpa_onnx {
 
-namespace {
-static inline bool IsCudaProvider(const std::string &provider) {
-  return provider == "cuda";
-}
-}  // namespace
+using json = nlohmann::json;
 
 class OfflineTtsSupertonicModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_(GetSessionOptions(config)),
-        cpu_mem_info_(
-            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
-        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
-    InitCudaIOBinding();
+        sess_opts_(GetSessionOptions(config)) {
     Init();
   }
 
@@ -55,25 +46,19 @@ class OfflineTtsSupertonicModel::Impl {
   Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_(GetSessionOptions(config)),
-        cpu_mem_info_(
-            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
-        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
-    InitCudaIOBinding();
+        sess_opts_(GetSessionOptions(config)) {
     Init(mgr);
   }
 
   const SupertonicConfig &GetConfig() const { return cfg_; }
   int32_t GetSampleRate() const { return cfg_.ae.sample_rate; }
 
-  bool UseCudaIOBinding() const { return use_cuda_iobinding_; }
-  const Ort::MemoryInfo &GetCpuMemoryInfo() const { return cpu_mem_info_; }
-  const Ort::MemoryInfo *GetCudaMemoryInfo() const {
-    return cuda_mem_info_.get();
-  }
-  std::string GetProvider() const { return config_.provider; }
-
-  Ort::Value RunDurationPredictor(std::vector<Ort::Value> inputs) const {
+  Ort::Value RunDurationPredictor(Ort::Value text_ids, Ort::Value style_dp,
+                                  Ort::Value text_mask) const {
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(text_ids));
+    inputs.push_back(std::move(style_dp));
+    inputs.push_back(std::move(text_mask));
     auto outputs =
         dp_sess_->Run(Ort::RunOptions{nullptr}, dp_input_names_ptr_.data(),
                       inputs.data(), inputs.size(), dp_output_names_ptr_.data(),
@@ -81,7 +66,12 @@ class OfflineTtsSupertonicModel::Impl {
     return std::move(outputs[0]);
   }
 
-  Ort::Value RunTextEncoder(std::vector<Ort::Value> inputs) const {
+  Ort::Value RunTextEncoder(Ort::Value text_ids, Ort::Value style_ttl,
+                            Ort::Value text_mask) const {
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(text_ids));
+    inputs.push_back(std::move(style_ttl));
+    inputs.push_back(std::move(text_mask));
     auto outputs = text_enc_sess_->Run(
         Ort::RunOptions{nullptr}, text_enc_input_names_ptr_.data(),
         inputs.data(), inputs.size(), text_enc_output_names_ptr_.data(),
@@ -89,7 +79,18 @@ class OfflineTtsSupertonicModel::Impl {
     return std::move(outputs[0]);
   }
 
-  Ort::Value RunVectorEstimator(std::vector<Ort::Value> inputs) const {
+  Ort::Value RunVectorEstimator(Ort::Value noisy_latent, Ort::Value text_emb,
+                                Ort::Value style_ttl, Ort::Value latent_mask,
+                                Ort::Value text_mask, Ort::Value current_step,
+                                Ort::Value total_step) const {
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(noisy_latent));
+    inputs.push_back(std::move(text_emb));
+    inputs.push_back(std::move(style_ttl));
+    inputs.push_back(std::move(latent_mask));
+    inputs.push_back(std::move(text_mask));
+    inputs.push_back(std::move(current_step));
+    inputs.push_back(std::move(total_step));
     auto outputs = vector_est_sess_->Run(
         Ort::RunOptions{nullptr}, vector_est_input_names_ptr_.data(),
         inputs.data(), inputs.size(), vector_est_output_names_ptr_.data(),
@@ -97,7 +98,9 @@ class OfflineTtsSupertonicModel::Impl {
     return std::move(outputs[0]);
   }
 
-  Ort::Value RunVocoder(std::vector<Ort::Value> inputs) const {
+  Ort::Value RunVocoder(Ort::Value latent) const {
+    std::vector<Ort::Value> inputs;
+    inputs.push_back(std::move(latent));
     auto outputs = vocoder_sess_->Run(
         Ort::RunOptions{nullptr}, vocoder_input_names_ptr_.data(),
         inputs.data(), inputs.size(), vocoder_output_names_ptr_.data(),
@@ -283,21 +286,15 @@ class OfflineTtsSupertonicModel::Impl {
     PrintModelInfos();
   }
 
-  // Load config from binary (4 x int32 LE: sample_rate, base_chunk_size,
-  // chunk_compress_factor, latent_dim). Shared by both LoadConfig variants.
-  void LoadConfigFromBinary(const char *data, size_t size) {
-    const size_t kExpectedSize = 4 * sizeof(int32_t);
-    if (size < kExpectedSize) {
-      SHERPA_ONNX_LOGE("tts.bin too small: %zu (expected %zu)", size,
-                       kExpectedSize);
+  void ParseConfig(const json &j) {
+    if (j.find("ae") == j.end() || j.find("ttl") == j.end()) {
+      SHERPA_ONNX_LOGE("Invalid config file: missing 'ae' or 'ttl' section");
       SHERPA_ONNX_EXIT(-1);
     }
-    int32_t vals[4];
-    std::memcpy(vals, data, kExpectedSize);
-    cfg_.ae.sample_rate = vals[0];
-    cfg_.ae.base_chunk_size = vals[1];
-    cfg_.ttl.chunk_compress_factor = vals[2];
-    cfg_.ttl.latent_dim = vals[3];
+    cfg_.ae.sample_rate = j["ae"]["sample_rate"];
+    cfg_.ae.base_chunk_size = j["ae"]["base_chunk_size"];
+    cfg_.ttl.chunk_compress_factor = j["ttl"]["chunk_compress_factor"];
+    cfg_.ttl.latent_dim = j["ttl"]["latent_dim"];
     if (cfg_.ae.sample_rate <= 0) {
       SHERPA_ONNX_LOGE("Invalid sample_rate: %d", cfg_.ae.sample_rate);
       SHERPA_ONNX_EXIT(-1);
@@ -318,41 +315,30 @@ class OfflineTtsSupertonicModel::Impl {
   }
 
   void LoadConfig(const std::string &config_path) {
-    std::vector<char> buf = ReadFile(config_path);
+    auto buf = ReadFile(config_path);
     if (buf.empty()) {
       SHERPA_ONNX_LOGE("Failed to read config: %s", config_path.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
-    LoadConfigFromBinary(buf.data(), buf.size());
+    json j = LoadJsonFromBuffer(buf);
+    ParseConfig(j);
   }
 
   template <typename Manager>
   void LoadConfig(Manager *mgr, const std::string &config_path) {
-    std::vector<char> buf = ReadFile(mgr, config_path);
+    auto buf = ReadFile(mgr, config_path);
     if (buf.empty()) {
       SHERPA_ONNX_LOGE("Failed to read config: %s", config_path.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
-    LoadConfigFromBinary(buf.data(), buf.size());
-  }
-
-  void InitCudaIOBinding() {
-    use_cuda_iobinding_ =
-        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
-    if (use_cuda_iobinding_) {
-      cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
-          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
-    }
+    json j = LoadJsonFromBuffer(buf);
+    ParseConfig(j);
   }
 
   OfflineTtsModelConfig config_;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   SupertonicConfig cfg_;
-  Ort::MemoryInfo cpu_mem_info_;
-  std::unique_ptr<Ort::MemoryInfo> cuda_mem_info_;
-  bool use_cuda_iobinding_ = false;
-  bool is_cpu_provider_ = false;
 
   std::unique_ptr<Ort::Session> dp_sess_;
   std::unique_ptr<Ort::Session> text_enc_sess_;
@@ -389,39 +375,29 @@ int32_t OfflineTtsSupertonicModel::GetSampleRate() const {
 }
 
 Ort::Value OfflineTtsSupertonicModel::RunDurationPredictor(
-    std::vector<Ort::Value> inputs) const {
-  return impl_->RunDurationPredictor(std::move(inputs));
+    Ort::Value text_ids, Ort::Value style_dp, Ort::Value text_mask) const {
+  return impl_->RunDurationPredictor(std::move(text_ids), std::move(style_dp),
+                                     std::move(text_mask));
 }
 
 Ort::Value OfflineTtsSupertonicModel::RunTextEncoder(
-    std::vector<Ort::Value> inputs) const {
-  return impl_->RunTextEncoder(std::move(inputs));
+    Ort::Value text_ids, Ort::Value style_ttl, Ort::Value text_mask) const {
+  return impl_->RunTextEncoder(std::move(text_ids), std::move(style_ttl),
+                               std::move(text_mask));
 }
 
 Ort::Value OfflineTtsSupertonicModel::RunVectorEstimator(
-    std::vector<Ort::Value> inputs) const {
-  return impl_->RunVectorEstimator(std::move(inputs));
+    Ort::Value noisy_latent, Ort::Value text_emb, Ort::Value style_ttl,
+    Ort::Value latent_mask, Ort::Value text_mask, Ort::Value current_step,
+    Ort::Value total_step) const {
+  return impl_->RunVectorEstimator(
+      std::move(noisy_latent), std::move(text_emb), std::move(style_ttl),
+      std::move(latent_mask), std::move(text_mask), std::move(current_step),
+      std::move(total_step));
 }
 
-Ort::Value OfflineTtsSupertonicModel::RunVocoder(
-    std::vector<Ort::Value> inputs) const {
-  return impl_->RunVocoder(std::move(inputs));
-}
-
-bool OfflineTtsSupertonicModel::UseCudaIOBinding() const {
-  return impl_->UseCudaIOBinding();
-}
-
-const Ort::MemoryInfo &OfflineTtsSupertonicModel::GetCpuMemoryInfo() const {
-  return impl_->GetCpuMemoryInfo();
-}
-
-const Ort::MemoryInfo *OfflineTtsSupertonicModel::GetCudaMemoryInfo() const {
-  return impl_->GetCudaMemoryInfo();
-}
-
-std::string OfflineTtsSupertonicModel::GetProvider() const {
-  return impl_->GetProvider();
+Ort::Value OfflineTtsSupertonicModel::RunVocoder(Ort::Value latent) const {
+  return impl_->RunVocoder(std::move(latent));
 }
 
 OfflineTtsSupertonicModel::OfflineTtsSupertonicModel(

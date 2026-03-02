@@ -23,10 +23,8 @@ class SupertonicUnicodeProcessor {
   SupertonicUnicodeProcessor(Manager *mgr,
                              const std::string &unicode_indexer_path);
 
-  // Process text list to text IDs and mask
-  void Process(const std::vector<std::string> &text_list,
-               const std::vector<std::string> &lang_list,
-               std::vector<std::vector<int64_t>> *text_ids,
+  void Process(const std::string &text, const std::string &lang,
+               std::vector<int64_t> *text_ids,
                std::vector<float> *text_mask_flat,
                std::vector<int64_t> *text_mask_shape) const;
 

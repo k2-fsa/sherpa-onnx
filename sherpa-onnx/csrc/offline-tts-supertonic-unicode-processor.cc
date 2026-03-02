@@ -333,7 +333,6 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
   }
   result = Trim(spaces_fixed);
 
-  // Add period if text doesn't end with punctuation
   if (!result.empty()) {
     char last_char = result.back();
     bool ends_with_punct =
@@ -358,7 +357,6 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
     }
   }
 
-  // Validate language
   bool valid_lang = false;
   for (const auto &available_lang : kSupertonicAvailableLangs) {
     if (lang == available_lang) {
@@ -425,56 +423,21 @@ void SupertonicUnicodeProcessor::GetTextMask(
 }
 
 void SupertonicUnicodeProcessor::Process(
-    const std::vector<std::string> &text_list,
-    const std::vector<std::string> &lang_list,
-    std::vector<std::vector<int64_t>> *text_ids,
-    std::vector<float> *text_mask_flat,
+    const std::string &text, const std::string &lang,
+    std::vector<int64_t> *text_ids, std::vector<float> *text_mask_flat,
     std::vector<int64_t> *text_mask_shape) const {
-  // Validate input sizes
-  if (text_list.size() != lang_list.size()) {
-    SHERPA_ONNX_LOGE(
-        "Process: text_list.size() (%zu) != lang_list.size() (%zu)",
-        text_list.size(), lang_list.size());
-    SHERPA_ONNX_EXIT(-1);
+  std::string processed = PreprocessText(text, lang);
+  std::vector<uint16_t> unicode_vals = TextToUnicodeValues(processed);
+  int64_t seq_len = static_cast<int64_t>(unicode_vals.size());
+
+  text_ids->resize(static_cast<size_t>(seq_len));
+  for (int64_t j = 0; j < seq_len; ++j) {
+    size_t u = static_cast<size_t>(unicode_vals[static_cast<size_t>(j)]);
+    (*text_ids)[static_cast<size_t>(j)] =
+        (u < indexer_.size()) ? static_cast<int64_t>(indexer_[u]) : 0;
   }
-
-  // Handle empty batch case to avoid UB with std::max_element
-  if (text_list.empty()) {
-    text_ids->clear();
-    GetTextMask(std::vector<int64_t>(), text_mask_flat, text_mask_shape);
-    return;
-  }
-
-  std::vector<std::string> processed_texts;
-  for (size_t i = 0; i < text_list.size(); i++) {
-    processed_texts.push_back(PreprocessText(text_list[i], lang_list[i]));
-  }
-
-  std::vector<std::vector<uint16_t>> all_unicode_vals;
-  std::vector<int64_t> text_ids_lengths;
-  for (const auto &text : processed_texts) {
-    auto unicode_vals = TextToUnicodeValues(text);
-    text_ids_lengths.push_back(static_cast<int64_t>(unicode_vals.size()));
-    all_unicode_vals.push_back(std::move(unicode_vals));
-  }
-
-  // text_ids_lengths is guaranteed to be non-empty here (same size as
-  // text_list)
-  int64_t max_len =
-      *std::max_element(text_ids_lengths.begin(), text_ids_lengths.end());
-
-  text_ids->resize(text_list.size());
-  for (size_t i = 0; i < all_unicode_vals.size(); i++) {
-    (*text_ids)[i].resize(max_len, 0);
-    const auto &unicode_vals = all_unicode_vals[i];
-    for (size_t j = 0; j < unicode_vals.size(); j++) {
-      if (unicode_vals[j] < indexer_.size()) {
-        (*text_ids)[i][j] = static_cast<int64_t>(indexer_[unicode_vals[j]]);
-      }
-    }
-  }
-
-  GetTextMask(text_ids_lengths, text_mask_flat, text_mask_shape);
+  GetTextMask(std::vector<int64_t>(1, seq_len), text_mask_flat,
+              text_mask_shape);
 }
 
 #if __ANDROID_API__ >= 9

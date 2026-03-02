@@ -9,6 +9,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_IMPL_H_
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,18 +41,25 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
       GeneratedAudioCallback callback = nullptr) const override;
 
  private:
-  GeneratedAudio Process(const std::vector<std::string> &text_list,
-                         const std::vector<std::string> &lang_list,
-                         const SupertonicStyle &style, int32_t num_steps,
-                         float speed) const;
+  GeneratedAudio Process(const std::string &text, const std::string &lang,
+                         int64_t sid, int32_t num_steps, float speed) const;
 
   GeneratedAudio ProcessChunksAndConcatenate(
       const std::vector<std::string> &text_chunks, const std::string &lang,
-      const SupertonicStyle &style, int32_t num_steps, float speed,
-      float silence_duration, GeneratedAudioCallback callback) const;
+      int64_t sid, int32_t num_steps, float speed, float silence_duration,
+      GeneratedAudioCallback callback) const;
 
   void InitVoiceStyle(const std::vector<char> &buf);
-  SupertonicStyle GetStyleForSid(int64_t sid) const;
+
+  struct StyleSliceView {
+    float *ttl_data;
+    size_t ttl_size;
+    std::array<int64_t, 3> ttl_shape;
+    float *dp_data;
+    size_t dp_size;
+    std::array<int64_t, 3> dp_shape;
+  };
+  void GetStyleSliceForSid(int64_t sid, StyleSliceView *out) const;
 
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsSupertonicModel> model_;

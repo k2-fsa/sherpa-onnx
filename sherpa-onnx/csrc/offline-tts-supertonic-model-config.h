@@ -1,10 +1,6 @@
 // sherpa-onnx/csrc/offline-tts-supertonic-model-config.h
 //
 // Copyright (c)  2026 zengyw
-//
-// This file is based on Supertonic TTS
-// (https://github.com/Supertone-Inc/supertonic) which is licensed under MIT
-// License (Copyright (c) 2025 Supertone Inc.)
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_MODEL_CONFIG_H_
@@ -22,7 +18,7 @@ struct OfflineTtsSupertonicModelConfig {
   std::string vector_estimator;
   std::string vocoder;
 
-  // Path to TTS config file (binary; sample_rate, base_chunk_size, etc.)
+  // Path to tts.json (TTS config: ae.sample_rate, ae.base_chunk_size, etc.)
   std::string tts_config;
 
   // Path to unicode_indexer.bin (raw int32 array)
