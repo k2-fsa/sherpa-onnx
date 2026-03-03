@@ -277,7 +277,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
       (lang == "ko")
           ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
           : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
-  if (max_len <= 0) {
+  if (max_len == 0) {
     SHERPA_ONNX_LOGE("Max length must be > 0. Given: %zu", max_len);
     SHERPA_ONNX_EXIT(-1);
   }
