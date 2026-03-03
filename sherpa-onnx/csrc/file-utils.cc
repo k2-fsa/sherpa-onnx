@@ -5,24 +5,28 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 
 #include <fstream>
+#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <limits.h>
-#include <stdlib.h>
-#endif
-
 #include "sherpa-onnx/csrc/macros.h"
+
+namespace sherpa_onnx {
+  std::wstring ToWideString(const std::string &s);
+}  // namespace sherpa_onnx
 
 namespace sherpa_onnx {
 
 bool FileExists(const std::string &filename) {
+#ifdef _WIN32
+  std::wstring wide_path = ToWideString(filename);
+  std::ifstream file(wide_path);
+  return file.good();
+#else
   return std::ifstream(filename).good();
+#endif
 }
 
 void AssertFileExists(const std::string &filename) {
@@ -33,7 +37,12 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
+#ifdef _WIN32
+  std::wstring wide_path = ToWideString(filename);
+  std::ifstream file(wide_path, std::ios::binary | std::ios::ate);
+#else
   std::ifstream file(filename, std::ios::binary | std::ios::ate);
+#endif
   if (!file.is_open()) {
     return {};
   }
@@ -119,33 +128,23 @@ std::string ResolveAbsolutePath(const std::string &path) {
     return path;
   }
 
-#ifdef _WIN32
-  // Check if path is already absolute (drive letter or UNC path)
-  if ((path.size() > 1 && path[1] == ':') ||
-      (path.size() > 1 && path[0] == '\\' && path[1] == '\\')) {
+  try {
+    std::filesystem::path fs_path(path);
+    
+    // If already absolute, return normalized path
+    if (fs_path.is_absolute()) {
+      return fs_path.lexically_normal().u8string();
+    }
+    
+    // Convert to absolute path and normalize
+    std::filesystem::path abs_path = std::filesystem::absolute(fs_path);
+    abs_path = abs_path.lexically_normal();
+    
+    return abs_path.u8string();
+  } catch (const std::filesystem::filesystem_error&) {
+    // If conversion fails, return original path
     return path;
   }
-
-  char buffer[MAX_PATH];
-  if (GetFullPathNameA(path.c_str(), MAX_PATH, buffer, nullptr)) {
-    return std::string(buffer);
-  }
-
-  return path;  // fallback on failure
-
-#else
-  // POSIX: absolute paths start with '/'
-  if (path[0] == '/') {
-    return path;
-  }
-
-  char buffer[PATH_MAX];
-  if (realpath(path.c_str(), buffer)) {
-    return std::string(buffer);
-  }
-
-  return path;  // fallback on failure
-#endif
 }
 
 }  // namespace sherpa_onnx
