@@ -14,10 +14,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
-  std::wstring ToWideString(const std::string &s);
-}  // namespace sherpa_onnx
-
-namespace sherpa_onnx {
+std::wstring ToWideString(const std::string &s);
 
 bool FileExists(const std::string &filename) {
   try {
@@ -29,7 +26,7 @@ bool FileExists(const std::string &filename) {
 #endif
     return std::filesystem::exists(file_path) && 
            std::filesystem::is_regular_file(file_path);
-  } catch (const std::filesystem::filesystem_error&) {
+  } catch (const std::exception&) {
     return false;
   }
 }
@@ -63,7 +60,7 @@ std::vector<char> ReadFile(const std::string &filename) {
     }
 
     return buffer;
-  } catch (const std::filesystem::filesystem_error&) {
+  } catch (const std::exception&) {
     return {};
   }
 }
@@ -156,7 +153,7 @@ std::string ResolveAbsolutePath(const std::string &path) {
     abs_path = abs_path.lexically_normal();
     
     return abs_path.u8string();
-  } catch (const std::filesystem::filesystem_error&) {
+  } catch (const std::exception&) {
     // If conversion fails, return original path
     return path;
   }
