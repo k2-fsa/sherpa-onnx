@@ -21,7 +21,6 @@ fi
 # Stage control: run from stage N to stop_stage M
 # Usage: ./run.sh [STAGE] [STOP_STAGE]
 # Default: run all stages (stage=0, stop-stage=4)
-
 usage() {
     echo "Usage: $0 [STAGE] [STOP_STAGE]"
     echo ""
@@ -41,7 +40,7 @@ usage() {
     echo "  ./run.sh 1 2         # Run stages 1-2 only"
     echo "  ./run.sh 3            # Only run stage 3"
     echo "  ./run.sh 0 0         # Only download models"
-    echo "  ./run.sh 4            # Only generate voice.bin"
+    echo "  ./run.sh 4            # Only generate voice.bin, unicode_indexer.bin"
 }
 
 case "${1:-}" in

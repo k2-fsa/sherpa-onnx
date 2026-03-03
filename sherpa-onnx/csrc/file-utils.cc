@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "nlohmann/json.hpp"
-
 #ifdef _WIN32
 #include <windows.h>
 #else

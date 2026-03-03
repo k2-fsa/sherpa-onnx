@@ -8,25 +8,45 @@ from pathlib import Path
 
 import numpy as np
 
+
 def load_one_json(json_path):
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    if "style_ttl" not in data:
+        raise ValueError(f"{json_path}: missing key 'style_ttl'")
+    if "style_dp" not in data:
+        raise ValueError(f"{json_path}: missing key 'style_dp'")
+
     style_ttl = data["style_ttl"]
-    ttl_dims = tuple(style_ttl["dims"])
-    ttl_arr = np.array(style_ttl["data"], dtype=np.float32)
+    if "dims" not in style_ttl or "data" not in style_ttl:
+        raise ValueError(f"{json_path}: 'style_ttl' must contain keys 'dims' and 'data'")
+    ttl_dims = tuple(int(x) for x in style_ttl["dims"])
+    ttl_arr = np.asarray(style_ttl["data"], dtype=np.float32)
 
-    if ttl_arr.shape != ttl_dims:
+    ttl_size = int(np.prod(ttl_dims)) if len(ttl_dims) > 0 else 0
+    if ttl_arr.size != ttl_size:
         raise ValueError(
-            f"ttl shape {ttl_arr.shape} != ttl_dims {ttl_dims}"
+            f"{json_path}: ttl size {ttl_arr.size} != prod(ttl_dims) {ttl_size} (ttl_dims={ttl_dims})"
         )
+    ttl_arr = ttl_arr.reshape(ttl_dims)
+    if not np.all(np.isfinite(ttl_arr)):
+        raise ValueError(f"{json_path}: ttl contains NaN/Inf")
+
     style_dp = data["style_dp"]
-    dp_dims = tuple(style_dp["dims"])
-    dp_arr = np.array(style_dp["data"], dtype=np.float32)
+    if "dims" not in style_dp or "data" not in style_dp:
+        raise ValueError(f"{json_path}: 'style_dp' must contain keys 'dims' and 'data'")
+    dp_dims = tuple(int(x) for x in style_dp["dims"])
+    dp_arr = np.asarray(style_dp["data"], dtype=np.float32)
 
-    if dp_arr.shape != dp_dims:
+    dp_size = int(np.prod(dp_dims)) if len(dp_dims) > 0 else 0
+    if dp_arr.size != dp_size:
         raise ValueError(
-            f"dp shape {dp_arr.shape} != dp_dims {dp_dims}"
+            f"{json_path}: dp size {dp_arr.size} != prod(dp_dims) {dp_size} (dp_dims={dp_dims})"
         )
+    dp_arr = dp_arr.reshape(dp_dims)
+    if not np.all(np.isfinite(dp_arr)):
+        raise ValueError(f"{json_path}: dp contains NaN/Inf")
     return ttl_dims, ttl_arr, dp_dims, dp_arr
 
 

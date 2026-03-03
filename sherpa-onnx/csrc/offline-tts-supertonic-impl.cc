@@ -236,7 +236,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   // Supported extra options in config.extra:
   //   - "speed" (float): Speech speed factor (default: 1.05)
   //   - "num_steps" (int): Number of denoising steps (default: 5)
-  //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en").
+  //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en")
   //   - sid selects speaker from voice.bin (0 .. NumSpeakers()-1).
   //   - "max_len_korean" (int): Max chunk length for Korean (default: 120)
   //   - "max_len_other" (int): Max chunk length for other languages (default:
@@ -277,7 +277,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
       (lang == "ko")
           ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
           : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
-  if (max_len == 0) {
+  if (max_len <= 0) {
     SHERPA_ONNX_LOGE("Max length must be > 0. Given: %zu", max_len);
     SHERPA_ONNX_EXIT(-1);
   }
