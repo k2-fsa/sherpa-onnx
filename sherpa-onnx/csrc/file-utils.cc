@@ -20,13 +20,18 @@ namespace sherpa_onnx {
 namespace sherpa_onnx {
 
 bool FileExists(const std::string &filename) {
+  try {
 #ifdef _WIN32
-  std::wstring wide_path = ToWideString(filename);
-  std::ifstream file(wide_path);
-  return file.good();
+    std::wstring wide_path = ToWideString(filename);
+    std::filesystem::path file_path(wide_path);
 #else
-  return std::ifstream(filename).good();
+    std::filesystem::path file_path(filename);
 #endif
+    return std::filesystem::exists(file_path) && 
+           std::filesystem::is_regular_file(file_path);
+  } catch (const std::filesystem::filesystem_error&) {
+    return false;
+  }
 }
 
 void AssertFileExists(const std::string &filename) {
@@ -37,25 +42,30 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
+  try {
 #ifdef _WIN32
-  std::wstring wide_path = ToWideString(filename);
-  std::ifstream file(wide_path, std::ios::binary | std::ios::ate);
+    std::wstring wide_path = ToWideString(filename);
+    std::filesystem::path file_path(wide_path);
 #else
-  std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    std::filesystem::path file_path(filename);
 #endif
-  if (!file.is_open()) {
+    std::ifstream file(file_path, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+      return {};
+    }
+
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<char> buffer(size);
+    if (!file.read(buffer.data(), size)) {
+      return {};
+    }
+
+    return buffer;
+  } catch (const std::filesystem::filesystem_error&) {
     return {};
   }
-
-  std::streamsize size = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  std::vector<char> buffer(size);
-  if (!file.read(buffer.data(), size)) {
-    return {};
-  }
-
-  return buffer;
 }
 
 #if __ANDROID_API__ >= 9
@@ -129,7 +139,12 @@ std::string ResolveAbsolutePath(const std::string &path) {
   }
 
   try {
+#ifdef _WIN32
+    std::wstring wide_path = ToWideString(path);
+    std::filesystem::path fs_path(wide_path);
+#else
     std::filesystem::path fs_path(path);
+#endif
     
     // If already absolute, return normalized path
     if (fs_path.is_absolute()) {
