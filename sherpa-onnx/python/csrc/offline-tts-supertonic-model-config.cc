@@ -1,10 +1,6 @@
 // sherpa-onnx/python/csrc/offline-tts-supertonic-model-config.cc
 //
 // Copyright (c)  2026 zengyw
-//
-// This file is based on Supertonic TTS
-// (https://github.com/Supertone-Inc/supertonic) which is licensed under MIT
-// License (Copyright (c) 2025 Supertone Inc.)
 
 #include "sherpa-onnx/python/csrc/offline-tts-supertonic-model-config.h"
 
