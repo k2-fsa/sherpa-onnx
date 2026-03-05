@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <sstream>
@@ -63,6 +64,8 @@ void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
 
 SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   constexpr size_t kHeaderSize = 6 * sizeof(int64_t);
+  constexpr size_t kMaxPayloadBytes = 64 * 1024 * 1024;
+
   if (buf.size() < kHeaderSize) {
     SHERPA_ONNX_LOGE(
         "Invalid voice style .bin: file too small (got %zu bytes, need %zu "
@@ -70,30 +73,70 @@ SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
         buf.size(), kHeaderSize);
     SHERPA_ONNX_EXIT(-1);
   }
-
   int64_t dims[6];
   std::memcpy(dims, buf.data(), kHeaderSize);
-  std::vector<int64_t> ttl_shape = {dims[0], dims[1], dims[2]};
-  std::vector<int64_t> dp_shape = {dims[3], dims[4], dims[5]};
-  int32_t ttl_expected_size = dims[0] * dims[1] * dims[2];
-  int32_t dp_expected_size = dims[3] * dims[4] * dims[5];
-  int32_t ttl_data_size_bytes = ttl_expected_size * sizeof(float);
-  int32_t dp_data_size_bytes = dp_expected_size * sizeof(float);
-  int32_t expected_total_size = static_cast<int32_t>(kHeaderSize) +
-                                ttl_data_size_bytes + dp_data_size_bytes;
-  if (buf.size() != static_cast<size_t>(expected_total_size)) {
-    SHERPA_ONNX_LOGE(
-        "Invalid voice style .bin: size mismatch (got %zu bytes, expected "
-        "exactly %d)",
-        buf.size(), expected_total_size);
+  for (int i = 0; i < 6; ++i) {
+    if (dims[i] <= 0) {
+      SHERPA_ONNX_LOGE("Invalid voice style .bin: dims[%d]=%" PRId64 " <= 0", i,
+                       dims[i]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+  }
+
+  auto mul3 = [](int64_t a, int64_t b, int64_t c, const char *name) -> size_t {
+    constexpr int64_t kMax = std::numeric_limits<int64_t>::max();
+    if (a <= 0 || b <= 0 || c <= 0 || a > kMax / b) {
+      SHERPA_ONNX_LOGE("Invalid voice style .bin: %s dims overflow", name);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    int64_t ab = a * b;
+    if (ab > kMax / c) {
+      SHERPA_ONNX_LOGE("Invalid voice style .bin: %s dims overflow", name);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    return static_cast<size_t>(ab * c);
+  };
+  size_t ttl_elems = mul3(dims[0], dims[1], dims[2], "ttl");
+  size_t dp_elems = mul3(dims[3], dims[4], dims[5], "dp");
+
+  size_t ttl_bytes = ttl_elems * sizeof(float);
+  size_t dp_bytes = dp_elems * sizeof(float);
+  if (ttl_bytes / sizeof(float) != ttl_elems ||
+      dp_bytes / sizeof(float) != dp_elems) {
+    SHERPA_ONNX_LOGE("Invalid voice style .bin: byte size overflow");
     SHERPA_ONNX_EXIT(-1);
   }
-  std::vector<float> ttl_data(static_cast<size_t>(ttl_expected_size));
-  std::memcpy(ttl_data.data(), buf.data() + kHeaderSize, ttl_data_size_bytes);
+  size_t payload_bytes = ttl_bytes + dp_bytes;
+  if (payload_bytes < ttl_bytes || payload_bytes < dp_bytes) {
+    SHERPA_ONNX_LOGE("Invalid voice style .bin: payload size overflow");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (payload_bytes > kMaxPayloadBytes) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style .bin: payload too large (%zu bytes, max %zu)",
+        payload_bytes, kMaxPayloadBytes);
+    SHERPA_ONNX_EXIT(-1);
+  }
+  size_t expected_total = kHeaderSize + payload_bytes;
+  if (expected_total < kHeaderSize) {
+    SHERPA_ONNX_LOGE("Invalid voice style .bin: total size overflow");
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (buf.size() != expected_total) {
+    SHERPA_ONNX_LOGE(
+        "Invalid voice style .bin: size mismatch (got %zu bytes, expected "
+        "exactly %zu)",
+        buf.size(), expected_total);
+    SHERPA_ONNX_EXIT(-1);
+  }
 
-  std::vector<float> dp_data(static_cast<size_t>(dp_expected_size));
-  std::memcpy(dp_data.data(), buf.data() + kHeaderSize + ttl_data_size_bytes,
-              dp_data_size_bytes);
+  std::vector<int64_t> ttl_shape = {dims[0], dims[1], dims[2]};
+  std::vector<int64_t> dp_shape = {dims[3], dims[4], dims[5]};
+  std::vector<float> ttl_data(ttl_elems);
+  std::memcpy(ttl_data.data(), buf.data() + kHeaderSize, ttl_bytes);
+  std::vector<float> dp_data(dp_elems);
+  std::memcpy(dp_data.data(), buf.data() + kHeaderSize + ttl_bytes, dp_bytes);
+
   SupertonicStyle style;
   style.ttl_data = std::move(ttl_data);
   style.dp_data = std::move(dp_data);
