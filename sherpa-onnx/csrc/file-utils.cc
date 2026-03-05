@@ -25,7 +25,6 @@ std::wstring ToWideString(const std::string &s);
 std::string ToString(const std::wstring &s);
 
 bool FileExists(const std::string &filename) {
-  try {
 #ifdef _WIN32
     DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
     
@@ -34,9 +33,6 @@ bool FileExists(const std::string &filename) {
     struct stat file_stat;
     return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
 #endif
-  } catch (const std::exception&) {
-    return false;
-  }
 }
 
 void AssertFileExists(const std::string &filename) {
@@ -77,8 +73,14 @@ std::vector<char> ReadFile(const std::string &filename) {
     std::vector<char> buffer(static_cast<size_t>(file_size.QuadPart));
 
     DWORD bytes_read = 0;
-    if (!::ReadFile(hFile, buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_read, nullptr) ||
-        bytes_read != buffer.size()) {
+    bool read_success = ::ReadFile(
+      hFile, 
+      buffer.data(), 
+      static_cast<DWORD>(buffer.size()), 
+      &bytes_read, 
+      nullptr
+    );
+    if (!read_success || bytes_read != buffer.size()) {
       return {};
     }
     
