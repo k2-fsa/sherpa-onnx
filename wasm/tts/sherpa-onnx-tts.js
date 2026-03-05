@@ -28,7 +28,9 @@ function freeConfig(config, Module) {
     freeConfig(config.pocket, Module)
   }
 
-  Module._free(config.ptr);
+  if (config.ptr) {
+    Module._free(config.ptr);
+  }
 }
 
 // The user should free the returned pointers
@@ -620,9 +622,6 @@ function initSherpaOnnxGenerationConfig(config, Module) {
   const len = 9 * 4;
   const ptr = Module._malloc(len);
 
-  // Zero-init for safety
-  Module.HEAPU8.fill(0, ptr, ptr + len);
-
   // float silence_scale
   Module.setValue(ptr + 0 * 4, config.silenceScale || 0.2, 'float');
 
@@ -714,6 +713,8 @@ class OfflineTts {
   }
 
   free() {
+    if (!this.handle) return;
+
     this.Module._SherpaOnnxDestroyOfflineTts(this.handle);
     this.handle = 0
   }
@@ -724,32 +725,47 @@ class OfflineTts {
   //   speed: 1.0
   // }
   generate(config) {
+    if (!this.handle) {
+      throw new Error('OfflineTts has been freed');
+    }
+
+    if (!config || !config.text) {
+      throw new Error('config.text is required');
+    }
+
     const textLen = this.Module.lengthBytesUTF8(config.text) + 1;
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(config.text, textPtr, textLen);
 
     const h = this.Module._SherpaOnnxOfflineTtsGenerate(
-        this.handle, textPtr, config.sid, config.speed);
+        this.handle, textPtr, config.sid ?? 0, config.speed ?? 1.0);
+
     this.Module._free(textPtr);
 
     if (!h) {
       throw new Error('TTS generation failed');
     }
 
-    const numSamples = this.Module.HEAP32[h / 4 + 1];
-    const sampleRate = this.Module.HEAP32[h / 4 + 2];
+    const base = h >> 2;
 
-    const samplesPtr = this.Module.HEAP32[h / 4] / 4;
-    const samples = new Float32Array(numSamples);
-    for (let i = 0; i < numSamples; i++) {
-      samples[i] = this.Module.HEAPF32[samplesPtr + i];
-    }
+    const samplesPtr = this.Module.HEAP32[base];
+    const numSamples = this.Module.HEAP32[base + 1];
+    const sampleRate = this.Module.HEAP32[base + 2];
+
+    const heapSamples = this.Module.HEAPF32.subarray(
+        samplesPtr / 4, samplesPtr / 4 + numSamples);
+
+    const samples = new Float32Array(heapSamples);
 
     this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(h);
     return {samples: samples, sampleRate: sampleRate};
   }
 
   generateWithConfig(text, genConfig) {
+    if (!this.handle) {
+      throw new Error('OfflineTts has been freed');
+    }
+
     const cfgWasm = initSherpaOnnxGenerationConfig(genConfig, this.Module);
 
     const textLen = this.Module.lengthBytesUTF8(text) + 1;
@@ -761,28 +777,24 @@ class OfflineTts {
         0,  // callback
         0   // callback arg
     );
+    this.Module._free(textPtr);
+    freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
 
     if (!audioPtr) {
-      this.Module._free(textPtr);
-      freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
       throw new Error('Failed to generate audio');
     }
 
-    const samplesPtr = this.Module.HEAP32[audioPtr / 4];  // float* samples
-    const numSamples =
-        this.Module.HEAP32[audioPtr / 4 + 1];  // int32 num_samples
-    const sampleRate =
-        this.Module.HEAP32[audioPtr / 4 + 2];  // int32 sample_rate
+    const base = audioPtr >> 2;
 
-    // 5️⃣ Copy samples to Float32Array
-    const samples = new Float32Array(numSamples);
-    for (let i = 0; i < numSamples; i++) {
-      samples[i] = this.Module.HEAPF32[samplesPtr / 4 + i];
-    }
+    const samplesPtr = this.Module.HEAP32[base];      // float* samples
+    const numSamples = this.Module.HEAP32[base + 1];  // int32 num_samples
+    const sampleRate = this.Module.HEAP32[base + 2];  // int32 sample_rate
+
+    const heapSamples = this.Module.HEAPF32.subarray(
+        samplesPtr / 4, samplesPtr / 4 + numSamples);
+    const samples = new Float32Array(heapSamples);
 
     this.Module._SherpaOnnxDestroyOfflineTtsGeneratedAudio(audioPtr);
-    this.Module._free(textPtr);
-    freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
 
     return {samples, sampleRate};
   }
@@ -791,9 +803,8 @@ class OfflineTts {
     const samples = audio.samples;
     const sampleRate = audio.sampleRate;
     const ptr = this.Module._malloc(samples.length * 4);
-    for (let i = 0; i < samples.length; i++) {
-      this.Module.HEAPF32[ptr / 4 + i] = samples[i];
-    }
+
+    this.Module.HEAPF32.set(samples, ptr / 4);
 
     const filenameLen = this.Module.lengthBytesUTF8(filename) + 1;
     const buffer = this.Module._malloc(filenameLen);
