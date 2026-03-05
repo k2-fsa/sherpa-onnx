@@ -746,9 +746,9 @@ class OfflineTts {
       throw new Error('TTS generation failed');
     }
 
-    const base = h >> 2;
+    const base = h / 4;
 
-    const samplesPtr = this.Module.HEAP32[base];
+    const samplesPtr = this.Module.HEAPU32[base];
     const numSamples = this.Module.HEAP32[base + 1];
     const sampleRate = this.Module.HEAP32[base + 2];
 
@@ -784,9 +784,9 @@ class OfflineTts {
       throw new Error('Failed to generate audio');
     }
 
-    const base = audioPtr >> 2;
+    const base = audioPtr / 4;
 
-    const samplesPtr = this.Module.HEAP32[base];      // float* samples
+    const samplesPtr = this.Module.HEAPU32[base];     // float* samples
     const numSamples = this.Module.HEAP32[base + 1];  // int32 num_samples
     const sampleRate = this.Module.HEAP32[base + 2];  // int32 sample_rate
 
