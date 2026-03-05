@@ -18,10 +18,10 @@ void OfflineTtsSupertonicModelConfig::Register(ParseOptions *po) {
   po->Register("supertonic-text-encoder", &text_encoder,
                "Path to text_encoder.onnx for Supertonic TTS");
   po->Register("supertonic-vector-estimator", &vector_estimator,
-               "Path to vector_estimator.onnx for Supertonic RTTS");
+               "Path to vector_estimator.onnx for Supertonic TTS");
   po->Register("supertonic-vocoder", &vocoder,
                "Path to vocoder.onnx for Supertonic TTS");
-  po->Register("supertonic-tts-config", &tts_config,
+  po->Register("supertonic-tts-json", &tts_json,
                "Path to tts.json for Supertonic TTS");
   po->Register("supertonic-unicode-indexer", &unicode_indexer,
                "Path to unicode_indexer.bin for Supertonic TTS");
@@ -71,13 +71,13 @@ bool OfflineTtsSupertonicModelConfig::Validate() const {
     return false;
   }
 
-  if (tts_config.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --supertonic-tts-config");
+  if (tts_json.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --supertonic-tts-json");
     return false;
   }
-  if (!FileExists(tts_config)) {
-    SHERPA_ONNX_LOGE("--supertonic-tts-config '%s' does not exist",
-                     tts_config.c_str());
+  if (!FileExists(tts_json)) {
+    SHERPA_ONNX_LOGE("--supertonic-tts-json '%s' does not exist",
+                     tts_json.c_str());
     return false;
   }
 
@@ -110,7 +110,7 @@ std::string OfflineTtsSupertonicModelConfig::ToString() const {
   os << "text_encoder=\"" << text_encoder << "\", ";
   os << "vector_estimator=\"" << vector_estimator << "\", ";
   os << "vocoder=\"" << vocoder << "\", ";
-  os << "tts_config=\"" << tts_config << "\", ";
+  os << "tts_json=\"" << tts_json << "\", ";
   os << "unicode_indexer=\"" << unicode_indexer << "\", ";
   os << "voice_style=\"" << voice_style << "\")";
   return os.str();

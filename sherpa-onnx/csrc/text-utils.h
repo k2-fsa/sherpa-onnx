@@ -206,13 +206,18 @@ int32_t ToIntOrDefault(const std::string &s, int32_t default_value);
 
 float ToFloatOrDefault(const std::string &s, float default_value);
 
-// Convert a vector of sequence lengths to a flat mask tensor.
-// Creates a 3D mask tensor of shape [bsz, 1, max_len] where mask[b][0][i] = 1.0
-// if i < lengths[b], else 0.0.
-// If max_len == -1, it will be set to the maximum value in lengths.
-void LengthToMaskFlat(const std::vector<int64_t> &lengths, int bsz,
-                      int64_t max_len, std::vector<float> *mask_flat,
-                      std::vector<int64_t> *mask_shape);
+// Convert lengths to flat mask + shape. Outputs [batch, 1, max_len] format
+// where mask[b][0][i] = 1.0 if i < lengths[b], else 0.0.
+void LengthsToMask(const std::vector<int64_t> &lengths,
+                   std::vector<float> *mask_flat,
+                   std::vector<int64_t> *mask_shape);
+
+// TTS text chunking helpers.
+std::vector<std::string> SplitByBlankLines(const std::string &text);
+std::vector<std::string> SplitByPunctuation(const std::string &text);
+std::vector<std::string> SplitLongSentence(const std::string &sentence,
+                                           size_t max_chars);
+std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
 
 }  // namespace sherpa_onnx
 

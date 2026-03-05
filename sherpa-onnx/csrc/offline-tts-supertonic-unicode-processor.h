@@ -32,9 +32,6 @@ class SupertonicUnicodeProcessor {
   std::string PreprocessText(const std::string &text,
                              const std::string &lang) const;
   std::vector<uint16_t> TextToUnicodeValues(const std::string &text) const;
-  void GetTextMask(const std::vector<int64_t> &text_ids_lengths,
-                   std::vector<float> *mask_flat,
-                   std::vector<int64_t> *mask_shape) const;
 
   std::vector<int32_t> indexer_;
 };

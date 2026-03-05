@@ -11,6 +11,7 @@
 
 #include <array>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -42,30 +43,32 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
 
  private:
   GeneratedAudio Process(const std::string &text, const std::string &lang,
-                         int64_t sid, int32_t num_steps, float speed) const;
+                         int64_t sid, int32_t num_steps, float speed,
+                         std::mt19937 &gen) const;
 
   GeneratedAudio ProcessChunksAndConcatenate(
       const std::vector<std::string> &text_chunks, const std::string &lang,
       int64_t sid, int32_t num_steps, float speed, float silence_duration,
-      GeneratedAudioCallback callback) const;
+      int32_t seed, GeneratedAudioCallback callback) const;
 
   void InitVoiceStyle(const std::vector<char> &buf);
 
   struct StyleSliceView {
-    float *ttl_data;
+    const float *ttl_data;
     size_t ttl_size;
     std::array<int64_t, 3> ttl_shape;
-    float *dp_data;
+    const float *dp_data;
     size_t dp_size;
     std::array<int64_t, 3> dp_shape;
   };
-  void GetStyleSliceForSid(int64_t sid, StyleSliceView *out) const;
+  StyleSliceView GetStyleSliceForSid(int64_t sid) const;
 
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsSupertonicModel> model_;
   std::unique_ptr<SupertonicUnicodeProcessor> text_processor_;
   int32_t num_speakers_ = 0;
   SupertonicStyle full_style_;  // shape [num_speakers_, ...]
+  Ort::MemoryInfo memory_info_;
 };
 
 }  // namespace sherpa_onnx

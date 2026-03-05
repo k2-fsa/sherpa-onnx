@@ -79,18 +79,19 @@ class OfflineTtsSupertonicModel::Impl {
     return std::move(outputs[0]);
   }
 
-  Ort::Value RunVectorEstimator(Ort::Value noisy_latent, Ort::Value text_emb,
-                                Ort::Value style_ttl, Ort::Value latent_mask,
-                                Ort::Value text_mask, Ort::Value current_step,
-                                Ort::Value total_step) const {
+  Ort::Value RunVectorEstimator(Ort::Value noisy_latent,
+                                Ort::Value current_step, Ort::Value &text_emb,
+                                Ort::Value &style_ttl, Ort::Value &latent_mask,
+                                Ort::Value &text_mask,
+                                Ort::Value &total_step) const {
     std::vector<Ort::Value> inputs;
     inputs.push_back(std::move(noisy_latent));
-    inputs.push_back(std::move(text_emb));
-    inputs.push_back(std::move(style_ttl));
-    inputs.push_back(std::move(latent_mask));
-    inputs.push_back(std::move(text_mask));
+    inputs.push_back(View(&text_emb));
+    inputs.push_back(View(&style_ttl));
+    inputs.push_back(View(&latent_mask));
+    inputs.push_back(View(&text_mask));
     inputs.push_back(std::move(current_step));
-    inputs.push_back(std::move(total_step));
+    inputs.push_back(View(&total_step));
     auto outputs = vector_est_sess_->Run(
         Ort::RunOptions{nullptr}, vector_est_input_names_ptr_.data(),
         inputs.data(), inputs.size(), vector_est_output_names_ptr_.data(),
@@ -269,7 +270,7 @@ class OfflineTtsSupertonicModel::Impl {
 
   void Init() {
     std::string tts_config_path =
-        ResolveAbsolutePath(config_.supertonic.tts_config);
+        ResolveAbsolutePath(config_.supertonic.tts_json);
     LoadConfig(tts_config_path);
     PrintDebugInfo(tts_config_path);
     LoadModels();
@@ -279,7 +280,7 @@ class OfflineTtsSupertonicModel::Impl {
   template <typename Manager>
   void Init(Manager *mgr) {
     std::string tts_config_path =
-        ResolveAbsolutePath(config_.supertonic.tts_config);
+        ResolveAbsolutePath(config_.supertonic.tts_json);
     LoadConfig(mgr, tts_config_path);
     PrintDebugInfo(tts_config_path);
     LoadModels(mgr);
@@ -291,10 +292,25 @@ class OfflineTtsSupertonicModel::Impl {
       SHERPA_ONNX_LOGE("Invalid config file: missing 'ae' or 'ttl' section");
       SHERPA_ONNX_EXIT(-1);
     }
-    cfg_.ae.sample_rate = j["ae"]["sample_rate"];
-    cfg_.ae.base_chunk_size = j["ae"]["base_chunk_size"];
-    cfg_.ttl.chunk_compress_factor = j["ttl"]["chunk_compress_factor"];
-    cfg_.ttl.latent_dim = j["ttl"]["latent_dim"];
+    const auto &ae = j["ae"];
+    const auto &ttl = j["ttl"];
+    auto get_int = [](const json &obj, const char *key,
+                      const char *section) -> int32_t {
+      if (obj.find(key) == obj.end()) {
+        SHERPA_ONNX_LOGE("Invalid config: %s.%s missing", section, key);
+        SHERPA_ONNX_EXIT(-1);
+      }
+      if (!obj[key].is_number_integer()) {
+        SHERPA_ONNX_LOGE("Invalid config: %s.%s must be integer", section, key);
+        SHERPA_ONNX_EXIT(-1);
+      }
+      return obj[key].get<int32_t>();
+    };
+    cfg_.ae.sample_rate = get_int(ae, "sample_rate", "ae");
+    cfg_.ae.base_chunk_size = get_int(ae, "base_chunk_size", "ae");
+    cfg_.ttl.chunk_compress_factor =
+        get_int(ttl, "chunk_compress_factor", "ttl");
+    cfg_.ttl.latent_dim = get_int(ttl, "latent_dim", "ttl");
     if (cfg_.ae.sample_rate <= 0) {
       SHERPA_ONNX_LOGE("Invalid sample_rate: %d", cfg_.ae.sample_rate);
       SHERPA_ONNX_EXIT(-1);
@@ -387,13 +403,12 @@ Ort::Value OfflineTtsSupertonicModel::RunTextEncoder(
 }
 
 Ort::Value OfflineTtsSupertonicModel::RunVectorEstimator(
-    Ort::Value noisy_latent, Ort::Value text_emb, Ort::Value style_ttl,
-    Ort::Value latent_mask, Ort::Value text_mask, Ort::Value current_step,
-    Ort::Value total_step) const {
-  return impl_->RunVectorEstimator(
-      std::move(noisy_latent), std::move(text_emb), std::move(style_ttl),
-      std::move(latent_mask), std::move(text_mask), std::move(current_step),
-      std::move(total_step));
+    Ort::Value noisy_latent, Ort::Value current_step, Ort::Value &text_emb,
+    Ort::Value &style_ttl, Ort::Value &latent_mask, Ort::Value &text_mask,
+    Ort::Value &total_step) const {
+  return impl_->RunVectorEstimator(std::move(noisy_latent),
+                                   std::move(current_step), text_emb, style_ttl,
+                                   latent_mask, text_mask, total_step);
 }
 
 Ort::Value OfflineTtsSupertonicModel::RunVocoder(Ort::Value latent) const {

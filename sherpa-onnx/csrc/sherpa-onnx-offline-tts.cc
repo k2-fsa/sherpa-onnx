@@ -108,7 +108,7 @@ or details.
   sherpa_onnx::GeneratedAudio audio;
 
   bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
-  bool is_supertonic_tts = !config.model.supertonic.tts_config.empty();
+  bool is_supertonic_tts = !config.model.supertonic.tts_json.empty();
 
   if (is_pocket_tts || is_supertonic_tts) {
     if (is_supertonic_tts) {

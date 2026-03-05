@@ -53,10 +53,12 @@ class OfflineTtsSupertonicModel {
                                   Ort::Value text_mask) const;
   Ort::Value RunTextEncoder(Ort::Value text_ids, Ort::Value style_ttl,
                             Ort::Value text_mask) const;
-  Ort::Value RunVectorEstimator(Ort::Value noisy_latent, Ort::Value text_emb,
-                                Ort::Value style_ttl, Ort::Value latent_mask,
-                                Ort::Value text_mask, Ort::Value current_step,
-                                Ort::Value total_step) const;
+
+  Ort::Value RunVectorEstimator(Ort::Value noisy_latent,
+                                Ort::Value current_step, Ort::Value &text_emb,
+                                Ort::Value &style_ttl, Ort::Value &latent_mask,
+                                Ort::Value &text_mask,
+                                Ort::Value &total_step) const;
   Ort::Value RunVocoder(Ort::Value latent) const;
 
  private:

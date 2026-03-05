@@ -8,7 +8,7 @@ Quantize [Supertonic](https://github.com/supertone-inc/supertonic) TTS ONNX mode
 - **Quantization**: duration_predictor, text_encoder, vector_estimator → dynamic INT8; vocoder → static INT8 (calibration from dumped data).
 - **Voice**: Runtime loads one **`voice.bin`**. Generate with `python3 generate_voices_bin.py [input_dir] [output_bin]`. Pass `--supertonic-voice-style=/path/to/voice.bin`. Use `--sid` 0..N-1 to select speaker.
 - **Unicode indexer**: Runtime uses **`unicode_indexer.bin`**. Generate with `python3 generate_indexer_bin.py [json_path] [bin_path]`. Pass `--supertonic-unicode-indexer=/path/to/unicode_indexer.bin`.
-- **TTS config**: Runtime loads **`tts.json`**. Pass `--supertonic-tts-config=/path/to/tts.json`.
+- **TTS config**: Runtime loads **`tts.json`**. Pass `--supertonic-tts-json=/path/to/tts.json`.
 
 ## Usage
 

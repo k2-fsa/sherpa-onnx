@@ -19,7 +19,7 @@ struct OfflineTtsSupertonicModelConfig {
   std::string vocoder;
 
   // Path to tts.json (TTS config: ae.sample_rate, ae.base_chunk_size, etc.)
-  std::string tts_config;
+  std::string tts_json;
 
   // Path to unicode_indexer.bin (raw int32 array)
   std::string unicode_indexer;
@@ -33,14 +33,14 @@ struct OfflineTtsSupertonicModelConfig {
                                   const std::string &text_encoder,
                                   const std::string &vector_estimator,
                                   const std::string &vocoder,
-                                  const std::string &tts_config,
+                                  const std::string &tts_json,
                                   const std::string &unicode_indexer,
                                   const std::string &voice_style)
       : duration_predictor(duration_predictor),
         text_encoder(text_encoder),
         vector_estimator(vector_estimator),
         vocoder(vocoder),
-        tts_config(tts_config),
+        tts_json(tts_json),
         unicode_indexer(unicode_indexer),
         voice_style(voice_style) {}
 

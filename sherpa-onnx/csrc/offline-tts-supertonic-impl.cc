@@ -9,15 +9,16 @@
 #include "sherpa-onnx/csrc/offline-tts-supertonic-impl.h"
 
 #include <algorithm>
-#include <climits>
+#include <array>
+#include <cinttypes>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <numeric>
 #include <random>
-#include <regex>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -41,109 +42,26 @@ namespace {
 constexpr float kMinDuration = 0.1f;
 
 // Maximum latent length to prevent excessive memory allocation and OOM.
-constexpr int kMaxLatentLen = 10000;
+constexpr int32_t kMaxLatentLen = 10000;
 
-// Compute product of dims with overflow check. Exits on overflow.
-static int64_t ComputeDimsProduct(const std::vector<int64_t> &dims,
-                                  const char *name_for_error) {
-  int64_t product = 1;
-  for (int64_t d : dims) {
-    if (d <= 0) {
-      SHERPA_ONNX_LOGE("Invalid voice style: %s dim %ld <= 0", name_for_error,
-                       d);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (product > INT64_MAX / d) {
-      SHERPA_ONNX_LOGE("Invalid voice style: %s product overflow (dim=%ld)",
-                       name_for_error, d);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    product *= d;
-  }
-  return product;
-}
+constexpr std::array<std::string_view, 5> kSupertonicAvailableLangs = {
+    "en", "ko", "es", "pt", "fr"};
 
-static void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths, int bsz,
-                              int base_chunk_size, int chunk_compress_factor,
-                              int64_t latent_len, std::vector<float> *mask_flat,
-                              std::vector<int64_t> *mask_shape) {
-  int latent_size = base_chunk_size * chunk_compress_factor;
+void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
+                       int32_t base_chunk_size, int32_t chunk_compress_factor,
+                       std::vector<float> *mask_flat,
+                       std::vector<int64_t> *mask_shape) {
+  const int32_t bsz = static_cast<int32_t>(wav_lengths.size());
+  int32_t wav_chunk_size = base_chunk_size * chunk_compress_factor;
   std::vector<int64_t> latent_lengths;
   latent_lengths.reserve(bsz);
   for (auto len : wav_lengths) {
-    latent_lengths.push_back((len + latent_size - 1) / latent_size);
+    latent_lengths.push_back((len + wav_chunk_size - 1) / wav_chunk_size);
   }
-  LengthToMaskFlat(latent_lengths, bsz, latent_len, mask_flat, mask_shape);
+  LengthsToMask(latent_lengths, mask_flat, mask_shape);
 }
 
-static std::vector<std::string> ChunkText(const std::string &text,
-                                          size_t max_len) {
-  std::vector<std::string> chunks;
-  std::regex paragraph_regex(R"(\n\s*\n+)");
-  std::sregex_token_iterator iter(text.begin(), text.end(), paragraph_regex,
-                                  -1);
-  std::sregex_token_iterator end;
-  std::vector<std::string> paragraphs;
-  for (; iter != end; ++iter) {
-    std::string para = Trim(*iter);
-    if (!para.empty()) {
-      paragraphs.push_back(para);
-    }
-  }
-  // Split by sentence delimiters but keep the punctuation
-  std::regex sentence_regex(R"(([.!?])(\s+|$))");
-  for (const auto &paragraph : paragraphs) {
-    std::vector<std::string> sentences;
-    std::sregex_iterator match_iter(paragraph.begin(), paragraph.end(),
-                                    sentence_regex);
-    size_t last_pos = 0;
-    for (; match_iter != std::sregex_iterator(); ++match_iter) {
-      size_t match_pos = match_iter->position(0);
-      std::string sentence = paragraph.substr(last_pos, match_pos - last_pos);
-      // Include the punctuation (match_iter->str(1) is the punctuation)
-      sentence += match_iter->str(1);
-      if (!sentence.empty()) {
-        sentences.push_back(sentence);
-      }
-      last_pos = match_iter->position(0) + match_iter->length(0);
-    }
-    // Add remaining text after last sentence delimiter
-    if (last_pos < paragraph.size()) {
-      std::string remaining = paragraph.substr(last_pos);
-      if (!remaining.empty()) {
-        sentences.push_back(remaining);
-      }
-    }
-    std::string current_chunk;
-    for (const auto &sentence : sentences) {
-      size_t total_len = current_chunk.length() + sentence.length();
-      // Add space separator length if chunk is not empty
-      if (!current_chunk.empty()) {
-        total_len += 1;
-      }
-      if (total_len <= max_len) {
-        if (!current_chunk.empty()) {
-          current_chunk += " ";
-        }
-        current_chunk += sentence;
-      } else {
-        if (!current_chunk.empty()) {
-          chunks.push_back(Trim(current_chunk));
-        }
-        current_chunk = sentence;
-      }
-    }
-    if (!current_chunk.empty()) {
-      chunks.push_back(Trim(current_chunk));
-    }
-  }
-  if (chunks.empty()) {
-    chunks.push_back(Trim(text));
-  }
-  return chunks;
-}
-
-static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
+SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   constexpr size_t kHeaderSize = 6 * sizeof(int64_t);
   if (buf.size() < kHeaderSize) {
     SHERPA_ONNX_LOGE(
@@ -157,24 +75,23 @@ static SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
   std::memcpy(dims, buf.data(), kHeaderSize);
   std::vector<int64_t> ttl_shape = {dims[0], dims[1], dims[2]};
   std::vector<int64_t> dp_shape = {dims[3], dims[4], dims[5]};
-  int64_t ttl_expected_size = ComputeDimsProduct(ttl_shape, "ttl_shape");
-  int64_t dp_expected_size = ComputeDimsProduct(dp_shape, "dp_shape");
-  size_t ttl_data_size_bytes =
-      static_cast<size_t>(ttl_expected_size) * sizeof(float);
-  size_t dp_data_size_bytes =
-      static_cast<size_t>(dp_expected_size) * sizeof(float);
-  size_t expected_total_size =
-      kHeaderSize + ttl_data_size_bytes + dp_data_size_bytes;
-  if (buf.size() != expected_total_size) {
+  int32_t ttl_expected_size = dims[0] * dims[1] * dims[2];
+  int32_t dp_expected_size = dims[3] * dims[4] * dims[5];
+  int32_t ttl_data_size_bytes = ttl_expected_size * sizeof(float);
+  int32_t dp_data_size_bytes = dp_expected_size * sizeof(float);
+  int32_t expected_total_size = static_cast<int32_t>(kHeaderSize) +
+                                ttl_data_size_bytes + dp_data_size_bytes;
+  if (buf.size() != static_cast<size_t>(expected_total_size)) {
     SHERPA_ONNX_LOGE(
         "Invalid voice style .bin: size mismatch (got %zu bytes, expected "
-        "exactly %zu)",
+        "exactly %d)",
         buf.size(), expected_total_size);
     SHERPA_ONNX_EXIT(-1);
   }
   std::vector<float> ttl_data(static_cast<size_t>(ttl_expected_size));
-  std::vector<float> dp_data(static_cast<size_t>(dp_expected_size));
   std::memcpy(ttl_data.data(), buf.data() + kHeaderSize, ttl_data_size_bytes);
+
+  std::vector<float> dp_data(static_cast<size_t>(dp_expected_size));
   std::memcpy(dp_data.data(), buf.data() + kHeaderSize + ttl_data_size_bytes,
               dp_data_size_bytes);
   SupertonicStyle style;
@@ -191,7 +108,9 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     : config_(config),
       model_(std::make_unique<OfflineTtsSupertonicModel>(config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
-          config.model.supertonic.unicode_indexer)) {
+          config.model.supertonic.unicode_indexer)),
+      memory_info_(
+          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)) {
   std::vector<char> buf = ReadFile(config.model.supertonic.voice_style);
   if (buf.empty()) {
     SHERPA_ONNX_LOGE("Failed to read voice style file: %s",
@@ -207,7 +126,9 @@ OfflineTtsSupertonicImpl::OfflineTtsSupertonicImpl(
     : config_(config),
       model_(std::make_unique<OfflineTtsSupertonicModel>(mgr, config.model)),
       text_processor_(std::make_unique<SupertonicUnicodeProcessor>(
-          mgr, config.model.supertonic.unicode_indexer)) {
+          mgr, config.model.supertonic.unicode_indexer)),
+      memory_info_(
+          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)) {
   std::vector<char> buf = ReadFile(mgr, config.model.supertonic.voice_style);
   if (buf.empty()) {
     SHERPA_ONNX_LOGE("Failed to read voice style file: %s",
@@ -238,20 +159,22 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   //   - "num_steps" (int): Number of denoising steps (default: 5)
   //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en")
   //   - sid selects speaker from voice.bin (0 .. NumSpeakers()-1).
-  //   - "max_len_korean" (int): Max chunk length for Korean (default: 120)
-  //   - "max_len_other" (int): Max chunk length for other languages (default:
-  //   300)
+  //   - "max_len" (int): Max chunk length. Default: 300 (non-Korean), 120 (ko).
+  //   - "silence_duration" (float): Silence in seconds between chunks (default:
+  //   0.3)
+  //   - "seed" (int): RNG seed for reproducibility. -1 = random (default).
+  int32_t seed = config.GetExtraInt("seed", -1);
   float speed =
       config.GetExtraFloat("speed", config.speed > 0 ? config.speed : 1.05f);
   int32_t num_steps = config.GetExtraInt(
       "num_steps", config.num_steps > 0 ? config.num_steps : 5);
   if (speed <= 0) {
     SHERPA_ONNX_LOGE("Speed must be > 0. Given: %f", speed);
-    SHERPA_ONNX_EXIT(-1);
+    return {};
   }
   if (num_steps <= 0) {
     SHERPA_ONNX_LOGE("Num steps must be > 0. Given: %d", num_steps);
-    SHERPA_ONNX_EXIT(-1);
+    return {};
   }
   std::string text_single = Trim(text);
   if (text_single.empty()) {
@@ -259,7 +182,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   }
 
   int64_t sid = config.sid;
-  if (num_speakers_ > 0 && (sid >= num_speakers_ || sid < 0)) {
+  if (sid >= num_speakers_ || sid < 0) {
     SHERPA_ONNX_LOGE(
         "Model has %d speaker(s). sid must be in [0, %d]. Given sid=%d, "
         "using 0",
@@ -267,34 +190,36 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
     sid = 0;
   }
 
-  std::string lang = Trim(config.GetExtraString("lang", "en"));
-  if (lang.empty()) {
-    lang = "en";
+  std::string lang = config.GetExtraString("lang", "en");
+  bool lang_ok = std::any_of(kSupertonicAvailableLangs.begin(),
+                             kSupertonicAvailableLangs.end(),
+                             [&](std::string_view s) { return s == lang; });
+  if (!lang_ok) {
+    SHERPA_ONNX_LOGE("Invalid language: %s. Available: en, ko, es, pt, fr",
+                     lang.c_str());
+    return {};
   }
 
-  float silence_duration = 0.3f;
+  float silence_duration = config.GetExtraFloat("silence_duration", 0.3f);
   size_t max_len =
-      (lang == "ko")
-          ? static_cast<size_t>(config.GetExtraInt("max_len_korean", 120))
-          : static_cast<size_t>(config.GetExtraInt("max_len_other", 300));
+      (lang == "ko") ? static_cast<size_t>(config.GetExtraInt("max_len", 120))
+                     : static_cast<size_t>(config.GetExtraInt("max_len", 300));
   if (max_len == 0) {
     SHERPA_ONNX_LOGE("Max length must be > 0. Given: %zu", max_len);
-    SHERPA_ONNX_EXIT(-1);
+    return {};
   }
   auto text_chunks = ChunkText(text_single, max_len);
   return ProcessChunksAndConcatenate(text_chunks, lang, sid, num_steps, speed,
-                                     silence_duration, callback);
+                                     silence_duration, seed, callback);
 }
 
 GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
                                                  const std::string &lang,
                                                  int64_t sid, int32_t num_steps,
-                                                 float speed) const {
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+                                                 float speed,
+                                                 std::mt19937 &gen) const {
   const auto &cfg = model_->GetConfig();
-  StyleSliceView slice;
-  GetStyleSliceForSid(sid, &slice);
+  StyleSliceView slice = GetStyleSliceForSid(sid);
   const int32_t bsz = 1;
 
   std::vector<int64_t> text_ids;
@@ -317,24 +242,22 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   int64_t text_seq_len = static_cast<int64_t>(text_ids.size());
   int64_t text_mask_len = text_mask_shape[2];
   if (text_seq_len != text_mask_len) {
-    SHERPA_ONNX_LOGE(
-        "Text sequence length mismatch: text_ids=%d, text_mask=%d. Text: "
-        "\"%s\"",
-        static_cast<int32_t>(text_seq_len), static_cast<int32_t>(text_mask_len),
-        text.c_str());
+    SHERPA_ONNX_LOGE("Text sequence length mismatch: text_ids=%" PRId64
+                     ", text_mask=%" PRId64 ". Text: \"%s\"",
+                     text_seq_len, text_mask_len, text.c_str());
     return {};
   }
 
   std::vector<int64_t> text_ids_shape = {1, text_seq_len};
 
   Ort::Value text_ids_tensor = Ort::Value::CreateTensor<int64_t>(
-      memory_info, text_ids.data(), text_ids.size(), text_ids_shape.data(),
+      memory_info_, text_ids.data(), text_ids.size(), text_ids_shape.data(),
       text_ids_shape.size());
   Ort::Value style_dp_tensor = Ort::Value::CreateTensor<float>(
-      memory_info, slice.dp_data, slice.dp_size, slice.dp_shape.data(),
-      slice.dp_shape.size());
+      memory_info_, const_cast<float *>(slice.dp_data), slice.dp_size,
+      slice.dp_shape.data(), slice.dp_shape.size());
   Ort::Value text_mask_tensor = Ort::Value::CreateTensor<float>(
-      memory_info, text_mask_flat.data(), text_mask_flat.size(),
+      memory_info_, text_mask_flat.data(), text_mask_flat.size(),
       text_mask_shape.data(), text_mask_shape.size());
   Ort::Value dp_output = model_->RunDurationPredictor(
       std::move(text_ids_tensor), std::move(style_dp_tensor),
@@ -360,14 +283,14 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   }
 
   Ort::Value text_enc_output = model_->RunTextEncoder(
-      Ort::Value::CreateTensor<int64_t>(memory_info, text_ids.data(),
+      Ort::Value::CreateTensor<int64_t>(memory_info_, text_ids.data(),
                                         text_ids.size(), text_ids_shape.data(),
                                         text_ids_shape.size()),
-      Ort::Value::CreateTensor<float>(memory_info, slice.ttl_data,
-                                      slice.ttl_size, slice.ttl_shape.data(),
-                                      slice.ttl_shape.size()),
       Ort::Value::CreateTensor<float>(
-          memory_info, text_mask_flat.data(), text_mask_flat.size(),
+          memory_info_, const_cast<float *>(slice.ttl_data), slice.ttl_size,
+          slice.ttl_shape.data(), slice.ttl_shape.size()),
+      Ort::Value::CreateTensor<float>(
+          memory_info_, text_mask_flat.data(), text_mask_flat.size(),
           text_mask_shape.data(), text_mask_shape.size()));
   auto text_emb_info = text_enc_output.GetTensorTypeAndShapeInfo();
   size_t text_emb_size = text_emb_info.GetElementCount();
@@ -377,7 +300,6 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
     return {};
   }
   auto *text_emb_data = text_enc_output.GetTensorMutableData<float>();
-  std::vector<float> text_emb_vec(text_emb_data, text_emb_data + text_emb_size);
   auto text_emb_shape = text_emb_info.GetShape();
 
   float wav_len_max =
@@ -391,9 +313,9 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
     }
     wav_lengths.push_back(wav_len);
   }
-  int chunk_size = cfg.ae.base_chunk_size * cfg.ttl.chunk_compress_factor;
-  int latent_len =
-      static_cast<int>((wav_len_max + chunk_size - 1) / chunk_size);
+  int32_t chunk_size = cfg.ae.base_chunk_size * cfg.ttl.chunk_compress_factor;
+  int32_t latent_len =
+      static_cast<int32_t>((wav_len_max + chunk_size - 1) / chunk_size);
   if (latent_len > kMaxLatentLen) {
     SHERPA_ONNX_LOGE(
         "Latent length (%d) exceeds maximum (%d), capping to prevent OOM",
@@ -401,9 +323,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
     latent_len = kMaxLatentLen;
   }
 
-  int latent_dim = cfg.ttl.latent_dim * cfg.ttl.chunk_compress_factor;
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  int32_t latent_dim = cfg.ttl.latent_dim * cfg.ttl.chunk_compress_factor;
   std::normal_distribution<float> dist(0.0f, 1.0f);
   size_t latent_total_size = static_cast<size_t>(bsz) *
                              static_cast<size_t>(latent_dim) *
@@ -424,22 +344,22 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   }
   std::vector<float> latent_mask_flat;
   std::vector<int64_t> latent_mask_shape;
-  GetLatentMaskFlat(wav_lengths, bsz, cfg.ae.base_chunk_size,
-                    cfg.ttl.chunk_compress_factor, latent_len,
-                    &latent_mask_flat, &latent_mask_shape);
+  GetLatentMaskFlat(wav_lengths, cfg.ae.base_chunk_size,
+                    cfg.ttl.chunk_compress_factor, &latent_mask_flat,
+                    &latent_mask_shape);
   int64_t latent_mask_len = latent_mask_shape[2];
   if (latent_mask_len != latent_len) {
-    SHERPA_ONNX_LOGE(
-        "Latent mask length mismatch: expected %d, got %ld. Text: \"%s\"",
-        latent_len, latent_mask_len, text.c_str());
+    SHERPA_ONNX_LOGE("Latent mask length mismatch: expected %d, got %" PRId64
+                     ". Text: \"%s\"",
+                     latent_len, latent_mask_len, text.c_str());
     return {};
   }
-  for (int b = 0; b < bsz; ++b) {
+  for (int32_t b = 0; b < bsz; ++b) {
     const float *mask_batch = latent_mask_flat.data() + b * latent_mask_len;
     float *xt_batch = xt_flat.data() + b * latent_dim * latent_len;
-    for (int d = 0; d < latent_dim; ++d) {
+    for (int32_t d = 0; d < latent_dim; ++d) {
       float *xt_dim = xt_batch + d * latent_len;
-      for (int t = 0; t < latent_len; ++t) {
+      for (int32_t t = 0; t < latent_len; ++t) {
         xt_dim[t] *= mask_batch[t];
       }
     }
@@ -447,37 +367,38 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
 
   std::vector<int64_t> latent_shape = {bsz, latent_dim, latent_len};
   std::vector<float> total_step_vec(bsz, static_cast<float>(num_steps));
-  std::vector<int64_t> step_shape = {bsz};
+  std::array<int64_t, 1> step_shape = {bsz};
 
+  // Constant inputs: create once outside loop, keep text_enc_output alive.
+  Ort::Value text_emb_const = Ort::Value::CreateTensor<float>(
+      memory_info_, text_emb_data, text_emb_size, text_emb_shape.data(),
+      text_emb_shape.size());
+  Ort::Value style_ttl_const = Ort::Value::CreateTensor<float>(
+      memory_info_, const_cast<float *>(slice.ttl_data), slice.ttl_size,
+      slice.ttl_shape.data(), slice.ttl_shape.size());
+  Ort::Value text_mask_const = Ort::Value::CreateTensor<float>(
+      memory_info_, text_mask_flat.data(), text_mask_flat.size(),
+      text_mask_shape.data(), text_mask_shape.size());
+  Ort::Value latent_mask_const = Ort::Value::CreateTensor<float>(
+      memory_info_, latent_mask_flat.data(), latent_mask_flat.size(),
+      latent_mask_shape.data(), latent_mask_shape.size());
+  Ort::Value total_step_const = Ort::Value::CreateTensor<float>(
+      memory_info_, total_step_vec.data(), total_step_vec.size(),
+      step_shape.data(), step_shape.size());
+
+  float current_step = 0.f;
   for (int32_t step = 0; step < num_steps; step++) {
-    std::vector<float> current_step_vec(bsz, static_cast<float>(step));
+    current_step = static_cast<float>(step);
     Ort::Value noisy_latent_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, xt_flat.data(), xt_flat.size(), latent_shape.data(),
+        memory_info_, xt_flat.data(), xt_flat.size(), latent_shape.data(),
         latent_shape.size());
-    Ort::Value text_emb_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, text_emb_vec.data(), text_emb_vec.size(),
-        text_emb_shape.data(), text_emb_shape.size());
-    Ort::Value style_ttl_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, slice.ttl_data, slice.ttl_size, slice.ttl_shape.data(),
-        slice.ttl_shape.size());
-    Ort::Value text_mask_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, text_mask_flat.data(), text_mask_flat.size(),
-        text_mask_shape.data(), text_mask_shape.size());
-    Ort::Value latent_mask_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, latent_mask_flat.data(), latent_mask_flat.size(),
-        latent_mask_shape.data(), latent_mask_shape.size());
-    Ort::Value total_step_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, total_step_vec.data(), total_step_vec.size(),
-        step_shape.data(), step_shape.size());
     Ort::Value current_step_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, current_step_vec.data(), current_step_vec.size(),
-        step_shape.data(), step_shape.size());
+        memory_info_, &current_step, 1, step_shape.data(), step_shape.size());
 
     Ort::Value vector_est_output = model_->RunVectorEstimator(
-        std::move(noisy_latent_tensor), std::move(text_emb_tensor),
-        std::move(style_ttl_tensor), std::move(latent_mask_tensor),
-        std::move(text_mask_tensor), std::move(current_step_tensor),
-        std::move(total_step_tensor));
+        std::move(noisy_latent_tensor), std::move(current_step_tensor),
+        text_emb_const, style_ttl_const, latent_mask_const, text_mask_const,
+        total_step_const);
     auto vector_est_output_info = vector_est_output.GetTensorTypeAndShapeInfo();
     size_t denoised_size = vector_est_output_info.GetElementCount();
     if (denoised_size != latent_total_size) {
@@ -493,7 +414,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   }
 
   Ort::Value latent_tensor = Ort::Value::CreateTensor<float>(
-      memory_info, xt_flat.data(), xt_flat.size(), latent_shape.data(),
+      memory_info_, xt_flat.data(), xt_flat.size(), latent_shape.data(),
       latent_shape.size());
   Ort::Value vocoder_output = model_->RunVocoder(std::move(latent_tensor));
   auto wav_info = vocoder_output.GetTensorTypeAndShapeInfo();
@@ -523,7 +444,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
         (wav_shape.size() == 2) ? wav_shape[1] : wav_shape[2];
     result.samples.reserve(static_cast<size_t>(
         std::accumulate(wav_lengths.begin(), wav_lengths.end(), int64_t(0))));
-    for (int b = 0; b < bsz; ++b) {
+    for (int32_t b = 0; b < bsz; ++b) {
       int64_t actual_len = wav_lengths[b];
       if (actual_len > samples_per_batch) {
         actual_len = samples_per_batch;
@@ -547,14 +468,15 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
     result.samples.assign(wav_data, wav_data + wav_size);
   }
   if (config_.model.debug && !result.samples.empty()) {
-    float max_abs_val = *std::max_element(
-        result.samples.begin(), result.samples.end(),
-        [](float a, float b) { return std::abs(a) < std::abs(b); });
-    float min_abs_val = *std::min_element(
-        result.samples.begin(), result.samples.end(),
-        [](float a, float b) { return std::abs(a) < std::abs(b); });
+    float max_abs = 0.f;
+    float min_abs = std::abs(result.samples[0]);
+    for (float x : result.samples) {
+      float ax = std::abs(x);
+      max_abs = std::max(max_abs, ax);
+      min_abs = std::min(min_abs, ax);
+    }
     SHERPA_ONNX_LOGE("Audio samples: %zu, min_abs=%.6f, max_abs=%.6f",
-                     result.samples.size(), min_abs_val, max_abs_val);
+                     result.samples.size(), min_abs, max_abs);
   }
   result.sample_rate = cfg.ae.sample_rate;
   return result;
@@ -563,12 +485,16 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
 GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
     const std::vector<std::string> &text_chunks, const std::string &lang,
     int64_t sid, int32_t num_steps, float speed, float silence_duration,
-    GeneratedAudioCallback callback) const {
+    int32_t seed, GeneratedAudioCallback callback) const {
+  std::mt19937 gen(seed >= 0 ? static_cast<unsigned>(seed)
+                             : std::random_device{}());
   GeneratedAudio result;
-  std::vector<float> wav_cat;
+  std::vector<std::vector<float>> chunk_samples;
+  chunk_samples.reserve(text_chunks.size());
   int32_t num_chunks = static_cast<int32_t>(text_chunks.size());
   for (int32_t i = 0; i < num_chunks; ++i) {
-    auto chunk_result = Process(text_chunks[i], lang, sid, num_steps, speed);
+    auto chunk_result =
+        Process(text_chunks[i], lang, sid, num_steps, speed, gen);
     if (chunk_result.samples.empty()) {
       continue;
     }
@@ -578,18 +504,36 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
       callback(chunk_result.samples.data(), chunk_result.samples.size(),
                progress);
     }
-    if (wav_cat.empty()) {
-      wav_cat = std::move(chunk_result.samples);
-    } else {
-      int silence_len =
-          static_cast<int>(silence_duration * chunk_result.sample_rate);
-      wav_cat.resize(wav_cat.size() + silence_len, 0);
-      wav_cat.insert(wav_cat.end(), chunk_result.samples.begin(),
-                     chunk_result.samples.end());
+    chunk_samples.push_back(std::move(chunk_result.samples));
+  }
+
+  if (chunk_samples.empty()) {
+    result.sample_rate = model_->GetSampleRate();
+    return result;
+  }
+
+  int32_t sample_rate = model_->GetSampleRate();
+  size_t silence_len =
+      static_cast<size_t>(silence_duration * static_cast<float>(sample_rate));
+  size_t total = 0;
+  for (const auto &s : chunk_samples) {
+    total += s.size();
+  }
+  if (chunk_samples.size() > 1) {
+    total += (chunk_samples.size() - 1) * silence_len;
+  }
+
+  std::vector<float> wav_cat;
+  wav_cat.reserve(total);
+  for (size_t i = 0; i < chunk_samples.size(); ++i) {
+    if (i > 0) {
+      wav_cat.insert(wav_cat.end(), silence_len, 0.f);
     }
+    wav_cat.insert(wav_cat.end(), chunk_samples[i].begin(),
+                   chunk_samples[i].end());
   }
   result.samples = std::move(wav_cat);
-  result.sample_rate = model_->GetSampleRate();
+  result.sample_rate = sample_rate;
   return result;
 }
 
@@ -609,38 +553,34 @@ void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
   }
   if (style.ttl_shape[0] != style.dp_shape[0]) {
     SHERPA_ONNX_LOGE(
-        "Invalid voice style: ttl_shape[0] != dp_shape[0]. Given: %ld != %ld",
-        static_cast<long>(style.ttl_shape[0]),
-        static_cast<long>(style.dp_shape[0]));
+        "Invalid voice style: ttl_shape[0] != dp_shape[0]. Given: %d != %d",
+        static_cast<int32_t>(style.ttl_shape[0]),
+        static_cast<int32_t>(style.dp_shape[0]));
     SHERPA_ONNX_EXIT(-1);
   }
   num_speakers_ = num_speakers;
   full_style_ = std::move(style);
 }
 
-void OfflineTtsSupertonicImpl::GetStyleSliceForSid(int64_t sid,
-                                                   StyleSliceView *out) const {
-  if (num_speakers_ == 0) {
-    SHERPA_ONNX_LOGE("No voice style loaded");
-    SHERPA_ONNX_EXIT(-1);
-  }
+OfflineTtsSupertonicImpl::StyleSliceView
+OfflineTtsSupertonicImpl::GetStyleSliceForSid(int64_t sid) const {
+  StyleSliceView out;
   int32_t s = 0;
   if (num_speakers_ != 1) {
-    int64_t clamped = std::max(
-        int64_t{0}, std::min(sid, static_cast<int64_t>(num_speakers_ - 1)));
+    int64_t hi = static_cast<int64_t>(num_speakers_ - 1);
+    int64_t clamped = std::clamp<int64_t>(sid, 0, hi);
     s = static_cast<int32_t>(clamped);
   }
   const SupertonicStyle &full = full_style_;
-  out->ttl_shape = {1, full.ttl_shape[1], full.ttl_shape[2]};
-  out->dp_shape = {1, full.dp_shape[1], full.dp_shape[2]};
-  size_t ttl_slice = static_cast<size_t>(out->ttl_shape[1] * out->ttl_shape[2]);
-  size_t dp_slice = static_cast<size_t>(out->dp_shape[1] * out->dp_shape[2]);
-  out->ttl_size = ttl_slice;
-  out->dp_size = dp_slice;
-  out->ttl_data = const_cast<float *>(full.ttl_data.data()) +
-                  static_cast<size_t>(s) * ttl_slice;
-  out->dp_data = const_cast<float *>(full.dp_data.data()) +
-                 static_cast<size_t>(s) * dp_slice;
+  out.ttl_shape = {1, full.ttl_shape[1], full.ttl_shape[2]};
+  out.dp_shape = {1, full.dp_shape[1], full.dp_shape[2]};
+  size_t ttl_slice = static_cast<size_t>(out.ttl_shape[1] * out.ttl_shape[2]);
+  size_t dp_slice = static_cast<size_t>(out.dp_shape[1] * out.dp_shape[2]);
+  out.ttl_size = ttl_slice;
+  out.dp_size = dp_slice;
+  out.ttl_data = full.ttl_data.data() + static_cast<size_t>(s) * ttl_slice;
+  out.dp_data = full.dp_data.data() + static_cast<size_t>(s) * dp_slice;
+  return out;
 }
 
 #if __ANDROID_API__ >= 9
