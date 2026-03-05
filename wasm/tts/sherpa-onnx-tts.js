@@ -727,10 +727,10 @@ class OfflineTts {
     const textLen = this.Module.lengthBytesUTF8(config.text) + 1;
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(config.text, textPtr, textLen);
-    this.Module._free(textPtr);
 
     const h = this.Module._SherpaOnnxOfflineTtsGenerate(
         this.handle, textPtr, config.sid, config.speed);
+    this.Module._free(textPtr);
 
     if (!h) {
       throw new Error('TTS generation failed');
