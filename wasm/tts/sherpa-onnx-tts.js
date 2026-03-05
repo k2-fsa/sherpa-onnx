@@ -405,8 +405,13 @@ function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
 
   Module.setValue(ptr + 6 * 4, buffer + offset, 'i8*');
   offset += tokenScoresJsonLen;
-  
-  Module.setValue(ptr + 7 * 4, config.voiceEmbeddingCacheCapacity !== undefined ? config.voiceEmbeddingCacheCapacity : 50, 'i32');
+
+  Module.setValue(
+      ptr + 7 * 4,
+      config.voiceEmbeddingCacheCapacity !== undefined ?
+          config.voiceEmbeddingCacheCapacity :
+          50,
+      'i32');
 
   return {
     buffer: buffer,
@@ -722,9 +727,14 @@ class OfflineTts {
     const textLen = this.Module.lengthBytesUTF8(config.text) + 1;
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(config.text, textPtr, textLen);
+    this.Module._free(textPtr);
 
     const h = this.Module._SherpaOnnxOfflineTtsGenerate(
         this.handle, textPtr, config.sid, config.speed);
+
+    if (!h) {
+      throw new Error('TTS generation failed');
+    }
 
     const numSamples = this.Module.HEAP32[h / 4 + 1];
     const sampleRate = this.Module.HEAP32[h / 4 + 2];
