@@ -5,27 +5,35 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 
 #include <fstream>
-#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 std::wstring ToWideString(const std::string &s);
+std::string ToString(const std::wstring &s);
 
 bool FileExists(const std::string &filename) {
   try {
 #ifdef _WIN32
-    std::wstring wide_path = ToWideString(filename);
-    std::filesystem::path file_path(wide_path);
+    DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
+    
+    return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 #else
-    std::filesystem::path file_path(filename);
+    struct stat file_stat;
+    return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
 #endif
-    return std::filesystem::exists(file_path) && 
-           std::filesystem::is_regular_file(file_path);
   } catch (const std::exception&) {
     return false;
   }
@@ -39,14 +47,44 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
+  if (filename.empty()) {
+    return {};
+  }
   try {
-#ifdef _WIN32
-    std::wstring wide_path = ToWideString(filename);
-    std::filesystem::path file_path(wide_path);
+#ifdef _WIN32     
+    HANDLE hFile = CreateFileW(
+        ToWideString(filename).c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr
+    );
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+      return {};
+    }
+
+    std::unique_ptr<void, decltype(&CloseHandle)> file_guard(
+      hFile, CloseHandle);
+
+    LARGE_INTEGER file_size;
+    if (!GetFileSizeEx(hFile, &file_size) || file_size.QuadPart > SIZE_MAX) {
+      return {};
+    }
+
+    std::vector<char> buffer(static_cast<size_t>(file_size.QuadPart));
+
+    DWORD bytes_read = 0;
+    if (!::ReadFile(hFile, buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_read, nullptr) ||
+        bytes_read != buffer.size()) {
+      return {};
+    }
+    
+    return buffer;
 #else
-    std::filesystem::path file_path(filename);
-#endif
-    std::ifstream file(file_path, std::ios::binary | std::ios::ate);
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
       return {};
     }
@@ -60,6 +98,7 @@ std::vector<char> ReadFile(const std::string &filename) {
     }
 
     return buffer;
+#endif
   } catch (const std::exception&) {
     return {};
   }
@@ -138,23 +177,33 @@ std::string ResolveAbsolutePath(const std::string &path) {
   try {
 #ifdef _WIN32
     std::wstring wide_path = ToWideString(path);
-    std::filesystem::path fs_path(wide_path);
-#else
-    std::filesystem::path fs_path(path);
-#endif
-    
-    // If already absolute, return normalized path
-    if (fs_path.is_absolute()) {
-      return fs_path.lexically_normal().u8string();
+    DWORD required_size = GetFullPathNameW(wide_path.c_str(), 0, nullptr, nullptr);
+    if (required_size == 0) {
+      return path;
     }
     
-    // Convert to absolute path and normalize
-    std::filesystem::path abs_path = std::filesystem::absolute(fs_path);
-    abs_path = abs_path.lexically_normal();
+    std::vector<wchar_t> buffer(required_size);
+    DWORD actual_size = GetFullPathNameW(
+        wide_path.c_str(),
+        required_size,
+        buffer.data(),
+        nullptr
+    );
     
-    return abs_path.u8string();
+    if (actual_size == 0 || actual_size >= required_size) {
+      return path;
+    }
+    
+    std::wstring resolved_wide(buffer.data(), actual_size);
+    return ToString(resolved_wide);
+#else
+    char resolved_path[PATH_MAX];
+    if (realpath(path.c_str(), resolved_path) == nullptr) {
+      return path;
+    }
+    return std::string(resolved_path);
+#endif
   } catch (const std::exception&) {
-    // If conversion fails, return original path
     return path;
   }
 }
