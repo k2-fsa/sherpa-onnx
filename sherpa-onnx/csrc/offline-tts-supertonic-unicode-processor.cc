@@ -46,8 +46,8 @@ static constexpr int32_t kHangulScount =
 
 // Latin NFKD decompositions via switch (no static map allocation).
 // Returns true if codepoint was decomposed, false otherwise.
-static bool DecomposeLatin(uint32_t codepoint, std::vector<std::uint16_t> *out) {
-  auto push2 = [&](std::uint16_t a, std::uint16_t b) {
+static bool DecomposeLatin(uint32_t codepoint, std::vector<uint16_t> *out) {
+  auto push2 = [&](uint16_t a, uint16_t b) {
     out->push_back(a);
     out->push_back(b);
   };
@@ -202,17 +202,17 @@ static bool DecomposeLatin(uint32_t codepoint, std::vector<std::uint16_t> *out) 
 }
 
 static void DecomposeCharacter(uint32_t codepoint,
-                               std::vector<std::uint16_t> *output) {
+                               std::vector<uint16_t> *output) {
   if (codepoint >= kHangulSbase && codepoint < kHangulSbase + kHangulScount) {
     uint32_t s_index = codepoint - kHangulSbase;
     uint32_t l_index = s_index / kHangulNcount;
     uint32_t v_index = (s_index % kHangulNcount) / kHangulTcount;
     uint32_t t_index = s_index % kHangulTcount;
 
-    output->push_back(static_cast<std::uint16_t>(kHangulLbase + l_index));
-    output->push_back(static_cast<std::uint16_t>(kHangulVbase + v_index));
+    output->push_back(static_cast<uint16_t>(kHangulLbase + l_index));
+    output->push_back(static_cast<uint16_t>(kHangulVbase + v_index));
     if (t_index > 0) {
-      output->push_back(static_cast<std::uint16_t>(kHangulTbase + t_index));
+      output->push_back(static_cast<uint16_t>(kHangulTbase + t_index));
     }
     return;
   }
@@ -220,7 +220,7 @@ static void DecomposeCharacter(uint32_t codepoint,
   if (DecomposeLatin(codepoint, output)) return;
 
   if (codepoint > 0xFFFF) return;
-  output->push_back(static_cast<std::uint16_t>(codepoint));
+  output->push_back(static_cast<uint16_t>(codepoint));
 }
 
 // Decode the last UTF-8 codepoint in s. Returns 0 if s is empty or invalid.
@@ -471,9 +471,9 @@ std::string SupertonicUnicodeProcessor::PreprocessText(
   return result;
 }
 
-std::vector<std::uint16_t> SupertonicUnicodeProcessor::TextToUnicodeValues(
+std::vector<uint16_t> SupertonicUnicodeProcessor::TextToUnicodeValues(
     const std::string &text) const {
-  std::vector<std::uint16_t> unicode_values;
+  std::vector<uint16_t> unicode_values;
   size_t i = 0;
 
   while (i < text.size()) {
@@ -514,7 +514,7 @@ void SupertonicUnicodeProcessor::Process(
     std::vector<int64_t> *text_ids, std::vector<float> *text_mask_flat,
     std::vector<int64_t> *text_mask_shape) const {
   const std::string processed = PreprocessText(text, lang);
-  const std::vector<std::uint16_t> unicode_vals = TextToUnicodeValues(processed);
+  const std::vector<uint16_t> unicode_vals = TextToUnicodeValues(processed);
   const size_t seq_len = unicode_vals.size();
 
   constexpr int64_t kUnknownId = 0;

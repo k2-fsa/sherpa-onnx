@@ -32,7 +32,7 @@ class SupertonicUnicodeProcessor {
  private:
   std::string PreprocessText(const std::string &text,
                              const std::string &lang) const;
-  std::vector<std::uint16_t> TextToUnicodeValues(const std::string &text) const;
+  std::vector<uint16_t> TextToUnicodeValues(const std::string &text) const;
 
   std::vector<int32_t> indexer_;
 };
