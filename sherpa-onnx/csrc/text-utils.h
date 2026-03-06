@@ -61,6 +61,14 @@ void SplitStringToVector(const std::string &full, const char *delim,
                          bool omit_empty_strings,
                          std::vector<std::string> *out);
 
+/// Trim leading and trailing whitespace from a string.
+std::string Trim(const std::string &str);
+
+/// Split a string by a single character delimiter, trim whitespace from each
+/// part, and remove empty strings. This is a convenience wrapper around
+/// SplitStringToVector with trimming and filtering.
+std::vector<std::string> SplitStringAndTrim(const std::string &str, char delim);
+
 /**
   \brief Split a string (e.g. 1:2:3) into a vector of integers.
 
@@ -197,6 +205,19 @@ bool IsPunct(const std::string &s);
 int32_t ToIntOrDefault(const std::string &s, int32_t default_value);
 
 float ToFloatOrDefault(const std::string &s, float default_value);
+
+// Convert lengths to flat mask + shape. Outputs [batch, 1, max_len] format
+// where mask[b][0][i] = 1.0 if i < lengths[b], else 0.0.
+void LengthsToMask(const std::vector<int64_t> &lengths,
+                   std::vector<float> *mask_flat,
+                   std::vector<int64_t> *mask_shape);
+
+// TTS text chunking helpers.
+std::vector<std::string> SplitByBlankLines(const std::string &text);
+std::vector<std::string> SplitByPunctuation(const std::string &text);
+std::vector<std::string> SplitLongSentence(const std::string &sentence,
+                                           size_t max_chars);
+std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
 
 }  // namespace sherpa_onnx
 
