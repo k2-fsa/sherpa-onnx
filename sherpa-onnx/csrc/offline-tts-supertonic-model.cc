@@ -330,6 +330,20 @@ class OfflineTtsSupertonicModel::Impl {
     }
   }
 
+  static json LoadJsonFromBuffer(const std::vector<char> &buf) {
+    if (buf.empty()) {
+      SHERPA_ONNX_LOGE("Empty json buffer");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    try {
+      return json::parse(buf.begin(), buf.end());
+    } catch (const std::exception &e) {
+      SHERPA_ONNX_LOGE("Failed to parse JSON buffer: %s", e.what());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    return json{};
+  }
+
   void LoadConfig(const std::string &config_path) {
     auto buf = ReadFile(config_path);
     if (buf.empty()) {

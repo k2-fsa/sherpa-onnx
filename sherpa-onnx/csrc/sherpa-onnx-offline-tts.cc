@@ -74,6 +74,10 @@ or details.
               "trained using the VCTK dataset. Not used for single-speaker "
               "models, e.g., models trained using the LJSpeech dataset");
 
+  po.Register("speed", &gen_config.speed,
+              "Speech speed. Larger=faster. Used by Supertonic, VITS, etc. "
+              "(float, default = 1.0)");
+
   sherpa_onnx::OfflineTtsConfig config;
 
   config.Register(&po);
@@ -115,7 +119,6 @@ or details.
       if (!lang.empty()) {
         gen_config.extra["lang"] = lang;
       }
-      gen_config.speed = 1.0f;
       gen_config.sid = sid;
     }
 
@@ -141,7 +144,7 @@ or details.
 
     audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
   } else {
-    audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
+    audio = tts.Generate(po.GetArg(1), sid, gen_config.speed, AudioCallback);
   }
 
   const auto end = std::chrono::steady_clock::now();
