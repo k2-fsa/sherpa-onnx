@@ -9,6 +9,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_UNICODE_PROCESSOR_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_SUPERTONIC_UNICODE_PROCESSOR_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -31,7 +32,7 @@ class SupertonicUnicodeProcessor {
  private:
   std::string PreprocessText(const std::string &text,
                              const std::string &lang) const;
-  std::vector<uint16_t> TextToUnicodeValues(const std::string &text) const;
+  std::vector<std::uint16_t> TextToUnicodeValues(const std::string &text) const;
 
   std::vector<int32_t> indexer_;
 };
