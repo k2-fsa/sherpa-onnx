@@ -50,8 +50,8 @@ jobs:
           d=sherpa-onnx-supertonic-tts-int8-2026-03-06
 
           mkdir $d
-          cp -a LICENSE $d/LICENSE
-          cp -a $src/README.md $d/README.md
+          cp -a $src/LICENSE $d/
+          cp -a $src/README.md $d/
           cp -v $src/onnx_int8/*.int8.onnx $d/
           [ -f $src/assets/onnx/unicode_indexer.bin ] && cp -v $src/assets/onnx/unicode_indexer.bin $d/
           [ -f $src/assets/onnx/tts.json ] && cp -v $src/assets/onnx/tts.json $d/
