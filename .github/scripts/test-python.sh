@@ -8,6 +8,20 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Supertonic TTS"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+python3 python-api-examples/supertonic-tts.py
+
+rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+
+mkdir -p tts
+cp supertonic-en.wav tts/
+ls -lh tts
+
 log "test Moonshine v2"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
@@ -399,7 +413,7 @@ done
 
 log "Offline TTS test"
 # test waves are saved in ./tts
-mkdir ./tts
+mkdir -p ./tts
 
 log "test kitten tts"
 
