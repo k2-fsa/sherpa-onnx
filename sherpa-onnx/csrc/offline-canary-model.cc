@@ -117,11 +117,13 @@ class OfflineCanaryModel::Impl {
   }
 
   std::vector<Ort::Value> GetInitialDecoderStates() {
-    std::array<int64_t, 3> shape{1, 0, 1024};
+    int32_t num_layers = meta_.num_decoder_layers;
+    int64_t hidden_size = meta_.decoder_hidden_size;
+    std::array<int64_t, 3> shape{1, 0, hidden_size};
 
     std::vector<Ort::Value> ans;
-    ans.reserve(6);
-    for (int32_t i = 0; i < 6; ++i) {
+    ans.reserve(num_layers);
+    for (int32_t i = 0; i < num_layers; ++i) {
       Ort::Value state = Ort::Value::CreateTensor<float>(
           Allocator(), shape.data(), shape.size());
 
@@ -178,6 +180,35 @@ class OfflineCanaryModel::Impl {
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA(meta_.subsampling_factor, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA(meta_.feat_dim, "feat_dim");
+
+    // Read decoder architecture metadata (with defaults for backward compat)
+    {
+      Ort::AllocatorWithDefaultOptions alloc;
+      try {
+        auto num_layers_str = meta_data.LookupCustomMetadataMapAllocated(
+            "num_decoder_layers", alloc);
+        if (num_layers_str) {
+          int32_t num_layers = std::stoi(num_layers_str.get());
+          if (num_layers > 0) {
+            meta_.num_decoder_layers = num_layers;
+          }
+        }
+      } catch (const std::exception &) {
+        // Use default (6) if not present or on parsing error
+      }
+      try {
+        auto hidden_size_str = meta_data.LookupCustomMetadataMapAllocated(
+            "decoder_hidden_size", alloc);
+        if (hidden_size_str) {
+          int64_t hidden_size = std::stoll(hidden_size_str.get());
+          if (hidden_size > 0) {
+            meta_.decoder_hidden_size = hidden_size;
+          }
+        }
+      } catch (const std::exception &) {
+        // Use default (1024) if not present or on parsing error
+      }
+    }
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
