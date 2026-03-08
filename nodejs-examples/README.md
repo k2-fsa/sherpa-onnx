@@ -36,6 +36,10 @@ node ./test-offline-speech-enhancement-gtcrn.js
 
 The example file currently uses `gtcrn_simple.onnx`. The same offline speech
 denoiser API also supports DPDFNet models through `model.dpdfnet.model`.
+Download DPDFNet models from the official Hugging Face hub:
+`https://huggingface.co/Ceva-IP/DPDFNet`
+instead of the sherpa-onnx release page.
+
 Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
 `dpdfnet4.onnx`, or `dpdfnet8.onnx` if you want enhanced audio for downstream
 ASR or speech recognition, and use `dpdfnet2_48khz_hr.onnx` if you want 48 kHz

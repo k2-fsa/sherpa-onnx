@@ -2,7 +2,10 @@
 
 // This file shows how to use speech enhancement models in sherpa-onnx
 //
-// please download files in this script from
+// Download DPDFNet models from the official Hugging Face hub:
+// https://huggingface.co/Ceva-IP/DPDFNet
+//
+// GTCRN models and sample test waves are still available from:
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 //
 // Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx

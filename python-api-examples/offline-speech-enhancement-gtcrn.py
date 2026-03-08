@@ -3,17 +3,17 @@
 """
 This file shows how to use the speech enhancement API.
 
-Please download files used this script from
-https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+Download DPDFNet models from the official Hugging Face hub:
+https://huggingface.co/Ceva-IP/DPDFNet
 
 Example:
 
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
- wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/baseline.onnx
- wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2.onnx
- wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
- wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
- wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet4.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_48khz_hr.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
 
 Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
@@ -37,7 +37,8 @@ def create_speech_denoiser():
     # "./dpdfnet2_48khz_hr.onnx" for 48 kHz enhancement output.
     if not Path(model_filename).is_file():
         raise ValueError(
-            "Please first download a model from "
+            "Please first download a DPDFNet model from "
+            "https://huggingface.co/Ceva-IP/DPDFNet or a GTCRN model from "
             "https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models"
         )
 

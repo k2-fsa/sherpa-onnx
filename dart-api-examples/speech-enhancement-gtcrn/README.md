@@ -9,7 +9,9 @@ Use `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 
 Download a model and a test wave file from:
 
-https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+- DPDFNet models: https://huggingface.co/Ceva-IP/DPDFNet
+- GTCRN model and sample test waves:
+  https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 
 Then run:
 
