@@ -4,22 +4,31 @@
 //
 // please download files in this script from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+//
+// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// for 16 kHz downstream ASR or speech recognition.
+// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 
 import com.k2fsa.sherpa.onnx.*;
 
 public class NonStreamingSpeechEnhancementGtcrn {
   public static void main(String[] args) {
     String model = "./gtcrn_simple.onnx";
-    OfflineSpeechDenoiserGtcrnModelConfig gtcrn =
-        OfflineSpeechDenoiserGtcrnModelConfig.builder().setModel(model).build();
-
-    OfflineSpeechDenoiserModelConfig modelConfig =
+    OfflineSpeechDenoiserModelConfig.Builder builder =
         OfflineSpeechDenoiserModelConfig.builder()
-            .setGtcrn(gtcrn)
             .setNumThreads(1)
             .setDebug(true)
-            .setProvider("cpu")
-            .build();
+            .setProvider("cpu");
+
+    if (model.toLowerCase().contains("dpdfnet")) {
+      builder.setDpdfnet(
+          OfflineSpeechDenoiserDpdfNetModelConfig.builder().setModel(model).build());
+    } else {
+      builder.setGtcrn(
+          OfflineSpeechDenoiserGtcrnModelConfig.builder().setModel(model).build());
+    }
+
+    OfflineSpeechDenoiserModelConfig modelConfig = builder.build();
     OfflineSpeechDenoiserConfig config =
         OfflineSpeechDenoiserConfig.builder().setModel(modelConfig).build();
 
@@ -29,7 +38,7 @@ public class NonStreamingSpeechEnhancementGtcrn {
     WaveReader reader = new WaveReader(testWaveFilename);
 
     DenoisedAudio denoised = speech_denoiser.run(reader.getSamples(), reader.getSampleRate());
-    String outFilename = "enhanced-16k.wav";
+    String outFilename = "enhanced.wav";
     WaveWriter.write(outFilename, denoised.getSamples(), denoised.getSampleRate());
     System.out.printf("Saved to %s\n", outFilename);
 

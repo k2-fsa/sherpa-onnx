@@ -5,7 +5,16 @@ This file shows how to use the speech enhancement API from sherpa-onnx
 Please first download files used in this script before you run it.
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/baseline.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+for 16 kHz downstream ASR or speech recognition.
+Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 }
 program main;
 
@@ -17,16 +26,21 @@ uses
 
 var
   Wave: TSherpaOnnxWave;
+  Model: AnsiString;
 
   Config: TSherpaOnnxOfflineSpeechDenoiserConfig;
   Sd: TSherpaOnnxOfflineSpeechDenoiser;
   Audio: TSherpaOnnxDenoisedAudio;
 begin
   Wave := SherpaOnnxReadWave('./inp_16k.wav');
+  Model := './gtcrn_simple.onnx';
 
   Initialize(Config);
 
-  Config.Model.Gtcrn.Model := './gtcrn_simple.onnx';
+  if Pos('dpdfnet', LowerCase(String(Model))) > 0 then
+    Config.Model.DpdfNet.Model := Model
+  else
+    Config.Model.Gtcrn.Model := Model;
   Config.Model.NumThreads:= 1;
   Config.Model.Debug:= True;
   Config.Model.Provider:= 'cpu';
@@ -35,9 +49,8 @@ begin
 
   Audio := Sd.Run(Wave.Samples, Wave.SampleRate);
 
-  SherpaOnnxWriteWave('./enhanced-16k.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./enhanced-16k.wav');
+  SherpaOnnxWriteWave('./enhanced.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./enhanced.wav');
 
   FreeAndNil(Sd);
 end.
-

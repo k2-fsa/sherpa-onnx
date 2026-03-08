@@ -29,9 +29,34 @@ class OfflineSpeechDenoiserGtcrnModelConfig {
   final String model;
 }
 
+class OfflineSpeechDenoiserDpdfNetModelConfig {
+  const OfflineSpeechDenoiserDpdfNetModelConfig({
+    this.model = '',
+  });
+
+  factory OfflineSpeechDenoiserDpdfNetModelConfig.fromJson(
+      Map<String, dynamic> json) {
+    return OfflineSpeechDenoiserDpdfNetModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineSpeechDenoiserDpdfNetModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
+
+  final String model;
+}
+
 class OfflineSpeechDenoiserModelConfig {
   const OfflineSpeechDenoiserModelConfig({
     this.gtcrn = const OfflineSpeechDenoiserGtcrnModelConfig(),
+    this.dpdfnet = const OfflineSpeechDenoiserDpdfNetModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -43,6 +68,10 @@ class OfflineSpeechDenoiserModelConfig {
           ? OfflineSpeechDenoiserGtcrnModelConfig.fromJson(
               json['gtcrn'] as Map<String, dynamic>)
           : const OfflineSpeechDenoiserGtcrnModelConfig(),
+      dpdfnet: json['dpdfnet'] != null
+          ? OfflineSpeechDenoiserDpdfNetModelConfig.fromJson(
+              json['dpdfnet'] as Map<String, dynamic>)
+          : const OfflineSpeechDenoiserDpdfNetModelConfig(),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -51,17 +80,19 @@ class OfflineSpeechDenoiserModelConfig {
 
   @override
   String toString() {
-    return 'OfflineSpeechDenoiserModelConfig(gtcrn: $gtcrn, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineSpeechDenoiserModelConfig(gtcrn: $gtcrn, dpdfnet: $dpdfnet, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
         'gtcrn': gtcrn.toJson(),
+        'dpdfnet': dpdfnet.toJson(),
         'numThreads': numThreads,
         'debug': debug,
         'provider': provider,
       };
 
   final OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+  final OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -113,6 +144,7 @@ class OfflineSpeechDenoiser {
   factory OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
     final c = calloc<SherpaOnnxOfflineSpeechDenoiserConfig>();
     c.ref.model.gtcrn.model = config.model.gtcrn.model.toNativeUtf8();
+    c.ref.model.dpdfnet.model = config.model.dpdfnet.model.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
@@ -128,6 +160,7 @@ class OfflineSpeechDenoiser {
 
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.gtcrn.model);
+    calloc.free(c.ref.model.dpdfnet.model);
     calloc.free(c);
 
     if (ptr == nullptr) {

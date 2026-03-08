@@ -2495,6 +2495,7 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
 
   if (c.model.debug) {
 #if __OHOS__

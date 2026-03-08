@@ -625,8 +625,13 @@ struct OfflineSpeechDenoiserGtcrnModelConfig {
   std::string model;
 };
 
+struct OfflineSpeechDenoiserDpdfNetModelConfig {
+  std::string model;
+};
+
 struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+  OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
   int32_t num_threads = 1;
   int32_t debug = false;
   std::string provider = "cpu";

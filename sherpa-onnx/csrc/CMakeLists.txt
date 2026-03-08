@@ -296,6 +296,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
 endif()
 
 list(APPEND sources
+  offline-speech-denoiser-dpdfnet-model-config.cc
+  offline-speech-denoiser-dpdfnet-model.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-gtcrn-model.cc
   offline-speech-denoiser-impl.cc

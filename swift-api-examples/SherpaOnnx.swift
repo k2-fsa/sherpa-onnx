@@ -1804,9 +1804,17 @@ func sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: String = "")
   return SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: toCPointer(model))
 }
 
+func sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: String = "")
+  -> SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig
+{
+  return SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: toCPointer(model))
+}
+
 func sherpaOnnxOfflineSpeechDenoiserModelConfig(
   gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig =
     sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(),
+  dpdfnet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig =
+    sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(),
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0
@@ -1815,7 +1823,8 @@ func sherpaOnnxOfflineSpeechDenoiserModelConfig(
     gtcrn: gtcrn,
     num_threads: Int32(numThreads),
     debug: Int32(debug),
-    provider: toCPointer(provider)
+    provider: toCPointer(provider),
+    dpdfnet: dpdfnet
   )
 }
 

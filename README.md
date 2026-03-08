@@ -70,7 +70,7 @@ This repository supports running the following functions **locally**
   - Spoken language identification
   - Audio tagging
   - VAD (e.g., [silero-vad][silero-vad])
-  - Speech enhancement (e.g., [gtcrn][gtcrn])
+  - Speech enhancement (e.g., [gtcrn][gtcrn], DPDFNet)
   - Keyword spotting
   - Source separation (e.g., [spleeter][spleeter], [UVR][UVR])
 

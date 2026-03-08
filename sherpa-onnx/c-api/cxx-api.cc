@@ -704,10 +704,10 @@ OfflineSpeechDenoiser OfflineSpeechDenoiser::Create(
   memset(&c, 0, sizeof(c));
 
   c.model.gtcrn.model = config.model.gtcrn.model.c_str();
-
   c.model.num_threads = config.model.num_threads;
   c.model.provider = config.model.provider.c_str();
   c.model.debug = config.model.debug;
+  c.model.dpdfnet.model = config.model.dpdfnet.model.c_str();
 
   auto p = SherpaOnnxCreateOfflineSpeechDenoiser(&c);
 

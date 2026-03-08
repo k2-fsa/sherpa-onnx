@@ -1878,11 +1878,17 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig {
   const char *model;
 } SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
 
+SHERPA_ONNX_API typedef struct
+    SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
+  const char *model;
+} SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
   SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   int32_t num_threads;
   int32_t debug;  // true to print debug information of the model
   const char *provider;
+  SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
 } SherpaOnnxOfflineSpeechDenoiserModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserConfig {
