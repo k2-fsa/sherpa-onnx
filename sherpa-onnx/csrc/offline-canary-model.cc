@@ -181,34 +181,10 @@ class OfflineCanaryModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_.subsampling_factor, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA(meta_.feat_dim, "feat_dim");
 
-    // Read decoder architecture metadata (with defaults for backward compat)
-    {
-      Ort::AllocatorWithDefaultOptions alloc;
-      try {
-        auto num_layers_str = meta_data.LookupCustomMetadataMapAllocated(
-            "num_decoder_layers", alloc);
-        if (num_layers_str) {
-          int32_t num_layers = std::stoi(num_layers_str.get());
-          if (num_layers > 0) {
-            meta_.num_decoder_layers = num_layers;
-          }
-        }
-      } catch (const std::exception &) {
-        // Use default (6) if not present or on parsing error
-      }
-      try {
-        auto hidden_size_str = meta_data.LookupCustomMetadataMapAllocated(
-            "decoder_hidden_size", alloc);
-        if (hidden_size_str) {
-          int64_t hidden_size = std::stoll(hidden_size_str.get());
-          if (hidden_size > 0) {
-            meta_.decoder_hidden_size = hidden_size;
-          }
-        }
-      } catch (const std::exception &) {
-        // Use default (1024) if not present or on parsing error
-      }
-    }
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.num_decoder_layers,
+                                            "num_decoder_layers", 6);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.decoder_hidden_size,
+                                            "decoder_hidden_size", 1024);
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
