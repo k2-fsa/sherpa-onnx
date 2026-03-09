@@ -116,8 +116,9 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     elapsed_seconds_batch += elapsed_seconds;
     int i = 0;
     for (const auto &wav_filename : wav_paths) {
-      fprintf(stderr, "%s\n%s\n----\n", wav_filename.c_str(),
-              ss[i]->GetResult().AsJsonString().c_str());
+      fprintf(stderr, "%s\n", wav_filename.c_str());
+      fprintf(stdout, "%s\n", ss[i]->GetResult().AsJsonString().c_str());
+      fprintf(stderr, "----\n");
       i = i + 1;
     }
     ss_pointers.clear();
