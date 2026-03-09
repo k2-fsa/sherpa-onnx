@@ -25,7 +25,7 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
 #ifdef SHERPA_ONNX_ENABLE_AXCL
-#include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-model-axcl.h"
+#include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-axcl-impl.h"
 #endif
 
 namespace sherpa_onnx {
@@ -47,7 +47,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
   if (config.model.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
     if (!config.model.kokoro.model.empty()) {
-      return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModelAxcl>>(
+      return std::make_unique<OfflineTtsKokoroAxclImpl<OfflineTtsKokoroModelAxcl>>(
           config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -75,8 +75,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
              !config.model.zipvoice.decoder.empty()) {
     return std::make_unique<OfflineTtsZipvoiceImpl>(config);
   } else if (!config.model.kokoro.model.empty()) {
-    return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModel>>(
-        config);
+    return std::make_unique<OfflineTtsKokoroImpl>(config);
   } else if (!config.model.kitten.model.empty()) {
     return std::make_unique<OfflineTtsKittenImpl>(config);
   } else if (!config.model.pocket.lm_flow.empty()) {
@@ -101,8 +100,7 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
              !config.model.zipvoice.decoder.empty()) {
     return std::make_unique<OfflineTtsZipvoiceImpl>(mgr, config);
   } else if (!config.model.kokoro.model.empty()) {
-    return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModel>>(
-        mgr, config);
+    return std::make_unique<OfflineTtsKokoroImpl>(mgr, config);
   } else if (!config.model.kitten.model.empty()) {
     return std::make_unique<OfflineTtsKittenImpl>(mgr, config);
   } else if (!config.model.pocket.lm_flow.empty()) {
