@@ -303,6 +303,7 @@ list(APPEND sources
   offline-speech-denoiser-impl.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc
+  online-speech-denoiser.cc
 )
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
@@ -477,6 +478,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
   add_executable(sherpa-onnx-offline-source-separation sherpa-onnx-offline-source-separation.cc)
+  add_executable(sherpa-onnx-online-denoiser sherpa-onnx-online-denoiser.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
   add_executable(sherpa-onnx-version sherpa-onnx-version.cc version.cc)
   add_executable(sherpa-onnx-vad sherpa-onnx-vad.cc)
@@ -500,6 +502,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
     sherpa-onnx-offline-source-separation
+    sherpa-onnx-online-denoiser
     sherpa-onnx-online-punctuation
     sherpa-onnx-vad
   )

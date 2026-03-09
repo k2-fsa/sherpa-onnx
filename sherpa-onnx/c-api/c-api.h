@@ -1933,6 +1933,42 @@ SherpaOnnxOfflineSpeechDenoiserRun(const SherpaOnnxOfflineSpeechDenoiser *sd,
 SHERPA_ONNX_API void SherpaOnnxDestroyDenoisedAudio(
     const SherpaOnnxDenoisedAudio *p);
 
+// =========================================================================
+// For streaming speech enhancement
+// =========================================================================
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineSpeechDenoiserConfig {
+  SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+} SherpaOnnxOnlineSpeechDenoiserConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineSpeechDenoiser
+    SherpaOnnxOnlineSpeechDenoiser;
+
+SHERPA_ONNX_API const SherpaOnnxOnlineSpeechDenoiser *
+SherpaOnnxCreateOnlineSpeechDenoiser(
+    const SherpaOnnxOnlineSpeechDenoiserConfig *config);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyOnlineSpeechDenoiser(
+    const SherpaOnnxOnlineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserGetSampleRate(
+    const SherpaOnnxOnlineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
+    const SherpaOnnxOnlineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
+SherpaOnnxOnlineSpeechDenoiserRun(const SherpaOnnxOnlineSpeechDenoiser *sd,
+                                  const float *samples, int32_t n,
+                                  int32_t sample_rate);
+
+// Flush buffered samples and reset the denoiser so it can be reused.
+SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
+SherpaOnnxOnlineSpeechDenoiserFlush(
+    const SherpaOnnxOnlineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API void SherpaOnnxOnlineSpeechDenoiserReset(
+    const SherpaOnnxOnlineSpeechDenoiser *sd);
+
 #ifdef __OHOS__
 
 // It is for HarmonyOS

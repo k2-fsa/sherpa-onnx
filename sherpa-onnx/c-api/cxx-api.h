@@ -662,6 +662,31 @@ class SHERPA_ONNX_API OfflineSpeechDenoiser
   explicit OfflineSpeechDenoiser(const SherpaOnnxOfflineSpeechDenoiser *p);
 };
 
+struct OnlineSpeechDenoiserConfig {
+  OfflineSpeechDenoiserModelConfig model;
+};
+
+class SHERPA_ONNX_API OnlineSpeechDenoiser
+    : public MoveOnly<OnlineSpeechDenoiser, SherpaOnnxOnlineSpeechDenoiser> {
+ public:
+  static OnlineSpeechDenoiser Create(const OnlineSpeechDenoiserConfig &config);
+
+  void Destroy(const SherpaOnnxOnlineSpeechDenoiser *p) const;
+
+  DenoisedAudio Run(const float *samples, int32_t n, int32_t sample_rate) const;
+
+  DenoisedAudio Flush() const;
+
+  void Reset() const;
+
+  int32_t GetSampleRate() const;
+
+  int32_t GetFrameShiftInSamples() const;
+
+ private:
+  explicit OnlineSpeechDenoiser(const SherpaOnnxOnlineSpeechDenoiser *p);
+};
+
 // ==============================
 // VAD
 // ==============================
