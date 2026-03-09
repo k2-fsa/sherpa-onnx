@@ -14,6 +14,8 @@ struct OfflineCanaryModelMetaData {
   int32_t vocab_size;
   int32_t subsampling_factor = 8;
   int32_t feat_dim = 120;
+  int32_t num_decoder_layers = 6;
+  int32_t decoder_hidden_size = 1024;
   std::string normalize_type;
   std::unordered_map<std::string, int32_t> lang2id;
 };
