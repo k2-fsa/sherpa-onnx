@@ -24,6 +24,10 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
+#ifdef SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-model-axcl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
@@ -40,6 +44,29 @@ std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
 
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
+  if (config.model.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (!config.model.kokoro.model.empty()) {
+      return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModelAxcl>>(
+          config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only Kokoro models are currently supported by axcl for "
+          "non-streaming TTS.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    }
+
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/axcl/install.html");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model.vits.model.empty()) {
     return std::make_unique<OfflineTtsVitsImpl>(config);
   } else if (!config.model.matcha.acoustic_model.empty()) {
@@ -48,7 +75,8 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
              !config.model.zipvoice.decoder.empty()) {
     return std::make_unique<OfflineTtsZipvoiceImpl>(config);
   } else if (!config.model.kokoro.model.empty()) {
-    return std::make_unique<OfflineTtsKokoroImpl>(config);
+    return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModel>>(
+        config);
   } else if (!config.model.kitten.model.empty()) {
     return std::make_unique<OfflineTtsKittenImpl>(config);
   } else if (!config.model.pocket.lm_flow.empty()) {
@@ -73,7 +101,8 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
              !config.model.zipvoice.decoder.empty()) {
     return std::make_unique<OfflineTtsZipvoiceImpl>(mgr, config);
   } else if (!config.model.kokoro.model.empty()) {
-    return std::make_unique<OfflineTtsKokoroImpl>(mgr, config);
+    return std::make_unique<OfflineTtsKokoroImpl<OfflineTtsKokoroModel>>(
+        mgr, config);
   } else if (!config.model.kitten.model.empty()) {
     return std::make_unique<OfflineTtsKittenImpl>(mgr, config);
   } else if (!config.model.pocket.lm_flow.empty()) {

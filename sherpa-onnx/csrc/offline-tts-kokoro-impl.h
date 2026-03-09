@@ -7,8 +7,9 @@
 #include <iomanip>
 #include <ios>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -25,13 +26,17 @@
 #include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#ifdef SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-model-axcl.h"
+#endif
+
 namespace sherpa_onnx {
 
+template <typename KokoroModel>
 class OfflineTtsKokoroImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsKokoroImpl(const OfflineTtsConfig &config)
-      : config_(config),
-        model_(std::make_unique<OfflineTtsKokoroModel>(config.model)) {
+      : config_(config), model_(std::make_unique<KokoroModel>(config.model)) {
     InitFrontend();
 
     if (!config.rule_fsts.empty()) {
@@ -87,7 +92,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   template <typename Manager>
   OfflineTtsKokoroImpl(Manager *mgr, const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsKokoroModel>(mgr, config.model)) {
+        model_(std::make_unique<KokoroModel>(mgr, config.model)) {
     InitFrontend(mgr);
 
     if (!config.rule_fsts.empty()) {
@@ -137,8 +142,8 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
           tn_list_.push_back(
               std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
         }  // for (; !reader->Done(); reader->Next())
-      }    // for (const auto &f : files)
-    }      // if (!config.rule_fars.empty())
+      }  // for (const auto &f : files)
+    }  // if (!config.rule_fars.empty())
   }
 
   int32_t SampleRate() const override {
@@ -394,29 +399,37 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
       x.insert(x.end(), k.begin(), k.end());
     }
 
-    auto memory_info =
-        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+    GeneratedAudio ans;
+    ans.sample_rate = model_->GetMetaData().sample_rate;
 
-    std::array<int64_t, 2> x_shape = {1, static_cast<int32_t>(x.size())};
-    Ort::Value x_tensor = Ort::Value::CreateTensor(
-        memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
+#ifdef SHERPA_ONNX_ENABLE_AXCL
+    if constexpr (std::is_same_v<KokoroModel, OfflineTtsKokoroModelAxcl>) {
+      std::vector<float> audio = model_->Run(x, sid, speed);
+      ans.samples = std::move(audio);
+    } else
+#endif
+    {
+      auto memory_info =
+          Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+      std::array<int64_t, 2> x_shape = {1, static_cast<int32_t>(x.size())};
+      Ort::Value x_tensor = Ort::Value::CreateTensor(
+          memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
     Ort::Value audio = model_->Run(std::move(x_tensor), sid, speed);
 
-    std::vector<int64_t> audio_shape =
-        audio.GetTensorTypeAndShapeInfo().GetShape();
+      std::vector<int64_t> audio_shape =
+          audio.GetTensorTypeAndShapeInfo().GetShape();
 
-    int64_t total = 1;
-    // The output shape may be (1, 1, total) or (1, total) or (total,)
-    for (auto i : audio_shape) {
-      total *= i;
+      int64_t total = 1;
+      // The output shape may be (1, 1, total) or (1, total) or (total,)
+      for (auto i : audio_shape) {
+        total *= i;
+      }
+
+      const float *p = audio.GetTensorData<float>();
+      ans.samples = std::vector<float>(p, p + total);
     }
-
-    const float *p = audio.GetTensorData<float>();
-
-    GeneratedAudio ans;
-    ans.sample_rate = model_->GetMetaData().sample_rate;
-    ans.samples = std::vector<float>(p, p + total);
 
     float silence_scale = config_.silence_scale;
     if (silence_scale != 1) {
@@ -428,7 +441,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
 
  private:
   OfflineTtsConfig config_;
-  std::unique_ptr<OfflineTtsKokoroModel> model_;
+  std::unique_ptr<KokoroModel> model_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<OfflineTtsFrontend> frontend_;
 };
