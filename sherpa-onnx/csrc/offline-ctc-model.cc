@@ -31,6 +31,10 @@
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
+#if SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-fire-red-asr-ctc-model-axcl.h"
+#endif
+
 namespace {
 
 enum class ModelType : std::uint8_t {
@@ -131,6 +135,11 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
+    if (config.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+      return std::make_unique<OfflineFireRedAsrCtcModelAxcl>(config);
+#endif
+    }
     return std::make_unique<OfflineFireRedAsrCtcModel>(config);
   }
 
@@ -201,6 +210,11 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(mgr, config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
+    if (config.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+      return std::make_unique<OfflineFireRedAsrCtcModelAxcl>(mgr, config);
+#endif
+    }
     return std::make_unique<OfflineFireRedAsrCtcModel>(mgr, config);
   }
 

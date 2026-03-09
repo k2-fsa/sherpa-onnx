@@ -221,6 +221,7 @@ if(SHERPA_ONNX_ENABLE_AXCL)
     ./axcl/axcl-manager.cc
     ./axcl/axcl-model.cc
     ./axcl/offline-sense-voice-model-axcl.cc
+    ./axcl/offline-fire-red-asr-ctc-model-axcl.cc
     ./axcl/utils.cc
   )
 endif()
