@@ -31,6 +31,10 @@
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
+#if SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/offline-fire-red-asr-ctc-model-axera.h"
+#endif
+
 #if SHERPA_ONNX_ENABLE_AXCL
 #include "sherpa-onnx/csrc/axcl/offline-fire-red-asr-ctc-model-axcl.h"
 #endif
@@ -135,7 +139,11 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
-    if (config.provider == "axcl") {
+    if (config.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+      return std::make_unique<OfflineFireRedAsrCtcModelAxera>(config);
+#endif
+    } else if (config.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
       return std::make_unique<OfflineFireRedAsrCtcModelAxcl>(config);
 #endif
@@ -210,7 +218,11 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(mgr, config);
   } else if (!config.fire_red_asr_ctc.model.empty()) {
-    if (config.provider == "axcl") {
+    if (config.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+      return std::make_unique<OfflineFireRedAsrCtcModelAxera>(mgr, config);
+#endif
+    } else if (config.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
       return std::make_unique<OfflineFireRedAsrCtcModelAxcl>(mgr, config);
 #endif

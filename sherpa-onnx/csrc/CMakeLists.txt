@@ -208,6 +208,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_AXERA)
   list(APPEND sources
     ./axera/ax-engine-guard.cc
+    ./axera/offline-fire-red-asr-ctc-model-axera.cc
     ./axera/offline-sense-voice-model-axera.cc
     ./axera/utils.cc
   )
