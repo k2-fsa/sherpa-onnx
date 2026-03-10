@@ -481,6 +481,16 @@ struct OfflineTtsPocketModelConfig {
   int32_t voice_embedding_cache_capacity = 50;
 };
 
+struct OfflineTtsSupertonicModelConfig {
+  std::string duration_predictor;
+  std::string text_encoder;
+  std::string vector_estimator;
+  std::string vocoder;
+  std::string tts_json;
+  std::string unicode_indexer;
+  std::string voice_style;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
@@ -488,6 +498,7 @@ struct OfflineTtsModelConfig {
   OfflineTtsKittenModelConfig kitten;
   OfflineTtsZipvoiceModelConfig zipvoice;
   OfflineTtsPocketModelConfig pocket;
+  OfflineTtsSupertonicModelConfig supertonic;
 
   int32_t num_threads = 1;
   bool debug = false;
