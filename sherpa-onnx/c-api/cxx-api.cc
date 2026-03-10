@@ -472,6 +472,18 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.pocket.voice_embedding_cache_capacity =
       config.model.pocket.voice_embedding_cache_capacity;
 
+  c.model.supertonic.duration_predictor =
+      config.model.supertonic.duration_predictor.c_str();
+  c.model.supertonic.text_encoder =
+      config.model.supertonic.text_encoder.c_str();
+  c.model.supertonic.vector_estimator =
+      config.model.supertonic.vector_estimator.c_str();
+  c.model.supertonic.vocoder = config.model.supertonic.vocoder.c_str();
+  c.model.supertonic.tts_json = config.model.supertonic.tts_json.c_str();
+  c.model.supertonic.unicode_indexer =
+      config.model.supertonic.unicode_indexer.c_str();
+  c.model.supertonic.voice_style = config.model.supertonic.voice_style.c_str();
+
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();

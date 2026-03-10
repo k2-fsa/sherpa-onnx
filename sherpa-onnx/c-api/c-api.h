@@ -1148,6 +1148,16 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsPocketModelConfig {
   int32_t voice_embedding_cache_capacity;
 } SherpaOnnxOfflineTtsPocketModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsSupertonicModelConfig {
+  const char *duration_predictor;
+  const char *text_encoder;
+  const char *vector_estimator;
+  const char *vocoder;
+  const char *tts_json;
+  const char *unicode_indexer;
+  const char *voice_style;
+} SherpaOnnxOfflineTtsSupertonicModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   int32_t num_threads;
@@ -1158,6 +1168,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsKittenModelConfig kitten;
   SherpaOnnxOfflineTtsZipvoiceModelConfig zipvoice;
   SherpaOnnxOfflineTtsPocketModelConfig pocket;
+  SherpaOnnxOfflineTtsSupertonicModelConfig supertonic;
 } SherpaOnnxOfflineTtsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
