@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-speech-denoiser-dpdfnet-model-config.cc
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Ceva Inc
 
 #include "sherpa-onnx/python/csrc/offline-speech-denoiser-dpdfnet-model-config.h"
 
