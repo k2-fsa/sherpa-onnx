@@ -1429,6 +1429,22 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
     tts_config.model.pocket.voice_embedding_cache_capacity = 50;
   }
 
+  // supertonic
+  tts_config.model.supertonic.duration_predictor =
+      SHERPA_ONNX_OR(config->model.supertonic.duration_predictor, "");
+  tts_config.model.supertonic.text_encoder =
+      SHERPA_ONNX_OR(config->model.supertonic.text_encoder, "");
+  tts_config.model.supertonic.vector_estimator =
+      SHERPA_ONNX_OR(config->model.supertonic.vector_estimator, "");
+  tts_config.model.supertonic.vocoder =
+      SHERPA_ONNX_OR(config->model.supertonic.vocoder, "");
+  tts_config.model.supertonic.tts_json =
+      SHERPA_ONNX_OR(config->model.supertonic.tts_json, "");
+  tts_config.model.supertonic.unicode_indexer =
+      SHERPA_ONNX_OR(config->model.supertonic.unicode_indexer, "");
+  tts_config.model.supertonic.voice_style =
+      SHERPA_ONNX_OR(config->model.supertonic.voice_style, "");
+
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
@@ -1532,7 +1548,8 @@ static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     try {
       auto json = nlohmann::json::parse(config->extra);
       for (auto &[k, v] : json.items()) {
-        cfg.extra.insert_or_assign(std::string(k), v.dump());
+        std::string val = v.is_string() ? v.get<std::string>() : v.dump();
+        cfg.extra.insert_or_assign(std::string(k), std::move(val));
       }
     } catch (const nlohmann::json::parse_error &e) {
       SHERPA_ONNX_LOGE("Failed to parse extra JSON: '%s'", e.what());
