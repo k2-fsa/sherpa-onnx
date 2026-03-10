@@ -10,6 +10,25 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Moonshine v2----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test_asr_non_streaming_moonshine_v2.js
+
+rm -rf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
+echo "----------FireRedAsr CTC----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test_asr_non_streaming_fire_red_asr_ctc.js
+node ./test_asr_non_streaming_fire_red_asr_ctc_async.js
+
+rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+
 echo "----------PocketTTS----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
@@ -28,11 +47,13 @@ tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 
 node ./test_asr_non_streaming_funasr_nano.js
+node ./test_asr_non_streaming_funasr_nano_async.js
+
 rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
 
 echo "----------non-streaming ASR Google MedASR CTC----------"
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 

@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/offline-canary-model-config.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model-config.h"
+#include "sherpa-onnx/csrc/offline-fire-red-asr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-funasr-nano-model-config.h"
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model-config.h"
@@ -40,6 +41,7 @@ struct OfflineModelConfig {
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineFunASRNanoModelConfig funasr_nano;
   OfflineMedAsrCtcModelConfig medasr;
+  OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -77,6 +79,7 @@ struct OfflineModelConfig {
                      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
                      const OfflineFunASRNanoModelConfig &funasr_nano,
                      const OfflineMedAsrCtcModelConfig &medasr,
+                     const OfflineFireRedAsrCtcModelConfig &fire_red_asr_ctc,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
@@ -97,6 +100,7 @@ struct OfflineModelConfig {
         omnilingual(omnilingual),
         funasr_nano(funasr_nano),
         medasr(medasr),
+        fire_red_asr_ctc(fire_red_asr_ctc),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),

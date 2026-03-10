@@ -385,6 +385,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineFireRedAsrCtcModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineFunAsrNanoModelConfig = record
     EncoderAdaptor: AnsiString;
     LLM: AnsiString;
@@ -430,6 +435,7 @@ type
     Encoder: AnsiString;
     UncachedDecoder: AnsiString;
     CachedDecoder: AnsiString;
+    MergedDecoder: AnsiString;
     function ToString: AnsiString;
   end;
 
@@ -483,6 +489,7 @@ type
     Omnilingual: TSherpaOnnxOfflineOmnilingualAsrCtcModelConfig;
     MedAsr: TSherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: TSherpaOnnxOfflineFunAsrNanoModelConfig;
+    FireRedAsrCtc: TSherpaOnnxOfflineFireRedAsrCtcModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -913,6 +920,9 @@ type
     UseItn: cint32;
     Hotwords: PAnsiChar;
   end;
+  SherpaOnnxOfflineFireRedAsrCtcModelConfig = record
+    Model: PAnsiChar;
+  end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -938,6 +948,7 @@ type
     Encoder: PAnsiChar;
     UncachedDecoder: PAnsiChar;
     CachedDecoder: PAnsiChar;
+    MergedDecoder: PAnsiChar;
   end;
   SherpaOnnxOfflineTdnnModelConfig = record
     Model: PAnsiChar;
@@ -975,6 +986,7 @@ type
     Omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig;
     MedAsr: SherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: SherpaOnnxOfflineFunAsrNanoModelConfig;
+    FireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1840,6 +1852,12 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineFireRedAsrCtcModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineFireRedAsrCtcModelConfig(Model := %s)',
+    [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineFunAsrNanoModelConfig(' +
@@ -1905,8 +1923,10 @@ begin
     'Preprocessor := %s, ' +
     'Encoder := %s, ' +
     'UncachedDecoder := %s, ' +
-    'CachedDecoder := %s)',
-    [Self.Preprocessor, Self.Encoder, Self.UncachedDecoder, Self.CachedDecoder]);
+    'CachedDecoder := %s, ' +
+    'MergedDecoder := %s)',
+    [Self.Preprocessor, Self.Encoder, Self.UncachedDecoder, Self.CachedDecoder,
+     Self.MergedDecoder]);
 end;
 
 function TSherpaOnnxOfflineTdnnModelConfig.ToString: AnsiString;
@@ -1960,6 +1980,7 @@ begin
     'Omnilingual := %s' +
     ', MedAsr := %s' +
     ', FunAsrNano := %s' +
+    ', FireRedAsrCtc := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
@@ -1969,7 +1990,7 @@ begin
      Self.FireRedAsr.ToString, Self.Dolphin.ToString,
      Self.ZipformerCtc.ToString, Self.Canary.ToString, Self.WenetCtc.ToString,
      Self.Omnilingual.ToString, Self.MedAsr.ToString,
-     Self.FunAsrNano.ToString
+     Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString
      ]);
 end;
 
@@ -2037,6 +2058,7 @@ begin
   C.ModelConfig.Moonshine.Encoder := PAnsiChar(Config.ModelConfig.Moonshine.Encoder);
   C.ModelConfig.Moonshine.UncachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.UncachedDecoder);
   C.ModelConfig.Moonshine.CachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.CachedDecoder);
+  C.ModelConfig.Moonshine.MergedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.MergedDecoder);
 
   C.ModelConfig.FireRedAsr.Encoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Encoder);
   C.ModelConfig.FireRedAsr.Decoder := PAnsiChar(Config.ModelConfig.FireRedAsr.Decoder);
@@ -2067,6 +2089,8 @@ begin
   C.ModelConfig.FunAsrNano.Language := PAnsiChar(Config.ModelConfig.FunAsrNano.Language);
   C.ModelConfig.FunAsrNano.UseItn := Ord(Config.ModelConfig.FunAsrNano.UseItn);
   C.ModelConfig.FunAsrNano.Hotwords := PAnsiChar(Config.ModelConfig.FunAsrNano.Hotwords);
+
+  C.ModelConfig.FireRedAsrCtc.Model := PAnsiChar(Config.ModelConfig.FireRedAsrCtc.Model);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;

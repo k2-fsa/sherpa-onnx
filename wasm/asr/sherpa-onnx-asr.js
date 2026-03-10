@@ -63,6 +63,10 @@ function freeConfig(config, Module) {
     freeConfig(config.medasr, Module)
   }
 
+  if ('fireRedAsrCtc' in config) {
+    freeConfig(config.fireRedAsrCtc, Module)
+  }
+
   if ('funasrNano' in config) {
     freeConfig(config.funasrNano, Module)
   }
@@ -837,6 +841,25 @@ function initSherpaOnnxOfflineMedAsrCtcModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineFireRedAsrCtcModelConfig(config, Module) {
+  const n = Module.lengthBytesUTF8(config.model || '') + 1;
+
+  const buffer = Module._malloc(n);
+
+  const len = 1 * 4;  // 1 pointer
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model || '', buffer, n);
+
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
   const encoderAdaptorLen =
       Module.lengthBytesUTF8(config.encoderAdaptor || '') + 1;
@@ -1027,12 +1050,14 @@ function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
       Module.lengthBytesUTF8(config.uncachedDecoder || '') + 1;
   const cachedDecoderLen =
       Module.lengthBytesUTF8(config.cachedDecoder || '') + 1;
+  const mergedDecoderLen =
+      Module.lengthBytesUTF8(config.mergedDecoder || '') + 1;
 
-  const n =
-      preprocessorLen + encoderLen + uncachedDecoderLen + cachedDecoderLen;
+  const n = preprocessorLen + encoderLen + uncachedDecoderLen +
+      cachedDecoderLen + mergedDecoderLen;
   const buffer = Module._malloc(n);
 
-  const len = 4 * 4;  // 4 pointers
+  const len = 5 * 4;  // 5 pointers
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -1051,6 +1076,10 @@ function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
       config.cachedDecoder || '', buffer + offset, cachedDecoderLen);
   offset += cachedDecoderLen;
 
+  Module.stringToUTF8(
+      config.mergedDecoder || '', buffer + offset, mergedDecoderLen);
+  offset += mergedDecoderLen;
+
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += preprocessorLen;
@@ -1063,6 +1092,9 @@ function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
 
   Module.setValue(ptr + 12, buffer + offset, 'i8*');
   offset += cachedDecoderLen;
+
+  Module.setValue(ptr + 16, buffer + offset, 'i8*');
+  offset += mergedDecoderLen;
 
   return {
     buffer: buffer,
@@ -1223,6 +1255,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('fireRedAsrCtc' in config)) {
+    config.fireRedAsrCtc = {
+      model: '',
+    };
+  }
+
   if (!('funasrNano' in config)) {
     config.funasrNano = {
       encoderAdaptor: '',
@@ -1259,6 +1297,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       encoder: '',
       uncachedDecoder: '',
       cachedDecoder: '',
+      mergedDecoder: '',
     };
   }
 
@@ -1336,10 +1375,13 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const funasrNano =
       initSherpaOnnxOfflineFunAsrNanoModelConfig(config.funasrNano, Module);
 
+  const fireRedAsrCtc = initSherpaOnnxOfflineFireRedAsrCtcModelConfig(
+      config.fireRedAsrCtc, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
-      omnilingual.len + medasr.len + funasrNano.len;
+      omnilingual.len + medasr.len + funasrNano.len + fireRedAsrCtc.len;
 
   const ptr = Module._malloc(len);
 
@@ -1459,6 +1501,9 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(funasrNano.ptr, funasrNano.len, ptr + offset);
   offset += funasrNano.len;
 
+  Module._CopyHeap(fireRedAsrCtc.ptr, fireRedAsrCtc.len, ptr + offset);
+  offset += fireRedAsrCtc.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -1477,7 +1522,8 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     wenetCtc: wenetCtc,
     omnilingual: omnilingual,
     medasr: medasr,
-    funasrNano: funasrNano
+    funasrNano: funasrNano,
+    fireRedAsrCtc: fireRedAsrCtc
   };
 }
 

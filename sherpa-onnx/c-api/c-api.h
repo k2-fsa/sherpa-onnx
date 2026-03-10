@@ -457,11 +457,16 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFireRedAsrModelConfig {
   const char *decoder;
 } SherpaOnnxOfflineFireRedAsrModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineFireRedAsrCtcModelConfig {
+  const char *model;
+} SherpaOnnxOfflineFireRedAsrCtcModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMoonshineModelConfig {
   const char *preprocessor;
   const char *encoder;
   const char *uncached_decoder;
   const char *cached_decoder;
+  const char *merged_decoder;
 } SherpaOnnxOfflineMoonshineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTdnnModelConfig {
@@ -544,6 +549,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
   SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
   SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
+  SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

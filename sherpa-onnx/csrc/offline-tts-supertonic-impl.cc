@@ -603,6 +603,10 @@ void OfflineTtsSupertonicImpl::InitVoiceStyle(const std::vector<char> &buf) {
   }
   num_speakers_ = num_speakers;
   full_style_ = std::move(style);
+
+  if (config_.model.debug) {
+    SHERPA_ONNX_LOGE("Number of speakers: %d", num_speakers_);
+  }
 }
 
 OfflineTtsSupertonicImpl::StyleSliceView

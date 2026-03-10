@@ -17,12 +17,13 @@ static_assert(sizeof(SherpaOnnxOfflineZipformerCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWenetCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 13 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrModelConfig) == 2 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineMoonshineModelConfig) == 4 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineMoonshineModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineCanaryModelConfig) == 5 * 4, "");
@@ -43,7 +44,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineWenetCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) +
-                      sizeof(SherpaOnnxOfflineFunASRNanoModelConfig),
+                      sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) +
+                      sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -95,6 +97,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto omnilingual = &model_config->omnilingual;
   auto medasr = &model_config->medasr;
   auto funasr_nano = &model_config->funasr_nano;
+  auto fire_red_asr_ctc = &model_config->fire_red_asr_ctc;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -127,6 +130,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "encoder: %s\n", moonshine->encoder);
   fprintf(stdout, "uncached_decoder: %s\n", moonshine->uncached_decoder);
   fprintf(stdout, "cached_decoder: %s\n", moonshine->cached_decoder);
+  fprintf(stdout, "merged_decoder: %s\n", moonshine->merged_decoder);
 
   fprintf(stdout, "----------offline FireRedAsr model config----------\n");
   fprintf(stdout, "encoder: %s\n", fire_red_asr->encoder);
@@ -165,6 +169,9 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "temperature: %f\n", funasr_nano->temperature);
   fprintf(stdout, "top_p: %f\n", funasr_nano->top_p);
   fprintf(stdout, "seed: %d\n", funasr_nano->seed);
+
+  fprintf(stdout, "----------offline FireRedASR CTC model config----------\n");
+  fprintf(stdout, "model: %s\n", fire_red_asr_ctc->model);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

@@ -165,6 +165,12 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       config_.feat_config.snip_edges = true;
     }
 
+    if (!config_.model_config.fire_red_asr_ctc.model.empty()) {
+      config_.feat_config.normalize_samples = false;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.snip_edges = true;
+    }
+
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 

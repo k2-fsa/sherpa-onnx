@@ -122,6 +122,7 @@ The following tables list the examples in this folder.
 |[./test_asr_non_streaming_whisper.js](./test_asr_non_streaming_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper)|
 |[./test_vad_with_non_streaming_asr_whisper.js](./test_vad_with_non_streaming_asr_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_moonshine.js](./test_asr_non_streaming_moonshine.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine)|
+|[./test_asr_non_streaming_moonshine_v2.js](./test_asr_non_streaming_moonshine_v2.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine) v2|
 |[./test_vad_with_non_streaming_asr_moonshine.js](./test_vad_with_non_streaming_asr_moonshine.js)| Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_nemo_ctc.js](./test_asr_non_streaming_nemo_ctc.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) CTC model with greedy search|
 |[./test_asr_non_streaming_wenet_ctc.js](./test_asr_non_streaming_wenet_ctc.js)|Non-streaming speech recognition from a file using a [u2pp_conformer_yue](https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue) CTC model with greedy search|
@@ -332,6 +333,16 @@ node ./test_asr_non_streaming_whisper.js
 # To run VAD + non-streaming ASR with Whisper using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_whisper_microphone.js
+```
+
+### Non-streaming speech recognition with Moonshine v2
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test_asr_non_streaming_moonshine_v2.js
 ```
 
 ### Non-streaming speech recognition with Moonshine

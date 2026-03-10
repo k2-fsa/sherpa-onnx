@@ -61,10 +61,12 @@ if [ ${STAGE} -le 0 ] && [ ${STOP_STAGE} -ge 0 ]; then
     echo ""
     echo "Stage 0: Check/Download ONNX Models"
 
-    if [ ! -d "./assets/onnx" ] || [ -z "$(ls -A ./assets/onnx 2>/dev/null)" ]; then
-        echo "ONNX models not found, downloading..."
-        mkdir -p ./assets
-        modelscope download --model Supertone/supertonic-2 --local_dir ./assets
+    if [ ! -d assets/onnx/ ]; then
+        git clone https://huggingface.co/Supertone/supertonic-2
+        mv supertonic-2 assets
+
+        ls -lh assets/onnx/
+
         echo "Download completed"
     else
         echo "ONNX models already exist, skipping download"

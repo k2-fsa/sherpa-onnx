@@ -168,6 +168,25 @@ jobs:
 
           mkdir $dst
 
+          if [[ "${{ matrix.build_type }}" == "Debug" || "${{ matrix.build_type }}" == "RelWithDebInfo" ]]; then
+            echo "Copy matching PDB files..."
+
+            build_bin_dir=build/bin/${{ matrix.build_type }}
+            install_bin_dir=build/install/bin
+
+            for exe in ${install_bin_dir}/*.exe; do
+              base=$(basename "$exe" .exe)
+              pdb=${build_bin_dir}/${base}.pdb
+
+              if [[ -f "$pdb" ]]; then
+                echo "Copying $pdb"
+                cp "$pdb" ${install_bin_dir}/
+              else
+                echo "No PDB found for $base"
+              fi
+            done
+          fi
+
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
@@ -225,7 +244,7 @@ jobs:
           file: sherpa-onnx-*-win-x64*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.15
+          tag: v1.12.28
 
       - name: Release pre-compiled binaries and libs for Windows x64
         if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')

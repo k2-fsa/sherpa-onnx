@@ -252,6 +252,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.moonshine.uncached_decoder.c_str();
   c.model_config.moonshine.cached_decoder =
       config.model_config.moonshine.cached_decoder.c_str();
+  c.model_config.moonshine.merged_decoder =
+      config.model_config.moonshine.merged_decoder.c_str();
 
   c.model_config.fire_red_asr.encoder =
       config.model_config.fire_red_asr.encoder.c_str();
@@ -289,19 +291,19 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.funasr_nano.max_new_tokens;
   c.model_config.funasr_nano.temperature =
       config.model_config.funasr_nano.temperature;
-  c.model_config.funasr_nano.top_p =
-      config.model_config.funasr_nano.top_p;
-  c.model_config.funasr_nano.seed =
-      config.model_config.funasr_nano.seed;
+  c.model_config.funasr_nano.top_p = config.model_config.funasr_nano.top_p;
+  c.model_config.funasr_nano.seed = config.model_config.funasr_nano.seed;
   c.model_config.funasr_nano.language =
       config.model_config.funasr_nano.language.c_str();
-  c.model_config.funasr_nano.itn =
-      config.model_config.funasr_nano.itn ? 1 : 0;
+  c.model_config.funasr_nano.itn = config.model_config.funasr_nano.itn ? 1 : 0;
   c.model_config.funasr_nano.hotwords =
       config.model_config.funasr_nano.hotwords.c_str();
   c.model_config.funasr_nano.top_p = config.model_config.funasr_nano.top_p;
   c.model_config.funasr_nano.seed = config.model_config.funasr_nano.seed;
   c.model_config.medasr.model = config.model_config.medasr.model.c_str();
+
+  c.model_config.fire_red_asr_ctc.model =
+      config.model_config.fire_red_asr_ctc.model.c_str();
 
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;

@@ -28,3 +28,5 @@ decode-file-t-one-streaming
 omnilingual-asr-ctc
 medasr-ctc
 funasr-nano
+fire-red-asr-ctc
+moonshine-v2-asr

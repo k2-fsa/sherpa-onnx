@@ -384,6 +384,14 @@ func sherpaOnnxOfflineMedAsrCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineFireRedAsrCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineFireRedAsrCtcModelConfig {
+  return SherpaOnnxOfflineFireRedAsrCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -446,17 +454,22 @@ func sherpaOnnxOfflineFireRedAsrModelConfig(
   )
 }
 
+// there are two versions of Moonshine
+// For v1, you need four models: preprocessor, encoder, uncachedDecoder, cachedDecoder
+// For v2, you need two models: encoder, mergedDecoder
 func sherpaOnnxOfflineMoonshineModelConfig(
   preprocessor: String = "",
   encoder: String = "",
   uncachedDecoder: String = "",
-  cachedDecoder: String = ""
+  cachedDecoder: String = "",
+  mergedDecoder: String = ""
 ) -> SherpaOnnxOfflineMoonshineModelConfig {
   return SherpaOnnxOfflineMoonshineModelConfig(
     preprocessor: toCPointer(preprocessor),
     encoder: toCPointer(encoder),
     uncached_decoder: toCPointer(uncachedDecoder),
-    cached_decoder: toCPointer(cachedDecoder)
+    cached_decoder: toCPointer(cachedDecoder),
+    merged_decoder: toCPointer(mergedDecoder)
   )
 }
 
@@ -550,7 +563,9 @@ func sherpaOnnxOfflineModelConfig(
   medasr: SherpaOnnxOfflineMedAsrCtcModelConfig =
     sherpaOnnxOfflineMedAsrCtcModelConfig(),
   funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
-    sherpaOnnxOfflineFunASRNanoModelConfig()
+    sherpaOnnxOfflineFunASRNanoModelConfig(),
+  fireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig =
+    sherpaOnnxOfflineFireRedAsrCtcModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -575,7 +590,8 @@ func sherpaOnnxOfflineModelConfig(
     wenet_ctc: wenetCtc,
     omnilingual: omnilingual,
     medasr: medasr,
-    funasr_nano: funasrNano
+    funasr_nano: funasrNano,
+    fire_red_asr_ctc: fireRedAsrCtc
   )
 }
 

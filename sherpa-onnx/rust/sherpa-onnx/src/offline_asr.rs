@@ -107,12 +107,18 @@ impl OfflineFireRedAsrModelConfig {
     }
 }
 
+/// For Moonshine v1, you need 4 models:
+///  - preprocessor, encoder, uncached_decoder, cached_decoder
+///
+/// For Moonshine v2, you need 2 models:
+///  - encoder, merged_decoder
 #[derive(Clone, Debug, Default)]
 pub struct OfflineMoonshineModelConfig {
     pub preprocessor: Option<String>,
     pub encoder: Option<String>,
     pub uncached_decoder: Option<String>,
     pub cached_decoder: Option<String>,
+    pub merged_decoder: Option<String>,
 }
 
 impl OfflineMoonshineModelConfig {
@@ -122,6 +128,7 @@ impl OfflineMoonshineModelConfig {
             encoder: to_c_ptr(&self.encoder, cstrings),
             uncached_decoder: to_c_ptr(&self.uncached_decoder, cstrings),
             cached_decoder: to_c_ptr(&self.cached_decoder, cstrings),
+            merged_decoder: to_c_ptr(&self.merged_decoder, cstrings),
         }
     }
 }
@@ -243,6 +250,19 @@ impl OfflineMedAsrCtcModelConfig {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct OfflineFireRedAsrCtcModelConfig {
+    pub model: Option<String>,
+}
+
+impl OfflineFireRedAsrCtcModelConfig {
+    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineFireRedAsrCtcModelConfig {
+        sys::OfflineFireRedAsrCtcModelConfig {
+            model: to_c_ptr(&self.model, cstrings),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct OfflineFunASRNanoModelConfig {
     pub encoder_adaptor: Option<String>,
@@ -315,6 +335,7 @@ pub struct OfflineModelConfig {
     pub omnilingual: OfflineOmnilingualAsrCtcModelConfig,
     pub medasr: OfflineMedAsrCtcModelConfig,
     pub funasr_nano: OfflineFunASRNanoModelConfig,
+    pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
 
     pub tokens: Option<String>,
     pub num_threads: i32,
@@ -373,6 +394,9 @@ impl OfflineModelConfig {
                 .to_sys(cstrings),
             funasr_nano: self
                 .funasr_nano
+                .to_sys(cstrings),
+            fire_red_asr_ctc: self
+                .fire_red_asr_ctc
                 .to_sys(cstrings),
 
             tokens: to_c_ptr(&self.tokens, cstrings),

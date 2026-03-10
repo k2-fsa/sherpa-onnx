@@ -168,6 +168,25 @@ class OfflineMedAsrCtcModelConfig {
   final String model;
 }
 
+class OfflineFireRedAsrCtcModelConfig {
+  const OfflineFireRedAsrCtcModelConfig({this.model = ''});
+
+  factory OfflineFireRedAsrCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineFireRedAsrCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineFireRedAsrCtcModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() => {'model': model};
+
+  final String model;
+}
+
 class OfflineFunAsrNanoModelConfig {
   const OfflineFunAsrNanoModelConfig({
     this.encoderAdaptor = '',
@@ -347,12 +366,18 @@ class OfflineFireRedAsrModelConfig {
   final String decoder;
 }
 
+// For Moonshine v1, you need 4 models:
+//  - preprocessor, encoder, uncachedDecoder, cachedDecoder
+//
+// For Moonshine v2, you need 2 models:
+//  - encoder, mergedDecoder
 class OfflineMoonshineModelConfig {
   const OfflineMoonshineModelConfig({
     this.preprocessor = '',
     this.encoder = '',
     this.uncachedDecoder = '',
     this.cachedDecoder = '',
+    this.mergedDecoder = '',
   });
 
   factory OfflineMoonshineModelConfig.fromJson(Map<String, dynamic> json) {
@@ -361,12 +386,13 @@ class OfflineMoonshineModelConfig {
       encoder: json['encoder'] as String? ?? '',
       uncachedDecoder: json['uncachedDecoder'] as String? ?? '',
       cachedDecoder: json['cachedDecoder'] as String? ?? '',
+      mergedDecoder: json['mergedDecoder'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder)';
+    return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder, mergedDecoder: $mergedDecoder)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -374,12 +400,14 @@ class OfflineMoonshineModelConfig {
     'encoder': encoder,
     'uncachedDecoder': uncachedDecoder,
     'cachedDecoder': cachedDecoder,
+    'mergedDecoder': mergedDecoder,
   };
 
   final String preprocessor;
   final String encoder;
   final String uncachedDecoder;
   final String cachedDecoder;
+  final String mergedDecoder;
 }
 
 class OfflineTdnnModelConfig {
@@ -469,6 +497,7 @@ class OfflineModelConfig {
     this.omnilingual = const OfflineOmnilingualAsrCtcModelConfig(),
     this.medasr = const OfflineMedAsrCtcModelConfig(),
     this.funasrNano = const OfflineFunAsrNanoModelConfig(),
+    this.fireRedAsrCtc = const OfflineFireRedAsrCtcModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -556,6 +585,11 @@ class OfflineModelConfig {
               json['funasrNano'] as Map<String, dynamic>,
             )
           : const OfflineFunAsrNanoModelConfig(),
+      fireRedAsrCtc: json['fireRedAsrCtc'] != null
+          ? OfflineFireRedAsrCtcModelConfig.fromJson(
+              json['fireRedAsrCtc'] as Map<String, dynamic>,
+            )
+          : const OfflineFireRedAsrCtcModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -569,7 +603,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -588,6 +622,7 @@ class OfflineModelConfig {
     'omnilingual': omnilingual.toJson(),
     'medasr': medasr.toJson(),
     'funasrNano': funasrNano.toJson(),
+    'fireRedAsrCtc': fireRedAsrCtc.toJson(),
     'tokens': tokens,
     'numThreads': numThreads,
     'debug': debug,
@@ -613,6 +648,7 @@ class OfflineModelConfig {
   final OfflineOmnilingualAsrCtcModelConfig omnilingual;
   final OfflineMedAsrCtcModelConfig medasr;
   final OfflineFunAsrNanoModelConfig funasrNano;
+  final OfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
 
   final String tokens;
   final int numThreads;
@@ -843,6 +879,8 @@ class OfflineRecognizer {
         .toNativeUtf8();
     c.ref.model.moonshine.cachedDecoder = config.model.moonshine.cachedDecoder
         .toNativeUtf8();
+    c.ref.model.moonshine.mergedDecoder = config.model.moonshine.mergedDecoder
+        .toNativeUtf8();
 
     // FireRedAsr
     c.ref.model.fireRedAsr.encoder = config.model.fireRedAsr.encoder
@@ -889,6 +927,9 @@ class OfflineRecognizer {
     c.ref.model.funasrNano.hotwords = config.model.funasrNano.hotwords
         .toNativeUtf8();
 
+    c.ref.model.fireRedAsrCtc.model = config.model.fireRedAsrCtc.model
+        .toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -933,6 +974,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.fireRedAsrCtc.model);
     calloc.free(c.ref.model.funasrNano.hotwords);
     calloc.free(c.ref.model.funasrNano.language);
     calloc.free(c.ref.model.funasrNano.userPrompt);
@@ -952,6 +994,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.dolphin.model);
     calloc.free(c.ref.model.fireRedAsr.decoder);
     calloc.free(c.ref.model.fireRedAsr.encoder);
+    calloc.free(c.ref.model.moonshine.mergedDecoder);
     calloc.free(c.ref.model.moonshine.cachedDecoder);
     calloc.free(c.ref.model.moonshine.uncachedDecoder);
     calloc.free(c.ref.model.moonshine.encoder);

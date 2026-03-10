@@ -18,7 +18,7 @@ function createOfflineSpeechDenoiser() {
   return sherpa_onnx.createOfflineSpeechDenoiser(config);
 }
 
-speech_denoiser = createOfflineSpeechDenoiser();
+const speech_denoiser = createOfflineSpeechDenoiser();
 
 const waveFilename = './inp_16k.wav';
 const wave = sherpa_onnx.readWave(waveFilename);

@@ -51,6 +51,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OfflineTtsMatchaModelConfig,
     OfflineTtsModelConfig,
     OfflineTtsPocketModelConfig,
+    OfflineTtsSupertonicModelConfig,
     OfflineTtsVitsModelConfig,
     OfflineTtsZipvoiceModelConfig,
     OfflineWenetCtcModelConfig,
