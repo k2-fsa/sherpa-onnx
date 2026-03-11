@@ -211,6 +211,11 @@ if(SHERPA_ONNX_ENABLE_AXERA)
     ./axera/offline-sense-voice-model-axera.cc
     ./axera/utils.cc
   )
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND sources
+      ./axera/offline-tts-kokoro-model-axera.cc
+    )
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_AXCL)

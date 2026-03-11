@@ -24,6 +24,10 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-impl.h"
 
+#ifdef SHERPA_ONNX_ENABLE_AXERA
+#include "sherpa-onnx/csrc/axera/offline-tts-kokoro-axera-impl.h"
+#endif
+
 #ifdef SHERPA_ONNX_ENABLE_AXCL
 #include "sherpa-onnx/csrc/axcl/offline-tts-kokoro-axcl-impl.h"
 #endif
@@ -44,11 +48,33 @@ std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
 
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
+  if (config.model.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+    if (!config.model.kokoro.model.empty()) {
+      return std::make_unique<
+          OfflineTtsKokoroAxeraImpl<OfflineTtsKokoroModelAxera>>(config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only Kokoro models are currently supported by axera for "
+          "non-streaming TTS.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    }
+
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXERA=ON if you "
+        "want to use axera. ");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (config.model.provider == "axcl") {
 #if SHERPA_ONNX_ENABLE_AXCL
     if (!config.model.kokoro.model.empty()) {
-      return std::make_unique<OfflineTtsKokoroAxclImpl<OfflineTtsKokoroModelAxcl>>(
-          config);
+      return std::make_unique<
+          OfflineTtsKokoroAxclImpl<OfflineTtsKokoroModelAxcl>>(config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only Kokoro models are currently supported by axcl for "
@@ -92,6 +118,51 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
 template <typename Manager>
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     Manager *mgr, const OfflineTtsConfig &config) {
+  if (config.model.provider == "axera") {
+#if SHERPA_ONNX_ENABLE_AXERA
+    if (!config.model.kokoro.model.empty()) {
+      return std::make_unique<
+          OfflineTtsKokoroAxeraImpl<OfflineTtsKokoroModelAxera>>(mgr, config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only Kokoro models are currently supported by axera for "
+          "non-streaming TTS.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    }
+
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXERA=ON if you "
+        "want to use axera.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model.provider == "axcl") {
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (!config.model.kokoro.model.empty()) {
+      return std::make_unique<
+          OfflineTtsKokoroAxclImpl<OfflineTtsKokoroModelAxcl>>(mgr, config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only Kokoro models are currently supported by axcl for "
+          "non-streaming TTS.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
+    }
+
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_AXCL=ON if you "
+        "want to use axcl. See also "
+        "https://k2-fsa.github.io/sherpa/onnx/axcl/install.html");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
   if (!config.model.vits.model.empty()) {
     return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
   } else if (!config.model.matcha.acoustic_model.empty()) {
