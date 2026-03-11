@@ -83,8 +83,8 @@ data class OfflineTtsModelConfig(
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
-    val pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
-    val supertonic: OfflineTtsSupertonicModelConfig = OfflineTtsSupertonicModelConfig(),
+    var pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+    var supertonic: OfflineTtsSupertonicModelConfig = OfflineTtsSupertonicModelConfig(),
 
     var numThreads: Int = 1,
     var debug: Boolean = false,
