@@ -351,6 +351,11 @@ void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
   stream->impl->InputFinished();
 }
 
+void SherpaOnnxOnlineStreamSetFinalChunk(
+    const SherpaOnnxOnlineStream *stream) {
+  stream->impl->SetParaformerFinalChunk(true);
+}
+
 int32_t SherpaOnnxOnlineStreamIsEndpoint(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
