@@ -111,6 +111,10 @@ class OnlineStream {
   std::vector<float> &GetParaformerEncoderOutCache();
   std::vector<float> &GetParaformerAlphaCache();
 
+  // for streaming paraformer is_final support
+  void SetParaformerFinalChunk(bool is_final);
+  bool IsParaformerFinalChunk() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

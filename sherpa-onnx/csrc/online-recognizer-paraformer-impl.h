@@ -156,7 +156,15 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   }
 
   bool IsReady(OnlineStream *s) const override {
-    return s->GetNumProcessedFrames() + chunk_size_ < s->NumFramesReady();
+    if (s->GetNumProcessedFrames() + chunk_size_ < s->NumFramesReady()) {
+      return true;
+    }
+    // is_final: accept short chunks (less than chunk_size_ frames)
+    if (s->IsParaformerFinalChunk() &&
+        s->GetNumProcessedFrames() < s->NumFramesReady()) {
+      return true;
+    }
+    return false;
   }
 
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
@@ -212,8 +220,30 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
  private:
   void DecodeStream(OnlineStream *s) const {
     const auto num_processed_frames = s->GetNumProcessedFrames();
-    std::vector<float> frames = s->GetFrames(num_processed_frames, chunk_size_);
-    s->GetNumProcessedFrames() += chunk_size_ - 1;
+
+    // is_final: accept short chunks, pad with zeros if needed
+    int32_t available_frames = s->NumFramesReady() - num_processed_frames;
+    int32_t actual_chunk_size = chunk_size_;
+    if (s->IsParaformerFinalChunk() && available_frames < chunk_size_) {
+      actual_chunk_size = available_frames;
+    }
+
+    std::vector<float> frames =
+        s->GetFrames(num_processed_frames, actual_chunk_size);
+
+    // Pad to chunk_size_ if short chunk
+    if (actual_chunk_size < chunk_size_) {
+      int32_t feat_dim_raw = config_.feat_config.feature_dim;
+      frames.resize(chunk_size_ * feat_dim_raw, 0.0f);
+    }
+
+    // For non-final chunks the original code uses chunk_size_ - 1 to create
+    // 1-frame overlap.  For the final short chunk we consume all frames.
+    if (s->IsParaformerFinalChunk()) {
+      s->GetNumProcessedFrames() += actual_chunk_size;
+    } else {
+      s->GetNumProcessedFrames() += chunk_size_ - 1;
+    }
 
     frames = ApplyLFR(frames);
     ApplyCMVN(&frames);
@@ -314,6 +344,16 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     }
 
     alpha_cache[0] = integrate;
+
+    // is_final: tail flush — force-fire residual token if integrate is
+    // high enough (token was mostly accumulated, just shy of threshold).
+    if (s->IsParaformerFinalChunk() && integrate >= kCifTailFlushMinAlpha) {
+      acoustic_embedding.insert(acoustic_embedding.end(),
+                                initial_hidden.begin(), initial_hidden.end());
+      integrate = 0.0f;
+      std::fill(initial_hidden.begin(), initial_hidden.end(), 0.0f);
+      alpha_cache[0] = integrate;
+    }
 
     if (acoustic_embedding.empty()) {
       return;
@@ -470,6 +510,11 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
   int32_t left_chunk_size_ = 5;
   int32_t right_chunk_size_ = 3;
+
+  // Minimum CIF residual alpha to force-fire a tail token on final chunk.
+  // Empirically tuned: below 0.6 causes hallucinated extra tokens;
+  // above 0.6 misses legitimate partial tokens.
+  static constexpr float kCifTailFlushMinAlpha = 0.6f;
 };
 
 }  // namespace sherpa_onnx
