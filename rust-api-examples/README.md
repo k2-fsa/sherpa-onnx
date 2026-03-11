@@ -36,12 +36,12 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 1 | [version](#example-1-show-sherpa-onnx-version) | Show the sherpa-onnx version |
 | 2 | [pocket_tts](#example-2-tts-with-pocket-tts-zero-shot-voice-cloning) | Text-to-speech with zero-shot voice cloning using a reference audio |
 | 3 | [supertonic_tts](#example-3-tts-with-supertonic-tts) | Text-to-speech with Supertonic TTS (multi-speaker, multi-language) |
-| 4 | [streaming_zipformer](#example-4-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
-| 5 | [streaming_zipformer](#example-5-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
+| 4 | [streaming_zipformer_en](#example-4-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
+| 5 | [streaming_zipformer_zh_en](#example-5-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
 | 6 | [streaming_zipformer_microphone](#example-6-asr-with-streaming-zipformer-with-a-microphone-real-time-asr) | Real-time streaming ASR from microphone input |
-| 7 | [zipformer](#example-7-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
-| 8 | [zipformer](#example-8-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
-| 9 | [zipformer](#example-9-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
+| 7 | [zipformer_en](#example-7-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
+| 8 | [zipformer_zh_en](#example-8-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
+| 9 | [zipformer_vi](#example-9-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
 | 10 | [nemo_parakeet](#example-10-asr-with-non-streaming-nemo-parakeet-english) | Non-streaming ASR with Nemo Parakeet TDT transducer (English) |
 | 11 | [fire_red_asr_ctc](#example-11-asr-with-non-streaming-fireredasr-ctc-chinese--english) | Non-streaming ASR with FireRedASR CTC model (Chinese + English) |
 | 12 | [moonshine_v2](#example-12-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
