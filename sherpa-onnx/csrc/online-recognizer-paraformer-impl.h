@@ -372,7 +372,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     for (int32_t i = 0; i != num_tokens; ++i) {
       int32_t t = p_sample_ids[i];
-      if (t == 0) {
+      if (t == 0 || t == 1 || t == 2) {
+        // skip blank(0), sos(1), eos(2)
         continue;
       }
 
