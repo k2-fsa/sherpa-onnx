@@ -160,7 +160,6 @@ type
     VoiceStyle: AnsiString;
 
     function ToString: AnsiString;
-    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsSupertonicModelConfig);
   end;
 
   TSherpaOnnxOfflineTtsModelConfig = record
@@ -2724,11 +2723,6 @@ begin
     ')',
     [Self.DurationPredictor, Self.TextEncoder, Self.VectorEstimator, Self.Vocoder,
      Self.TtsJson, Self.UnicodeIndexer, Self.VoiceStyle]);
-end;
-
-class operator TSherpaOnnxOfflineTtsSupertonicModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsSupertonicModelConfig);
-begin
-  // No default initialization needed
 end;
 
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
