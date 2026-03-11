@@ -23,16 +23,16 @@ public class NonStreamingSpeechEnhancementGtcrn {
     OfflineSpeechDenoiserConfig config =
         OfflineSpeechDenoiserConfig.builder().setModel(modelConfig).build();
 
-    OfflineSpeechDenoiser speech_denoiser = new OfflineSpeechDenoiser(config);
+    OfflineSpeechDenoiser speechDenoiser = new OfflineSpeechDenoiser(config);
 
     String testWaveFilename = "./inp_16k.wav";
     WaveReader reader = new WaveReader(testWaveFilename);
 
-    DenoisedAudio denoised = speech_denoiser.run(reader.getSamples(), reader.getSampleRate());
+    DenoisedAudio denoised = speechDenoiser.run(reader.getSamples(), reader.getSampleRate());
     String outFilename = "enhanced-16k.wav";
     WaveWriter.write(outFilename, denoised.getSamples(), denoised.getSampleRate());
     System.out.printf("Saved to %s\n", outFilename);
 
-    speech_denoiser.release();
+    speechDenoiser.release();
   }
 }
