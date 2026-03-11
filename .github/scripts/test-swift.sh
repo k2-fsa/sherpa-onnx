@@ -19,6 +19,10 @@ rm -rf sherpa-onnx-fire-red-*
 ls -lh
 rm -rf sherpa-onnx-pocket-*
 
+./run-tts-supertonic-en.sh
+ls -lh
+rm -rf sherpa-onnx-supertonic-*
+
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 
