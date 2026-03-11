@@ -1065,6 +1065,26 @@ func sherpaOnnxOfflineTtsPocketModelConfig(
   )
 }
 
+func sherpaOnnxOfflineTtsSupertonicModelConfig(
+  durationPredictor: String = "",
+  textEncoder: String = "",
+  vectorEstimator: String = "",
+  vocoder: String = "",
+  ttsJson: String = "",
+  unicodeIndexer: String = "",
+  voiceStyle: String = ""
+) -> SherpaOnnxOfflineTtsSupertonicModelConfig {
+  return SherpaOnnxOfflineTtsSupertonicModelConfig(
+    duration_predictor: toCPointer(durationPredictor),
+    text_encoder: toCPointer(textEncoder),
+    vector_estimator: toCPointer(vectorEstimator),
+    vocoder: toCPointer(vocoder),
+    tts_json: toCPointer(ttsJson),
+    unicode_indexer: toCPointer(unicodeIndexer),
+    voice_style: toCPointer(voiceStyle)
+  )
+}
+
 func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
@@ -1074,7 +1094,8 @@ func sherpaOnnxOfflineTtsModelConfig(
   provider: String = "cpu",
   kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig(),
   zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig(),
-  pocket: SherpaOnnxOfflineTtsPocketModelConfig = sherpaOnnxOfflineTtsPocketModelConfig()
+  pocket: SherpaOnnxOfflineTtsPocketModelConfig = sherpaOnnxOfflineTtsPocketModelConfig(),
+  supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig = sherpaOnnxOfflineTtsSupertonicModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
     vits: vits,
@@ -1085,7 +1106,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     kokoro: kokoro,
     kitten: kitten,
     zipvoice: zipvoice,
-    pocket: pocket
+    pocket: pocket,
+    supertonic: supertonic
   )
 }
 
@@ -1250,7 +1272,7 @@ final class SherpaOnnxGenerationConfigC {
         silence_scale: swiftConfig.silenceScale,
         speed: swiftConfig.speed,
         sid: Int32(swiftConfig.sid),
-        reference_audio: buffer.baseAddress,
+        reference_audio: buffer.count > 0 ? buffer.baseAddress : nil,
         reference_audio_len: Int32(buffer.count),
         reference_sample_rate: Int32(swiftConfig.referenceSampleRate),
         reference_text: toCPointer(swiftConfig.referenceText),
