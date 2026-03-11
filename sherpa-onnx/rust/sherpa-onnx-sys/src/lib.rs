@@ -13,10 +13,12 @@ extern "C" {
 
 pub mod offline_asr;
 pub mod online_asr;
+pub mod tts;
 pub mod vad;
 pub mod wave;
 
 pub use offline_asr::*;
 pub use online_asr::*;
+pub use tts::*;
 pub use vad::*;
 pub use wave::*;
