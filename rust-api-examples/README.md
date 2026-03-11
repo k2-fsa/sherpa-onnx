@@ -260,7 +260,3 @@ cargo run --example silero_vad_remove_silence -- \
     --output ./no-silence.wav \
     --silero-vad-model ./silero_vad.onnx
 ```
-
-# Alternative rust bindings for sherpa-onnx
-
-Please see also https://github.com/thewh1teagle/sherpa-rs
