@@ -249,6 +249,34 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_INT(ans.model.pocket.voice_embedding_cache_capacity,
                            voiceEmbeddingCacheCapacity, pocket_cls, pocket);
 
+  // supertonic
+  fid = env->GetFieldID(
+      model_config_cls, "supertonic",
+      "Lcom/k2fsa/sherpa/onnx/OfflineTtsSupertonicModelConfig;");
+  jobject supertonic = env->GetObjectField(model, fid);
+  jclass supertonic_cls = env->GetObjectClass(supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.duration_predictor,
+                              durationPredictor, supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.text_encoder, textEncoder,
+                              supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.vector_estimator,
+                              vectorEstimator, supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.vocoder, vocoder,
+                              supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.tts_json, ttsJson,
+                              supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.unicode_indexer,
+                              unicodeIndexer, supertonic_cls, supertonic);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.supertonic.voice_style, voiceStyle,
+                              supertonic_cls, supertonic);
+
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
 
@@ -276,6 +304,8 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   env->DeleteLocalRef(kitten_cls);
   env->DeleteLocalRef(pocket);
   env->DeleteLocalRef(pocket_cls);
+  env->DeleteLocalRef(supertonic);
+  env->DeleteLocalRef(supertonic_cls);
   env->DeleteLocalRef(model_config_cls);
   env->DeleteLocalRef(cls);
 
