@@ -4,6 +4,12 @@ set -ex
 
 cd rust-api-examples
 
+./run-pocket-tts.sh
+rm -rf sherpa-onnx-pocket-*
+
+./run-supertonic-tts.sh
+rm -rf sherpa-onnx-supertonic-*
+
 ./run-version.sh
 
 ./run-moonshine-v2.sh

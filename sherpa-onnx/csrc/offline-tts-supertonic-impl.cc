@@ -206,6 +206,10 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
   //   - "silence_duration" (float): Silence in seconds between chunks (default:
   //   0.3)
   //   - "seed" (int): RNG seed for reproducibility. -1 = random (default).
+
+  if (config_.model.debug) {
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+  }
   int32_t seed = config.GetExtraInt("seed", -1);
   float speed =
       config.GetExtraFloat("speed", config.speed > 0 ? config.speed : 1.05f);
