@@ -89,6 +89,7 @@ pushd tts
 echo '----------tts----------'
 ./run-pocket-en.sh
 ./run-kitten-en.sh
+./run-supertonic-en.sh
 ./run-kokoro-zh-en.sh
 ./run-kokoro-en.sh
 ./run-matcha-zh.sh
