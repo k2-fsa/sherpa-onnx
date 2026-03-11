@@ -918,13 +918,24 @@ type OfflineTtsZipvoiceModelConfig struct {
 	GuidanceScale float32 // CFG scale
 }
 
+type OfflineTtsSupertonicModelConfig struct {
+	DurationPredictor string // Path to duration_predictor.onnx
+	TextEncoder       string // Path to text_encoder.onnx
+	VectorEstimator   string // Path to vector_estimator.onnx
+	Vocoder           string // Path to vocoder.onnx
+	TtsJson           string // Path to tts.json
+	UnicodeIndexer    string // Path to unicode_indexer.bin
+	VoiceStyle        string // Path to voice.bin
+}
+
 type OfflineTtsModelConfig struct {
-	Vits     OfflineTtsVitsModelConfig
-	Matcha   OfflineTtsMatchaModelConfig
-	Kokoro   OfflineTtsKokoroModelConfig
-	Kitten   OfflineTtsKittenModelConfig
-	Zipvoice OfflineTtsZipvoiceModelConfig
-	Pocket   OfflineTtsPocketModelConfig
+	Vits       OfflineTtsVitsModelConfig
+	Matcha     OfflineTtsMatchaModelConfig
+	Kokoro     OfflineTtsKokoroModelConfig
+	Kitten     OfflineTtsKittenModelConfig
+	Zipvoice   OfflineTtsZipvoiceModelConfig
+	Pocket     OfflineTtsPocketModelConfig
+	Supertonic OfflineTtsSupertonicModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -1187,6 +1198,28 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	defer C.free(unsafe.Pointer(c.model.pocket.token_scores_json))
 
 	c.model.pocket.voice_embedding_cache_capacity = C.int(config.Model.Pocket.VoiceEmbeddingCacheCapacity)
+
+	// supertonic
+	c.model.supertonic.duration_predictor = C.CString(config.Model.Supertonic.DurationPredictor)
+	defer C.free(unsafe.Pointer(c.model.supertonic.duration_predictor))
+
+	c.model.supertonic.text_encoder = C.CString(config.Model.Supertonic.TextEncoder)
+	defer C.free(unsafe.Pointer(c.model.supertonic.text_encoder))
+
+	c.model.supertonic.vector_estimator = C.CString(config.Model.Supertonic.VectorEstimator)
+	defer C.free(unsafe.Pointer(c.model.supertonic.vector_estimator))
+
+	c.model.supertonic.vocoder = C.CString(config.Model.Supertonic.Vocoder)
+	defer C.free(unsafe.Pointer(c.model.supertonic.vocoder))
+
+	c.model.supertonic.tts_json = C.CString(config.Model.Supertonic.TtsJson)
+	defer C.free(unsafe.Pointer(c.model.supertonic.tts_json))
+
+	c.model.supertonic.unicode_indexer = C.CString(config.Model.Supertonic.UnicodeIndexer)
+	defer C.free(unsafe.Pointer(c.model.supertonic.unicode_indexer))
+
+	c.model.supertonic.voice_style = C.CString(config.Model.Supertonic.VoiceStyle)
+	defer C.free(unsafe.Pointer(c.model.supertonic.voice_style))
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
