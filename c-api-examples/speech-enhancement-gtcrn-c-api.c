@@ -4,16 +4,28 @@
 //
 // We assume you have pre-downloaded model
 // from
+// https://huggingface.co/Ceva-IP/DPDFNet for DPDFNet models
+// or
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+// for GTCRN and sample test waves
 //
 //
 // An example command to download
 // clang-format off
 /*
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet4.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8.onnx
+wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_48khz_hr.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 */
 // clang-format on
+//
+// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// for 16 kHz downstream ASR or speech recognition.
+// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 #include <stdio.h>
 #include <string.h>
 
@@ -21,11 +33,16 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 
 int32_t main() {
   SherpaOnnxOfflineSpeechDenoiserConfig config;
+  const char *model_filename = "./gtcrn_simple.onnx";
   const char *wav_filename = "./inp_16k.wav";
-  const char *out_wave_filename = "./enhanced_16k.wav";
+  const char *out_wave_filename = "./enhanced.wav";
 
   memset(&config, 0, sizeof(config));
-  config.model.gtcrn.model = "./gtcrn_simple.onnx";
+  if (strstr(model_filename, "dpdfnet") != NULL) {
+    config.model.dpdfnet.model = model_filename;
+  } else {
+    config.model.gtcrn.model = model_filename;
+  }
 
   const SherpaOnnxOfflineSpeechDenoiser *sd =
       SherpaOnnxCreateOfflineSpeechDenoiser(&config);

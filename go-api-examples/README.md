@@ -15,6 +15,9 @@ for details.
 - [./non-streaming-speaker-diarization](./non-streaming-speaker-diarization) It shows how to use
   a speaker segmentation model and a speaker embedding model for speaker diarization.
 
+- [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn) It shows how to use
+  the offline speech denoiser API with GTCRN models.
+
 - [./non-streaming-tts](./non-streaming-tts) It shows how to use a non-streaming TTS
   model to convert text to speech
 

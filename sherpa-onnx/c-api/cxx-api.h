@@ -636,8 +636,13 @@ struct OfflineSpeechDenoiserGtcrnModelConfig {
   std::string model;
 };
 
+struct OfflineSpeechDenoiserDpdfNetModelConfig {
+  std::string model;
+};
+
 struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+  OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
   int32_t num_threads = 1;
   int32_t debug = false;
   std::string provider = "cpu";
@@ -666,6 +671,31 @@ class SHERPA_ONNX_API OfflineSpeechDenoiser
 
  private:
   explicit OfflineSpeechDenoiser(const SherpaOnnxOfflineSpeechDenoiser *p);
+};
+
+struct OnlineSpeechDenoiserConfig {
+  OfflineSpeechDenoiserModelConfig model;
+};
+
+class SHERPA_ONNX_API OnlineSpeechDenoiser
+    : public MoveOnly<OnlineSpeechDenoiser, SherpaOnnxOnlineSpeechDenoiser> {
+ public:
+  static OnlineSpeechDenoiser Create(const OnlineSpeechDenoiserConfig &config);
+
+  void Destroy(const SherpaOnnxOnlineSpeechDenoiser *p) const;
+
+  DenoisedAudio Run(const float *samples, int32_t n, int32_t sample_rate) const;
+
+  DenoisedAudio Flush() const;
+
+  void Reset() const;
+
+  int32_t GetSampleRate() const;
+
+  int32_t GetFrameShiftInSamples() const;
+
+ private:
+  explicit OnlineSpeechDenoiser(const SherpaOnnxOnlineSpeechDenoiser *p);
 };
 
 // ==============================

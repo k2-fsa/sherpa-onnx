@@ -3,13 +3,22 @@
 """
 This file shows how to use the speech enhancement API.
 
-Please download files used this script from
-https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+Download DPDFNet models from the official Hugging Face hub:
+https://huggingface.co/Ceva-IP/DPDFNet
 
 Example:
 
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet4.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8.onnx
+ wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_48khz_hr.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
+
+Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
+`dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR or speech recognition.
+Use `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 """
 
 import time
@@ -23,22 +32,32 @@ import soundfile as sf
 
 def create_speech_denoiser():
     model_filename = "./gtcrn_simple.onnx"
+    # Switch to "./baseline.onnx", "./dpdfnet2.onnx", "./dpdfnet4.onnx",
+    # or "./dpdfnet8.onnx" for 16 kHz downstream ASR, or
+    # "./dpdfnet2_48khz_hr.onnx" for 48 kHz enhancement output.
     if not Path(model_filename).is_file():
         raise ValueError(
-            "Please first download a model from "
+            "Please first download a DPDFNet model from "
+            "https://huggingface.co/Ceva-IP/DPDFNet or a GTCRN model from "
             "https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models"
         )
 
-    config = sherpa_onnx.OfflineSpeechDenoiserConfig(
-        model=sherpa_onnx.OfflineSpeechDenoiserModelConfig(
-            gtcrn=sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(
-                model=model_filename
-            ),
-            debug=False,
-            num_threads=1,
-            provider="cpu",
-        )
+    is_dpdfnet = "dpdfnet" in model_filename.lower()
+    model_config = sherpa_onnx.OfflineSpeechDenoiserModelConfig(
+        debug=False,
+        num_threads=1,
+        provider="cpu",
     )
+    if is_dpdfnet:
+        model_config.dpdfnet = sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(
+            model=model_filename
+        )
+    else:
+        model_config.gtcrn = sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(
+            model=model_filename
+        )
+
+    config = sherpa_onnx.OfflineSpeechDenoiserConfig(model=model_config)
     if not config.validate():
         print(config)
         raise ValueError("Errors in config. Please check previous error logs")
@@ -75,8 +94,9 @@ def main():
     audio_duration = len(samples) / sample_rate
     real_time_factor = elapsed_seconds / audio_duration
 
-    sf.write("./enhanced_16k.wav", denoised.samples, denoised.sample_rate)
-    print("Saved to ./enhanced_16k.wav")
+    output_filename = f"./enhanced_{denoised.sample_rate}.wav"
+    sf.write(output_filename, denoised.samples, denoised.sample_rate)
+    print(f"Saved to {output_filename}")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
     print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")

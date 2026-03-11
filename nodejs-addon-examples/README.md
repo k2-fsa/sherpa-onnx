@@ -47,7 +47,7 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
-|[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement.|
+|[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with GTCRN.|
 
 ## Speaker diarization
 

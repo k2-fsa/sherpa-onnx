@@ -28,6 +28,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-punctuation.h"
+#include "sherpa-onnx/csrc/online-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -2512,6 +2513,7 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
 
   if (c.model.debug) {
 #if __OHOS__
@@ -2570,6 +2572,93 @@ const SherpaOnnxDenoisedAudio *SherpaOnnxOfflineSpeechDenoiserRun(
 void SherpaOnnxDestroyDenoisedAudio(const SherpaOnnxDenoisedAudio *p) {
   delete[] p->samples;
   delete p;
+}
+
+struct SherpaOnnxOnlineSpeechDenoiser {
+  std::unique_ptr<sherpa_onnx::OnlineSpeechDenoiser> impl;
+};
+
+static sherpa_onnx::OnlineSpeechDenoiserConfig GetOnlineSpeechDenoiserConfig(
+    const SherpaOnnxOnlineSpeechDenoiserConfig *config) {
+  sherpa_onnx::OnlineSpeechDenoiserConfig c;
+  c.model.gtcrn.model = SHERPA_ONNX_OR(config->model.gtcrn.model, "");
+  c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.debug = config->model.debug;
+  c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
+
+  if (c.model.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", c.ToString().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
+#endif
+  }
+
+  return c;
+}
+
+const SherpaOnnxOnlineSpeechDenoiser *SherpaOnnxCreateOnlineSpeechDenoiser(
+    const SherpaOnnxOnlineSpeechDenoiserConfig *config) {
+  auto sd_config = GetOnlineSpeechDenoiserConfig(config);
+
+  if (!sd_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  auto *sd = new SherpaOnnxOnlineSpeechDenoiser;
+  sd->impl = std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(sd_config);
+  return sd;
+}
+
+void SherpaOnnxDestroyOnlineSpeechDenoiser(
+    const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  delete sd;
+}
+
+int32_t SherpaOnnxOnlineSpeechDenoiserGetSampleRate(
+    const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  return sd->impl->GetSampleRate();
+}
+
+int32_t SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
+    const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  return sd->impl->GetFrameShiftInSamples();
+}
+
+const SherpaOnnxDenoisedAudio *SherpaOnnxOnlineSpeechDenoiserRun(
+    const SherpaOnnxOnlineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate) {
+  auto audio = sd->impl->Run(samples, n, sample_rate);
+
+  auto ans = new SherpaOnnxDenoisedAudio;
+  float *denoised_samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
+
+  ans->samples = denoised_samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+  return ans;
+}
+
+const SherpaOnnxDenoisedAudio *SherpaOnnxOnlineSpeechDenoiserFlush(
+    const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  auto audio = sd->impl->Flush();
+
+  auto ans = new SherpaOnnxDenoisedAudio;
+  float *denoised_samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
+
+  ans->samples = denoised_samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+  return ans;
+}
+
+void SherpaOnnxOnlineSpeechDenoiserReset(
+    const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  sd->impl->Reset();
 }
 
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1

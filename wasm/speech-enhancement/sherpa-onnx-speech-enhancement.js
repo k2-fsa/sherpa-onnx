@@ -11,6 +11,10 @@ function freeConfig(config, Module) {
     freeConfig(config.gtcrn, Module)
   }
 
+  if ('dpdfnet' in config) {
+    freeConfig(config.dpdfnet, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -43,15 +47,43 @@ function initSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(config, Module) {
+  if (!('model' in config)) {
+    config.model = '';
+  }
+
+  const modelLen = Module.lengthBytesUTF8(config.model) + 1;
+  const n = modelLen;
+  const buffer = Module._malloc(n);
+  const len = 1 * 4;
+  const ptr = Module._malloc(len);
+
+  Module.stringToUTF8(config.model, buffer, modelLen);
+  Module.setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
   if (!('gtcrn' in config)) {
     config.gtcrn = {model: ''};
   }
 
+  if (!('dpdfnet' in config)) {
+    config.dpdfnet = {model: ''};
+  }
+
   const gtcrn =
       initSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(config.gtcrn, Module);
+  const dpdfnet =
+      initSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(
+          config.dpdfnet, Module);
 
-  const len = gtcrn.len + 3 * 4;
+  const len = gtcrn.len + 3 * 4 + dpdfnet.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -70,13 +102,23 @@ function initSherpaOnnxOfflineSpeechDenoiserModelConfig(config, Module) {
   Module.setValue(ptr + offset, buffer, 'i8*');
   offset += 4;
 
-  return {buffer: buffer, ptr: ptr, len: len, gtcrn: gtcrn};
+  Module._CopyHeap(dpdfnet.ptr, dpdfnet.len, ptr + offset);
+  offset += dpdfnet.len;
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    gtcrn: gtcrn,
+    dpdfnet: dpdfnet,
+  };
 }
 
 function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
   if (!('model' in config)) {
     config.model = {
       gtcrn: {model: ''},
+      dpdfnet: {model: ''},
       provider: 'cpu',
       debug: 1,
       numThreads: 1,

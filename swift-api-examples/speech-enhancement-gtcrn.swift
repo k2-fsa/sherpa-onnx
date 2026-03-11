@@ -13,12 +13,22 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
+  let model = "./gtcrn_simple.onnx"
+  let isDpdfNet = model.lowercased().contains("dpdfnet")
   // Please refer to
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
   // to download files used in this script
+  // Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+  // for 16 kHz downstream ASR or speech recognition.
+  // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
   var config = sherpaOnnxOfflineSpeechDenoiserConfig(
     model: sherpaOnnxOfflineSpeechDenoiserModelConfig(
-      gtcrn: sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: "./gtcrn_simple.onnx"))
+      gtcrn: isDpdfNet
+        ? sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig()
+        : sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: model),
+      dpdfnet: isDpdfNet
+        ? sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: model)
+        : sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig())
   )
 
   let sd = SherpaOnnxOfflineSpeechDenoiserWrapper(config: &config)
@@ -38,7 +48,7 @@ func run() {
   let array: [Float]! = audioFileBuffer?.array()
   let audio = sd.run(samples: array, sampleRate: Int(audioFormat.sampleRate))
 
-  let filename = "enhanced_16k.wav"
+  let filename = "enhanced.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
     print("\nSaved to:\(filename)")
