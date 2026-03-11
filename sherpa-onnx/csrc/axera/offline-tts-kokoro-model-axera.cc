@@ -35,6 +35,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -213,10 +214,6 @@ static std::string GetModelPath(const std::string &model, const std::string &p,
 }
 
 class OfflineTtsKokoroModelAxera::Impl {
- private:
-  int32_t max_seq_len_ = 0;
-  std::vector<float> styles_;
-
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
@@ -319,15 +316,41 @@ class OfflineTtsKokoroModelAxera::Impl {
   }
 
   void LoadVoices(const char *voices_data, size_t voices_data_length) {
-    // get metadata
-    meta_data_.sample_rate = 24000;
-    meta_data_.num_speakers = voices_data_length / (sizeof(float) * 256 * 510);
-    meta_data_.version = 1;
-    meta_data_.has_espeak = 1;
-    meta_data_.voice = "en-us";
-    meta_data_.max_token_len = 510;
+    // Get metadata from model4 (ONNX model)
+    Ort::ModelMetadata meta_data = model4_->GetModelMetadata();
+    Ort::AllocatorWithDefaultOptions allocator;
+
+    SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
+    SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
+                                                "en-us");
+    SHERPA_ONNX_READ_META_DATA_VEC(style_dim_, "style_dim");
+
+    if (style_dim_.size() != 3) {
+      SHERPA_ONNX_LOGE("style_dim should be 3-d, given: %d",
+                       static_cast<int32_t>(style_dim_.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (style_dim_[1] != 1) {
+      SHERPA_ONNX_LOGE("style_dim[1] should be 1, given: %d", style_dim_[1]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    meta_data_.max_token_len = style_dim_[0];
 
     int32_t actual_num_floats = voices_data_length / sizeof(float);
+    int32_t expected_num_floats =
+        style_dim_[0] * style_dim_[2] * meta_data_.num_speakers;
+
+    if (actual_num_floats != expected_num_floats) {
+      SHERPA_ONNX_LOGE(
+          "Corrupted voices file. Expected #floats: %d, actual: %d",
+          expected_num_floats, actual_num_floats);
+      SHERPA_ONNX_EXIT(-1);
+    }
     styles_ = std::vector<float>(
         reinterpret_cast<const float *>(voices_data),
         reinterpret_cast<const float *>(voices_data) + actual_num_floats);
@@ -343,8 +366,8 @@ class OfflineTtsKokoroModelAxera::Impl {
   }
 
   std::vector<float> LoadVoiceEmbedding(int32_t sid, int32_t phoneme_len) {
-    int32_t style_dim0 = 510;
-    int32_t style_dim1 = 256;
+    int32_t style_dim0 = style_dim_[0];
+    int32_t style_dim1 = style_dim_[2];
     phoneme_len = std::max(phoneme_len, 0);
 
     sid = std::max(sid, 0);
@@ -696,8 +719,6 @@ class OfflineTtsKokoroModelAxera::Impl {
   AxEngineGuard ax_engine_guard_;
 
   OfflineTtsModelConfig config_;
-  OfflineTtsKokoroModelMetaData meta_data_;
-
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
@@ -711,6 +732,12 @@ class OfflineTtsKokoroModelAxera::Impl {
   std::vector<const char *> model4_input_names_ptr_;
   std::vector<std::string> model4_output_names_;
   std::vector<const char *> model4_output_names_ptr_;
+
+  OfflineTtsKokoroModelMetaData meta_data_;
+  std::vector<int32_t> style_dim_;
+  std::vector<float> styles_;
+
+  int32_t max_seq_len_;
 };
 
 OfflineTtsKokoroModelAxera::~OfflineTtsKokoroModelAxera() = default;

@@ -30,6 +30,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -111,7 +112,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     return meta_data_;
   }
 
-  std::vector<float> Run(std::vector<int64_t> input_ids, int64_t sid, float speed) {
+  std::vector<float> Run(std::vector<int64_t> input_ids, int64_t sid,
+                         float speed) {
     if (input_ids.size() < 2) {
       return {};
     }
@@ -138,15 +140,15 @@ class OfflineTtsKokoroModelAxcl::Impl {
  private:
   void Init(const OfflineTtsModelConfig &config) {
     std::string model_path = config.kokoro.model;
-    
-    // kokoro axcl mode we assume config.kokoro.model is a directory containing models
-    // or we can use the pattern like kokoro.model + "_part1.axmodel"
-    // Let's assume the user passes a directory. Or the user passes the prefix path.
-    // For simplicity, we assume `config.kokoro.model` is a directory.
+
+    // kokoro axcl mode we assume config.kokoro.model is a directory containing
+    // models or we can use the pattern like kokoro.model + "_part1.axmodel"
+    // Let's assume the user passes a directory. Or the user passes the prefix
+    // path. For simplicity, we assume `config.kokoro.model` is a directory.
     std::string model1_path = model_path + "/kokoro_part1.axmodel";
     std::string model2_path = model_path + "/kokoro_part2.axmodel";
     std::string model3_path = model_path + "/kokoro_part3.axmodel";
-    std::string model4_path = model_path + "/kokoro_part4.onnx"; 
+    std::string model4_path = model_path + "/kokoro_part4.onnx";
 
     model1_ = std::make_unique<AxclModel>(model1_path);
     model2_ = std::make_unique<AxclModel>(model2_path);
@@ -155,7 +157,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     auto buf4 = ReadFile(model4_path);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
-    GetInputNames(model4_.get(), &model4_input_names_, &model4_input_names_ptr_);
+    GetInputNames(model4_.get(), &model4_input_names_,
+                  &model4_input_names_ptr_);
     GetOutputNames(model4_.get(), &model4_output_names_,
                    &model4_output_names_ptr_);
 
@@ -169,7 +172,7 @@ class OfflineTtsKokoroModelAxcl::Impl {
     std::string model1_path = model_path + "/kokoro_part1.axmodel";
     std::string model2_path = model_path + "/kokoro_part2.axmodel";
     std::string model3_path = model_path + "/kokoro_part3.axmodel";
-    std::string model4_path = model_path + "/kokoro_part4.onnx"; 
+    std::string model4_path = model_path + "/kokoro_part4.onnx";
 
     auto buf1 = ReadFile(mgr, model1_path);
     model1_ = std::make_unique<AxclModel>(buf1.data(), buf1.size());
@@ -183,7 +186,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     auto buf4 = ReadFile(mgr, model4_path);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
-    GetInputNames(model4_.get(), &model4_input_names_, &model4_input_names_ptr_);
+    GetInputNames(model4_.get(), &model4_input_names_,
+                  &model4_input_names_ptr_);
     GetOutputNames(model4_.get(), &model4_output_names_,
                    &model4_output_names_ptr_);
 
@@ -192,26 +196,53 @@ class OfflineTtsKokoroModelAxcl::Impl {
   }
 
   void LoadVoices(const char *voices_data, size_t voices_data_length) {
-    // get metadata
-    meta_data_.sample_rate = 24000;
-    meta_data_.num_speakers = voices_data_length / (sizeof(float) * 256 * 510);
-    meta_data_.version = 1;
-    meta_data_.has_espeak = 1;
-    meta_data_.voice = "en-us";
-    meta_data_.max_token_len = 510;
+    // Get metadata from model4 (ONNX model)
+    Ort::ModelMetadata meta_data = model4_->GetModelMetadata();
+    Ort::AllocatorWithDefaultOptions allocator;
+
+    SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
+    SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
+                                                "en-us");
+    SHERPA_ONNX_READ_META_DATA_VEC(style_dim_, "style_dim");
+
+    if (style_dim_.size() != 3) {
+      SHERPA_ONNX_LOGE("style_dim should be 3-d, given: %d",
+                       static_cast<int32_t>(style_dim_.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (style_dim_[1] != 1) {
+      SHERPA_ONNX_LOGE("style_dim[1] should be 1, given: %d", style_dim_[1]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    meta_data_.max_token_len = style_dim_[0];
 
     int32_t actual_num_floats = voices_data_length / sizeof(float);
+    int32_t expected_num_floats =
+        style_dim_[0] * style_dim_[2] * meta_data_.num_speakers;
+
+    if (actual_num_floats != expected_num_floats) {
+      SHERPA_ONNX_LOGE(
+          "Corrupted voices file. Expected #floats: %d, actual: %d",
+          expected_num_floats, actual_num_floats);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     styles_ = std::vector<float>(
         reinterpret_cast<const float *>(voices_data),
         reinterpret_cast<const float *>(voices_data) + actual_num_floats);
-    
+
     auto shape1 = model1_->TensorShape("input_ids");
     max_seq_len_ = shape1[1];
   }
 
   std::vector<float> LoadVoiceEmbedding(int32_t sid, int32_t phoneme_len) {
-    int32_t style_dim0 = 510; // max_token_len
-    int32_t style_dim1 = 256;
+    int32_t style_dim0 = style_dim_[0];
+    int32_t style_dim1 = style_dim_[2];
     phoneme_len = std::max(phoneme_len, 0);
 
     std::vector<float> ref_s(style_dim1);
@@ -233,8 +264,9 @@ class OfflineTtsKokoroModelAxcl::Impl {
                  std::vector<float> &audio) {
     int32_t actual_len = input_ids.size();
     if (actual_len > max_seq_len_) {
-      SHERPA_ONNX_LOGE("Input ids length %d exceeds max_seq_len %d, truncating.",
-                       actual_len, max_seq_len_);
+      SHERPA_ONNX_LOGE(
+          "Input ids length %d exceeds max_seq_len %d, truncating.", actual_len,
+          max_seq_len_);
       input_ids.resize(max_seq_len_);
       actual_len = max_seq_len_;
     }
@@ -279,7 +311,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     model1_->SetInputTensorData("input_ids", input_ids_i32.data(),
                                 input_ids_i32.size());
     model1_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
-    model1_->SetInputTensorData("text_mask", text_mask_u8.data(), text_mask_u8.size()); 
+    model1_->SetInputTensorData("text_mask", text_mask_u8.data(),
+                                text_mask_u8.size());
 
     if (!model1_->Run()) {
       return false;
@@ -291,10 +324,12 @@ class OfflineTtsKokoroModelAxcl::Impl {
     std::vector<int32_t> pred_dur;
     ProcessDuration(duration, actual_len, speed, pred_dur, total_frames);
 
-    std::vector<float> pred_aln_trg = CreateAlignmentMatrix(pred_dur, total_frames);
+    std::vector<float> pred_aln_trg =
+        CreateAlignmentMatrix(pred_dur, total_frames);
 
-    int32_t d_shape_1 = max_seq_len_; 
-    int32_t d_shape_2 = 640; // style_dim_[2] essentially, or based on d_shape_[2]
+    int32_t d_shape_1 = max_seq_len_;
+    int32_t d_shape_2 =
+        640;  // style_dim_[2] essentially, or based on d_shape_[2]
     std::vector<float> en(total_frames * d_shape_2, 0.0f);
 
     for (int32_t j = 0; j < d_shape_2; ++j) {
@@ -311,9 +346,12 @@ class OfflineTtsKokoroModelAxcl::Impl {
 
     model2_->SetInputTensorData("en", en.data(), en.size());
     model2_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
-    model2_->SetInputTensorData("input_ids", input_ids_i32.data(), input_ids_i32.size());
-    model2_->SetInputTensorData("text_mask", text_mask_float.data(), text_mask_float.size());
-    model2_->SetInputTensorData("pred_aln_trg", pred_aln_trg.data(), pred_aln_trg.size());
+    model2_->SetInputTensorData("input_ids", input_ids_i32.data(),
+                                input_ids_i32.size());
+    model2_->SetInputTensorData("text_mask", text_mask_float.data(),
+                                text_mask_float.size());
+    model2_->SetInputTensorData("pred_aln_trg", pred_aln_trg.data(),
+                                pred_aln_trg.size());
 
     if (!model2_->Run()) {
       return false;
@@ -326,9 +364,9 @@ class OfflineTtsKokoroModelAxcl::Impl {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
     std::array<int64_t, 2> f0_shape = {1, static_cast<int64_t>(f0_pred.size())};
-    Ort::Value f0_tensor = Ort::Value::CreateTensor(
-        memory_info, f0_pred.data(), f0_pred.size(), f0_shape.data(),
-        f0_shape.size());
+    Ort::Value f0_tensor =
+        Ort::Value::CreateTensor(memory_info, f0_pred.data(), f0_pred.size(),
+                                 f0_shape.data(), f0_shape.size());
 
     auto out4 = model4_->Run({}, model4_input_names_ptr_.data(), &f0_tensor, 1,
                              model4_output_names_ptr_.data(),
@@ -355,8 +393,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     PostprocessXToAudio(x_out, 23041, audio);
 
     if (is_doubled) {
-      actual_content_frames = std::accumulate(pred_dur.begin(),
-                                              pred_dur.begin() + original_actual_len, 0);
+      actual_content_frames = std::accumulate(
+          pred_dur.begin(), pred_dur.begin() + original_actual_len, 0);
       audio.erase(audio.begin() + audio.size() / 2, audio.end());
       total_frames = total_frames / 2;
     } else {
@@ -371,15 +409,16 @@ class OfflineTtsKokoroModelAxcl::Impl {
                        int32_t &total_frames) {
     std::vector<int32_t> pred_dur_original(actual_len, 0);
     std::vector<float> duration_processed = Sigmoid(duration);
-    
-    int32_t dur_shape_2 = 50; 
+
+    int32_t dur_shape_2 = 50;
     for (int32_t i = 0; i < actual_len; i++) {
       float sum = 0;
       for (int32_t n = 0; n < dur_shape_2; n++) {
         sum += duration_processed[i * dur_shape_2 + n];
       }
       sum /= speed;
-      pred_dur_original[i] = static_cast<int32_t>(std::max(1.f, std::round(sum)));
+      pred_dur_original[i] =
+          static_cast<int32_t>(std::max(1.f, std::round(sum)));
     }
 
     std::vector<int32_t> pred_dur_padding(max_seq_len_ - actual_len, 0);
@@ -413,7 +452,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
       int32_t frames_per_padding = remaining_frames / padding_len;
       int32_t remainder = remaining_frames % padding_len;
 
-      for (int32_t i = actual_len; i < static_cast<int32_t>(pred_dur.size()); i++)
+      for (int32_t i = actual_len; i < static_cast<int32_t>(pred_dur.size());
+           i++)
         pred_dur[i] = frames_per_padding;
 
       if (remainder > 0) {
@@ -458,8 +498,8 @@ class OfflineTtsKokoroModelAxcl::Impl {
     for (int32_t i = 0; i < half_n_fft * num_frames; i++) {
       spec_part[i] = std::exp(spec_part[i]);
       phase_part[i] = std::sin(phase_part[i]);
-      cos_part[i] =
-          std::sqrt(1.f - std::max(0.f, std::min(phase_part[i] * phase_part[i], 1.0f)));
+      cos_part[i] = std::sqrt(
+          1.f - std::max(0.f, std::min(phase_part[i] * phase_part[i], 1.0f)));
     }
 
     knf::StftResult stft_result;
@@ -492,12 +532,14 @@ class OfflineTtsKokoroModelAxcl::Impl {
     audio = istft.Compute(stft_result);
   }
 
-  void TrimAudioByContent(std::vector<float> &audio, int32_t actual_content_frames,
-                          int32_t total_frames, int32_t actual_len) {
+  void TrimAudioByContent(std::vector<float> &audio,
+                          int32_t actual_content_frames, int32_t total_frames,
+                          int32_t actual_len) {
     int32_t padding_len = max_seq_len_ - actual_len;
     if (padding_len > 0) {
       float content_ratio = actual_content_frames * 1.0f / total_frames;
-      int32_t audio_len_to_keep = static_cast<int32_t>(audio.size() * content_ratio);
+      int32_t audio_len_to_keep =
+          static_cast<int32_t>(audio.size() * content_ratio);
       audio.resize(audio_len_to_keep);
     }
   }
@@ -507,7 +549,7 @@ class OfflineTtsKokoroModelAxcl::Impl {
     is_doubled = false;
     int32_t original_actual_len = actual_len;
 
-    if (actual_len <= 32) { // DOUBLE_INPUT_THRESHOLD
+    if (actual_len <= 32) {  // DOUBLE_INPUT_THRESHOLD
       is_doubled = true;
       std::vector<int64_t> valid_content(input_ids.begin(),
                                          input_ids.begin() + actual_len);
@@ -545,6 +587,7 @@ class OfflineTtsKokoroModelAxcl::Impl {
  private:
   OfflineTtsModelConfig config_;
   OfflineTtsKokoroModelMetaData meta_data_;
+  std::vector<int32_t> style_dim_;
 
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
@@ -572,8 +615,9 @@ OfflineTtsKokoroModelAxcl::OfflineTtsKokoroModelAxcl(
     Manager *mgr, const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
-std::vector<float> OfflineTtsKokoroModelAxcl::Run(
-    const std::vector<int64_t>& x, int64_t sid, float speed) const {
+std::vector<float> OfflineTtsKokoroModelAxcl::Run(const std::vector<int64_t> &x,
+                                                  int64_t sid,
+                                                  float speed) const {
   return impl_->Run(x, sid, speed);
 }
 
@@ -593,4 +637,3 @@ template OfflineTtsKokoroModelAxcl::OfflineTtsKokoroModelAxcl(
 #endif
 
 }  // namespace sherpa_onnx
-
