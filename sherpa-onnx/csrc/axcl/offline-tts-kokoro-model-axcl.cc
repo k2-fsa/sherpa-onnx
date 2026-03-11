@@ -139,22 +139,45 @@ class OfflineTtsKokoroModelAxcl::Impl {
 
  private:
   void Init(const OfflineTtsModelConfig &config) {
-    std::string model_path = config.kokoro.model;
+    std::string model_str = config.kokoro.model;
 
-    // kokoro axcl mode we assume config.kokoro.model is a directory containing
-    // models or we can use the pattern like kokoro.model + "_part1.axmodel"
-    // Let's assume the user passes a directory. Or the user passes the prefix
-    // path. For simplicity, we assume `config.kokoro.model` is a directory.
-    std::string model1_path = model_path + "/kokoro_part1.axmodel";
-    std::string model2_path = model_path + "/kokoro_part2.axmodel";
-    std::string model3_path = model_path + "/kokoro_part3.axmodel";
-    std::string model4_path = model_path + "/kokoro_part4.onnx";
+    std::vector<std::string> model_files;
+    SplitStringToVector(model_str, ",", false, &model_files);
 
-    model1_ = std::make_unique<AxclModel>(model1_path);
-    model2_ = std::make_unique<AxclModel>(model2_path);
-    model3_ = std::make_unique<AxclModel>(model3_path);
+    std::vector<std::string> model_paths;
 
-    auto buf4 = ReadFile(model4_path);
+    if (config_.provider == "axcl") {
+      // axcl provider requires exactly 4 model files
+      if (model_files.size() != 4) {
+        SHERPA_ONNX_LOGE(
+            "For axcl provider, model should contain exactly 4 files "
+            "separated by comma. Given %d files: %s",
+            static_cast<int32_t>(model_files.size()), model_str.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      // Validate all 4 files exist
+      for (int32_t i = 0; i < 4; ++i) {
+        if (!FileExists(model_files[i])) {
+          SHERPA_ONNX_LOGE("Model file '%s' does not exist",
+                           model_files[i].c_str());
+          SHERPA_ONNX_EXIT(-1);
+        }
+      }
+      model_paths = model_files;
+    } else {
+      SHERPA_ONNX_LOGE(
+          "This model only supports axcl provider. Please use provider=axcl");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    // Load ax models (indices 0, 1, 2)
+    for (int32_t i = 0; i < 3; ++i) {
+      axcl_models_.push_back(std::make_unique<AxclModel>(model_paths[i]));
+    }
+
+    // Load onnx model (index 3)
+    auto buf4 = ReadFile(model_paths[3]);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
     GetInputNames(model4_.get(), &model4_input_names_,
@@ -168,22 +191,38 @@ class OfflineTtsKokoroModelAxcl::Impl {
 
   template <typename Manager>
   void Init(Manager *mgr, const OfflineTtsModelConfig &config) {
-    std::string model_path = config.kokoro.model;
-    std::string model1_path = model_path + "/kokoro_part1.axmodel";
-    std::string model2_path = model_path + "/kokoro_part2.axmodel";
-    std::string model3_path = model_path + "/kokoro_part3.axmodel";
-    std::string model4_path = model_path + "/kokoro_part4.onnx";
+    std::string model_str = config.kokoro.model;
 
-    auto buf1 = ReadFile(mgr, model1_path);
-    model1_ = std::make_unique<AxclModel>(buf1.data(), buf1.size());
+    std::vector<std::string> model_files;
+    SplitStringToVector(model_str, ",", false, &model_files);
 
-    auto buf2 = ReadFile(mgr, model2_path);
-    model2_ = std::make_unique<AxclModel>(buf2.data(), buf2.size());
+    std::vector<std::string> model_paths;
 
-    auto buf3 = ReadFile(mgr, model3_path);
-    model3_ = std::make_unique<AxclModel>(buf3.data(), buf3.size());
+    if (config_.provider == "axcl") {
+      // axcl provider requires exactly 4 model files
+      if (model_files.size() != 4) {
+        SHERPA_ONNX_LOGE(
+            "For axcl provider, model should contain exactly 4 files "
+            "separated by comma. Given %d files: %s",
+            static_cast<int32_t>(model_files.size()), model_str.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+      model_paths = model_files;
+    } else {
+      SHERPA_ONNX_LOGE(
+          "This model only supports axcl provider. Please use provider=axcl");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
-    auto buf4 = ReadFile(mgr, model4_path);
+    // Load ax models (indices 0, 1, 2)
+    for (int32_t i = 0; i < 3; ++i) {
+      auto buf = ReadFile(mgr, model_paths[i]);
+      axcl_models_.push_back(
+          std::make_unique<AxclModel>(buf.data(), buf.size()));
+    }
+
+    // Load onnx model (index 3)
+    auto buf4 = ReadFile(mgr, model_paths[3]);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
     GetInputNames(model4_.get(), &model4_input_names_,
@@ -236,7 +275,7 @@ class OfflineTtsKokoroModelAxcl::Impl {
         reinterpret_cast<const float *>(voices_data),
         reinterpret_cast<const float *>(voices_data) + actual_num_floats);
 
-    auto shape1 = model1_->TensorShape("input_ids");
+    auto shape1 = axcl_models_[0]->TensorShape("input_ids");
     max_seq_len_ = shape1[1];
   }
 
@@ -308,18 +347,19 @@ class OfflineTtsKokoroModelAxcl::Impl {
 
     std::vector<uint8_t> text_mask_u8(text_mask.begin(), text_mask.end());
 
-    model1_->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                input_ids_i32.size());
-    model1_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
-    model1_->SetInputTensorData("text_mask", text_mask_u8.data(),
-                                text_mask_u8.size());
+    axcl_models_[0]->SetInputTensorData("input_ids", input_ids_i32.data(),
+                                        input_ids_i32.size());
+    axcl_models_[0]->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
+    axcl_models_[0]->SetInputTensorData("text_mask", text_mask_u8.data(),
+                                        text_mask_u8.size());
 
-    if (!model1_->Run()) {
+    if (!axcl_models_[0]->Run()) {
       return false;
     }
 
-    std::vector<float> duration = model1_->GetOutputTensorData("duration");
-    std::vector<float> d = model1_->GetOutputTensorData("d");
+    std::vector<float> duration =
+        axcl_models_[0]->GetOutputTensorData("duration");
+    std::vector<float> d = axcl_models_[0]->GetOutputTensorData("d");
 
     std::vector<int32_t> pred_dur;
     ProcessDuration(duration, actual_len, speed, pred_dur, total_frames);
@@ -344,22 +384,23 @@ class OfflineTtsKokoroModelAxcl::Impl {
 
     std::vector<float> text_mask_float(text_mask.begin(), text_mask.end());
 
-    model2_->SetInputTensorData("en", en.data(), en.size());
-    model2_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
-    model2_->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                input_ids_i32.size());
-    model2_->SetInputTensorData("text_mask", text_mask_float.data(),
-                                text_mask_float.size());
-    model2_->SetInputTensorData("pred_aln_trg", pred_aln_trg.data(),
-                                pred_aln_trg.size());
+    axcl_models_[1]->SetInputTensorData("en", en.data(), en.size());
+    axcl_models_[1]->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
+    axcl_models_[1]->SetInputTensorData("input_ids", input_ids_i32.data(),
+                                        input_ids_i32.size());
+    axcl_models_[1]->SetInputTensorData("text_mask", text_mask_float.data(),
+                                        text_mask_float.size());
+    axcl_models_[1]->SetInputTensorData("pred_aln_trg", pred_aln_trg.data(),
+                                        pred_aln_trg.size());
 
-    if (!model2_->Run()) {
+    if (!axcl_models_[1]->Run()) {
       return false;
     }
 
-    std::vector<float> f0_pred = model2_->GetOutputTensorData("F0_pred");
-    std::vector<float> n_pred = model2_->GetOutputTensorData("N_pred");
-    std::vector<float> asr = model2_->GetOutputTensorData("asr");
+    std::vector<float> f0_pred =
+        axcl_models_[1]->GetOutputTensorData("F0_pred");
+    std::vector<float> n_pred = axcl_models_[1]->GetOutputTensorData("N_pred");
+    std::vector<float> asr = axcl_models_[1]->GetOutputTensorData("asr");
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -379,17 +420,18 @@ class OfflineTtsKokoroModelAxcl::Impl {
     }
     std::vector<float> har(p_har, p_har + har_num_elements);
 
-    model3_->SetInputTensorData("asr", asr.data(), asr.size());
-    model3_->SetInputTensorData("F0_pred", f0_pred.data(), f0_pred.size());
-    model3_->SetInputTensorData("N_pred", n_pred.data(), n_pred.size());
-    model3_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
-    model3_->SetInputTensorData("har", har.data(), har.size());
+    axcl_models_[2]->SetInputTensorData("asr", asr.data(), asr.size());
+    axcl_models_[2]->SetInputTensorData("F0_pred", f0_pred.data(),
+                                        f0_pred.size());
+    axcl_models_[2]->SetInputTensorData("N_pred", n_pred.data(), n_pred.size());
+    axcl_models_[2]->SetInputTensorData("ref_s", ref_s.data(), ref_s.size());
+    axcl_models_[2]->SetInputTensorData("har", har.data(), har.size());
 
-    if (!model3_->Run()) {
+    if (!axcl_models_[2]->Run()) {
       return false;
     }
 
-    std::vector<float> x_out = model3_->GetOutputTensorData("x");
+    std::vector<float> x_out = axcl_models_[2]->GetOutputTensorData("x");
     PostprocessXToAudio(x_out, 23041, audio);
 
     if (is_doubled) {
@@ -593,9 +635,7 @@ class OfflineTtsKokoroModelAxcl::Impl {
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
-  std::unique_ptr<AxclModel> model1_;
-  std::unique_ptr<AxclModel> model2_;
-  std::unique_ptr<AxclModel> model3_;
+  std::vector<std::unique_ptr<AxclModel>> axcl_models_;
 
   std::unique_ptr<Ort::Session> model4_;
   std::vector<std::string> model4_input_names_;

@@ -266,16 +266,45 @@ class OfflineTtsKokoroModelAxera::Impl {
 
  private:
   void Init(const OfflineTtsModelConfig &config) {
-    std::string model1_path = GetModelPath(config.kokoro.model, "part1");
-    std::string model2_path = GetModelPath(config.kokoro.model, "part2");
-    std::string model3_path = GetModelPath(config.kokoro.model, "part3");
-    std::string model4_path = GetModelPath(config.kokoro.model, "part4", true);
+    std::string model_str = config.kokoro.model;
 
-    model1_ = std::make_unique<AxeraModel>(model1_path);
-    model2_ = std::make_unique<AxeraModel>(model2_path);
-    model3_ = std::make_unique<AxeraModel>(model3_path);
+    std::vector<std::string> model_files;
+    SplitStringToVector(model_str, ",", false, &model_files);
 
-    auto buf4 = ReadFile(model4_path);
+    std::vector<std::string> model_paths;
+
+    if (config_.provider == "axera") {
+      // axera provider requires exactly 4 model files
+      if (model_files.size() != 4) {
+        SHERPA_ONNX_LOGE(
+            "For axera provider, model should contain exactly 4 files "
+            "separated by comma. Given %d files: %s",
+            static_cast<int32_t>(model_files.size()), model_str.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      // Validate all 4 files exist
+      for (int32_t i = 0; i < 4; ++i) {
+        if (!FileExists(model_files[i])) {
+          SHERPA_ONNX_LOGE("Model file '%s' does not exist",
+                           model_files[i].c_str());
+          SHERPA_ONNX_EXIT(-1);
+        }
+      }
+      model_paths = model_files;
+    } else {
+      SHERPA_ONNX_LOGE(
+          "This model only supports axera provider. Please use provider=axera");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    // Load axera models (indices 0, 1, 2)
+    for (int32_t i = 0; i < 3; ++i) {
+      axera_models_.push_back(std::make_unique<AxeraModel>(model_paths[i]));
+    }
+
+    // Load onnx model (index 3)
+    auto buf4 = ReadFile(model_paths[3]);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
     GetInputNames(model4_.get(), &model4_input_names_,
@@ -289,21 +318,38 @@ class OfflineTtsKokoroModelAxera::Impl {
 
   template <typename Manager>
   void Init(Manager *mgr, const OfflineTtsModelConfig &config) {
-    std::string model1_path = GetModelPath(config.kokoro.model, "part1");
-    std::string model2_path = GetModelPath(config.kokoro.model, "part2");
-    std::string model3_path = GetModelPath(config.kokoro.model, "part3");
-    std::string model4_path = GetModelPath(config.kokoro.model, "part4", true);
+    std::string model_str = config.kokoro.model;
 
-    auto buf1 = ReadFile(mgr, model1_path);
-    model1_ = std::make_unique<AxeraModel>(buf1.data(), buf1.size());
+    std::vector<std::string> model_files;
+    SplitStringToVector(model_str, ",", false, &model_files);
 
-    auto buf2 = ReadFile(mgr, model2_path);
-    model2_ = std::make_unique<AxeraModel>(buf2.data(), buf2.size());
+    std::vector<std::string> model_paths;
 
-    auto buf3 = ReadFile(mgr, model3_path);
-    model3_ = std::make_unique<AxeraModel>(buf3.data(), buf3.size());
+    if (config_.provider == "axera") {
+      // axera provider requires exactly 4 model files
+      if (model_files.size() != 4) {
+        SHERPA_ONNX_LOGE(
+            "For axera provider, model should contain exactly 4 files "
+            "separated by comma. Given %d files: %s",
+            static_cast<int32_t>(model_files.size()), model_str.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+      model_paths = model_files;
+    } else {
+      SHERPA_ONNX_LOGE(
+          "This model only supports axera provider. Please use provider=axera");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
-    auto buf4 = ReadFile(mgr, model4_path);
+    // Load axera models (indices 0, 1, 2)
+    for (int32_t i = 0; i < 3; ++i) {
+      auto buf = ReadFile(mgr, model_paths[i]);
+      axera_models_.push_back(
+          std::make_unique<AxeraModel>(buf.data(), buf.size()));
+    }
+
+    // Load onnx model (index 3)
+    auto buf4 = ReadFile(mgr, model_paths[3]);
     model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
                                              sess_opts_);
     GetInputNames(model4_.get(), &model4_input_names_,
@@ -355,7 +401,7 @@ class OfflineTtsKokoroModelAxera::Impl {
         reinterpret_cast<const float *>(voices_data),
         reinterpret_cast<const float *>(voices_data) + actual_num_floats);
 
-    auto shape1 = model1_->TensorShape("input_ids");
+    auto shape1 = axera_models_[0]->TensorShape("input_ids");
     if (shape1.size() < 2) {
       SHERPA_ONNX_LOGE("Unexpected shape rank for input_ids: %d",
                        static_cast<int32_t>(shape1.size()));
@@ -436,20 +482,22 @@ class OfflineTtsKokoroModelAxera::Impl {
 
     std::vector<uint8_t> text_mask_u8(text_mask.begin(), text_mask.end());
 
-    if (!model1_->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                     input_ids_i32.size()) ||
-        !model1_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size()) ||
-        !model1_->SetInputTensorData("text_mask", text_mask_u8.data(),
-                                     text_mask_u8.size())) {
+    if (!axera_models_[0]->SetInputTensorData("input_ids", input_ids_i32.data(),
+                                              input_ids_i32.size()) ||
+        !axera_models_[0]->SetInputTensorData("ref_s", ref_s.data(),
+                                              ref_s.size()) ||
+        !axera_models_[0]->SetInputTensorData("text_mask", text_mask_u8.data(),
+                                              text_mask_u8.size())) {
       return false;
     }
 
-    if (!model1_->Run()) {
+    if (!axera_models_[0]->Run()) {
       return false;
     }
 
-    std::vector<float> duration = model1_->GetOutputTensorData("duration");
-    std::vector<float> d = model1_->GetOutputTensorData("d");
+    std::vector<float> duration =
+        axera_models_[0]->GetOutputTensorData("duration");
+    std::vector<float> d = axera_models_[0]->GetOutputTensorData("d");
 
     std::vector<int32_t> pred_dur;
     ProcessDuration(duration, actual_len, speed, pred_dur, total_frames);
@@ -472,24 +520,26 @@ class OfflineTtsKokoroModelAxera::Impl {
 
     std::vector<float> text_mask_float(text_mask.begin(), text_mask.end());
 
-    if (!model2_->SetInputTensorData("en", en.data(), en.size()) ||
-        !model2_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size()) ||
-        !model2_->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                     input_ids_i32.size()) ||
-        !model2_->SetInputTensorData("text_mask", text_mask_float.data(),
-                                     text_mask_float.size()) ||
-        !model2_->SetInputTensorData("pred_aln_trg", pred_aln_trg.data(),
-                                     pred_aln_trg.size())) {
+    if (!axera_models_[1]->SetInputTensorData("en", en.data(), en.size()) ||
+        !axera_models_[1]->SetInputTensorData("ref_s", ref_s.data(),
+                                              ref_s.size()) ||
+        !axera_models_[1]->SetInputTensorData("input_ids", input_ids_i32.data(),
+                                              input_ids_i32.size()) ||
+        !axera_models_[1]->SetInputTensorData(
+            "text_mask", text_mask_float.data(), text_mask_float.size()) ||
+        !axera_models_[1]->SetInputTensorData(
+            "pred_aln_trg", pred_aln_trg.data(), pred_aln_trg.size())) {
       return false;
     }
 
-    if (!model2_->Run()) {
+    if (!axera_models_[1]->Run()) {
       return false;
     }
 
-    std::vector<float> f0_pred = model2_->GetOutputTensorData("F0_pred");
-    std::vector<float> n_pred = model2_->GetOutputTensorData("N_pred");
-    std::vector<float> asr = model2_->GetOutputTensorData("asr");
+    std::vector<float> f0_pred =
+        axera_models_[1]->GetOutputTensorData("F0_pred");
+    std::vector<float> n_pred = axera_models_[1]->GetOutputTensorData("N_pred");
+    std::vector<float> asr = axera_models_[1]->GetOutputTensorData("asr");
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -509,20 +559,22 @@ class OfflineTtsKokoroModelAxera::Impl {
     }
     std::vector<float> har(p_har, p_har + har_num_elements);
 
-    if (!model3_->SetInputTensorData("asr", asr.data(), asr.size()) ||
-        !model3_->SetInputTensorData("F0_pred", f0_pred.data(),
-                                     f0_pred.size()) ||
-        !model3_->SetInputTensorData("N_pred", n_pred.data(), n_pred.size()) ||
-        !model3_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size()) ||
-        !model3_->SetInputTensorData("har", har.data(), har.size())) {
+    if (!axera_models_[2]->SetInputTensorData("asr", asr.data(), asr.size()) ||
+        !axera_models_[2]->SetInputTensorData("F0_pred", f0_pred.data(),
+                                              f0_pred.size()) ||
+        !axera_models_[2]->SetInputTensorData("N_pred", n_pred.data(),
+                                              n_pred.size()) ||
+        !axera_models_[2]->SetInputTensorData("ref_s", ref_s.data(),
+                                              ref_s.size()) ||
+        !axera_models_[2]->SetInputTensorData("har", har.data(), har.size())) {
       return false;
     }
 
-    if (!model3_->Run()) {
+    if (!axera_models_[2]->Run()) {
       return false;
     }
 
-    std::vector<float> x_out = model3_->GetOutputTensorData("x");
+    std::vector<float> x_out = axera_models_[2]->GetOutputTensorData("x");
     PostprocessXToAudio(x_out, 23041, audio);
 
     if (is_doubled) {
@@ -723,9 +775,7 @@ class OfflineTtsKokoroModelAxera::Impl {
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
-  std::unique_ptr<AxeraModel> model1_;
-  std::unique_ptr<AxeraModel> model2_;
-  std::unique_ptr<AxeraModel> model3_;
+  std::vector<std::unique_ptr<AxeraModel>> axera_models_;
 
   std::unique_ptr<Ort::Session> model4_;
   std::vector<std::string> model4_input_names_;
