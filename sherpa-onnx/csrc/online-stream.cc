@@ -4,6 +4,8 @@
 #include "sherpa-onnx/csrc/online-stream.h"
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -48,7 +50,8 @@ class OnlineStream::Impl {
     // we don't reset the feature extractor
     start_frame_index_ += num_processed_frames_;
     num_processed_frames_ = 0;
-    paraformer_is_final_ = false;
+    // Note: we don't clear options_ here since options are session-level
+    // parameters set by the user (e.g., "is_final").
   }
 
   int32_t &GetNumProcessedFrames() {
@@ -129,12 +132,37 @@ class OnlineStream::Impl {
     return paraformer_alpha_cache_;
   }
 
-  void SetParaformerFinalChunk(bool is_final) {
-    paraformer_is_final_ = is_final;
+  void SetOption(const std::string &key, const std::string &value) {
+    options_[key] = value;
   }
 
-  bool IsParaformerFinalChunk() const {
-    return paraformer_is_final_;
+  bool HasOption(const std::string &key) const {
+    return options_.count(key) != 0;
+  }
+
+  const std::string &GetOption(const std::string &key) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return it->second;
+    }
+    static const std::string kEmpty;
+    return kEmpty;
+  }
+
+  int32_t GetOptionInt(const std::string &key, int32_t default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return std::stoi(it->second);
+    }
+    return default_value;
+  }
+
+  float GetOptionFloat(const std::string &key, float default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return std::stof(it->second);
+    }
+    return default_value;
   }
 
   void SetFasterDecoder(std::unique_ptr<kaldi_decoder::FasterDecoder> decoder) {
@@ -168,7 +196,7 @@ class OnlineStream::Impl {
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
   OnlineParaformerDecoderResult paraformer_result_;
-  bool paraformer_is_final_ = false;
+  std::unordered_map<std::string, std::string> options_;
   std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
   int32_t faster_decoder_processed_frames_ = 0;
 };
@@ -292,12 +320,27 @@ std::vector<float> &OnlineStream::GetParaformerAlphaCache() {
   return impl_->GetParaformerAlphaCache();
 }
 
-void OnlineStream::SetParaformerFinalChunk(bool is_final) {
-  impl_->SetParaformerFinalChunk(is_final);
+void OnlineStream::SetOption(const std::string &key,
+                             const std::string &value) {
+  impl_->SetOption(key, value);
 }
 
-bool OnlineStream::IsParaformerFinalChunk() const {
-  return impl_->IsParaformerFinalChunk();
+bool OnlineStream::HasOption(const std::string &key) const {
+  return impl_->HasOption(key);
+}
+
+const std::string &OnlineStream::GetOption(const std::string &key) const {
+  return impl_->GetOption(key);
+}
+
+int32_t OnlineStream::GetOptionInt(const std::string &key,
+                                   int32_t default_value) const {
+  return impl_->GetOptionInt(key, default_value);
+}
+
+float OnlineStream::GetOptionFloat(const std::string &key,
+                                   float default_value) const {
+  return impl_->GetOptionFloat(key, default_value);
 }
 
 }  // namespace sherpa_onnx

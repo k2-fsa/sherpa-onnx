@@ -39,6 +39,9 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
+#include "fst/extensions/far/far.h"
+#include "kaldifst/csrc/text-normalizer.h"
+
 #if SHERPA_ONNX_ENABLE_TTS == 1
 #include "sherpa-onnx/csrc/offline-tts.h"
 #endif
@@ -351,9 +354,14 @@ void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
   stream->impl->InputFinished();
 }
 
-void SherpaOnnxOnlineStreamSetFinalChunk(
-    const SherpaOnnxOnlineStream *stream) {
-  stream->impl->SetParaformerFinalChunk(true);
+void SherpaOnnxOnlineStreamSetOption(const SherpaOnnxOnlineStream *stream,
+                                     const char *key, const char *value) {
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOnlineStreamGetOption(
+    const SherpaOnnxOnlineStream *stream, const char *key) {
+  return stream->impl->GetOption(key).c_str();
 }
 
 int32_t SherpaOnnxOnlineStreamIsEndpoint(
@@ -656,6 +664,16 @@ void SherpaOnnxAcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
                                      int32_t sample_rate, const float *samples,
                                      int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
+}
+
+void SherpaOnnxOfflineStreamSetOption(const SherpaOnnxOfflineStream *stream,
+                                      const char *key, const char *value) {
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOfflineStreamGetOption(
+    const SherpaOnnxOfflineStream *stream, const char *key) {
+  return stream->impl->GetOption(key).c_str();
 }
 
 void SherpaOnnxDecodeOfflineStream(
@@ -3006,3 +3024,99 @@ SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
 #endif  // #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
 
 #endif  // #ifdef __OHOS__
+
+// ============================================================
+// Inverse Text Normalization (standalone)
+// ============================================================
+
+struct SherpaOnnxInverseTextNormalization {
+  std::vector<std::unique_ptr<kaldifst::TextNormalizer>> itn_list;
+};
+
+const SherpaOnnxInverseTextNormalization *
+SherpaOnnxCreateInverseTextNormalization(const char *rule_fsts,
+                                         const char *rule_fars) {
+  auto p = new SherpaOnnxInverseTextNormalization;
+  try {
+    std::string fsts = SHERPA_ONNX_OR(rule_fsts, "");
+    std::string fars = SHERPA_ONNX_OR(rule_fars, "");
+
+    if (fsts.empty() && fars.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Both rule_fsts and rule_fars are empty. Cannot create ITN.");
+      delete p;
+      return nullptr;
+    }
+
+    // Load FST files
+    if (!fsts.empty()) {
+      std::vector<std::string> files;
+      sherpa_onnx::SplitStringToVector(fsts, ",", false, &files);
+      p->itn_list.reserve(files.size());
+      for (const auto &f : files) {
+        p->itn_list.push_back(
+            std::make_unique<kaldifst::TextNormalizer>(f));
+      }
+    }
+
+    // Load FAR archives
+    if (!fars.empty()) {
+      std::vector<std::string> files;
+      sherpa_onnx::SplitStringToVector(fars, ",", false, &files);
+      p->itn_list.reserve(p->itn_list.size() + files.size());
+      for (const auto &f : files) {
+        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+            fst::FarReader<fst::StdArc>::Open(f));
+        for (; !reader->Done(); reader->Next()) {
+          std::unique_ptr<fst::StdConstFst> r(
+              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+          p->itn_list.push_back(
+              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+        }
+      }
+    }
+
+    if (p->itn_list.empty()) {
+      SHERPA_ONNX_LOGE("No ITN rules loaded.");
+      delete p;
+      return nullptr;
+    }
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to create inverse text normalization: %s",
+                     e.what());
+    delete p;
+    return nullptr;
+  }
+  return p;
+}
+
+void SherpaOnnxDestroyInverseTextNormalization(
+    const SherpaOnnxInverseTextNormalization *itn) {
+  delete itn;
+}
+
+const char *SherpaOnnxInverseTextNormalizationNormalize(
+    const SherpaOnnxInverseTextNormalization *itn, const char *text) {
+  if (!itn || !text) return nullptr;
+
+  try {
+    std::string s = text;
+    s = sherpa_onnx::RemoveInvalidUtf8Sequences(s);
+
+    for (const auto &tn : itn->itn_list) {
+      s = tn->Normalize(s);
+    }
+
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = '\0';
+    return p;
+  } catch (const std::exception &e) {
+    SHERPA_ONNX_LOGE("Failed to normalize text: %s", e.what());
+    return nullptr;
+  }
+}
+
+void SherpaOnnxInverseTextNormalizationFreeText(const char *text) {
+  delete[] text;
+}

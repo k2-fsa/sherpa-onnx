@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -222,6 +223,39 @@ class OfflineStream::Impl {
 
   const ContextGraphPtr &GetContextGraph() const { return context_graph_; }
 
+  void SetOption(const std::string &key, const std::string &value) {
+    options_[key] = value;
+  }
+
+  bool HasOption(const std::string &key) const {
+    return options_.count(key) != 0;
+  }
+
+  const std::string &GetOption(const std::string &key) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return it->second;
+    }
+    static const std::string kEmpty;
+    return kEmpty;
+  }
+
+  int32_t GetOptionInt(const std::string &key, int32_t default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return std::stoi(it->second);
+    }
+    return default_value;
+  }
+
+  float GetOptionFloat(const std::string &key, float default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return std::stof(it->second);
+    }
+    return default_value;
+  }
+
  private:
   // see
   // https://github.com/pytorch/audio/blob/main/src/torchaudio/functional/functional.py#L359
@@ -292,6 +326,7 @@ class OfflineStream::Impl {
   knf::MfccOptions mfcc_opts_;
   OfflineRecognitionResult r_;
   ContextGraphPtr context_graph_;
+  std::unordered_map<std::string, std::string> options_;
   bool is_ced_ = false;
   bool is_moonshine_ = false;
   bool is_omnilingual_asr_ = false;
@@ -339,6 +374,30 @@ const ContextGraphPtr &OfflineStream::GetContextGraph() const {
 const OfflineRecognitionResult &OfflineStream::GetResult() const {
   return impl_->GetResult();
 }
+
+void OfflineStream::SetOption(const std::string &key,
+                              const std::string &value) {
+  impl_->SetOption(key, value);
+}
+
+bool OfflineStream::HasOption(const std::string &key) const {
+  return impl_->HasOption(key);
+}
+
+const std::string &OfflineStream::GetOption(const std::string &key) const {
+  return impl_->GetOption(key);
+}
+
+int32_t OfflineStream::GetOptionInt(const std::string &key,
+                                    int32_t default_value) const {
+  return impl_->GetOptionInt(key, default_value);
+}
+
+float OfflineStream::GetOptionFloat(const std::string &key,
+                                    float default_value) const {
+  return impl_->GetOptionFloat(key, default_value);
+}
+
 std::string OfflineRecognitionResult::AsJsonString() const {
   std::ostringstream os;
   os << "{";

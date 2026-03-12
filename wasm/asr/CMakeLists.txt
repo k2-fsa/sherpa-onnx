@@ -21,9 +21,13 @@ set(exported_functions
   SherpaOnnxGetOnlineStreamResultAsJson
   SherpaOnnxIsOnlineStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamGetOption
   SherpaOnnxOnlineStreamInputFinished
   SherpaOnnxOnlineStreamIsEndpoint
   SherpaOnnxOnlineStreamReset
+  SherpaOnnxOnlineStreamSetOption
+  SherpaOnnxOfflineStreamGetOption
+  SherpaOnnxOfflineStreamSetOption
   #
 )
 set(mangled_exported_functions)

@@ -160,7 +160,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       return true;
     }
     // is_final: accept short chunks (less than chunk_size_ frames)
-    if (s->IsParaformerFinalChunk() &&
+    if (s->GetOption("is_final") == "true" &&
         s->GetNumProcessedFrames() < s->NumFramesReady()) {
       return true;
     }
@@ -224,7 +224,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     // is_final: accept short chunks, pad with zeros if needed
     int32_t available_frames = s->NumFramesReady() - num_processed_frames;
     int32_t actual_chunk_size = chunk_size_;
-    if (s->IsParaformerFinalChunk() && available_frames < chunk_size_) {
+    bool is_final = (s->GetOption("is_final") == "true");
+    if (is_final && available_frames < chunk_size_) {
       actual_chunk_size = available_frames;
     }
 
@@ -239,7 +240,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     // For non-final chunks the original code uses chunk_size_ - 1 to create
     // 1-frame overlap.  For the final short chunk we consume all frames.
-    if (s->IsParaformerFinalChunk()) {
+    if (is_final) {
       s->GetNumProcessedFrames() += actual_chunk_size;
     } else {
       s->GetNumProcessedFrames() += chunk_size_ - 1;
@@ -347,7 +348,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     // is_final: tail flush — force-fire residual token if integrate is
     // high enough (token was mostly accumulated, just shy of threshold).
-    if (s->IsParaformerFinalChunk() && integrate >= kCifTailFlushMinAlpha) {
+    if (is_final && integrate >= kCifTailFlushMinAlpha) {
       acoustic_embedding.insert(acoustic_embedding.end(),
                                 initial_hidden.begin(), initial_hidden.end());
       integrate = 0.0f;
