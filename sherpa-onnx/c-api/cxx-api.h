@@ -232,6 +232,8 @@ struct OfflineWhisperModelConfig {
   std::string language;
   std::string task = "transcribe";
   int32_t tail_paddings = -1;
+  bool enable_token_timestamps = false;
+  bool enable_segment_timestamps = false;
 };
 
 struct OfflineCanaryModelConfig {
@@ -593,7 +595,7 @@ struct KeywordResult {
   std::string keyword;
   std::vector<std::string> tokens;
   std::vector<float> timestamps;
-  float start_time;
+  float start_time = 0.0f;
   std::string json;
 };
 
@@ -605,6 +607,7 @@ struct KeywordSpotterConfig {
   float keywords_score = 1.0f;
   float keywords_threshold = 0.25f;
   std::string keywords_file;
+  std::string keywords_buf;
 };
 
 class SHERPA_ONNX_API KeywordSpotter
@@ -639,7 +642,7 @@ struct OfflineSpeechDenoiserGtcrnModelConfig {
 struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   int32_t num_threads = 1;
-  int32_t debug = false;
+  bool debug = false;
   std::string provider = "cpu";
 };
 
@@ -649,7 +652,7 @@ struct OfflineSpeechDenoiserConfig {
 
 struct DenoisedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 class SHERPA_ONNX_API OfflineSpeechDenoiser
@@ -701,7 +704,7 @@ struct VadModelConfig {
 };
 
 struct SpeechSegment {
-  int32_t start;
+  int32_t start = 0;
   std::vector<float> samples;
 };
 
