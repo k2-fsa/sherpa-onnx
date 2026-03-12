@@ -26,6 +26,14 @@ public class OfflineStream {
         acceptWaveform(this.ptr, samples, sampleRate);
     }
 
+    public void setOption(String key, String value) {
+        setOption(this.ptr, key, value);
+    }
+
+    public String getOption(String key) {
+        return getOption(this.ptr, key);
+    }
+
     public void release() {
         // stream object must be release after used
         if (this.ptr == 0) {
@@ -42,6 +50,10 @@ public class OfflineStream {
     }
 
     private native void acceptWaveform(long ptr, float[] samples, int sampleRate);
+
+    private native void setOption(long ptr, String key, String value);
+
+    private native String getOption(long ptr, String key);
 
     private native void delete(long ptr);
 }
