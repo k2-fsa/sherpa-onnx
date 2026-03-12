@@ -195,6 +195,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
   jclass string_cls = env->FindClass("java/lang/String");
   if (string_cls == nullptr) {
     SHERPA_ONNX_LOGE("Failed to find class java/lang/String");
+    env->DeleteLocalRef(j_keyword);
     return nullptr;
   }
 
@@ -219,6 +220,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
   if (result_cls == nullptr) {
     SHERPA_ONNX_LOGE(
         "Failed to find class com/k2fsa/sherpa/onnx/KeywordSpotterResult");
+    env->DeleteLocalRef(j_keyword);
+    env->DeleteLocalRef(j_tokens);
+    env->DeleteLocalRef(j_timestamps);
+    env->DeleteLocalRef(string_cls);
     return nullptr;
   }
 
@@ -227,6 +232,11 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
 
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get KeywordSpotterResult constructor");
+    env->DeleteLocalRef(j_keyword);
+    env->DeleteLocalRef(j_tokens);
+    env->DeleteLocalRef(j_timestamps);
+    env->DeleteLocalRef(result_cls);
+    env->DeleteLocalRef(string_cls);
     return nullptr;
   }
 

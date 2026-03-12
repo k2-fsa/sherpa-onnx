@@ -135,10 +135,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_run(
     return nullptr;
   }
 
-  // https://javap.yawk.at/
   jmethodID constructor = env->GetMethodID(cls, "<init>", "([FI)V");
   if (constructor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get constructor for DenoisedAudio");
+    env->DeleteLocalRef(cls);
     return nullptr;
   }
 
@@ -146,7 +146,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_run(
   env->SetFloatArrayRegion(samples_arr, 0, denoised.samples.size(),
                            denoised.samples.data());
 
-  return env->NewObject(cls, constructor, samples_arr, denoised.sample_rate);
+  jobject obj = env->NewObject(cls, constructor, samples_arr, denoised.sample_rate);
+  env->DeleteLocalRef(cls);
+  env->DeleteLocalRef(samples_arr);
+  return obj;
 }
 
 SHERPA_ONNX_EXTERN_C
