@@ -179,6 +179,9 @@ class SHERPA_ONNX_API OnlineStream
 
   void InputFinished() const;
 
+  void SetOption(const char *key, const char *value) const;
+  const char *GetOption(const char *key) const;
+
   void Destroy(const SherpaOnnxOnlineStream *p) const;
 };
 
@@ -377,6 +380,9 @@ class SHERPA_ONNX_API OfflineStream
 
   void AcceptWaveform(int32_t sample_rate, const float *samples,
                       int32_t n) const;
+
+  void SetOption(const char *key, const char *value) const;
+  const char *GetOption(const char *key) const;
 
   void Destroy(const SherpaOnnxOfflineStream *p) const;
 };
