@@ -28,6 +28,10 @@ function freeConfig(config, Module) {
     freeConfig(config.pocket, Module)
   }
 
+  if ('supertonic' in config) {
+    freeConfig(config.supertonic, Module)
+  }
+
   if (config.ptr) {
     Module._free(config.ptr);
   }
@@ -422,6 +426,84 @@ function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineTtsSupertonicModelConfig(config, Module) {
+  const durationPredictorLen =
+      Module.lengthBytesUTF8(config.durationPredictor || '') + 1;
+  const textEncoderLen =
+      Module.lengthBytesUTF8(config.textEncoder || '') + 1;
+  const vectorEstimatorLen =
+      Module.lengthBytesUTF8(config.vectorEstimator || '') + 1;
+  const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
+  const ttsJsonLen = Module.lengthBytesUTF8(config.ttsJson || '') + 1;
+  const unicodeIndexerLen =
+      Module.lengthBytesUTF8(config.unicodeIndexer || '') + 1;
+  const voiceStyleLen =
+      Module.lengthBytesUTF8(config.voiceStyle || '') + 1;
+
+  const n = durationPredictorLen + textEncoderLen + vectorEstimatorLen +
+      vocoderLen + ttsJsonLen + unicodeIndexerLen + voiceStyleLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 7 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(
+      config.durationPredictor || '', buffer + offset, durationPredictorLen);
+  offset += durationPredictorLen;
+
+  Module.stringToUTF8(
+      config.textEncoder || '', buffer + offset, textEncoderLen);
+  offset += textEncoderLen;
+
+  Module.stringToUTF8(
+      config.vectorEstimator || '', buffer + offset, vectorEstimatorLen);
+  offset += vectorEstimatorLen;
+
+  Module.stringToUTF8(config.vocoder || '', buffer + offset, vocoderLen);
+  offset += vocoderLen;
+
+  Module.stringToUTF8(config.ttsJson || '', buffer + offset, ttsJsonLen);
+  offset += ttsJsonLen;
+
+  Module.stringToUTF8(
+      config.unicodeIndexer || '', buffer + offset, unicodeIndexerLen);
+  offset += unicodeIndexerLen;
+
+  Module.stringToUTF8(
+      config.voiceStyle || '', buffer + offset, voiceStyleLen);
+  offset += voiceStyleLen;
+
+  offset = 0;
+  Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
+  offset += durationPredictorLen;
+
+  Module.setValue(ptr + 1 * 4, buffer + offset, 'i8*');
+  offset += textEncoderLen;
+
+  Module.setValue(ptr + 2 * 4, buffer + offset, 'i8*');
+  offset += vectorEstimatorLen;
+
+  Module.setValue(ptr + 3 * 4, buffer + offset, 'i8*');
+  offset += vocoderLen;
+
+  Module.setValue(ptr + 4 * 4, buffer + offset, 'i8*');
+  offset += ttsJsonLen;
+
+  Module.setValue(ptr + 5 * 4, buffer + offset, 'i8*');
+  offset += unicodeIndexerLen;
+
+  Module.setValue(ptr + 6 * 4, buffer + offset, 'i8*');
+  offset += voiceStyleLen;
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
@@ -496,6 +578,17 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     };
   }
 
+  if (!('offlineTtsSupertonicModelConfig' in config)) {
+    config.offlineTtsSupertonicModelConfig = {
+      durationPredictor: '',
+      textEncoder: '',
+      vectorEstimator: '',
+      vocoder: '',
+      ttsJson: '',
+      unicodeIndexer: '',
+      voiceStyle: '',
+    };
+  }
 
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
@@ -515,9 +608,12 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const pocketModelConfig = initSherpaOnnxOfflineTtsPocketModelConfig(
       config.offlineTtsPocketModelConfig, Module);
 
+  const supertonicModelConfig = initSherpaOnnxOfflineTtsSupertonicModelConfig(
+      config.offlineTtsSupertonicModelConfig, Module);
+
   const len = vitsModelConfig.len + matchaModelConfig.len +
       kokoroModelConfig.len + kittenModelConfig.len + zipVoiceModelConfig.len +
-      pocketModelConfig.len + 3 * 4;
+      pocketModelConfig.len + supertonicModelConfig.len + 3 * 4;
 
   const ptr = Module._malloc(len);
 
@@ -553,6 +649,10 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   Module._CopyHeap(pocketModelConfig.ptr, pocketModelConfig.len, ptr + offset);
   offset += pocketModelConfig.len;
 
+  Module._CopyHeap(
+      supertonicModelConfig.ptr, supertonicModelConfig.len, ptr + offset);
+  offset += supertonicModelConfig.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -563,6 +663,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     kitten: kittenModelConfig,
     zipvoice: zipVoiceModelConfig,
     pocket: pocketModelConfig,
+    supertonic: supertonicModelConfig,
   };
 }
 

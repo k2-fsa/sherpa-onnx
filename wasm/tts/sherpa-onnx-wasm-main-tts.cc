@@ -19,13 +19,15 @@ static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsPocketModelConfig) == 8 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsSupertonicModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4 +
                       sizeof(SherpaOnnxOfflineTtsKittenModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) +
-                      sizeof(SherpaOnnxOfflineTtsPocketModelConfig),
+                      sizeof(SherpaOnnxOfflineTtsPocketModelConfig) +
+                      sizeof(SherpaOnnxOfflineTtsSupertonicModelConfig),
               "");
 
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
@@ -101,6 +103,16 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "token_scores_json: %s\n", pocket->token_scores_json);
   fprintf(stdout, "voice_embedding_cache_capacity: %d\n",
           pocket->voice_embedding_cache_capacity);
+
+  auto supertonic = &tts_model_config->supertonic;
+  fprintf(stdout, "----------supertonic model config----------\n");
+  fprintf(stdout, "duration_predictor: %s\n", supertonic->duration_predictor);
+  fprintf(stdout, "text_encoder: %s\n", supertonic->text_encoder);
+  fprintf(stdout, "vector_estimator: %s\n", supertonic->vector_estimator);
+  fprintf(stdout, "vocoder: %s\n", supertonic->vocoder);
+  fprintf(stdout, "tts_json: %s\n", supertonic->tts_json);
+  fprintf(stdout, "unicode_indexer: %s\n", supertonic->unicode_indexer);
+  fprintf(stdout, "voice_style: %s\n", supertonic->voice_style);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);

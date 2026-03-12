@@ -54,7 +54,7 @@ if (wave.sampleRate != recognizer.config.featConfig.sampleRate) {
       'Expected sample rate: ${recognizer.config.featConfig.sampleRate}. Given: ${wave.sampleRate}');
 }
 
-console.log('Started')
+console.log('Started');
 let start = Date.now();
 
 const windowSize = vad.config.sileroVad.windowSize;
@@ -110,16 +110,16 @@ while (!vad.isEmpty()) {
 }
 
 let stop = Date.now();
-console.log('Done')
+console.log('Done');
 
 const elapsed_seconds = (stop - start) / 1000;
 const duration = wave.samples.length / wave.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
+    real_time_factor.toFixed(3));
 
 vad.free();
 recognizer.free();

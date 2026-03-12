@@ -69,9 +69,9 @@ ai.on('data', data => {
   while (buffer.size() > windowSize) {
     const samples = buffer.get(buffer.head(), windowSize);
     buffer.pop(windowSize);
-    vad.acceptWaveform(samples)
+    vad.acceptWaveform(samples);
     if (vad.isDetected() && !printed) {
-      console.log(`${index}: Detected speech`)
+      console.log(`${index}: Detected speech`);
       printed = true;
     }
 
@@ -103,4 +103,4 @@ ai.on('close', () => {
 });
 
 ai.start();
-console.log('Started! Please speak')
+console.log('Started! Please speak');

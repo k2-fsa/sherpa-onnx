@@ -29,7 +29,7 @@ const tts = createOfflineTts();
 const speakerId = 0;
 const speed = 1.0;
 const text =
-    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.'
+    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
 const audio = tts.generate({text: text, sid: speakerId, speed: speed});
 tts.save('./test-kokoro-en.wav', audio);

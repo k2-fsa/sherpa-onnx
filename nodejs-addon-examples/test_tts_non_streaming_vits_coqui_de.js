@@ -21,7 +21,7 @@ function createOfflineTts() {
 
 const tts = createOfflineTts();
 
-const text = 'Alles hat ein Ende, nur die Wurst hat zwei.'
+const text = 'Alles hat ein Ende, nur die Wurst hat zwei.';
 
 let start = Date.now();
 const audio = tts.generate({
@@ -34,11 +34,11 @@ let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
+    real_time_factor.toFixed(3));
 
 const filename = 'test-coqui-de.wav';
 sherpa_onnx.writeWave(
