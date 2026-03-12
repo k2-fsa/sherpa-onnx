@@ -379,6 +379,17 @@ SHERPA_ONNX_API void SherpaOnnxOnlineStreamReset(
 SHERPA_ONNX_API void SherpaOnnxOnlineStreamInputFinished(
     const SherpaOnnxOnlineStream *stream);
 
+/// Signal that the current chunk is the final chunk for streaming Paraformer.
+/// This enables:
+///   1. Short chunk acceptance (less than chunk_size frames)
+///   2. CIF tail token flush for residual accumulated alpha
+///
+/// Call this BEFORE the last InputFinished() + DecodeStream() cycle.
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOnlineStream()
+SHERPA_ONNX_API void SherpaOnnxOnlineStreamSetFinalChunk(
+    const SherpaOnnxOnlineStream *stream);
+
 /// Return 1 if an endpoint has been detected.
 ///
 /// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer()
