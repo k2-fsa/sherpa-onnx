@@ -242,8 +242,7 @@ typedef struct SherpaOnnxOnlineRecognizerResult {
 /// Note: OnlineRecognizer here means StreamingRecognizer.
 /// It does not need to access the Internet during recognition.
 /// Everything is run locally.
-typedef struct SherpaOnnxOnlineRecognizer
-    SherpaOnnxOnlineRecognizer;
+typedef struct SherpaOnnxOnlineRecognizer SherpaOnnxOnlineRecognizer;
 typedef struct SherpaOnnxOnlineStream SherpaOnnxOnlineStream;
 
 /// @param config  Config for the recognizer.
@@ -572,8 +571,7 @@ typedef struct SherpaOnnxOfflineRecognizerConfig {
   SherpaOnnxHomophoneReplacerConfig hr;
 } SherpaOnnxOfflineRecognizerConfig;
 
-typedef struct SherpaOnnxOfflineRecognizer
-    SherpaOnnxOfflineRecognizer;
+typedef struct SherpaOnnxOfflineRecognizer SherpaOnnxOfflineRecognizer;
 
 typedef struct SherpaOnnxOfflineStream SherpaOnnxOfflineStream;
 
@@ -813,8 +811,7 @@ typedef struct SherpaOnnxKeywordSpotterConfig {
   int32_t keywords_buf_size;
 } SherpaOnnxKeywordSpotterConfig;
 
-typedef struct SherpaOnnxKeywordSpotter
-    SherpaOnnxKeywordSpotter;
+typedef struct SherpaOnnxKeywordSpotter SherpaOnnxKeywordSpotter;
 
 /// @param config  Config for the keyword spotter.
 /// @return Return a pointer to the spotter. The user has to invoke
@@ -970,8 +967,7 @@ typedef struct SherpaOnnxVadModelConfig {
   SherpaOnnxTenVadModelConfig ten_vad;
 } SherpaOnnxVadModelConfig;
 
-typedef struct SherpaOnnxCircularBuffer
-    SherpaOnnxCircularBuffer;
+typedef struct SherpaOnnxCircularBuffer SherpaOnnxCircularBuffer;
 
 // Return an instance of circular buffer. The user has to use
 // SherpaOnnxDestroyCircularBuffer() to free the returned pointer to avoid
@@ -1334,8 +1330,7 @@ SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
 // For spoken language identification
 // ============================================================
 
-typedef struct
-    SherpaOnnxSpokenLanguageIdentificationWhisperConfig {
+typedef struct SherpaOnnxSpokenLanguageIdentificationWhisperConfig {
   const char *encoder;
   const char *decoder;
   int32_t tail_paddings;
@@ -1511,8 +1506,7 @@ typedef struct SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch {
   const char *name;
 } SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch;
 
-typedef struct
-    SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult {
+typedef struct SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult {
   const SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch *matches;
   int32_t count;
 } SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult;
@@ -1585,8 +1579,7 @@ SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
 // ============================================================
 // For audio tagging
 // ============================================================
-typedef struct
-    SherpaOnnxOfflineZipformerAudioTaggingModelConfig {
+typedef struct SherpaOnnxOfflineZipformerAudioTaggingModelConfig {
   const char *model;
 } SherpaOnnxOfflineZipformerAudioTaggingModelConfig;
 
@@ -1657,8 +1650,7 @@ typedef struct SherpaOnnxOfflinePunctuationConfig {
   SherpaOnnxOfflinePunctuationModelConfig model;
 } SherpaOnnxOfflinePunctuationConfig;
 
-typedef struct SherpaOnnxOfflinePunctuation
-    SherpaOnnxOfflinePunctuation;
+typedef struct SherpaOnnxOfflinePunctuation SherpaOnnxOfflinePunctuation;
 
 // The user has to invoke SherpaOnnxDestroyOfflinePunctuation()
 // to free the returned pointer to avoid memory leak
@@ -1689,8 +1681,7 @@ typedef struct SherpaOnnxOnlinePunctuationConfig {
   SherpaOnnxOnlinePunctuationModelConfig model;
 } SherpaOnnxOnlinePunctuationConfig;
 
-typedef struct SherpaOnnxOnlinePunctuation
-    SherpaOnnxOnlinePunctuation;
+typedef struct SherpaOnnxOnlinePunctuation SherpaOnnxOnlinePunctuation;
 
 // Create an online punctuation processor. The user has to invoke
 // SherpaOnnxDestroyOnlinePunctuation() to free the returned pointer
@@ -1713,8 +1704,7 @@ SHERPA_ONNX_API const char *SherpaOnnxOnlinePunctuationAddPunct(
 SHERPA_ONNX_API void SherpaOnnxOnlinePunctuationFreeText(const char *text);
 
 // for resampling
-typedef struct SherpaOnnxLinearResampler
-    SherpaOnnxLinearResampler;
+typedef struct SherpaOnnxLinearResampler SherpaOnnxLinearResampler;
 
 /*
       float min_freq = min(sampling_rate_in_hz, samp_rate_out_hz);
@@ -1762,8 +1752,7 @@ SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
 // =========================================================================
 // For offline speaker diarization (i.e., non-streaming speaker diarization)
 // =========================================================================
-typedef struct
-    SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig {
+typedef struct SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig {
   const char *model;
 } SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
 
@@ -1900,8 +1889,7 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserConfig {
   SherpaOnnxOfflineSpeechDenoiserModelConfig model;
 } SherpaOnnxOfflineSpeechDenoiserConfig;
 
-typedef struct SherpaOnnxOfflineSpeechDenoiser
-    SherpaOnnxOfflineSpeechDenoiser;
+typedef struct SherpaOnnxOfflineSpeechDenoiser SherpaOnnxOfflineSpeechDenoiser;
 
 // The users has to invoke SherpaOnnxDestroyOfflineSpeechDenoiser()
 // to free the returned pointer to avoid memory leak

@@ -1752,7 +1752,7 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
                                  num_steps,
                                  /*callback=*/nullptr);
 
-    if (out.samples.empty()) {
+  if (out.samples.empty()) {
     return nullptr;
   }
 
