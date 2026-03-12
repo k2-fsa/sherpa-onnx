@@ -233,7 +233,7 @@ class OfflineSpeakerDiarization {
     this.Module._SherpaOnnxOfflineSpeakerDiarizationSetConfig(
         this.handle, config.ptr);
 
-    freeConfig(config, Module);
+    freeConfig(config, this.Module);
 
     this.config.clustering = configObj.clustering;
   }
