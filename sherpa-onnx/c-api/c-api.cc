@@ -356,6 +356,16 @@ void SherpaOnnxOnlineStreamSetFinalChunk(
   stream->impl->SetParaformerFinalChunk(true);
 }
 
+void SherpaOnnxOnlineStreamSetOption(const SherpaOnnxOnlineStream *stream,
+                                     const char *key, const char *value) {
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOnlineStreamGetOption(
+    const SherpaOnnxOnlineStream *stream, const char *key) {
+  return stream->impl->GetOption(key).c_str();
+}
+
 int32_t SherpaOnnxOnlineStreamIsEndpoint(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
@@ -656,6 +666,16 @@ void SherpaOnnxAcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
                                      int32_t sample_rate, const float *samples,
                                      int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
+}
+
+void SherpaOnnxOfflineStreamSetOption(const SherpaOnnxOfflineStream *stream,
+                                      const char *key, const char *value) {
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOfflineStreamGetOption(
+    const SherpaOnnxOfflineStream *stream, const char *key) {
+  return stream->impl->GetOption(key).c_str();
 }
 
 void SherpaOnnxDecodeOfflineStream(
