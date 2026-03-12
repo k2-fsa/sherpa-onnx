@@ -50,7 +50,6 @@ class OnlineStream::Impl {
     // we don't reset the feature extractor
     start_frame_index_ += num_processed_frames_;
     num_processed_frames_ = 0;
-    paraformer_is_final_ = false;
   }
 
   int32_t &GetNumProcessedFrames() {
@@ -131,14 +130,6 @@ class OnlineStream::Impl {
     return paraformer_alpha_cache_;
   }
 
-  void SetParaformerFinalChunk(bool is_final) {
-    paraformer_is_final_ = is_final;
-  }
-
-  bool IsParaformerFinalChunk() const {
-    return paraformer_is_final_;
-  }
-
   void SetOption(const std::string &key, const std::string &value) {
     options_[key] = value;
   }
@@ -203,7 +194,6 @@ class OnlineStream::Impl {
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
   OnlineParaformerDecoderResult paraformer_result_;
-  bool paraformer_is_final_ = false;
   std::unordered_map<std::string, std::string> options_;
   std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
   int32_t faster_decoder_processed_frames_ = 0;
@@ -326,14 +316,6 @@ std::vector<float> &OnlineStream::GetParaformerEncoderOutCache() {
 
 std::vector<float> &OnlineStream::GetParaformerAlphaCache() {
   return impl_->GetParaformerAlphaCache();
-}
-
-void OnlineStream::SetParaformerFinalChunk(bool is_final) {
-  impl_->SetParaformerFinalChunk(is_final);
-}
-
-bool OnlineStream::IsParaformerFinalChunk() const {
-  return impl_->IsParaformerFinalChunk();
 }
 
 void OnlineStream::SetOption(const std::string &key,

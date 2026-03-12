@@ -353,7 +353,7 @@ void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
 
 void SherpaOnnxOnlineStreamSetFinalChunk(
     const SherpaOnnxOnlineStream *stream) {
-  stream->impl->SetParaformerFinalChunk(true);
+  stream->impl->SetOption("is_final", "true");
 }
 
 void SherpaOnnxOnlineStreamSetOption(const SherpaOnnxOnlineStream *stream,

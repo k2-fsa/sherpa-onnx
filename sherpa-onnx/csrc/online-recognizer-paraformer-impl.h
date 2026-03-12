@@ -160,7 +160,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       return true;
     }
     // is_final: accept short chunks (less than chunk_size_ frames)
-    if (s->IsParaformerFinalChunk() &&
+    if (s->GetOption("is_final") == "true" &&
         s->GetNumProcessedFrames() < s->NumFramesReady()) {
       return true;
     }
@@ -220,11 +220,12 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
  private:
   void DecodeStream(OnlineStream *s) const {
     const auto num_processed_frames = s->GetNumProcessedFrames();
+    bool is_final = (s->GetOption("is_final") == "true");
 
     // is_final: accept short chunks, pad with zeros if needed
     int32_t available_frames = s->NumFramesReady() - num_processed_frames;
     int32_t actual_chunk_size = chunk_size_;
-    if (s->IsParaformerFinalChunk() && available_frames < chunk_size_) {
+    if (is_final && available_frames < chunk_size_) {
       actual_chunk_size = available_frames;
     }
 
@@ -239,7 +240,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     // For non-final chunks the original code uses chunk_size_ - 1 to create
     // 1-frame overlap.  For the final short chunk we consume all frames.
-    if (s->IsParaformerFinalChunk()) {
+    if (is_final) {
       s->GetNumProcessedFrames() += actual_chunk_size;
     } else {
       s->GetNumProcessedFrames() += chunk_size_ - 1;
