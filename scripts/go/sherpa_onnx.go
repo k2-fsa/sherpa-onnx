@@ -317,6 +317,33 @@ func (s *OnlineStream) InputFinished() {
 	C.SherpaOnnxOnlineStreamInputFinished(s.impl)
 }
 
+// Set a key-value option on the online stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "is_final" for streaming Paraformer).
+func (s *OnlineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOnlineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the online stream.
+// Returns an empty string if the option is not set.
+func (s *OnlineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOnlineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the online stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OnlineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOnlineStreamHasOption(s.impl, cKey) == 1
+}
+
 // Check whether the stream has enough feature frames for decoding.
 // Return true if this stream is ready for decoding. Return false otherwise.
 //
@@ -795,6 +822,33 @@ func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 // samples contains the actual audio samples. Each sample is in the range [-1, 1].
 func (s *OfflineStream) AcceptWaveform(sampleRate int, samples []float32) {
 	C.SherpaOnnxAcceptWaveformOffline(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
+}
+
+// Set a key-value option on the offline stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "task", "prompt").
+func (s *OfflineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOfflineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the offline stream.
+// Returns an empty string if the option is not set.
+func (s *OfflineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOfflineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the offline stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OfflineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOfflineStreamHasOption(s.impl, cKey) == 1
 }
 
 // Decode the offline stream.
