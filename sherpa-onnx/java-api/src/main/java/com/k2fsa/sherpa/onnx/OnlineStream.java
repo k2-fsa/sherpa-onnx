@@ -31,6 +31,14 @@ public class OnlineStream {
         inputFinished(this.ptr);
     }
 
+    public void setOption(String key, String value) {
+        setOption(this.ptr, key, value);
+    }
+
+    public String getOption(String key) {
+        return getOption(this.ptr, key);
+    }
+
     public void release() {
         close();
     }
@@ -53,6 +61,10 @@ public class OnlineStream {
     private native void acceptWaveform(long ptr, float[] samples, int sampleRate);
 
     private native void inputFinished(long ptr);
+
+    private native void setOption(long ptr, String key, String value);
+
+    private native String getOption(long ptr, String key);
 
     private native void delete(long ptr);
 }
