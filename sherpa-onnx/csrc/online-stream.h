@@ -112,10 +112,6 @@ class OnlineStream {
   std::vector<float> &GetParaformerEncoderOutCache();
   std::vector<float> &GetParaformerAlphaCache();
 
-  // for streaming paraformer is_final support
-  void SetParaformerFinalChunk(bool is_final);
-  bool IsParaformerFinalChunk() const;
-
   // Generic per-stream option mechanism (key-value string pairs).
   void SetOption(const std::string &key, const std::string &value);
   bool HasOption(const std::string &key) const;
