@@ -90,7 +90,7 @@ SENTENCES = {
         "L'apprentissage profond a révolutionné l'intelligence artificielle.",
         "La technologie de synthèse vocale a considérablement progressé.",
         "Le clonage vocal neuronal peut reproduire les styles de parole.",
-        "La normalisation du texte est importante pour la pronunciation.",
+        "La normalisation du texte est importante pour la prononciation.",
         "Les assistants vocaux nous aident à interagir avec la technologie.",
         "Les systèmes TTS modernes utilisent l'apprentissage profond.",
         "L'interaction homme machine est devenue plus intuitive.",
