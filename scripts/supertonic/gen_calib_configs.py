@@ -86,7 +86,7 @@ SENTENCES = {
         "Le texte en voix convertit le texte en audio.",
         "Le rapide renard brun saute par-dessus le chien paresseux.",
         "L'apprentissage automatique permet aux ordinateurs d'apprendre.",
-        "Le traitement du language naturel aide les machines à comprendre.",
+        "Le traitement du langage naturel aide les machines à comprendre.",
         "L'apprentissage profond a révolutionné l'intelligence artificielle.",
         "La technologie de synthèse vocale a considérablement progressé.",
         "Le clonage vocal neuronal peut reproduire les styles de parole.",
