@@ -1,3 +1,22 @@
+## 1.12.29
+
+* Add Supertonic TTS support (#3094)
+* Upload supertonic tts models (#3263)
+* Add Python API examples for Supertonic TTS (#3264)
+* Support dynamic decoder layers in canary model runtime (#3268)
+* Add CXX API for Supertonic TTS (#3280)
+* Add C# API for Supertonic TTS (#3283)
+* Add Go API for Supertonic TTS (#3284)
+* Add Rust API for Supertonic TTS (#3285)
+* Add Swift API for Supertonic TTS (#3286)
+* Add JavaScript API for Supertonic TTS (#3287)
+* Add Dart API for Supertonic TTS (#3288)
+* Add Java and Kotlin API for Supertonic TTS (#3289)
+* Add Pascal API and example for Supertonic TTS (#3290)
+* Publish pdb files for Debug build on Windows (#3252)
+* Fix memory leak in WebAssembly for TTS (#3259)
+* Refactor WebAssembly TTS API (#3260)
+
 ## 1.12.28
 
 * Add C++ runtime support for Moonshine v2 (#3232)
