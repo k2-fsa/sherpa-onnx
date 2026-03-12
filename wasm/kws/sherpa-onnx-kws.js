@@ -225,7 +225,7 @@ function initKwsConfig(config, Module) {
   Module.setValue(ptr + offset, keywordsBuffer + keywordsLen, 'i8*');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.keywordsBufLen, 'i32');
+  Module.setValue(ptr + offset, config.keywordsBufSize, 'i32');
   offset += 4;
 
   return {
