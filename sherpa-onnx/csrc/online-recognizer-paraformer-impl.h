@@ -127,8 +127,12 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         model_(mgr, config.model_config),
-        sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      sym_ = SymbolTable(mgr, config.model_config.tokens);
+    }
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -195,8 +199,14 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   }
 
   void Reset(OnlineStream *s) const override {
-    OnlineParaformerDecoderResult r;
-    s->SetParaformerResult(r);
+    // segment is incremented only when the last result is not empty
+    const auto &r = s->GetParaformerResult();
+    if (!r.tokens.empty()) {
+      s->GetCurrentSegment() += 1;
+    }
+
+    OnlineParaformerDecoderResult empty;
+    s->SetParaformerResult(empty);
 
     s->GetStates().clear();
     s->GetParaformerEncoderOutCache().clear();

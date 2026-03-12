@@ -92,6 +92,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   SHERPA_ONNX_LOGE("Please specify a model");
   SHERPA_ONNX_EXIT(-1);
+  return nullptr;
 }
 
 template <typename Manager>
@@ -152,6 +153,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   SHERPA_ONNX_LOGE("Please specify a model");
   SHERPA_ONNX_EXIT(-1);
+  return nullptr;
 }
 
 OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)

@@ -28,7 +28,7 @@
 namespace sherpa_onnx {
 
 // defined in ./online-recognizer-transducer-impl.h
-OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
+static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                const SymbolTable &sym_table,
                                float frame_shift_ms, int32_t subsampling_factor,
                                int32_t segment, int32_t frames_since_start);
@@ -65,10 +65,14 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       Manager *mgr, const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
-        symbol_table_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config),
         model_(std::make_unique<OnlineTransducerNeMoModel>(
             mgr, config.model_config)) {
+    if (!config.model_config.tokens_buf.empty()) {
+      symbol_table_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      symbol_table_ = SymbolTable(mgr, config.model_config.tokens);
+    }
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
