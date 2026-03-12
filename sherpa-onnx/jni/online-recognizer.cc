@@ -315,7 +315,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_reset(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
@@ -324,7 +324,7 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);

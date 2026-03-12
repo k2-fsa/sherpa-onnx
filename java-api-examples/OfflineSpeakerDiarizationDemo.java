@@ -73,6 +73,7 @@ public class OfflineSpeakerDiarizationDemo {
     if (sd.getSampleRate() != reader.getSampleRate()) {
       System.out.printf(
           "Expected sample rate: %d, given: %d\n", sd.getSampleRate(), reader.getSampleRate());
+      sd.release();
       return;
     }
 

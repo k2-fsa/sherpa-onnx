@@ -440,6 +440,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
 
         if (!config.Validate()) {
           SHERPA_ONNX_LOGE("Errors found in config!");
+          return 0;
         }
 
         auto tts = new sherpa_onnx::OfflineTts(config);
