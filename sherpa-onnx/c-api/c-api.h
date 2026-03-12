@@ -379,6 +379,37 @@ SHERPA_ONNX_API void SherpaOnnxOnlineStreamReset(
 SHERPA_ONNX_API void SherpaOnnxOnlineStreamInputFinished(
     const SherpaOnnxOnlineStream *stream);
 
+/// Signal that the current chunk is the final chunk for streaming Paraformer.
+/// This enables:
+///   1. Short chunk acceptance (less than chunk_size frames)
+///   2. CIF tail token flush for residual accumulated alpha
+///
+/// Call this BEFORE the last InputFinished() + DecodeStream() cycle.
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOnlineStream()
+SHERPA_ONNX_API void SherpaOnnxOnlineStreamSetFinalChunk(
+    const SherpaOnnxOnlineStream *stream);
+
+/// Set a key-value option on an online stream.
+/// This provides a generic mechanism for passing per-stream runtime parameters
+/// to the recognizer (e.g., "is_final" for streaming Paraformer).
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOnlineStream()
+/// @param key   The option name (e.g., "is_final")
+/// @param value The option value (e.g., "true")
+SHERPA_ONNX_API void SherpaOnnxOnlineStreamSetOption(
+    const SherpaOnnxOnlineStream *stream, const char *key, const char *value);
+
+/// Get a key-value option from an online stream.
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOnlineStream()
+/// @param key   The option name to query
+/// @return The option value, or an empty string if not set.
+///         The returned pointer is valid as long as the stream is alive
+///         and the option is not overwritten.
+SHERPA_ONNX_API const char *SherpaOnnxOnlineStreamGetOption(
+    const SherpaOnnxOnlineStream *stream, const char *key);
+
 /// Return 1 if an endpoint has been detected.
 ///
 /// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer()
@@ -634,6 +665,27 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineStream(
 SHERPA_ONNX_API void SherpaOnnxAcceptWaveformOffline(
     const SherpaOnnxOfflineStream *stream, int32_t sample_rate,
     const float *samples, int32_t n);
+
+/// Set a key-value option on an offline stream.
+/// This provides a generic mechanism for passing per-stream runtime parameters
+/// to the recognizer.
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOfflineStream()
+/// @param key   The option name
+/// @param value The option value
+SHERPA_ONNX_API void SherpaOnnxOfflineStreamSetOption(
+    const SherpaOnnxOfflineStream *stream, const char *key, const char *value);
+
+/// Get a key-value option from an offline stream.
+///
+/// @param stream A pointer returned by SherpaOnnxCreateOfflineStream()
+/// @param key   The option name to query
+/// @return The option value, or an empty string if not set.
+///         The returned pointer is valid as long as the stream is alive
+///         and the option is not overwritten.
+SHERPA_ONNX_API const char *SherpaOnnxOfflineStreamGetOption(
+    const SherpaOnnxOfflineStream *stream, const char *key);
+
 /// Decode an offline stream.
 ///
 /// We assume you have invoked SherpaOnnxAcceptWaveformOffline() for the given
