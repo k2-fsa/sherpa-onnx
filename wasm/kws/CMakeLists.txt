@@ -16,7 +16,9 @@ set(exported_functions
   SherpaOnnxGetKeywordResult
   SherpaOnnxIsKeywordStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamGetOption
   SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamSetOption
   SherpaOnnxResetKeywordStream
 )
 set(mangled_exported_functions)

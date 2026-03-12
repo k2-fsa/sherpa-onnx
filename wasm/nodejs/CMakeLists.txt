@@ -26,9 +26,11 @@ set(exported_functions
   SherpaOnnxGetOnlineStreamResultAsJson
   SherpaOnnxIsOnlineStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamGetOption
   SherpaOnnxOnlineStreamInputFinished
   SherpaOnnxOnlineStreamIsEndpoint
   SherpaOnnxOnlineStreamReset
+  SherpaOnnxOnlineStreamSetOption
   # non-streaming ASR
   PrintOfflineRecognizerConfig
   SherpaOnnxAcceptWaveformOffline
@@ -42,6 +44,8 @@ set(exported_functions
   SherpaOnnxDestroyOfflineStreamResultJson
   SherpaOnnxGetOfflineStreamResult
   SherpaOnnxGetOfflineStreamResultAsJson
+  SherpaOnnxOfflineStreamGetOption
+  SherpaOnnxOfflineStreamSetOption
   SherpaOnnxOfflineRecognizerSetConfig
   # online kws
   SherpaOnnxCreateKeywordSpotter
