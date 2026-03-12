@@ -167,6 +167,12 @@ jobs:
           ls -lh
           echo "---"
 
+          ./run-supertonic-en.sh
+          rm -rf sherpa-onnx-supertonic-*
+          rm supertonic-en
+          ls -lh
+          echo "---"
+
           popd
 
       - uses: actions/upload-artifact@v4

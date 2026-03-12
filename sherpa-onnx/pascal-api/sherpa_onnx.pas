@@ -150,6 +150,18 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsPocketModelConfig);
   end;
 
+  TSherpaOnnxOfflineTtsSupertonicModelConfig = record
+    DurationPredictor: AnsiString;
+    TextEncoder: AnsiString;
+    VectorEstimator: AnsiString;
+    Vocoder: AnsiString;
+    TtsJson: AnsiString;
+    UnicodeIndexer: AnsiString;
+    VoiceStyle: AnsiString;
+
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineTtsModelConfig = record
     Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: Integer;
@@ -160,6 +172,7 @@ type
     Kitten: TSherpaOnnxOfflineTtsKittenModelConfig;
     ZipVoice: TSherpaOnnxOfflineTtsZipVoiceModelConfig;
     Pocket: TSherpaOnnxOfflineTtsPocketModelConfig;
+    Supertonic: TSherpaOnnxOfflineTtsSupertonicModelConfig;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
@@ -1120,6 +1133,16 @@ type
     VoiceEmbeddingCacheCapacity: cint32;
   end;
 
+  SherpaOnnxOfflineTtsSupertonicModelConfig = record
+    DurationPredictor: PAnsiChar;
+    TextEncoder: PAnsiChar;
+    VectorEstimator: PAnsiChar;
+    Vocoder: PAnsiChar;
+    TtsJson: PAnsiChar;
+    UnicodeIndexer: PAnsiChar;
+    VoiceStyle: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineTtsModelConfig = record
     Vits: SherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: cint32;
@@ -1130,6 +1153,7 @@ type
     Kitten: SherpaOnnxOfflineTtsKittenModelConfig;
     ZipVoice: SherpaOnnxOfflineTtsZipVoiceModelConfig;
     Pocket: SherpaOnnxOfflineTtsPocketModelConfig;
+    Supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig;
   end;
 
   SherpaOnnxOfflineTtsConfig = record
@@ -2686,6 +2710,21 @@ begin
      Self.VocabJson, Self.TokenScoresJson, Self.VoiceEmbeddingCacheCapacity]);
 end;
 
+function TSherpaOnnxOfflineTtsSupertonicModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsSupertonicModelConfig(' +
+    'DurationPredictor := %s, ' +
+    'TextEncoder := %s, ' +
+    'VectorEstimator := %s, ' +
+    'Vocoder := %s, ' +
+    'TtsJson := %s, ' +
+    'UnicodeIndexer := %s, ' +
+    'VoiceStyle := %s' +
+    ')',
+    [Self.DurationPredictor, Self.TextEncoder, Self.VectorEstimator, Self.Vocoder,
+     Self.TtsJson, Self.UnicodeIndexer, Self.VoiceStyle]);
+end;
+
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
@@ -2697,11 +2736,12 @@ begin
     'Kokoro := %s, ' +
     'Kitten := %s, ' +
     'ZipVoice := %s, ' +
-    'Pocket := %s' +
+    'Pocket := %s, ' +
+    'Supertonic := %s' +
     ')',
     [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.Matcha.ToString, Self.Kokoro.ToString, Self.Kitten.ToString,
-     Self.ZipVoice.ToString, Self.Pocket.ToString
+     Self.ZipVoice.ToString, Self.Pocket.ToString, Self.Supertonic.ToString
     ]);
 end;
 
@@ -2787,6 +2827,14 @@ begin
   C.Model.Pocket.VocabJson := PAnsiChar(Config.Model.Pocket.VocabJson);
   C.Model.Pocket.TokenScoresJson := PAnsiChar(Config.Model.Pocket.TokenScoresJson);
   C.Model.Pocket.VoiceEmbeddingCacheCapacity := Config.Model.Pocket.VoiceEmbeddingCacheCapacity;
+
+  C.Model.Supertonic.DurationPredictor := PAnsiChar(Config.Model.Supertonic.DurationPredictor);
+  C.Model.Supertonic.TextEncoder := PAnsiChar(Config.Model.Supertonic.TextEncoder);
+  C.Model.Supertonic.VectorEstimator := PAnsiChar(Config.Model.Supertonic.VectorEstimator);
+  C.Model.Supertonic.Vocoder := PAnsiChar(Config.Model.Supertonic.Vocoder);
+  C.Model.Supertonic.TtsJson := PAnsiChar(Config.Model.Supertonic.TtsJson);
+  C.Model.Supertonic.UnicodeIndexer := PAnsiChar(Config.Model.Supertonic.UnicodeIndexer);
+  C.Model.Supertonic.VoiceStyle := PAnsiChar(Config.Model.Supertonic.VoiceStyle);
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
