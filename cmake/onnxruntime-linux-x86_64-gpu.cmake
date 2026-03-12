@@ -19,7 +19,7 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
 endif()
 
 
-# Requres CUDA 12, cudnn 9
+# Requires CUDA 12, cudnn 9
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.23.2/onnxruntime-linux-x64-gpu-1.23.2-patched.zip")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-linux-x64-gpu-1.23.2-patched.zip")
 set(onnxruntime_HASH "SHA256=e2f622513212304447e34512b99ae4eabb4fd8870dd1baac895f222179dede19")

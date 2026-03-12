@@ -30,7 +30,7 @@ void OfflineWebsocketDecoderConfig::Register(ParseOptions *po) {
 
 void OfflineWebsocketDecoderConfig::Validate() const {
   if (!recognizer_config.Validate()) {
-    SHERPA_ONNX_LOGE("Error in recongizer config");
+    SHERPA_ONNX_LOGE("Error in recognizer config");
     exit(-1);
   }
 

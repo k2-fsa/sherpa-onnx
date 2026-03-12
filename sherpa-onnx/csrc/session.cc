@@ -87,7 +87,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
     case Provider::kTRT: {
       if (provider_config == nullptr) {
         SHERPA_ONNX_LOGE(
-            "Tensorrt support for Online models ony,"
+            "Tensorrt support for Online models only,"
             "Must be extended for offline and others");
         exit(1);
       }

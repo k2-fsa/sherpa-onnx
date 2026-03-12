@@ -37,7 +37,7 @@ public class AsrWebsocketServer extends WebSocketServer {
   //  Queue waiting for deocdeing, use websocket as the key
   private LinkedBlockingQueue<WebSocket> decoderQueue = new LinkedBlockingQueue<WebSocket>();
 
-  // recogizer object
+  // recognizer object
   private OnlineRecognizer rcgOjb = null;
 
   // mapping between websocket connection and connection data

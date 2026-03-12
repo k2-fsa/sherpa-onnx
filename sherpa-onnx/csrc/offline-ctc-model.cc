@@ -88,7 +88,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/tele-speech/"
         "add-metadata.py"
         "\n"
-        "for how to add metadta to model.onnx\n");
+        "for how to add metadata to model.onnx\n");
     return ModelType::kUnknown;
   }
 

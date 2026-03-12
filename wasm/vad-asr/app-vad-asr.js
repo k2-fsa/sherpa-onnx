@@ -145,7 +145,7 @@ Module.setStatus = function(status) {
   console.log(`status ${status}`);
   const statusElement = document.getElementById('status');
   if (status == 'Running...') {
-    status = 'Model downloaded. Initializing recongizer...'
+    status = 'Model downloaded. Initializing recognizer...'
   }
 
   const downloadMatch = status.match(/Downloading data... \((\d+)\/(\d+)\)/);
@@ -354,7 +354,7 @@ if (navigator.mediaDevices.getUserMedia) {
   };
 
   let onError = function(err) {
-    console.log('The following error occured: ' + err);
+    console.log('The following error occurred: ' + err);
   };
 
   navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
