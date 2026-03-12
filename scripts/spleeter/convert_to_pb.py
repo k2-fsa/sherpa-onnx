@@ -57,7 +57,7 @@ def freeze_graph(model_dir, output_node_names, output_filename):
             tf.compat.v1.get_default_graph().as_graph_def(),  # The graph_def is used to retrieve the nodes
             output_node_names.split(
                 ","
-            ),  # The output node names are used to select the usefull nodes
+            ),  # The output node names are used to select the useful nodes
         )
 
         # Finally we serialize and dump the output graph to the filesystem

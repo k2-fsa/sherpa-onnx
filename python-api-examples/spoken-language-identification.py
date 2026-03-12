@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This script shows how to use Python APIs for spoken languge identification.
+This script shows how to use Python APIs for spoken language identification.
 It detects the language spoken in the given wave file.
 
 Usage:

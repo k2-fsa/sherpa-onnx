@@ -120,7 +120,7 @@ class OfflineWhisperModelAscend::Impl {
 
     RunEncoder(std::move(features));
 
-    // Note(fangjun): No need to intialize the self kv cache to 0
+    // Note(fangjun): No need to initialize the self kv cache to 0
 
     std::vector<int32_t> sot_sequence(sot_sequence_);
 

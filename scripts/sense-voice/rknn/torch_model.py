@@ -50,7 +50,7 @@ class PositionwiseFeedForward(nn.Module):
     """Positionwise feed forward layer.
 
     Args:
-        idim (int): Input dimenstion.
+        idim (int): Input dimension.
         hidden_units (int): The number of hidden units.
         dropout_rate (float): Dropout rate.
 
