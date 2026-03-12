@@ -28,7 +28,7 @@
 namespace sherpa_onnx {
 
 // defined in ./online-recognizer-transducer-impl.h
-static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
+OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                const SymbolTable &sym_table,
                                float frame_shift_ms, int32_t subsampling_factor,
                                int32_t segment, int32_t frames_since_start);
