@@ -45,9 +45,15 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
     return false;
   }
 
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--kokoro-model: '%s' does not exist", model.c_str());
-    return false;
+  if (!model.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(model, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE("--kokoro-model: '%s' does not exist", model.c_str());
+        return false;
+      }
+    }
   }
 
   if (tokens.empty()) {
