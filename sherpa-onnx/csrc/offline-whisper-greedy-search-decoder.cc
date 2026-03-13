@@ -237,19 +237,20 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
     // Track if this is a timestamp token (for filtering in DTW)
     if (max_token_id >= timestamp_begin) {
+      // The attention index is: initial_tokens.size() + current predicted index
       int32_t attn_idx = static_cast<int32_t>(initial_tokens.size()) +
                          static_cast<int32_t>(predicted_tokens.size()) - 1;
       timestamp_token_indices.push_back(attn_idx);
     }
 
-    std::array<int64_t, 2> token_input_shape{1, 1};
-    Ort::Value tokens_input = Ort::Value::CreateTensor<int64_t>(
-        model_->Allocator(), token_input_shape.data(),
-        token_input_shape.size());
-    int64_t *p_tokens = tokens_input.GetTensorMutableData<int64_t>();
+    std::array<int64_t, 2> token_shape{1, 1};
+    Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
+        model_->Allocator(), token_shape.data(), token_shape.size());
+
+    int64_t *p_tokens = tokens.GetTensorMutableData<int64_t>();
     p_tokens[0] = max_token_id;
 
-    decoder_out = model_->ForwardDecoder(std::move(tokens_input),
+    decoder_out = model_->ForwardDecoder(std::move(tokens),
                                          std::move(std::get<1>(decoder_out)),
                                          std::move(std::get<2>(decoder_out)),
                                          std::move(std::get<3>(decoder_out)),
@@ -299,7 +300,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   std::vector<OfflineWhisperDecoderResult> ans(1);
 
   const auto &id2lang = model_->GetID2Lang();
-  if (model_->IsMultiLingual() && id2lang.count(initial_tokens[1])) {
+  if (id2lang.count(initial_tokens[1])) {
     ans[0].lang = id2lang.at(initial_tokens[1]);
   } else {
     ans[0].lang = "";
