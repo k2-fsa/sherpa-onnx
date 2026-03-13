@@ -104,10 +104,12 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxera>>(
           config);
+    } else if (!config.model_config.fire_red_asr_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by Axera NPU for "
-          "non-streaming ASR.");
+          "Only SenseVoice and FireRedASR CTC models are currently supported "
+          "by Axera NPU for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -127,9 +129,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
           config);
+    } else if (!config.model_config.fire_red_asr_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by axcl for "
+          "Only SenseVoice and FireRedASR CTC models are currently supported by axcl for "
           "non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
@@ -445,10 +449,12 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxera>>(
           mgr, config);
+    } else if (!config.model_config.fire_red_asr_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by Axera NPU for "
-          "non-streaming ASR.");
+          "Only SenseVoice and FireRedASR CTC models are currently supported "
+          "by Axera NPU for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -468,9 +474,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelAxcl>>(
           mgr, config);
+    } else if (!config.model_config.fire_red_asr_ctc.model.empty()) {
+      return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice models are currently supported by axcl for "
+          "Only SenseVoice and FireRedASR CTC models are currently supported by axcl for "
           "non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
