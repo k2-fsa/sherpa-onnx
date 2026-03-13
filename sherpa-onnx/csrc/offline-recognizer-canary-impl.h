@@ -283,9 +283,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         memory_info, _decoder_input.data(), _decoder_input.size(), shape.data(),
         shape.size());
 
-    return model_->ForwardDecoder(
-        std::move(decoder_input), std::move(decoder_states),
-        std::move(enc_states), std::move(enc_mask));
+    return model_->ForwardDecoder(std::move(decoder_input),
+                                  std::move(decoder_states),
+                                  std::move(enc_states), std::move(enc_mask));
   }
 
   // see
@@ -345,7 +345,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     meta.lang2id["fr"] = symbol_table_["<|fr|>"];
 
     if (symbol_table_.NumSymbols() != meta.vocab_size) {
-      SHERPA_ONNX_LOGE("symbol_table has %d symbols but vocab_size is %d",
+      SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",
                        symbol_table_.NumSymbols(), meta.vocab_size);
       SHERPA_ONNX_EXIT(-1);
     }

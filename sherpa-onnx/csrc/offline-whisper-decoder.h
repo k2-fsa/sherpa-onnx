@@ -13,8 +13,6 @@
 
 namespace sherpa_onnx {
 
-// OfflineWhisperDecoderResult is defined in offline-whisper-model-config.h
-
 class OfflineWhisperDecoder {
  public:
   virtual ~OfflineWhisperDecoder() = default;

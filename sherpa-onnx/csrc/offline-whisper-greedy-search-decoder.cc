@@ -133,6 +133,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   auto logits_shape = std::get<0>(decoder_out).GetTensorTypeAndShapeInfo().GetShape();
   int32_t vocab_size = logits_shape[2];
+
   int32_t n_text_ctx = model_->TextCtx();
   int32_t max_token_id = 0;
 
