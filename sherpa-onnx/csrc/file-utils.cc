@@ -13,16 +13,26 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <sys/stat.h>
+#include <unistd.h>
 #include <limits.h>
-#include <stdlib.h>
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
+std::wstring ToWideString(const std::string &s);
+std::string ToString(const std::wstring &s);
 
 bool FileExists(const std::string &filename) {
-  return std::ifstream(filename).good();
+#ifdef _WIN32
+    DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
+    
+    return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    struct stat file_stat;
+    return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
+#endif
 }
 
 void AssertFileExists(const std::string &filename) {
@@ -33,20 +43,67 @@ void AssertFileExists(const std::string &filename) {
 }
 
 std::vector<char> ReadFile(const std::string &filename) {
-  std::ifstream file(filename, std::ios::binary | std::ios::ate);
-  if (!file.is_open()) {
+  if (filename.empty()) {
     return {};
   }
+  try {
+#ifdef _WIN32     
+    HANDLE hFile = CreateFileW(
+        ToWideString(filename).c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr
+    );
 
-  std::streamsize size = file.tellg();
-  file.seekg(0, std::ios::beg);
+    if (hFile == INVALID_HANDLE_VALUE) {
+      return {};
+    }
 
-  std::vector<char> buffer(size);
-  if (!file.read(buffer.data(), size)) {
+    std::unique_ptr<void, decltype(&CloseHandle)> file_guard(
+      hFile, CloseHandle);
+
+    LARGE_INTEGER file_size;
+    if (!GetFileSizeEx(hFile, &file_size) || file_size.QuadPart > SIZE_MAX) {
+      return {};
+    }
+
+    std::vector<char> buffer(static_cast<size_t>(file_size.QuadPart));
+
+    DWORD bytes_read = 0;
+    bool read_success = ::ReadFile(
+      hFile, 
+      buffer.data(), 
+      static_cast<DWORD>(buffer.size()), 
+      &bytes_read, 
+      nullptr
+    );
+    if (!read_success || bytes_read != buffer.size()) {
+      return {};
+    }
+    
+    return buffer;
+#else
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+      return {};
+    }
+
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<char> buffer(size);
+    if (!file.read(buffer.data(), size)) {
+      return {};
+    }
+
+    return buffer;
+#endif
+  } catch (const std::exception&) {
     return {};
   }
-
-  return buffer;
 }
 
 #if __ANDROID_API__ >= 9
@@ -119,33 +176,38 @@ std::string ResolveAbsolutePath(const std::string &path) {
     return path;
   }
 
+  try {
 #ifdef _WIN32
-  // Check if path is already absolute (drive letter or UNC path)
-  if ((path.size() > 1 && path[1] == ':') ||
-      (path.size() > 1 && path[0] == '\\' && path[1] == '\\')) {
-    return path;
-  }
-
-  char buffer[MAX_PATH];
-  if (GetFullPathNameA(path.c_str(), MAX_PATH, buffer, nullptr)) {
-    return std::string(buffer);
-  }
-
-  return path;  // fallback on failure
-
+    std::wstring wide_path = ToWideString(path);
+    DWORD required_size = GetFullPathNameW(wide_path.c_str(), 0, nullptr, nullptr);
+    if (required_size == 0) {
+      return path;
+    }
+    
+    std::vector<wchar_t> buffer(required_size);
+    DWORD actual_size = GetFullPathNameW(
+        wide_path.c_str(),
+        required_size,
+        buffer.data(),
+        nullptr
+    );
+    
+    if (actual_size == 0 || actual_size >= required_size) {
+      return path;
+    }
+    
+    std::wstring resolved_wide(buffer.data(), actual_size);
+    return ToString(resolved_wide);
 #else
-  // POSIX: absolute paths start with '/'
-  if (path[0] == '/') {
+    char resolved_path[PATH_MAX];
+    if (realpath(path.c_str(), resolved_path) == nullptr) {
+      return path;
+    }
+    return std::string(resolved_path);
+#endif
+  } catch (const std::exception&) {
     return path;
   }
-
-  char buffer[PATH_MAX];
-  if (realpath(path.c_str(), buffer)) {
-    return std::string(buffer);
-  }
-
-  return path;  // fallback on failure
-#endif
 }
 
 }  // namespace sherpa_onnx
