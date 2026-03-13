@@ -506,8 +506,8 @@ class OnlineRecognizer {
         tokens: List<String>.from(parsedJson['tokens']),
         timestamps: List<double>.from(parsedJson['timestamps']),
         ysProbs: (parsedJson['ys_probs'] as List<dynamic>?)
-    	    ?.map<double>((e) => (e as num).toDouble())
-    	    .toList() ?? <double>[]);
+            ?.map<double>((e) => (e as num).toDouble())
+            .toList() ?? <double>[]);
   }
 
   void reset(OnlineStream stream) {

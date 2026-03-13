@@ -32,7 +32,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   r.timestamps.reserve(src.timestamps.size());
 
   r.token_log_probs.reserve(src.token_log_probs.size());
-  
+
   std::string text;
 
   for (int32_t i = 0; i != src.tokens.size(); ++i) {
@@ -59,7 +59,7 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
 
     r.tokens.push_back(std::move(sym));
-    
+
     // Add confidence score if available
     if (i < src.token_log_probs.size()) {
       r.token_log_probs.push_back(src.token_log_probs[i]);
