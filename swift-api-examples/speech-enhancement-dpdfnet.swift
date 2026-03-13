@@ -13,13 +13,16 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
-  let model = "./gtcrn_simple.onnx"
+  let model = "./dpdfnet2.onnx"
   // Please refer to
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
   // to download files used in this script
+  // Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+  // for 16 kHz downstream ASR or speech recognition.
+  // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
   var config = sherpaOnnxOfflineSpeechDenoiserConfig(
     model: sherpaOnnxOfflineSpeechDenoiserModelConfig(
-      gtcrn: sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: model))
+      dpdfnet: sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: model))
   )
 
   let sd = SherpaOnnxOfflineSpeechDenoiserWrapper(config: &config)

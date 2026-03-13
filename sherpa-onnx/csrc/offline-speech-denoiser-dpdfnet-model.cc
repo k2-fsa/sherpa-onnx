@@ -31,13 +31,11 @@ namespace sherpa_onnx {
 
 namespace {
 
-template <typename SessionLike>
-std::vector<int64_t> GetTensorShape(SessionLike *sess, size_t index,
-                                    bool is_input) {
-  if (is_input) {
-    return sess->GetInputTypeInfo(index).GetTensorTypeAndShapeInfo().GetShape();
-  }
+std::vector<int64_t> GetInputShape(Ort::Session *sess, size_t index) {
+  return sess->GetInputTypeInfo(index).GetTensorTypeAndShapeInfo().GetShape();
+}
 
+std::vector<int64_t> GetOutputShape(Ort::Session *sess, size_t index) {
   return sess->GetOutputTypeInfo(index)
       .GetTensorTypeAndShapeInfo()
       .GetShape();
@@ -70,9 +68,8 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
     Ort::Value state = Ort::Value::CreateTensor<float>(
         allocator_, meta_.state_shape.data(), meta_.state_shape.size());
 
-    Fill<float>(&state, 0);
-
     auto *p = state.GetTensorMutableData<float>();
+    std::fill_n(p, meta_.state_size, 0.f);
     std::copy(meta_.erb_norm_init.begin(), meta_.erb_norm_init.end(), p);
     std::copy(meta_.spec_norm_init.begin(), meta_.spec_norm_init.end(),
               p + meta_.erb_norm_state_size);
@@ -169,16 +166,22 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    auto spec_shape = GetTensorShape(sess_.get(), 0, true);
-    auto state_shape = GetTensorShape(sess_.get(), 1, true);
-    auto out_spec_shape = GetTensorShape(sess_.get(), 0, false);
-    auto out_state_shape = GetTensorShape(sess_.get(), 1, false);
+    auto spec_shape = GetInputShape(sess_.get(), 0);
+    auto state_shape = GetInputShape(sess_.get(), 1);
+    auto out_spec_shape = GetOutputShape(sess_.get(), 0);
+    auto out_state_shape = GetOutputShape(sess_.get(), 1);
 
     if (spec_shape.size() != 4 || state_shape.size() != 1 ||
         out_spec_shape.size() != 4 || out_state_shape.size() != 1) {
       SHERPA_ONNX_LOGE(
           "Unexpected dpdfnet ONNX signature. Expected "
-          "(spec:[B,T,F,2], state:[S]) -> (spec_e:[B,T,F,2], state_out:[S]).");
+          "(spec:[B,T,F,2], state:[S]) -> (spec_e:[B,T,F,2], state_out:[S]). "
+          "Got spec ndim=%d, state ndim=%d, out_spec ndim=%d, out_state "
+          "ndim=%d.",
+          static_cast<int32_t>(spec_shape.size()),
+          static_cast<int32_t>(state_shape.size()),
+          static_cast<int32_t>(out_spec_shape.size()),
+          static_cast<int32_t>(out_state_shape.size()));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -188,8 +191,13 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
 
     if (freq_bins <= 1 || complex_dim != 2 || state_size <= 0) {
       SHERPA_ONNX_LOGE(
-          "Unsupported dpdfnet model shapes. spec=%zu dims, state=%zu dims",
-          spec_shape.size(), state_shape.size());
+          "Unsupported dpdfnet model shapes. spec ndim=%d, state ndim=%d, "
+          "freq_bins=%d, complex_dim=%d, state_size=%d.",
+          static_cast<int32_t>(spec_shape.size()),
+          static_cast<int32_t>(state_shape.size()),
+          static_cast<int32_t>(freq_bins),
+          static_cast<int32_t>(complex_dim),
+          static_cast<int32_t>(state_size));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -199,25 +207,24 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
     if (meta_.freq_bins != freq_bins) {
       SHERPA_ONNX_LOGE(
           "Mismatch between metadata and ONNX graph for freq_bins. "
-          "metadata=%d, graph=%lld.",
-          meta_.freq_bins,
-          static_cast<long long>(freq_bins));
+          "metadata=%d, graph=%d.",
+          meta_.freq_bins, static_cast<int32_t>(freq_bins));
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (meta_.n_fft != static_cast<int32_t>((freq_bins - 1) * 2)) {
       SHERPA_ONNX_LOGE(
           "Mismatch between metadata and ONNX graph for n_fft. metadata=%d, "
-          "graph=%lld.",
-          meta_.n_fft, static_cast<long long>((freq_bins - 1) * 2));
+          "graph=%d.",
+          meta_.n_fft, static_cast<int32_t>((freq_bins - 1) * 2));
       SHERPA_ONNX_EXIT(-1);
     }
 
     if (meta_.state_size != state_size) {
       SHERPA_ONNX_LOGE(
           "Mismatch between metadata and ONNX graph for state_size. "
-          "metadata=%d, graph=%lld.",
-          meta_.state_size, static_cast<long long>(state_size));
+          "metadata=%d, graph=%d.",
+          meta_.state_size, static_cast<int32_t>(state_size));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -258,7 +265,15 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
 
     if (out_spec_shape[2] != freq_bins || out_spec_shape[3] != 2 ||
         out_state_shape[0] != state_size) {
-      SHERPA_ONNX_LOGE("Unexpected dpdfnet output shapes.");
+      SHERPA_ONNX_LOGE(
+          "Unexpected dpdfnet output shapes. out_spec[2]=%d, out_spec[3]=%d, "
+          "out_state[0]=%d, expected freq_bins=%d, complex_dim=2, "
+          "state_size=%d.",
+          static_cast<int32_t>(out_spec_shape[2]),
+          static_cast<int32_t>(out_spec_shape[3]),
+          static_cast<int32_t>(out_state_shape[0]),
+          static_cast<int32_t>(freq_bins),
+          static_cast<int32_t>(state_size));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -292,6 +307,8 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
       os << "\nerb_bins: " << meta_.erb_bins;
       os << "\nspec_bins: " << meta_.spec_bins;
       os << "\nstate_size: " << meta_.state_size;
+      os << "\nnormalized: " << static_cast<int32_t>(meta_.normalized);
+      os << "\ncenter: " << static_cast<int32_t>(meta_.center);
       os << "\n";
 
 #if __OHOS__

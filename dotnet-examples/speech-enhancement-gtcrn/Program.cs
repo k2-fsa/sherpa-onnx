@@ -1,19 +1,11 @@
 ﻿// Copyright (c)  2025  Xiaomi Corporation
 //
-// This file shows how to use speech enhancement API with GTCRN or DPDFNet
-// models. Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
-// for 16 kHz downstream ASR or speech recognition.
-// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
+// This file shows how to use speech enhancement API with GTCRN models.
 //
 // 1. Download a model from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/baseline.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
 //
 // 2. Download a test file
 //
@@ -31,14 +23,7 @@ class OfflineSpeechEnhancementDemo
   {
     var model = "./gtcrn_simple.onnx";
     var config = new OfflineSpeechDenoiserConfig();
-    if (model.Contains("dpdfnet", StringComparison.OrdinalIgnoreCase))
-    {
-      config.Model.Dpdfnet.Model = model;
-    }
-    else
-    {
-      config.Model.Gtcrn.Model = model;
-    }
+    config.Model.Gtcrn.Model = model;
     config.Model.Debug = 1;
     config.Model.NumThreads = 1;
     var sd = new OfflineSpeechDenoiser(config);

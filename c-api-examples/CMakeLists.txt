@@ -10,6 +10,9 @@ target_link_libraries(kws-c-api sherpa-onnx-c-api)
 add_executable(speech-enhancement-gtcrn-c-api speech-enhancement-gtcrn-c-api.c)
 target_link_libraries(speech-enhancement-gtcrn-c-api sherpa-onnx-c-api)
 
+add_executable(speech-enhancement-dpdfnet-c-api speech-enhancement-dpdfnet-c-api.c)
+target_link_libraries(speech-enhancement-dpdfnet-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)

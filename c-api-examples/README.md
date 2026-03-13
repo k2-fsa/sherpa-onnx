@@ -16,8 +16,12 @@ for details.
   to convert text to speech with a non-streaming model.
 
 - [speech-enhancement-gtcrn-c-api.c](./speech-enhancement-gtcrn-c-api.c)
-  This file shows how to use the C API for speech enhancement with GTCRN or
-  DPDFNet models. Use 16 kHz DPDFNet models such as `baseline.onnx`,
+  This file shows how to use the C API for speech enhancement with GTCRN
+  models.
+
+- [speech-enhancement-dpdfnet-c-api.c](./speech-enhancement-dpdfnet-c-api.c)
+  This file shows how to use the C API for speech enhancement with DPDFNet
+  models. Use 16 kHz DPDFNet models such as `baseline.onnx`,
   `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR and
   `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 

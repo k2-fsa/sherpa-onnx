@@ -34,16 +34,19 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhan
 node ./test-offline-speech-enhancement-gtcrn.js
 ```
 
-The example file currently uses `gtcrn_simple.onnx`. The same offline speech
-denoiser API also supports DPDFNet models through `model.dpdfnet.model`.
-Download DPDFNet models from the official Hugging Face hub:
-`https://huggingface.co/Ceva-IP/DPDFNet`
-instead of the sherpa-onnx release page.
+The GTCRN example file uses `gtcrn_simple.onnx`.
+
+DPDFNet has a separate example file. Download DPDFNet models from the official
+Hugging Face hub: `https://huggingface.co/Ceva-IP/DPDFNet`
 
 Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
 `dpdfnet4.onnx`, or `dpdfnet8.onnx` if you want enhanced audio for downstream
 ASR or speech recognition, and use `dpdfnet2_48khz_hr.onnx` if you want 48 kHz
 enhancement output.
+
+```bash
+node ./test-offline-speech-enhancement-dpdfnet.js
+```
 
 # Speaker diarization
 

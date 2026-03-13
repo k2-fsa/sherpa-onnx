@@ -7,10 +7,12 @@ https://k2-fsa.github.io/sherpa/onnx/csharp-api/index.html
 for details.
 
 - [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn) It shows how to use
-  the offline speech denoiser API with GTCRN or DPDFNet models. Use 16 kHz
-  DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`,
-  or `dpdfnet8.onnx` for downstream ASR and `dpdfnet2_48khz_hr.onnx` for
-  48 kHz enhancement output.
+  the offline speech denoiser API with GTCRN models.
+- [./speech-enhancement-dpdfnet](./speech-enhancement-dpdfnet) It shows how to
+  use the offline speech denoiser API with DPDFNet models. Use 16 kHz DPDFNet
+  models such as `baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`, or
+  `dpdfnet8.onnx` for downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz
+  enhancement output.
 
 ```bash
 dotnet new console -n offline-tts-play

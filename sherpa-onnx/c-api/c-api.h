@@ -1878,8 +1878,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig {
   const char *model;
 } SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
 
-SHERPA_ONNX_API typedef struct
-    SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
+typedef struct SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig {
   const char *model;
 } SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
 
@@ -1936,11 +1935,11 @@ SHERPA_ONNX_API void SherpaOnnxDestroyDenoisedAudio(
 // =========================================================================
 // For streaming speech enhancement
 // =========================================================================
-SHERPA_ONNX_API typedef struct SherpaOnnxOnlineSpeechDenoiserConfig {
+typedef struct SherpaOnnxOnlineSpeechDenoiserConfig {
   SherpaOnnxOfflineSpeechDenoiserModelConfig model;
 } SherpaOnnxOnlineSpeechDenoiserConfig;
 
-SHERPA_ONNX_API typedef struct SherpaOnnxOnlineSpeechDenoiser
+typedef struct SherpaOnnxOnlineSpeechDenoiser
     SherpaOnnxOnlineSpeechDenoiser;
 
 SHERPA_ONNX_API const SherpaOnnxOnlineSpeechDenoiser *
@@ -1956,6 +1955,7 @@ SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserGetSampleRate(
 SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
     const SherpaOnnxOnlineSpeechDenoiser *sd);
 
+// This function is not thread-safe.
 SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
 SherpaOnnxOnlineSpeechDenoiserRun(const SherpaOnnxOnlineSpeechDenoiser *sd,
                                   const float *samples, int32_t n,

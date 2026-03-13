@@ -1,22 +1,26 @@
 // Copyright 2025 Xiaomi Corporation
 
-// This file shows how to use speech enhancement models in sherpa-onnx
+// This file shows how to use DPDFNet speech enhancement models in sherpa-onnx
 //
-// Download GTCRN models and sample test waves from:
-// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+// Download DPDFNet models from the official Hugging Face hub:
+// https://huggingface.co/Ceva-IP/DPDFNet
+//
+// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// for 16 kHz downstream ASR or speech recognition.
+// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingSpeechEnhancementGtcrn {
+public class NonStreamingSpeechEnhancementDpdfNet {
   public static void main(String[] args) {
-    String model = "./gtcrn_simple.onnx";
+    String model = "./dpdfnet2.onnx";
     OfflineSpeechDenoiserModelConfig.Builder builder =
         OfflineSpeechDenoiserModelConfig.builder()
             .setNumThreads(1)
             .setDebug(true)
-            .setProvider("cpu");
-
-    builder.setGtcrn(OfflineSpeechDenoiserGtcrnModelConfig.builder().setModel(model).build());
+            .setProvider("cpu")
+            .setDpdfnet(
+                OfflineSpeechDenoiserDpdfNetModelConfig.builder().setModel(model).build());
 
     OfflineSpeechDenoiserModelConfig modelConfig = builder.build();
     OfflineSpeechDenoiserConfig config =

@@ -2,16 +2,19 @@
 //
 // Please download a speech enhancement model and ./inp_16k.wav used in this file
 // from
-// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+// https://huggingface.co/Ceva-IP/DPDFNet
 //
 // This script shows how to use speech enhancement API from sherpa-onnx.
+// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// for 16 kHz downstream ASR or speech recognition.
+// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineSpeechDenoiser() {
-  const model = './gtcrn_simple.onnx';
+  const model = './dpdfnet2.onnx';
   let config = {
     model: {
-      gtcrn: {model},
+      dpdfnet: {model},
       debug: 1,
     },
   };

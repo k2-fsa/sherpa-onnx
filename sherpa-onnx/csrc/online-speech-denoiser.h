@@ -12,6 +12,8 @@
 
 namespace sherpa_onnx {
 
+class OnlineSpeechDenoiserImpl;
+
 struct OnlineSpeechDenoiserConfig {
   OfflineSpeechDenoiserModelConfig model;
 
@@ -48,8 +50,7 @@ class OnlineSpeechDenoiser {
   int32_t GetFrameShiftInSamples() const;
 
  private:
-  class Impl;
-  std::unique_ptr<Impl> impl_;
+  std::unique_ptr<OnlineSpeechDenoiserImpl> impl_;
 };
 
 }  // namespace sherpa_onnx

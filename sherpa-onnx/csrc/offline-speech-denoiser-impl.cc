@@ -25,20 +25,13 @@ std::unique_ptr<OfflineSpeechDenoiserImpl> OfflineSpeechDenoiserImpl::Create(
   const bool has_gtcrn = !config.model.gtcrn.model.empty();
   const bool has_dpdfnet = !config.model.dpdfnet.model.empty();
 
-  if (has_gtcrn && !has_dpdfnet) {
+  if (has_gtcrn) {
     return std::make_unique<OfflineSpeechDenoiserGtcrnImpl>(config);
-  }
-
-  if (has_dpdfnet && !has_gtcrn) {
+  } else if (has_dpdfnet) {
     return std::make_unique<OfflineSpeechDenoiserDpdfNetImpl>(config);
   }
 
-  if (has_gtcrn && has_dpdfnet) {
-    SHERPA_ONNX_LOGE("Please provide only one speech denoising model.");
-    return nullptr;
-  }
-
-  SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
+  SHERPA_ONNX_LOGE("Please provide one speech denoising model.");
   return nullptr;
 }
 
@@ -48,20 +41,13 @@ std::unique_ptr<OfflineSpeechDenoiserImpl> OfflineSpeechDenoiserImpl::Create(
   const bool has_gtcrn = !config.model.gtcrn.model.empty();
   const bool has_dpdfnet = !config.model.dpdfnet.model.empty();
 
-  if (has_gtcrn && !has_dpdfnet) {
+  if (has_gtcrn) {
     return std::make_unique<OfflineSpeechDenoiserGtcrnImpl>(mgr, config);
-  }
-
-  if (has_dpdfnet && !has_gtcrn) {
+  } else if (has_dpdfnet) {
     return std::make_unique<OfflineSpeechDenoiserDpdfNetImpl>(mgr, config);
   }
 
-  if (has_gtcrn && has_dpdfnet) {
-    SHERPA_ONNX_LOGE("Please provide only one speech denoising model.");
-    return nullptr;
-  }
-
-  SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
+  SHERPA_ONNX_LOGE("Please provide one speech denoising model.");
   return nullptr;
 }
 

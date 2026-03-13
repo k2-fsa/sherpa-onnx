@@ -26,23 +26,8 @@ void OfflineSpeechDenoiserModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineSpeechDenoiserModelConfig::Validate() const {
-  int32_t num_selected_models = 0;
-  if (!gtcrn.model.empty()) {
-    ++num_selected_models;
-  }
-
-  if (!dpdfnet.model.empty()) {
-    ++num_selected_models;
-  }
-
-  if (num_selected_models == 0) {
+  if (gtcrn.model.empty() && dpdfnet.model.empty()) {
     SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
-    return false;
-  }
-
-  if (num_selected_models > 1) {
-    SHERPA_ONNX_LOGE(
-        "Please provide only one speech denoising model at a time.");
     return false;
   }
 

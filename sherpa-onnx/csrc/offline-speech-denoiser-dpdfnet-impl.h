@@ -14,6 +14,7 @@
 
 #include "kaldi-native-fbank/csrc/istft.h"
 #include "kaldi-native-fbank/csrc/stft.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-dpdfnet-model.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser-impl.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
@@ -91,18 +92,6 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
   }
 
  private:
-  static std::vector<float> MakeVorbisWindow(int32_t window_length) {
-    constexpr float kPi = 3.14159265358979323846f;
-    std::vector<float> window(window_length);
-    const float half = window_length / 2.0f;
-    for (int32_t i = 0; i != window_length; ++i) {
-      float s = std::sin(0.5f * kPi * (i + 0.5f) / half);
-      window[i] = std::sin(0.5f * kPi * s * s);
-    }
-
-    return window;
-  }
-
   static std::vector<float> ShiftWaveform(std::vector<float> samples,
                                           int32_t shift) {
     std::vector<float> ans;

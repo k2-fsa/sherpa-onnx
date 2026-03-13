@@ -1,4 +1,4 @@
-// Copyright 2026 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 package com.k2fsa.sherpa.onnx;
 
 public class OfflineSpeechDenoiserDpdfNetModelConfig {

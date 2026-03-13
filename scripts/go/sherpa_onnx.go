@@ -2405,8 +2405,13 @@ type OfflineSpeechDenoiserGtcrnModelConfig struct {
 	Model string
 }
 
+type OfflineSpeechDenoiserDpdfNetModelConfig struct {
+	Model string
+}
+
 type OfflineSpeechDenoiserModelConfig struct {
 	Gtcrn      OfflineSpeechDenoiserGtcrnModelConfig
+	DpdfNet    OfflineSpeechDenoiserDpdfNetModelConfig
 	NumThreads int32
 	Debug      int32
 	Provider   string
@@ -2439,6 +2444,8 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 	c := C.struct_SherpaOnnxOfflineSpeechDenoiserConfig{}
 	c.model.gtcrn.model = C.CString(config.Model.Gtcrn.Model)
 	defer C.free(unsafe.Pointer(c.model.gtcrn.model))
+	c.model.dpdfnet.model = C.CString(config.Model.DpdfNet.Model)
+	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)

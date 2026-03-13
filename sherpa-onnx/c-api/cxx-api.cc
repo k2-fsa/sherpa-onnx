@@ -766,6 +766,9 @@ OnlineSpeechDenoiser::OnlineSpeechDenoiser(
 DenoisedAudio OnlineSpeechDenoiser::Run(const float *samples, int32_t n,
                                         int32_t sample_rate) const {
   auto audio = SherpaOnnxOnlineSpeechDenoiserRun(p_, samples, n, sample_rate);
+  if (audio == nullptr) {
+    return {};
+  }
 
   DenoisedAudio ans;
   ans.samples = {audio->samples, audio->samples + audio->n};
