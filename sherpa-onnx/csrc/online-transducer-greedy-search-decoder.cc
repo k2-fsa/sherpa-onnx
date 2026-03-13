@@ -141,8 +141,9 @@ void OnlineTransducerGreedySearchDecoder::Decode(
 
         // export the per-token log scores
         // apply temperature-scaling
+        float temp = temperature_scale_ > 0.0f ? temperature_scale_ : 1.0f;
         for (int32_t n = 0; n < vocab_size; ++n) {
-          p_logit[n] /= temperature_scale_;
+          p_logit[n] /= temp;
         }
         LogSoftmax(p_logit, vocab_size);   // renormalize probabilities,
                                            // save time by doing it only for

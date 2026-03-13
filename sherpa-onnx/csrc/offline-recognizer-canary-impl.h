@@ -102,10 +102,8 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     token_log_probs.reserve(num_tokens + 1);
     vocab_log_probs.reserve(num_tokens + 1);
 
-    // Start from decoder_input.size() + 1 for proper position tracking
     if (max_token_id != eos) {
-      for (int32_t i = decoder_input.size() + 1;
-           i <= decoder_input.size() + num_tokens; ++i) {
+      for (int32_t i = 1; i <= num_tokens; ++i) {
         if (tokens.back() == eos) {
           break;
         }
