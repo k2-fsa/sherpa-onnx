@@ -315,7 +315,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_reset(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
@@ -324,7 +324,7 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
@@ -394,6 +394,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
 
   // Find the OnlineRecognizerResult class
   jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/OnlineRecognizerResult");
+  if (cls == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to find class OnlineRecognizerResult");
+    return nullptr;
+  }
 
   // Find the constructor: (String, String[], float[], float[])V
   jmethodID ctor = env->GetMethodID(
@@ -403,8 +407,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
   jstring text = env->NewStringUTF(result.text.c_str());
 
   // tokens
+  jclass string_cls = env->FindClass("java/lang/String");
   jobjectArray tokens = env->NewObjectArray(
-      result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
+      result.tokens.size(), string_cls, nullptr);
+  env->DeleteLocalRef(string_cls);
   for (size_t i = 0; i < result.tokens.size(); ++i) {
     jstring token_str = env->NewStringUTF(result.tokens[i].c_str());
     env->SetObjectArrayElement(tokens, i, token_str);

@@ -41,7 +41,11 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_add(JNIEnv *env,
   if (n != manager->Dim()) {
     SHERPA_ONNX_LOGE("Expected dim %d, given %d", manager->Dim(),
                      static_cast<int32_t>(n));
-    exit(-1);
+    env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
+    jclass iae = env->FindClass("java/lang/IllegalArgumentException");
+    env->ThrowNew(iae, "Embedding dimension mismatch");
+    env->DeleteLocalRef(iae);
+    return false;
   }
 
   const char *p_name = env->GetStringUTFChars(name, nullptr);
@@ -77,11 +81,17 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_addList(
     if (n != manager->Dim()) {
       SHERPA_ONNX_LOGE("i: %d. Expected dim %d, given %d", i, manager->Dim(),
                        static_cast<int32_t>(n));
-      exit(-1);
+      env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
+      env->DeleteLocalRef(embedding);
+      jclass iae = env->FindClass("java/lang/IllegalArgumentException");
+      env->ThrowNew(iae, "Embedding dimension mismatch");
+      env->DeleteLocalRef(iae);
+      return false;
     }
 
     embedding_list.push_back({p, p + n});
     env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
+    env->DeleteLocalRef(embedding);
   }
 
   const char *p_name = env->GetStringUTFChars(name, nullptr);
@@ -125,7 +135,11 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_search(JNIEnv *env,
   if (n != manager->Dim()) {
     SHERPA_ONNX_LOGE("Expected dim %d, given %d", manager->Dim(),
                      static_cast<int32_t>(n));
-    exit(-1);
+    env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
+    jclass iae = env->FindClass("java/lang/IllegalArgumentException");
+    env->ThrowNew(iae, "Embedding dimension mismatch");
+    env->DeleteLocalRef(iae);
+    return env->NewStringUTF("");
   }
 
   std::string name = manager->Search(p, threshold);
@@ -148,7 +162,11 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_verify(
   if (n != manager->Dim()) {
     SHERPA_ONNX_LOGE("Expected dim %d, given %d", manager->Dim(),
                      static_cast<int32_t>(n));
-    exit(-1);
+    env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
+    jclass iae = env->FindClass("java/lang/IllegalArgumentException");
+    env->ThrowNew(iae, "Embedding dimension mismatch");
+    env->DeleteLocalRef(iae);
+    return false;
   }
 
   const char *p_name = env->GetStringUTFChars(name, nullptr);
@@ -195,14 +213,16 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_allSpeakerNames(
   auto manager = reinterpret_cast<sherpa_onnx::SpeakerEmbeddingManager *>(ptr);
   std::vector<std::string> all_speakers = manager->GetAllSpeakers();
 
+  jclass string_cls = env->FindClass("java/lang/String");
   jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      all_speakers.size(), env->FindClass("java/lang/String"), nullptr);
+      all_speakers.size(), string_cls, nullptr);
+  env->DeleteLocalRef(string_cls);
 
   int32_t i = 0;
   for (auto &s : all_speakers) {
     jstring js = env->NewStringUTF(s.c_str());
     env->SetObjectArrayElement(obj_arr, i, js);
-
+    env->DeleteLocalRef(js);
     ++i;
   }
 

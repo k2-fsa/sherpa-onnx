@@ -557,14 +557,20 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
 
   // 2. Find the Java class and constructor
   jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/OfflineRecognizerResult");
+  if (cls == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to find class OfflineRecognizerResult");
+    return nullptr;
+  }
   jmethodID ctor =
       env->GetMethodID(cls, "<init>",
                        "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
                        "String;Ljava/lang/String;Ljava/lang/String;[F)V");
   jstring jtext = env->NewStringUTF(result.text.c_str());
 
+  jclass string_cls = env->FindClass("java/lang/String");
   jobjectArray jtokens = env->NewObjectArray(
-      result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
+      result.tokens.size(), string_cls, nullptr);
+  env->DeleteLocalRef(string_cls);
 
   for (size_t i = 0; i < result.tokens.size(); ++i) {
     jstring token_str = env->NewStringUTF(result.tokens[i].c_str());

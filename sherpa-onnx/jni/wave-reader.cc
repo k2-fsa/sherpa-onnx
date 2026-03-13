@@ -21,6 +21,7 @@ static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
     SHERPA_ONNX_LOGE("Failed to read '%s'", p_filename);
     jclass exception_class = env->FindClass("java/lang/Exception");
     env->ThrowNew(exception_class, "Failed to read wave file.");
+    env->DeleteLocalRef(exception_class);
     return nullptr;
   }
 
@@ -97,7 +98,11 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
-    exit(-1);
+    env->ReleaseStringUTFChars(filename, p_filename);
+    jclass re = env->FindClass("java/lang/RuntimeException");
+    env->ThrowNew(re, "Failed to get asset manager");
+    env->DeleteLocalRef(re);
+    return nullptr;
   }
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
