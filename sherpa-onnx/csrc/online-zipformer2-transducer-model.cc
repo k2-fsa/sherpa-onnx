@@ -65,8 +65,8 @@ OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       encoder_sess_opts_(GetSessionOptions(config)),
-      decoder_sess_opts_(GetSessionOptions(config)),
-      joiner_sess_opts_(GetSessionOptions(config)),
+      decoder_sess_opts_(GetSessionOptions(config, "decoder")),
+      joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       allocator_{} {
   {
     auto buf = ReadFile(mgr, config.transducer.encoder);
