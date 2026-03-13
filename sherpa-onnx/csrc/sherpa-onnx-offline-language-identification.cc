@@ -88,8 +88,9 @@ for a list of pre-trained models to download.
   const auto end = std::chrono::steady_clock::now();
 
   fprintf(stderr, "Done!\n\n");
-  fprintf(stderr, "%s\nDetected language: %s\n", wav_filename.c_str(),
-          language.c_str());
+  fprintf(stderr, "%s\n", wav_filename.c_str());
+  fprintf(stderr, "Detected language: ");
+  fprintf(stdout, "%s\n", language.c_str());
 
   float elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)

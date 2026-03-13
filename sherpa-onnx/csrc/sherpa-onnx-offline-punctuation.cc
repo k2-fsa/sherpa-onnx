@@ -65,5 +65,6 @@ The output text should look like below:
   fprintf(stderr, "Num threads: %d\n", config.model.num_threads);
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   fprintf(stderr, "Input text: %s\n", text.c_str());
-  fprintf(stderr, "Output text: %s\n", text_with_punct.c_str());
+  fprintf(stderr, "Output text: ");
+  fprintf(stdout, "%s\n", text_with_punct.c_str());
 }

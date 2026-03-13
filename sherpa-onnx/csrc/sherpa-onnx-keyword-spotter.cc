@@ -103,8 +103,9 @@ for a list of pre-trained models to download.
       if (!r.keyword.empty()) {
         keyword_spotter.Reset(s.get());
 
-        fprintf(stderr, "%s\n%s\n\n", wav_filename.c_str(),
-                r.AsJsonString().c_str());
+        fprintf(stderr, "%s\n", wav_filename.c_str());
+        fprintf(stdout, "%s\n", r.AsJsonString().c_str());
+        fprintf(stderr, "\n");
       }
     }
 
@@ -163,8 +164,9 @@ for a list of pre-trained models to download.
         const auto r = keyword_spotter.GetResult(p_ss);
         if (!r.keyword.empty()) {
           os << s.filename << "\n";
-          os << r.AsJsonString() << "\n\n";
           fprintf(stderr, "%s", os.str().c_str());
+          fprintf(stdout, "%s\n", r.AsJsonString().c_str());
+          fprintf(stderr, "\n");
         }
       }
 

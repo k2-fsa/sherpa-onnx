@@ -109,6 +109,7 @@ struct OfflineWhisperDecoderResult {
   /// Segments with timestamps (when using timestamp token mode)
   std::vector<OfflineWhisperSegment> segments;
 };
+
 // used by ascend/rknn/qnn/axera, etc.
 enum class WhisperModelType {
   Tiny,

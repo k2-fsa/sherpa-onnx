@@ -256,6 +256,7 @@ std::vector<Ort::Value> OnlineWenetCtcModel::StackStates(
   if (states.size() != 1) {
     SHERPA_ONNX_LOGE("wenet CTC model supports only batch_size==1. Given: %d",
                      static_cast<int32_t>(states.size()));
+    SHERPA_ONNX_EXIT(-1);
   }
 
   return std::move(states[0]);
