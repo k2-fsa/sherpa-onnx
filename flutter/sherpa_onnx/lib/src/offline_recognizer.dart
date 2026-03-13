@@ -821,10 +821,11 @@ class OfflineRecognizer {
 
   void setConfig(OfflineRecognizerConfig config) {
     final c = convertConfig(config);
-
-    SherpaOnnxBindings.offlineRecognizerSetConfig?.call(ptr, c);
-
-    freeConfig(c);
+    try {
+      SherpaOnnxBindings.offlineRecognizerSetConfig?.call(ptr, c);
+    } finally {
+      freeConfig(c);
+    }
     // we don't update this.config
   }
 

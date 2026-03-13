@@ -331,11 +331,11 @@ class OnlineRecognizerResult {
 
   factory OnlineRecognizerResult.fromJson(Map<String, dynamic> json) {
     return OnlineRecognizerResult(
-      text: json['text'] as String,
-      tokens: List<String>.from(json['tokens'] as List),
-      timestamps: (json['timestamps'] as List)
-          .map<double>((e) => (e as num).toDouble())
-          .toList(),
+      text: json['text'] as String? ?? '',
+      tokens: (json['tokens'] as List?)?.cast<String>().toList() ?? const <String>[],
+      timestamps: (json['timestamps'] as List?)
+          ?.map<double>((e) => (e as num).toDouble())
+          .toList() ?? const <double>[],
       ysProbs: (json['ys_probs'] as List?)
           ?.map<double>((e) => (e as num).toDouble())
           .toList() ?? const <double>[],
