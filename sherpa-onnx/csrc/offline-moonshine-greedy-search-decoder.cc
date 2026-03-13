@@ -65,11 +65,11 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
     // Compute log-softmax once for both max selection and storage
     float max_logit = *std::max_element(p, p + vocab_size);
 
-    float sum_exp = 0.0f;
+    double sum_exp = 0.0;
     for (int32_t j = 0; j < vocab_size; ++j) {
       sum_exp += std::exp(p[j] - max_logit);
     }
-    float log_sum = max_logit + std::log(sum_exp);
+    float log_sum = max_logit + static_cast<float>(std::log(sum_exp));
 
     // Compute log-softmax for all tokens and find max in single pass
     std::vector<float> full_vocab_probs(vocab_size);

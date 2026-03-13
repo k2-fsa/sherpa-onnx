@@ -267,9 +267,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         Ort::Value::CreateTensor(memory_info, &x_length_scalar, 1,
                                  x_length_shape.data(), x_length_shape.size());
 
-    auto result = model_->ForwardEncoder(std::move(x), std::move(x_length));
-
-    return result;
+    return model_->ForwardEncoder(std::move(x), std::move(x_length));
   }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
@@ -285,11 +283,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         memory_info, _decoder_input.data(), _decoder_input.size(), shape.data(),
         shape.size());
 
-    auto result = model_->ForwardDecoder(
+    return model_->ForwardDecoder(
         std::move(decoder_input), std::move(decoder_states),
         std::move(enc_states), std::move(enc_mask));
-
-    return result;
   }
 
   // see

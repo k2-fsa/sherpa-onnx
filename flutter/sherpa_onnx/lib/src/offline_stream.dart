@@ -50,6 +50,15 @@ class OfflineStream {
     final numTokens = vocabLogProbs.numTokens;
     final vocabSize = vocabLogProbs.vocabSize;
 
+    // Defensive validation for native values
+    if (numTokens < 0 ||
+        vocabSize < 0 ||
+        numTokens > 10000 ||
+        vocabSize > 100000) {
+      destroyFunc(vocabPtr);
+      return null;
+    }
+
     final Map<String, List<double>> result = {};
 
     for (int tokenIdx = 0; tokenIdx < numTokens; tokenIdx++) {
