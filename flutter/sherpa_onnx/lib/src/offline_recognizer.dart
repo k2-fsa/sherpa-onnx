@@ -814,22 +814,22 @@ class OfflineRecognizer {
   /// method of the returned instance to avoid memory leak.
 
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
-    final c = convertConfig(config);
-
     if (SherpaOnnxBindings.createOfflineRecognizer == null) {
       throw Exception("Please initialize sherpa-onnx first");
     }
 
-    final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
+    final c = convertConfig(config);
 
-    if (ptr == nullptr) {
-      throw Exception(
-          "Failed to create offline recognizer. Please check your config");
+    try {
+      final ptr = SherpaOnnxBindings.createOfflineRecognizer!.call(c);
+      if (ptr == nullptr) {
+        throw Exception(
+            "Failed to create offline recognizer. Please check your config");
+      }
+      return OfflineRecognizer._(ptr: ptr, config: config);
+    } finally {
+      freeConfig(c);
     }
-
-    freeConfig(c);
-
-    return OfflineRecognizer._(ptr: ptr, config: config);
   }
 
   void setConfig(OfflineRecognizerConfig config) {
@@ -1057,17 +1057,9 @@ class OfflineRecognizer {
 
     SherpaOnnxBindings.destroyOfflineStreamResultJson?.call(json);
 
-    return OfflineRecognizerResult(
-        text: parsedJson['text'],
-        tokens: List<String>.from(parsedJson['tokens']),
-        tokenLogProbs: (parsedJson['token_log_probs'] as List?)
-                ?.map((e) => (e as num).toDouble())
-                .toList() ??
-            [],
-        timestamps: List<double>.from(parsedJson['timestamps']),
-        lang: parsedJson['lang'],
-        emotion: parsedJson['emotion'],
-        event: parsedJson['event']);
+    return OfflineRecognizerResult.fromJson(
+      parsedJson as Map<String, dynamic>,
+    );
   }
 
   Pointer<SherpaOnnxOfflineRecognizer> ptr;
