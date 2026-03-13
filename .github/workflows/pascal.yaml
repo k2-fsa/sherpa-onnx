@@ -126,6 +126,60 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
+      - name:  Run Pascal test (TTS)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+          pushd tts
+
+          ./run-pocket-en.sh
+          rm -rf sherpa-onnx-pocket-*
+
+          ./run-piper.sh
+          rm -rf vits-piper-*
+          rm piper
+          ls -lh
+          echo "---"
+
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
+          rm kokoro-zh-en
+          ls -lh
+          echo "---"
+
+          ./run-kokoro-en.sh
+          rm -rf kokoro-en-*
+          rm kokoro-en
+          ls -lh
+          echo "---"
+
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+          rm matcha-zh
+          ls -lh
+          echo "---"
+
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          rm matcha-en
+          ls -lh
+          echo "---"
+
+          ./run-supertonic-en.sh
+          rm -rf sherpa-onnx-supertonic-*
+          rm supertonic-en
+          ls -lh
+          echo "---"
+
+          popd
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-${{ matrix.os }}
+          path: ./pascal-api-examples/tts/*.wav
+
       - name:  Run Pascal test (Non Streaming ASR)
         shell: bash
         run: |
@@ -167,8 +221,14 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-moonshine-v2.sh
+
           ./run-moonshine.sh
           rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-fire-red-asr-ctc.sh
+          rm -rf sherpa-onnx-fire-red-asr*
           echo "---"
 
           ./run-fire-red-asr.sh
@@ -284,46 +344,6 @@ jobs:
 
           ./run.sh
           rm -rfv *.onnx *.wav sherpa-onnx-*
-          ls -lh
-          echo "---"
-
-          popd
-
-      - name:  Run Pascal test (TTS)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-          pushd tts
-
-          ./run-piper.sh
-          rm -rf vits-piper-*
-          rm piper
-          ls -lh
-          echo "---"
-
-          ./run-kokoro-zh-en.sh
-          rm -rf kokoro-multi-*
-          rm kokoro-zh-en
-          ls -lh
-          echo "---"
-
-          ./run-kokoro-en.sh
-          rm -rf kokoro-en-*
-          rm kokoro-en
-          ls -lh
-          echo "---"
-
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-          rm matcha-zh
-          ls -lh
-          echo "---"
-
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          rm matcha-en
           ls -lh
           echo "---"
 

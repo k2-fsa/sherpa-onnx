@@ -13,15 +13,7 @@
 
 namespace sherpa_onnx {
 
-struct OfflineWhisperDecoderResult {
-  /// The decoded token IDs
-  std::vector<int32_t> tokens;
-  /// The log probabilities for each token
-  std::vector<float> token_log_probs;
-  std::string lang;
-  /// Full vocabulary log probabilities at each token position
-  std::vector<std::vector<float>> vocab_log_probs;
-};
+// OfflineWhisperDecoderResult is defined in offline-whisper-model-config.h
 
 class OfflineWhisperDecoder {
  public:

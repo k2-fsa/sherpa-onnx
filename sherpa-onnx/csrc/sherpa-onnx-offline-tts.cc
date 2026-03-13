@@ -6,9 +6,11 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
 static int32_t AudioCallback(const float * /*samples*/, int32_t n,
@@ -47,13 +49,34 @@ or details.
   std::string output_filename = "./generated.wav";
   int32_t sid = 0;
 
+  std::string reference_audio;
+  po.Register(
+      "reference-audio", &reference_audio,
+      "Path to reference audio if you are using a TTS model supporting that");
+
+  sherpa_onnx::GenerationConfig gen_config;
+
+  std::string lang;
+
+  po.Register(
+      "num-steps", &gen_config.num_steps,
+      "Used by some models, e.g., PocketTTS. Number of flow matching steps");
+
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
+
+  po.Register("lang", &lang,
+              "Language for text: en, ko, es, pt, fr. Used only for Supertonic "
+              "TTS models.");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "
               "trained using the VCTK dataset. Not used for single-speaker "
               "models, e.g., models trained using the LJSpeech dataset");
+
+  po.Register("speed", &gen_config.speed,
+              "Speech speed. Larger=faster. Used by Supertonic, VITS, etc. "
+              "(float, default = 1.0)");
 
   sherpa_onnx::OfflineTtsConfig config;
 
@@ -69,7 +92,7 @@ or details.
   if (po.NumArgs() > 1) {
     fprintf(stderr,
             "Error: Accept only one positional argument. Please use single "
-            "quotes to wrap your text\n");
+            "quotes to wrap your text.\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -86,7 +109,44 @@ or details.
   sherpa_onnx::OfflineTts tts(config);
 
   const auto begin = std::chrono::steady_clock::now();
-  auto audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
+  sherpa_onnx::GeneratedAudio audio;
+
+  bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
+  bool is_supertonic_tts = !config.model.supertonic.tts_json.empty();
+
+  if (is_pocket_tts || is_supertonic_tts) {
+    if (is_supertonic_tts) {
+      if (!lang.empty()) {
+        gen_config.extra["lang"] = lang;
+      }
+      gen_config.sid = sid;
+    }
+
+    // Set reference audio for PocketTTS
+    if (is_pocket_tts) {
+      if (reference_audio.empty()) {
+        fprintf(stderr, "You need to provide --reference-audio for Pocket TTS");
+        exit(EXIT_FAILURE);
+      }
+
+      int32_t sample_rate;
+      bool is_ok = false;
+      auto samples =
+          sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+      if (!is_ok) {
+        fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
+        exit(EXIT_FAILURE);
+      }
+
+      gen_config.reference_audio = std::move(samples);
+      gen_config.reference_sample_rate = sample_rate;
+    }
+
+    audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
+  } else {
+    audio = tts.Generate(po.GetArg(1), sid, gen_config.speed, AudioCallback);
+  }
+
   const auto end = std::chrono::steady_clock::now();
 
   if (audio.samples.empty()) {

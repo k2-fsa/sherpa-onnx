@@ -28,8 +28,15 @@ class OfflineTtsImpl {
   virtual GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const {
-    throw std::runtime_error(
-        "OfflineTtsImpl backend does not support non zero-shot Generate()");
+    SHERPA_ONNX_LOGE("Not implemented yet. Only some models support this");
+    return {};
+  }
+
+  virtual GeneratedAudio Generate(
+      const std::string &text, const GenerationConfig &config,
+      GeneratedAudioCallback callback = nullptr) const {
+    SHERPA_ONNX_LOGE("Not implemented yet. Only some models support this");
+    return {};
   }
 
   virtual GeneratedAudio Generate(
@@ -37,8 +44,8 @@ class OfflineTtsImpl {
       const std::vector<float> &prompt_samples, int32_t sample_rate,
       float speed = 1.0, int32_t num_step = 4,
       GeneratedAudioCallback callback = nullptr) const {
-    throw std::runtime_error(
-        "OfflineTtsImpl backend does not support zero-shot Generate()");
+    SHERPA_ONNX_LOGE("Not implemented yet. Only some models support this");
+    return {};
   }
 
   // Return the sample rate of the generated audio
@@ -46,10 +53,7 @@ class OfflineTtsImpl {
 
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
-  virtual int32_t NumSpeakers() const {
-    throw std::runtime_error(
-        "Zero-shot OfflineTts does not support NumSpeakers()");
-  }
+  virtual int32_t NumSpeakers() const { return 1; }
 
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;

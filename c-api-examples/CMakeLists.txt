@@ -28,6 +28,12 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
   target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
+
+  add_executable(pocket-tts-en-c-api pocket-tts-en-c-api.c)
+  target_link_libraries(pocket-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(supertonic-tts-en-c-api supertonic-tts-en-c-api.c)
+  target_link_libraries(supertonic-tts-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
@@ -80,6 +86,9 @@ target_link_libraries(dolphin-ctc-c-api sherpa-onnx-c-api)
 add_executable(moonshine-c-api moonshine-c-api.c)
 target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
 
+add_executable(moonshine-v2-c-api moonshine-v2-c-api.c)
+target_link_libraries(moonshine-v2-c-api sherpa-onnx-c-api)
+
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
@@ -91,6 +100,9 @@ target_link_libraries(omnilingual-asr-ctc-c-api sherpa-onnx-c-api)
 
 add_executable(medasr-ctc-c-api medasr-ctc-c-api.c)
 target_link_libraries(medasr-ctc-c-api sherpa-onnx-c-api)
+
+add_executable(fire-red-asr-ctc-c-api fire-red-asr-ctc-c-api.c)
+target_link_libraries(fire-red-asr-ctc-c-api sherpa-onnx-c-api)
 
 add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
 target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)

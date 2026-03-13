@@ -41,14 +41,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            # image: quay.io/pypa/manylinux2014_aarch64 # it does not have gcc 11
-            image: ghcr.io/csukuangfj/manylinux2014-aarch64-gcc11:latest # i have built gcc 11 from source
-            options: |
-              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              ghcr.io/csukuangfj/manylinux2014-aarch64-gcc11:latest \
+            bash -c '
               echo "config: ${{ matrix.config }}"
               uname -a
               which gcc
@@ -58,7 +56,6 @@ jobs:
 
               ldd --version
 
-              # ✅ FORCE GCC 11
               export GCC_ROOT=/opt/gcc-11.4.0
               export CC=$GCC_ROOT/bin/gcc
               export CXX=$GCC_ROOT/bin/g++
@@ -109,6 +106,7 @@ jobs:
 
               rm -rf install/lib/pkgconfig
               rm -fv install/lib/cargs.h
+            '
 
       - name: Copy files
         shell: bash

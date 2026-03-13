@@ -1,19 +1,19 @@
 function(download_hclust_cpp)
   include(FetchContent)
 
-  # The latest commit as of 2024.09.29
-  set(hclust_cpp_URL  "https://github.com/csukuangfj/hclust-cpp/archive/refs/tags/2024-09-29.tar.gz")
-  set(hclust_cpp_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/hclust-cpp-2024-09-29.tar.gz")
-  set(hclust_cpp_HASH "SHA256=abab51448a3cb54272aae07522970306e0b2cc6479d59d7b19e7aee4d6cedd33")
+  # The latest release as of 2026.02.25
+  set(hclust_cpp_URL  "https://github.com/csukuangfj/hclust-cpp/archive/refs/tags/2026-02-25.tar.gz")
+  set(hclust_cpp_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/hclust-cpp-2026-02-25.tar.gz")
+  set(hclust_cpp_HASH "SHA256=8f14e024c709d73afb40ae69cb22de4b73dba67cbce40f2e518813da8139ab56")
 
   # If you don't have access to the Internet,
   # please pre-download hclust-cpp
   set(possible_file_locations
-    $ENV{HOME}/Downloads/hclust-cpp-2024-09-29.tar.gz
-    ${CMAKE_SOURCE_DIR}/hclust-cpp-2024-09-29.tar.gz
-    ${CMAKE_BINARY_DIR}/hclust-cpp-2024-09-29.tar.gz
-    /tmp/hclust-cpp-2024-09-29.tar.gz
-    /star-fj/fangjun/download/github/hclust-cpp-2024-09-29.tar.gz
+    $ENV{HOME}/Downloads/hclust-cpp-2026-02-25.tar.gz
+    ${CMAKE_SOURCE_DIR}/hclust-cpp-2026-02-25.tar.gz
+    ${CMAKE_BINARY_DIR}/hclust-cpp-2026-02-25.tar.gz
+    /tmp/hclust-cpp-2026-02-25.tar.gz
+    /star-fj/fangjun/download/github/hclust-cpp-2026-02-25.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -33,10 +33,19 @@ function(download_hclust_cpp)
     URL_HASH          ${hclust_cpp_HASH}
   )
 
-  FetchContent_GetProperties(hclust_cpp)
-  if(NOT hclust_cpp_POPULATED)
-    message(STATUS "Downloading hclust_cpp from ${hclust_cpp_URL}")
-    FetchContent_Populate(hclust_cpp)
+  # hclust-cpp is header-only with no CMakeLists.txt, so we just need the
+  # source directory populated. Use FetchContent_MakeAvailable on CMake 3.24+
+  # (which handles missing CMakeLists.txt gracefully and avoids the
+  # FetchContent_Populate deprecation warning on CMake 3.28+). Fall back to
+  # the older FetchContent_Populate pattern on CMake < 3.24.
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    FetchContent_MakeAvailable(hclust_cpp)
+  else()
+    FetchContent_GetProperties(hclust_cpp)
+    if(NOT hclust_cpp_POPULATED)
+      message(STATUS "Downloading hclust_cpp from ${hclust_cpp_URL}")
+      FetchContent_Populate(hclust_cpp)
+    endif()
   endif()
 
   message(STATUS "hclust_cpp is downloaded to ${hclust_cpp_SOURCE_DIR}")

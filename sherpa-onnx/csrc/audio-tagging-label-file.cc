@@ -9,8 +9,6 @@
 #include <string>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -30,7 +28,7 @@ AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
 AudioTaggingLabels::AudioTaggingLabels(AAssetManager *mgr,
                                        const std::string &filename) {
   auto buf = ReadFile(mgr, filename);
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   Init(is);
 }
 #endif

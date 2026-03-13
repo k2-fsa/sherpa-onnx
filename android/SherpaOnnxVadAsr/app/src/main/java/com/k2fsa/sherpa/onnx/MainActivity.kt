@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
+import androidx.lifecycle.lifecycleScope
 
 
 private const val TAG = "sherpa-onnx"
@@ -83,19 +84,30 @@ class MainActivity : AppCompatActivity() {
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
-        Log.i(TAG, "Start to initialize model")
-        initVadModel()
-        Log.i(TAG, "Finished initializing model")
-
-        Log.i(TAG, "Start to initialize non-streaimng recognizer")
-        initOfflineRecognizer()
-        Log.i(TAG, "Finished initializing non-streaming recognizer")
-
-        recordButton = findViewById(R.id.record_button)
-        recordButton.setOnClickListener { onclick() }
-
         textView = findViewById(R.id.my_text)
         textView.movementMethod = ScrollingMovementMethod()
+
+        recordButton = findViewById(R.id.record_button)
+        recordButton.isEnabled = false
+        recordButton.setOnClickListener { onclick() }
+
+        textView.text = "Initializing models... Please wait."
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            Log.i(TAG, "Start to initialize model")
+            initVadModel()
+            Log.i(TAG, "Finished initializing model")
+
+            Log.i(TAG, "Start to initialize non-streaming recognizer")
+            initOfflineRecognizer()
+            Log.i(TAG, "Finished initializing non-streaming recognizer")
+
+            withContext(Dispatchers.Main) {
+                recordButton.isEnabled = true
+                textView.text = "" 
+                Log.i(TAG, "Model initialization completed, button enabled")
+            }
+        }
     }
 
     private fun onclick() {
@@ -194,12 +206,6 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     vad.pop();
-                }
-
-                val isSpeechDetected = vad.isSpeechDetected()
-
-                runOnUiThread {
-                    textView.text = lastText.lowercase()
                 }
             }
         }

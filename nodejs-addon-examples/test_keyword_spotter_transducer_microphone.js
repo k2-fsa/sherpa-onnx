@@ -70,5 +70,5 @@ ai.on('data', data => {
 });
 
 ai.start();
-console.log('Started! Please speak.')
-console.log(`Only words from ${kws.config.keywordsFile} can be recognized`)
+console.log('Started! Please speak.');
+console.log(`Only words from ${kws.config.keywordsFile} can be recognized`);

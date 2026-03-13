@@ -5,8 +5,8 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <memory>
+#include <sstream>
 #include <string>
-#include <strstream>
 #include <utility>
 #include <vector>
 
@@ -30,6 +30,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-moonshine-v2-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-tpl-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
@@ -228,6 +229,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
+      !config.model_config.fire_red_asr_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -242,6 +244,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
     return std::make_unique<OfflineRecognizerMoonshineImpl>(config);
+  }
+
+  if (!config.model_config.moonshine.merged_decoder.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineV2Impl>(config);
   }
 
   if (!config.model_config.canary.encoder.empty()) {
@@ -567,6 +573,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       !config.model_config.wenet_ctc.model.empty() ||
       !config.model_config.omnilingual.model.empty() ||
       !config.model_config.medasr.model.empty() ||
+      !config.model_config.fire_red_asr_ctc.model.empty() ||
       !config.model_config.dolphin.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
@@ -581,6 +588,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
     return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
+  }
+
+  if (!config.model_config.moonshine.merged_decoder.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineV2Impl>(mgr, config);
   }
 
   if (!config.model_config.canary.encoder.empty()) {
@@ -605,6 +616,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
     } else if (model_type == "moonshine") {
+      // unreachable code
       return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
@@ -806,7 +818,7 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
         SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
       }
       auto buf = ReadFile(mgr, f);
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       itn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
     }
   }
@@ -824,7 +836,7 @@ OfflineRecognizerImpl::OfflineRecognizerImpl(
       auto buf = ReadFile(mgr, f);
 
       std::unique_ptr<std::istream> s(
-          new std::istrstream(buf.data(), buf.size()));
+          new std::istringstream(std::string(buf.data(), buf.size())));
 
       std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
           fst::FarReader<fst::StdArc>::Open(std::move(s)));

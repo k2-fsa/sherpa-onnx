@@ -19,7 +19,13 @@ def get_args():
         "--model-card",
         type=str,
         required=True,
-        help="omniASR_CTC_300M, or omniASR_CTC_1B",
+        choices=[
+            "omniASR_CTC_300M",
+            "omniASR_CTC_300M_v2",
+            "omniASR_CTC_1B",
+            "omniASR_CTC_1B_v2",
+        ],
+        help="The model card to export.",
     )
     return parser.parse_args()
 

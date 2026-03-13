@@ -46,7 +46,7 @@ const config = {
 const waveFilename = './test-hr.wav';
 
 const recognizer = new sherpa_onnx.OfflineRecognizer(config);
-console.log('Started')
+console.log('Started');
 let start = Date.now();
 const stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
@@ -55,15 +55,15 @@ stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 recognizer.decode(stream);
 const result = recognizer.getResult(stream);
 let stop = Date.now();
-console.log('Done')
+console.log('Done');
 
 const elapsed_seconds = (stop - start) / 1000;
 const duration = wave.samples.length / wave.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
-console.log(waveFilename)
-console.log('result\n', result)
+    real_time_factor.toFixed(3));
+console.log(waveFilename);
+console.log('result\n', result);

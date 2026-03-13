@@ -33,6 +33,7 @@ namespace SherpaOnnx
             Omnilingual = new OfflineOmnilingualAsrCtcModelConfig();
             MedAsr = new OfflineMedAsrCtcModelConfig();
             FunAsrNano = new OfflineFunAsrNanoModelConfig();
+            FireRedAsrCtc = new OfflineFireRedAsrCtcModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -72,5 +73,6 @@ namespace SherpaOnnx
         public OfflineOmnilingualAsrCtcModelConfig Omnilingual;
         public OfflineMedAsrCtcModelConfig MedAsr;
         public OfflineFunAsrNanoModelConfig FunAsrNano;
+        public OfflineFireRedAsrCtcModelConfig FireRedAsrCtc;
     }
 }

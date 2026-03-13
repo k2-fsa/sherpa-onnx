@@ -48,14 +48,13 @@ jobs:
           platforms: arm64
 
       - name: Test sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --platform linux/arm64
-              --volume ${{ github.workspace }}/:/shared/
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --platform linux/arm64 \
+              --volume ${{ github.workspace }}/:/shared/ \
+              quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               git config --global --add safe.directory /shared
 
               echo $HOME
@@ -86,3 +85,4 @@ jobs:
               cd ../
 
               .github/scripts/test-nodejs-addon-npm.sh
+            '

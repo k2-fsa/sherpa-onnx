@@ -49,7 +49,7 @@ class KittenTtsDemo
       float[] data = new float[n];
       Marshal.Copy(samples, data, 0, n);
       // You can process samples here, e.g., play them.
-      // See ../kitten-tts-playback for how to play them
+      // See ../kitten-tts-play for how to play them
       Console.WriteLine($"Progress {progress*100}%");
 
       // 1 means to keep generating

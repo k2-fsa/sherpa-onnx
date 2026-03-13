@@ -18,7 +18,13 @@ data class KeywordSpotterResult(
     val tokens: Array<String>,
     val timestamps: FloatArray,
     // TODO(fangjun): Add more fields
-)
+) {
+    override fun toString(): String {
+        val tokensStr = tokens.joinToString(", ")
+        val timestampsStr = timestamps.joinToString(", ") { "%.2f".format(it) }
+        return "Keyword: $keyword\nTokens: [$tokensStr]\nTimestamps: [$timestampsStr]"
+    }
+}
 
 class KeywordSpotter(
     assetManager: AssetManager? = null,
@@ -52,13 +58,7 @@ class KeywordSpotter(
     fun reset(stream: OnlineStream) = reset(ptr, stream.ptr)
     fun isReady(stream: OnlineStream) = isReady(ptr, stream.ptr)
     fun getResult(stream: OnlineStream): KeywordSpotterResult {
-        val objArray = getResult(ptr, stream.ptr)
-
-        val keyword = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
-
-        return KeywordSpotterResult(keyword = keyword, tokens = tokens, timestamps = timestamps)
+        return getResult(ptr, stream.ptr)
     }
 
     private external fun delete(ptr: Long)
@@ -76,7 +76,7 @@ class KeywordSpotter(
     private external fun isReady(ptr: Long, streamPtr: Long): Boolean
     private external fun decode(ptr: Long, streamPtr: Long)
     private external fun reset(ptr: Long, streamPtr: Long)
-    private external fun getResult(ptr: Long, streamPtr: Long): Array<Any>
+    private external fun getResult(ptr: Long, streamPtr: Long): KeywordSpotterResult
 
     companion object {
         init {

@@ -499,6 +499,21 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09",
+            idx=29,
+            lang="bn",
+            short_name="bengali_vosk_2026_02_09",
+            cmd="""
+            pushd $model_name
+
+            rm -rf test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models

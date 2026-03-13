@@ -42,6 +42,15 @@ struct OfflineFunASRNanoModelConfig {
   // Random seed for reproducibility
   int32_t seed = 42;
 
+  // Language for transcription (empty string means None)
+  std::string language;
+
+  // Whether to apply inverse text normalization (ITN)
+  bool itn = true;
+
+  // Hotwords
+  std::string hotwords;
+
   OfflineFunASRNanoModelConfig() = default;
 
   void Register(ParseOptions *po);

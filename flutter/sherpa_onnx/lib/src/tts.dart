@@ -1,10 +1,102 @@
 // Copyright (c)  2024  Xiaomi Corporation
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
+
+class OfflineTtsGenerationConfig {
+  const OfflineTtsGenerationConfig({
+    this.silenceScale = 0.2,
+    this.speed = 1.0,
+    this.sid = 0,
+    this.referenceAudio,
+    this.referenceSampleRate = 0,
+    this.referenceText = '',
+    this.numSteps = 5,
+    this.extra = const {},
+  });
+
+  /// Convert Extra to JSON string.
+  /// Returns nullptr if empty.
+  /// The user should use calloc.free(p); to free the returned value
+  Pointer<Utf8> extraToNativeUtf8() {
+    if (extra.isEmpty) {
+      return nullptr;
+    }
+
+    // Validate values
+    for (final v in extra.values) {
+      if (v is! String && v is! int && v is! double) {
+        throw ArgumentError(
+          'extra values must be String, int, or double. Got: ${v.runtimeType}',
+        );
+      }
+    }
+
+    final jsonString = jsonEncode(extra);
+    return jsonString.toNativeUtf8();
+  }
+
+  Pointer<SherpaOnnxGenerationConfig> toNative() {
+    final p = calloc<SherpaOnnxGenerationConfig>();
+
+    p.ref.silenceScale = silenceScale;
+    p.ref.speed = speed;
+    p.ref.sid = sid;
+    p.ref.numSteps = numSteps;
+
+    if (referenceAudio != null && referenceAudio!.isNotEmpty) {
+      final audioPtr = calloc<Float>(referenceAudio!.length);
+      audioPtr.asTypedList(referenceAudio!.length).setAll(0, referenceAudio!);
+      p.ref.referenceAudio = audioPtr;
+      p.ref.referenceAudioLength = referenceAudio!.length;
+      p.ref.referenceSampleRate = referenceSampleRate;
+    } else {
+      p.ref.referenceAudio = nullptr;
+      p.ref.referenceAudioLength = 0;
+      p.ref.referenceSampleRate = 0;
+    }
+
+    p.ref.referenceText = referenceText.isEmpty
+        ? nullptr
+        : referenceText.toNativeUtf8();
+
+    p.ref.extra = extraToNativeUtf8();
+
+    return p;
+  }
+
+  void freeNative(Pointer<SherpaOnnxGenerationConfig> p) {
+    if (p.ref.referenceAudio != nullptr) {
+      calloc.free(p.ref.referenceAudio);
+    }
+    if (p.ref.referenceText != nullptr) {
+      calloc.free(p.ref.referenceText);
+    }
+    if (p.ref.extra != nullptr) {
+      calloc.free(p.ref.extra);
+    }
+    calloc.free(p);
+  }
+
+  final double silenceScale;
+  final double speed;
+  final int sid;
+
+  /// mono audio in [-1, 1]
+  final Float32List? referenceAudio;
+  final int referenceSampleRate;
+  final String referenceText;
+  final int numSteps;
+
+  /// Extra model-specific attributes
+  /// key: string
+  /// value: string | int | double
+  final Map<String, Object> extra;
+}
 
 class OfflineTtsVitsModelConfig {
   const OfflineTtsVitsModelConfig({
@@ -251,6 +343,105 @@ class OfflineTtsZipVoiceModelConfig {
   final double guidanceScale;
 }
 
+class OfflineTtsPocketModelConfig {
+  const OfflineTtsPocketModelConfig({
+    this.lmFlow = '',
+    this.lmMain = '',
+    this.encoder = '',
+    this.decoder = '',
+    this.textConditioner = '',
+    this.vocabJson = '',
+    this.tokenScoresJson = '',
+    this.voiceEmbeddingCacheCapacity = 50,
+  });
+
+  factory OfflineTtsPocketModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsPocketModelConfig(
+      lmFlow: json['lmFlow'] as String? ?? '',
+      lmMain: json['lmMain'] as String? ?? '',
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      textConditioner: json['textConditioner'] as String? ?? '',
+      vocabJson: json['vocabJson'] as String? ?? '',
+      tokenScoresJson: json['tokenScoresJson'] as String? ?? '',
+      voiceEmbeddingCacheCapacity:
+          json['voiceEmbeddingCacheCapacity'] as int? ?? 50,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'lmFlow': lmFlow,
+    'lmMain': lmMain,
+    'encoder': encoder,
+    'decoder': decoder,
+    'textConditioner': textConditioner,
+    'vocabJson': vocabJson,
+    'tokenScoresJson': tokenScoresJson,
+    'voiceEmbeddingCacheCapacity': voiceEmbeddingCacheCapacity,
+  };
+
+  @override
+  String toString() {
+    return 'OfflineTtsPocketModelConfig(lmFlow: $lmFlow, lmMain: $lmMain, encoder: $encoder, decoder: $decoder, textConditioner: $textConditioner, vocabJson: $vocabJson, tokenScoresJson: $tokenScoresJson, voiceEmbeddingCacheCapacity: $voiceEmbeddingCacheCapacity)';
+  }
+
+  final String lmFlow;
+  final String lmMain;
+  final String encoder;
+  final String decoder;
+  final String textConditioner;
+  final String vocabJson;
+  final String tokenScoresJson;
+  final int voiceEmbeddingCacheCapacity;
+}
+
+class OfflineTtsSupertonicModelConfig {
+  const OfflineTtsSupertonicModelConfig({
+    this.durationPredictor = '',
+    this.textEncoder = '',
+    this.vectorEstimator = '',
+    this.vocoder = '',
+    this.ttsJson = '',
+    this.unicodeIndexer = '',
+    this.voiceStyle = '',
+  });
+
+  factory OfflineTtsSupertonicModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsSupertonicModelConfig(
+      durationPredictor: json['durationPredictor'] as String? ?? '',
+      textEncoder: json['textEncoder'] as String? ?? '',
+      vectorEstimator: json['vectorEstimator'] as String? ?? '',
+      vocoder: json['vocoder'] as String? ?? '',
+      ttsJson: json['ttsJson'] as String? ?? '',
+      unicodeIndexer: json['unicodeIndexer'] as String? ?? '',
+      voiceStyle: json['voiceStyle'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'durationPredictor': durationPredictor,
+    'textEncoder': textEncoder,
+    'vectorEstimator': vectorEstimator,
+    'vocoder': vocoder,
+    'ttsJson': ttsJson,
+    'unicodeIndexer': unicodeIndexer,
+    'voiceStyle': voiceStyle,
+  };
+
+  @override
+  String toString() {
+    return 'OfflineTtsSupertonicModelConfig(durationPredictor: $durationPredictor, textEncoder: $textEncoder, vectorEstimator: $vectorEstimator, vocoder: $vocoder, ttsJson: $ttsJson, unicodeIndexer: $unicodeIndexer, voiceStyle: $voiceStyle)';
+  }
+
+  final String durationPredictor;
+  final String textEncoder;
+  final String vectorEstimator;
+  final String vocoder;
+  final String ttsJson;
+  final String unicodeIndexer;
+  final String voiceStyle;
+}
+
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
     this.vits = const OfflineTtsVitsModelConfig(),
@@ -258,6 +449,8 @@ class OfflineTtsModelConfig {
     this.kokoro = const OfflineTtsKokoroModelConfig(),
     this.kitten = const OfflineTtsKittenModelConfig(),
     this.zipvoice = const OfflineTtsZipVoiceModelConfig(),
+    this.pocket = const OfflineTtsPocketModelConfig(),
+    this.supertonic = const OfflineTtsSupertonicModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -280,6 +473,12 @@ class OfflineTtsModelConfig {
       zipvoice: OfflineTtsZipVoiceModelConfig.fromJson(
         json['zipvoice'] as Map<String, dynamic>? ?? const {},
       ),
+      pocket: OfflineTtsPocketModelConfig.fromJson(
+        json['pocket'] as Map<String, dynamic>? ?? const {},
+      ),
+      supertonic: OfflineTtsSupertonicModelConfig.fromJson(
+        json['supertonic'] as Map<String, dynamic>? ?? const {},
+      ),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -288,7 +487,7 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, pocket: $pocket, supertonic: $supertonic, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -297,6 +496,8 @@ class OfflineTtsModelConfig {
     'kokoro': kokoro.toJson(),
     'kitten': kitten.toJson(),
     'zipvoice': zipvoice.toJson(),
+    'pocket': pocket.toJson(),
+    'supertonic': supertonic.toJson(),
     'numThreads': numThreads,
     'debug': debug,
     'provider': provider,
@@ -307,6 +508,8 @@ class OfflineTtsModelConfig {
   final OfflineTtsKokoroModelConfig kokoro;
   final OfflineTtsKittenModelConfig kitten;
   final OfflineTtsZipVoiceModelConfig zipvoice;
+  final OfflineTtsPocketModelConfig pocket;
+  final OfflineTtsSupertonicModelConfig supertonic;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -415,6 +618,33 @@ class OfflineTts {
     c.ref.model.zipvoice.targetRms = config.model.zipvoice.targetRms;
     c.ref.model.zipvoice.guidanceScale = config.model.zipvoice.guidanceScale;
 
+    c.ref.model.pocket.lmFlow = config.model.pocket.lmFlow.toNativeUtf8();
+    c.ref.model.pocket.lmMain = config.model.pocket.lmMain.toNativeUtf8();
+    c.ref.model.pocket.encoder = config.model.pocket.encoder.toNativeUtf8();
+    c.ref.model.pocket.decoder = config.model.pocket.decoder.toNativeUtf8();
+    c.ref.model.pocket.textConditioner = config.model.pocket.textConditioner
+        .toNativeUtf8();
+    c.ref.model.pocket.vocabJson = config.model.pocket.vocabJson.toNativeUtf8();
+    c.ref.model.pocket.tokenScoresJson = config.model.pocket.tokenScoresJson
+        .toNativeUtf8();
+    c.ref.model.pocket.voiceEmbeddingCacheCapacity =
+        config.model.pocket.voiceEmbeddingCacheCapacity;
+
+    c.ref.model.supertonic.durationPredictor = config.model.supertonic
+        .durationPredictor.toNativeUtf8();
+    c.ref.model.supertonic.textEncoder = config.model.supertonic.textEncoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.vectorEstimator = config.model.supertonic
+        .vectorEstimator.toNativeUtf8();
+    c.ref.model.supertonic.vocoder = config.model.supertonic.vocoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.ttsJson = config.model.supertonic.ttsJson
+        .toNativeUtf8();
+    c.ref.model.supertonic.unicodeIndexer = config.model.supertonic
+        .unicodeIndexer.toNativeUtf8();
+    c.ref.model.supertonic.voiceStyle = config.model.supertonic.voiceStyle
+        .toNativeUtf8();
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -429,6 +659,22 @@ class OfflineTts {
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+
+    calloc.free(c.ref.model.supertonic.voiceStyle);
+    calloc.free(c.ref.model.supertonic.unicodeIndexer);
+    calloc.free(c.ref.model.supertonic.ttsJson);
+    calloc.free(c.ref.model.supertonic.vocoder);
+    calloc.free(c.ref.model.supertonic.vectorEstimator);
+    calloc.free(c.ref.model.supertonic.textEncoder);
+    calloc.free(c.ref.model.supertonic.durationPredictor);
+
+    calloc.free(c.ref.model.pocket.tokenScoresJson);
+    calloc.free(c.ref.model.pocket.vocabJson);
+    calloc.free(c.ref.model.pocket.textConditioner);
+    calloc.free(c.ref.model.pocket.decoder);
+    calloc.free(c.ref.model.pocket.encoder);
+    calloc.free(c.ref.model.pocket.lmMain);
+    calloc.free(c.ref.model.pocket.lmFlow);
 
     calloc.free(c.ref.model.zipvoice.lexicon);
     calloc.free(c.ref.model.zipvoice.dataDir);
@@ -542,6 +788,58 @@ class OfflineTts {
     SherpaOnnxBindings.destroyOfflineTtsGeneratedAudio?.call(p);
 
     return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
+  }
+
+  GeneratedAudio generateWithConfig({
+    required String text,
+    required OfflineTtsGenerationConfig config,
+    int Function(Float32List samples, double progress)? onProgress,
+  }) {
+    final textPtr = text.toNativeUtf8();
+    final cfgPtr = config.toNative();
+
+    NativeCallable<SherpaOnnxGeneratedAudioProgressCallbackWithArgNative>?
+    wrapper;
+
+    if (onProgress != null) {
+      wrapper =
+          NativeCallable<
+            SherpaOnnxGeneratedAudioProgressCallbackWithArgNative
+          >.isolateLocal((
+            Pointer<Float> samples,
+            int n,
+            double p,
+            Pointer<Void> arg,
+          ) {
+            final list = Float32List.fromList(samples.asTypedList(n));
+            return onProgress(list, p);
+          }, exceptionalReturn: 0);
+    }
+
+    final p =
+        SherpaOnnxBindings.offlineTtsGenerateWithConfig?.call(
+          ptr,
+          textPtr,
+          cfgPtr,
+          wrapper?.nativeFunction ?? nullptr,
+          nullptr,
+        ) ??
+        nullptr;
+
+    calloc.free(textPtr);
+    config.freeNative(cfgPtr);
+    wrapper?.close();
+
+    if (p == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
+    final samples = Float32List.fromList(p.ref.samples.asTypedList(p.ref.n));
+    final sampleRate = p.ref.sampleRate;
+
+    SherpaOnnxBindings.destroyOfflineTtsGeneratedAudio?.call(p);
+
+    return GeneratedAudio(samples: samples, sampleRate: sampleRate);
   }
 
   int get sampleRate => SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;

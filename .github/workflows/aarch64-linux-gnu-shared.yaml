@@ -93,13 +93,12 @@ jobs:
 
       - name: Build sherpa-onnx
         if: matrix.gpu == 'OFF'
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               echo "config: ${{ matrix.config }}"
               uname -a
               which gcc
@@ -142,6 +141,7 @@ jobs:
               rm -rf install/lib/pkgconfig
               rm -fv install/lib/cargs.h
               rm -fv install/lib/libcargs.so
+            '
 
       - name: Display system info
         shell: bash

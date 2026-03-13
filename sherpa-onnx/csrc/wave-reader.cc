@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -222,7 +223,8 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
     // As we assume each sample contains two bytes, so it is divided by 2 here
     std::vector<int16_t> samples(header.subchunk2_size / 2);
 
-    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    is.read(reinterpret_cast<char *>(samples.data()),
+            samples.size() * sizeof(int16_t));
     if (!is) {
       SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
       *is_ok = false;
@@ -336,6 +338,17 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
 
 std::vector<float> ReadWave(const std::string &filename, int32_t *sampling_rate,
                             bool *is_ok) {
+  *is_ok = false;
+  if (filename.empty()) {
+    SHERPA_ONNX_LOGE("Filename is empty");
+    return {};
+  }
+
+  if (!FileExists(filename)) {
+    SHERPA_ONNX_LOGE("Filename '%s' does not exist", filename.c_str());
+    return {};
+  }
+
   std::ifstream is(filename, std::ifstream::binary);
   return ReadWave(is, sampling_rate, is_ok);
 }

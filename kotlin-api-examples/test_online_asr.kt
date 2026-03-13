@@ -21,7 +21,7 @@ fun testOnlineAsr(type: String) {
         waveFilename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav"
         // please refer to
         // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
-        // to dowload pre-trained models
+        // to download pre-trained models
         OnlineModelConfig(
             transducer = OnlineTransducerModelConfig(
                 encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
@@ -100,24 +100,22 @@ fun testOnlineAsr(type: String) {
         config = config,
     )
 
-    val objArray = WaveReader.readWaveFromFile(
+    val waveData = WaveReader.readWaveFromFile(
         filename = waveFilename,
     )
-    val samples: FloatArray = objArray[0] as FloatArray
-    val sampleRate: Int = objArray[1] as Int
 
     val stream = recognizer.createStream()
 
-    val leftPaddings = FloatArray((sampleRate * 0.3).toInt()) // 0.3 seconds
-    stream.acceptWaveform(leftPaddings, sampleRate = sampleRate)
+    val leftPaddings = FloatArray((waveData.sampleRate * 0.3).toInt()) // 0.3 seconds
+    stream.acceptWaveform(leftPaddings, sampleRate = waveData.sampleRate)
 
-    stream.acceptWaveform(samples, sampleRate = sampleRate)
+    stream.acceptWaveform(waveData.samples, sampleRate = waveData.sampleRate)
     while (recognizer.isReady(stream)) {
         recognizer.decode(stream)
     }
 
-    val tailPaddings = FloatArray((sampleRate * 0.6).toInt()) // 0.6 seconds
-    stream.acceptWaveform(tailPaddings, sampleRate = sampleRate)
+    val tailPaddings = FloatArray((waveData.sampleRate * 0.6).toInt()) // 0.6 seconds
+    stream.acceptWaveform(tailPaddings, sampleRate = waveData.sampleRate)
     stream.inputFinished()
     while (recognizer.isReady(stream)) {
         recognizer.decode(stream)

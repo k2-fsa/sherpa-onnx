@@ -368,12 +368,29 @@
  */
 
 /**
+ * @typedef {Object} GenerationConfig
+ * @property {number=} silenceScale
+ * @property {number=} speed
+ * @property {number=} sid
+ * @property {number=} numSteps
+ *
+ * @property {Float32Array=} referenceAudio
+ * @property {number=} referenceSampleRate
+ * @property {string=} referenceText
+ *
+ * @property {{[key: string]: number | string}} [extra]
+ */
+
+
+/**
  * TTS request object passed to generate/generateAsync.
  * @typedef {Object} TtsRequest
  * @property {string} text - Input text to synthesize.
  * @property {number} sid - Speaker id (integer).
  * @property {number} speed - Playback speed (float).
- * @property {boolean} [enableExternalBuffer=true] - Whether to use an external buffer.
+ * @property {boolean} [enableExternalBuffer=true] - Whether to use an external
+ *           buffer.
+ * @property {GenerationConfig=} generationConfig - Optional
  */
 
 /**
@@ -485,12 +502,25 @@
  */
 
 /**
+ * @typedef {Object} OfflineTtsPocketModelConfig
+ * @property {string} [lmFlow]
+ * @property {string} [lmMain]
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [textConditioner]
+ * @property {string} [vocabJson]
+ * @property {string} [tokenScoresJson]
+ * @property {number} [voiceEmbeddingCacheCapacity]
+ */
+
+/**
  * Offline TTS model config
  * @typedef {Object} OfflineTtsModelConfig
  * @property {OfflineTtsVitsModelConfig} [vits]
  * @property {OfflineTtsMatchaModelConfig} [matcha]
  * @property {OfflineTtsKokoroModelConfig} [kokoro]
  * @property {OfflineTtsKittenModelConfig} [kitten]
+ * @property {OfflineTtsPocketModelConfig} [pocket]
  */
 
 /**

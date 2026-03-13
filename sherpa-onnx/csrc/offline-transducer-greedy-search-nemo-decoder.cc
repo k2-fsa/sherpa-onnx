@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -76,9 +77,14 @@ static OfflineTransducerDecoderResult DecodeOne(
           std::max_element(static_cast<const float *>(p_logit),
                            static_cast<const float *>(p_logit) + vocab_size)));
 
+      // Apply LogSoftmax and get log probability for selected token
+      LogSoftmax(p_logit, vocab_size);
+      float log_prob = p_logit[y];
+
       if (y != blank_id) {
         ans.tokens.push_back(y);
         ans.timestamps.push_back(t);
+        ans.ys_log_probs.push_back(log_prob);
 
         decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
@@ -119,6 +125,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
   int32_t tokens_this_frame = 0;
 
   int32_t skip = 0;
+  std::vector<float> token_logits_copy(vocab_size);  // Reusable buffer for LogSoftmax
   for (int32_t t = 0; t < num_rows; t += skip) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
         memory_info, const_cast<float *>(p) + t * num_cols, num_cols,
@@ -145,6 +152,11 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
         token_logits,
         std::max_element(token_logits, token_logits + vocab_size)));
 
+    // Apply LogSoftmax to token logits and get log probability
+    std::copy(token_logits, token_logits + vocab_size, token_logits_copy.begin());
+    LogSoftmax(token_logits_copy.data(), vocab_size);
+    float log_prob = token_logits_copy[y];
+
     // note that skip can be 0
     skip = static_cast<int32_t>(std::distance(
         duration_logits,
@@ -154,6 +166,7 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
       ans.tokens.push_back(y);
       ans.timestamps.push_back(t);
       ans.durations.push_back(skip);
+      ans.ys_log_probs.push_back(log_prob);
 
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 

@@ -11,13 +11,11 @@ fun test() {
 
   val waveFilename = "./inp_16k.wav";
 
-  val objArray = WaveReader.readWaveFromFile(
+  val waveData = WaveReader.readWaveFromFile(
       filename = waveFilename,
   )
-  val samples: FloatArray = objArray[0] as FloatArray
-  val sampleRate: Int = objArray[1] as Int
 
-  val denoised = denoiser.run(samples, sampleRate);
+  val denoised = denoiser.run(waveData.samples, waveData.sampleRate);
   denoised.save(filename="./enhanced-16k.wav")
   println("saved to ./enhanced-16k.wav")
 }

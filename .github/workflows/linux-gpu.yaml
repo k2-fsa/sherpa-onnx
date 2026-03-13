@@ -49,13 +49,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux_2_28_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux_2_28_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -108,6 +107,7 @@ jobs:
 
               echo "----"
               ls -lh install/bin
+            '
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash

@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "sherpa-onnx/c-api/c-api.h"
@@ -110,7 +111,7 @@ struct OnlineRecognizerResult {
 
 struct Wave {
   std::vector<float> samples;
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 SHERPA_ONNX_API Wave ReadWave(const std::string &filename);
@@ -211,29 +212,31 @@ class SHERPA_ONNX_API OnlineRecognizer
 // ============================================================================
 // Non-streaming ASR
 // ============================================================================
-struct SHERPA_ONNX_API OfflineTransducerModelConfig {
+struct OfflineTransducerModelConfig {
   std::string encoder;
   std::string decoder;
   std::string joiner;
 };
 
-struct SHERPA_ONNX_API OfflineParaformerModelConfig {
+struct OfflineParaformerModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineNemoEncDecCtcModelConfig {
+struct OfflineNemoEncDecCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineWhisperModelConfig {
+struct OfflineWhisperModelConfig {
   std::string encoder;
   std::string decoder;
   std::string language;
   std::string task = "transcribe";
   int32_t tail_paddings = -1;
+  bool enable_token_timestamps = false;
+  bool enable_segment_timestamps = false;
 };
 
-struct SHERPA_ONNX_API OfflineCanaryModelConfig {
+struct OfflineCanaryModelConfig {
   std::string encoder;
   std::string decoder;
   std::string src_lang;
@@ -241,49 +244,54 @@ struct SHERPA_ONNX_API OfflineCanaryModelConfig {
   bool use_pnc = true;
 };
 
-struct SHERPA_ONNX_API OfflineFireRedAsrModelConfig {
+struct OfflineFireRedAsrModelConfig {
   std::string encoder;
   std::string decoder;
 };
 
-struct SHERPA_ONNX_API OfflineTdnnModelConfig {
+struct OfflineFireRedAsrCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
+struct OfflineTdnnModelConfig {
+  std::string model;
+};
+
+struct OfflineSenseVoiceModelConfig {
   std::string model;
   std::string language;
   bool use_itn = false;
 };
 
-struct SHERPA_ONNX_API OfflineDolphinModelConfig {
+struct OfflineDolphinModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineZipformerCtcModelConfig {
+struct OfflineZipformerCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineWenetCtcModelConfig {
+struct OfflineWenetCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineOmnilingualAsrCtcModelConfig {
+struct OfflineOmnilingualAsrCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineMedAsrCtcModelConfig {
+struct OfflineMedAsrCtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
+struct OfflineMoonshineModelConfig {
   std::string preprocessor;
   std::string encoder;
   std::string uncached_decoder;
   std::string cached_decoder;
+  std::string merged_decoder;
 };
 
-struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
+struct OfflineFunASRNanoModelConfig {
   std::string encoder_adaptor;
   std::string llm;
   std::string embedding;
@@ -294,9 +302,12 @@ struct SHERPA_ONNX_API OfflineFunASRNanoModelConfig {
   float temperature = 1e-6f;
   float top_p = 0.8f;
   int32_t seed = 42;
+  std::string language;
+  bool itn = true;
+  std::string hotwords;
 };
 
-struct SHERPA_ONNX_API OfflineModelConfig {
+struct OfflineModelConfig {
   OfflineTransducerModelConfig transducer;
   OfflineParaformerModelConfig paraformer;
   OfflineNemoEncDecCtcModelConfig nemo_ctc;
@@ -321,14 +332,15 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineMedAsrCtcModelConfig medasr;
   OfflineFunASRNanoModelConfig funasr_nano;
+  OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
 };
 
-struct SHERPA_ONNX_API OfflineLMConfig {
+struct OfflineLMConfig {
   std::string model;
   float scale = 1.0;
 };
 
-struct SHERPA_ONNX_API OfflineRecognizerConfig {
+struct OfflineRecognizerConfig {
   FeatureConfig feat_config;
   OfflineModelConfig model_config;
   OfflineLMConfig lm_config;
@@ -345,7 +357,7 @@ struct SHERPA_ONNX_API OfflineRecognizerConfig {
   HomophoneReplacerConfig hr;
 };
 
-struct SHERPA_ONNX_API OfflineRecognizerResult {
+struct OfflineRecognizerResult {
   std::string text;
   std::vector<float> timestamps;
   std::vector<std::string> tokens;
@@ -459,16 +471,53 @@ struct OfflineTtsZipvoiceModelConfig {
   float guidance_scale = 1.0;
 };
 
+struct OfflineTtsPocketModelConfig {
+  std::string lm_flow;
+  std::string lm_main;
+  std::string encoder;
+  std::string decoder;
+  std::string text_conditioner;
+
+  std::string vocab_json;
+  std::string token_scores_json;
+  int32_t voice_embedding_cache_capacity = 50;
+};
+
+struct OfflineTtsSupertonicModelConfig {
+  std::string duration_predictor;
+  std::string text_encoder;
+  std::string vector_estimator;
+  std::string vocoder;
+  std::string tts_json;
+  std::string unicode_indexer;
+  std::string voice_style;
+};
+
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
   OfflineTtsKokoroModelConfig kokoro;
   OfflineTtsKittenModelConfig kitten;
   OfflineTtsZipvoiceModelConfig zipvoice;
+  OfflineTtsPocketModelConfig pocket;
+  OfflineTtsSupertonicModelConfig supertonic;
 
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
+};
+
+struct GenerationConfig {
+  float silence_scale = 0.2;
+  float speed = 1.0;  // used only by some models.
+  int32_t sid = 0;    // used only by models support multi-speakers
+  std::vector<float> reference_audio;  // mono, [-1, 1]
+  int32_t reference_sample_rate = 0;   // sample rate of reference_audio
+  std::string reference_text;          // not all models require this
+  int32_t num_steps = 5;               // number of steps in flow matching
+
+  // extra attrs , model specific
+  std::unordered_map<std::string, std::string> extra;
 };
 
 struct OfflineTtsConfig {
@@ -481,7 +530,7 @@ struct OfflineTtsConfig {
 
 struct GeneratedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 // Return 1 to continue generating
@@ -518,11 +567,20 @@ class SHERPA_ONNX_API OfflineTts
                           OfflineTtsCallback callback = nullptr,
                           void *arg = nullptr) const;
 
+  GeneratedAudio Generate(const std::string &text,
+                          const GenerationConfig &config,
+                          OfflineTtsCallback callback = nullptr,
+                          void *arg = nullptr) const;
+
   // Like Generate, but return a smart pointer.
   //
   // See also https://github.com/k2-fsa/sherpa-onnx/issues/2347
   std::shared_ptr<GeneratedAudio> Generate2(
       const std::string &text, int32_t sid = 0, float speed = 1.0,
+      OfflineTtsCallback callback = nullptr, void *arg = nullptr) const;
+
+  std::shared_ptr<GeneratedAudio> Generate2(
+      const std::string &text, const GenerationConfig &config,
       OfflineTtsCallback callback = nullptr, void *arg = nullptr) const;
 
  private:
@@ -537,7 +595,7 @@ struct KeywordResult {
   std::string keyword;
   std::vector<std::string> tokens;
   std::vector<float> timestamps;
-  float start_time;
+  float start_time = 0.0f;
   std::string json;
 };
 
@@ -549,6 +607,7 @@ struct KeywordSpotterConfig {
   float keywords_score = 1.0f;
   float keywords_threshold = 0.25f;
   std::string keywords_file;
+  std::string keywords_buf;
 };
 
 class SHERPA_ONNX_API KeywordSpotter
@@ -583,7 +642,7 @@ struct OfflineSpeechDenoiserGtcrnModelConfig {
 struct OfflineSpeechDenoiserModelConfig {
   OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   int32_t num_threads = 1;
-  int32_t debug = false;
+  bool debug = false;
   std::string provider = "cpu";
 };
 
@@ -593,7 +652,7 @@ struct OfflineSpeechDenoiserConfig {
 
 struct DenoisedAudio {
   std::vector<float> samples;  // in the range [-1, 1]
-  int32_t sample_rate;
+  int32_t sample_rate = 0;
 };
 
 class SHERPA_ONNX_API OfflineSpeechDenoiser
@@ -645,7 +704,7 @@ struct VadModelConfig {
 };
 
 struct SpeechSegment {
-  int32_t start;
+  int32_t start = 0;
   std::vector<float> samples;
 };
 

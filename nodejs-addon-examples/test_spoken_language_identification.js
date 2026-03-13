@@ -29,7 +29,7 @@ const testWaves = [
   './spoken-language-identification-test-wavs/zh-chinese.wav',
 ];
 
-const display = new Intl.DisplayNames(['en'], {type: 'language'})
+const display = new Intl.DisplayNames(['en'], {type: 'language'});
 
 for (let f of testWaves) {
   const stream = slid.createStream();

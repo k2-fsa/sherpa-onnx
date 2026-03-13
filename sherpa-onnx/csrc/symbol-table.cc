@@ -10,12 +10,10 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <utility>
 
 #if __ANDROID_API__ >= 9
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -165,7 +163,7 @@ template <typename Manager>
 SymbolTable::SymbolTable(Manager *mgr, const std::string &filename) {
   auto buf = ReadFile(mgr, filename);
 
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   Init(is);
 }
 

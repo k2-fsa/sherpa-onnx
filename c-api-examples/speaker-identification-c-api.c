@@ -53,7 +53,7 @@ static const float *ComputeEmbedding(
   SherpaOnnxDestroyOnlineStream(stream);
   SherpaOnnxFreeWave(wave);
 
-  // Remeber to free v to avoid memory leak
+  // Remember to free v to avoid memory leak
   return v;
 }
 

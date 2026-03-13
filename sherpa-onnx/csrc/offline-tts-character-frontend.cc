@@ -4,13 +4,11 @@
 
 #include <algorithm>
 #include <cctype>
-#include <codecvt>
 #include <fstream>
 #include <locale>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -27,11 +25,11 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-character-frontend.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
 static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
-  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
   std::unordered_map<char32_t, int32_t> token2id;
 
   std::string line;
@@ -62,7 +60,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
       continue;
     }
 
-    s = conv.from_bytes(sym);
+    s = Utf8ToUtf32(sym);
     if (s.size() != 1) {
       SHERPA_ONNX_LOGE("Error when reading tokens at Line %s. size: %d",
                        line.c_str(), static_cast<int32_t>(s.size()));
@@ -96,7 +94,7 @@ OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
     const OfflineTtsVitsModelMetaData &meta_data)
     : meta_data_(meta_data) {
   auto buf = ReadFile(mgr, tokens);
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   token2id_ = ReadTokens(is);
 }
 
@@ -114,8 +112,7 @@ std::vector<TokenIDs> OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
   std::transform(_text.begin(), _text.end(), text.begin(),
                  [](auto c) { return std::tolower(c); });
 
-  std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-  std::u32string s = conv.from_bytes(text);
+  std::u32string s = Utf8ToUtf32(text);
 
   std::vector<TokenIDs> ans;
 

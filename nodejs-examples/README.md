@@ -54,6 +54,20 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
+## ./test-offline-tts-pocket-en.js
+
+[./test-offline-tts-pocket-en.js](./test-offline-tts-pocket-en.js)
+shows how to use PocketTTS for Zero-shot TTS.
+
+You can use the following command to run it:
+```
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test-offline-tts-pocket-en.js
+```
+
 ## ./test-offline-tts-kitten-en.js
 
 [./test-offline-tts-kitten-en.js](./test-offline-tts-kitten-en.js) shows how to use
@@ -235,6 +249,22 @@ rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 node ./test-offline-medasr-ctc.js
 ```
 
+## ./test-offline-fire-red-asr-ctc.js
+
+[./test-offline-fire-red-asr-ctc.js](./test-offline-fire-red-asr-ctc.js) demonstrates
+how to decode a file with a FireRedASR CTC model. In the code we use
+[sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test-offline-fire-red-asr-ctc.js
+```
+
 ## ./test-offline-omnilingual-asr-ctc.js
 
 [./test-offline-omnilingual-asr-ctc.js](./test-offline-omnilingual-asr-ctc.js) demonstrates
@@ -390,6 +420,22 @@ tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
 rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
 
 node ./test-offline-fire-red-asr.js
+```
+
+## ./test-offline-moonshine-v2.js
+
+[./test-offline-moonshine-v2.js](./test-offline-moonshine-v2.js) demonstrates
+how to decode a file with a Moonshine v2 model. In the code we use
+[sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test-offline-moonshine-v2.js
 ```
 
 ## ./test-offline-moonshine.js

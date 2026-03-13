@@ -167,7 +167,7 @@ class OnlineRecognizer(object):
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
           temperature_scale:
-            Temperature scaling for output symbol confidence estiamation.
+            Temperature scaling for output symbol confidence estimation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
           reset_encoder:

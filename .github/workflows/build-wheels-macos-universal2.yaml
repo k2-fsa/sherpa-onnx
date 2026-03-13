@@ -247,7 +247,6 @@ jobs:
         run: |
           opts='--break-system-packages'
 
-          python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload /tmp/wheels/*.whl
@@ -275,7 +274,7 @@ jobs:
         run: echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: >
@@ -342,7 +341,6 @@ jobs:
         run: |
           opts='--break-system-packages'
 
-          python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

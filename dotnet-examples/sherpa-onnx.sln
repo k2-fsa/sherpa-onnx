@@ -51,6 +51,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-funasr-nano-d
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vad-non-streaming-funasr-nano", "vad-non-streaming-funasr-nano\vad-non-streaming-funasr-nano.csproj", "{32C8C12B-D7DB-455E-B35C-945A745520CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pocket-tts-zero-shot", "pocket-tts-zero-shot\pocket-tts-zero-shot.csproj", "{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pocket-tts-zero-shot-play", "pocket-tts-zero-shot-play\pocket-tts-zero-shot-play.csproj", "{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-moonshine-v2-decode-files", "non-streaming-moonshine-v2-decode-files\non-streaming-moonshine-v2-decode-files.csproj", "{C9E5A6D3-02F4-46DE-808B-5163348F45B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "supertonic-tts", "supertonic-tts\supertonic-tts.csproj", "{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,6 +161,22 @@ Global
 		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32C8C12B-D7DB-455E-B35C-945A745520CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9164FA6A-F8D3-4F52-8173-A2FA78E74BB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E73BD08-EA6F-416D-8DBF-E92893A8C3B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9E5A6D3-02F4-46DE-808B-5163348F45B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9E5A6D3-02F4-46DE-808B-5163348F45B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9E5A6D3-02F4-46DE-808B-5163348F45B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9E5A6D3-02F4-46DE-808B-5163348F45B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

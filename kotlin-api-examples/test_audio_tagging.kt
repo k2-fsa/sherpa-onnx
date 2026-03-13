@@ -29,18 +29,19 @@ fun testAudioTagging() {
   for (waveFilename in testFiles) {
     val stream = tagger.createStream()
 
-    val objArray = WaveReader.readWaveFromFile(
+    val waveData = WaveReader.readWaveFromFile(
         filename = waveFilename,
     )
-    val samples: FloatArray = objArray[0] as FloatArray
-    val sampleRate: Int = objArray[1] as Int
 
-    stream.acceptWaveform(samples, sampleRate = sampleRate)
+    stream.acceptWaveform(waveData.samples, sampleRate = waveData.sampleRate)
     val events = tagger.compute(stream)
     stream.release()
 
     println(waveFilename)
-    println(events)
+    for (event in events) {
+      println("Name: ${event.name}, Index: ${event.index}, Probability: ${event.prob}")
+    }
+
     println("----------")
   }
 

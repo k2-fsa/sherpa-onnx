@@ -9,6 +9,9 @@ public class OfflineRecognizer {
     public OfflineRecognizer(OfflineRecognizerConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid OfflineRecognizerConfig: failed to create native OfflineRecognizer");
+        }
 
         this.config = config;
     }
@@ -54,15 +57,7 @@ public class OfflineRecognizer {
     }
 
     public OfflineRecognizerResult getResult(OfflineStream s) {
-        Object[] arr = getResult(s.getPtr());
-        String text = (String) arr[0];
-        String[] tokens = (String[]) arr[1];
-        float[] timestamps = (float[]) arr[2];
-        String lang = (String) arr[3];
-        String emotion = (String) arr[4];
-        String event = (String) arr[5];
-        float[] durations = (float[]) arr[6];
-        return new OfflineRecognizerResult(text, tokens, timestamps, lang, emotion, event, durations);
+        return getResult(s.getPtr());
     }
 
     private native void delete(long ptr);
@@ -77,5 +72,5 @@ public class OfflineRecognizer {
 
     private native void decodeStreams(long ptr, long[] streamPtrs);
 
-    private native Object[] getResult(long streamPtr);
+    private native OfflineRecognizerResult getResult(long streamPtr);
 }

@@ -48,13 +48,12 @@ jobs:
 
       - name: Build sherpa-onnx
         if: matrix.java-version == '21'
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -113,6 +112,7 @@ jobs:
               ls -lh install/lib
 
               echo "----"
+            '
 
       - uses: actions/upload-artifact@v4
         if: matrix.java-version == '21'
@@ -179,9 +179,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.42
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.25
 
       - name: Release pre-compiled binaries and libs for linux aarch64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.java-version == '21'

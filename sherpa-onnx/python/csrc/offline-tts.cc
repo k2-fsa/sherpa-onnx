@@ -26,6 +26,22 @@ static void PybindGeneratedAudio(py::module *m) {
       });
 }
 
+static void PybindGenerationConfig(py::module *m) {
+  using PyClass = GenerationConfig;
+
+  py::class_<PyClass>(*m, "GenerationConfig")
+      .def(py::init<>())
+      .def_readwrite("silence_scale", &PyClass::silence_scale)
+      .def_readwrite("speed", &PyClass::speed)
+      .def_readwrite("sid", &PyClass::sid)
+      .def_readwrite("reference_audio", &PyClass::reference_audio)
+      .def_readwrite("reference_sample_rate", &PyClass::reference_sample_rate)
+      .def_readwrite("reference_text", &PyClass::reference_text)
+      .def_readwrite("num_steps", &PyClass::num_steps)
+      .def_readwrite("extra", &PyClass::extra)
+      .def("__str__", &PyClass::ToString);
+}
+
 static void PybindOfflineTtsConfig(py::module *m) {
   PybindOfflineTtsModelConfig(m);
 
@@ -49,6 +65,7 @@ static void PybindOfflineTtsConfig(py::module *m) {
 void PybindOfflineTts(py::module *m) {
   PybindOfflineTtsConfig(m);
   PybindGeneratedAudio(m);
+  PybindGenerationConfig(m);
 
   using PyClass = OfflineTts;
   py::class_<PyClass>(*m, "OfflineTts")
@@ -85,6 +102,33 @@ void PybindOfflineTts(py::module *m) {
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
           py::arg("callback") = py::none(),
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "generate",
+          [](const PyClass &self, const std::string &text,
+             const GenerationConfig &config,
+             std::function<int32_t(py::array_t<float>, float)> callback)
+              -> GeneratedAudio {
+            if (!callback) {
+              return self.Generate(text, config);
+            }
+
+            std::function<int32_t(const float *, int32_t, float)>
+                callback_wrapper = [callback](const float *samples, int32_t n,
+                                              float progress) {
+                  py::gil_scoped_acquire acquire;
+
+                  py::array_t<float> array(n);
+                  auto buf = array.request();
+                  auto *p = static_cast<float *>(buf.ptr);
+                  std::copy(samples, samples + n, p);
+
+                  return callback(array, progress);
+                };
+
+            return self.Generate(text, config, callback_wrapper);
+          },
+          py::arg("text"), py::arg("config"), py::arg("callback") = py::none(),
           py::call_guard<py::gil_scoped_release>())
       .def(
           "generate",

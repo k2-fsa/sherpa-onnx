@@ -4,45 +4,19 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./vad-non-streaming-funasr-nano
-./run-ten-vad.sh
-rm -fv *.onnx
-
-./run.sh
-rm -fv *.onnx
-
-cd ../non-streaming-funasr-nano-decode-files
+cd ./supertonic-tts
 ./run.sh
 ls -lh
-rm -rf sherpa-onnx-funasr-*
+rm -rf sherpa-onnx-supertonic-*
 
-cd ../version-test
+cd ../non-streaming-moonshine-v2-decode-files
 ./run.sh
-ls -lh
-
-cd ../offline-audio-tagging
-./run.sh
-ls -lh
-rm -rf sherpa-onnx-*
-
-cd ../kitten-tts
-./run-kitten.sh
-ls -lh
-rm -rf kitten-nano-en-v0_1-fp16
-
-cd ../vad-non-streaming-asr-paraformer
-./run-ten-vad.sh
-rm -fv *.onnx
-
-./run.sh
-rm -fv *.onnx
-
-cd ../non-streaming-canary-decode-files
-./run.sh
-ls -lh
-rm -rf sherpa-onnx-nemo-*
+rm -rf sherpa-onnx-moonshine-*
 
 cd ../offline-decode-files
+
+./run-fire-red-asr-ctc.sh
+rm -rf sherpa-onnx-fire-*
 
 ./run-medasr-ctc.sh
 rm -rf sherpa-onnx-*
@@ -95,6 +69,52 @@ rm -rf sherpa-onnx-*
 ./run-tdnn-yesno.sh
 rm -rf sherpa-onnx-*
 
+cd ../pocket-tts-zero-shot
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-pocket-*
+
+cd ../vad-non-streaming-funasr-nano
+./run-ten-vad.sh
+rm -fv *.onnx
+
+./run.sh
+rm -fv *.onnx
+
+cd ../non-streaming-funasr-nano-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-funasr-*
+
+cd ../version-test
+./run.sh
+ls -lh
+
+cd ../offline-audio-tagging
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-*
+
+cd ../kitten-tts
+./run-kitten.sh
+ls -lh
+rm -rf kitten-nano-en-v0_1-fp16
+
+cd ../vad-non-streaming-asr-paraformer
+./run-ten-vad.sh
+rm -fv *.onnx
+
+./run.sh
+rm -fv *.onnx
+
+cd ../non-streaming-canary-decode-files
+
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-nemo-*
+
+
+
 cd ../speech-enhancement-gtcrn
 ./run.sh
 ls -lh
@@ -122,6 +142,7 @@ mkdir tts
 
 cp -v dotnet-examples/kokoro-tts/*.wav ./tts
 cp -v dotnet-examples/offline-tts/*.wav ./tts
+cp -v dotnet-examples/supertonic-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization

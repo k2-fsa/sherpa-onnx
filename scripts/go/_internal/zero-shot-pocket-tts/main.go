@@ -1,0 +1,1 @@
+../../../../go-api-examples/zero-shot-pocket-tts/main.go

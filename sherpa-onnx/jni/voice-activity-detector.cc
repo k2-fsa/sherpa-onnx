@@ -183,22 +183,52 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv * /*env*/,
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
-Java_com_k2fsa_sherpa_onnx_Vad_front(JNIEnv *env, jobject /*obj*/, jlong ptr) {
-  const auto &front =
-      reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr)->Front();
+JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_Vad_front(JNIEnv *env,
+                                                               jobject /*obj*/,
+                                                               jlong ptr) {
+  auto vad = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
+  if (!vad) {
+    return nullptr;
+  }
 
-  jfloatArray samples_arr = env->NewFloatArray(front.samples.size());
-  env->SetFloatArrayRegion(samples_arr, 0, front.samples.size(),
+  const auto &front = vad->Front();
+
+  jfloatArray samples_arr =
+      env->NewFloatArray(static_cast<jsize>(front.samples.size()));
+
+  if (!samples_arr) {
+    SHERPA_ONNX_LOGE("Failed to allocate");
+    return nullptr;
+  }
+
+  env->SetFloatArrayRegion(samples_arr, 0,
+                           static_cast<jsize>(front.samples.size()),
                            front.samples.data());
 
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      2, env->FindClass("java/lang/Object"), nullptr);
+  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/SpeechSegment");
+  if (!cls) {
+    SHERPA_ONNX_LOGE("Failed to find com/k2fsa/sherpa/onnx/SpeechSegment");
 
-  env->SetObjectArrayElement(obj_arr, 0, NewInteger(env, front.start));
-  env->SetObjectArrayElement(obj_arr, 1, samples_arr);
+    env->DeleteLocalRef(samples_arr);
+    return nullptr;
+  }
 
-  return obj_arr;
+  jmethodID ctor = env->GetMethodID(cls, "<init>", "(I[F)V");
+  if (!ctor) {
+    SHERPA_ONNX_LOGE("failed to get constructor");
+
+    env->DeleteLocalRef(samples_arr);
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
+
+  jobject speechSegment =
+      env->NewObject(cls, ctor, static_cast<jint>(front.start), samples_arr);
+
+  env->DeleteLocalRef(samples_arr);
+  env->DeleteLocalRef(cls);
+
+  return speechSegment;
 }
 
 SHERPA_ONNX_EXTERN_C

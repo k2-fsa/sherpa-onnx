@@ -124,8 +124,8 @@ public class LibraryUtils {
             tempDirectory = Files.createTempDirectory("sherpa-onnx-java");
 
             if (Objects.equals(detectedOS, "osx")) {
-                // for macos, we need to first load libonnxruntime.1.17.1.dylib
-                String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + "libonnxruntime.1.17.1.dylib";
+                // for macos, we need to first load libonnxruntime.1.23.2.dylib
+                String onnxruntimePath = "sherpa-onnx/native/" + getOsArch() + '/' + "libonnxruntime.1.23.2.dylib";
                 if (!resourceExists(onnxruntimePath)) {
                     if (debug) {
                         System.out.printf("%s does not exist\n", onnxruntimePath);
@@ -134,7 +134,7 @@ public class LibraryUtils {
                     return false;
                 }
 
-                File tempFile = tempDirectory.resolve("libonnxruntime.1.17.1.dylib").toFile();
+                File tempFile = tempDirectory.resolve("libonnxruntime.1.23.2.dylib").toFile();
                 extractResource(onnxruntimePath, tempFile);
                 System.load(tempFile.getAbsolutePath());
             } else {

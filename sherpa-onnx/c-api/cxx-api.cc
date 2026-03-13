@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "nlohmann/json.hpp"
+
 namespace sherpa_onnx::cxx {
 
 Wave ReadWave(const std::string &filename) {
@@ -152,7 +154,7 @@ void OnlineRecognizer::Decode(const OnlineStream *ss, int32_t n) const {
   }
 
   std::vector<const SherpaOnnxOnlineStream *> streams(n);
-  for (int32_t i = 0; i != n; ++n) {
+  for (int32_t i = 0; i != n; ++i) {
     streams[i] = ss[i].Get();
   }
 
@@ -224,6 +226,10 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.whisper.task = config.model_config.whisper.task.c_str();
   c.model_config.whisper.tail_paddings =
       config.model_config.whisper.tail_paddings;
+  c.model_config.whisper.enable_token_timestamps =
+      config.model_config.whisper.enable_token_timestamps;
+  c.model_config.whisper.enable_segment_timestamps =
+      config.model_config.whisper.enable_segment_timestamps;
 
   c.model_config.tdnn.model = config.model_config.tdnn.model.c_str();
 
@@ -250,6 +256,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.moonshine.uncached_decoder.c_str();
   c.model_config.moonshine.cached_decoder =
       config.model_config.moonshine.cached_decoder.c_str();
+  c.model_config.moonshine.merged_decoder =
+      config.model_config.moonshine.merged_decoder.c_str();
 
   c.model_config.fire_red_asr.encoder =
       config.model_config.fire_red_asr.encoder.c_str();
@@ -274,8 +282,7 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
 
   c.model_config.funasr_nano.encoder_adaptor =
       config.model_config.funasr_nano.encoder_adaptor.c_str();
-  c.model_config.funasr_nano.llm =
-      config.model_config.funasr_nano.llm.c_str();
+  c.model_config.funasr_nano.llm = config.model_config.funasr_nano.llm.c_str();
   c.model_config.funasr_nano.embedding =
       config.model_config.funasr_nano.embedding.c_str();
   c.model_config.funasr_nano.tokenizer =
@@ -288,11 +295,17 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.funasr_nano.max_new_tokens;
   c.model_config.funasr_nano.temperature =
       config.model_config.funasr_nano.temperature;
-  c.model_config.funasr_nano.top_p =
-      config.model_config.funasr_nano.top_p;
-  c.model_config.funasr_nano.seed =
-      config.model_config.funasr_nano.seed;
+  c.model_config.funasr_nano.top_p = config.model_config.funasr_nano.top_p;
+  c.model_config.funasr_nano.seed = config.model_config.funasr_nano.seed;
+  c.model_config.funasr_nano.language =
+      config.model_config.funasr_nano.language.c_str();
+  c.model_config.funasr_nano.itn = config.model_config.funasr_nano.itn ? 1 : 0;
+  c.model_config.funasr_nano.hotwords =
+      config.model_config.funasr_nano.hotwords.c_str();
   c.model_config.medasr.model = config.model_config.medasr.model.c_str();
+
+  c.model_config.fire_red_asr_ctc.model =
+      config.model_config.fire_red_asr_ctc.model.c_str();
 
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
@@ -446,6 +459,33 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.zipvoice.target_rms = config.model.zipvoice.target_rms;
   c.model.zipvoice.guidance_scale = config.model.zipvoice.guidance_scale;
 
+  c.model.pocket.lm_flow = config.model.pocket.lm_flow.c_str();
+  c.model.pocket.lm_main = config.model.pocket.lm_main.c_str();
+  c.model.pocket.encoder = config.model.pocket.encoder.c_str();
+  c.model.pocket.decoder = config.model.pocket.decoder.c_str();
+  c.model.pocket.text_conditioner =
+      config.model.pocket.text_conditioner.c_str();
+
+  c.model.pocket.vocab_json = config.model.pocket.vocab_json.c_str();
+
+  c.model.pocket.token_scores_json =
+      config.model.pocket.token_scores_json.c_str();
+
+  c.model.pocket.voice_embedding_cache_capacity =
+      config.model.pocket.voice_embedding_cache_capacity;
+
+  c.model.supertonic.duration_predictor =
+      config.model.supertonic.duration_predictor.c_str();
+  c.model.supertonic.text_encoder =
+      config.model.supertonic.text_encoder.c_str();
+  c.model.supertonic.vector_estimator =
+      config.model.supertonic.vector_estimator.c_str();
+  c.model.supertonic.vocoder = config.model.supertonic.vocoder.c_str();
+  c.model.supertonic.tts_json = config.model.supertonic.tts_json.c_str();
+  c.model.supertonic.unicode_indexer =
+      config.model.supertonic.unicode_indexer.c_str();
+  c.model.supertonic.voice_style = config.model.supertonic.voice_style.c_str();
+
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();
@@ -487,9 +527,49 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   }
 
   GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
   ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
   ans.sample_rate = audio->sample_rate;
 
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  return ans;
+}
+
+GeneratedAudio OfflineTts::Generate(const std::string &text,
+                                    const GenerationConfig &config,
+                                    OfflineTtsCallback callback /*= nullptr*/,
+                                    void *arg /*= nullptr*/) const {
+  SherpaOnnxGenerationConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.silence_scale = config.silence_scale;
+  c.speed = config.speed;
+  c.sid = config.sid;
+  c.reference_audio = config.reference_audio.data();
+  c.reference_audio_len = config.reference_audio.size();
+  c.reference_sample_rate = config.reference_sample_rate;
+  c.reference_text = config.reference_text.c_str();
+  c.num_steps = config.num_steps;
+
+  nlohmann::json j = config.extra;
+  std::string s = j.dump();
+  c.extra = s.c_str();
+
+  const SherpaOnnxGeneratedAudio *audio =
+      SherpaOnnxOfflineTtsGenerateWithConfig(p_, text.c_str(), &c, callback,
+                                             arg);
+  GeneratedAudio ans;
+
+  if (!audio) {
+    return ans;
+  }
+
+  ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
+  ans.sample_rate = audio->sample_rate;
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   return ans;
 }
@@ -498,6 +578,18 @@ std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
     const std::string &text, int32_t sid /*= 0*/, float speed /*= 1.0*/,
     OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
   auto audio = Generate(text, sid, speed, callback, arg);
+
+  GeneratedAudio *ans = new GeneratedAudio;
+  ans->samples = std::move(audio.samples);
+  ans->sample_rate = audio.sample_rate;
+
+  return std::shared_ptr<GeneratedAudio>(ans);
+}
+
+std::shared_ptr<GeneratedAudio> OfflineTts::Generate2(
+    const std::string &text, const GenerationConfig &config,
+    OfflineTtsCallback callback /*= nullptr*/, void *arg /*= nullptr*/) const {
+  auto audio = Generate(text, config, callback, arg);
 
   GeneratedAudio *ans = new GeneratedAudio;
   ans->samples = std::move(audio.samples);
@@ -545,6 +637,8 @@ KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
   c.keywords_score = config.keywords_score;
   c.keywords_threshold = config.keywords_threshold;
   c.keywords_file = config.keywords_file.c_str();
+  c.keywords_buf = config.keywords_buf.c_str();
+  c.keywords_buf_size = static_cast<int32_t>(config.keywords_buf.size());
 
   auto p = SherpaOnnxCreateKeywordSpotter(&c);
   return KeywordSpotter(p);
@@ -581,7 +675,7 @@ void KeywordSpotter::Decode(const OnlineStream *ss, int32_t n) const {
   }
 
   std::vector<const SherpaOnnxOnlineStream *> streams(n);
-  for (int32_t i = 0; i != n; ++n) {
+  for (int32_t i = 0; i != n; ++i) {
     streams[i] = ss[i].Get();
   }
 
@@ -762,6 +856,7 @@ SpeechSegment VoiceActivityDetector::Front() const {
   auto f = SherpaOnnxVoiceActivityDetectorFront(p_);
 
   SpeechSegment segment;
+  if (!f) return segment;
   segment.start = f->start;
   segment.samples = std::vector<float>{f->samples, f->samples + f->n};
 
@@ -857,6 +952,7 @@ void OfflinePunctuation::Destroy(const SherpaOnnxOfflinePunctuation *p) const {
 
 std::string OfflinePunctuation::AddPunctuation(const std::string &text) const {
   const char *result = SherpaOfflinePunctuationAddPunct(p_, text.c_str());
+  if (!result) return {};
   std::string ans(result);
   SherpaOfflinePunctuationFreeText(result);
   return ans;
@@ -889,6 +985,7 @@ void OnlinePunctuation::Destroy(const SherpaOnnxOnlinePunctuation *p) const {
 
 std::string OnlinePunctuation::AddPunctuation(const std::string &text) const {
   const char *result = SherpaOnnxOnlinePunctuationAddPunct(p_, text.c_str());
+  if (!result) return {};
   std::string ans(result);
   SherpaOnnxOnlinePunctuationFreeText(result);
   return ans;

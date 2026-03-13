@@ -1,7 +1,139 @@
+## 1.12.29
+
+* Add Supertonic TTS support (#3094)
+* Upload supertonic tts models (#3263)
+* Add Python API examples for Supertonic TTS (#3264)
+* Support dynamic decoder layers in canary model runtime (#3268)
+* Add CXX API for Supertonic TTS (#3280)
+* Add C# API for Supertonic TTS (#3283)
+* Add Go API for Supertonic TTS (#3284)
+* Add Rust API for Supertonic TTS (#3285)
+* Add Swift API for Supertonic TTS (#3286)
+* Add JavaScript API for Supertonic TTS (#3287)
+* Add Dart API for Supertonic TTS (#3288)
+* Add Java and Kotlin API for Supertonic TTS (#3289)
+* Add Pascal API and example for Supertonic TTS (#3290)
+* Publish pdb files for Debug build on Windows (#3252)
+* Fix memory leak in WebAssembly for TTS (#3259)
+* Refactor WebAssembly TTS API (#3260)
+
+## 1.12.28
+
+* Add C++ runtime support for Moonshine v2 (#3232)
+* Export Moonshine v2 models to sherpa-onnx (#3234)
+* Update Python APIs for Moonshine v2 models (#3235)
+* Add Kotlin and Java APIs for Moonshine v2 models (#3237)
+* Add C and C++ API for Moonshine v2 models (#3238)
+* Add Swift API for Moonshine v2 models (#3240)
+* Add JavaScript API (WebAssembly) for Moonshine v2 models (#3241)
+* Add JavaScript API (node-addon) for Moonshine v2 models (#3242)
+* Add C# API for Moonshine v2 (#3243)
+* Add Go API for Moonshine v2 (#3244)
+* Add Dart API for Moonshine v2 (#3245)
+* Add Rust API for Moonshine v2 (#3247)
+* Add Pascal API for Moonshine v2 (#3248)
+* Build huggingface spaces for Moonshine v2 with WebAssembly (#3249)
+
+## 1.12.27
+
+* Add Rust API for VAD (#3213)
+* Replace deprecated std::istrstream with std::istringstream (#3214)
+* Replace deprecated std::wstring_convert with manual UTF-8 codec (#3215)
+* Fix CMake warnings: optional feature message level + policy version minimum (#3217)
+* Upload FireRedASR2 CTC model (#3220)
+* Bump hclust-cpp to 2026-02-25 release and modernize FetchContent (#3216)
+* Support FireRedASR CTC models (#3221)
+* Update language bindings for FireRedASR CTC models (#3224)
+
+## 1.12.26
+
+* Fix CI (#3192)
+* Fix heap-buffer-overflow in ReadWaveImpl when data chunk size is odd (#3195)
+* [PocketTTS] Add seed support and voice embedding caching for consiste… (#3189)
+* Feat/pocket tts cache config (#3200)
+* 3197: enhanced java binding for voice_embedding_cache_capacity (#3201)
+* Dart, flutter, go, c-api binding and example (#3202)
+* Begin to add Rust API (#3203)
+* Add Rust API for streaming speech recognition (#3204)
+* Add a real-time speech recognition example with microphone for Rust API. (#3205)
+* Add Rust API for offline ASR (#3207)
+* feat: Add PocketTTS cache & seed support to Node.js Addon and WASM APIs (#3206)
+* Add more examples for offline ASR models with Rust API. (#3209)
+* Update C#/Swift/Pascal API for PocketTTS' VoiceEmbeddingCacheCapacity. (#3211)
+
+## 1.12.25
+
+* Fix building without tts (#3168)
+* Fix publishing npm packages for Linux aarch64 and wheels for macOS (#3169)
+* Export PocketTTS for earlier versions of onnxruntime (#3170)
+* Fix building wheels for Python 3.14 (#3182)
+* Update Eigen from 3.4.0 to 3.4.1 (#3178)
+* fix(flutter): add missing FFI struct fields for OfflineWhisper and FunAsrNano (#3186)
+* Fix building wheels for Windows (#3187)
+
+## 1.12.24
+
+* Fix UnicodeDecodeError when accessing tokens in FunASR-nano tokenizer (#3058)
+* Use more jobs for building VAD ASR APKs (#3068)
+* Add export CGO_ENABLED=1 to all GO examples. (#3069)
+* Support BPE tokenizer (#3078)
+* Add C++ runtime and Python support PocketTTS for streaming voice cloning on CPU (#3083)
+* Refactor addon loading logic and add static import for platform-specific binaries (#3075)
+* Update C++ binary for PocketTTS (#3087)
+* Add Python API examples for PocketTTS (#3088)
+* Limit text length for PocketTTS. (#3089)
+* Add CI for PocketTTS. (#3090)
+* Fix Python CI (#3091)
+* Fix build error (#3096)
+* Add Java and Kotlin API for PocketTTS (#3095)
+* Refactor JNI to remove casting. (#3103)
+* Refactor JNI (#3107)
+* Support MD and MT MSVC runtime libraries (CRT) for Windows x64 static build (#3111)
+* Fix MSVC CRT for Windows x64 shared build. (#3114)
+* Fix MSVC CRT for Windows arm64 (#3117)
+* Fix MSVC CRT for Windows x86 (#3118)
+* Refactor CI for Windows x64 (#3119)
+* Fix CI for Windows x64 (#3123)
+* Upload WenetSpeech-Wu u2pp ASR models. (#3125)
+* Add TTS generation with GenerationConfig params C API (#3115)
+* Refactor TTS C API (#3127)
+* Add CXX API for PocketTTS (#3128)
+* Add Swift API for PocketTTS (#3129)
+* fix(android): Optimize UI updates and remove dead code in MainActivity (#3130)
+* Change RPATH for sherpa-onnx.node (#3131)
+* Add async js API for tts generate. (#3133)
+* fix(android): Initialize models in background coroutine to avoid UI blocking (#3132)
+* Add hotword support for FunASR-Nano (#3122)
+* Provide async JS API to create TTS. (#3134)
+* feat: Add a WebAssembly Text-to-Speech (TTS) demo with UI and worker-based audio generation using sherpa-onnx. (#3120)
+* feat: add support for Meta Omnilingual ASR v2 models (#3138)
+* Export omnilingualASR v2 (#3140)
+* feat: Add ys_log_probs to NeMo transducer greedy search decoder (#3105)
+* Add modified beam search and hotwords support for NeMo transducer models (#3077)
+* Fix ORT Value default construction for Android build (#3141)
+* Whisper timestamps (#2945)
+* Add node-addon JavaScript API for PocketTTS (#3139)
+* Update lifecycle-runtime-ktx version to 2.5.1 (#3143)
+* Enable return value in callback for TTS in Go API. (#3150)
+* Refactor Go API for TTS (#3151)
+* Export models for CANN 8.1 (#3152)
+* Add Go API for PocketTTS (#3153)
+* Export models for CANN 8.3 and 8.5 (#3156)
+* Add https://huggingface.co/alphacep/vosk-model-small-streaming-bn (#3158)
+* Add Pascal API for Pocket TTS (#3157)
+* Upload Vietnamese ASR models (#3159)
+* Refactor Pascal API (#3160)
+* Add C# API for PocketTTS. (#3162)
+* Add JavaScript (WebAssembly) API for PocketTTS (#3163)
+* Add Dart API for PocketTTS (#3164)
+* Add GeneratedAudio ToBuffer() to the GO API (#3136)
+* fix: resolve high vulnerability python.lang.security.audit.dangerous-system-call-tainted-env-args.dangerous-system-call-tainted-env-args (#3155)
+* Fix various language bindings (#3166)
+
 ## 1.12.23
 
 * Node addon api jsdoc (#3005)
-* Add JavaScript async api for OfflineRecongizer decodeStream. (#3049)
+* Add JavaScript async api for OfflineRecognizer decodeStream. (#3049)
 * Support creating OfflineRecognizer asynchronously in JavaScript. (#3050)
 * Fix uploading files to huggingface (#3054)
 * Add Dart API for FunASR Nano (#3055)
@@ -53,7 +185,7 @@
 * Test Whisper on Ascend NPU using ACL Python API (#2986)
 * FunASR-nano: switch to unified KV-cache LLM (#2995)
 * Remove filesystem header (#2998)
-* Fix(csrc/melotts): Fix V-words pronounciation on MeloTTS_en (#3002)
+* Fix(csrc/melotts): Fix V-words pronunciation on MeloTTS_en (#3002)
 * Upload FunASR Nano ASR models with LLM (#3003)
 * Fix download test wav files (#3004)
 * Use onnxruntime 1.23.2 for Windows (#3007)
@@ -212,7 +344,7 @@
 * Export Paraformer to RKNN (#2689)
 * Update README.md add achatbot-go Projects using sherpa-onnx link (#2691)
 * Add CI to export Paraformer to RKNN (#2692)
-* Support MatchTTS with English and Chinese (#2695)
+* Support MatchaTTS with English and Chinese (#2695)
 * Export Paraformer ASR models from FunASR to Ascend NPU 910B (#2697)
 * Update README to include Ascend NPU (#2698)
 * Fix WASM (JS) after adding zipvoice. (#2702)
@@ -223,8 +355,8 @@
 
 * Fix setting rknn core mask (#2594)
 * Add Dart API for spoken language identification (#2596)
-* Add CI tests for dart spoken language identifcation example (#2598)
-* Provide pre-compiled shepra-onnx libs/binaries for CUDA 12.x + onnxruntime 1.22.0 (#2599)
+* Add CI tests for dart spoken language identification example (#2598)
+* Provide pre-compiled sherpa-onnx libs/binaries for CUDA 12.x + onnxruntime 1.22.0 (#2599)
 * Provide pre-compiled whls for cuda 12.x on Linux x64 and Windows x64 (#2601)
 * Fix TDT decoding for NeMo TDT transducers (#2606)
 * Add a C++ example for simulated streaming ASR (#2607)
@@ -253,7 +385,7 @@
 * Export KittenTTS mini v0.1 to sherpa-onnx (#2578)
 * Upload new sense-voice models (#2580)
 * Export ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue to sherpa-onnx (#2582)
-* Add various languge bindings for Wenet non-streaming CTC models (#2584)
+* Add various language bindings for Wenet non-streaming CTC models (#2584)
 
 ## 1.12.11
 
@@ -338,7 +470,7 @@
 * Add more piper tts models (#2425)
 * Implement max_symbols_per_frame for GigaAM2 accurate decoding since model uses char tokens instead of BPE. (#2423)
 * Fix GigaAM transducer encoder output length data type (#2426)
-* Add friendly log messages for Android and HarmonyOs TTS users. (#2427)
+* Add friendly log messages for Android and HarmonyOS TTS users. (#2427)
 * Fix setGraph in OnlineCtcFstDecoderConfig Java API (#2411)
 
 
@@ -391,7 +523,7 @@
 
 * Show CMake debug information. (#2316)
 * Remove portaudio-go in Go API examples. (#2317)
-* Support Xipformer CTC ASR with whisper features. (#2319)
+* Support Zipformer CTC ASR with whisper features. (#2319)
 * Support Zipformer transducer ASR with whisper features. (#2321)
 
 ## 1.12.2
@@ -478,11 +610,11 @@
 * Export kokoro 1.0 int8 models (#2137)
 * Upload more onnx ASR models (#2141)
 * Fix building for open harmonyOS (#2142)
-* online-transducer: reset the encoder toghter with 2 previous output symbols (non-blank) (#2129)
+* online-transducer: reset the encoder together with 2 previous output symbols (non-blank) (#2129)
 * Fix punctuations for kokoro tts 1.1-zh. (#2146)
 * Fix setting OnlineModelConfig in Java API (#2147)
 * Support decoding multiple streams in Java API. (#2149)
-* Support replacing homonphonic phrases (#2153)
+* Support replacing homophonic phrases (#2153)
 * Add C and CXX API for homophone replacer (#2156)
 * Add JavaScript API (WASM) for homophone replacer (#2157)
 * Add JavaScript API (node-addon) for homophone replacer (#2158)
@@ -755,7 +887,7 @@
 
 ## 1.10.35
 
-* Add missing changes about speaker identfication demo for HarmonyOS (#1612)
+* Add missing changes about speaker identification demo for HarmonyOS (#1612)
 * Provide sherpa-onnx.aar for Android (#1615)
 * Use aar in Android Java demo. (#1616)
 
@@ -782,7 +914,7 @@
 * Fix getting microphone permission for HarmonyOS VAD+ASR example (#1582)
 * Add HarmonyOS support for text-to-speech. (#1584)
 * Fix: support both old and new websockets request headers format (#1588)
-* Add on-device tex-to-speech (TTS) demo for HarmonyOS (#1590)
+* Add on-device text-to-speech (TTS) demo for HarmonyOS (#1590)
 
 ## 1.10.32
 
@@ -858,7 +990,7 @@
 * Update readme to include more external projects using sherpa-onnx (#1405)
 * C# API for speaker diarization (#1407)
 * JavaScript API (node-addon) for speaker diarization (#1408)
-* WebAssembly exmaple for speaker diarization (#1411)
+* WebAssembly example for speaker diarization (#1411)
 * Handle audio files less than 10s long for speaker diarization. (#1412)
 * JavaScript API with WebAssembly for speaker diarization (#1414)
 * Kotlin API for speaker diarization (#1415)
@@ -884,7 +1016,7 @@
 
 ## 1.10.25
 
-* Allow tokens and hotwords to be loaded from buffered string driectly (#1339)
+* Allow tokens and hotwords to be loaded from buffered string directly (#1339)
 * Fix computing features for CED audio tagging models. (#1341)
 * Preserve previous result as context for next segment (#1335)
 * Add Python binding for online punctuation models (#1312)
@@ -943,7 +1075,7 @@
 * Non-streaming WebSocket client for Java. (#1190)
 * Fix copying asset files for flutter examples. (#1191)
 * Add Chinese+English tts example for flutter (#1192)
-* Add speaker identification and verification exmaple for Dart API (#1194)
+* Add speaker identification and verification example for Dart API (#1194)
 * Fix reading non-standard wav files. (#1199)
 * Add ReazonSpeech Japanese pre-trained model (#1203)
 * Describe how to add new words for MeloTTS models (#1209)

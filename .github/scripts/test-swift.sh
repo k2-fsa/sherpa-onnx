@@ -9,6 +9,20 @@ ls -lh
 
 ./run-test-version.sh
 
+./run-moonshine-v2-asr.sh
+rm -rf sherpa-onnx-moonshine-*
+
+./run-fire-red-asr-ctc.sh
+rm -rf sherpa-onnx-fire-red-*
+
+./run-tts-pocket-en.sh
+ls -lh
+rm -rf sherpa-onnx-pocket-*
+
+./run-tts-supertonic-en.sh
+ls -lh
+rm -rf sherpa-onnx-supertonic-*
+
 ./run-medasr-ctc-asr.sh
 rm -rf sherpa-onnx-medasr-*
 

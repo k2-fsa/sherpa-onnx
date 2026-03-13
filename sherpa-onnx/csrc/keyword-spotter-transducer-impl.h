@@ -9,7 +9,7 @@
 #include <memory>
 #include <regex>  // NOLINT
 #include <string>
-#include <strstream>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -321,7 +321,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
     auto buf = ReadFile(mgr, config_.keywords_file);
 
-    std::istrstream is(buf.data(), buf.size());
+    std::istringstream is(std::string(buf.data(), buf.size()));
 
     if (!is) {
 #if __OHOS__

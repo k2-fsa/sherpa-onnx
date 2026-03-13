@@ -41,7 +41,6 @@
 |-------|----------|----------|------------|
 | ✔️     |  ✔️       |   ✔️      |    ✔️       |
 
-For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
@@ -428,7 +427,6 @@ Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
 a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 
-[sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
@@ -530,8 +528,8 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [apk-slid-cn]: https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html
 [apk-kws]: https://k2-fsa.github.io/sherpa/onnx/kws/apk.html
 [apk-kws-cn]: https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html
-[apk-flutter-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app.html
-[apk-flutter-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app-cn.html
+[apk-flutter-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
+[apk-flutter-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
 [flutter-tts-android]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android.html
 [flutter-tts-android-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android-cn.html
 [flutter-tts-linux]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux.html
