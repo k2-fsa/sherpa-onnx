@@ -81,7 +81,8 @@ for more models.
   int32_t i = 0;
 
   for (const auto &event : results) {
-    fprintf(stderr, "%d: %s\n", i, event.ToString().c_str());
+    fprintf(stderr, "%d: ", i);
+    fprintf(stdout, "%s\n", event.ToString().c_str());
     i += 1;
   }
 
