@@ -28,9 +28,13 @@ OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
                                  const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
+  if (!src.vocab_log_probs.empty()) {
+    r.vocab_log_probs.reserve(src.tokens.size());
+  }
 
   std::string text;
-  for (auto i : src.tokens) {
+  for (size_t idx = 0; idx < src.tokens.size(); ++idx) {
+    auto i = src.tokens[idx];
     if (!sym_table.Contains(i)) {
       continue;
     }
@@ -38,6 +42,14 @@ OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
     const auto &s = sym_table[i];
     text += s;
     r.tokens.push_back(s);
+
+    if (idx < src.token_log_probs.size()) {
+      r.token_log_probs.push_back(src.token_log_probs[idx]);
+    }
+
+    if (!src.vocab_log_probs.empty() && idx < src.vocab_log_probs.size()) {
+      r.vocab_log_probs.push_back(src.vocab_log_probs[idx]);
+    }
   }
 
   r.text = text;

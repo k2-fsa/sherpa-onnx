@@ -56,6 +56,10 @@ struct OfflineRecognitionResult {
   std::vector<std::string> segment_texts; // text of each segment
 
   std::string AsJsonString() const;
+
+  /// Token-level probabilities
+  std::vector<float> token_log_probs;
+  std::vector<std::vector<float>> vocab_log_probs;
 };
 
 struct WhisperTag {

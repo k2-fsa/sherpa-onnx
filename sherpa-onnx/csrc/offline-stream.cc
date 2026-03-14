@@ -419,6 +419,21 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
+  // Serialize token_log_probs (custom field, may be same as ys_log_probs)
+  if (!token_log_probs.empty()) {
+    os << "\""
+       << "token_log_probs"
+       << "\""
+       << ": ";
+    os << "[";
+    sep = "";
+    for (auto prob : token_log_probs) {
+      os << sep << std::fixed << std::setprecision(4) << prob;
+      sep = ", ";
+    }
+    os << "], ";
+  }
+
   sep = "";
 
   os << "\""

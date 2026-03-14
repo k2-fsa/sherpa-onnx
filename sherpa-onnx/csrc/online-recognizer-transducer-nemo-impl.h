@@ -51,7 +51,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), config_.blank_penalty, config_.temperature_scale);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -75,7 +75,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     }
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), config_.blank_penalty, config_.temperature_scale);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());

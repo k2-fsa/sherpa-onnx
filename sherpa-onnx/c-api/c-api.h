@@ -729,6 +729,21 @@ typedef struct SherpaOnnxOfflineRecognizerResult {
   int32_t segment_count;
 } SherpaOnnxOfflineRecognizerResult;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxVocabLogProbs {
+  const float *log_probs;  // Flattened 2D array [num_tokens][vocab_size]
+  int32_t num_tokens;
+  int32_t vocab_size;
+} SherpaOnnxVocabLogProbs;
+
+SHERPA_ONNX_API const SherpaOnnxVocabLogProbs *
+SherpaOnnxOnlineStreamGetVocabLogProbs(const SherpaOnnxOnlineStream *stream);
+
+SHERPA_ONNX_API const SherpaOnnxVocabLogProbs *
+SherpaOnnxOfflineStreamGetVocabLogProbs(const SherpaOnnxOfflineStream *stream);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyVocabLogProbs(
+    const SherpaOnnxVocabLogProbs *log_probs);
+
 /// Get the result of the offline stream.
 ///
 /// We assume you have called SherpaOnnxDecodeOfflineStream() or
