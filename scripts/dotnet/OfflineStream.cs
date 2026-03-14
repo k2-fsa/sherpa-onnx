@@ -18,6 +18,17 @@ namespace SherpaOnnx
             AcceptWaveform(Handle, sampleRate, samples, samples.Length);
         }
 
+        public void SetOption(string key, string value)
+        {
+            SherpaOnnxOfflineStreamSetOption(Handle, key, value);
+        }
+
+        public string GetOption(string key)
+        {
+            IntPtr p = SherpaOnnxOfflineStreamGetOption(Handle, key);
+            return Marshal.PtrToStringAnsi(p) ?? "";
+        }
+
         public OfflineRecognizerResult Result
         {
             get
@@ -58,6 +69,12 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxAcceptWaveformOffline")]
         private static extern void AcceptWaveform(IntPtr handle, int sampleRate, float[] samples, int n);
+
+        [DllImport(Dll.Filename)]
+        private static extern void SherpaOnnxOfflineStreamSetOption(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string key, [MarshalAs(UnmanagedType.LPStr)] string value);
+
+        [DllImport(Dll.Filename)]
+        private static extern IntPtr SherpaOnnxOfflineStreamGetOption(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string key);
 
         [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxGetOfflineStreamResult")]
         private static extern IntPtr GetResult(IntPtr handle);
