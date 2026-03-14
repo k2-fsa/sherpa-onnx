@@ -501,13 +501,9 @@ class OnlineRecognizer {
 
     SherpaOnnxBindings.destroyOnlineStreamResultJson?.call(json);
 
-    return OnlineRecognizerResult(
-        text: parsedJson['text'],
-        tokens: List<String>.from(parsedJson['tokens']),
-        timestamps: List<double>.from(parsedJson['timestamps']),
-        ysProbs: (parsedJson['ys_probs'] as List<dynamic>?)
-            ?.map<double>((e) => (e as num).toDouble())
-            .toList() ?? <double>[]);
+    return OnlineRecognizerResult.fromJson(
+      parsedJson as Map<String, dynamic>,
+    );
   }
 
   void reset(OnlineStream stream) {
