@@ -36,10 +36,11 @@ node ./test-offline-speech-enhancement-gtcrn.js
 
 The GTCRN example file uses `gtcrn_simple.onnx`.
 
-DPDFNet has a separate example file. Download DPDFNet models from the official
-Hugging Face hub: `https://huggingface.co/Ceva-IP/DPDFNet`
+DPDFNet has a separate example file. Download DPDFNet models from
+`https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models`
+or the official Hugging Face hub `https://huggingface.co/Ceva-IP/DPDFNet`
 
-Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
+Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`,
 `dpdfnet4.onnx`, or `dpdfnet8.onnx` if you want enhanced audio for downstream
 ASR or speech recognition, and use `dpdfnet2_48khz_hr.onnx` if you want 48 kHz
 enhancement output.

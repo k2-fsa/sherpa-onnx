@@ -19,7 +19,8 @@ https://pub.dev/packages/sherpa_onnx
 | [./tts](./tts)| Example for text to speech|
 | [./vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| Example for voice activity detection with non-streaming speech recognition. You can use it to generate subtitles.|
 | [./vad](./vad)| Example for voice activity detection|
-| [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn)| Example for speech enhancement/denoising with GTCRN or the 16 kHz DPDFNet family (`baseline`, `dpdfnet2`, `dpdfnet4`, `dpdfnet8`).|
+| [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn)| Example for speech enhancement/denoising with GTCRN.|
+| [./speech-enhancement-dpdfnet](./speech-enhancement-dpdfnet)| Example for speech enhancement/denoising with DPDFNet, including the 16 kHz family (`dpdfnet_baseline`, `dpdfnet2`, `dpdfnet4`, `dpdfnet8`).|
 
 ## How to create an example in this folder
 

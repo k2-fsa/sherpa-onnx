@@ -3,19 +3,21 @@
 """
 This file shows how to use the speech enhancement API with DPDFNet.
 
-Download DPDFNet models from the official Hugging Face hub:
+Please download DPDFNet models from the sherpa-onnx GitHub release
+or the official Hugging Face hub:
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 https://huggingface.co/Ceva-IP/DPDFNet
 
 Example:
 
- wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
- wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2.onnx
- wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet4.onnx
- wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8.onnx
- wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_48khz_hr.onnx
+ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2.onnx
+ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
+ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
+ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2_48khz_hr.onnx
  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
 
-Use 16 kHz DPDFNet models such as `baseline.onnx`, `dpdfnet2.onnx`,
+Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`, `dpdfnet2.onnx`,
 `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR or speech recognition.
 Use `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 """
@@ -30,10 +32,13 @@ import soundfile as sf
 
 
 def create_speech_denoiser():
-    model_filename = "./dpdfnet2.onnx"
+    model_filename = "./dpdfnet_baseline.onnx"
     if not Path(model_filename).is_file():
+        print(f"{model_filename} does not exist")
         raise ValueError(
             "Please first download a DPDFNet model from "
+            "the sherpa-onnx GitHub release or the official Hugging Face hub: "
+            "https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models or "
             "https://huggingface.co/Ceva-IP/DPDFNet"
         )
 

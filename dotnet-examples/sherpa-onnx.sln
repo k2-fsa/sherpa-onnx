@@ -61,6 +61,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "non-streaming-moonshine-v2-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "supertonic-tts", "supertonic-tts\supertonic-tts.csproj", "{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-gtcrn", "streaming-speech-enhancement-gtcrn\streaming-speech-enhancement-gtcrn.csproj", "{5B87496C-EF81-4232-A448-6308F8E5A18C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-dpdfnet", "streaming-speech-enhancement-dpdfnet\streaming-speech-enhancement-dpdfnet.csproj", "{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -183,6 +187,14 @@ Global
 		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3B7C4D1-E5F6-4A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B87496C-EF81-4232-A448-6308F8E5A18C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B87496C-EF81-4232-A448-6308F8E5A18C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B87496C-EF81-4232-A448-6308F8E5A18C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B87496C-EF81-4232-A448-6308F8E5A18C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

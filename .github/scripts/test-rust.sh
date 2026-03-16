@@ -27,3 +27,8 @@ rm -rf sherpa-onnx-supertonic-*
 
 ./run-streaming-zipformer-en.sh
 ./run-streaming-zipformer-zh-en.sh
+
+./run-offline-speech-enhancement-gtcrn.sh
+./run-offline-speech-enhancement-dpdfnet.sh
+./run-streaming-speech-enhancement-gtcrn.sh
+./run-streaming-speech-enhancement-dpdfnet.sh

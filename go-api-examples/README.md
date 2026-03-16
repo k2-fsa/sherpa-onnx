@@ -18,6 +18,15 @@ for details.
 - [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn) It shows how to use
   the offline speech denoiser API with GTCRN models.
 
+- [./speech-enhancement-dpdfnet](./speech-enhancement-dpdfnet) It shows how to use
+  the offline speech denoiser API with DPDFNet models.
+
+- [./streaming-speech-enhancement-gtcrn](./streaming-speech-enhancement-gtcrn) It shows how to use
+  the online speech denoiser API with GTCRN models.
+
+- [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet) It shows how to use
+  the online speech denoiser API with DPDFNet models.
+
 - [./non-streaming-tts](./non-streaming-tts) It shows how to use a non-streaming TTS
   model to convert text to speech
 

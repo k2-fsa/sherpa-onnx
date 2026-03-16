@@ -28,8 +28,8 @@
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-punctuation.h"
-#include "sherpa-onnx/csrc/online-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/online-speech-denoiser.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
@@ -2558,6 +2558,23 @@ struct SherpaOnnxOfflineSpeechDenoiser {
   std::unique_ptr<sherpa_onnx::OfflineSpeechDenoiser> impl;
 };
 
+static const SherpaOnnxDenoisedAudio *CreateDenoisedAudio(
+    const sherpa_onnx::DenoisedAudio &audio) {
+  auto ans = new SherpaOnnxDenoisedAudio;
+
+  float *denoised_samples = nullptr;
+  if (!audio.samples.empty()) {
+    denoised_samples = new float[audio.samples.size()];
+    std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
+  }
+
+  ans->samples = denoised_samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+
+  return ans;
+}
+
 static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
     const SherpaOnnxOfflineSpeechDenoiserConfig *config) {
   sherpa_onnx::OfflineSpeechDenoiserConfig c;
@@ -2580,6 +2597,10 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
 
 const SherpaOnnxOfflineSpeechDenoiser *SherpaOnnxCreateOfflineSpeechDenoiser(
     const SherpaOnnxOfflineSpeechDenoiserConfig *config) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
   auto sd_config = GetOfflineSpeechDenoiserConfig(config);
 
   if (!sd_config.Validate()) {
@@ -2602,24 +2623,26 @@ void SherpaOnnxDestroyOfflineSpeechDenoiser(
 
 int32_t SherpaOnnxOfflineSpeechDenoiserGetSampleRate(
     const SherpaOnnxOfflineSpeechDenoiser *sd) {
+  if (sd == nullptr) {
+    return 0;
+  }
+
   return sd->impl->GetSampleRate();
 }
 
 const SherpaOnnxDenoisedAudio *SherpaOnnxOfflineSpeechDenoiserRun(
     const SherpaOnnxOfflineSpeechDenoiser *sd, const float *samples, int32_t n,
     int32_t sample_rate) {
+  if (sd == nullptr) {
+    return nullptr;
+  }
+
+  if (samples == nullptr && n > 0) {
+    return nullptr;
+  }
+
   auto audio = sd->impl->Run(samples, n, sample_rate);
-
-  auto ans = new SherpaOnnxDenoisedAudio;
-
-  float *denoised_samples = new float[audio.samples.size()];
-  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
-
-  ans->samples = denoised_samples;
-  ans->n = audio.samples.size();
-  ans->sample_rate = audio.sample_rate;
-
-  return ans;
+  return CreateDenoisedAudio(audio);
 }
 
 void SherpaOnnxDestroyDenoisedAudio(const SherpaOnnxDenoisedAudio *p) {
@@ -2672,58 +2695,69 @@ const SherpaOnnxOnlineSpeechDenoiser *SherpaOnnxCreateOnlineSpeechDenoiser(
 
 void SherpaOnnxDestroyOnlineSpeechDenoiser(
     const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  if (!sd) return;
   delete sd;
 }
 
 int32_t SherpaOnnxOnlineSpeechDenoiserGetSampleRate(
     const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  if (sd == nullptr) {
+    return 0;
+  }
+
   return sd->impl->GetSampleRate();
 }
 
 int32_t SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
     const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  if (sd == nullptr) {
+    return 0;
+  }
+
   return sd->impl->GetFrameShiftInSamples();
 }
 
 const SherpaOnnxDenoisedAudio *SherpaOnnxOnlineSpeechDenoiserRun(
     const SherpaOnnxOnlineSpeechDenoiser *sd, const float *samples, int32_t n,
     int32_t sample_rate) {
+  if (sd == nullptr) {
+    return nullptr;
+  }
+
+  if (samples == nullptr && n > 0) {
+    return nullptr;
+  }
+
   auto audio = sd->impl->Run(samples, n, sample_rate);
 
   if (audio.samples.empty()) {
     return nullptr;
   }
 
-  auto ans = new SherpaOnnxDenoisedAudio;
-  float *denoised_samples = new float[audio.samples.size()];
-  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
-
-  ans->samples = denoised_samples;
-  ans->n = audio.samples.size();
-  ans->sample_rate = audio.sample_rate;
-  return ans;
+  return CreateDenoisedAudio(audio);
 }
 
 const SherpaOnnxDenoisedAudio *SherpaOnnxOnlineSpeechDenoiserFlush(
     const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  if (sd == nullptr) {
+    return nullptr;
+  }
+
   auto audio = sd->impl->Flush();
 
   if (audio.samples.empty()) {
     return nullptr;
   }
 
-  auto ans = new SherpaOnnxDenoisedAudio;
-  float *denoised_samples = new float[audio.samples.size()];
-  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
-
-  ans->samples = denoised_samples;
-  ans->n = audio.samples.size();
-  ans->sample_rate = audio.sample_rate;
-  return ans;
+  return CreateDenoisedAudio(audio);
 }
 
 void SherpaOnnxOnlineSpeechDenoiserReset(
     const SherpaOnnxOnlineSpeechDenoiser *sd) {
+  if (sd == nullptr) {
+    return;
+  }
+
   sd->impl->Reset();
 }
 
@@ -3011,6 +3045,10 @@ const SherpaOnnxOfflineSpeechDenoiser *
 SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
     const SherpaOnnxOfflineSpeechDenoiserConfig *config,
     NativeResourceManager *mgr) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
   if (!mgr) {
     return SherpaOnnxCreateOfflineSpeechDenoiser(config);
   }
@@ -3019,7 +3057,28 @@ SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
 
   SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
 
-  sd->impl = std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(sd_config);
+  sd->impl =
+      std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(mgr, sd_config);
+
+  return sd;
+}
+
+const SherpaOnnxOnlineSpeechDenoiser *SherpaOnnxCreateOnlineSpeechDenoiserOHOS(
+    const SherpaOnnxOnlineSpeechDenoiserConfig *config,
+    NativeResourceManager *mgr) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
+  if (mgr == nullptr) {
+    return SherpaOnnxCreateOnlineSpeechDenoiser(config);
+  }
+
+  auto sd_config = GetOnlineSpeechDenoiserConfig(config);
+
+  auto *sd = new SherpaOnnxOnlineSpeechDenoiser;
+  sd->impl =
+      std::make_unique<sherpa_onnx::OnlineSpeechDenoiser>(mgr, sd_config);
 
   return sd;
 }

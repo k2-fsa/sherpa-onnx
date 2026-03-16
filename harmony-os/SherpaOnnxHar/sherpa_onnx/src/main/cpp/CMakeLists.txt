@@ -46,6 +46,7 @@ add_library(sherpa_onnx SHARED
   non-streaming-speaker-diarization.cc
   non-streaming-speech-denoiser.cc
   non-streaming-tts.cc
+  streaming-speech-denoiser.cc
   punctuation.cc
   sherpa-onnx-node-addon-api.cc
   speaker-identification.cc

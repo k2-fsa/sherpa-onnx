@@ -519,7 +519,7 @@ jobs:
 
           ./$name
           rm -rf denoised-wavs
-          mkdir denoised-wavs
+          mkdir -p denoised-wavs
           cp -v inp_16k.wav denoised-wavs
           cp -v enhanced.wav denoised-wavs/enhanced-gtcrn.wav
           rm -fv *.onnx enhanced.wav
@@ -543,15 +543,77 @@ jobs:
             echo "----"
             readelf -d ./$name
           fi
-          curl -SL -O https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
           ./$name
+
+          mkdir -p denoised-wavs
           cp -v enhanced.wav denoised-wavs/enhanced-dpdfnet.wav
           rm -fv *.onnx enhanced.wav
+
+          rm $name
+
+      - name: Test online speech enhancement (GTCRN)
+        shell: bash
+        run: |
+          name=online-speech-enhancement-gtcrn-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+          mkdir -p denoised-wavs
+          cp -v enhanced-online-gtcrn.wav denoised-wavs/
+          rm -fv *.onnx enhanced-online-gtcrn.wav
+
+          rm $name
+
+      - name: Test online speech enhancement (DPDFNet)
+        shell: bash
+        run: |
+          name=online-speech-enhancement-dpdfnet-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+          mkdir -p denoised-wavs
+          cp -v enhanced-online-dpdfnet.wav denoised-wavs/
+          rm -fv *.onnx enhanced-online-dpdfnet.wav
 
           rm $name
 

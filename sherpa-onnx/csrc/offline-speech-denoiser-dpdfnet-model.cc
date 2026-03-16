@@ -36,9 +36,7 @@ std::vector<int64_t> GetInputShape(Ort::Session *sess, size_t index) {
 }
 
 std::vector<int64_t> GetOutputShape(Ort::Session *sess, size_t index) {
-  return sess->GetOutputTypeInfo(index)
-      .GetTensorTypeAndShapeInfo()
-      .GetShape();
+  return sess->GetOutputTypeInfo(index).GetTensorTypeAndShapeInfo().GetShape();
 }
 
 }  // namespace
@@ -77,8 +75,7 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
     return state;
   }
 
-  std::pair<Ort::Value, Ort::Value> Run(Ort::Value x,
-                                        Ort::Value state) const {
+  std::pair<Ort::Value, Ort::Value> Run(Ort::Value x, Ort::Value state) const {
     std::array<Ort::Value, 2> inputs{std::move(x), std::move(state)};
 
     auto out =
@@ -152,9 +149,8 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
           "Invalid DPDFNet metadata. sample_rate=%d, n_fft=%d, "
           "hop_length=%d, window_length=%d, freq_bins=%d, erb_bins=%d, "
           "spec_bins=%d, state_size=%d.",
-          meta_.sample_rate, meta_.n_fft, meta_.hop_length,
-          meta_.window_length, meta_.freq_bins, meta_.erb_bins,
-          meta_.spec_bins, meta_.state_size);
+          meta_.sample_rate, meta_.n_fft, meta_.hop_length, meta_.window_length,
+          meta_.freq_bins, meta_.erb_bins, meta_.spec_bins, meta_.state_size);
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -195,8 +191,7 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
           "freq_bins=%d, complex_dim=%d, state_size=%d.",
           static_cast<int32_t>(spec_shape.size()),
           static_cast<int32_t>(state_shape.size()),
-          static_cast<int32_t>(freq_bins),
-          static_cast<int32_t>(complex_dim),
+          static_cast<int32_t>(freq_bins), static_cast<int32_t>(complex_dim),
           static_cast<int32_t>(state_size));
       SHERPA_ONNX_EXIT(-1);
     }
@@ -272,8 +267,7 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
           static_cast<int32_t>(out_spec_shape[2]),
           static_cast<int32_t>(out_spec_shape[3]),
           static_cast<int32_t>(out_state_shape[0]),
-          static_cast<int32_t>(freq_bins),
-          static_cast<int32_t>(state_size));
+          static_cast<int32_t>(freq_bins), static_cast<int32_t>(state_size));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -337,7 +331,7 @@ class OfflineSpeechDenoiserDpdfNetModel::Impl {
 };
 
 OfflineSpeechDenoiserDpdfNetModel::~OfflineSpeechDenoiserDpdfNetModel() =
-    default;
+    default;  // NOLINT
 
 OfflineSpeechDenoiserDpdfNetModel::OfflineSpeechDenoiserDpdfNetModel(
     const OfflineSpeechDenoiserModelConfig &config)

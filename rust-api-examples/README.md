@@ -47,6 +47,10 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 12 | [moonshine_v2](#example-12-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
 | 13 | [sense_voice](#example-13-asr-with-non-streaming-sensevoice) | Non-streaming ASR with SenseVoice (Chinese, English, Japanese, Korean, Cantonese) |
 | 14 | [silero_vad_remove_silence](#example-14-remove-silences-from-a-file-using-silerovad) | Remove silences from an audio file using Silero VAD |
+| 15 | [offline_speech_enhancement_gtcrn](#example-15-offline-speech-enhancement-with-gtcrn) | Offline speech enhancement with GTCRN |
+| 16 | [offline_speech_enhancement_dpdfnet](#example-16-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
+| 17 | [streaming_speech_enhancement_gtcrn](#example-17-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
+| 18 | [streaming_speech_enhancement_dpdfnet](#example-18-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
 
 ## Run it
 
@@ -259,4 +263,52 @@ cargo run --example silero_vad_remove_silence -- \
     --input ./lei-jun-test.wav \
     --output ./no-silence.wav \
     --silero-vad-model ./silero_vad.onnx
+```
+
+### Example 15: Offline speech enhancement with GTCRN
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+cargo run --example offline_speech_enhancement_gtcrn -- \
+    --model ./gtcrn_simple.onnx \
+    --input ./inp_16k.wav \
+    --output ./enhanced-rust-gtcrn.wav
+```
+
+### Example 16: Offline speech enhancement with DPDFNet
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+cargo run --example offline_speech_enhancement_dpdfnet -- \
+    --model ./dpdfnet_baseline.onnx \
+    --input ./inp_16k.wav \
+    --output ./enhanced-rust-dpdfnet.wav
+```
+
+### Example 17: Streaming speech enhancement with GTCRN
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+cargo run --example streaming_speech_enhancement_gtcrn -- \
+    --model ./gtcrn_simple.onnx \
+    --input ./inp_16k.wav \
+    --output ./enhanced-rust-streaming-gtcrn.wav
+```
+
+### Example 18: Streaming speech enhancement with DPDFNet
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+cargo run --example streaming_speech_enhancement_dpdfnet -- \
+    --model ./dpdfnet_baseline.onnx \
+    --input ./inp_16k.wav \
+    --output ./enhanced-rust-streaming-dpdfnet.wav
 ```

@@ -160,6 +160,12 @@ echo "speech enhancement with gtcrn models"
 ls -lh
 popd
 
+pushd speech-enhancement-dpdfnet
+echo "speech enhancement with dpdfnet models"
+./run.sh
+ls -lh
+popd
+
 pushd speaker-diarization
 echo '----------speaker diarization----------'
 ./run.sh

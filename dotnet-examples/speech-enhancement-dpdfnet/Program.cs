@@ -1,14 +1,14 @@
 ﻿// Copyright (c)  2025  Xiaomi Corporation
 //
 // This file shows how to use speech enhancement API with DPDFNet models.
-// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// Use dpdfnet_baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
 // for 16 kHz downstream ASR or speech recognition.
 // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 //
 // 1. Download a model from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/baseline.onnx
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet2.onnx
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet4.onnx
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet8.onnx
@@ -28,7 +28,7 @@ class OfflineSpeechEnhancementDemo
 {
   static void Main(string[] args)
   {
-    var model = "./baseline.onnx";
+    var model = "./dpdfnet_baseline.onnx";
     var config = new OfflineSpeechDenoiserConfig();
     config.Model.Dpdfnet.Model = model;
     config.Model.Debug = 1;

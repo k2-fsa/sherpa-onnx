@@ -14,6 +14,17 @@
 
 namespace sherpa_onnx::cxx {
 
+static void FillSpeechDenoiserModelConfig(
+    const OfflineSpeechDenoiserModelConfig &src,
+    SherpaOnnxOfflineSpeechDenoiserModelConfig *dst) {
+  memset(dst, 0, sizeof(*dst));
+  dst->gtcrn.model = src.gtcrn.model.c_str();
+  dst->dpdfnet.model = src.dpdfnet.model.c_str();
+  dst->num_threads = src.num_threads;
+  dst->provider = src.provider.c_str();
+  dst->debug = src.debug;
+}
+
 Wave ReadWave(const std::string &filename) {
   auto p = SherpaOnnxReadWave(filename.c_str());
 
@@ -717,13 +728,7 @@ void KeywordSpotter::Reset(const OnlineStream *s) const {
 OfflineSpeechDenoiser OfflineSpeechDenoiser::Create(
     const OfflineSpeechDenoiserConfig &config) {
   struct SherpaOnnxOfflineSpeechDenoiserConfig c;
-  memset(&c, 0, sizeof(c));
-
-  c.model.gtcrn.model = config.model.gtcrn.model.c_str();
-  c.model.num_threads = config.model.num_threads;
-  c.model.provider = config.model.provider.c_str();
-  c.model.debug = config.model.debug;
-  c.model.dpdfnet.model = config.model.dpdfnet.model.c_str();
+  FillSpeechDenoiserModelConfig(config.model, &c.model);
 
   auto p = SherpaOnnxCreateOfflineSpeechDenoiser(&c);
 
@@ -742,6 +747,9 @@ OfflineSpeechDenoiser::OfflineSpeechDenoiser(
 DenoisedAudio OfflineSpeechDenoiser::Run(const float *samples, int32_t n,
                                          int32_t sample_rate) const {
   auto audio = SherpaOnnxOfflineSpeechDenoiserRun(p_, samples, n, sample_rate);
+  if (audio == nullptr) {
+    return {};
+  }
 
   DenoisedAudio ans;
   ans.samples = {audio->samples, audio->samples + audio->n};
@@ -758,13 +766,7 @@ int32_t OfflineSpeechDenoiser::GetSampleRate() const {
 OnlineSpeechDenoiser OnlineSpeechDenoiser::Create(
     const OnlineSpeechDenoiserConfig &config) {
   struct SherpaOnnxOnlineSpeechDenoiserConfig c;
-  memset(&c, 0, sizeof(c));
-
-  c.model.gtcrn.model = config.model.gtcrn.model.c_str();
-  c.model.num_threads = config.model.num_threads;
-  c.model.provider = config.model.provider.c_str();
-  c.model.debug = config.model.debug;
-  c.model.dpdfnet.model = config.model.dpdfnet.model.c_str();
+  FillSpeechDenoiserModelConfig(config.model, &c.model);
 
   auto p = SherpaOnnxCreateOnlineSpeechDenoiser(&c);
   return OnlineSpeechDenoiser(p);
@@ -795,6 +797,9 @@ DenoisedAudio OnlineSpeechDenoiser::Run(const float *samples, int32_t n,
 
 DenoisedAudio OnlineSpeechDenoiser::Flush() const {
   auto audio = SherpaOnnxOnlineSpeechDenoiserFlush(p_);
+  if (audio == nullptr) {
+    return {};
+  }
 
   DenoisedAudio ans;
   ans.samples = {audio->samples, audio->samples + audio->n};

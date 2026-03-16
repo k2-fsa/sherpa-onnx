@@ -62,6 +62,8 @@ from sherpa_onnx.lib._sherpa_onnx import (
     OnlinePunctuation,
     OnlinePunctuationConfig,
     OnlinePunctuationModelConfig,
+    OnlineSpeechDenoiser,
+    OnlineSpeechDenoiserConfig,
     OnlineStream,
     SentencePieceTokenizer,
     SileroVadModelConfig,

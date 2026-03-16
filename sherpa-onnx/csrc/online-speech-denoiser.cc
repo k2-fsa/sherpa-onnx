@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <sstream>
+#include <string>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -16,7 +17,6 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-speech-denoiser-impl.h"
 
 namespace sherpa_onnx {
@@ -25,19 +25,7 @@ void OnlineSpeechDenoiserConfig::Register(ParseOptions *po) {
   model.Register(po);
 }
 
-bool OnlineSpeechDenoiserConfig::Validate() const {
-  if (!model.Validate()) {
-    return false;
-  }
-
-  if (model.dpdfnet.model.empty() || !model.gtcrn.model.empty()) {
-    SHERPA_ONNX_LOGE(
-        "Online speech denoiser currently supports only DPDFNet models.");
-    return false;
-  }
-
-  return true;
-}
+bool OnlineSpeechDenoiserConfig::Validate() const { return model.Validate(); }
 
 std::string OnlineSpeechDenoiserConfig::ToString() const {
   std::ostringstream os;

@@ -74,16 +74,16 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
       enhanced_stft_result.real.insert(enhanced_stft_result.real.end(),
                                        frame.first.begin(), frame.first.end());
       enhanced_stft_result.imag.insert(enhanced_stft_result.imag.end(),
-                                       frame.second.begin(), frame.second.end());
+                                       frame.second.begin(),
+                                       frame.second.end());
     }
 
     knf::IStft istft(stft_config);
 
     DenoisedAudio denoised_audio;
     denoised_audio.sample_rate = meta.sample_rate;
-    denoised_audio.samples =
-        ShiftWaveform(istft.Compute(enhanced_stft_result), meta.window_length *
-                                                             2);
+    denoised_audio.samples = ShiftWaveform(istft.Compute(enhanced_stft_result),
+                                           meta.window_length * 2);
     return denoised_audio;
   }
 
@@ -94,17 +94,15 @@ class OfflineSpeechDenoiserDpdfNetImpl : public OfflineSpeechDenoiserImpl {
  private:
   static std::vector<float> ShiftWaveform(std::vector<float> samples,
                                           int32_t shift) {
-    std::vector<float> ans;
-    ans.reserve(samples.size() > static_cast<size_t>(shift)
-                    ? samples.size()
-                    : static_cast<size_t>(shift));
-
     if (samples.size() > static_cast<size_t>(shift)) {
-      ans.insert(ans.end(), samples.begin() + shift, samples.end());
+      std::copy(samples.begin() + shift, samples.end(), samples.begin());
+      samples.resize(samples.size() - shift);
+    } else {
+      samples.clear();
     }
 
-    ans.insert(ans.end(), shift, 0);
-    return ans;
+    samples.resize(samples.size() + shift, 0.0f);
+    return samples;
   }
 
   knf::StftConfig GetStftConfig() const {

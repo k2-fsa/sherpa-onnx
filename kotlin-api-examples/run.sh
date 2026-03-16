@@ -459,14 +459,60 @@ function testOfflineSpeechDenoiser() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
   fi
 
+  if [ ! -f ./dpdfnet_baseline.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+  fi
+
   if [ ! -f ./inp_16k.wav ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
   fi
 
-  out_filename=test_offline_speech_denoiser.jar
+  out_filename=test_offline_speech_denoiser_gtcrn.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_speech_denoiser.kt \
     OfflineSpeechDenoiser.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  out_filename=test_offline_speech_denoiser_dpdfnet.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speech_denoiser_dpdfnet.kt \
+    OfflineSpeechDenoiser.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  ls -lh *.wav
+}
+
+function testOnlineSpeechDenoiser() {
+  if [ ! -f ./gtcrn_simple.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+  fi
+
+  if [ ! -f ./dpdfnet_baseline.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+  fi
+
+  if [ ! -f ./inp_16k.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+  fi
+
+  out_filename=test_online_speech_denoiser.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_online_speech_denoiser.kt \
+    OnlineSpeechDenoiser.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -677,6 +723,7 @@ testOfflineWenetCtc
 testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
+testOnlineSpeechDenoiser
 testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
 testOnlineAsr

@@ -1,31 +1,18 @@
 // cxx-api-examples/speech-enhancement-gtcrn-cxx-api.cc
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 //
-// We assume you have pre-downloaded model
-// from
-// https://huggingface.co/Ceva-IP/DPDFNet for DPDFNet models
-// or
+// We assume you have pre-downloaded the GTCRN model and sample test wave from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
-// for GTCRN and sample test waves
 //
-//
-// An example command to download
+// An example command to download:
 // clang-format off
 /*
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
-wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/baseline.onnx
-wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2.onnx
-wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet4.onnx
-wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet8.onnx
-wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/dpdfnet2_48khz_hr.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 */
 // clang-format on
-//
-// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
-// for 16 kHz downstream ASR or speech recognition.
-// Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
+
 #include <chrono>  // NOLINT
 #include <cstdio>
 #include <iostream>
@@ -39,13 +26,8 @@ int32_t main() {
   OfflineSpeechDenoiserConfig config;
   std::string model_filename = "./gtcrn_simple.onnx";
   std::string wav_filename = "./inp_16k.wav";
-  std::string out_wave_filename = "./enhanced.wav";
-
-  if (model_filename.find("dpdfnet") != std::string::npos) {
-    config.model.dpdfnet.model = model_filename;
-  } else {
-    config.model.gtcrn.model = model_filename;
-  }
+  std::string out_wave_filename = "./enhanced-gtcrn.wav";
+  config.model.gtcrn.model = model_filename;
 
   auto sd = OfflineSpeechDenoiser::Create(config);
   if (!sd.Get()) {
@@ -80,4 +62,5 @@ int32_t main() {
   printf("Elapsed seconds: %.3fs\n", elapsed_seconds);
   printf("(Real time factor) RTF = %.3f / %.3f = %.3f\n", elapsed_seconds,
          duration, rtf);
+  return 0;
 }

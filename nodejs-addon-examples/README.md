@@ -48,6 +48,9 @@ The following tables list the examples in this folder.
 |File| Description|
 |---|---|
 |[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with GTCRN.|
+|[./test_offline_speech_enhancement_dpdfnet.js](./test_offline_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with DPDFNet.|
+|[./test_online_speech_enhancement_gtcrn.js](./test_online_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with GTCRN.|
+|[./test_online_speech_enhancement_dpdfnet.js](./test_online_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with DPDFNet.|
 
 ## Speaker diarization
 

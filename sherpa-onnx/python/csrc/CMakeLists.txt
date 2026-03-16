@@ -46,6 +46,7 @@ set(srcs
   online-paraformer-model-config.cc
   online-punctuation.cc
   online-recognizer.cc
+  online-speech-denoiser.cc
   online-stream.cc
   online-t-one-ctc-model-config.cc
   online-transducer-model-config.cc

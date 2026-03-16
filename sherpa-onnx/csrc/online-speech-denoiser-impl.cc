@@ -17,6 +17,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-speech-denoiser-dpdfnet-impl.h"
+#include "sherpa-onnx/csrc/online-speech-denoiser-gtcrn-impl.h"
 
 namespace sherpa_onnx {
 
@@ -26,9 +27,7 @@ std::unique_ptr<OnlineSpeechDenoiserImpl> OnlineSpeechDenoiserImpl::Create(
   const bool has_dpdfnet = !config.model.dpdfnet.model.empty();
 
   if (has_gtcrn) {
-    SHERPA_ONNX_LOGE(
-        "Online speech denoiser currently does not support GTCRN models.");
-    return nullptr;
+    return std::make_unique<OnlineSpeechDenoiserGtcrnImpl>(config);
   } else if (has_dpdfnet) {
     return std::make_unique<OnlineSpeechDenoiserDpdfNetImpl>(config);
   }
@@ -44,9 +43,7 @@ std::unique_ptr<OnlineSpeechDenoiserImpl> OnlineSpeechDenoiserImpl::Create(
   const bool has_dpdfnet = !config.model.dpdfnet.model.empty();
 
   if (has_gtcrn) {
-    SHERPA_ONNX_LOGE(
-        "Online speech denoiser currently does not support GTCRN models.");
-    return nullptr;
+    return std::make_unique<OnlineSpeechDenoiserGtcrnImpl>(mgr, config);
   } else if (has_dpdfnet) {
     return std::make_unique<OnlineSpeechDenoiserDpdfNetImpl>(mgr, config);
   }
