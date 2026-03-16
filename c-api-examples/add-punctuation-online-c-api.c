@@ -68,4 +68,4 @@ int32_t main() {
   SherpaOnnxDestroyOnlinePunctuation(punct);
 
   return 0;
-};
+}
