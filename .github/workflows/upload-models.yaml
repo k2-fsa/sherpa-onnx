@@ -1150,7 +1150,7 @@ jobs:
             done
 
       - name: Release
-        if: false
+        if: true
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -1161,7 +1161,7 @@ jobs:
           tag: asr-models
 
       - name: Release
-        if: true
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
