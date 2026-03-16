@@ -24,7 +24,7 @@ int32_t main() {
   OfflineRecognizerConfig config;
 
   // clang-format off
-  config.model_config.fire_red_asr_ctc.model = "./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx"; 
+  config.model_config.fire_red_asr_ctc.model = "./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx";
   config.model_config.tokens = "./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt";
 
   config.model_config.num_threads = 1;

@@ -21,6 +21,7 @@ rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 #include <cstdint>
 #include <cstdio>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 

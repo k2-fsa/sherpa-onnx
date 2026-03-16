@@ -9,10 +9,11 @@
 #include "sherpa-onnx/csrc/offline-tts-supertonic-unicode-processor.h"
 
 #include <array>
-#include <cstddef>
 #include <cctype>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -42,7 +43,7 @@ static constexpr int32_t kHangulVcount = 21;
 static constexpr int32_t kHangulTcount = 28;
 static constexpr int32_t kHangulNcount = kHangulVcount * kHangulTcount;  // 588
 static constexpr int32_t kHangulScount =
-    kHangulLcount * kHangulNcount;  // 11172
+    kHangulLcount * kHangulNcount;  // 11172  // NOLINT
 
 // Latin NFKD decompositions via switch (no static map allocation).
 // Returns true if codepoint was decomposed, false otherwise.

@@ -466,7 +466,7 @@ MatchaTtsLexicon::MatchaTtsLexicon(const std::string &lexicon,
                                    const std::string &data_dir, bool debug,
                                    bool skip_replacement)
     : impl_(std::make_unique<Impl>(lexicon, tokens, data_dir, debug,
-                                   skip_replacement)) {}
+                                   skip_replacement)) {}  // NOLINT
 
 template <typename Manager>
 MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
@@ -474,7 +474,7 @@ MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
                                    const std::string &data_dir, bool debug,
                                    bool skip_replacement)
     : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, data_dir, debug,
-                                   skip_replacement)) {}
+                                   skip_replacement)) {}  // NOLINT
 
 std::vector<TokenIDs> MatchaTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {

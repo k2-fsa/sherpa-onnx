@@ -146,7 +146,8 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_run(
   env->SetFloatArrayRegion(samples_arr, 0, denoised.samples.size(),
                            denoised.samples.data());
 
-  jobject obj = env->NewObject(cls, constructor, samples_arr, denoised.sample_rate);
+  jobject obj =
+      env->NewObject(cls, constructor, samples_arr, denoised.sample_rate);
   env->DeleteLocalRef(cls);
   env->DeleteLocalRef(samples_arr);
   return obj;

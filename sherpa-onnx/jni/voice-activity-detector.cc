@@ -159,9 +159,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_Vad_empty(JNIEnv * /*env*/,
-                                                            jobject /*obj*/,
-                                                            jlong ptr) {
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_Vad_empty(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
   return model->Empty();
 }

@@ -13,6 +13,7 @@ rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 // clang-format on
 
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 
