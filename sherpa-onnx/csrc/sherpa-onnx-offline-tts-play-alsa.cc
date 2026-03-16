@@ -17,6 +17,7 @@
 #include <queue>
 #include <string>
 #include <thread>  // NOLINT
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/alsa-play.h"

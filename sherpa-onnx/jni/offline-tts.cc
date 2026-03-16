@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/wave-writer.h"

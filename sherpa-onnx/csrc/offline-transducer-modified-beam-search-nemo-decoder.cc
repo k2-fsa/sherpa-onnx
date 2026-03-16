@@ -20,17 +20,21 @@ namespace sherpa_onnx {
 
 // Helper structure to track hypothesis with decoder state
 struct NeMoHypothesis {
-  std::vector<int32_t> ys;           // token sequence (excluding initial blank)
-  std::vector<int32_t> timestamps;   // timestamps for each token
-  std::vector<int32_t> durations;    // durations for TDT
-  std::vector<float> ys_probs;       // log probability for each token
-  float log_prob;                     // accumulated log probability
+  std::vector<int32_t> ys;          // token sequence (excluding initial blank)
+  std::vector<int32_t> timestamps;  // timestamps for each token
+  std::vector<int32_t> durations;   // durations for TDT
+  std::vector<float> ys_probs;      // log probability for each token
+  float log_prob;                   // accumulated log probability
   std::vector<Ort::Value> decoder_states;  // RNN/LSTM states
-  const ContextState *context_state;  // context graph state
-  OrtAllocator *allocator;            // allocator for cloning states
-  int32_t frame_offset;               // current frame position for this hypothesis
+  const ContextState *context_state;       // context graph state
+  OrtAllocator *allocator;                 // allocator for cloning states
+  int32_t frame_offset;  // current frame position for this hypothesis
 
-  NeMoHypothesis() : log_prob(0.0f), context_state(nullptr), allocator(nullptr), frame_offset(0) {}
+  NeMoHypothesis()
+      : log_prob(0.0f),
+        context_state(nullptr),
+        allocator(nullptr),
+        frame_offset(0) {}
 
   // Copy constructor - needed for hypothesis expansion
   NeMoHypothesis(const NeMoHypothesis &other)
@@ -77,7 +81,6 @@ std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     Ort::Value encoder_out, Ort::Value encoder_out_length,
     OfflineStream **ss /*= nullptr*/, int32_t n /*= 0*/) {
-
   auto encoder_shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
   int32_t batch_size = static_cast<int32_t>(encoder_shape[0]);
   int32_t num_frames = static_cast<int32_t>(encoder_shape[1]);
@@ -103,16 +106,20 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
   // Get per-utterance lengths
   std::vector<int32_t> utterance_lengths(batch_size);
-  auto length_type = encoder_out_length.GetTensorTypeAndShapeInfo().GetElementType();
+  auto length_type =
+      encoder_out_length.GetTensorTypeAndShapeInfo().GetElementType();
   for (int32_t i = 0; i < batch_size; ++i) {
-    utterance_lengths[i] = (length_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32)
-        ? encoder_out_length.GetTensorData<int32_t>()[i]
-        : static_cast<int32_t>(encoder_out_length.GetTensorData<int64_t>()[i]);
+    utterance_lengths[i] =
+        (length_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32)
+            ? encoder_out_length.GetTensorData<int32_t>()[i]
+            : static_cast<int32_t>(
+                  encoder_out_length.GetTensorData<int64_t>()[i]);
   }
 
   std::vector<OfflineTransducerDecoderResult> results(batch_size);
 
-  // Process each utterance independently (simpler for TDT with variable frame positions)
+  // Process each utterance independently (simpler for TDT with variable frame
+  // positions)
   for (int32_t b = 0; b < batch_size; ++b) {
     const ContextState *context_state = nullptr;
     if (ss != nullptr) {
@@ -166,10 +173,11 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         const float *frame_data = this_encoder + hyp.frame_offset * encoder_dim;
 
         Ort::Value encoder_out_frame = Ort::Value::CreateTensor(
-            memory_info, const_cast<float*>(frame_data), encoder_dim,
+            memory_info, const_cast<float *>(frame_data), encoder_dim,
             encoder_3d_shape.data(), encoder_3d_shape.size());
 
-        // Prepare decoder input: use blank_id as initial token, then last emitted token
+        // Prepare decoder input: use blank_id as initial token, then last
+        // emitted token
         int32_t last_token = hyp.ys.empty() ? blank_id : hyp.ys.back();
         std::array<int64_t, 2> decoder_input_shape = {1, 1};
         std::vector<int32_t> decoder_input_data = {last_token};
@@ -183,7 +191,8 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
         Ort::Value decoder_input_length = Ort::Value::CreateTensor(
             memory_info, decoder_input_length_data.data(), 1,
-            decoder_input_length_shape.data(), decoder_input_length_shape.size());
+            decoder_input_length_shape.data(),
+            decoder_input_length_shape.size());
 
         // Clone decoder states for this expansion
         std::vector<Ort::Value> decoder_states_copy;
@@ -193,17 +202,15 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         }
 
         auto decoder_result = model_->RunDecoder(
-            std::move(decoder_input),
-            std::move(decoder_input_length),
+            std::move(decoder_input), std::move(decoder_input_length),
             std::move(decoder_states_copy));
 
         Ort::Value decoder_out = std::move(decoder_result.first);
         std::vector<Ort::Value> next_states = std::move(decoder_result.second);
 
         // Run joiner
-        Ort::Value logit = model_->RunJoiner(
-            View(&encoder_out_frame),
-            View(&decoder_out));
+        Ort::Value logit =
+            model_->RunJoiner(View(&encoder_out_frame), View(&decoder_out));
 
         auto logit_shape = logit.GetTensorTypeAndShapeInfo().GetShape();
         int32_t output_size = static_cast<int32_t>(logit_shape.back());
@@ -239,7 +246,8 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           }
         }
 
-        auto top_k_tokens = TopkIndex(token_logits, token_vocab_size, max_active_paths_);
+        auto top_k_tokens =
+            TopkIndex(token_logits, token_vocab_size, max_active_paths_);
 
         // Determine duration/skip for TDT
         int32_t predicted_skip = 1;  // Default: advance by 1 frame
@@ -249,9 +257,10 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
           LogSoftmax(duration_logits, num_durations, 1);
 
           // Find best duration
-          predicted_skip = static_cast<int32_t>(std::distance(
-              duration_logits,
-              std::max_element(duration_logits, duration_logits + num_durations)));
+          predicted_skip = static_cast<int32_t>(
+              std::distance(duration_logits,
+                            std::max_element(duration_logits,
+                                             duration_logits + num_durations)));
 
           // Get the log probability for the selected duration
           duration_log_prob = duration_logits[predicted_skip];
@@ -261,8 +270,10 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         for (int32_t idx : top_k_tokens) {
           int32_t token = idx;
           // For TDT: joint probability = P(token) * P(duration)
-          // In log space: log P(token, duration) = log P(token) + log P(duration)
-          float token_log_prob = token_logits[token] + duration_log_prob + hyp.log_prob;
+          // In log space: log P(token, duration) = log P(token) + log
+          // P(duration)
+          float token_log_prob =
+              token_logits[token] + duration_log_prob + hyp.log_prob;
 
           NeMoHypothesis new_hyp;
           new_hyp.ys = hyp.ys;
@@ -282,7 +293,8 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
               new_hyp.decoder_states.push_back(Clone(allocator, &state));
             }
             // For blank/unk in TDT, always advance by at least 1
-            new_hyp.frame_offset = hyp.frame_offset + std::max(1, predicted_skip);
+            new_hyp.frame_offset =
+                hyp.frame_offset + std::max(1, predicted_skip);
           } else {
             // Non-blank: add token, use new decoder state
             new_hyp.ys.push_back(token);
@@ -297,8 +309,9 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
               new_hyp.decoder_states.push_back(Clone(allocator, &state));
             }
 
-            // For non-blank in TDT, advance by predicted duration (can be 0 to emit more tokens)
-            // For non-TDT, stay on same frame to allow more tokens
+            // For non-blank in TDT, advance by predicted duration (can be 0 to
+            // emit more tokens) For non-TDT, stay on same frame to allow more
+            // tokens
             if (is_tdt_) {
               new_hyp.frame_offset = hyp.frame_offset + predicted_skip;
             } else {
@@ -326,13 +339,14 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
       std::partial_sort(
           all_candidates.begin(),
-          all_candidates.begin() + std::min(max_active_paths_,
-                                           static_cast<int32_t>(all_candidates.size())),
+          all_candidates.begin() +
+              std::min(max_active_paths_,
+                       static_cast<int32_t>(all_candidates.size())),
           all_candidates.end(),
           [](const auto &a, const auto &b) { return a.first > b.first; });
 
       int32_t keep = std::min(max_active_paths_,
-                             static_cast<int32_t>(all_candidates.size()));
+                              static_cast<int32_t>(all_candidates.size()));
       cur_hyps.clear();
       cur_hyps.reserve(keep);
       for (int32_t k = 0; k < keep; ++k) {
@@ -350,11 +364,11 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
     }
 
     // Find best hypothesis
-    auto best_it = std::max_element(
-        cur_hyps.begin(), cur_hyps.end(),
-        [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
-          return a.log_prob < b.log_prob;
-        });
+    auto best_it =
+        std::max_element(cur_hyps.begin(), cur_hyps.end(),
+                         [](const NeMoHypothesis &a, const NeMoHypothesis &b) {
+                           return a.log_prob < b.log_prob;
+                         });
 
     if (best_it != cur_hyps.end()) {
       // Convert int32_t to int64_t for tokens

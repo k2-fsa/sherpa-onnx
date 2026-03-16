@@ -15,6 +15,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 */
 // clang-format on
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 

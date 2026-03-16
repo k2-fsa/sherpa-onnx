@@ -4,6 +4,7 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 #include <fstream>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"

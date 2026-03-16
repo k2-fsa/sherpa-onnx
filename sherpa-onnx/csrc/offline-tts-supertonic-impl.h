@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/normal-data-generator.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-supertonic-model.h"
 #include "sherpa-onnx/csrc/offline-tts-supertonic-unicode-processor.h"
@@ -44,7 +45,7 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
  private:
   GeneratedAudio Process(const std::string &text, const std::string &lang,
                          int64_t sid, int32_t num_steps, float speed,
-                         std::mt19937 &gen) const;
+                         NormalDataGenerator &gen) const;
 
   GeneratedAudio ProcessChunksAndConcatenate(
       const std::vector<std::string> &text_chunks, const std::string &lang,
