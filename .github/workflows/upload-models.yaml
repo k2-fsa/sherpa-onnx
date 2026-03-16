@@ -24,6 +24,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Upload DPDFNet
+        shell: bash
+        run: |
+
+          models=(
+            baseline.onnx
+            dpdfnet2.onnx
+            dpdfnet2_48khz_hr.onnx
+            dpdfnet4.onnx
+            dpdfnet8.onnx
+          )
+          for m in ${models[@]}; do
+            wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/$m
+          done
+
+          mv baseline.onnx dpdfnet_baseline.onnx
+
       - name: Install ffmpeg
         if: false
         shell: bash
@@ -1132,7 +1149,6 @@ jobs:
               popd
             done
 
-
       - name: Release
         if: true
         uses: svenstaro/upload-release-action@v2
@@ -1143,3 +1159,14 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
+
+      - name: Release
+        if: false
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.onnx
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: speech-enhancement-models
