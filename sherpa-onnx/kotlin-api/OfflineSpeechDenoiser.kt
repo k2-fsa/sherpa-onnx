@@ -6,8 +6,13 @@ data class OfflineSpeechDenoiserGtcrnModelConfig(
     var model: String = "",
 )
 
+data class OfflineSpeechDenoiserDpdfNetModelConfig(
+    var model: String = "",
+)
+
 data class OfflineSpeechDenoiserModelConfig(
     var gtcrn: OfflineSpeechDenoiserGtcrnModelConfig = OfflineSpeechDenoiserGtcrnModelConfig(),
+    var dpdfnet: OfflineSpeechDenoiserDpdfNetModelConfig = OfflineSpeechDenoiserDpdfNetModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",

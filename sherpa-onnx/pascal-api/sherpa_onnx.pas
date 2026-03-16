@@ -706,8 +706,14 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: TSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
+    DpdfNet: TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
     NumThreads: Integer;
     Debug: Boolean;
     Provider: AnsiString;
@@ -1226,11 +1232,16 @@ type
     Model: PAnsiChar;
   end;
 
+  SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig = record
+    Model: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
     NumThreads: cint32;
     Debug: cint32;
     Provider: PAnsiChar;
+    DpdfNet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
   end;
 
   SherpaOnnxOfflineSpeechDenoiserConfig = record
@@ -3190,14 +3201,21 @@ begin
     'Model := %s)', [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(' +
+    'Model := %s)', [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineSpeechDenoiserModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeechDenoiserModelConfig(' +
     'Gtcrn := %s, '+
+    'DpdfNet := %s, '+
     'NumThreads := %d, '+
     'Debug := %s, '+
     'Provider := %s)',
-    [Self.Gtcrn.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
+    [Self.Gtcrn.ToString, Self.DpdfNet.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
 end;
 
 class operator TSherpaOnnxOfflineSpeechDenoiserModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeechDenoiserModelConfig);
@@ -3219,6 +3237,7 @@ var
 begin
   C := Default(SherpaOnnxOfflineSpeechDenoiserConfig);
   C.Model.Gtcrn.Model := PAnsiChar(Config.Model.Gtcrn.Model);
+  C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Debug := Ord(Config.Model.Debug);
   C.Model.Provider := PAnsiChar(Config.Model.Provider);

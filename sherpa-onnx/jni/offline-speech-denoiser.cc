@@ -28,6 +28,15 @@ static OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
 
   SHERPA_ONNX_JNI_READ_STRING(ans.model.gtcrn.model, model, gtcrn_cls, gtcrn);
 
+  fid = env->GetFieldID(
+      model_config_cls, "dpdfnet",
+      "Lcom/k2fsa/sherpa/onnx/OfflineSpeechDenoiserDpdfNetModelConfig;");
+  jobject dpdfnet = env->GetObjectField(model, fid);
+  jclass dpdfnet_cls = env->GetObjectClass(dpdfnet);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.dpdfnet.model, model, dpdfnet_cls,
+                              dpdfnet);
+
   SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
                            model);
 

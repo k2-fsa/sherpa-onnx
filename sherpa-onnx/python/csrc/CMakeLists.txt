@@ -29,6 +29,7 @@ set(srcs
   offline-source-separation-spleeter-model-config.cc
   offline-source-separation-uvr-model-config.cc
   offline-source-separation.cc
+  offline-speech-denoiser-dpdfnet-model-config.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc

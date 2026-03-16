@@ -6,6 +6,10 @@ final class SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
 final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
   external SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
 
@@ -16,6 +20,8 @@ final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
   external int debug;
 
   external Pointer<Utf8> provider;
+
+  external SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
 }
 
 final class SherpaOnnxOfflineSpeechDenoiserConfig extends Struct {

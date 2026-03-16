@@ -25,6 +25,22 @@ GetOfflineSpeechDenoiserGtcrnModelConfig(Napi::Object obj) {
   return c;
 }
 
+static SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig
+GetOfflineSpeechDenoiserDpdfNetModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("dpdfnet") || !obj.Get("dpdfnet").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("dpdfnet").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
 static SherpaOnnxOfflineSpeechDenoiserModelConfig
 GetOfflineSpeechDenoiserModelConfig(Napi::Object obj) {
   SherpaOnnxOfflineSpeechDenoiserModelConfig c;
@@ -37,6 +53,7 @@ GetOfflineSpeechDenoiserModelConfig(Napi::Object obj) {
   Napi::Object o = obj.Get("model").As<Napi::Object>();
 
   c.gtcrn = GetOfflineSpeechDenoiserGtcrnModelConfig(o);
+  c.dpdfnet = GetOfflineSpeechDenoiserDpdfNetModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -106,6 +123,7 @@ CreateOfflineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
 
   SHERPA_ONNX_DELETE_C_STR(c.model.gtcrn.model);
   SHERPA_ONNX_DELETE_C_STR(c.model.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.model.dpdfnet.model);
 
   if (!sd) {
     Napi::TypeError::New(env, "Please check your config!")
