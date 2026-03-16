@@ -170,6 +170,43 @@ jobs:
           name: pocket-tts-wavs-${{ matrix.os }}
           path: ./generated-pocket-en.wav
 
+      - name: Test SupertonicTTS
+        shell: bash
+        run: |
+          name=supertonic-tts-en-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+          tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+          rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+
+          ls -lh ./generated-supertonic-en-c.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supertonic-tts-wavs-${{ matrix.os }}
+          path: ./generated-supertonic-en-c.wav
+
       - name: Test FunASR Nano
         shell: bash
         run: |

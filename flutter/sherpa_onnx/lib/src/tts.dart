@@ -395,6 +395,53 @@ class OfflineTtsPocketModelConfig {
   final int voiceEmbeddingCacheCapacity;
 }
 
+class OfflineTtsSupertonicModelConfig {
+  const OfflineTtsSupertonicModelConfig({
+    this.durationPredictor = '',
+    this.textEncoder = '',
+    this.vectorEstimator = '',
+    this.vocoder = '',
+    this.ttsJson = '',
+    this.unicodeIndexer = '',
+    this.voiceStyle = '',
+  });
+
+  factory OfflineTtsSupertonicModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsSupertonicModelConfig(
+      durationPredictor: json['durationPredictor'] as String? ?? '',
+      textEncoder: json['textEncoder'] as String? ?? '',
+      vectorEstimator: json['vectorEstimator'] as String? ?? '',
+      vocoder: json['vocoder'] as String? ?? '',
+      ttsJson: json['ttsJson'] as String? ?? '',
+      unicodeIndexer: json['unicodeIndexer'] as String? ?? '',
+      voiceStyle: json['voiceStyle'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'durationPredictor': durationPredictor,
+    'textEncoder': textEncoder,
+    'vectorEstimator': vectorEstimator,
+    'vocoder': vocoder,
+    'ttsJson': ttsJson,
+    'unicodeIndexer': unicodeIndexer,
+    'voiceStyle': voiceStyle,
+  };
+
+  @override
+  String toString() {
+    return 'OfflineTtsSupertonicModelConfig(durationPredictor: $durationPredictor, textEncoder: $textEncoder, vectorEstimator: $vectorEstimator, vocoder: $vocoder, ttsJson: $ttsJson, unicodeIndexer: $unicodeIndexer, voiceStyle: $voiceStyle)';
+  }
+
+  final String durationPredictor;
+  final String textEncoder;
+  final String vectorEstimator;
+  final String vocoder;
+  final String ttsJson;
+  final String unicodeIndexer;
+  final String voiceStyle;
+}
+
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
     this.vits = const OfflineTtsVitsModelConfig(),
@@ -403,6 +450,7 @@ class OfflineTtsModelConfig {
     this.kitten = const OfflineTtsKittenModelConfig(),
     this.zipvoice = const OfflineTtsZipVoiceModelConfig(),
     this.pocket = const OfflineTtsPocketModelConfig(),
+    this.supertonic = const OfflineTtsSupertonicModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -428,6 +476,9 @@ class OfflineTtsModelConfig {
       pocket: OfflineTtsPocketModelConfig.fromJson(
         json['pocket'] as Map<String, dynamic>? ?? const {},
       ),
+      supertonic: OfflineTtsSupertonicModelConfig.fromJson(
+        json['supertonic'] as Map<String, dynamic>? ?? const {},
+      ),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -436,7 +487,7 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, pocket: $pocket, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, pocket: $pocket, supertonic: $supertonic, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -446,6 +497,7 @@ class OfflineTtsModelConfig {
     'kitten': kitten.toJson(),
     'zipvoice': zipvoice.toJson(),
     'pocket': pocket.toJson(),
+    'supertonic': supertonic.toJson(),
     'numThreads': numThreads,
     'debug': debug,
     'provider': provider,
@@ -457,6 +509,7 @@ class OfflineTtsModelConfig {
   final OfflineTtsKittenModelConfig kitten;
   final OfflineTtsZipVoiceModelConfig zipvoice;
   final OfflineTtsPocketModelConfig pocket;
+  final OfflineTtsSupertonicModelConfig supertonic;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -577,6 +630,21 @@ class OfflineTts {
     c.ref.model.pocket.voiceEmbeddingCacheCapacity =
         config.model.pocket.voiceEmbeddingCacheCapacity;
 
+    c.ref.model.supertonic.durationPredictor = config.model.supertonic
+        .durationPredictor.toNativeUtf8();
+    c.ref.model.supertonic.textEncoder = config.model.supertonic.textEncoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.vectorEstimator = config.model.supertonic
+        .vectorEstimator.toNativeUtf8();
+    c.ref.model.supertonic.vocoder = config.model.supertonic.vocoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.ttsJson = config.model.supertonic.ttsJson
+        .toNativeUtf8();
+    c.ref.model.supertonic.unicodeIndexer = config.model.supertonic
+        .unicodeIndexer.toNativeUtf8();
+    c.ref.model.supertonic.voiceStyle = config.model.supertonic.voiceStyle
+        .toNativeUtf8();
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -591,6 +659,14 @@ class OfflineTts {
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+
+    calloc.free(c.ref.model.supertonic.voiceStyle);
+    calloc.free(c.ref.model.supertonic.unicodeIndexer);
+    calloc.free(c.ref.model.supertonic.ttsJson);
+    calloc.free(c.ref.model.supertonic.vocoder);
+    calloc.free(c.ref.model.supertonic.vectorEstimator);
+    calloc.free(c.ref.model.supertonic.textEncoder);
+    calloc.free(c.ref.model.supertonic.durationPredictor);
 
     calloc.free(c.ref.model.pocket.tokenScoresJson);
     calloc.free(c.ref.model.pocket.vocabJson);

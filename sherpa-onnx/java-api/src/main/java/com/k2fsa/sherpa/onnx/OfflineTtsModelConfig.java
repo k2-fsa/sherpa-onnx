@@ -8,6 +8,7 @@ public class OfflineTtsModelConfig {
     private final OfflineTtsKokoroModelConfig kokoro;
     private final OfflineTtsKittenModelConfig kitten;
     private final OfflineTtsPocketModelConfig pocket;
+    private final OfflineTtsSupertonicModelConfig supertonic;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
@@ -18,6 +19,7 @@ public class OfflineTtsModelConfig {
         this.kokoro = builder.kokoro;
         this.kitten = builder.kitten;
         this.pocket = builder.pocket;
+        this.supertonic = builder.supertonic;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -47,12 +49,17 @@ public class OfflineTtsModelConfig {
         return pocket;
     }
 
+    public OfflineTtsSupertonicModelConfig getSupertonic() {
+        return supertonic;
+    }
+
     public static class Builder {
         private OfflineTtsVitsModelConfig vits = OfflineTtsVitsModelConfig.builder().build();
         private OfflineTtsMatchaModelConfig matcha = OfflineTtsMatchaModelConfig.builder().build();
         private OfflineTtsKokoroModelConfig kokoro = OfflineTtsKokoroModelConfig.builder().build();
         private OfflineTtsKittenModelConfig kitten = OfflineTtsKittenModelConfig.builder().build();
         private OfflineTtsPocketModelConfig pocket = OfflineTtsPocketModelConfig.builder().build();
+        private OfflineTtsSupertonicModelConfig supertonic = OfflineTtsSupertonicModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -83,6 +90,11 @@ public class OfflineTtsModelConfig {
 
         public Builder setPocket(OfflineTtsPocketModelConfig pocket) {
             this.pocket = pocket;
+            return this;
+        }
+
+        public Builder setSupertonic(OfflineTtsSupertonicModelConfig supertonic) {
+            this.supertonic = supertonic;
             return this;
         }
 

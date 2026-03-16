@@ -339,6 +339,7 @@ jobs:
           cd ./java-api-examples
 
           ./run-pocket-tts.sh
+          ./run-supertonic-tts.sh
           ./run-non-streaming-tts-kitten-en.sh
           ./run-non-streaming-tts-kokoro-zh-en.sh
           ./run-non-streaming-tts-kokoro-en.sh
@@ -347,6 +348,7 @@ jobs:
           ls -lh
 
           rm -rf sherpa-onnx-pocket-tts-*
+          rm -rf sherpa-onnx-supertonic-tts-*
           rm -rf kitten-nano-en-*
           rm -rf kokoro-multi-*
           rm -rf kokoro-en-*

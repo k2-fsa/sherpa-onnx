@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <algorithm>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
 #include <iostream>

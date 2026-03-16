@@ -1,3 +1,5 @@
+import Foundation
+
 class PocketTtsProgressHandler {
   func progress(samples: [Float], progress: Float) {
     print(String(format: "Received %d samples, Progress: %.2f%%", samples.count, progress * 100))

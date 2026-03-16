@@ -254,6 +254,16 @@ final class SherpaOnnxOfflineTtsPocketModelConfig extends Struct {
   external int voiceEmbeddingCacheCapacity;
 }
 
+final class SherpaOnnxOfflineTtsSupertonicModelConfig extends Struct {
+  external Pointer<Utf8> durationPredictor;
+  external Pointer<Utf8> textEncoder;
+  external Pointer<Utf8> vectorEstimator;
+  external Pointer<Utf8> vocoder;
+  external Pointer<Utf8> ttsJson;
+  external Pointer<Utf8> unicodeIndexer;
+  external Pointer<Utf8> voiceStyle;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -268,6 +278,7 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsKittenModelConfig kitten;
   external SherpaOnnxOfflineTtsZipVoiceModelConfig zipvoice;
   external SherpaOnnxOfflineTtsPocketModelConfig pocket;
+  external SherpaOnnxOfflineTtsSupertonicModelConfig supertonic;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {

@@ -4,7 +4,12 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./non-streaming-moonshine-v2-decode-files
+cd ./supertonic-tts
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-supertonic-*
+
+cd ../non-streaming-moonshine-v2-decode-files
 ./run.sh
 rm -rf sherpa-onnx-moonshine-*
 
@@ -137,6 +142,7 @@ mkdir tts
 
 cp -v dotnet-examples/kokoro-tts/*.wav ./tts
 cp -v dotnet-examples/offline-tts/*.wav ./tts
+cp -v dotnet-examples/supertonic-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization

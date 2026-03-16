@@ -17,11 +17,15 @@
 jobject NewInteger(JNIEnv *env, int32_t value) {
   jclass cls = env->FindClass("java/lang/Integer");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
-  return env->NewObject(cls, constructor, value);
+  jobject obj = env->NewObject(cls, constructor, value);
+  env->DeleteLocalRef(cls);
+  return obj;
 }
 
 jobject NewFloat(JNIEnv *env, float value) {
   jclass cls = env->FindClass("java/lang/Float");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(F)V");
-  return env->NewObject(cls, constructor, value);
+  jobject obj = env->NewObject(cls, constructor, value);
+  env->DeleteLocalRef(cls);
+  return obj;
 }

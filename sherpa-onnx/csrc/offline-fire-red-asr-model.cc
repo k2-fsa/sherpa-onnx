@@ -45,8 +45,8 @@ class OfflineFireRedAsrModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(config.fire_red_asr.encoder);
@@ -67,8 +67,8 @@ class OfflineFireRedAsrModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(mgr, config.fire_red_asr.encoder);
@@ -236,7 +236,8 @@ class OfflineFireRedAsrModel::Impl {
   }
 
   void InitCudaIOBinding() {
-    use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    use_cuda_iobinding_ =
+        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
     if (use_cuda_iobinding_) {
       // Use device 0 by default. SessionOptions() in sherpa-onnx usually
       // configures the CUDA EP device; binding here only affects output memory.

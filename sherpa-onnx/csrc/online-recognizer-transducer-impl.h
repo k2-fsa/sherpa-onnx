@@ -168,7 +168,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
       }
 
-      if (!config_.hotwords_file.empty()) {
+      if (!config_.hotwords_buf.empty()) {
+        InitHotwordsFromBufStr();
+      } else if (!config_.hotwords_file.empty()) {
         InitHotwords(mgr);
       }
 
@@ -252,8 +254,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       return;
     }
     int32_t chunk_size = model_->ChunkSize();
-    int32_t chunk_shift = model_->ChunkShift();
-    int32_t feature_dim = 80;
+    int32_t feature_dim = config_.feat_config.feature_dim;
     std::vector<OnlineTransducerDecoderResult> results(max_batch_size);
     std::vector<float> features_vec(max_batch_size * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(max_batch_size);

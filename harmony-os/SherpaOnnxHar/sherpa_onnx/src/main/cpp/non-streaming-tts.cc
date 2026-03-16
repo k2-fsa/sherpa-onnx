@@ -54,6 +54,14 @@
     SHERPA_ONNX_DELETE_C_STR(c.model.pocket.vocab_json);        \
     SHERPA_ONNX_DELETE_C_STR(c.model.pocket.token_scores_json); \
                                                                 \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.duration_predictor);  \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.text_encoder);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.vector_estimator);    \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.vocoder);             \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.tts_json);            \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.unicode_indexer);     \
+    SHERPA_ONNX_DELETE_C_STR(c.model.supertonic.voice_style);         \
+                                                                \
     SHERPA_ONNX_DELETE_C_STR(c.model.provider);                 \
                                                                 \
     SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);                      \
@@ -223,6 +231,28 @@ static SherpaOnnxOfflineTtsPocketModelConfig GetOfflineTtsPocketModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsSupertonicModelConfig
+GetOfflineTtsSupertonicModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineTtsSupertonicModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("supertonic") || !obj.Get("supertonic").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("supertonic").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(duration_predictor, durationPredictor);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(text_encoder, textEncoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vector_estimator, vectorEstimator);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vocoder, vocoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tts_json, ttsJson);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(unicode_indexer, unicodeIndexer);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(voice_style, voiceStyle);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsModelConfig c;
@@ -239,6 +269,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   c.kokoro = GetOfflineTtsKokoroModelConfig(o);
   c.kitten = GetOfflineTtsKittenModelConfig(o);
   c.pocket = GetOfflineTtsPocketModelConfig(o);
+  c.supertonic = GetOfflineTtsSupertonicModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 

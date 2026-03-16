@@ -41,7 +41,6 @@
 |-------|----------|----------|------------|
 | ✔️     |  ✔️       |   ✔️      |    ✔️       |
 
-For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
@@ -428,7 +427,6 @@ Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
 a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 
-[sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf

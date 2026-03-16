@@ -27,6 +27,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 // for 16 kHz downstream ASR or speech recognition.
 // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 

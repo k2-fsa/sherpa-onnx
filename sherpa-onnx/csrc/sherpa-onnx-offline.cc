@@ -177,8 +177,9 @@ for a list of pre-trained models to download.
 
   fprintf(stderr, "Done!\n\n");
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
-    fprintf(stderr, "%s\n%s\n----\n", po.GetArg(i).c_str(),
-            ss[i - 1]->GetResult().AsJsonString().c_str());
+    fprintf(stderr, "%s\n", po.GetArg(i).c_str());
+    fprintf(stdout, "%s\n", ss[i - 1]->GetResult().AsJsonString().c_str());
+    fprintf(stderr, "----\n");
   }
 
   float elapsed_seconds =

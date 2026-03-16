@@ -26,7 +26,7 @@
 
 namespace sherpa_onnx {
 
-OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
+static OnlineRecognizerResult ConvertCtc(const OnlineCtcDecoderResult &src,
                                   const SymbolTable &sym_table,
                                   float frame_shift_ms,
                                   int32_t subsampling_factor, int32_t segment,
@@ -79,8 +79,12 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(config),
         config_(config),
         model_(OnlineCtcModel::Create(config.model_config)),
-        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      sym_ = SymbolTable(config.model_config.tokens, true);
+    }
     PostInit();
   }
 
@@ -90,8 +94,12 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         model_(OnlineCtcModel::Create(mgr, config.model_config)),
-        sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      sym_ = SymbolTable(mgr, config.model_config.tokens);
+    }
     PostInit();
   }
 
@@ -209,11 +217,15 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
     int32_t num_processed_frames = s->GetNumProcessedFrames();
 
-    // frame shift is 10 milliseconds
     float frame_shift_in_seconds = 0.01;
+    int32_t subsampling_factor = 4;
+    if (!config_.model_config.t_one_ctc.model.empty()) {
+      frame_shift_in_seconds = 0.03;
+      subsampling_factor = 1;
+    }
 
-    // subsampling factor is 4
-    int32_t trailing_silence_frames = s->GetCtcResult().num_trailing_blanks * 4;
+    int32_t trailing_silence_frames =
+        s->GetCtcResult().num_trailing_blanks * subsampling_factor;
 
     return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
                                 frame_shift_in_seconds);
@@ -242,11 +254,6 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
  private:
   void PostInit() {
-    if (!config_.model_config.tokens_buf.empty()) {
-      /// assuming tokens_buf and tokens are guaranteed not being both empty
-      sym_ = SymbolTable(config_.model_config.tokens_buf, false);
-    }
-
     if (!config_.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false

@@ -68,12 +68,23 @@ data class OfflineTtsPocketModelConfig(
   var voiceEmbeddingCacheCapacity: Int = 50,
 )
 
+data class OfflineTtsSupertonicModelConfig(
+  var durationPredictor: String = "",
+  var textEncoder: String = "",
+  var vectorEstimator: String = "",
+  var vocoder: String = "",
+  var ttsJson: String = "",
+  var unicodeIndexer: String = "",
+  var voiceStyle: String = "",
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
-    val pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+    var pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+    var supertonic: OfflineTtsSupertonicModelConfig = OfflineTtsSupertonicModelConfig(),
 
     var numThreads: Int = 1,
     var debug: Boolean = false,

@@ -26,7 +26,8 @@ void PybindOfflineWhisperModelConfig(py::module *m) {
       .def_readwrite("language", &PyClass::language)
       .def_readwrite("task", &PyClass::task)
       .def_readwrite("tail_paddings", &PyClass::tail_paddings)
-      .def_readwrite("enable_token_timestamps", &PyClass::enable_token_timestamps)
+      .def_readwrite("enable_token_timestamps",
+                     &PyClass::enable_token_timestamps)
       .def_readwrite("enable_segment_timestamps",
                      &PyClass::enable_segment_timestamps)
       .def("__str__", &PyClass::ToString);

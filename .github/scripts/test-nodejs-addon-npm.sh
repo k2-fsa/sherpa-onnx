@@ -99,6 +99,17 @@ node ./test_tts_non_streaming_kitten_en.js
 
 rm -rf kitten-nano-en-v0_1-fp16
 
+echo "----------SupertonicTTS----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+node ./test_tts_non_streaming_supertonic_en.js
+node ./test_tts_non_streaming_supertonic_en_async.js
+
+rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+
 echo "----------non-streaming ASR NeMo Canary----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2

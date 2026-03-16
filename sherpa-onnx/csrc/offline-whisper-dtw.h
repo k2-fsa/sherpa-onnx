@@ -19,8 +19,8 @@ struct DTWResult {
 
 // Token timing result from DTW
 struct TokenTimingResult {
-  std::vector<float> start_times;   // Start time in seconds for each token
-  std::vector<float> durations;     // Duration in seconds for each token
+  std::vector<float> start_times;  // Start time in seconds for each token
+  std::vector<float> durations;    // Duration in seconds for each token
 };
 
 // Class for processing cross-attention weights and computing DTW alignment
@@ -60,7 +60,8 @@ class WhisperDTW {
   void ApplySoftmax(float *data, int32_t n_tokens, int32_t n_frames);
 
   // Apply z-score normalization across tokens (dim=-2)
-  void ApplyZScoreNormalization(float *data, int32_t n_tokens, int32_t n_frames);
+  void ApplyZScoreNormalization(float *data, int32_t n_tokens,
+                                int32_t n_frames);
 
   // Apply median filter across frames with given width
   void ApplyMedianFilter(float *data, int32_t n_tokens, int32_t n_frames,

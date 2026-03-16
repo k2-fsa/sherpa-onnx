@@ -92,6 +92,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   SHERPA_ONNX_LOGE("Please specify a model");
   SHERPA_ONNX_EXIT(-1);
+  return nullptr;
 }
 
 template <typename Manager>
@@ -99,7 +100,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     Manager *mgr, const OnlineRecognizerConfig &config) {
   if (config.model_config.provider_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
-    // Currently, only zipformer v1 is suported for rknn
+    // Currently, only zipformer v1 is supported for rknn
     if (config.model_config.transducer.encoder.empty() &&
         config.model_config.zipformer2_ctc.model.empty()) {
       SHERPA_ONNX_LOGE(
@@ -152,6 +153,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   SHERPA_ONNX_LOGE("Please specify a model");
   SHERPA_ONNX_EXIT(-1);
+  return nullptr;
 }
 
 OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)

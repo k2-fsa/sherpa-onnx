@@ -56,7 +56,7 @@ reader.on('format', ({audioFormat, bitDepth, channels, sampleRate}) => {
   }
 
   if (channels != 1) {
-    throw new Error(`Only a single channel. Given ${channel}`);
+    throw new Error(`Only a single channel. Given ${channels}`);
   }
 
   if (bitDepth != 16) {

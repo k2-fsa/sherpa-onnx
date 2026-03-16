@@ -117,11 +117,13 @@ class OfflineCanaryModel::Impl {
   }
 
   std::vector<Ort::Value> GetInitialDecoderStates() {
-    std::array<int64_t, 3> shape{1, 0, 1024};
+    int32_t num_layers = meta_.num_decoder_layers;
+    int64_t hidden_size = meta_.decoder_hidden_size;
+    std::array<int64_t, 3> shape{1, 0, hidden_size};
 
     std::vector<Ort::Value> ans;
-    ans.reserve(6);
-    for (int32_t i = 0; i < 6; ++i) {
+    ans.reserve(num_layers);
+    for (int32_t i = 0; i < num_layers; ++i) {
       Ort::Value state = Ort::Value::CreateTensor<float>(
           Allocator(), shape.data(), shape.size());
 
@@ -178,6 +180,11 @@ class OfflineCanaryModel::Impl {
                                                "normalize_type");
     SHERPA_ONNX_READ_META_DATA(meta_.subsampling_factor, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA(meta_.feat_dim, "feat_dim");
+
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.num_decoder_layers,
+                                            "num_decoder_layers", 6);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_.decoder_hidden_size,
+                                            "decoder_hidden_size", 1024);
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
