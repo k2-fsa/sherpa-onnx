@@ -62,6 +62,9 @@ target_link_libraries(audio-tagging-c-api sherpa-onnx-c-api)
 add_executable(add-punctuation-c-api add-punctuation-c-api.c)
 target_link_libraries(add-punctuation-c-api sherpa-onnx-c-api)
 
+add_executable(add-punctuation-online-c-api add-punctuation-online-c-api.c)
+target_link_libraries(add-punctuation-online-c-api sherpa-onnx-c-api)
+
 add_executable(whisper-c-api whisper-c-api.c)
 target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 

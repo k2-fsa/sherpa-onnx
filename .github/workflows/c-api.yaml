@@ -135,6 +135,36 @@ jobs:
           rm $name
           rm -rf sherpa-onnx-fire-*
 
+      - name: Test online punctuation
+        shell: bash
+        run: |
+          name=add-punctuation-online-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+          tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+          rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-online-punct-en-2024-08-06
+
       - name: Test PocketTTS
         shell: bash
         run: |
