@@ -1,6 +1,8 @@
 mod display;
 mod offline_asr;
+mod offline_speech_denoiser;
 mod online_asr;
+mod online_speech_denoiser;
 mod speech_denoiser;
 mod tts;
 mod utils;
@@ -9,7 +11,9 @@ mod wave;
 
 pub use display::*;
 pub use offline_asr::*;
+pub use offline_speech_denoiser::*;
 pub use online_asr::*;
+pub use online_speech_denoiser::*;
 pub use speech_denoiser::*;
 pub use tts::*;
 pub use utils::*;
