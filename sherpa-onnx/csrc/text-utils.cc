@@ -1216,6 +1216,30 @@ std::vector<std::string> SplitByPunctuation(const std::string &text) {
   return sentences;
 }
 
+std::vector<std::string> MergeShortSentences(
+    const std::vector<std::string> &sentences, size_t min_chars) {
+  std::vector<std::string> merged;
+  std::string buffer;
+
+  for (const auto &s : sentences) {
+    if (!buffer.empty()) {
+      buffer += " ";
+    }
+    buffer += s;
+
+    if (buffer.size() >= min_chars) {
+      merged.push_back(buffer);
+      buffer.clear();
+    }
+  }
+
+  if (!buffer.empty()) {
+    merged.push_back(buffer);
+  }
+
+  return merged;
+}
+
 std::vector<std::string> SplitLongSentence(const std::string &sentence,
                                            size_t max_chars) {
   std::vector<std::string> chunks;
