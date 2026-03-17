@@ -147,6 +147,11 @@ async function readReferenceAudio(file) {
   }
 }
 
+function isWaveFile(file) {
+  const name = file.name || '';
+  return name.toLowerCase().endsWith('.wav');
+}
+
 generateBtn.onclick = async function() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
 
@@ -186,13 +191,19 @@ generateBtn.onclick = async function() {
       return;
     }
 
+    const referenceFile = referenceAudioInput.files[0];
+    if (!isWaveFile(referenceFile)) {
+      alert('Please select a .wav reference audio file');
+      return;
+    }
+
     const referenceText = referenceTextInput.value.trim();
     if (referenceText.length === 0) {
       alert('Please input the reference text');
       return;
     }
 
-    const referenceAudio = await readReferenceAudio(referenceAudioInput.files[0]);
+    const referenceAudio = await readReferenceAudio(referenceFile);
     const genConfig = {
       speed: parseFloat(speedInput.value),
       referenceAudio: referenceAudio.samples,
