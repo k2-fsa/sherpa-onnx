@@ -2134,8 +2134,8 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 // ============================================================
 type OfflinePunctuationModelConfig struct {
 	CtTransformer string
-	NumThreads    C.int
-	Debug         C.int // true to print debug information of the model
+	NumThreads    int
+	Debug         int // true to print debug information of the model
 	Provider      string
 }
 
@@ -2152,8 +2152,8 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	cfg.model.ct_transformer = C.CString(config.Model.CtTransformer)
 	defer C.free(unsafe.Pointer(cfg.model.ct_transformer))
 
-	cfg.model.num_threads = config.Model.NumThreads
-	cfg.model.debug = config.Model.Debug
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
@@ -2172,12 +2172,75 @@ func DeleteOfflinePunc(punc *OfflinePunctuation) {
 }
 
 func (punc *OfflinePunctuation) AddPunct(text string) string {
-	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, C.CString(text))
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
 	defer C.SherpaOfflinePunctuationFreeText(p)
 
 	text_with_punct := C.GoString(p)
 
 	return text_with_punct
+}
+
+type OnlinePunctuationModelConfig struct {
+	CnnBilstm  string
+	BpeVocab   string
+	NumThreads int
+	Debug      int
+	Provider   string
+}
+
+type OnlinePunctuationConfig struct {
+	Model OnlinePunctuationModelConfig
+}
+
+type OnlinePunctuation struct {
+	impl *C.struct_SherpaOnnxOnlinePunctuation
+}
+
+func NewOnlinePunctuation(config *OnlinePunctuationConfig) *OnlinePunctuation {
+	cfg := C.struct_SherpaOnnxOnlinePunctuationConfig{}
+	cfg.model.cnn_bilstm = C.CString(config.Model.CnnBilstm)
+	defer C.free(unsafe.Pointer(cfg.model.cnn_bilstm))
+
+	cfg.model.bpe_vocab = C.CString(config.Model.BpeVocab)
+	defer C.free(unsafe.Pointer(cfg.model.bpe_vocab))
+
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
+	cfg.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(cfg.model.provider))
+
+	impl := C.SherpaOnnxCreateOnlinePunctuation(&cfg)
+	if impl == nil {
+		return nil
+	}
+	punc := &OnlinePunctuation{}
+	punc.impl = impl
+	return punc
+}
+
+func DeleteOnlinePunctuation(punc *OnlinePunctuation) {
+	C.SherpaOnnxDestroyOnlinePunctuation(punc.impl)
+	punc.impl = nil
+}
+
+func (punc *OnlinePunctuation) AddPunct(text string) string {
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+
+	p := C.SherpaOnnxOnlinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
+	defer C.SherpaOnnxOnlinePunctuationFreeText(p)
+
+	textWithPunct := C.GoString(p)
+
+	return textWithPunct
 }
 
 // Configuration for the online/streaming recognizer.
