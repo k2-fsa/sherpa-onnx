@@ -172,6 +172,13 @@ class AudioTagging {
   }
 
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyAudioTagging == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyAudioTagging?.call(ptr);
     ptr = nullptr;
   }
@@ -179,6 +186,14 @@ class AudioTagging {
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
   OfflineStream createStream() {
+    if (SherpaOnnxBindings.sherpaOnnxAudioTaggingCreateOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return OfflineStream(ptr: nullptr);
+    }
+
     final p = SherpaOnnxBindings.sherpaOnnxAudioTaggingCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
@@ -186,6 +201,14 @@ class AudioTagging {
   }
 
   List<AudioEvent> compute({required OfflineStream stream, required int topK}) {
+    if (SherpaOnnxBindings.sherpaOnnxAudioTaggingCompute == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return <AudioEvent>[];
+    }
+
     final pp = SherpaOnnxBindings.sherpaOnnxAudioTaggingCompute
             ?.call(ptr, stream.ptr, topK) ??
         nullptr;

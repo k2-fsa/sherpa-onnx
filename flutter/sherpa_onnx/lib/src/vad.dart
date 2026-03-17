@@ -170,11 +170,26 @@ class CircularBuffer {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroyCircularBuffer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyCircularBuffer?.call(ptr);
     ptr = nullptr;
   }
 
   void push(Float32List data) {
+    if (SherpaOnnxBindings.circularBufferPush == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final n = data.length;
     final Pointer<Float> p = calloc<Float>(n);
 
@@ -187,6 +202,14 @@ class CircularBuffer {
   }
 
   Float32List get({required int startIndex, required int n}) {
+    if (SherpaOnnxBindings.circularBufferGet == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return Float32List(0);
+    }
+
     final Pointer<Float> p =
         SherpaOnnxBindings.circularBufferGet?.call(ptr, startIndex, n) ??
             nullptr;
@@ -204,15 +227,50 @@ class CircularBuffer {
   }
 
   void pop(int n) {
+    if (SherpaOnnxBindings.circularBufferPop == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.circularBufferPop?.call(ptr, n);
   }
 
   void reset() {
+    if (SherpaOnnxBindings.circularBufferReset == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.circularBufferReset?.call(ptr);
   }
 
-  int get size => SherpaOnnxBindings.circularBufferSize?.call(ptr) ?? 0;
-  int get head => SherpaOnnxBindings.circularBufferHead?.call(ptr) ?? 0;
+  int get size {
+    if (SherpaOnnxBindings.circularBufferSize == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.circularBufferSize?.call(ptr) ?? 0;
+  }
+
+  int get head {
+    if (SherpaOnnxBindings.circularBufferHead == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.circularBufferHead?.call(ptr) ?? 0;
+  }
 
   Pointer<SherpaOnnxCircularBuffer> ptr;
 }
@@ -274,11 +332,26 @@ class VoiceActivityDetector {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroyVoiceActivityDetector == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyVoiceActivityDetector?.call(ptr);
     ptr = nullptr;
   }
 
   void acceptWaveform(Float32List samples) {
+    if (SherpaOnnxBindings.voiceActivityDetectorAcceptWaveform == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
 
@@ -291,6 +364,14 @@ class VoiceActivityDetector {
   }
 
   bool isEmpty() {
+    if (SherpaOnnxBindings.voiceActivityDetectorEmpty == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return true;
+    }
+
     final int empty =
         SherpaOnnxBindings.voiceActivityDetectorEmpty?.call(ptr) ?? 0;
 
@@ -298,6 +379,14 @@ class VoiceActivityDetector {
   }
 
   bool isDetected() {
+    if (SherpaOnnxBindings.voiceActivityDetectorDetected == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
     final int detected =
         SherpaOnnxBindings.voiceActivityDetectorDetected?.call(ptr) ?? 0;
 
@@ -305,14 +394,36 @@ class VoiceActivityDetector {
   }
 
   void pop() {
+    if (SherpaOnnxBindings.voiceActivityDetectorPop == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.voiceActivityDetectorPop?.call(ptr);
   }
 
   void clear() {
+    if (SherpaOnnxBindings.voiceActivityDetectorClear == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.voiceActivityDetectorClear?.call(ptr);
   }
 
   SpeechSegment front() {
+    if (SherpaOnnxBindings.voiceActivityDetectorFront == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return SpeechSegment(samples: Float32List(0), start: 0);
+    }
+
     final Pointer<SherpaOnnxSpeechSegment> segment =
         SherpaOnnxBindings.voiceActivityDetectorFront?.call(ptr) ?? nullptr;
     if (segment == nullptr) {
@@ -330,10 +441,24 @@ class VoiceActivityDetector {
   }
 
   void reset() {
+    if (SherpaOnnxBindings.voiceActivityDetectorReset == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.voiceActivityDetectorReset?.call(ptr);
   }
 
   void flush() {
+    if (SherpaOnnxBindings.voiceActivityDetectorFlush == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.voiceActivityDetectorFlush?.call(ptr);
   }
 

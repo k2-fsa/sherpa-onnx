@@ -185,6 +185,13 @@ class OfflineSpeakerDiarization {
       {required this.ptr, required this.config, required this.sampleRate});
 
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeakerDiarization == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeakerDiarization?.call(ptr);
     ptr = nullptr;
   }
@@ -240,6 +247,10 @@ class OfflineSpeakerDiarization {
 
   List<OfflineSpeakerDiarizationSegment> process(
       {required Float32List samples}) {
+    if (SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationProcess == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     if (ptr == nullptr) {
       return <OfflineSpeakerDiarizationSegment>[];
     }
@@ -266,6 +277,12 @@ class OfflineSpeakerDiarization {
     required Float32List samples,
     required int Function(int numProcessedChunks, int numTotalChunks) callback,
   }) {
+    if (SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     if (ptr == nullptr) {
       return <OfflineSpeakerDiarizationSegment>[];
     }

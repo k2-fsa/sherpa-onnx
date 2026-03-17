@@ -785,6 +785,13 @@ class OfflineRecognizer {
   OfflineRecognizer._({required this.ptr, required this.config});
 
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineRecognizer?.call(ptr);
     ptr = nullptr;
   }
@@ -813,6 +820,14 @@ class OfflineRecognizer {
   }
 
   void setConfig(OfflineRecognizerConfig config) {
+    if (SherpaOnnxBindings.offlineRecognizerSetConfig == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final c = convertConfig(config);
 
     SherpaOnnxBindings.offlineRecognizerSetConfig?.call(ptr, c);
@@ -1017,15 +1032,46 @@ class OfflineRecognizer {
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
   OfflineStream createStream() {
+    if (SherpaOnnxBindings.createOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return OfflineStream(ptr: nullptr);
+    }
+
     final p = SherpaOnnxBindings.createOfflineStream?.call(ptr) ?? nullptr;
     return OfflineStream(ptr: p);
   }
 
   void decode(OfflineStream stream) {
+    if (SherpaOnnxBindings.decodeOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.decodeOfflineStream?.call(ptr, stream.ptr);
   }
 
   OfflineRecognizerResult getResult(OfflineStream stream) {
+    if (SherpaOnnxBindings.getOfflineStreamResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return OfflineRecognizerResult(
+        text: '',
+        tokens: [],
+        timestamps: [],
+        lang: '',
+        emotion: '',
+        event: '',
+      );
+    }
+
     final json =
         SherpaOnnxBindings.getOfflineStreamResultAsJson?.call(stream.ptr) ??
         nullptr;

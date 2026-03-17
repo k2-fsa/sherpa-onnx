@@ -100,11 +100,26 @@ class OfflinePunctuation {
   }
 
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOfflinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyOfflinePunctuation?.call(ptr);
     ptr = nullptr;
   }
 
   String addPunct(String text) {
+    if (SherpaOnnxBindings.sherpaOfflinePunctuationAddPunct == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return '';
+    }
+
     final textPtr = text.toNativeUtf8();
 
     final p = SherpaOnnxBindings.sherpaOfflinePunctuationAddPunct

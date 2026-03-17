@@ -10,6 +10,13 @@ class OnlineStream {
   OnlineStream({required this.ptr});
 
   void free() {
+    if (SherpaOnnxBindings.destroyOnlineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOnlineStream?.call(ptr);
     ptr = nullptr;
   }
@@ -22,6 +29,14 @@ class OnlineStream {
   /// and
   ///  https://api.flutter.dev/flutter/dart-typed_data/Float32List-class.html
   void acceptWaveform({required Float32List samples, required int sampleRate}) {
+    if (SherpaOnnxBindings.onlineStreamAcceptWaveform == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
 
@@ -34,6 +49,13 @@ class OnlineStream {
   }
 
   void inputFinished() {
+    if (SherpaOnnxBindings.onlineStreamInputFinished == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.onlineStreamInputFinished?.call(ptr);
   }
 

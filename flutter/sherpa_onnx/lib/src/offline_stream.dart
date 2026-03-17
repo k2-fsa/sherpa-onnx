@@ -10,6 +10,13 @@ class OfflineStream {
   OfflineStream({required this.ptr});
 
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineStream?.call(ptr);
     ptr = nullptr;
   }
@@ -22,6 +29,14 @@ class OfflineStream {
   /// and
   ///  https://api.flutter.dev/flutter/dart-typed_data/Float32List-class.html
   void acceptWaveform({required Float32List samples, required int sampleRate}) {
+    if (SherpaOnnxBindings.acceptWaveformOffline == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
 
