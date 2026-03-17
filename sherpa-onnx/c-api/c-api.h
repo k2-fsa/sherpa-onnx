@@ -47,12 +47,14 @@ extern "C" {
 #define SHERPA_ONNX_API SHERPA_ONNX_IMPORT
 #endif
 
+#ifndef SHERPA_ONNX_DEPRECATED
 #if defined(_MSC_VER)
 #define SHERPA_ONNX_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif defined(__GNUC__) || defined(__clang__)
 #define SHERPA_ONNX_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else
 #define SHERPA_ONNX_DEPRECATED(msg)
+#endif
 #endif
 
 // Please don't free the returned pointer.
@@ -1260,7 +1262,7 @@ SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
 
 // Deprecated: Please use SherpaOnnxOfflineTtsGenerateWithConfig() instead.
 SHERPA_ONNX_API SHERPA_ONNX_DEPRECATED(
-    "Use SherpaOnnxOfflineTtsGenerateWithConfig instead")
+    "Use SherpaOnnxOfflineTtsGenerateWithConfig() instead")
 const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithZipvoice(const SherpaOnnxOfflineTts *tts,
                                          const char *text,
