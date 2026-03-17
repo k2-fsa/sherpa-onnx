@@ -10,13 +10,14 @@ const speedInput = document.getElementById('speed');
 const speedValue = document.getElementById('speedValue');
 const textArea = document.getElementById('text');
 const soundClips = document.getElementById('sound-clips');
+const statusElement = document.getElementById('status');
 
 speedValue.innerHTML = speedInput.value;
 
 let index = 0;
 
 let audioCtx = null;
-const worker = new Worker("/sherpa-onnx-tts.worker.js");
+const worker = new Worker("sherpa-onnx-tts.worker.js");
 let ttsInstanceInfo = {
   modelType: 0,
   numSpeakers: 0,
@@ -25,6 +26,7 @@ let ttsInstanceInfo = {
 worker.onmessage = (e) => {
   if (e.data.type === "sherpa-onnx-tts-progress") {
     Module.setStatus(e.data.status);
+    return;
   }
   if (e.data.type === "sherpa-onnx-tts-ready") {
     ttsInstanceInfo.modelType = e.data.modelType ?? 0;
@@ -33,6 +35,11 @@ worker.onmessage = (e) => {
     generateBtn.disabled = false;
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${e.data.numSpeakers - 1}):`;
     updateUiForModelType();
+    Module.setStatus('');
+    return;
+  }
+  if (e.data.type === "error") {
+    Module.setStatus(e.data.message);
     return;
   }
   if (e.data.type === "sherpa-onnx-tts-result") {
@@ -65,7 +72,6 @@ Module = {};
 // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
 Module.setStatus = function(status) {
   console.log(`status ${status}`);
-  const statusElement = document.getElementById('status');
   if (status == 'Running...') {
     status = 'Model downloaded. Initializing text to speech model...'
   }

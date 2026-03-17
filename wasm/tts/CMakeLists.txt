@@ -52,6 +52,7 @@ install(
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.js"
     "index.html"
     "sherpa-onnx-tts.js"
+    "sherpa-onnx-tts.worker.js"
     "app-tts.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.wasm"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.data"

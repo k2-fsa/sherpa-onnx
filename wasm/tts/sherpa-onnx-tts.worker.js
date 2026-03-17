@@ -26,8 +26,8 @@ self.Module = {
     }
   },
 };
-importScripts("/sherpa-onnx-wasm-main-tts.js");
-importScripts("/sherpa-onnx-tts.js");
+importScripts("sherpa-onnx-wasm-main-tts.js");
+importScripts("sherpa-onnx-tts.js");
 self.onmessage = async (e) => {
   const { type, text, sid, speed, genConfig } = e.data;
   if (type === "generate") {
