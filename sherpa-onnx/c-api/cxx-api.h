@@ -592,6 +592,10 @@ class SHERPA_ONNX_API OfflineTts
 struct KeywordResult {
   std::string keyword;
   std::vector<std::string> tokens;
+  /// Full decoded token sequence for the whole segment.
+  /// Use this for exact-match: only treat as hit when full_tokens equals
+  /// one of your keyword token sequences (e.g. "过来" yes, "不要过来" no).
+  std::vector<std::string> full_tokens;
   std::vector<float> timestamps;
   float start_time;
   std::string json;

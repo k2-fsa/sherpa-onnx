@@ -72,6 +72,24 @@ std::string KeywordResult::AsJsonString() const {
     }
     sep = ", ";
   }
+  os << "], ";
+
+  os << "\"full_tokens\": [";
+  sep = "";
+  os.flags(oldFlags);
+  for (const auto &t : full_tokens) {
+    if (t.size() == 1 && static_cast<uint8_t>(t[0]) > 0x7f) {
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(t.c_str());
+      os << sep << "\""
+         << "<0x" << std::hex << std::uppercase << static_cast<uint32_t>(p[0])
+         << ">"
+         << "\"";
+      os.flags(oldFlags);
+    } else {
+      os << sep << "\"" << t << "\"";
+    }
+    sep = ", ";
+  }
   os << "]";
   os << "}";
 

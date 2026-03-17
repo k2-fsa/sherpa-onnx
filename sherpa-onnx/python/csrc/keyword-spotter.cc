@@ -24,6 +24,11 @@ static void PybindKeywordResult(py::module *m) {
           "tokens",
           [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
       .def_property_readonly(
+          "full_tokens",
+          [](PyClass &self) -> std::vector<std::string> {
+            return self.full_tokens;
+          })
+      .def_property_readonly(
           "timestamps",
           [](PyClass &self) -> std::vector<float> { return self.timestamps; });
 }

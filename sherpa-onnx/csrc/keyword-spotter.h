@@ -29,6 +29,10 @@ struct KeywordResult {
   /// For instance, for BPE-based models it consists of a list of BPE tokens.
   std::vector<std::string> tokens;
 
+  /// Full decoded token sequence for the whole segment (for exact keyword match).
+  /// Use this to check if the entire utterance equals one of your keywords.
+  std::vector<std::string> full_tokens;
+
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;

@@ -152,8 +152,18 @@ class KeywordSpotter(object):
     def get_result(self, s: OnlineStream) -> str:
         return self.keyword_spotter.get_result(s).keyword.strip()
 
+    def get_result_full(self, s: OnlineStream):
+        """Return the full result object with .keyword, .full_tokens, .tokens, .timestamps.
+        Use .full_tokens to check exact match (entire utterance equals one keyword).
+        """
+        return self.keyword_spotter.get_result(s)
+
     def tokens(self, s: OnlineStream) -> List[str]:
         return self.keyword_spotter.get_result(s).tokens
+
+    def full_tokens(self, s: OnlineStream) -> List[str]:
+        """Full decoded token sequence for the segment (for exact keyword match)."""
+        return self.keyword_spotter.get_result(s).full_tokens
 
     def timestamps(self, s: OnlineStream) -> List[float]:
         return self.keyword_spotter.get_result(s).timestamps
