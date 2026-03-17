@@ -30,11 +30,13 @@ In the following, we demonstrate how to run speech enhancement.
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 node ./test-offline-speech-enhancement-gtcrn.js
+node ./test-online-speech-enhancement-gtcrn.js
 ```
 
-The GTCRN example file uses `gtcrn_simple.onnx`.
+The GTCRN example files use `gtcrn_simple.onnx`.
 
 DPDFNet has a separate example file. Download DPDFNet models from
 `https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models`
@@ -47,6 +49,16 @@ enhancement output.
 
 ```bash
 node ./test-offline-speech-enhancement-dpdfnet.js
+node ./test-online-speech-enhancement-dpdfnet.js
+```
+
+The following four example files are available:
+
+```bash
+node ./test-offline-speech-enhancement-gtcrn.js
+node ./test-offline-speech-enhancement-dpdfnet.js
+node ./test-online-speech-enhancement-gtcrn.js
+node ./test-online-speech-enhancement-dpdfnet.js
 ```
 
 # Speaker diarization

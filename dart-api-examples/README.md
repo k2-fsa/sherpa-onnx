@@ -21,6 +21,8 @@ https://pub.dev/packages/sherpa_onnx
 | [./vad](./vad)| Example for voice activity detection|
 | [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn)| Example for speech enhancement/denoising with GTCRN.|
 | [./speech-enhancement-dpdfnet](./speech-enhancement-dpdfnet)| Example for speech enhancement/denoising with DPDFNet, including the 16 kHz family (`dpdfnet_baseline`, `dpdfnet2`, `dpdfnet4`, `dpdfnet8`).|
+| [./streaming-speech-enhancement-gtcrn](./streaming-speech-enhancement-gtcrn)| Example for streaming speech enhancement/denoising with GTCRN.|
+| [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet)| Example for streaming speech enhancement/denoising with DPDFNet.|
 
 ## How to create an example in this folder
 

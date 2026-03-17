@@ -141,49 +141,22 @@ function initSherpaOnnxOfflineSpeechDenoiserConfig(config, Module) {
   };
 }
 
-class OfflineSpeechDenoiser {
-  constructor(configObj, Module) {
-    console.log(configObj)
-    const config = initSherpaOnnxOfflineSpeechDenoiserConfig(configObj, Module)
-    // Module._MyPrint(config.ptr);
-    const handle = Module._SherpaOnnxCreateOfflineSpeechDenoiser(config.ptr);
-
-    freeConfig(config, Module);
-
-    this.handle = handle;
-    this.sampleRate =
-        Module._SherpaOnnxOfflineSpeechDenoiserGetSampleRate(this.handle);
-    this.Module = Module
+function copyDenoisedAudio(handle, Module) {
+  const numSamples = Module.HEAP32[handle / 4 + 1];
+  const denoisedSampleRate = Module.HEAP32[handle / 4 + 2];
+  const samplesPtr = Module.HEAP32[handle / 4] / 4;
+  const denoisedSamples = new Float32Array(numSamples);
+  for (let i = 0; i < numSamples; i++) {
+    denoisedSamples[i] = Module.HEAPF32[samplesPtr + i];
   }
 
-  free() {
-    this.Module._SherpaOnnxDestroyOfflineSpeechDenoiser(this.handle);
-    this.handle = 0
-  }
+  Module._SherpaOnnxDestroyDenoisedAudio(handle);
+  return {samples: denoisedSamples, sampleRate: denoisedSampleRate};
+}
 
-  /**
-   * @param samples {Float32Array} Containing samples in the range [-1, 1]
-   * @param sampleRate {Number}
-   */
-  run(samples, sampleRate) {
-    const pointer =
-        this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
-    this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
-    const h = this.Module._SherpaOnnxOfflineSpeechDenoiserRun(
-        this.handle, pointer, samples.length, sampleRate);
-    this.Module._free(pointer);
-
-    const numSamples = this.Module.HEAP32[h / 4 + 1];
-    const denoisedSampleRate = this.Module.HEAP32[h / 4 + 2];
-
-    const samplesPtr = this.Module.HEAP32[h / 4] / 4;
-    const denoisedSamples = new Float32Array(numSamples);
-    for (let i = 0; i < numSamples; i++) {
-      denoisedSamples[i] = this.Module.HEAPF32[samplesPtr + i];
-    }
-
-    this.Module._SherpaOnnxDestroyDenoisedAudio(h);
-    return {samples: denoisedSamples, sampleRate: denoisedSampleRate};
+class SpeechDenoiserBase {
+  constructor(Module) {
+    this.Module = Module;
   }
 
   save(filename, audio) {
@@ -203,6 +176,78 @@ class OfflineSpeechDenoiser {
   }
 }
 
+class OfflineSpeechDenoiser extends SpeechDenoiserBase {
+  constructor(configObj, Module) {
+    super(Module);
+    const config = initSherpaOnnxOfflineSpeechDenoiserConfig(configObj, Module);
+    const handle = Module._SherpaOnnxCreateOfflineSpeechDenoiser(config.ptr);
+
+    freeConfig(config, Module);
+
+    this.handle = handle;
+    this.sampleRate =
+        Module._SherpaOnnxOfflineSpeechDenoiserGetSampleRate(this.handle);
+  }
+
+  free() {
+    this.Module._SherpaOnnxDestroyOfflineSpeechDenoiser(this.handle);
+    this.handle = 0;
+  }
+
+  run(samples, sampleRate) {
+    const pointer =
+        this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
+    this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
+    const h = this.Module._SherpaOnnxOfflineSpeechDenoiserRun(
+        this.handle, pointer, samples.length, sampleRate);
+    this.Module._free(pointer);
+
+    return copyDenoisedAudio(h, this.Module);
+  }
+}
+
+class OnlineSpeechDenoiser extends SpeechDenoiserBase {
+  constructor(configObj, Module) {
+    super(Module);
+    const config = initSherpaOnnxOfflineSpeechDenoiserConfig(configObj, Module);
+    const handle = Module._SherpaOnnxCreateOnlineSpeechDenoiser(config.ptr);
+
+    freeConfig(config, Module);
+
+    this.handle = handle;
+    this.sampleRate =
+        Module._SherpaOnnxOnlineSpeechDenoiserGetSampleRate(this.handle);
+    this.frameShiftInSamples =
+        Module._SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
+            this.handle);
+  }
+
+  free() {
+    this.Module._SherpaOnnxDestroyOnlineSpeechDenoiser(this.handle);
+    this.handle = 0;
+  }
+
+  run(samples, sampleRate) {
+    const pointer =
+        this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
+    this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
+    const h = this.Module._SherpaOnnxOnlineSpeechDenoiserRun(
+        this.handle, pointer, samples.length, sampleRate);
+    this.Module._free(pointer);
+
+    return copyDenoisedAudio(h, this.Module);
+  }
+
+  flush() {
+    const h = this.Module._SherpaOnnxOnlineSpeechDenoiserFlush(this.handle);
+    return copyDenoisedAudio(h, this.Module);
+  }
+
+  reset() {
+    this.Module._SherpaOnnxOnlineSpeechDenoiserReset(this.handle);
+  }
+}
+
 function createOfflineSpeechDenoiser(Module, myConfig) {
   let config = {
     model: {
@@ -218,9 +263,25 @@ function createOfflineSpeechDenoiser(Module, myConfig) {
   return new OfflineSpeechDenoiser(config, Module);
 }
 
+function createOnlineSpeechDenoiser(Module, myConfig) {
+  let config = {
+    model: {
+      gtcrn: {model: './gtcrn.onnx'},
+      debug: 0,
+    },
+  };
+
+  if (myConfig) {
+    config = myConfig;
+  }
+
+  return new OnlineSpeechDenoiser(config, Module);
+}
+
 if (typeof process == 'object' && typeof process.versions == 'object' &&
     typeof process.versions.node == 'string') {
   module.exports = {
     createOfflineSpeechDenoiser,
+    createOnlineSpeechDenoiser,
   };
 }

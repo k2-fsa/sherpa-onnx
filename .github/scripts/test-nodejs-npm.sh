@@ -143,10 +143,15 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 
 # speech enhancement
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 node ./test-offline-speech-enhancement-gtcrn.js
+node ./test-offline-speech-enhancement-dpdfnet.js
+node ./test-online-speech-enhancement-gtcrn.js
+node ./test-online-speech-enhancement-dpdfnet.js
 ls -lh *.wav
 rm gtcrn_simple.onnx
+rm dpdfnet_baseline.onnx
 rm -fv inp_16k.wav
 rm -fv enhanced*.wav
 

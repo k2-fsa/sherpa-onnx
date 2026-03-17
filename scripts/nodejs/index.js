@@ -60,6 +60,11 @@ function createOfflineSpeechDenoiser(config) {
       wasmModule, config);
 }
 
+function createOnlineSpeechDenoiser(config) {
+  return sherpa_onnx_speech_enhancement.createOnlineSpeechDenoiser(
+      wasmModule, config);
+}
+
 function getVersion() {
   const v = wasmModule._SherpaOnnxGetVersionStr();
   return wasmModule.UTF8ToString(v);
@@ -89,6 +94,7 @@ module.exports = {
   createVad,
   createOfflineSpeakerDiarization,
   createOfflineSpeechDenoiser,
+  createOnlineSpeechDenoiser,
   version: getVersion(),
   gitSha1: getGitSha1(),
   gitDate: getGitDate(),
