@@ -1273,6 +1273,7 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	return ans
 }
 
+// Deprecated: Use GenerateWithConfig() instead.
 func (tts *OfflineTts) GenerateWithZipvoice(
 	text, promptText string,
 	promptSamples []float32,
