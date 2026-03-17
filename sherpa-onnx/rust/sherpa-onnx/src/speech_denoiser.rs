@@ -1,7 +1,6 @@
 use crate::utils::to_c_ptr;
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
-use std::ptr;
 use std::slice;
 
 #[derive(Clone, Debug, Default)]
@@ -10,7 +9,10 @@ pub struct OfflineSpeechDenoiserGtcrnModelConfig {
 }
 
 impl OfflineSpeechDenoiserGtcrnModelConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSpeechDenoiserGtcrnModelConfig {
+    pub(crate) fn to_sys(
+        &self,
+        cstrings: &mut Vec<CString>,
+    ) -> sys::OfflineSpeechDenoiserGtcrnModelConfig {
         sys::OfflineSpeechDenoiserGtcrnModelConfig {
             model: to_c_ptr(&self.model, cstrings),
         }
@@ -23,7 +25,7 @@ pub struct OfflineSpeechDenoiserDpdfNetModelConfig {
 }
 
 impl OfflineSpeechDenoiserDpdfNetModelConfig {
-    fn to_sys(
+    pub(crate) fn to_sys(
         &self,
         cstrings: &mut Vec<CString>,
     ) -> sys::OfflineSpeechDenoiserDpdfNetModelConfig {
@@ -55,7 +57,7 @@ impl Default for OfflineSpeechDenoiserModelConfig {
 }
 
 impl OfflineSpeechDenoiserModelConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSpeechDenoiserModelConfig {
+    pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSpeechDenoiserModelConfig {
         sys::OfflineSpeechDenoiserModelConfig {
             gtcrn: self.gtcrn.to_sys(cstrings),
             num_threads: self.num_threads,
@@ -67,39 +69,13 @@ impl OfflineSpeechDenoiserModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct OfflineSpeechDenoiserConfig {
-    pub model: OfflineSpeechDenoiserModelConfig,
-}
-
-impl OfflineSpeechDenoiserConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSpeechDenoiserConfig {
-        sys::OfflineSpeechDenoiserConfig {
-            model: self.model.to_sys(cstrings),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct OnlineSpeechDenoiserConfig {
-    pub model: OfflineSpeechDenoiserModelConfig,
-}
-
-impl OnlineSpeechDenoiserConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineSpeechDenoiserConfig {
-        sys::OnlineSpeechDenoiserConfig {
-            model: self.model.to_sys(cstrings),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default)]
 pub struct DenoisedAudio {
     pub samples: Vec<f32>,
     pub sample_rate: i32,
 }
 
 impl DenoisedAudio {
-    fn from_ptr(ptr: *const sys::DenoisedAudio) -> Self {
+    pub(crate) fn from_ptr(ptr: *const sys::DenoisedAudio) -> Self {
         if ptr.is_null() {
             return Self::default();
         }
@@ -118,106 +94,5 @@ impl DenoisedAudio {
                 sample_rate,
             }
         }
-    }
-}
-
-pub struct OfflineSpeechDenoiser {
-    ptr: *const sys::OfflineSpeechDenoiser,
-}
-
-impl OfflineSpeechDenoiser {
-    pub fn create(config: &OfflineSpeechDenoiserConfig) -> Option<Self> {
-        let mut cstrings = Vec::new();
-        let sys_config = config.to_sys(&mut cstrings);
-        let ptr = unsafe { sys::SherpaOnnxCreateOfflineSpeechDenoiser(&sys_config) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self { ptr })
-        }
-    }
-
-    pub fn run(&self, samples: &[f32], sample_rate: i32) -> DenoisedAudio {
-        let samples_ptr = if samples.is_empty() {
-            ptr::null()
-        } else {
-            samples.as_ptr()
-        };
-        let ptr = unsafe {
-            sys::SherpaOnnxOfflineSpeechDenoiserRun(
-                self.ptr,
-                samples_ptr,
-                samples.len() as i32,
-                sample_rate,
-            )
-        };
-        DenoisedAudio::from_ptr(ptr)
-    }
-
-    pub fn sample_rate(&self) -> i32 {
-        unsafe { sys::SherpaOnnxOfflineSpeechDenoiserGetSampleRate(self.ptr) }
-    }
-}
-
-impl Drop for OfflineSpeechDenoiser {
-    fn drop(&mut self) {
-        unsafe { sys::SherpaOnnxDestroyOfflineSpeechDenoiser(self.ptr) }
-    }
-}
-
-pub struct OnlineSpeechDenoiser {
-    ptr: *const sys::OnlineSpeechDenoiser,
-}
-
-impl OnlineSpeechDenoiser {
-    pub fn create(config: &OnlineSpeechDenoiserConfig) -> Option<Self> {
-        let mut cstrings = Vec::new();
-        let sys_config = config.to_sys(&mut cstrings);
-        let ptr = unsafe { sys::SherpaOnnxCreateOnlineSpeechDenoiser(&sys_config) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self { ptr })
-        }
-    }
-
-    pub fn run(&self, samples: &[f32], sample_rate: i32) -> DenoisedAudio {
-        let samples_ptr = if samples.is_empty() {
-            ptr::null()
-        } else {
-            samples.as_ptr()
-        };
-        let ptr = unsafe {
-            sys::SherpaOnnxOnlineSpeechDenoiserRun(
-                self.ptr,
-                samples_ptr,
-                samples.len() as i32,
-                sample_rate,
-            )
-        };
-        DenoisedAudio::from_ptr(ptr)
-    }
-
-    pub fn flush(&self) -> DenoisedAudio {
-        let ptr = unsafe { sys::SherpaOnnxOnlineSpeechDenoiserFlush(self.ptr) };
-        DenoisedAudio::from_ptr(ptr)
-    }
-
-    pub fn reset(&self) {
-        unsafe { sys::SherpaOnnxOnlineSpeechDenoiserReset(self.ptr) }
-    }
-
-    pub fn sample_rate(&self) -> i32 {
-        unsafe { sys::SherpaOnnxOnlineSpeechDenoiserGetSampleRate(self.ptr) }
-    }
-
-    pub fn frame_shift_in_samples(&self) -> i32 {
-        unsafe { sys::SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(self.ptr) }
-    }
-}
-
-impl Drop for OnlineSpeechDenoiser {
-    fn drop(&mut self) {
-        unsafe { sys::SherpaOnnxDestroyOnlineSpeechDenoiser(self.ptr) }
     }
 }
