@@ -1,1 +1,1 @@
-../../speech-enhancement-gtcrn/bin/init.dart
+../../vad/bin/init.dart
