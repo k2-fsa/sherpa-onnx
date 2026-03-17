@@ -11,7 +11,16 @@
   how to use VAD with a non-streaming ASR model for speech recognition from
   a microphone
 - [offline-speech-enhancement-gtcrn.py](./offline-speech-enhancement-gtcrn.py)
-  It shows how to use the offline speech denoiser API with GTCRN or DPDFNet
-  models. Use 16 kHz DPDFNet models such as `baseline.onnx`,
+  It shows how to use the offline speech denoiser API with GTCRN.
+
+- [offline-speech-enhancement-dpdfnet.py](./offline-speech-enhancement-dpdfnet.py)
+  It shows how to use the offline speech denoiser API with DPDFNet.
+
+- [online-speech-enhancement-gtcrn.py](./online-speech-enhancement-gtcrn.py)
+  It shows how to use the online speech denoiser API with GTCRN.
+
+- [online-speech-enhancement-dpdfnet.py](./online-speech-enhancement-dpdfnet.py)
+  It shows how to use the online speech denoiser API with DPDFNet.
+  models. Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`,
   `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR and
   `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.

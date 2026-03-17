@@ -18,11 +18,11 @@ static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) == 1 * 4,
 static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) ==
                   1 * 4,
               "");
-static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig) ==
-                  sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) +
-                      sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) +
-                      3 * 4,
-              "");
+static_assert(
+    sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig) ==
+        sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) +
+            sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) + 3 * 4,
+    "");
 static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserConfig) ==
                   sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig),
               "");

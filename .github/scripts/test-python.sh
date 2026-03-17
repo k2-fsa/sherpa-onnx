@@ -140,8 +140,12 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 log "test offline speech enhancement (GTCRN)"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
 python3 ./python-api-examples/offline-speech-enhancement-gtcrn.py
+python3 ./python-api-examples/offline-speech-enhancement-dpdfnet.py
+python3 ./python-api-examples/online-speech-enhancement-gtcrn.py
+python3 ./python-api-examples/online-speech-enhancement-dpdfnet.py
 ls -lh *.wav
 
 log "test offline zipformer (byte-level bpe, Chinese+English)"

@@ -207,14 +207,17 @@ jobs:
           rm *.wav
           rm -rf sherpa-onnx-dolphin-*
 
-      - name:  Run speech enhancement (GTCRN)
+      - name:  Run speech enhancement
         shell: bash
         run: |
           cd ./java-api-examples
           ./run-non-streaming-speech-enhancement-gtcrn.sh
+          ./run-non-streaming-speech-enhancement-dpdfnet.sh
+          ./run-streaming-speech-enhancement-gtcrn.sh
+          ./run-streaming-speech-enhancement-dpdfnet.sh
           ls -lh *.wav
 
-          rm -fv gtcrn_simple.onnx *.wav
+          rm -fv gtcrn_simple.onnx dpdfnet_baseline.onnx *.wav
 
       - name:  Run java test (Online add punctuations)
         shell: bash

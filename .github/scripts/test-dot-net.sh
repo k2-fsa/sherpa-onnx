@@ -119,6 +119,18 @@ cd ../speech-enhancement-gtcrn
 ./run.sh
 ls -lh
 
+cd ../speech-enhancement-dpdfnet
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-gtcrn
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-dpdfnet
+./run.sh
+ls -lh
+
 cd ../kokoro-tts
 ./run-kokoro.sh
 ls -lh

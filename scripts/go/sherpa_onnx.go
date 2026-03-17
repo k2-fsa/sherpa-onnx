@@ -2458,11 +2458,51 @@ type OfflineSpeechDenoiser struct {
 	impl *C.struct_SherpaOnnxOfflineSpeechDenoiser
 }
 
+type OnlineSpeechDenoiserConfig struct {
+	Model OfflineSpeechDenoiserModelConfig
+}
+
+type OnlineSpeechDenoiser struct {
+	impl *C.struct_SherpaOnnxOnlineSpeechDenoiser
+}
+
 type DenoisedAudio struct {
 	// Normalized samples in the range [-1, 1]
 	Samples []float32
 
 	SampleRate int
+}
+
+func floatPointer(samples []float32) *C.float {
+	if len(samples) == 0 {
+		return nil
+	}
+
+	return (*C.float)(&samples[0])
+}
+
+func denoisedAudioFromPointer(audio *C.struct_SherpaOnnxDenoisedAudio) *DenoisedAudio {
+	if audio == nil {
+		return &DenoisedAudio{}
+	}
+
+	defer C.SherpaOnnxDestroyDenoisedAudio(audio)
+
+	ans := &DenoisedAudio{}
+	ans.SampleRate = int(audio.sample_rate)
+	n := int(audio.n)
+	ans.Samples = make([]float32, n)
+
+	if n == 0 || audio.samples == nil {
+		return ans
+	}
+
+	denoisedSamples := unsafe.Slice(audio.samples, n)
+	for i := 0; i < n; i++ {
+		ans.Samples[i] = float32(denoisedSamples[i])
+	}
+
+	return ans
 }
 
 // Free the internal pointer inside the OfflineSpeechDenoiser to avoid memory leak.
@@ -2497,33 +2537,74 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 }
 
 func (sd *OfflineSpeechDenoiser) Run(samples []float32, sampleRate int) *DenoisedAudio {
-	audio := C.SherpaOnnxOfflineSpeechDenoiserRun(sd.impl, (*C.float)(&samples[0]), C.int(len(samples)), C.int(sampleRate))
-	defer C.SherpaOnnxDestroyDenoisedAudio(audio)
-
-	ans := &DenoisedAudio{}
-	ans.SampleRate = int(audio.sample_rate)
-	n := int(audio.n)
-	ans.Samples = make([]float32, n)
-
-	denoisedSamples := unsafe.Slice(audio.samples, n)
-	for i := 0; i < n; i++ {
-		ans.Samples[i] = float32(denoisedSamples[i])
-	}
-
-	return ans
+	audio := C.SherpaOnnxOfflineSpeechDenoiserRun(sd.impl, floatPointer(samples), C.int(len(samples)), C.int(sampleRate))
+	return denoisedAudioFromPointer(audio)
 }
 
 func (audio *DenoisedAudio) Save(filename string) bool {
 	s := C.CString(filename)
 	defer C.free(unsafe.Pointer(s))
 
-	ok := int(C.SherpaOnnxWriteWave((*C.float)(&audio.Samples[0]), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
+	ok := int(C.SherpaOnnxWriteWave(floatPointer(audio.Samples), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
 
 	return ok == 1
 }
 
 func (sd *OfflineSpeechDenoiser) SampleRate() int {
 	return int(C.SherpaOnnxOfflineSpeechDenoiserGetSampleRate(sd.impl))
+}
+
+// Free the internal pointer inside the OnlineSpeechDenoiser to avoid memory leak.
+func DeleteOnlineSpeechDenoiser(sd *OnlineSpeechDenoiser) {
+	C.SherpaOnnxDestroyOnlineSpeechDenoiser(sd.impl)
+	sd.impl = nil
+}
+
+// The user is responsible to invoke [DeleteOnlineSpeechDenoiser]() to free
+// the returned denoiser to avoid memory leak.
+func NewOnlineSpeechDenoiser(config *OnlineSpeechDenoiserConfig) *OnlineSpeechDenoiser {
+	c := C.struct_SherpaOnnxOnlineSpeechDenoiserConfig{}
+	c.model.gtcrn.model = C.CString(config.Model.Gtcrn.Model)
+	defer C.free(unsafe.Pointer(c.model.gtcrn.model))
+	c.model.dpdfnet.model = C.CString(config.Model.DpdfNet.Model)
+	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
+
+	c.model.num_threads = C.int(config.Model.NumThreads)
+	c.model.debug = C.int(config.Model.Debug)
+
+	c.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(c.model.provider))
+
+	impl := C.SherpaOnnxCreateOnlineSpeechDenoiser(&c)
+	if impl == nil {
+		return nil
+	}
+
+	sd := &OnlineSpeechDenoiser{}
+	sd.impl = impl
+	return sd
+}
+
+func (sd *OnlineSpeechDenoiser) Run(samples []float32, sampleRate int) *DenoisedAudio {
+	audio := C.SherpaOnnxOnlineSpeechDenoiserRun(sd.impl, floatPointer(samples), C.int(len(samples)), C.int(sampleRate))
+	return denoisedAudioFromPointer(audio)
+}
+
+func (sd *OnlineSpeechDenoiser) Flush() *DenoisedAudio {
+	audio := C.SherpaOnnxOnlineSpeechDenoiserFlush(sd.impl)
+	return denoisedAudioFromPointer(audio)
+}
+
+func (sd *OnlineSpeechDenoiser) Reset() {
+	C.SherpaOnnxOnlineSpeechDenoiserReset(sd.impl)
+}
+
+func (sd *OnlineSpeechDenoiser) SampleRate() int {
+	return int(C.SherpaOnnxOnlineSpeechDenoiserGetSampleRate(sd.impl))
+}
+
+func (sd *OnlineSpeechDenoiser) FrameShiftInSamples() int {
+	return int(C.SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(sd.impl))
 }
 
 func GetVersion() string {

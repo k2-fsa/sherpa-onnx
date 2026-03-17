@@ -1938,9 +1938,10 @@ typedef struct SherpaOnnxOnlineSpeechDenoiserConfig {
   SherpaOnnxOfflineSpeechDenoiserModelConfig model;
 } SherpaOnnxOnlineSpeechDenoiserConfig;
 
-typedef struct SherpaOnnxOnlineSpeechDenoiser
-    SherpaOnnxOnlineSpeechDenoiser;
+typedef struct SherpaOnnxOnlineSpeechDenoiser SherpaOnnxOnlineSpeechDenoiser;
 
+// You have to invoke SherpaOnnxDestroyOnlineSpeechDenoiser(0
+// to free the returned pointer to avoid memory leak
 SHERPA_ONNX_API const SherpaOnnxOnlineSpeechDenoiser *
 SherpaOnnxCreateOnlineSpeechDenoiser(
     const SherpaOnnxOnlineSpeechDenoiserConfig *config);
@@ -1955,16 +1956,22 @@ SHERPA_ONNX_API int32_t SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(
     const SherpaOnnxOnlineSpeechDenoiser *sd);
 
 // This function is not thread-safe.
+// It returns a nullptr if no audio is available. For instance, if n is too
+// small.
+// If a non-nullptr is returned, the user has to invoke
+// SherpaOnnxDestroyDenoisedAudio() to free the returned pointer to avoid memory
+// leak.
 SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
 SherpaOnnxOnlineSpeechDenoiserRun(const SherpaOnnxOnlineSpeechDenoiser *sd,
                                   const float *samples, int32_t n,
                                   int32_t sample_rate);
 
 // Flush buffered samples and reset the denoiser so it can be reused.
+// Note: It also calls SherpaOnnxOnlineSpeechDenoiserReset().
 SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
-SherpaOnnxOnlineSpeechDenoiserFlush(
-    const SherpaOnnxOnlineSpeechDenoiser *sd);
+SherpaOnnxOnlineSpeechDenoiserFlush(const SherpaOnnxOnlineSpeechDenoiser *sd);
 
+// Reset the denoiser so you can use it to process a new stream of audio
 SHERPA_ONNX_API void SherpaOnnxOnlineSpeechDenoiserReset(
     const SherpaOnnxOnlineSpeechDenoiser *sd);
 
@@ -1976,6 +1983,11 @@ typedef struct NativeResourceManager NativeResourceManager;
 SHERPA_ONNX_API const SherpaOnnxOfflineSpeechDenoiser *
 SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
     const SherpaOnnxOfflineSpeechDenoiserConfig *config,
+    NativeResourceManager *mgr);
+
+SHERPA_ONNX_API const SherpaOnnxOnlineSpeechDenoiser *
+SherpaOnnxCreateOnlineSpeechDenoiserOHOS(
+    const SherpaOnnxOnlineSpeechDenoiserConfig *config,
     NativeResourceManager *mgr);
 
 /// @param config  Config for the recognizer.

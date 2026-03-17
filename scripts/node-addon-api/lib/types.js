@@ -541,16 +541,30 @@
 
 /**
  * Offline Speech Denoiser model config
+ * @typedef {Object} OfflineSpeechDenoiserDpdfNetModelConfig
+ * @property {string} [model]
+ */
+
+/**
+ * Offline Speech Denoiser model config
  * @typedef {Object} OfflineSpeechDenoiserModelConfig
  * @property {OfflineSpeechDenoiserGtcrnModelConfig} [gtcrn]
+ * @property {OfflineSpeechDenoiserDpdfNetModelConfig} [dpdfnet]
+ * @property {number} [numThreads]
+ * @property {boolean|number} [debug]
+ * @property {string} [provider]
  */
 
 /**
  * Offline Speech Denoiser configuration (partial).
  * @typedef {Object} OfflineSpeechDenoiserConfig
  * @property {OfflineSpeechDenoiserModelConfig} [model]
- * @property {number} [numThreads]
- * @property {string} [provider]
+ */
+
+/**
+ * Online Speech Denoiser configuration (partial).
+ * @typedef {Object} OnlineSpeechDenoiserConfig
+ * @property {OfflineSpeechDenoiserModelConfig} [model]
  */
 
 /**

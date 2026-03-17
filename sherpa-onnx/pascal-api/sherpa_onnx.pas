@@ -726,6 +726,11 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOnlineSpeechDenoiserConfig = record
+    Model: TSherpaOnnxOfflineSpeechDenoiserModelConfig;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxDenoisedAudio = record
     Samples: array of Single;
     SampleRate: Integer;
@@ -744,6 +749,25 @@ type
 
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
+  end;
+
+  TSherpaOnnxOnlineSpeechDenoiser = class
+  private
+   Handle: Pointer;
+   SampleRate: Integer;
+   FrameShiftInSamples: Integer;
+   _Config: TSherpaOnnxOnlineSpeechDenoiserConfig;
+  public
+    constructor Create(Config: TSherpaOnnxOnlineSpeechDenoiserConfig);
+    destructor Destroy; override;
+
+    function Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+    function Flush: TSherpaOnnxDenoisedAudio;
+    procedure Reset;
+
+    property GetHandle: Pointer Read Handle;
+    property GetSampleRate: Integer Read SampleRate;
+    property GetFrameShiftInSamples: Integer Read FrameShiftInSamples;
   end;
 
   { It supports reading a single channel wave with 16-bit encoded samples.
@@ -1250,6 +1274,12 @@ type
 
   PSherpaOnnxOfflineSpeechDenoiserConfig = ^SherpaOnnxOfflineSpeechDenoiserConfig;
 
+  SherpaOnnxOnlineSpeechDenoiserConfig = record
+    Model: SherpaOnnxOfflineSpeechDenoiserModelConfig;
+  end;
+
+  PSherpaOnnxOnlineSpeechDenoiserConfig = ^SherpaOnnxOnlineSpeechDenoiserConfig;
+
   SherpaOnnxDenoisedAudio = record
     Samples: pcfloat;
     N: cint32;
@@ -1314,6 +1344,28 @@ function SherpaOnnxOfflineSpeechDenoiserGetSampleRate(P: Pointer): cint32; cdecl
 
 function SherpaOnnxOfflineSpeechDenoiserRun(P: Pointer;
   Samples: pcfloat; N: cint32;SampleRate: cint32):PSherpaOnnxDenoisedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateOnlineSpeechDenoiser(Config: PSherpaOnnxOnlineSpeechDenoiserConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOnlineSpeechDenoiser(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserGetSampleRate(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserRun(P: Pointer;
+  Samples: pcfloat; N: cint32; SampleRate: cint32): PSherpaOnnxDenoisedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserFlush(P: Pointer): PSherpaOnnxDenoisedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOnlineSpeechDenoiserReset(P: Pointer); cdecl;
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxDestroyDenoisedAudio(Audio: Pointer); cdecl;
@@ -3231,6 +3283,28 @@ begin
     'Model := %s)', [Self.Model.ToString]);
 end;
 
+function TSherpaOnnxOnlineSpeechDenoiserConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOnlineSpeechDenoiserConfig(' +
+    'Model := %s)', [Self.Model.ToString]);
+end;
+
+function ExtractDenoisedAudio(Audio: PSherpaOnnxDenoisedAudio): TSherpaOnnxDenoisedAudio;
+begin
+  Result := Default(TSherpaOnnxDenoisedAudio);
+
+  if Audio = nil then
+    Exit;
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
+
+  SherpaOnnxDestroyDenoisedAudio(Audio);
+end;
+
 constructor TSherpaOnnxOfflineSpeechDenoiser.Create(Config: TSherpaOnnxOfflineSpeechDenoiserConfig);
 var
   C: SherpaOnnxOfflineSpeechDenoiserConfig;
@@ -3262,20 +3336,58 @@ function TSherpaOnnxOfflineSpeechDenoiser.Run(const Samples: array of Single; In
 var
   Audio: PSherpaOnnxDenoisedAudio;
 begin
-  Result := Default(TSherpaOnnxDenoisedAudio);
-
   Audio := SherpaOnnxOfflineSpeechDenoiserRun(Self.Handle, pcfloat(Samples), Length(Samples), InputSampleRate);
+  Result := ExtractDenoisedAudio(Audio);
+end;
 
-  if Audio = nil then
-    Exit;
+constructor TSherpaOnnxOnlineSpeechDenoiser.Create(Config: TSherpaOnnxOnlineSpeechDenoiserConfig);
+var
+  C: SherpaOnnxOnlineSpeechDenoiserConfig;
+begin
+  C := Default(SherpaOnnxOnlineSpeechDenoiserConfig);
+  C.Model.Gtcrn.Model := PAnsiChar(Config.Model.Gtcrn.Model);
+  C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
+  C.Model.NumThreads := Config.Model.NumThreads;
+  C.Model.Debug := Ord(Config.Model.Debug);
+  C.Model.Provider := PAnsiChar(Config.Model.Provider);
 
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
+  Self.Handle := SherpaOnnxCreateOnlineSpeechDenoiser(@C);
+  Self._Config := Config;
+  Self.SampleRate := 0;
+  Self.FrameShiftInSamples := 0;
 
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
+  if Self.Handle <> nil then
+    begin
+      Self.SampleRate := SherpaOnnxOnlineSpeechDenoiserGetSampleRate(Self.Handle);
+      Self.FrameShiftInSamples := SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(Self.Handle);
+    end;
+end;
 
-  SherpaOnnxDestroyDenoisedAudio(audio);
+destructor TSherpaOnnxOnlineSpeechDenoiser.Destroy;
+begin
+  SherpaOnnxDestroyOnlineSpeechDenoiser(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxOnlineSpeechDenoiser.Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+var
+  Audio: PSherpaOnnxDenoisedAudio;
+begin
+  Audio := SherpaOnnxOnlineSpeechDenoiserRun(Self.Handle, pcfloat(Samples), Length(Samples), InputSampleRate);
+  Result := ExtractDenoisedAudio(Audio);
+end;
+
+function TSherpaOnnxOnlineSpeechDenoiser.Flush: TSherpaOnnxDenoisedAudio;
+var
+  Audio: PSherpaOnnxDenoisedAudio;
+begin
+  Audio := SherpaOnnxOnlineSpeechDenoiserFlush(Self.Handle);
+  Result := ExtractDenoisedAudio(Audio);
+end;
+
+procedure TSherpaOnnxOnlineSpeechDenoiser.Reset;
+begin
+  SherpaOnnxOnlineSpeechDenoiserReset(Self.Handle);
 end;
 
 end.

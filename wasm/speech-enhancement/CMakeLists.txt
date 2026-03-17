@@ -9,11 +9,18 @@ endif()
 set(exported_functions
   MyPrint
   SherpaOnnxCreateOfflineSpeechDenoiser
+  SherpaOnnxCreateOnlineSpeechDenoiser
   SherpaOnnxDestroyDenoisedAudio
   SherpaOnnxDestroyOfflineSpeechDenoiser
+  SherpaOnnxDestroyOnlineSpeechDenoiser
   SherpaOnnxFreeWave
   SherpaOnnxOfflineSpeechDenoiserGetSampleRate
   SherpaOnnxOfflineSpeechDenoiserRun
+  SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples
+  SherpaOnnxOnlineSpeechDenoiserGetSampleRate
+  SherpaOnnxOnlineSpeechDenoiserRun
+  SherpaOnnxOnlineSpeechDenoiserFlush
+  SherpaOnnxOnlineSpeechDenoiserReset
   SherpaOnnxReadWave
   SherpaOnnxReadWaveFromBinaryData
   SherpaOnnxWriteWave

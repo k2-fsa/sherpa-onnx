@@ -27,7 +27,7 @@ public class NonStreamingSpeechEnhancementGtcrn {
     String testWaveFilename = "./inp_16k.wav";
     WaveReader reader = new WaveReader(testWaveFilename);
 
-    DenoisedAudio denoised = speech_denoiser.run(reader.getSamples(), reader.getSampleRate());
+    DenoisedAudio denoised = speechDenoiser.run(reader.getSamples(), reader.getSampleRate());
     String outFilename = "enhanced.wav";
     WaveWriter.write(outFilename, denoised.getSamples(), denoised.getSampleRate());
     System.out.printf("Saved to %s\n", outFilename);

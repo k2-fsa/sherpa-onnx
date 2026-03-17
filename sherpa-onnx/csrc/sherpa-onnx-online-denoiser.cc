@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -17,17 +18,30 @@ int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Streaming speech denoising with sherpa-onnx.
 
-Please download DPDFNet models from the official Hugging Face hub:
+Please download GTCRN and sample files from:
+
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+
+DPDFNet models are available from either:
+
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 https://huggingface.co/Ceva-IP/DPDFNet
 
-Currently this binary supports the DPDFNet streaming exports:
-  baseline.onnx
+Currently this binary supports:
+  gtcrn_simple.onnx
+  dpdfnet_baseline.onnx
   dpdfnet2.onnx
   dpdfnet4.onnx
   dpdfnet8.onnx
   dpdfnet2_48khz_hr.onnx
 
 Usage:
+
+./bin/sherpa-onnx-online-denoiser \
+  --speech-denoiser-gtcrn-model=gtcrn_simple.onnx \
+  --chunk-duration-ms=16 \
+  --input-wav=input.wav \
+  --output-wav=output_16k.wav
 
 ./bin/sherpa-onnx-online-denoiser \
   --speech-denoiser-dpdfnet-model=dpdfnet4.onnx \

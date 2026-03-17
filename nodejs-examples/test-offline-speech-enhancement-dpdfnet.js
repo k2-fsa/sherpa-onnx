@@ -1,11 +1,12 @@
 // Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-// Please download a speech enhancement model and ./inp_16k.wav used in this file
+// Please download a DPDFNet model and ./inp_16k.wav used in this file
 // from
-// https://huggingface.co/Ceva-IP/DPDFNet
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+// or https://huggingface.co/Ceva-IP/DPDFNet
 //
 // This script shows how to use speech enhancement API from sherpa-onnx.
-// Use baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
+// Use dpdfnet_baseline.onnx, dpdfnet2.onnx, dpdfnet4.onnx, or dpdfnet8.onnx
 // for 16 kHz downstream ASR or speech recognition.
 // Use dpdfnet2_48khz_hr.onnx for 48 kHz enhancement output.
 const sherpa_onnx = require('sherpa-onnx');

@@ -91,6 +91,27 @@ jobs:
           cd go-api-examples/speech-enhancement-gtcrn/
           ./run.sh
 
+      - name: Test speech enhancement (DPDFNet)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/speech-enhancement-dpdfnet/
+          ./run.sh
+
+      - name: Test streaming speech enhancement (GTCRN)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-speech-enhancement-gtcrn/
+          ./run.sh
+
+      - name: Test streaming speech enhancement (DPDFNet)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-speech-enhancement-dpdfnet/
+          ./run.sh
+
       - name: Test Keyword spotting
         if: matrix.os != 'windows-2022'
         shell: bash

@@ -1873,14 +1873,24 @@ class SherpaOnnxDenoisedAudioWrapper {
   }
 
   var n: Int32 {
+    guard let audio else {
+      return 0
+    }
     return audio.pointee.n
   }
 
   var sampleRate: Int32 {
+    guard let audio else {
+      return 0
+    }
     return audio.pointee.sample_rate
   }
 
   var samples: [Float] {
+    guard let audio else {
+      return []
+    }
+
     if let p = audio.pointee.samples {
       var samples: [Float] = []
       for index in 0..<n {
@@ -1894,6 +1904,9 @@ class SherpaOnnxDenoisedAudioWrapper {
   }
 
   func save(filename: String) -> Int32 {
+    guard let audio else {
+      return 0
+    }
     return SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
   }
 }
@@ -1924,6 +1937,52 @@ class SherpaOnnxOfflineSpeechDenoiserWrapper {
 
   var sampleRate: Int {
     return Int(SherpaOnnxOfflineSpeechDenoiserGetSampleRate(impl))
+  }
+}
+
+func sherpaOnnxOnlineSpeechDenoiserConfig(
+  model: SherpaOnnxOfflineSpeechDenoiserModelConfig =
+    sherpaOnnxOfflineSpeechDenoiserModelConfig()
+) -> SherpaOnnxOnlineSpeechDenoiserConfig {
+  return SherpaOnnxOnlineSpeechDenoiserConfig(model: model)
+}
+
+class SherpaOnnxOnlineSpeechDenoiserWrapper {
+  let impl: OpaquePointer!
+
+  init(
+    config: UnsafePointer<SherpaOnnxOnlineSpeechDenoiserConfig>!
+  ) {
+    impl = SherpaOnnxCreateOnlineSpeechDenoiser(config)
+  }
+
+  deinit {
+    if let impl {
+      SherpaOnnxDestroyOnlineSpeechDenoiser(impl)
+    }
+  }
+
+  func run(samples: [Float], sampleRate: Int) -> SherpaOnnxDenoisedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxDenoisedAudio>? = SherpaOnnxOnlineSpeechDenoiserRun(
+      impl, samples, Int32(samples.count), Int32(sampleRate))
+    return SherpaOnnxDenoisedAudioWrapper(audio: audio)
+  }
+
+  func flush() -> SherpaOnnxDenoisedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxDenoisedAudio>? = SherpaOnnxOnlineSpeechDenoiserFlush(impl)
+    return SherpaOnnxDenoisedAudioWrapper(audio: audio)
+  }
+
+  func reset() {
+    SherpaOnnxOnlineSpeechDenoiserReset(impl)
+  }
+
+  var sampleRate: Int {
+    return Int(SherpaOnnxOnlineSpeechDenoiserGetSampleRate(impl))
+  }
+
+  var frameShiftInSamples: Int {
+    return Int(SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(impl))
   }
 }
 

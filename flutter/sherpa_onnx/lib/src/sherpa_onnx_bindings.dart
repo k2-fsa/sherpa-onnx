@@ -28,6 +28,10 @@ final class SherpaOnnxOfflineSpeechDenoiserConfig extends Struct {
   external SherpaOnnxOfflineSpeechDenoiserModelConfig model;
 }
 
+final class SherpaOnnxOnlineSpeechDenoiserConfig extends Struct {
+  external SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+}
+
 final class SherpaOnnxDenoisedAudio extends Struct {
   external Pointer<Float> samples;
 
@@ -784,6 +788,8 @@ final class SherpaOnnxSpokenLanguageIdentification extends Opaque {}
 
 final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
 
+final class SherpaOnnxOnlineSpeechDenoiser extends Opaque {}
+
 typedef SherpaOnnxCreateOfflineSpeechDenoiserNative =
     Pointer<SherpaOnnxOfflineSpeechDenoiser> Function(
       Pointer<SherpaOnnxOfflineSpeechDenoiserConfig>,
@@ -825,6 +831,64 @@ typedef SherpaOnnxDestroyDenoisedAudioNative =
 
 typedef SherpaOnnxDestroyDenoisedAudio =
     void Function(Pointer<SherpaOnnxDenoisedAudio>);
+
+typedef SherpaOnnxCreateOnlineSpeechDenoiserNative =
+    Pointer<SherpaOnnxOnlineSpeechDenoiser> Function(
+      Pointer<SherpaOnnxOnlineSpeechDenoiserConfig>,
+    );
+
+typedef SherpaOnnxCreateOnlineSpeechDenoiser =
+    SherpaOnnxCreateOnlineSpeechDenoiserNative;
+
+typedef SherpaOnnxDestroyOnlineSpeechDenoiserNative =
+    Void Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxDestroyOnlineSpeechDenoiser =
+    void Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserGetSampleRateNative =
+    Int32 Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserGetSampleRate =
+    int Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamplesNative =
+    Int32 Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples =
+    int Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserRunNative =
+    Pointer<SherpaOnnxDenoisedAudio> Function(
+      Pointer<SherpaOnnxOnlineSpeechDenoiser>,
+      Pointer<Float>,
+      Int32,
+      Int32,
+    );
+
+typedef SherpaOnnxOnlineSpeechDenoiserRun =
+    Pointer<SherpaOnnxDenoisedAudio> Function(
+      Pointer<SherpaOnnxOnlineSpeechDenoiser>,
+      Pointer<Float>,
+      int,
+      int,
+    );
+
+typedef SherpaOnnxOnlineSpeechDenoiserFlushNative =
+    Pointer<SherpaOnnxDenoisedAudio> Function(
+      Pointer<SherpaOnnxOnlineSpeechDenoiser>,
+    );
+
+typedef SherpaOnnxOnlineSpeechDenoiserFlush =
+    Pointer<SherpaOnnxDenoisedAudio> Function(
+      Pointer<SherpaOnnxOnlineSpeechDenoiser>,
+    );
+
+typedef SherpaOnnxOnlineSpeechDenoiserResetNative =
+    Void Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
+
+typedef SherpaOnnxOnlineSpeechDenoiserReset =
+    void Function(Pointer<SherpaOnnxOnlineSpeechDenoiser>);
 
 typedef SherpaOnnxCreateSpokenLanguageIdentificationNative =
     Pointer<SherpaOnnxSpokenLanguageIdentification> Function(
@@ -1741,6 +1805,19 @@ class SherpaOnnxBindings {
   sherpaOnnxOfflineSpeechDenoiserGetSampleRate;
   static SherpaOnnxOfflineSpeechDenoiserRun? sherpaOnnxOfflineSpeechDenoiserRun;
   static SherpaOnnxDestroyDenoisedAudio? sherpaOnnxDestroyDenoisedAudio;
+  static SherpaOnnxCreateOnlineSpeechDenoiser?
+  sherpaOnnxCreateOnlineSpeechDenoiser;
+  static SherpaOnnxDestroyOnlineSpeechDenoiser?
+  sherpaOnnxDestroyOnlineSpeechDenoiser;
+  static SherpaOnnxOnlineSpeechDenoiserGetSampleRate?
+  sherpaOnnxOnlineSpeechDenoiserGetSampleRate;
+  static SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples?
+  sherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples;
+  static SherpaOnnxOnlineSpeechDenoiserRun? sherpaOnnxOnlineSpeechDenoiserRun;
+  static SherpaOnnxOnlineSpeechDenoiserFlush?
+  sherpaOnnxOnlineSpeechDenoiserFlush;
+  static SherpaOnnxOnlineSpeechDenoiserReset?
+  sherpaOnnxOnlineSpeechDenoiserReset;
 
   static SherpaOnnxCreateSpokenLanguageIdentification?
   sherpaOnnxCreateSpokenLanguageIdentification;
@@ -1985,6 +2062,50 @@ class SherpaOnnxBindings {
     sherpaOnnxDestroyDenoisedAudio ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyDenoisedAudioNative>>(
           'SherpaOnnxDestroyDenoisedAudio',
+        )
+        .asFunction();
+
+    sherpaOnnxCreateOnlineSpeechDenoiser ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateOnlineSpeechDenoiserNative>>(
+          'SherpaOnnxCreateOnlineSpeechDenoiser',
+        )
+        .asFunction();
+
+    sherpaOnnxDestroyOnlineSpeechDenoiser ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOnlineSpeechDenoiserNative>>(
+          'SherpaOnnxDestroyOnlineSpeechDenoiser',
+        )
+        .asFunction();
+
+    sherpaOnnxOnlineSpeechDenoiserGetSampleRate ??= dynamicLibrary
+        .lookup<
+          NativeFunction<SherpaOnnxOnlineSpeechDenoiserGetSampleRateNative>
+        >('SherpaOnnxOnlineSpeechDenoiserGetSampleRate')
+        .asFunction();
+
+    sherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples ??= dynamicLibrary
+        .lookup<
+          NativeFunction<
+            SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamplesNative
+          >
+        >('SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples')
+        .asFunction();
+
+    sherpaOnnxOnlineSpeechDenoiserRun ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlineSpeechDenoiserRunNative>>(
+          'SherpaOnnxOnlineSpeechDenoiserRun',
+        )
+        .asFunction();
+
+    sherpaOnnxOnlineSpeechDenoiserFlush ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlineSpeechDenoiserFlushNative>>(
+          'SherpaOnnxOnlineSpeechDenoiserFlush',
+        )
+        .asFunction();
+
+    sherpaOnnxOnlineSpeechDenoiserReset ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlineSpeechDenoiserResetNative>>(
+          'SherpaOnnxOnlineSpeechDenoiserReset',
         )
         .asFunction();
 

@@ -17,7 +17,10 @@ void OfflineSpeechDenoiserDpdfNetModelConfig::Register(ParseOptions *po) {
                "Path to a DPDFNet ONNX model for speech denoising, e.g. "
                "baseline/dpdfnet2/dpdfnet4/dpdfnet8 (16 kHz) or "
                "dpdfnet2_48khz_hr (48 kHz). Download DPDFNet models from the "
-               "official Hugging Face hub: https://huggingface.co/Ceva-IP/DPDFNet");
+               "sherpa-onnx GitHub release or the official Hugging Face hub: "
+               "https://github.com/k2-fsa/sherpa-onnx/releases/tag/"
+               "speech-enhancement-models or "
+               "https://huggingface.co/Ceva-IP/DPDFNet");
 }
 
 bool OfflineSpeechDenoiserDpdfNetModelConfig::Validate() const {

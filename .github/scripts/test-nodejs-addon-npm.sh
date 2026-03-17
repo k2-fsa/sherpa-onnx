@@ -150,10 +150,15 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 echo "----------non-streaming speech denoiser----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
 node ./test_offline_speech_enhancement_gtcrn.js
+node ./test_offline_speech_enhancement_dpdfnet.js
+node ./test_online_speech_enhancement_gtcrn.js
+node ./test_online_speech_enhancement_dpdfnet.js
 rm gtcrn_simple.onnx
+rm dpdfnet_baseline.onnx
 ls -lh *.wav
 
 echo "----------non-streaming asr FireRedAsr----------"

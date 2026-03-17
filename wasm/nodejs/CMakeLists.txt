@@ -92,10 +92,17 @@ set(exported_functions
   SherpaOnnxWriteWave
   # speech enhancement
   SherpaOnnxCreateOfflineSpeechDenoiser
+  SherpaOnnxCreateOnlineSpeechDenoiser
   SherpaOnnxDestroyDenoisedAudio
   SherpaOnnxDestroyOfflineSpeechDenoiser
+  SherpaOnnxDestroyOnlineSpeechDenoiser
   SherpaOnnxOfflineSpeechDenoiserGetSampleRate
   SherpaOnnxOfflineSpeechDenoiserRun
+  SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples
+  SherpaOnnxOnlineSpeechDenoiserGetSampleRate
+  SherpaOnnxOnlineSpeechDenoiserRun
+  SherpaOnnxOnlineSpeechDenoiserFlush
+  SherpaOnnxOnlineSpeechDenoiserReset
   # version
   SherpaOnnxGetGitDate
   SherpaOnnxGetGitSha1

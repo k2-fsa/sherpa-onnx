@@ -25,6 +25,7 @@ set(sources
   online-stream.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
+  speech-denoiser.cc
   spoken-language-identification.cc
   version.cc
   voice-activity-detector.cc

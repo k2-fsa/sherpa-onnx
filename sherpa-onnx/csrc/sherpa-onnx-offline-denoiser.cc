@@ -31,7 +31,8 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 
 (2) Use DPDFNet models at 16 kHz or 48 kHz
 
-# Download DPDFNet models from the official Hugging Face hub:
+# Download DPDFNet models from either:
+#   https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 #   https://huggingface.co/Ceva-IP/DPDFNet
 
 ./bin/sherpa-onnx-offline-denoiser \
@@ -40,7 +41,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
   --output-wav=output_16k.wav
 
 # You can also use other 16 kHz DPDFNet models such as:
-#   baseline.onnx
+#   dpdfnet_baseline.onnx
 #   dpdfnet2.onnx
 #   dpdfnet8.onnx
 

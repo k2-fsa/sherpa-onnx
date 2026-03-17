@@ -9,7 +9,7 @@ void main(List<String> arguments) async {
   await initSherpaOnnx();
 
   final parser = ArgParser()
-    ..addOption('model', help: 'Path to a GTCRN or DPDFNet onnx model')
+    ..addOption('model', help: 'Path to a GTCRN onnx model')
     ..addOption('input-wav', help: 'Path to input.wav')
     ..addOption('output-wav', help: 'Path to output.wav');
 
@@ -24,16 +24,11 @@ void main(List<String> arguments) async {
   final model = res['model'] as String;
   final inputWav = res['input-wav'] as String;
   final outputWav = res['output-wav'] as String;
-  final isDpdfNet = model.toLowerCase().contains('dpdfnet');
 
   final config = sherpa_onnx.OfflineSpeechDenoiserConfig(
       model: sherpa_onnx.OfflineSpeechDenoiserModelConfig(
-    gtcrn: isDpdfNet
-        ? const sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig()
-        : sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(model: model),
-    dpdfnet: isDpdfNet
-        ? sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(model: model)
-        : const sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(),
+    gtcrn: sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(model: model),
+    dpdfnet: const sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(),
     numThreads: 1,
     debug: true,
     provider: 'cpu',

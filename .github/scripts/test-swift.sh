@@ -56,6 +56,9 @@ rm -rf dict lexicon.txt replace.fst test-hr.wav
 rm -rf sherpa-onnx-dolphin-*
 
 ./run-speech-enhancement-gtcrn.sh
+./run-speech-enhancement-dpdfnet.sh
+./run-online-speech-enhancement-gtcrn.sh
+./run-online-speech-enhancement-dpdfnet.sh
 ls -lh *.wav
 
 ./run-fire-red-asr.sh

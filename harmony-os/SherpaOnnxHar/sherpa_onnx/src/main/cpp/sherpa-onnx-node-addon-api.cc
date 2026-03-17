@@ -29,6 +29,8 @@ void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingSpeechDenoiser(Napi::Env env, Napi::Object exports);
 
+void InitOnlineSpeechDenoiser(Napi::Env env, Napi::Object exports);
+
 void InitVersion(Napi::Env env, Napi::Object exports);
 
 #if __OHOS__
@@ -49,6 +51,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitKeywordSpotting(env, exports);
   InitNonStreamingSpeakerDiarization(env, exports);
   InitNonStreamingSpeechDenoiser(env, exports);
+  InitOnlineSpeechDenoiser(env, exports);
   InitVersion(env, exports);
 
 #if __OHOS__

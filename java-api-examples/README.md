@@ -8,11 +8,11 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-speech-enhancement-gtcrn.sh
+./run-non-streaming-speech-enhancement-dpdfnet.sh
 ```
 
-The example file keeps the historical `Gtcrn` name, but the same offline
-speech denoiser API also supports DPDFNet. Use 16 kHz DPDFNet models such as
-`baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for
+Use 16 kHz DPDFNet models such as
+`dpdfnet_baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for
 downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 
 ## Non-streaming speaker diarization
