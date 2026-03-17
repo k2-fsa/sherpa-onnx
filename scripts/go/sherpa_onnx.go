@@ -2172,7 +2172,12 @@ func DeleteOfflinePunc(punc *OfflinePunctuation) {
 }
 
 func (punc *OfflinePunctuation) AddPunct(text string) string {
-	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, C.CString(text))
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
 	defer C.SherpaOfflinePunctuationFreeText(p)
 
 	text_with_punct := C.GoString(p)
@@ -2228,6 +2233,9 @@ func (punc *OnlinePunctuation) AddPunct(text string) string {
 	defer C.free(unsafe.Pointer(inputText))
 
 	p := C.SherpaOnnxOnlinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
 	defer C.SherpaOnnxOnlinePunctuationFreeText(p)
 
 	textWithPunct := C.GoString(p)
