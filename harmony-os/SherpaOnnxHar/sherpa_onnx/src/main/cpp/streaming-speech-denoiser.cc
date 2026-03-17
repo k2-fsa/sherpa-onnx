@@ -1,132 +1,58 @@
 // scripts/node-addon-api/src/streaming-speech-denoiser.cc
 //
 // Copyright (c)  2026  Xiaomi Corporation
-#include <algorithm>
+#include <memory>
 #include <sstream>
 
-#include "macros.h"  // NOLINT
-#include "napi.h"    // NOLINT
+#include "napi.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
-
-static SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig
-GetOnlineSpeechDenoiserGtcrnModelConfig(Napi::Object obj) {
-  SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig c;
-  memset(&c, 0, sizeof(c));
-
-  if (!obj.Has("gtcrn") || !obj.Get("gtcrn").IsObject()) {
-    return c;
-  }
-
-  Napi::Object o = obj.Get("gtcrn").As<Napi::Object>();
-  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
-  return c;
-}
-
-static SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig
-GetOnlineSpeechDenoiserDpdfNetModelConfig(Napi::Object obj) {
-  SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig c;
-  memset(&c, 0, sizeof(c));
-
-  if (!obj.Has("dpdfnet") || !obj.Get("dpdfnet").IsObject()) {
-    return c;
-  }
-
-  Napi::Object o = obj.Get("dpdfnet").As<Napi::Object>();
-  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
-  return c;
-}
-
-static SherpaOnnxOnlineSpeechDenoiserConfig GetOnlineSpeechDenoiserConfig(
-    Napi::Object obj) {
-  SherpaOnnxOnlineSpeechDenoiserConfig c;
-  memset(&c, 0, sizeof(c));
-
-  if (!obj.Has("model") || !obj.Get("model").IsObject()) {
-    return c;
-  }
-
-  Napi::Object o = obj.Get("model").As<Napi::Object>();
-
-  c.model.gtcrn = GetOnlineSpeechDenoiserGtcrnModelConfig(o);
-  c.model.dpdfnet = GetOnlineSpeechDenoiserDpdfNetModelConfig(o);
-
-  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
-
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.model.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.model.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
-
-  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
-
-  return c;
-}
-
-static Napi::Object CreateDenoisedAudioObject(
-    Napi::Env env, const SherpaOnnxDenoisedAudio *audio,
-    bool enable_external_buffer) {
-  Napi::Object ans = Napi::Object::New(env);
-
-  if (!audio) {
-    ans.Set(Napi::String::New(env, "samples"),
-            Napi::Float32Array::New(env, 0));
-    ans.Set(Napi::String::New(env, "sampleRate"), 0);
-    return ans;
-  }
-
-  if (enable_external_buffer) {
-    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-        env, const_cast<float *>(audio->samples), sizeof(float) * audio->n,
-        [](Napi::Env /*env*/, void * /*data*/,
-           const SherpaOnnxDenoisedAudio *hint) {
-          SherpaOnnxDestroyDenoisedAudio(hint);
-        },
-        audio);
-    Napi::Float32Array float32Array =
-        Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
-    ans.Set(Napi::String::New(env, "samples"), float32Array);
-    ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
-    return ans;
-  }
-
-  Napi::ArrayBuffer arrayBuffer =
-      Napi::ArrayBuffer::New(env, sizeof(float) * audio->n);
-  Napi::Float32Array float32Array =
-      Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
-
-  if (audio->n > 0 && audio->samples) {
-    std::copy(audio->samples, audio->samples + audio->n, float32Array.Data());
-  }
-
-  ans.Set(Napi::String::New(env, "samples"), float32Array);
-  ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
-  SherpaOnnxDestroyDenoisedAudio(audio);
-  return ans;
-}
+#include "speech-denoiser.h"  // NOLINT
 
 static Napi::External<SherpaOnnxOnlineSpeechDenoiser>
 CreateOnlineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1 || !info[0].IsObject()) {
-    Napi::TypeError::New(env, "Expect a single config object")
+#if __OHOS__
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+    return {};
+  }
+#else
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+    return {};
+  }
+#endif
+
+  if (!info[0].IsObject()) {
+    Napi::TypeError::New(env, "Expect an object as the argument")
         .ThrowAsJavaScriptException();
     return {};
   }
 
   SherpaOnnxOnlineSpeechDenoiserConfig c;
   memset(&c, 0, sizeof(c));
-  c = GetOnlineSpeechDenoiserConfig(info[0].As<Napi::Object>());
+  c.model = GetSpeechDenoiserModelConfig(info[0].As<Napi::Object>());
+
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
 
   const SherpaOnnxOnlineSpeechDenoiser *sd =
+      SherpaOnnxCreateOnlineSpeechDenoiserOHOS(&c, mgr.get());
+#else
+  const SherpaOnnxOnlineSpeechDenoiser *sd =
       SherpaOnnxCreateOnlineSpeechDenoiser(&c);
+#endif
 
-  SHERPA_ONNX_DELETE_C_STR(c.model.gtcrn.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
-  SHERPA_ONNX_DELETE_C_STR(c.model.dpdfnet.model);
+  DeleteSpeechDenoiserModelConfig(c.model);
 
   if (!sd) {
     Napi::TypeError::New(env, "Please check your config!")
@@ -155,29 +81,24 @@ static Napi::Object OnlineSpeechDenoiserRunWrapper(
   Napi::Object obj = info[1].As<Napi::Object>();
 
   if (!obj.Has("samples") || !obj.Get("samples").IsTypedArray()) {
-    Napi::TypeError::New(env, "The argument object should have a typed array field samples")
+    Napi::TypeError::New(
+        env, "The argument object should have a typed array field samples")
         .ThrowAsJavaScriptException();
     return {};
   }
 
   if (!obj.Has("sampleRate") || !obj.Get("sampleRate").IsNumber()) {
-    Napi::TypeError::New(env, "The argument object should have a number field sampleRate")
+    Napi::TypeError::New(
+        env, "The argument object should have a number field sampleRate")
         .ThrowAsJavaScriptException();
     return {};
   }
 
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
-  bool enable_external_buffer = true;
-  if (obj.Has("enableExternalBuffer") &&
-      obj.Get("enableExternalBuffer").IsBoolean()) {
-    enable_external_buffer =
-        obj.Get("enableExternalBuffer").As<Napi::Boolean>().Value();
-  }
-
   const SherpaOnnxDenoisedAudio *audio = SherpaOnnxOnlineSpeechDenoiserRun(
-      sd, samples.Data(), samples.ElementLength(), sample_rate);
-  return CreateDenoisedAudioObject(env, audio, enable_external_buffer);
+      sd, samples.Data(), GetFloat32ArrayElementLength(samples), sample_rate);
+  return CreateDenoisedAudioObject(env, audio, GetEnableExternalBuffer(obj));
 }
 
 static Napi::Object OnlineSpeechDenoiserFlushWrapper(
@@ -225,8 +146,8 @@ static Napi::Number OnlineSpeechDenoiserGetSampleRateWrapper(
 
   const SherpaOnnxOnlineSpeechDenoiser *sd =
       info[0].As<Napi::External<SherpaOnnxOnlineSpeechDenoiser>>().Data();
-  return Napi::Number::New(
-      env, SherpaOnnxOnlineSpeechDenoiserGetSampleRate(sd));
+  return Napi::Number::New(env,
+                           SherpaOnnxOnlineSpeechDenoiserGetSampleRate(sd));
 }
 
 static Napi::Number OnlineSpeechDenoiserGetFrameShiftInSamplesWrapper(
@@ -256,8 +177,8 @@ void InitOnlineSpeechDenoiser(Napi::Env env, Napi::Object exports) {
   exports.Set(
       Napi::String::New(env, "onlineSpeechDenoiserGetSampleRateWrapper"),
       Napi::Function::New(env, OnlineSpeechDenoiserGetSampleRateWrapper));
-  exports.Set(
-      Napi::String::New(env, "onlineSpeechDenoiserGetFrameShiftInSamplesWrapper"),
-      Napi::Function::New(env,
-                          OnlineSpeechDenoiserGetFrameShiftInSamplesWrapper));
+  exports.Set(Napi::String::New(
+                  env, "onlineSpeechDenoiserGetFrameShiftInSamplesWrapper"),
+              Napi::Function::New(
+                  env, OnlineSpeechDenoiserGetFrameShiftInSamplesWrapper));
 }
