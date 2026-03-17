@@ -181,13 +181,18 @@ class SpokenLanguageIdentification {
     }
 
     if (ptr == nullptr) {
-      return OfflineStream(ptr: nullptr);
+      throw Exception("Failed to create offline stream");
     }
 
     final p = SherpaOnnxBindings
             .sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 

@@ -482,11 +482,14 @@ class OnlineRecognizer {
     }
 
     if (ptr == nullptr) {
-      return OnlineStream(ptr: nullptr);
+      throw Exception("Failed to create online stream");
     }
 
     if (hotwords == '') {
       final p = SherpaOnnxBindings.createOnlineStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -495,6 +498,11 @@ class OnlineRecognizer {
         SherpaOnnxBindings.createOnlineStreamWithHotwords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 

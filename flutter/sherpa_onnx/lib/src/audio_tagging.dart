@@ -191,12 +191,17 @@ class AudioTagging {
     }
 
     if (ptr == nullptr) {
-      return OfflineStream(ptr: nullptr);
+      throw Exception("Failed to create offline stream");
     }
 
     final p = SherpaOnnxBindings.sherpaOnnxAudioTaggingCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 

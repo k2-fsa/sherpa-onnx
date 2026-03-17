@@ -101,12 +101,16 @@ class SpeakerEmbeddingExtractor {
     }
 
     if (ptr == nullptr) {
-      return OnlineStream(ptr: nullptr);
+      throw Exception("Failed to create online stream");
     }
 
     final p =
         SherpaOnnxBindings.speakerEmbeddingExtractorCreateStream?.call(ptr) ??
             nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
 
     return OnlineStream(ptr: p);
   }

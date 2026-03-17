@@ -196,11 +196,14 @@ class KeywordSpotter {
     }
 
     if (ptr == nullptr) {
-      return OnlineStream(ptr: nullptr);
+      throw Exception("Failed to create online stream");
     }
 
     if (keywords == '') {
       final p = SherpaOnnxBindings.createKeywordStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -209,6 +212,11 @@ class KeywordSpotter {
         SherpaOnnxBindings.createKeywordStreamWithKeywords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 
