@@ -2134,8 +2134,8 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 // ============================================================
 type OfflinePunctuationModelConfig struct {
 	CtTransformer string
-	NumThreads    C.int
-	Debug         C.int // true to print debug information of the model
+	NumThreads    int
+	Debug         int // true to print debug information of the model
 	Provider      string
 }
 
@@ -2152,8 +2152,8 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	cfg.model.ct_transformer = C.CString(config.Model.CtTransformer)
 	defer C.free(unsafe.Pointer(cfg.model.ct_transformer))
 
-	cfg.model.num_threads = config.Model.NumThreads
-	cfg.model.debug = config.Model.Debug
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
@@ -2183,8 +2183,8 @@ func (punc *OfflinePunctuation) AddPunct(text string) string {
 type OnlinePunctuationModelConfig struct {
 	CnnBilstm  string
 	BpeVocab   string
-	NumThreads C.int
-	Debug      C.int
+	NumThreads int
+	Debug      int
 	Provider   string
 }
 
@@ -2204,8 +2204,8 @@ func NewOnlinePunctuation(config *OnlinePunctuationConfig) *OnlinePunctuation {
 	cfg.model.bpe_vocab = C.CString(config.Model.BpeVocab)
 	defer C.free(unsafe.Pointer(cfg.model.bpe_vocab))
 
-	cfg.model.num_threads = config.Model.NumThreads
-	cfg.model.debug = config.Model.Debug
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
