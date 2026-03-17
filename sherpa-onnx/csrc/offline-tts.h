@@ -135,6 +135,7 @@ class OfflineTts {
   //                 keep a reference to it. The caller can copy the data if
   //                 he/she wants to access the samples after the callback
   //                 returns. The callback is called in the current thread.
+  [[deprecated("Use Generate(text, GenerationConfig, callback) instead")]]
   GeneratedAudio Generate(const std::string &text,
                           const std::string &prompt_text,
                           const std::vector<float> &prompt_samples,

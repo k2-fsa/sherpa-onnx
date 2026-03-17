@@ -45,6 +45,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(supertonic-tts-en-c-api supertonic-tts-en-c-api.c)
   target_link_libraries(supertonic-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(zipvoice-tts-zh-en-c-api zipvoice-tts-zh-en-c-api.c)
+  target_link_libraries(zipvoice-tts-zh-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
