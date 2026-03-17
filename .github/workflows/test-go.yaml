@@ -206,6 +206,21 @@ jobs:
           rm -rf sherpa-onnx-*
           ls -lh *.wav
 
+      - name: Test ZeroShot TTS with ZipVoice
+        shell: bash
+        run: |
+          cd scripts/go/_internal/zero-shot-zipvoice-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
+          ls -lh *.wav
+
       - name: Test non-streaming decoding files with FunASR Nano
         shell: bash
         run: |
@@ -257,15 +272,10 @@ jobs:
           go build
           ls -lh
 
-          echo "Test zipvoice"
-          ./run-zipvoice.sh
-          ls -lh
-
           echo "Test kitten en"
           ./run-kitten-en.sh
           rm -rf kitten-*
           ls -lh
-          rm -rf sherpa-onnx-zipvoice-distill-zh-en-emilia
 
           echo "Test kokoro zh+en"
           ./run-kokoro-zh-en.sh
