@@ -97,7 +97,7 @@ namespace SherpaOnnx
             {
                 if (Handle == IntPtr.Zero)
                 {
-                    return Array.Empty<float>();
+                    return new float[0];
                 }
 
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
