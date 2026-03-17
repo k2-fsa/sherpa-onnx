@@ -92,9 +92,12 @@ std::vector<char> ReadFile(const std::string &filename) {
     }
 
     std::streamsize size = file.tellg();
+    if (size < 0) {
+      return {};
+    }
     file.seekg(0, std::ios::beg);
 
-    std::vector<char> buffer(size);
+    std::vector<char> buffer(static_cast<size_t>(size));
     if (!file.read(buffer.data(), size)) {
       return {};
     }
