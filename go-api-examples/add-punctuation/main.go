@@ -14,7 +14,7 @@ func main() {
 	config.Model.Provider = "cpu"
 
 	punct := sherpa.NewOfflinePunctuation(&config)
-	defer sherpa.DeleteOfflinePunc(punct)
+	defer sherpa.DeleteOfflinePunctuation(punct)
 
 	textArray := []string{
 		"这是一个测试你好吗How are you我很好thank you are you ok谢谢你",

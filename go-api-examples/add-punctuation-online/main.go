@@ -19,7 +19,7 @@ func main() {
 	if punct == nil {
 		log.Fatal("Failed to create OnlinePunctuation")
 	}
-	defer sherpa.DeleteOnlinePunc(punct)
+	defer sherpa.DeleteOnlinePunctuation(punct)
 
 	textArray := []string{
 		"how are you i am fine thank you",
