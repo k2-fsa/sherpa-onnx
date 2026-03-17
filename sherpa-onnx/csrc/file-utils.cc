@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <stdlib.h>
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
