@@ -471,6 +471,7 @@ function testOfflineSpeechDenoiser() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_speech_denoiser.kt \
     OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -483,6 +484,7 @@ function testOfflineSpeechDenoiser() {
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_speech_denoiser_dpdfnet.kt \
     OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
