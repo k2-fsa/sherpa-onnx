@@ -24,3 +24,15 @@
   models. Use 16 kHz DPDFNet models such as `dpdfnet_baseline.onnx`,
   `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for downstream ASR and
   `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
+
+- [pocket-tts.py](./pocket-tts.py) It shows how to use PocketTTS with the
+  `GenerationConfig` API.
+
+- [supertonic-tts.py](./supertonic-tts.py) It shows how to use SupertonicTTS
+  with the `GenerationConfig` API.
+
+- [zipvoice-tts.py](./zipvoice-tts.py) It shows how to use ZipVoice for
+  zero-shot TTS with the `GenerationConfig` API.
+
+- [zipvoice-tts-play.py](./zipvoice-tts-play.py) It shows how to use ZipVoice
+  for zero-shot TTS and plays the generated audio while it is being synthesized.
