@@ -9,6 +9,9 @@ for details.
 - [./add-punctuation](./add-punctuation) It shows how to use
   a punctuation model to add punctuations to text
 
+- [./add-punctuation-online](./add-punctuation-online) It shows how to use
+  an online punctuation model to add punctuations and casing to text
+
 - [./non-streaming-decode-files](./non-streaming-decode-files) It shows how to use
   a non-streaming ASR model to decode files
 

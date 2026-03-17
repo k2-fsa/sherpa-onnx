@@ -98,6 +98,7 @@ jobs:
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation-online
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/audio-tagging
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
@@ -442,6 +443,12 @@ jobs:
         shell: bash
         run: |
           cd scripts/go/_internal/add-punctuation/
+          ./run.sh
+
+      - name: Test adding online punctuation
+        shell: bash
+        run: |
+          cd scripts/go/_internal/add-punctuation-online/
           ./run.sh
 
       - name: Test non-streaming speaker diarization
