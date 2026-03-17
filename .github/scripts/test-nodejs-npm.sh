@@ -147,8 +147,8 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhan
 node ./test-offline-speech-enhancement-gtcrn.js
 ls -lh *.wav
 rm gtcrn_simple.onnx
-rm inp_16k.wav
-rm enhanced-16k.wav
+rm -fv inp_16k.wav
+rm -fv enhanced*.wav
 
 # offline tts
 
