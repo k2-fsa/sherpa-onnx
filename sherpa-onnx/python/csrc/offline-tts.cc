@@ -164,7 +164,8 @@ void PybindOfflineTts(py::module *m) {
           py::arg("text"), py::arg("prompt_text"), py::arg("prompt_samples"),
           py::arg("sample_rate"), py::arg("speed") = 1.0,
           py::arg("num_steps") = 4, py::arg("callback") = py::none(),
-          py::call_guard<py::gil_scoped_release>());
+          py::call_guard<py::gil_scoped_release>(),
+          "Deprecated. Please never use it!");
 }
 
 }  // namespace sherpa_onnx
