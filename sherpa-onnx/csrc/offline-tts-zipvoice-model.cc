@@ -63,7 +63,8 @@ class OfflineTtsZipvoiceModel::Impl {
   }
 
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
-                 Ort::Value prompt_features, float speed, int32_t num_steps) {
+                 Ort::Value prompt_features, float speed, int32_t num_steps,
+                 float t_shift, float guidance_scale) {
     std::vector<int64_t> tokens_shape =
         tokens.GetTensorTypeAndShapeInfo().GetShape();
 
@@ -107,9 +108,6 @@ class OfflineTtsZipvoiceModel::Impl {
     Ort::Value speech_condition = Ort::Value::CreateTensor<float>(
         memory_info, speech_cond_data.data(), speech_cond_data.size(),
         speech_cond_shape.data(), speech_cond_shape.size());
-
-    float t_shift = config_.zipvoice.t_shift;
-    float guidance_scale = config_.zipvoice.guidance_scale;
 
     std::vector<float> timesteps(num_steps + 1);
     for (int32_t i = 0; i <= num_steps; ++i) {
@@ -365,9 +363,12 @@ Ort::Value OfflineTtsZipvoiceModel::Run(Ort::Value tokens,
                                         Ort::Value prompt_tokens,
                                         Ort::Value prompt_features,
                                         float speed /*= 1.0*/,
-                                        int32_t num_steps /*= 16*/) const {
+                                        int32_t num_steps /*= 16*/,
+                                        float t_shift /*= 0.5f*/,
+                                        float guidance_scale /*= 1.0f*/) const {
   return impl_->Run(std::move(tokens), std::move(prompt_tokens),
-                    std::move(prompt_features), speed, num_steps);
+                    std::move(prompt_features), speed, num_steps, t_shift,
+                    guidance_scale);
 }
 
 #if __ANDROID_API__ >= 9
