@@ -214,7 +214,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
 
       GeneratedAudio cur = GenerateChunk(
           sentences[i], prompt_tokens, prompt_features, speed, num_steps,
-          feat_scale, t_shift, target_rms, guidance_scale);
+          feat_scale, t_shift, guidance_scale);
 
       if (cur.samples.empty()) {
         continue;
@@ -366,8 +366,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                                const std::vector<int64_t> &prompt_tokens,
                                const std::vector<float> &prompt_features,
                                float speed, int32_t num_steps, float feat_scale,
-                               float t_shift, float target_rms,
-                               float guidance_scale) const {
+                               float t_shift, float guidance_scale) const {
     std::vector<TokenIDs> text_token_ids =
         frontend_->ConvertTextToTokenIds(text);
 
@@ -388,7 +387,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
 
     return Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
-                   feat_scale, t_shift, target_rms, guidance_scale);
+                   feat_scale, t_shift, guidance_scale);
   }
 
   std::vector<float> ComputePromptFeatures(
@@ -419,7 +418,7 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                          const std::vector<int64_t> &prompt_tokens,
                          const std::vector<float> &prompt_features, float speed,
                          int32_t num_steps, float feat_scale, float t_shift,
-                         float target_rms, float guidance_scale) const {
+                         float guidance_scale) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
