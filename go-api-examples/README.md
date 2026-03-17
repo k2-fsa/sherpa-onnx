@@ -42,6 +42,12 @@ for details.
 - [./zero-shot-pocket-tts-play](./zero-shot-pocket-tts-play) It shows how to use a PocketTTS
   model for zero-shot TTS. It plays the audio back as it is being generated.
 
+- [./zero-shot-zipvoice-tts](./zero-shot-zipvoice-tts) It shows how to use a ZipVoice
+  model for zero-shot TTS with the GenerationConfig API.
+
+- [./zero-shot-zipvoice-tts-play](./zero-shot-zipvoice-tts-play) It shows how to use a
+  ZipVoice model for zero-shot TTS. It plays the audio back as it is being generated.
+
 - [./real-time-speech-recognition-from-microphone](./real-time-speech-recognition-from-microphone)
   It shows how to use a streaming ASR model to recognize speech from a microphone in real-time
 
