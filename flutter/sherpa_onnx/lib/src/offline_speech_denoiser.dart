@@ -142,6 +142,10 @@ class OfflineSpeechDenoiser {
   /// The user is responsible to call the OfflineSpeechDenoiser.free()
   /// method of the returned instance to avoid memory leak.
   factory OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
+    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final c = calloc<SherpaOnnxOfflineSpeechDenoiserConfig>();
     c.ref.model.gtcrn.model = config.model.gtcrn.model.toNativeUtf8();
     c.ref.model.dpdfnet.model = config.model.dpdfnet.model.toNativeUtf8();
@@ -149,10 +153,6 @@ class OfflineSpeechDenoiser {
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
-
-    if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser == null) {
-      throw Exception("Please initialize sherpa-onnx first");
-    }
 
     final ptr =
         SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser?.call(c) ??
@@ -172,11 +172,27 @@ class OfflineSpeechDenoiser {
   }
 
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeechDenoiser == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeechDenoiser?.call(ptr);
     ptr = nullptr;
   }
 
   DenoisedAudio run({required Float32List samples, required int sampleRate}) {
+    if (SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserRun == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return DenoisedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
     final n = samples.length;
     final Pointer<Float> psamples = calloc<Float>(n);
 
@@ -193,19 +209,32 @@ class OfflineSpeechDenoiser {
       return DenoisedAudio(samples: Float32List(0), sampleRate: 0);
     }
 
-    final denoisedSamples = p.ref.samples.asTypedList(p.ref.n);
-    final denoisedSampleRate = p.ref.sampleRate;
-    final newSamples = Float32List.fromList(denoisedSamples);
+    final sampleRateOut = p.ref.sampleRate;
+    final nOut = p.ref.n;
+    Float32List newSamples = Float32List(0);
+    if (nOut > 0 && p.ref.samples != nullptr) {
+      newSamples = Float32List.fromList(p.ref.samples.asTypedList(nOut));
+    }
 
     SherpaOnnxBindings.sherpaOnnxDestroyDenoisedAudio?.call(p);
 
-    return DenoisedAudio(samples: newSamples, sampleRate: denoisedSampleRate);
+    return DenoisedAudio(samples: newSamples, sampleRate: sampleRateOut);
   }
 
-  int get sampleRate =>
-      SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserGetSampleRate
-          ?.call(ptr) ??
-      0;
+  int get sampleRate {
+    if (SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserGetSampleRate ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserGetSampleRate
+            ?.call(ptr) ??
+        0;
+  }
 
   Pointer<SherpaOnnxOfflineSpeechDenoiser> ptr;
   OfflineSpeechDenoiserConfig config;

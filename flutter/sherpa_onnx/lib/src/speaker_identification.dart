@@ -82,6 +82,13 @@ class SpeakerEmbeddingExtractor {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroySpeakerEmbeddingExtractor == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroySpeakerEmbeddingExtractor?.call(ptr);
     ptr = nullptr;
   }
@@ -89,14 +96,34 @@ class SpeakerEmbeddingExtractor {
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
   OnlineStream createStream() {
+    if (SherpaOnnxBindings.speakerEmbeddingExtractorCreateStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     final p =
         SherpaOnnxBindings.speakerEmbeddingExtractorCreateStream?.call(ptr) ??
             nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
 
     return OnlineStream(ptr: p);
   }
 
   bool isReady(OnlineStream stream) {
+    if (SherpaOnnxBindings.speakerEmbeddingExtractorIsReady == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     final int ready = SherpaOnnxBindings.speakerEmbeddingExtractorIsReady
             ?.call(ptr, stream.ptr) ??
         0;
@@ -104,6 +131,14 @@ class SpeakerEmbeddingExtractor {
   }
 
   Float32List compute(OnlineStream stream) {
+    if (SherpaOnnxBindings.speakerEmbeddingExtractorComputeEmbedding == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return Float32List(0);
+    }
+
     final Pointer<Float> embedding = SherpaOnnxBindings
             .speakerEmbeddingExtractorComputeEmbedding
             ?.call(ptr, stream.ptr) ??
@@ -134,12 +169,28 @@ class SpeakerEmbeddingManager {
 
   // The user has to use SpeakerEmbeddingManager.free() to avoid memory leak
   factory SpeakerEmbeddingManager(int dim) {
+    if (SherpaOnnxBindings.createSpeakerEmbeddingManager == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     final p =
         SherpaOnnxBindings.createSpeakerEmbeddingManager?.call(dim) ?? nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create speaker embedding manager");
+    }
+
     return SpeakerEmbeddingManager._(ptr: p, dim: dim);
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroySpeakerEmbeddingManager == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroySpeakerEmbeddingManager?.call(ptr);
     ptr = nullptr;
   }
@@ -147,6 +198,14 @@ class SpeakerEmbeddingManager {
   /// Return true if added successfully; return false otherwise
   bool add({required String name, required Float32List embedding}) {
     assert(embedding.length == dim, '${embedding.length} vs $dim');
+
+    if (SherpaOnnxBindings.speakerEmbeddingManagerAdd == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
 
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embedding.length;
@@ -167,6 +226,14 @@ class SpeakerEmbeddingManager {
 
   bool addMulti(
       {required String name, required List<Float32List> embeddingList}) {
+    if (SherpaOnnxBindings.speakerEmbeddingManagerAddListFlattened == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embeddingList.length;
 
@@ -192,6 +259,14 @@ class SpeakerEmbeddingManager {
   }
 
   bool contains(String name) {
+    if (SherpaOnnxBindings.speakerEmbeddingManagerContains == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
     final int found = SherpaOnnxBindings.speakerEmbeddingManagerContains
@@ -204,6 +279,14 @@ class SpeakerEmbeddingManager {
   }
 
   bool remove(String name) {
+    if (SherpaOnnxBindings.speakerEmbeddingManagerRemove == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
     final int ok =
@@ -218,6 +301,14 @@ class SpeakerEmbeddingManager {
   /// Return an empty string if no speaker is found
   String search({required Float32List embedding, required double threshold}) {
     assert(embedding.length == dim);
+
+    if (SherpaOnnxBindings.speakerEmbeddingManagerSearch == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return '';
+    }
 
     final Pointer<Float> p = calloc<Float>(dim);
     final pList = p.asTypedList(dim);
@@ -246,6 +337,14 @@ class SpeakerEmbeddingManager {
       required double threshold}) {
     assert(embedding.length == dim);
 
+    if (SherpaOnnxBindings.speakerEmbeddingManagerVerify == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return false;
+    }
+
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
     final Pointer<Float> p = calloc<Float>(dim);
@@ -262,10 +361,24 @@ class SpeakerEmbeddingManager {
     return ok == 1;
   }
 
-  int get numSpeakers =>
-      SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers?.call(ptr) ?? 0;
+  int get numSpeakers {
+    if (SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers?.call(ptr) ??
+        0;
+  }
 
   List<String> get allSpeakerNames {
+    if (SherpaOnnxBindings.speakerEmbeddingManagerGetAllSpeakers == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     int n = numSpeakers;
     if (n == 0) {
       return <String>[];

@@ -457,6 +457,13 @@ class OnlineRecognizer {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroyOnlineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOnlineRecognizer?.call(ptr);
     ptr = nullptr;
   }
@@ -465,7 +472,24 @@ class OnlineRecognizer {
   /// to avoid memory leak
   OnlineStream createStream({String hotwords = ''}) {
     if (hotwords == '') {
+      if (SherpaOnnxBindings.createOnlineStream == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    } else {
+      if (SherpaOnnxBindings.createOnlineStreamWithHotwords == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
+    if (hotwords == '') {
       final p = SherpaOnnxBindings.createOnlineStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -474,10 +498,23 @@ class OnlineRecognizer {
         SherpaOnnxBindings.createOnlineStreamWithHotwords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 
   bool isReady(OnlineStream stream) {
+    if (SherpaOnnxBindings.isOnlineStreamReady == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int ready =
         SherpaOnnxBindings.isOnlineStreamReady?.call(ptr, stream.ptr) ?? 0;
 
@@ -485,6 +522,14 @@ class OnlineRecognizer {
   }
 
   OnlineRecognizerResult getResult(OnlineStream stream) {
+    if (SherpaOnnxBindings.getOnlineStreamResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
+    }
+
     final json =
         SherpaOnnxBindings.getOnlineStreamResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
@@ -503,14 +548,38 @@ class OnlineRecognizer {
   }
 
   void reset(OnlineStream stream) {
+    if (SherpaOnnxBindings.reset == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.reset?.call(ptr, stream.ptr);
   }
 
   void decode(OnlineStream stream) {
+    if (SherpaOnnxBindings.decodeOnlineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.decodeOnlineStream?.call(ptr, stream.ptr);
   }
 
   bool isEndpoint(OnlineStream stream) {
+    if (SherpaOnnxBindings.isEndpoint == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int yes = SherpaOnnxBindings.isEndpoint?.call(ptr, stream.ptr) ?? 0;
 
     return yes == 1;

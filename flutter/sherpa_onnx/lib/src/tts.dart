@@ -715,6 +715,13 @@ class OfflineTts {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineTts == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineTts?.call(ptr);
     ptr = nullptr;
   }
@@ -724,6 +731,14 @@ class OfflineTts {
     int sid = 0,
     double speed = 1.0,
   }) {
+    if (SherpaOnnxBindings.offlineTtsGenerate == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
     final Pointer<Utf8> textPtr = text.toNativeUtf8();
     final p =
         SherpaOnnxBindings.offlineTtsGenerate?.call(ptr, textPtr, sid, speed) ??
@@ -749,6 +764,14 @@ class OfflineTts {
     double speed = 1.0,
     required int Function(Float32List samples) callback,
   }) {
+    if (SherpaOnnxBindings.offlineTtsGenerateWithCallback == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
     // see
     // https://github.com/dart-lang/sdk/issues/54276#issuecomment-1846109285
     // https://stackoverflow.com/questions/69537440/callbacks-in-dart-dartffi-only-supports-calling-static-dart-functions-from-nat
@@ -795,6 +818,14 @@ class OfflineTts {
     required OfflineTtsGenerationConfig config,
     int Function(Float32List samples, double progress)? onProgress,
   }) {
+    if (SherpaOnnxBindings.offlineTtsGenerateWithConfig == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
     final textPtr = text.toNativeUtf8();
     final cfgPtr = config.toNative();
 
@@ -842,10 +873,29 @@ class OfflineTts {
     return GeneratedAudio(samples: samples, sampleRate: sampleRate);
   }
 
-  int get sampleRate => SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
+  int get sampleRate {
+    if (SherpaOnnxBindings.offlineTtsSampleRate == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
 
-  int get numSpeakers =>
-      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
+  }
+
+  int get numSpeakers {
+    if (SherpaOnnxBindings.offlineTtsNumSpeakers == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
+  }
 
   Pointer<SherpaOnnxOfflineTts> ptr;
   OfflineTtsConfig config;

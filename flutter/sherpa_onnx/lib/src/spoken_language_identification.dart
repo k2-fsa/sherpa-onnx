@@ -109,6 +109,14 @@ class SpokenLanguageIdentification {
   SpokenLanguageIdentification._({required this.ptr, required this.config});
 
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroySpokenLanguageIdentification ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroySpokenLanguageIdentification?.call(ptr);
     ptr = nullptr;
   }
@@ -166,14 +174,38 @@ class SpokenLanguageIdentification {
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
   OfflineStream createStream() {
+    if (SherpaOnnxBindings
+            .sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     final p = SherpaOnnxBindings
             .sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 
   SpokenLanguageIdentificationResult compute(OfflineStream stream) {
+    if (SherpaOnnxBindings.sherpaOnnxSpokenLanguageIdentificationCompute ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return const SpokenLanguageIdentificationResult(lang: '');
+    }
+
     final result = SherpaOnnxBindings
             .sherpaOnnxSpokenLanguageIdentificationCompute
             ?.call(ptr, stream.ptr) ??

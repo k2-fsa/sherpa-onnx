@@ -171,6 +171,13 @@ class KeywordSpotter {
   }
 
   void free() {
+    if (SherpaOnnxBindings.destroyKeywordSpotter == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyKeywordSpotter?.call(ptr);
     ptr = nullptr;
   }
@@ -179,7 +186,24 @@ class KeywordSpotter {
   /// to avoid memory leak
   OnlineStream createStream({String keywords = ''}) {
     if (keywords == '') {
+      if (SherpaOnnxBindings.createKeywordStream == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    } else {
+      if (SherpaOnnxBindings.createKeywordStreamWithKeywords == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
+    if (keywords == '') {
       final p = SherpaOnnxBindings.createKeywordStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -188,10 +212,23 @@ class KeywordSpotter {
         SherpaOnnxBindings.createKeywordStreamWithKeywords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 
   bool isReady(OnlineStream stream) {
+    if (SherpaOnnxBindings.isKeywordStreamReady == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int ready =
         SherpaOnnxBindings.isKeywordStreamReady?.call(ptr, stream.ptr) ?? 0;
 
@@ -199,6 +236,14 @@ class KeywordSpotter {
   }
 
   KeywordResult getResult(OnlineStream stream) {
+    if (SherpaOnnxBindings.getKeywordResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return KeywordResult(keyword: '');
+    }
+
     final json =
         SherpaOnnxBindings.getKeywordResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
@@ -216,10 +261,24 @@ class KeywordSpotter {
   }
 
   void decode(OnlineStream stream) {
+    if (SherpaOnnxBindings.decodeKeywordStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.decodeKeywordStream?.call(ptr, stream.ptr);
   }
 
   void reset(OnlineStream stream) {
+    if (SherpaOnnxBindings.resetKeywordStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.resetKeywordStream?.call(ptr, stream.ptr);
   }
 
