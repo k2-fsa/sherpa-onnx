@@ -2166,7 +2166,7 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	return punc
 }
 
-func DeleteOfflinePunctuation(punc *OfflinePunctuation) {
+func DeleteOfflinePunc(punc *OfflinePunctuation) {
 	C.SherpaOnnxDestroyOfflinePunctuation(punc.impl)
 	punc.impl = nil
 }
