@@ -15,6 +15,7 @@ self.Module = {
       tts = createOfflineTts(self.Module);
       self.postMessage({
         type: "sherpa-onnx-tts-ready",
+        modelType: getDefaultOfflineTtsModelType(),
         numSpeakers: tts.numSpeakers,
       });
     } catch (e) {
@@ -28,7 +29,7 @@ self.Module = {
 importScripts("/sherpa-onnx-wasm-main-tts.js");
 importScripts("/sherpa-onnx-tts.js");
 self.onmessage = async (e) => {
-  const { type, text, sid, speed } = e.data;
+  const { type, text, sid, speed, genConfig } = e.data;
   if (type === "generate") {
     if (!tts) {
       return;
@@ -48,6 +49,28 @@ self.onmessage = async (e) => {
           sampleRate: sampleRate,
         },
         [samples.buffer],
+      );
+    } catch (err) {
+      self.postMessage({
+        type: "error",
+        message: "Generation failed: " + err.message,
+      });
+    }
+  } else if (type === "generateWithConfig") {
+    if (!tts) {
+      return;
+    }
+    try {
+      const audio = tts.generateWithConfig(text, genConfig || {});
+      const samples = audio.samples;
+      const sampleRate = audio.sampleRate;
+      self.postMessage(
+          {
+            type: "sherpa-onnx-tts-result",
+            samples: samples,
+            sampleRate: sampleRate,
+          },
+          [samples.buffer],
       );
     } catch (err) {
       self.postMessage({

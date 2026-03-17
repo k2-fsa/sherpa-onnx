@@ -1,6 +1,11 @@
 const generateBtn = document.getElementById('generateBtn');
 const speakerIdLabel = document.getElementById('speakerIdLabel');
 const speakerIdInput = document.getElementById('speakerId');
+const speakerIdSection = document.getElementById('speakerIdSection');
+const referenceAudioSection = document.getElementById('referenceAudioSection');
+const referenceTextSection = document.getElementById('referenceTextSection');
+const referenceAudioInput = document.getElementById('referenceAudio');
+const referenceTextInput = document.getElementById('referenceText');
 const speedInput = document.getElementById('speed');
 const speedValue = document.getElementById('speedValue');
 const textArea = document.getElementById('text');
@@ -13,6 +18,7 @@ let index = 0;
 let audioCtx = null;
 const worker = new Worker("/sherpa-onnx-tts.worker.js");
 let ttsInstanceInfo = {
+  modelType: 0,
   numSpeakers: 0,
   isReady: false,
 };
@@ -21,10 +27,12 @@ worker.onmessage = (e) => {
     Module.setStatus(e.data.status);
   }
   if (e.data.type === "sherpa-onnx-tts-ready") {
+    ttsInstanceInfo.modelType = e.data.modelType ?? 0;
     ttsInstanceInfo.numSpeakers = e.data.numSpeakers;
     ttsInstanceInfo.isReady = true;
     generateBtn.disabled = false;
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${e.data.numSpeakers - 1}):`;
+    updateUiForModelType();
     return;
   }
   if (e.data.type === "sherpa-onnx-tts-result") {
@@ -92,23 +100,68 @@ speedInput.oninput = function() {
   speedValue.innerHTML = this.value;
 };
 
-generateBtn.onclick = function() {
-  let speakerId = speakerIdInput.value;
-  if (speakerId.trim().length == 0) {
-    alert('Please input a speakerId');
-    return;
+function updateUiForModelType() {
+  const isZipVoice = ttsInstanceInfo.modelType === 4;
+  speakerIdSection.classList.toggle('hidden', isZipVoice);
+  referenceAudioSection.classList.toggle('hidden', !isZipVoice);
+  referenceTextSection.classList.toggle('hidden', !isZipVoice);
+}
+
+function getMonoSamples(audioBuffer) {
+  if (audioBuffer.numberOfChannels === 1) {
+    return new Float32Array(audioBuffer.getChannelData(0));
   }
 
-  if (!speakerId.match(/^\d+$/)) {
-    alert(`Input speakerID ${
-        speakerId} is not a number.\nPlease enter a number between 0 and ${
-        ttsInstanceInfo.numSpeakers - 1}`);
-    return;
+  const samples = new Float32Array(audioBuffer.length);
+  for (let c = 0; c < audioBuffer.numberOfChannels; ++c) {
+    const channel = audioBuffer.getChannelData(c);
+    for (let i = 0; i < channel.length; ++i) {
+      samples[i] += channel[i];
+    }
   }
-  speakerId = parseInt(speakerId, 10);
-  if (speakerId > ttsInstanceInfo.numSpeakers - 1) {
-    alert(`Pleaser enter a number between 0 and ${ttsInstanceInfo.numSpeakers - 1}`);
-    return;
+
+  for (let i = 0; i < samples.length; ++i) {
+    samples[i] /= audioBuffer.numberOfChannels;
+  }
+
+  return samples;
+}
+
+async function readReferenceAudio(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const ctx = new AudioContext();
+  try {
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    return {
+      samples: getMonoSamples(audioBuffer),
+      sampleRate: audioBuffer.sampleRate,
+    };
+  } finally {
+    await ctx.close();
+  }
+}
+
+generateBtn.onclick = async function() {
+  const isZipVoice = ttsInstanceInfo.modelType === 4;
+
+  let speakerId = speakerIdInput.value;
+  if (!isZipVoice) {
+    if (speakerId.trim().length == 0) {
+      alert('Please input a speakerId');
+      return;
+    }
+
+    if (!speakerId.match(/^\d+$/)) {
+      alert(`Input speakerID ${
+          speakerId} is not a number.\nPlease enter a number between 0 and ${
+          ttsInstanceInfo.numSpeakers - 1}`);
+      return;
+    }
+    speakerId = parseInt(speakerId, 10);
+    if (speakerId > ttsInstanceInfo.numSpeakers - 1) {
+      alert(`Pleaser enter a number between 0 and ${ttsInstanceInfo.numSpeakers - 1}`);
+      return;
+    }
   }
 
   let text = textArea.value.trim();
@@ -120,10 +173,43 @@ generateBtn.onclick = function() {
   console.log('speakerId', speakerId);
   console.log('speed', speedInput.value);
   console.log('text', text);
+
+  if (isZipVoice) {
+    if (!referenceAudioInput.files || referenceAudioInput.files.length === 0) {
+      alert('Please select a reference audio file');
+      return;
+    }
+
+    const referenceText = referenceTextInput.value.trim();
+    if (referenceText.length === 0) {
+      alert('Please input the reference text');
+      return;
+    }
+
+    const referenceAudio = await readReferenceAudio(referenceAudioInput.files[0]);
+    const genConfig = {
+      speed: parseFloat(speedInput.value),
+      referenceAudio: referenceAudio.samples,
+      referenceSampleRate: referenceAudio.sampleRate,
+      referenceText: referenceText,
+      numSteps: 4,
+      extra: {
+        min_char_in_sentence: 30,
+      },
+    };
+
+    worker.postMessage({
+      text,
+      genConfig,
+      type: "generateWithConfig",
+    }, [genConfig.referenceAudio.buffer]);
+    return;
+  }
+
   worker.postMessage({
     text,
     sid: speakerId,
-    speed: speedInput.value,
+    speed: parseFloat(speedInput.value),
     type: "generate",
   });
 };

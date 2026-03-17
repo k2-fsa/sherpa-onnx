@@ -88,7 +88,7 @@ def get_models():
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-16khz-univ.onnx
 
             git checkout .
-            sed -i.bak 's/let type = 0/let type = 1/g' ../sherpa-onnx-tts.js
+            sed -i.bak 's/let modelType = 0/let modelType = 1/g' ../sherpa-onnx-tts.js
 
             rm -rf $model_name
             git diff
@@ -111,7 +111,7 @@ def get_models():
 
 
             git checkout .
-            sed -i.bak 's/let type = 0/let type = 2/g' ../sherpa-onnx-tts.js
+            sed -i.bak 's/let modelType = 0/let modelType = 2/g' ../sherpa-onnx-tts.js
 
             rm -rf $model_name
             git diff
@@ -133,7 +133,30 @@ def get_models():
 
 
             git checkout .
-            sed -i.bak 's/let type = 0/let type = 3/g' ../sherpa-onnx-tts.js
+            sed -i.bak 's/let modelType = 0/let modelType = 3/g' ../sherpa-onnx-tts.js
+
+             rm -rf $model_name
+             git diff
+             """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipvoice-distill-int8-zh-en-emilia",
+            hf="k2-fsa/web-assembly-zh-en-tts-zipvoice",
+            ms="csukuangfj/web-assembly-zh-en-tts-zipvoice",
+            cmd="""
+            pushd $model_name
+
+            mv -v encoder.int8.onnx ../
+            mv -v decoder.int8.onnx ../
+            mv -v tokens.txt ../
+            mv -v lexicon.txt ../
+            mv -v espeak-ng-data ../
+            popd
+
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+            git checkout .
+            sed -i.bak 's/let modelType = 0/let modelType = 4/g' ../sherpa-onnx-tts.js
 
             rm -rf $model_name
             git diff

@@ -916,6 +916,12 @@ class OfflineTts {
   }
 }
 
+let modelType = 0;
+
+function getDefaultOfflineTtsModelType() {
+  return modelType;
+}
+
 function createOfflineTts(Module, myConfig) {
   const vits = {
     model: '',
@@ -955,10 +961,22 @@ function createOfflineTts(Module, myConfig) {
     lengthScale: 1.0,
   };
 
+  const offlineTtsZipVoiceModelConfig = {
+    tokens: '',
+    encoder: '',
+    decoder: '',
+    vocoder: '',
+    dataDir: '',
+    lexicon: '',
+    featScale: 0.1,
+    tShift: 0.5,
+    targetRMS: 0.1,
+    guidanceScale: 1.0,
+  };
+
   let ruleFsts = '';
 
-  let type = 0;
-  switch (type) {
+  switch (modelType) {
     case 0:
       // vits
       vits.model = './model.onnx';
@@ -992,6 +1010,16 @@ function createOfflineTts(Module, myConfig) {
       matcha.tokens = './tokens.txt';
       matcha.dataDir = './espeak-ng-data';
       break;
+    case 4:
+      // zipvoice zh-en
+      // https://k2-fsa.github.io/sherpa/onnx/tts/zipvoice.html
+      offlineTtsZipVoiceModelConfig.tokens = './tokens.txt';
+      offlineTtsZipVoiceModelConfig.encoder = './encoder.int8.onnx';
+      offlineTtsZipVoiceModelConfig.decoder = './decoder.int8.onnx';
+      offlineTtsZipVoiceModelConfig.vocoder = './vocos_24khz.onnx';
+      offlineTtsZipVoiceModelConfig.dataDir = './espeak-ng-data';
+      offlineTtsZipVoiceModelConfig.lexicon = './lexicon.txt';
+      break;
   }
 
   const offlineTtsModelConfig = {
@@ -999,6 +1027,7 @@ function createOfflineTts(Module, myConfig) {
     offlineTtsMatchaModelConfig: matcha,
     offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
     offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
+    offlineTtsZipVoiceModelConfig: offlineTtsZipVoiceModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',
@@ -1022,5 +1051,6 @@ if (typeof process == 'object' && typeof process.versions == 'object' &&
     typeof process.versions.node == 'string') {
   module.exports = {
     createOfflineTts,
+    getDefaultOfflineTtsModelType,
   };
 }
