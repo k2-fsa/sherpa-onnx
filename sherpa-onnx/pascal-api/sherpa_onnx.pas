@@ -3391,7 +3391,9 @@ end;
 initialization
   { Match the C API's default behavior. PocketTTS can raise FP overflow flags
     during native inference on some platforms, and Free Pascal would otherwise
-    surface them as EOverflow. }
+    surface them as EOverflow.
+    See also https://github.com/k2-fsa/sherpa-onnx/pull/3351
+  }
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow,
     exUnderflow, exPrecision]);
 
