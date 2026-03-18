@@ -17,6 +17,25 @@ mv vits-piper-en_US-libritts_r-medium/espeak-ng-data ./
 rm -rf vits-piper-en_US-libritts_r-medium
 ```
 
+ZipVoice example:
+
+```bash
+cd sherpa-onnx/wasm/tts/assets
+
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ./
+mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx ./
+mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt ./
+mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt ./
+mv sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data ./
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+```
+
 You should have the following files in `assets` before you can run
 `build-wasm-simd-tts.sh`
 
