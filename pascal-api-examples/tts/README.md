@@ -6,4 +6,4 @@ This directory contains examples for how to use the TTS (text to speech) APIs.
 |---------|------------|
 |[run-piper.sh](./run-piper.sh)|It shows how to use models from [piper](https://github.com/rhasspy/piper) for text to speech.|
 |[run-piper-playback.sh](./run-piper-playback.sh)|It shows how to use models from [piper](https://github.com/rhasspy/piper) for text to speech. It plays the generated audio as it is still generating. |
-
+|[run-zipvoice-zh-en.sh](./run-zipvoice-zh-en.sh)|It shows how to use ZipVoice Chinese/English zero-shot TTS for text to speech.|
