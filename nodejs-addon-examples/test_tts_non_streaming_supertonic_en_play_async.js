@@ -8,16 +8,19 @@ const sherpa_onnx = require('sherpa-onnx-node');
 async function createOfflineTts() {
   const config = {
     model: {
-      zipvoice: {
-        tokens: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt',
-        encoder:
-            './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx',
-        decoder:
-            './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx',
-        vocoder: './vocos_24khz.onnx',
-        dataDir:
-            './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data',
-        lexicon: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt',
+      supertonic: {
+        durationPredictor:
+            './sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx',
+        textEncoder:
+            './sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx',
+        vectorEstimator:
+            './sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx',
+        vocoder:
+            './sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx',
+        ttsJson: './sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json',
+        unicodeIndexer:
+            './sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin',
+        voiceStyle: './sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin',
       },
       debug: false,  // set to true to see verbose logs
       numThreads: 2,
@@ -62,19 +65,11 @@ function waitForEvent(emitter, eventName) {
  * @param {string} text
  */
 async function generateAudioAsync(tts, text) {
-  const referenceText =
-      '那还是三十六年前, 一九八七年. 我呢考上了武汉大学的计算机系.';
-  const referenceAudioFilename =
-      './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav';
-  const referenceWave = sherpa_onnx.readWave(referenceAudioFilename);
-
   const generationConfig = new sherpa_onnx.GenerationConfig({
-    speed: 1.0,
-    referenceAudio: referenceWave.samples,
-    referenceSampleRate: referenceWave.sampleRate,
-    referenceText,
-    numSteps: 4,
-    extra: {min_char_in_sentence: 10},
+    sid: 6,
+    speed: 1.25,
+    numSteps: 5,
+    extra: {lang: 'en'},
   });
 
   const speaker = createSpeaker(tts.sampleRate);
@@ -114,7 +109,7 @@ async function main() {
   console.log('OfflineTts created!');
 
   const text =
-      '小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中.';
+      'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
   const {audio, generationElapsedSeconds, playbackElapsedSeconds} =
       await generateAudioAsync(tts, text);
@@ -130,7 +125,7 @@ async function main() {
       `RTF = ${generationElapsedSeconds.toFixed(3)}/${duration.toFixed(3)} =`,
       real_time_factor.toFixed(3));
 
-  const filename = 'test-zipvoice-zh-en-play-async.wav';
+  const filename = 'test-supertonic-en-play-async.wav';
   sherpa_onnx.writeWave(filename, {
     samples: audio.samples,
     sampleRate: audio.sampleRate,
