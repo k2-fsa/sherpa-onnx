@@ -17,6 +17,10 @@ for details.
   It shows how to use the online speech denoiser API with GTCRN models.
 - [./streaming-speech-enhancement-dpdfnet](./streaming-speech-enhancement-dpdfnet)
   It shows how to use the online speech denoiser API with DPDFNet models.
+- [./zipvoice-tts](./zipvoice-tts) It shows how to use ZipVoice for
+  Chinese/English zero-shot text-to-speech.
+- [./zipvoice-tts-play](./zipvoice-tts-play) It shows how to use ZipVoice for
+  Chinese/English zero-shot text-to-speech with playback.
 
 ```bash
 dotnet new console -n offline-tts-play
