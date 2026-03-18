@@ -51,6 +51,7 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 16 | [offline_speech_enhancement_dpdfnet](#example-16-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
 | 17 | [streaming_speech_enhancement_gtcrn](#example-17-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
 | 18 | [streaming_speech_enhancement_dpdfnet](#example-18-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
+| 19 | [online_punctuation](#example-19-online-punctuation) | Add punctuation to text using online punctuation model |
 
 ## Run it
 
@@ -311,4 +312,16 @@ cargo run --example streaming_speech_enhancement_dpdfnet -- \
     --model ./dpdfnet_baseline.onnx \
     --input ./inp_16k.wav \
     --output ./enhanced-rust-streaming-dpdfnet.wav
+```
+
+### Example 19: Online punctuation
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+cargo run --example online_punctuation -- \
+    --cnn-bilstm ./sherpa-onnx-online-punct-en-2024-08-06/model.onnx \
+    --bpe-vocab ./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab
 ```

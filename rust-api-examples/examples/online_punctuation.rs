@@ -1,21 +1,53 @@
-// Copyright (c) 2026  zengyw
+// Copyright (c) 2026 zengyw
 //
 // This file demonstrates how to use online punctuation with sherpa-onnx's Rust API.
+//
+// See ../README.md for how to run it.
 
+use clap::Parser;
 use sherpa_onnx::{OnlinePunctuation, OnlinePunctuationConfig, OnlinePunctuationModelConfig};
 
-fn main() {
+/// Online punctuation example
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Path to CNN-BiLSTM ONNX model
+    #[arg(long)]
+    cnn_bilstm: String,
+
+    /// Path to BPE vocabulary file
+    #[arg(long)]
+    bpe_vocab: String,
+
+    /// Number of threads
+    #[arg(long, default_value_t = 1)]
+    num_threads: i32,
+
+    /// Provider (default: cpu)
+    #[arg(long, default_value = "cpu")]
+    provider: String,
+
+    /// Enable debug logs
+    #[arg(long, default_value_t = false)]
+    debug: bool,
+}
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
     let config = OnlinePunctuationConfig {
         model: OnlinePunctuationModelConfig {
-            cnn_bilstm: Some("./sherpa-onnx-online-punct-en-2024-08-06/model.onnx".to_string()),
-            bpe_vocab: Some("./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab".to_string()),
-            num_threads: 1,
-            provider: Some("cpu".to_string()),
+            cnn_bilstm: Some(args.cnn_bilstm),
+            bpe_vocab: Some(args.bpe_vocab),
+            num_threads: args.num_threads,
+            provider: Some(args.provider),
+            debug: args.debug,
             ..Default::default()
         },
     };
 
-    let punct = OnlinePunctuation::create(&config).expect("Failed to create OnlinePunctuation");
+    let punct = OnlinePunctuation::create(&config)
+        .ok_or_else(|| anyhow::anyhow!("Failed to create OnlinePunctuation"))?;
 
     let texts = [
         "how are you i am fine thank you",
@@ -26,10 +58,12 @@ fn main() {
     for text in texts {
         let out = punct
             .add_punctuation(text)
-            .expect("Failed to add punctuation");
+            .ok_or_else(|| anyhow::anyhow!("Failed to add punctuation"))?;
 
         println!("Input text: {text}");
         println!("Output text: {out}");
         println!("----------");
     }
+
+    Ok(())
 }

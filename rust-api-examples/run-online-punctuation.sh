@@ -7,4 +7,6 @@ if [ ! -d ./sherpa-onnx-online-punct-en-2024-08-06 ]; then
   rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 fi
 
-cargo run --example online_punctuation
+cargo run --example online_punctuation -- \
+  --cnn-bilstm ./sherpa-onnx-online-punct-en-2024-08-06/model.onnx \
+  --bpe-vocab ./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab
