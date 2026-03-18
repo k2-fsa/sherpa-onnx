@@ -62,6 +62,18 @@ void OnlineStream::InputFinished() const {
   SherpaOnnxOnlineStreamInputFinished(p_);
 }
 
+void OnlineStream::SetOption(const char *key, const char *value) const {
+  SherpaOnnxOnlineStreamSetOption(p_, key, value);
+}
+
+const char *OnlineStream::GetOption(const char *key) const {
+  return SherpaOnnxOnlineStreamGetOption(p_, key);
+}
+
+int32_t OnlineStream::HasOption(const char *key) const {
+  return SherpaOnnxOnlineStreamHasOption(p_, key);
+}
+
 OnlineRecognizer OnlineRecognizer::Create(
     const OnlineRecognizerConfig &config) {
   struct SherpaOnnxOnlineRecognizerConfig c;
@@ -209,6 +221,18 @@ void OfflineStream::Destroy(const SherpaOnnxOfflineStream *p) const {
 void OfflineStream::AcceptWaveform(int32_t sample_rate, const float *samples,
                                    int32_t n) const {
   SherpaOnnxAcceptWaveformOffline(p_, sample_rate, samples, n);
+}
+
+void OfflineStream::SetOption(const char *key, const char *value) const {
+  SherpaOnnxOfflineStreamSetOption(p_, key, value);
+}
+
+const char *OfflineStream::GetOption(const char *key) const {
+  return SherpaOnnxOfflineStreamGetOption(p_, key);
+}
+
+int32_t OfflineStream::HasOption(const char *key) const {
+  return SherpaOnnxOfflineStreamHasOption(p_, key);
 }
 
 static SherpaOnnxOfflineRecognizerConfig Convert(
