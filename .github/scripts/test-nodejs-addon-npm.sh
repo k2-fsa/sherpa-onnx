@@ -40,6 +40,20 @@ node ./test_tts_non_streaming_pocket_en_async.js
 
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
 
+echo "----------ZipVoice----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+node ./test_tts_non_streaming_zipvoice_zh_en.js
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+rm -f vocos_24khz.onnx
+
 echo "----------non-streaming ASR FunASR Nano----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2

@@ -145,7 +145,7 @@ We also have spaces built using WebAssembly. They are listed below:
 |Speech synthesis (Matcha, Chinese+English)                                                          |[Click me][wasm-hf-tts-matcha-zh-en]| [地址][wasm-ms-tts-matcha-zh-en]|
 |Speaker diarization                                                                         |[Click me][wasm-hf-speaker-diarization]|[地址][wasm-ms-speaker-diarization]|
 |Voice cloning with ZipVoice (Chinese+English)                                               |[Click me][wasm-hf-voice-cloning-zipvoice]|[地址][wasm-ms-voice-cloning-zipvoice]|
-|Voice cloning with Pocket TTS (English)                                               |[Click me][wasm-hf-voice-cloning-pocket]|[地址][wasm-ms-voice-cloning-pocketzipvoice]|
+|Voice cloning with Pocket TTS (English)                                               |[Click me][wasm-hf-voice-cloning-pocket]|[地址][wasm-ms-voice-cloning-pocket]|
 
 </details>
 
