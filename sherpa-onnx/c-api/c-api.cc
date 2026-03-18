@@ -357,6 +357,24 @@ void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
   stream->impl->InputFinished();
 }
 
+void SherpaOnnxOnlineStreamSetOption(const SherpaOnnxOnlineStream *stream,
+                                     const char *key, const char *value) {
+  if (!stream || !key || !value) return;
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOnlineStreamGetOption(
+    const SherpaOnnxOnlineStream *stream, const char *key) {
+  if (!stream || !key) return nullptr;
+  return stream->impl->GetOption(key).c_str();
+}
+
+int32_t SherpaOnnxOnlineStreamHasOption(const SherpaOnnxOnlineStream *stream,
+                                         const char *key) {
+  if (!stream || !key) return 0;
+  return stream->impl->HasOption(key);
+}
+
 int32_t SherpaOnnxOnlineStreamIsEndpoint(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
@@ -660,6 +678,24 @@ void SherpaOnnxAcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
                                      int32_t sample_rate, const float *samples,
                                      int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
+}
+
+void SherpaOnnxOfflineStreamSetOption(const SherpaOnnxOfflineStream *stream,
+                                      const char *key, const char *value) {
+  if (!stream || !key || !value) return;
+  stream->impl->SetOption(key, value);
+}
+
+const char *SherpaOnnxOfflineStreamGetOption(
+    const SherpaOnnxOfflineStream *stream, const char *key) {
+  if (!stream || !key) return nullptr;
+  return stream->impl->GetOption(key).c_str();
+}
+
+int32_t SherpaOnnxOfflineStreamHasOption(const SherpaOnnxOfflineStream *stream,
+                                          const char *key) {
+  if (!stream || !key) return 0;
+  return stream->impl->HasOption(key);
 }
 
 void SherpaOnnxDecodeOfflineStream(
