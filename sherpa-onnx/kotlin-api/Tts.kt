@@ -36,6 +36,19 @@ data class OfflineTtsKokoroModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+data class OfflineTtsZipVoiceModelConfig(
+    var tokens: String = "",
+    var encoder: String = "",
+    var decoder: String = "",
+    var vocoder: String = "",
+    var dataDir: String = "",
+    var lexicon: String = "",
+    var featScale: Float = 0.1f,
+    var tShift: Float = 0.5f,
+    var targetRms: Float = 0.1f,
+    var guidanceScale: Float = 1.0f,
+)
+
 data class OfflineTtsKittenModelConfig(
     var model: String = "",
     var voices: String = "",
@@ -82,6 +95,7 @@ data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
+    var zipvoice: OfflineTtsZipVoiceModelConfig = OfflineTtsZipVoiceModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
     var pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
     var supertonic: OfflineTtsSupertonicModelConfig = OfflineTtsSupertonicModelConfig(),
