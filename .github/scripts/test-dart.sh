@@ -118,8 +118,10 @@ echo '----------tts----------'
 ./run-kokoro-en.sh
 ./run-matcha-zh.sh
 ./run-matcha-en.sh
+./run-zipvoice-zh-en.sh
 ls -lh *.wav
 rm -rf matcha-icefall-*
+rm -rf sherpa-onnx-zipvoice-*
 rm *.onnx
 
 echo '----------piper tts----------'
