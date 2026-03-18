@@ -985,6 +985,17 @@ function createOfflineTts(Module, myConfig) {
     guidanceScale: 1.0,
   };
 
+  const offlineTtsPocketModelConfig = {
+    lmFlow: '',
+    lmMain: '',
+    encoder: '',
+    decoder: '',
+    textConditioner: '',
+    vocabJson: '',
+    tokenScoresJson: '',
+    voiceEmbeddingCacheCapacity: 50,
+  };
+
   let ruleFsts = '';
 
   switch (modelType) {
@@ -1031,6 +1042,17 @@ function createOfflineTts(Module, myConfig) {
       offlineTtsZipVoiceModelConfig.dataDir = './espeak-ng-data';
       offlineTtsZipVoiceModelConfig.lexicon = './lexicon.txt';
       break;
+    case 5:
+      // pocket tts
+      // https://k2-fsa.github.io/sherpa/onnx/tts/pocket.html
+      offlineTtsPocketModelConfig.lmFlow = './lm_flow.int8.onnx';
+      offlineTtsPocketModelConfig.lmMain = './lm_main.int8.onnx';
+      offlineTtsPocketModelConfig.encoder = './encoder.onnx';
+      offlineTtsPocketModelConfig.decoder = './decoder.int8.onnx';
+      offlineTtsPocketModelConfig.textConditioner = './text_conditioner.onnx';
+      offlineTtsPocketModelConfig.vocabJson = './vocab.json';
+      offlineTtsPocketModelConfig.tokenScoresJson = './token_scores.json';
+      break;
   }
 
   const offlineTtsModelConfig = {
@@ -1039,6 +1061,7 @@ function createOfflineTts(Module, myConfig) {
     offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
     offlineTtsKittenModelConfig: offlineTtsKittenModelConfig,
     offlineTtsZipVoiceModelConfig: offlineTtsZipVoiceModelConfig,
+    offlineTtsPocketModelConfig: offlineTtsPocketModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',

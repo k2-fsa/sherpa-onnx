@@ -161,6 +161,28 @@ def get_models():
             git diff
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-pocket-tts-int8-2026-01-26",
+            hf="k2-fsa/web-assembly-en-tts-pocket",
+            ms="csukuangfj/web-assembly-en-tts-pocket",
+            cmd="""
+            pushd $model_name
+
+            mv -v lm_flow.int8.onnx ../
+            mv -v lm_main.int8.onnx ../
+            mv -v encoder.onnx ../
+            mv -v decoder.int8.onnx ../
+            mv -v text_conditioner.onnx ../
+            mv -v vocab.json ../
+            mv -v token_scores.json ../
+            popd
+
+            git checkout .
+            sed -i.bak 's/let modelType = 0/let modelType = 5/g' ../sherpa-onnx-tts.js
+            rm -rf $model_name
+            git diff
+            """,
+        ),
     ]
     return models
 
