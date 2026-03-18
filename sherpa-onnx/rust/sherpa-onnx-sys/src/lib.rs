@@ -14,6 +14,7 @@ extern "C" {
 pub mod offline_asr;
 pub mod online_asr;
 pub mod speech_denoiser;
+pub mod punctuation;
 pub mod tts;
 pub mod vad;
 pub mod wave;
@@ -21,6 +22,7 @@ pub mod wave;
 pub use offline_asr::*;
 pub use online_asr::*;
 pub use speech_denoiser::*;
+pub use punctuation::*;
 pub use tts::*;
 pub use vad::*;
 pub use wave::*;

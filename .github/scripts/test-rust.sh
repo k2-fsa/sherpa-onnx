@@ -10,6 +10,9 @@ rm -rf sherpa-onnx-pocket-*
 ./run-supertonic-tts.sh
 rm -rf sherpa-onnx-supertonic-*
 
+./run-online-punctuation.sh
+rm -rf sherpa-onnx-online-punct-*
+
 ./run-version.sh
 
 ./run-moonshine-v2.sh
