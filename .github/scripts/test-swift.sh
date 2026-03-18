@@ -84,6 +84,11 @@ rm -rf matcha-icefall-*
 ls -lh
 rm -rf matcha-icefall-*
 
+./run-tts-zipvoice.sh
+ls -lh
+rm -rf sherpa-onnx-zipvoice-*
+rm -f vocos_24khz.onnx
+
 ./run-speaker-diarization.sh
 rm -rf *.onnx
 rm -rf sherpa-onnx-pyannote-segmentation-3-0
