@@ -5,15 +5,15 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_QWEN3_ASR_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_QWEN3_ASR_IMPL_H_
 
-#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "sherpa-onnx/csrc/offline-qwen3-asr-model.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/offline-qwen3-asr-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
@@ -38,25 +38,30 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
 
  private:
   void InitFeatConfig();
+  void InitPromptTemplateIds();
   std::vector<int64_t> BuildSourceIds(int32_t audio_token_len,
-                                      int32_t &audio_beg_idx) const;
+                                      int32_t *before_len,
+                                      int32_t *fake_audio_token_len) const;
 
-  int64_t SampleTokenFromLogitsFp16OrFp32(const void *logits,
-                                         bool is_fp16,
-                                         int32_t vocab_size) const;
+  int64_t SampleTokenFromLogitsFp16OrFp32(const void *logits, bool is_fp16,
+                                          int32_t vocab_size) const;
+  int64_t SampleTokenFromLogits(const Ort::Value &logits, int32_t time_index,
+                                float temperature, float top_p) const;
 
-  int64_t SampleTokenWithTemperatureAndTopP(const void *logits,
-                                            bool is_fp16,
+  int64_t SampleTokenWithTemperatureAndTopP(const void *logits, bool is_fp16,
                                             int32_t vocab_size,
                                             float temperature,
                                             float top_p) const;
 
   OfflineRecognitionResult GenerateText(Ort::Value audio_features,
-                                         int32_t audio_token_len) const;
+                                        int32_t audio_token_len) const;
 
   OfflineRecognizerConfig config_;
   std::unique_ptr<OfflineQwen3ASRModel> model_;
   std::unique_ptr<QwenAsrTokenizer> tokenizer_;
+  std::vector<int64_t> prompt_ids_before_;
+  std::vector<int64_t> audio_pad_ids_;
+  std::vector<int64_t> prompt_ids_after_;
   mutable std::mt19937 rng_;
 };
 

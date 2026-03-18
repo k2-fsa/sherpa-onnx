@@ -4,10 +4,12 @@
 #ifndef SHERPA_ONNX_CSRC_QWEN_ASR_TOKENIZER_H_
 #define SHERPA_ONNX_CSRC_QWEN_ASR_TOKENIZER_H_
 
+#include <array>
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -44,6 +46,10 @@ class QwenAsrTokenizer {
 
  private:
   void Init(const std::string &tokenizer_dir);
+  void InitFromContents(const std::string &vocab_content,
+                        const std::string &merges_content,
+                        const std::string &config_content,
+                        const std::string &tokenizer_dir);
 
 #if __ANDROID_API__ >= 9
   void Init(AAssetManager *mgr, const std::string &tokenizer_dir);
@@ -57,17 +63,17 @@ class QwenAsrTokenizer {
   int64_t eos_token_id_ = -1;
   int64_t pad_token_id_ = -1;
   int64_t im_end_token_id_ = -1;
+  int64_t unk_token_id_ = -1;
 
   std::unordered_map<std::string, int32_t> token2id_;
   std::vector<std::string> id2token_;
 
-  // Track which tokens come from added_tokens_decoder (for special handling)
-  std::unordered_set<std::string> added_tokens_;
+  std::vector<std::pair<std::string, int32_t>> special_tokens_;
 
-  // BPE related
-  std::unordered_map<unsigned char, std::string> byte_to_unicode_;
+  std::array<std::string, 256> byte_to_unicode_;
   std::unordered_map<std::string, int32_t> merges_rank_;
   mutable std::unordered_map<std::string, std::vector<std::string>> bpe_cache_;
+  mutable std::mutex bpe_cache_mutex_;
 };
 
 }  // namespace sherpa_onnx

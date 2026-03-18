@@ -1,37 +1,30 @@
 // sherpa-onnx/csrc/qwen-asr-tokenizer.cc
 //
 // Copyright (c)  2026  zengyw
-//
-// A simplified BPE tokenizer for Qwen3-ASR.
+
 #include "sherpa-onnx/csrc/qwen-asr-tokenizer.h"
 
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cstdint>
-#include <cstring>
-#include <fstream>
-#include <iostream>
 #include <limits>
 #include <mutex>
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
-#include "sherpa-onnx/csrc/file-utils.h"
 #endif
 
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
-#include "sherpa-onnx/csrc/file-utils.h"
 #endif
 
+#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -39,39 +32,33 @@ namespace sherpa_onnx {
 
 namespace {
 
-static std::string ReadFileToString(const std::string &path) {
-#if __ANDROID_API__ >= 9 || __OHOS__
-  std::vector<char> data = ReadFile(path);
+using json = nlohmann::json;
+
+std::string ToString(const std::vector<char> &data) {
   if (data.empty()) {
     return "";
   }
+
   return std::string(data.data(), data.size());
-#else
-  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-  if (!ifs) {
-    return "";
-  }
-  size_t size = ifs.tellg();
-  std::string content(size, '\0');
-  ifs.seekg(0);
-  ifs.read(content.data(), size);
-  return content;
+}
+
+std::string ReadTextFile(const std::string &path) {
+  return ToString(ReadFile(path));
+}
+
+#if __ANDROID_API__ >= 9
+std::string ReadTextFile(AAssetManager *mgr, const std::string &path) {
+  return ToString(ReadFile(mgr, path));
+}
 #endif
-}
 
-static inline void TrimInPlace(std::string *s) {
-  if (!s) return;
-  auto &x = *s;
-  size_t b = x.find_first_not_of(" \t\r\n");
-  if (b == std::string::npos) {
-    x.clear();
-    return;
-  }
-  size_t e = x.find_last_not_of(" \t\r\n");
-  x = x.substr(b, e - b + 1);
+#if __OHOS__
+std::string ReadTextFile(NativeResourceManager *mgr, const std::string &path) {
+  return ToString(ReadFile(mgr, path));
 }
+#endif
 
-static std::string Utf8Encode(uint32_t cp) {
+std::string Utf8Encode(uint32_t cp) {
   std::string out;
   if (cp <= 0x7F) {
     out.push_back(static_cast<char>(cp));
@@ -88,424 +75,373 @@ static std::string Utf8Encode(uint32_t cp) {
     out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
     out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
   }
+
   return out;
 }
 
-static std::once_flag g_b2u_once;
-static std::array<std::string, 256> g_byte_to_unicode;
-static std::unordered_map<std::string, uint8_t> g_unicode_to_byte;
+std::once_flag g_byte_to_unicode_once;
+std::array<std::string, 256> g_byte_to_unicode;
+std::unordered_map<std::string, uint8_t> g_unicode_to_byte;
+std::once_flag g_oov_log_once;
 
-static void InitByteUnicodeMapsOnce() {
-  bool in_bs[256];
-  std::memset(in_bs, 0, sizeof(in_bs));
+void InitByteToUnicode() {
+  std::array<bool, 256> used{};
 
-  std::vector<int> bs;
-  bs.reserve(256);
-  std::vector<uint32_t> cs;
-  cs.reserve(256);
+  std::vector<int32_t> bytes;
+  bytes.reserve(256);
+  std::vector<uint32_t> code_points;
+  code_points.reserve(256);
 
-  for (int b = 33; b <= 126; ++b) {
-    bs.push_back(b);
-    in_bs[b] = true;
-  }
-  for (int b = 161; b <= 172; ++b) {
-    bs.push_back(b);
-    in_bs[b] = true;
-  }
-  for (int b = 174; b <= 255; ++b) {
-    bs.push_back(b);
-    in_bs[b] = true;
+  for (int32_t b = 33; b <= 126; ++b) {
+    bytes.push_back(b);
+    used[static_cast<size_t>(b)] = true;
   }
 
-  for (int b : bs) {
-    cs.push_back(static_cast<uint32_t>(b));
+  for (int32_t b = 161; b <= 172; ++b) {
+    bytes.push_back(b);
+    used[static_cast<size_t>(b)] = true;
+  }
+
+  for (int32_t b = 174; b <= 255; ++b) {
+    bytes.push_back(b);
+    used[static_cast<size_t>(b)] = true;
+  }
+
+  for (int32_t b : bytes) {
+    code_points.push_back(static_cast<uint32_t>(b));
   }
 
   uint32_t n = 0;
-  for (int b = 0; b < 256; ++b) {
-    if (!in_bs[b]) {
-      bs.push_back(b);
-      cs.push_back(256u + n);
+  for (int32_t b = 0; b != 256; ++b) {
+    if (!used[static_cast<size_t>(b)]) {
+      bytes.push_back(b);
+      code_points.push_back(256u + n);
       ++n;
     }
   }
 
-  for (size_t i = 0; i < bs.size(); ++i) {
-    g_byte_to_unicode[static_cast<size_t>(bs[i])] = Utf8Encode(cs[i]);
+  for (size_t i = 0; i != bytes.size(); ++i) {
+    g_byte_to_unicode[static_cast<size_t>(bytes[i])] = Utf8Encode(code_points[i]);
   }
 
   g_unicode_to_byte.clear();
   g_unicode_to_byte.reserve(256);
-  for (int b = 0; b < 256; ++b) {
+  for (int32_t b = 0; b != 256; ++b) {
     g_unicode_to_byte[g_byte_to_unicode[static_cast<size_t>(b)]] =
         static_cast<uint8_t>(b);
   }
 }
 
-static inline const std::array<std::string, 256> &ByteToUnicode() {
-  std::call_once(g_b2u_once, InitByteUnicodeMapsOnce);
+const std::array<std::string, 256> &ByteToUnicode() {
+  std::call_once(g_byte_to_unicode_once, InitByteToUnicode);
   return g_byte_to_unicode;
 }
 
-static inline const std::unordered_map<std::string, uint8_t> &UnicodeToByte() {
-  std::call_once(g_b2u_once, InitByteUnicodeMapsOnce);
+const std::unordered_map<std::string, uint8_t> &UnicodeToByte() {
+  std::call_once(g_byte_to_unicode_once, InitByteToUnicode);
   return g_unicode_to_byte;
 }
 
-// UTF-8 utilities (same as FunASRNanoTokenizer)
-static bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp, size_t *nb) {
-  if (*i >= s.size()) return false;
+bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp, size_t *num_bytes) {
+  if (*i >= s.size()) {
+    return false;
+  }
+
   size_t pos = *i;
-  unsigned char c = static_cast<unsigned char>(s[pos]);
+  auto c = static_cast<unsigned char>(s[pos]);
 
   if (c < 0x80) {
     *cp = c;
-    *nb = 1;
+    *num_bytes = 1;
   } else if ((c >> 5) == 0x6) {
-    if (pos + 1 >= s.size()) return false;
+    if (pos + 1 >= s.size()) {
+      return false;
+    }
+
     *cp = (c & 0x1F) << 6;
     *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F);
-    *nb = 2;
+    *num_bytes = 2;
   } else if ((c >> 4) == 0xE) {
-    if (pos + 2 >= s.size()) return false;
+    if (pos + 2 >= s.size()) {
+      return false;
+    }
+
     *cp = (c & 0x0F) << 12;
     *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F) << 6;
     *cp |= (static_cast<unsigned char>(s[pos + 2]) & 0x3F);
-    *nb = 3;
+    *num_bytes = 3;
   } else if ((c >> 3) == 0x1E) {
-    if (pos + 3 >= s.size()) return false;
+    if (pos + 3 >= s.size()) {
+      return false;
+    }
+
     *cp = (c & 0x07) << 18;
     *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F) << 12;
     *cp |= (static_cast<unsigned char>(s[pos + 2]) & 0x3F) << 6;
     *cp |= (static_cast<unsigned char>(s[pos + 3]) & 0x3F);
-    *nb = 4;
+    *num_bytes = 4;
   } else {
     return false;
   }
 
-  *i = pos + *nb;
+  *i = pos + *num_bytes;
   return true;
 }
 
-static std::vector<std::string> SplitUtf8ToChars(const std::string &s) {
-  std::vector<std::string> result;
+std::vector<std::string> SplitUtf8ToChars(const std::string &s) {
+  std::vector<std::string> ans;
+  ans.reserve(s.size());
+
   size_t i = 0;
   while (i < s.size()) {
     uint32_t cp = 0;
-    size_t nb = 0;
-    if (Utf8Next(s, &i, &cp, &nb)) {
-      result.push_back(s.substr(i - nb, nb));
+    size_t num_bytes = 0;
+    if (Utf8Next(s, &i, &cp, &num_bytes)) {
+      ans.push_back(s.substr(i - num_bytes, num_bytes));
     } else {
-      result.push_back(s.substr(i, 1));
+      ans.push_back(s.substr(i, 1));
       ++i;
     }
   }
-  return result;
+
+  return ans;
 }
 
-static inline bool IsLetter(uint32_t cp) {
+bool IsLetter(uint32_t cp) {
   if (cp >= 'a' && cp <= 'z') return true;
   if (cp >= 'A' && cp <= 'Z') return true;
-  // CJK Unified Ideographs
   if (cp >= 0x4E00 && cp <= 0x9FFF) return true;
-  // CJK Extension A
   if (cp >= 0x3400 && cp <= 0x4DBF) return true;
-  // Hiragana/Katakana
   if (cp >= 0x3040 && cp <= 0x30FF) return true;
-  // Hangul syllables
   if (cp >= 0xAC00 && cp <= 0xD7AF) return true;
   return false;
 }
 
-static std::vector<std::string> SplitByQwen3Pattern(const std::string &s) {
-  std::vector<std::string> words;
+std::vector<std::string> SplitByQwen3Pattern(const std::string &text) {
+  std::vector<std::string> ans;
+  ans.reserve(text.size() / 2 + 1);
+
   size_t start = 0;
   size_t i = 0;
-
-  while (i < s.size()) {
+  while (i < text.size()) {
     uint32_t cp = 0;
-    size_t nb = 0;
-    if (Utf8Next(s, &i, &cp, &nb)) {
+    size_t num_bytes = 0;
+    if (Utf8Next(text, &i, &cp, &num_bytes)) {
       if (IsLetter(cp)) {
-        // Continue current word
-      } else {
-        if (i - nb > start) {
-          words.push_back(s.substr(start, i - nb - start));
-        }
-        words.push_back(s.substr(i - nb, nb));
-        start = i;
+        continue;
       }
-    } else {
-      if (i > start) {
-        words.push_back(s.substr(start, i - start));
+
+      if (i - num_bytes > start) {
+        ans.push_back(text.substr(start, i - num_bytes - start));
       }
-      words.push_back(s.substr(i, 1));
-      ++i;
+      ans.push_back(text.substr(i - num_bytes, num_bytes));
       start = i;
-    }
-  }
-
-  if (i > start) {
-    words.push_back(s.substr(start, i - start));
-  }
-
-  return words;
-}
-
-static std::string MakeMergeKey(const std::string &first,
-                               const std::string &second) {
-  std::string k;
-  k.reserve(first.size() + second.size() + 1);
-  k.append(first);
-  k.push_back('\t');
-  k.append(second);
-  return k;
-}
-
-// Parse vocab.json - format: {"token": id, ...}
-static bool ParseVocabJson(const std::string &content,
-                           std::unordered_map<std::string, int32_t> *vocab,
-                           std::vector<std::string> *id2vocab) {
-  if (!vocab || !id2vocab) return false;
-  vocab->clear();
-  id2vocab->clear();
-
-  size_t pos = 0;
-  while (pos < content.size() && content[pos] != '{') {
-    ++pos;
-  }
-  if (pos >= content.size()) return false;
-  ++pos;
-
-  while (pos < content.size()) {
-    while (pos < content.size() &&
-           (content[pos] == ' ' || content[pos] == '\t' ||
-            content[pos] == '\n' || content[pos] == '\r' ||
-            content[pos] == ',')) {
-      ++pos;
-    }
-
-    if (pos >= content.size() || content[pos] != '"') break;
-
-    ++pos;
-    size_t start = pos;
-
-    while (pos < content.size() && content[pos] != '"') {
-      if (content[pos] == '\\' && pos + 1 < content.size()) {
-        ++pos;
-      }
-      ++pos;
-    }
-
-    if (pos >= content.size()) break;
-
-    std::string token = content.substr(start, pos - start);
-    ++pos;
-
-    while (pos < content.size() && content[pos] != ':') {
-      ++pos;
-    }
-    if (pos >= content.size()) break;
-    ++pos;
-
-    while (pos < content.size() &&
-           (content[pos] == ' ' || content[pos] == '\t' ||
-            content[pos] == '\n')) {
-      ++pos;
-    }
-
-    if (pos >= content.size() || content[pos] < '0' || content[pos] > '9')
-      break;
-
-    int32_t id = 0;
-    while (pos < content.size() && content[pos] >= '0' && content[pos] <= '9') {
-      id = id * 10 + (content[pos] - '0');
-      ++pos;
-    }
-
-    if (!token.empty()) {
-      (*vocab)[token] = id;
-      if (static_cast<size_t>(id) >= id2vocab->size()) {
-        id2vocab->resize(id + 1);
-      }
-      (*id2vocab)[id] = token;
-    }
-  }
-
-  return true;
-}
-
-
-static void ParseAddedTokensDecoder(
-    const std::string &content, std::unordered_map<std::string, int32_t> *token2id,
-    std::vector<std::string> *id2token,
-    std::unordered_set<std::string> *added_tokens) {
-  if (!token2id || !id2token) return;
-
-  size_t section_start = content.find("\"added_tokens_decoder\"");
-  if (section_start == std::string::npos) return;
-
-  size_t brace_pos = content.find('{', section_start);
-  if (brace_pos == std::string::npos) return;
-  ++brace_pos;
-
-  int depth = 1;
-  size_t section_end = brace_pos;
-  for (size_t i = brace_pos + 1; i < content.size(); ++i) {
-    if (content[i] == '{')
-      ++depth;
-    else if (content[i] == '}') {
-      --depth;
-      if (depth == 0) {
-        section_end = i + 1;
-        break;
-      }
-    }
-  }
-
-  std::string section;
-  if (section_end > brace_pos) {
-    section = content.substr(brace_pos, section_end - brace_pos);
-  }
-  if (section.empty()) return;
-
-  size_t pos = 0;
-  while (pos < section.size()) {
-    size_t q1 = section.find('"', pos);
-    if (q1 == std::string::npos) {
-      break;
-    }
-
-    size_t q2 = section.find('"', q1 + 1);
-    if (q2 == std::string::npos) break;
-
-    std::string key = section.substr(q1 + 1, q2 - q1 - 1);
-
-    bool is_number = !key.empty();
-    for (char c : key) {
-      if (c < '0' || c > '9') {
-        is_number = false;
-        break;
-      }
-    }
-
-    if (is_number) {
-      size_t entry_start = q2 + 1;
-      int entry_depth = 0;
-      size_t entry_end = entry_start;
-      for (size_t i = entry_start; i < section.size(); ++i) {
-        if (section[i] == '{')
-          ++entry_depth;
-        else if (section[i] == '}') {
-          --entry_depth;
-          if (entry_depth == 0) {
-            entry_end = i + 1;
-            break;
-          }
-        }
-      }
-
-      std::string field_key = "\"content\"";
-      size_t field_pos = section.find(field_key, entry_start);
-      if (field_pos != std::string::npos && field_pos < entry_end) {
-        size_t colon = section.find(':', field_pos);
-        if (colon != std::string::npos && colon < entry_end) {
-          // Find the opening quote after colon
-          size_t value_start = section.find('"', colon + 1);
-          if (value_start != std::string::npos && value_start < entry_end) {
-            ++value_start;
-            size_t value_end = section.find('"', value_start);
-            if (value_end != std::string::npos && value_end <= entry_end) {
-              std::string token_value =
-                  section.substr(value_start, value_end - value_start);
-
-              if (!token_value.empty()) {
-                try {
-                  int32_t token_id = std::stoi(key);
-                  (*token2id)[token_value] = token_id;
-                  if (static_cast<size_t>(token_id) >= id2token->size()) {
-                    id2token->resize(token_id + 1);
-                  }
-                  (*id2token)[token_id] = token_value;
-                  if (added_tokens) {
-                    added_tokens->insert(token_value);
-                  }
-                } catch (const std::exception &e) {
-                }
-              }
-            }
-          }
-        }
-      }
-
-      pos = entry_end;
-    } else {
-      pos = q2 + 1;
-    }
-  }
-}
-
-// Parse merges.txt
-static bool ParseMergesTxt(
-    const std::string &content,
-    std::unordered_map<std::string, int32_t> *merges_rank) {
-  if (!merges_rank) return false;
-  merges_rank->clear();
-
-  size_t pos = 0;
-  int32_t rank = 0;
-
-  while (pos < content.size()) {
-    while (pos < content.size() &&
-           (content[pos] == ' ' || content[pos] == '\t' ||
-            content[pos] == '\n' || content[pos] == '\r')) {
-      ++pos;
-    }
-
-    if (pos >= content.size()) break;
-
-    if (content[pos] == '#') {
-      while (pos < content.size() && content[pos] != '\n') {
-        ++pos;
-      }
       continue;
     }
 
-    size_t start = pos;
-    while (pos < content.size() && content[pos] != ' ' && content[pos] != '\t' &&
-           content[pos] != '\n' && content[pos] != '\r') {
-      ++pos;
+    if (i > start) {
+      ans.push_back(text.substr(start, i - start));
     }
-    if (pos <= start) break;
-    std::string first = content.substr(start, pos - start);
+    ans.push_back(text.substr(i, 1));
+    ++i;
+    start = i;
+  }
 
-    while (pos < content.size() && (content[pos] == ' ' || content[pos] == '\t')) {
-      ++pos;
+  if (i > start) {
+    ans.push_back(text.substr(start, i - start));
+  }
+
+  return ans;
+}
+
+std::string MakeMergeKey(const std::string &left, const std::string &right) {
+  std::string key;
+  key.reserve(left.size() + right.size() + 1);
+  key.append(left);
+  key.push_back('\t');
+  key.append(right);
+  return key;
+}
+
+std::string ByteLevelEncode(const std::string &token,
+                            const std::array<std::string, 256> &byte_to_unicode) {
+  std::string ans;
+  ans.reserve(token.size() * 2);
+  for (unsigned char c : token) {
+    ans.append(byte_to_unicode[c]);
+  }
+  return ans;
+}
+
+bool IsSpecialToken(const std::string &token) {
+  if (token.size() < 5) {
+    return false;
+  }
+
+  if (token.rfind("<|", 0) != 0) {
+    return false;
+  }
+
+  return token.compare(token.size() - 2, 2, "|>") == 0;
+}
+
+bool ParseInt32String(const std::string &s, int32_t *value) {
+  if (!value || s.empty()) {
+    return false;
+  }
+
+  int64_t v = 0;
+  for (char c : s) {
+    if (c < '0' || c > '9') {
+      return false;
     }
-    if (pos >= content.size()) break;
 
-    start = pos;
-    while (pos < content.size() && content[pos] != ' ' && content[pos] != '\t' &&
-           content[pos] != '\n' && content[pos] != '\r') {
-      ++pos;
+    v = v * 10 + (c - '0');
+    if (v > std::numeric_limits<int32_t>::max()) {
+      return false;
     }
-    if (pos <= start) break;
-    std::string second = content.substr(start, pos - start);
+  }
 
-    std::string key = MakeMergeKey(first, second);
-    (*merges_rank)[key] = rank;
-    ++rank;
+  *value = static_cast<int32_t>(v);
+  return true;
+}
+
+bool ParseVocab(const std::string &content,
+                std::unordered_map<std::string, int32_t> *token2id,
+                std::vector<std::string> *id2token) {
+  if (!token2id || !id2token) {
+    return false;
+  }
+
+  token2id->clear();
+  id2token->clear();
+
+  json j = json::parse(content, nullptr, false);
+  if (j.is_discarded() || !j.is_object()) {
+    return false;
+  }
+
+  for (const auto &item : j.items()) {
+    if (!item.value().is_number_integer()) {
+      continue;
+    }
+
+    int64_t id64 = -1;
+    try {
+      id64 = item.value().get<int64_t>();
+    } catch (...) {
+      continue;
+    }
+
+    if (id64 < 0 || id64 > std::numeric_limits<int32_t>::max()) {
+      continue;
+    }
+
+    int32_t id = static_cast<int32_t>(id64);
+    (*token2id)[item.key()] = id;
+    if (static_cast<size_t>(id) >= id2token->size()) {
+      id2token->resize(static_cast<size_t>(id) + 1);
+    }
+    (*id2token)[static_cast<size_t>(id)] = item.key();
+  }
+
+  return !token2id->empty();
+}
+
+void ParseAddedTokens(const std::string &content,
+                      std::unordered_map<std::string, int32_t> *token2id,
+                      std::vector<std::string> *id2token) {
+  if (!token2id || !id2token || content.empty()) {
+    return;
+  }
+
+  json j = json::parse(content, nullptr, false);
+  if (j.is_discarded() || !j.is_object()) {
+    return;
+  }
+
+  auto it = j.find("added_tokens_decoder");
+  if (it == j.end() || !it->is_object()) {
+    return;
+  }
+
+  for (const auto &item : it->items()) {
+    if (!item.value().is_object()) {
+      continue;
+    }
+
+    auto content_it = item.value().find("content");
+    if (content_it == item.value().end() || !content_it->is_string()) {
+      continue;
+    }
+
+    int32_t id = -1;
+    auto id_it = item.value().find("id");
+    if (id_it != item.value().end() && id_it->is_number_integer()) {
+      int64_t id64 = -1;
+      try {
+        id64 = id_it->get<int64_t>();
+      } catch (...) {
+        id64 = -1;
+      }
+      if (id64 >= 0 && id64 <= std::numeric_limits<int32_t>::max()) {
+        id = static_cast<int32_t>(id64);
+      }
+    }
+
+    if (id < 0 && !ParseInt32String(item.key(), &id)) {
+      continue;
+    }
+
+    const std::string token = content_it->get<std::string>();
+    if (token.empty()) {
+      continue;
+    }
+
+    (*token2id)[token] = id;
+    if (static_cast<size_t>(id) >= id2token->size()) {
+      id2token->resize(static_cast<size_t>(id) + 1);
+    }
+    (*id2token)[static_cast<size_t>(id)] = token;
+  }
+}
+
+bool ParseMerges(const std::string &content,
+                 std::unordered_map<std::string, int32_t> *merges_rank) {
+  if (!merges_rank) {
+    return false;
+  }
+
+  merges_rank->clear();
+  std::istringstream is(content);
+  std::string line;
+  int32_t rank = 0;
+
+  while (std::getline(is, line)) {
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+
+    std::istringstream ls(line);
+    std::string left;
+    std::string right;
+    if (!(ls >> left >> right)) {
+      continue;
+    }
+
+    (*merges_rank)[MakeMergeKey(left, right)] = rank++;
   }
 
   return true;
 }
 
-// BPE encode with caching
-static std::vector<std::string> BpeEncodeWithCache(
+std::vector<std::string> BpeEncode(
     const std::string &word,
     const std::unordered_map<std::string, int32_t> &merges_rank,
-    std::unordered_map<std::string, std::vector<std::string>> *cache) {
-  if (!word.empty()) {
+    std::unordered_map<std::string, std::vector<std::string>> *cache,
+    std::mutex *cache_mutex) {
+  if (!word.empty() && cache && cache_mutex) {
+    std::lock_guard<std::mutex> lock(*cache_mutex);
     auto it = cache->find(word);
     if (it != cache->end()) {
       return it->second;
@@ -513,12 +449,11 @@ static std::vector<std::string> BpeEncodeWithCache(
   }
 
   std::vector<std::string> symbols = SplitUtf8ToChars(word);
-  if (symbols.empty()) {
-    if (cache) (*cache)[word] = {};
-    return {};
-  }
-  if (symbols.size() == 1) {
-    if (cache) (*cache)[word] = symbols;
+  if (symbols.size() <= 1) {
+    if (cache && cache_mutex) {
+      std::lock_guard<std::mutex> lock(*cache_mutex);
+      (*cache)[word] = symbols;
+    }
     return symbols;
   }
 
@@ -527,75 +462,139 @@ static std::vector<std::string> BpeEncodeWithCache(
     int32_t best_pos = -1;
 
     for (int32_t i = 0; i + 1 < static_cast<int32_t>(symbols.size()); ++i) {
-      std::string key = MakeMergeKey(symbols[i], symbols[i + 1]);
-      auto it2 = merges_rank.find(key);
-      if (it2 != merges_rank.end()) {
-        int32_t r = it2->second;
-        if (r < best_rank) {
-          best_rank = r;
-          best_pos = i;
-        }
+      auto it = merges_rank.find(MakeMergeKey(symbols[i], symbols[i + 1]));
+      if (it != merges_rank.end() && it->second < best_rank) {
+        best_rank = it->second;
+        best_pos = i;
       }
     }
 
-    if (best_pos < 0) break;
+    if (best_pos < 0) {
+      break;
+    }
 
-    std::string a = symbols[best_pos];
-    std::string b = symbols[best_pos + 1];
-
-    std::vector<std::string> new_symbols;
-    new_symbols.reserve(symbols.size());
-
+    const std::string left = symbols[best_pos];
+    const std::string right = symbols[best_pos + 1];
+    std::vector<std::string> next;
+    next.reserve(symbols.size());
     for (size_t i = 0; i < symbols.size();) {
-      if (i + 1 < symbols.size() && symbols[i] == a && symbols[i + 1] == b) {
-        new_symbols.push_back(a + b);
+      if (i + 1 < symbols.size() && symbols[i] == left &&
+          symbols[i + 1] == right) {
+        next.push_back(left + right);
         i += 2;
       } else {
-        new_symbols.push_back(symbols[i]);
-        i += 1;
+        next.push_back(symbols[i]);
+        ++i;
       }
     }
-
-    symbols.swap(new_symbols);
+    symbols.swap(next);
   }
 
-  if (cache) (*cache)[word] = symbols;
+  if (cache && cache_mutex) {
+    std::lock_guard<std::mutex> lock(*cache_mutex);
+    (*cache)[word] = symbols;
+  }
+
   return symbols;
 }
 
-static inline bool IsSpecialTokenString(const std::string &s) {
-  if (s.size() < 5) return false;
-  if (s.rfind("<|", 0) == 0 && s.size() >= 2 && s.substr(s.size() - 2) == "|>") {
-    return true;
+void BuildSpecialTokens(
+    const std::unordered_map<std::string, int32_t> &token2id,
+    std::vector<std::pair<std::string, int32_t>> *special_tokens) {
+  if (!special_tokens) {
+    return;
   }
-  return false;
-}
 
-static std::string DecodeBytesToUtf8(const std::string &u) {
-  const auto &u2b = UnicodeToByte();
-  std::string bytes;
-  bytes.reserve(u.size());
+  special_tokens->clear();
+  special_tokens->reserve(token2id.size());
 
-  size_t i = 0;
-  while (i < u.size()) {
-    uint32_t cp = 0;
-    size_t nb = 0;
-    size_t pos0 = i;
-    if (Utf8Next(u, &i, &cp, &nb)) {
-      std::string k = u.substr(pos0, nb);
-      auto it = u2b.find(k);
-      if (it != u2b.end()) {
-        bytes.push_back(static_cast<char>(it->second));
-      } else {
-        bytes.append(k);
-      }
-    } else {
-      bytes.push_back(u[i]);
-      ++i;
+  for (const auto &kv : token2id) {
+    if (IsSpecialToken(kv.first)) {
+      special_tokens->push_back(kv);
     }
   }
 
-  return bytes;
+  std::sort(special_tokens->begin(), special_tokens->end(),
+            [](const std::pair<std::string, int32_t> &a,
+               const std::pair<std::string, int32_t> &b) {
+              return a.first.size() > b.first.size();
+            });
+}
+
+std::string DecodeBytes(const std::string &text) {
+  const auto &unicode_to_byte = UnicodeToByte();
+
+  std::string ans;
+  ans.reserve(text.size());
+
+  size_t i = 0;
+  while (i < text.size()) {
+    size_t pos = i;
+    uint32_t cp = 0;
+    size_t num_bytes = 0;
+    if (Utf8Next(text, &i, &cp, &num_bytes)) {
+      std::string piece = text.substr(pos, num_bytes);
+      auto it = unicode_to_byte.find(piece);
+      if (it != unicode_to_byte.end()) {
+        ans.push_back(static_cast<char>(it->second));
+      } else {
+        ans.append(piece);
+      }
+      continue;
+    }
+
+    ans.push_back(text[i]);
+    ++i;
+  }
+
+  return ans;
+}
+
+void AppendEncodedPieceIds(
+    const std::string &encoded,
+    const std::unordered_map<std::string, int32_t> &token2id,
+    const std::unordered_map<std::string, int32_t> &merges_rank,
+    std::unordered_map<std::string, std::vector<std::string>> *bpe_cache,
+    std::mutex *bpe_cache_mutex, int64_t unk_token_id,
+    std::vector<int64_t> *ids) {
+  auto bpe_tokens = BpeEncode(encoded, merges_rank, bpe_cache, bpe_cache_mutex);
+
+  size_t old_size = ids->size();
+  bool has_missing = false;
+  for (const auto &bpe_token : bpe_tokens) {
+    auto it = token2id.find(bpe_token);
+    if (it != token2id.end()) {
+      ids->push_back(it->second);
+    } else {
+      has_missing = true;
+      break;
+    }
+  }
+
+  if (!has_missing) {
+    return;
+  }
+
+  ids->resize(old_size);
+  auto chars = SplitUtf8ToChars(encoded);
+  for (const auto &c : chars) {
+    auto it = token2id.find(c);
+    if (it != token2id.end()) {
+      ids->push_back(it->second);
+      continue;
+    }
+
+    if (unk_token_id >= 0) {
+      ids->push_back(unk_token_id);
+      continue;
+    }
+
+    std::call_once(g_oov_log_once, []() {
+      SHERPA_ONNX_LOGE(
+          "qwen-asr-tokenizer: encountered OOV piece without <unk>; "
+          "unmatched pieces will be dropped");
+    });
+  }
 }
 
 }  // namespace
@@ -618,222 +617,224 @@ QwenAsrTokenizer::QwenAsrTokenizer(NativeResourceManager *mgr,
 }
 #endif
 
-void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
-  std::string vocab_path = tokenizer_dir + "/vocab.json";
-  std::string merges_path = tokenizer_dir + "/merges.txt";
-  std::string config_path = tokenizer_dir + "/tokenizer_config.json";
-
-  std::string vocab_content = ReadFileToString(vocab_path);
-  std::string merges_content = ReadFileToString(merges_path);
-  std::string config_content = ReadFileToString(config_path);
-
+void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
+                                        const std::string &merges_content,
+                                        const std::string &config_content,
+                                        const std::string &tokenizer_dir) {
   if (vocab_content.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read vocab.json from: %s",
-                     tokenizer_dir.c_str());
+    SHERPA_ONNX_LOGE("Failed to read vocab.json from: %s", tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
-  const auto &b2u = ByteToUnicode();
-  for (int i = 0; i < 256; ++i) {
-    byte_to_unicode_[i] = b2u[static_cast<size_t>(i)];
-  }
+  token2id_.clear();
+  id2token_.clear();
+  special_tokens_.clear();
+  merges_rank_.clear();
+  byte_to_unicode_ = ByteToUnicode();
 
-  // Parse vocab.json
-  if (!ParseVocabJson(vocab_content, &token2id_, &id2token_)) {
-    SHERPA_ONNX_LOGE("Failed to parse vocab.json");
+  if (!ParseVocab(vocab_content, &token2id_, &id2token_)) {
+    SHERPA_ONNX_LOGE("Failed to parse vocab.json from: %s", tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
-  // Parse merges.txt
-  if (!merges_content.empty()) {
-    if (!ParseMergesTxt(merges_content, &merges_rank_)) {
-      SHERPA_ONNX_LOGE("Failed to parse merges.txt");
-      SHERPA_ONNX_EXIT(-1);
-    }
+  if (!merges_content.empty() && !ParseMerges(merges_content, &merges_rank_)) {
+    SHERPA_ONNX_LOGE("Failed to parse merges.txt from: %s", tokenizer_dir.c_str());
+    SHERPA_ONNX_EXIT(-1);
   }
 
-  // Parse added_tokens_decoder from tokenizer_config.json
-  if (!config_content.empty()) {
-    ParseAddedTokensDecoder(config_content, &token2id_, &id2token_, &added_tokens_);
+  ParseAddedTokens(config_content, &token2id_, &id2token_);
+  BuildSpecialTokens(token2id_, &special_tokens_);
+
+  {
+    std::lock_guard<std::mutex> lock(bpe_cache_mutex_);
+    bpe_cache_.clear();
   }
 
-  // Find special token IDs
   eos_token_id_ = -1;
   pad_token_id_ = -1;
   im_end_token_id_ = -1;
+  unk_token_id_ = -1;
 
-  for (const auto &[token, id] : token2id_) {
-    if (token == "<|im_end|>") {
-      eos_token_id_ = id;
-      im_end_token_id_ = id;
-    } else if (token == "<|endoftext|>" || token == "<|padding|>") {
-      if (pad_token_id_ < 0) pad_token_id_ = id;
+  auto it = token2id_.find("<|im_end|>");
+  if (it != token2id_.end()) {
+    eos_token_id_ = it->second;
+    im_end_token_id_ = it->second;
+  }
+
+  it = token2id_.find("<|padding|>");
+  if (it != token2id_.end()) {
+    pad_token_id_ = it->second;
+  }
+
+  if (pad_token_id_ < 0) {
+    it = token2id_.find("<|endoftext|>");
+    if (it != token2id_.end()) {
+      pad_token_id_ = it->second;
     }
   }
 
-  for (size_t i = 0; i < id2token_.size(); ++i) {
-    const std::string &token = id2token_[i];
-    if (token == "<|im_end|>") {
-      eos_token_id_ = static_cast<int64_t>(i);
-      im_end_token_id_ = static_cast<int64_t>(i);
-    } else if (token == "<|endoftext|>" || token == "<|padding|>") {
-      if (pad_token_id_ < 0) pad_token_id_ = static_cast<int64_t>(i);
+  if (pad_token_id_ < 0) {
+    pad_token_id_ = eos_token_id_;
+  }
+
+  it = token2id_.find("<unk>");
+  if (it != token2id_.end()) {
+    unk_token_id_ = it->second;
+  } else {
+    it = token2id_.find("<|unk|>");
+    if (it != token2id_.end()) {
+      unk_token_id_ = it->second;
     }
   }
+}
+
+void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
+  const std::string vocab_path = tokenizer_dir + "/vocab.json";
+  const std::string merges_path = tokenizer_dir + "/merges.txt";
+  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
+
+  InitFromContents(ReadTextFile(vocab_path), ReadTextFile(merges_path),
+                   ReadTextFile(config_path), tokenizer_dir);
 }
 
 #if __ANDROID_API__ >= 9
 void QwenAsrTokenizer::Init(AAssetManager *mgr,
                             const std::string &tokenizer_dir) {
-  Init(tokenizer_dir);
+  const std::string vocab_path = tokenizer_dir + "/vocab.json";
+  const std::string merges_path = tokenizer_dir + "/merges.txt";
+  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
+
+  InitFromContents(ReadTextFile(mgr, vocab_path), ReadTextFile(mgr, merges_path),
+                   ReadTextFile(mgr, config_path), tokenizer_dir);
 }
 #endif
 
 #if __OHOS__
 void QwenAsrTokenizer::Init(NativeResourceManager *mgr,
                             const std::string &tokenizer_dir) {
-  Init(tokenizer_dir);
+  const std::string vocab_path = tokenizer_dir + "/vocab.json";
+  const std::string merges_path = tokenizer_dir + "/merges.txt";
+  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
+
+  InitFromContents(ReadTextFile(mgr, vocab_path), ReadTextFile(mgr, merges_path),
+                   ReadTextFile(mgr, config_path), tokenizer_dir);
 }
 #endif
 
 std::vector<int64_t> QwenAsrTokenizer::Encode(const std::string &text) {
-  std::vector<int64_t> result;
+  std::vector<int64_t> ans;
 
-  // Build list of special tokens (from added_tokens_decoder)
-  // These are Qwen-specific special tokens like <|im_start|>, <|im_end|>, etc.
-  std::vector<std::pair<std::string, int32_t>> special_tokens;
-  for (const auto &[token, id] : token2id_) {
-    // Qwen special tokens: start with "<|" and end with "|>"
-    if (token.size() >= 5 &&
-        token.find("<|") == 0 &&
-        token.find("|>") == token.size() - 2) {
-      special_tokens.push_back({token, id});
-    }
-  }
-
-  // Sort by length descending for longest match first
-  std::sort(special_tokens.begin(), special_tokens.end(),
-            [](const auto &a, const auto &b) {
-              return a.first.size() > b.first.size();
-            });
-
-  // Process text: check for special tokens at each position
   size_t pos = 0;
   while (pos < text.size()) {
-    bool matched = false;
-
-    // Check for special token match at current position
-    for (const auto &[token, id] : special_tokens) {
-      if (pos + token.size() <= text.size() &&
-          text.compare(pos, token.size(), token) == 0) {
-        result.push_back(id);
-        pos += token.size();
-        matched = true;
+    bool matched_special = false;
+    for (const auto &token : special_tokens_) {
+      if (pos + token.first.size() <= text.size() &&
+          text.compare(pos, token.first.size(), token.first) == 0) {
+        ans.push_back(token.second);
+        pos += token.first.size();
+        matched_special = true;
         break;
       }
     }
 
-    if (matched) continue;
+    if (matched_special) {
+      continue;
+    }
 
-    // No special token match - process as regular text
-    // Find next special token position to limit the word
-    size_t word_end = text.size();
-    for (const auto &[token, id] : special_tokens) {
-      size_t found = text.find(token, pos);
-      if (found != std::string::npos && found < word_end) {
-        word_end = found;
+    size_t next_special_pos = text.size();
+    for (const auto &token : special_tokens_) {
+      size_t p = text.find(token.first, pos);
+      if (p != std::string::npos && p < next_special_pos) {
+        next_special_pos = p;
       }
     }
 
-    // Process the text from pos to word_end
-    if (word_end > pos) {
-      std::string word = text.substr(pos, word_end - pos);
-      std::string bl;
-      bl.reserve(word.size() * 2);
-      for (unsigned char c : word) {
-        bl += byte_to_unicode_[c];
-      }
-
-      auto bpe_toks = BpeEncodeWithCache(bl, merges_rank_, &bpe_cache_);
-      for (const std::string &tok : bpe_toks) {
-        auto it = token2id_.find(tok);
-        if (it != token2id_.end()) {
-          result.push_back(it->second);
-        }
+    if (next_special_pos > pos) {
+      std::string chunk = text.substr(pos, next_special_pos - pos);
+      auto pieces = SplitByQwen3Pattern(chunk);
+      for (const auto &piece : pieces) {
+        std::string encoded = ByteLevelEncode(piece, byte_to_unicode_);
+        AppendEncodedPieceIds(encoded, token2id_, merges_rank_, &bpe_cache_,
+                              &bpe_cache_mutex_, unk_token_id_, &ans);
       }
     }
 
-    pos = word_end;
+    pos = next_special_pos;
   }
 
-  return result;
+  return ans;
 }
 
 std::string QwenAsrTokenizer::Decode(const std::vector<int64_t> &token_ids) {
-  std::string result;
-  std::string buf;
+  std::string ans;
+  std::string buffer;
 
   for (int64_t id : token_ids) {
-    if (id >= 0 && static_cast<size_t>(id) < id2token_.size()) {
-      const std::string &t = id2token_[id];
-      if (IsSpecialTokenString(t)) {
-        if (!buf.empty()) {
-          result += DecodeBytesToUtf8(buf);
-          buf.clear();
-        }
-        result += t;
-      } else {
-        buf += t;
+    if (id < 0 || static_cast<size_t>(id) >= id2token_.size()) {
+      continue;
+    }
+
+    const std::string &token = id2token_[static_cast<size_t>(id)];
+    if (IsSpecialToken(token)) {
+      if (!buffer.empty()) {
+        ans.append(DecodeBytes(buffer));
+        buffer.clear();
       }
+      ans.append(token);
+    } else {
+      buffer.append(token);
     }
   }
 
-  if (!buf.empty()) {
-    result += DecodeBytesToUtf8(buf);
-    buf.clear();
+  if (!buffer.empty()) {
+    ans.append(DecodeBytes(buffer));
   }
 
-  return result;
+  return ans;
 }
 
 std::string QwenAsrTokenizer::GetTokenStringStreaming(int64_t token_id,
                                                       std::string *state) const {
-  if (token_id >= 0 && static_cast<size_t>(token_id) < id2token_.size()) {
-    const std::string &t = id2token_[token_id];
-    if (IsSpecialTokenString(t)) {
-      return t;
-    }
-
-    std::string bytes = DecodeBytesToUtf8(t);
-    if (!state) {
-      return bytes;
-    }
-
-    state->append(bytes);
-
-    std::string out;
-    size_t i = 0;
-    size_t last_good = 0;
-    while (i < state->size()) {
-      uint32_t cp = 0;
-      size_t nb = 0;
-      size_t pos0 = i;
-      if (Utf8Next(*state, &i, &cp, &nb)) {
-        last_good = i;
-      } else {
-        break;
-      }
-      (void)pos0;
-    }
-
-    if (last_good > 0) {
-      out.assign(state->data(), last_good);
-      state->erase(0, last_good);
-    }
-
-    return out;
+  if (token_id < 0 || static_cast<size_t>(token_id) >= id2token_.size()) {
+    return "";
   }
-  return "";
+
+  const std::string &token = id2token_[static_cast<size_t>(token_id)];
+  if (IsSpecialToken(token)) {
+    if (state && !state->empty()) {
+      std::string out = DecodeBytes(*state);
+      state->clear();
+      out.append(token);
+      return out;
+    }
+    return token;
+  }
+
+  std::string bytes = DecodeBytes(token);
+  if (!state) {
+    return bytes;
+  }
+
+  state->append(bytes);
+
+  size_t i = 0;
+  size_t last_good = 0;
+  while (i < state->size()) {
+    uint32_t cp = 0;
+    size_t num_bytes = 0;
+    if (!Utf8Next(*state, &i, &cp, &num_bytes)) {
+      break;
+    }
+    last_good = i;
+  }
+
+  if (last_good == 0) {
+    return "";
+  }
+
+  std::string ans = state->substr(0, last_good);
+  state->erase(0, last_good);
+  return ans;
 }
 
 }  // namespace sherpa_onnx

@@ -5,7 +5,9 @@
 #include "sherpa-onnx/csrc/offline-qwen3-asr-model.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <sstream>
@@ -33,8 +35,7 @@ namespace sherpa_onnx {
 
 namespace {
 
-// Calculate the total number of elements from a tensor shape.
-static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
+inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
   if (shape.empty()) return 0;
   size_t n = 1;
   for (auto d : shape) {
@@ -45,8 +46,8 @@ static inline size_t NumelFromShape(const std::vector<int64_t> &shape) {
 }
 
 template <typename T>
-static Ort::Value AllocTensor(OrtAllocator *alloc,
-                              const std::vector<int64_t> &shape) {
+Ort::Value AllocTensor(OrtAllocator *alloc,
+                       const std::vector<int64_t> &shape) {
   return Ort::Value::CreateTensor<T>(alloc, shape.data(), shape.size());
 }
 
@@ -57,8 +58,7 @@ Ort::Value AllocTensor<uint16_t>(OrtAllocator *alloc,
                                   ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 }
 
-// Allocate tensor by ONNX elem type (float/float16 only).
-static inline Ort::Value AllocTensorByElemType(
+inline Ort::Value AllocTensorByElemType(
     OrtAllocator *alloc, const std::vector<int64_t> &shape,
     ONNXTensorElementDataType t) {
   if (t == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
@@ -73,15 +73,14 @@ static inline Ort::Value AllocTensorByElemType(
   return AllocTensor<float>(alloc, shape);
 }
 
-// Get the element type of a session input tensor.
-static inline ONNXTensorElementDataType GetSessionInputElemType(
+inline ONNXTensorElementDataType GetSessionInputElemType(
     Ort::Session *sess, size_t input_index) {
   auto ti = sess->GetInputTypeInfo(input_index);
   auto t = ti.GetTensorTypeAndShapeInfo();
   return static_cast<ONNXTensorElementDataType>(t.GetElementType());
 }
 
-static inline bool IsCudaProvider(const std::string &provider) {
+inline bool IsCudaProvider(const std::string &provider) {
   std::string p = provider;
   std::transform(p.begin(), p.end(), p.begin(), ::tolower);
   return p == "cuda" || (p.size() > 4 && p.find("cuda") == 0);
@@ -89,7 +88,6 @@ static inline bool IsCudaProvider(const std::string &provider) {
 
 }  // namespace
 
-// Implementation class for OfflineQwen3ASRModel.
 class OfflineQwen3ASRModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
@@ -103,32 +101,12 @@ class OfflineQwen3ASRModel::Impl {
             Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.qwen3_asr;
-
-    if (c.conv_frontend.empty()) {
-      SHERPA_ONNX_LOGE("qwen3_asr.conv_frontend is empty");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (c.encoder.empty()) {
-      SHERPA_ONNX_LOGE("qwen3_asr.encoder is required");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (c.decoder.empty()) {
-      SHERPA_ONNX_LOGE("qwen3_asr.decoder is required");
-      SHERPA_ONNX_EXIT(-1);
-    }
+    ValidateConfig();
 
     InitConvFrontend(c.conv_frontend);
     InitEncoder(c.encoder);
     InitDecoder(c.decoder);
-
-    use_cuda_iobinding_ =
-        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
-    if (use_cuda_iobinding_) {
-      cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
-          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
-    }
+    InitIoBindingConfig();
   }
 
   template <typename Manager>
@@ -143,6 +121,37 @@ class OfflineQwen3ASRModel::Impl {
             Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.qwen3_asr;
+    ValidateConfig();
+
+    auto buf_conv = ReadFile(mgr, c.conv_frontend);
+    if (buf_conv.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.conv_frontend: %s",
+                       c.conv_frontend.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    InitConvFrontend(buf_conv.data(), buf_conv.size());
+
+    auto buf_encoder = ReadFile(mgr, c.encoder);
+    if (buf_encoder.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.encoder: %s",
+                       c.encoder.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    InitEncoder(buf_encoder.data(), buf_encoder.size());
+
+    auto buf_decoder = ReadFile(mgr, c.decoder);
+    if (buf_decoder.empty()) {
+      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.decoder: %s",
+                       c.decoder.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    InitDecoder(buf_decoder.data(), buf_decoder.size());
+
+    InitIoBindingConfig();
+  }
+
+  void ValidateConfig() const {
+    const auto &c = config_.qwen3_asr;
 
     if (c.conv_frontend.empty()) {
       SHERPA_ONNX_LOGE("qwen3_asr.conv_frontend is empty");
@@ -158,16 +167,9 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_LOGE("qwen3_asr.decoder is required");
       SHERPA_ONNX_EXIT(-1);
     }
+  }
 
-    auto buf_conv = ReadFile(mgr, c.conv_frontend);
-    InitConvFrontendFromMemory(buf_conv.data(), buf_conv.size());
-
-    auto buf_encoder = ReadFile(mgr, c.encoder);
-    InitEncoderFromMemory(buf_encoder.data(), buf_encoder.size());
-
-    auto buf_decoder = ReadFile(mgr, c.decoder);
-    InitDecoderFromMemory(buf_decoder.data(), buf_decoder.size());
-
+  void InitIoBindingConfig() {
     use_cuda_iobinding_ =
         (!is_cpu_provider_ && IsCudaProvider(config_.provider));
     if (use_cuda_iobinding_) {
@@ -176,153 +178,125 @@ class OfflineQwen3ASRModel::Impl {
     }
   }
 
+  void InitSessionIo(Ort::Session *sess,
+                     std::vector<std::string> *input_names,
+                     std::vector<const char *> *input_names_ptr,
+                     std::vector<std::string> *output_names,
+                     std::vector<const char *> *output_names_ptr) {
+    GetInputNames(sess, input_names, input_names_ptr);
+    GetOutputNames(sess, output_names, output_names_ptr);
+  }
+
+  void LogModelMetadata(const Ort::ModelMetadata &meta_data,
+                        const char *model_name) const {
+    if (!config_.debug) {
+      return;
+    }
+
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+    SHERPA_ONNX_LOGE("%s model metadata:\n%s\n", model_name, os.str().c_str());
+  }
+
+  int32_t GetOutputTrailingDim(Ort::Session *sess, const char *name) const {
+    auto shape = sess->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    if (shape.size() >= 3 && shape[2] > 0) {
+      return static_cast<int32_t>(shape[2]);
+    }
+
+    if (shape.size() >= 2 && shape[1] > 0) {
+      return static_cast<int32_t>(shape[1]);
+    }
+
+    SHERPA_ONNX_LOGE("Cannot infer %s from output shape. Shape size: %zu", name,
+                     shape.size());
+    SHERPA_ONNX_EXIT(-1);
+    return 0;
+  }
+
   void InitConvFrontend(const std::string &model_path) {
     conv_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_conv_);
-    GetInputNames(conv_sess_.get(), &conv_input_names_,
-                  &conv_input_names_ptr_);
-    GetOutputNames(conv_sess_.get(), &conv_output_names_,
-                   &conv_output_names_ptr_);
+    InitSessionIo(conv_sess_.get(), &conv_input_names_, &conv_input_names_ptr_,
+                  &conv_output_names_, &conv_output_names_ptr_);
     conv_in_type_ = GetSessionInputElemType(conv_sess_.get(), 0);
   }
 
-  void InitConvFrontendFromMemory(void *model_data, size_t model_data_length) {
+  void InitConvFrontend(void *model_data, size_t model_data_length) {
     conv_sess_ = std::make_unique<Ort::Session>(
         env_, model_data, model_data_length, sess_opts_conv_);
-    GetInputNames(conv_sess_.get(), &conv_input_names_,
-                  &conv_input_names_ptr_);
-    GetOutputNames(conv_sess_.get(), &conv_output_names_,
-                   &conv_output_names_ptr_);
+    InitSessionIo(conv_sess_.get(), &conv_input_names_, &conv_input_names_ptr_,
+                  &conv_output_names_, &conv_output_names_ptr_);
     conv_in_type_ = GetSessionInputElemType(conv_sess_.get(), 0);
   }
 
   void InitEncoder(const std::string &model_path) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_encoder_);
-    GetInputNames(encoder_sess_.get(), &encoder_input_names_,
-                  &encoder_input_names_ptr_);
-    GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
-                   &encoder_output_names_ptr_);
-    encoder_in_type_ = GetSessionInputElemType(encoder_sess_.get(), 0);
-    Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
-    if (config_.debug) {
-      std::ostringstream os;
-      PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
-    }
-    Ort::AllocatorWithDefaultOptions allocator;
-    // Try to read hidden_size from metadata, if not found, infer from output shape
-    auto hidden_size_value =
-        LookupCustomModelMetaData(meta_data, "hidden_size", allocator);
-    if (!hidden_size_value.empty()) {
-      hidden_size_ = atoi(hidden_size_value.c_str());
-    } else {
-      // Infer from encoder output shape: (N, T, hidden_size)
-      auto shape = encoder_sess_->GetOutputTypeInfo(0)
-                       .GetTensorTypeAndShapeInfo()
-                       .GetShape();
-      if (shape.size() >= 3 && shape[2] > 0) {
-        hidden_size_ = static_cast<int32_t>(shape[2]);
-      } else if (shape.size() >= 2 && shape[1] > 0) {
-        // Fallback: might be (N, hidden_size) format
-        hidden_size_ = static_cast<int32_t>(shape[1]);
-      } else {
-        SHERPA_ONNX_LOGE(
-            "Cannot infer hidden_size from encoder output shape. Shape size: %zu",
-            shape.size());
-        SHERPA_ONNX_EXIT(-1);
-      }
-    }
+    InitEncoderSession();
   }
 
-  void InitEncoderFromMemory(void *model_data, size_t model_data_length) {
+  void InitEncoder(void *model_data, size_t model_data_length) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, model_data, model_data_length, sess_opts_encoder_);
-    GetInputNames(encoder_sess_.get(), &encoder_input_names_,
-                  &encoder_input_names_ptr_);
-    GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
-                   &encoder_output_names_ptr_);
+    InitEncoderSession();
+  }
+
+  void InitEncoderSession() {
+    InitSessionIo(encoder_sess_.get(), &encoder_input_names_,
+                  &encoder_input_names_ptr_, &encoder_output_names_,
+                  &encoder_output_names_ptr_);
     encoder_in_type_ = GetSessionInputElemType(encoder_sess_.get(), 0);
+
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
-    if (config_.debug) {
-      std::ostringstream os;
-      PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
-    }
+    LogModelMetadata(meta_data, "Encoder");
+
     Ort::AllocatorWithDefaultOptions allocator;
-    // Try to read hidden_size from metadata, if not found, infer from output shape
     auto hidden_size_value =
         LookupCustomModelMetaData(meta_data, "hidden_size", allocator);
     if (!hidden_size_value.empty()) {
-      hidden_size_ = atoi(hidden_size_value.c_str());
+      hidden_size_ = std::atoi(hidden_size_value.c_str());
     } else {
-      // Infer from encoder output shape: (N, T, hidden_size)
-      auto shape = encoder_sess_->GetOutputTypeInfo(0)
-                       .GetTensorTypeAndShapeInfo()
-                       .GetShape();
-      if (shape.size() >= 3 && shape[2] > 0) {
-        hidden_size_ = static_cast<int32_t>(shape[2]);
-      } else if (shape.size() >= 2 && shape[1] > 0) {
-        // Fallback: might be (N, hidden_size) format
-        hidden_size_ = static_cast<int32_t>(shape[1]);
-      } else {
-        SHERPA_ONNX_LOGE(
-            "Cannot infer hidden_size from encoder output shape. Shape size: %zu",
-            shape.size());
-        SHERPA_ONNX_EXIT(-1);
-      }
+      hidden_size_ = GetOutputTrailingDim(encoder_sess_.get(), "hidden_size");
     }
   }
 
   void InitDecoder(const std::string &model_path) {
     decoder_sess_ = std::make_unique<Ort::Session>(
         env_, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts_decoder_);
-    GetInputNames(decoder_sess_.get(), &decoder_input_names_,
-                  &decoder_input_names_ptr_);
-    GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
-                   &decoder_output_names_ptr_);
+    InitDecoderSession();
+  }
 
+  void InitDecoder(void *model_data, size_t model_data_length) {
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, model_data, model_data_length, sess_opts_decoder_);
+    InitDecoderSession();
+  }
+
+  void InitDecoderSession() {
+    InitSessionIo(decoder_sess_.get(), &decoder_input_names_,
+                  &decoder_input_names_ptr_, &decoder_output_names_,
+                  &decoder_output_names_ptr_);
     Ort::ModelMetadata meta_data = decoder_sess_->GetModelMetadata();
-    if (config_.debug) {
-      std::ostringstream os;
-      PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("Decoder model metadata:\n%s\n", os.str().c_str());
-    }
+    LogModelMetadata(meta_data, "Decoder");
 
     Ort::AllocatorWithDefaultOptions allocator;
-    // Try to read vocab_size from metadata, if not found, infer from output shape
-    // Aligned with Python infer_qwen3_asr.py: vocab_size from logits output shape
     auto vocab_size_value =
         LookupCustomModelMetaData(meta_data, "vocab_size", allocator);
     if (!vocab_size_value.empty()) {
-      vocab_size_ = atoi(vocab_size_value.c_str());
+      vocab_size_ = std::atoi(vocab_size_value.c_str());
     } else {
-      // Infer from decoder logits output shape: (N, T, vocab_size)
-      auto shape = decoder_sess_->GetOutputTypeInfo(0)
-                       .GetTensorTypeAndShapeInfo()
-                       .GetShape();
-      if (shape.size() >= 3 && shape[2] > 0) {
-        vocab_size_ = static_cast<int32_t>(shape[2]);
-      } else if (shape.size() >= 2 && shape[1] > 0) {
-        // Fallback: might be (N, vocab_size) format
-        vocab_size_ = static_cast<int32_t>(shape[1]);
-      } else {
-        SHERPA_ONNX_LOGE(
-            "Cannot infer vocab_size from decoder output shape. Shape size: %zu",
-            shape.size());
-        SHERPA_ONNX_EXIT(-1);
-      }
+      vocab_size_ = GetOutputTrailingDim(decoder_sess_.get(), "vocab_size");
     }
+
     if (hidden_size_ == 0) {
       auto hidden_size_value =
           LookupCustomModelMetaData(meta_data, "hidden_size", allocator);
       if (!hidden_size_value.empty()) {
-        hidden_size_ = atoi(hidden_size_value.c_str());
+        hidden_size_ = std::atoi(hidden_size_value.c_str());
       }
-      // If still 0, will be inferred from encoder output shape in InitEncoder
     }
 
-    // Detect KV delta model type
     auto model_type_value =
         LookupCustomModelMetaData(meta_data, "model_type", allocator);
     is_kv_delta_model_ =
@@ -342,7 +316,7 @@ class OfflineQwen3ASRModel::Impl {
     auto num_layers_value =
         LookupCustomModelMetaData(meta_data, "num_layers", allocator);
     if (!num_layers_value.empty()) {
-      num_layers_ = atoi(num_layers_value.c_str());
+      num_layers_ = std::atoi(num_layers_value.c_str());
       if (num_layers_ <= 0) {
         SHERPA_ONNX_LOGE("Invalid num_layers=%d from metadata", num_layers_);
         SHERPA_ONNX_EXIT(-1);
@@ -356,11 +330,10 @@ class OfflineQwen3ASRModel::Impl {
       num_layers_ = inferred_layers;
     }
 
-    // Read KV cache capacity from metadata or config
     auto max_total_len_value =
         LookupCustomModelMetaData(meta_data, "max_total_len", allocator);
     if (!max_total_len_value.empty()) {
-      max_total_len_ = atoi(max_total_len_value.c_str());
+      max_total_len_ = std::atoi(max_total_len_value.c_str());
     } else {
       max_total_len_ = config_.qwen3_asr.max_total_len;
     }
@@ -369,7 +342,6 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Validate input layout: 0 input_ids, 1 audio_features, 2 attention_mask, 3 cache_position, 4+ KV cache
     if (decoder_input_names_.size() < 4u) {
       SHERPA_ONNX_LOGE(
           "Decoder model inputs must be >=4 (input_ids,audio_features,mask,cache_position)");
@@ -388,7 +360,6 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // KV input element type
     kv_in_type_ =
         GetSessionInputElemType(decoder_sess_.get(), past_kv_input_start_index_);
     kv_in_type_v_ = GetSessionInputElemType(decoder_sess_.get(),
@@ -408,7 +379,6 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Templates for KV shapes from session inputs
     auto past_key_ti =
         decoder_sess_->GetInputTypeInfo(past_kv_input_start_index_);
     past_key_shape_tpl_ = past_key_ti.GetTensorTypeAndShapeInfo().GetShape();
@@ -440,32 +410,33 @@ class OfflineQwen3ASRModel::Impl {
                                    inputs.data(), inputs.size(),
                                    conv_output_names_ptr_.data(),
                                    conv_output_names_ptr_.size());
+    if (outputs.empty()) {
+      SHERPA_ONNX_LOGE("ForwardConvFrontend: empty outputs");
+      SHERPA_ONNX_EXIT(-1);
+    }
     return std::move(outputs[0]);
   }
 
   Ort::Value ForwardEncoder(Ort::Value conv_output,
                             Ort::Value feature_attention_mask) {
-    // Convert feature_attention_mask to bool if needed
     auto mask_info = feature_attention_mask.GetTensorTypeAndShapeInfo();
     auto mask_type = static_cast<ONNXTensorElementDataType>(mask_info.GetElementType());
     auto mask_shape = mask_info.GetShape();
-    
+
     Ort::Value bool_mask;
     if (mask_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL) {
       bool_mask = std::move(feature_attention_mask);
     } else {
-      // Convert int64 to bool
       size_t numel = NumelFromShape(mask_shape);
       const int64_t *src = nullptr;
-      
+
       if (mask_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
         src = feature_attention_mask.GetTensorData<int64_t>();
       } else {
         SHERPA_ONNX_LOGE("ForwardEncoder: unsupported mask type %d", (int)mask_type);
         SHERPA_ONNX_EXIT(-1);
       }
-      
-      // Create bool tensor
+
       bool_mask = Ort::Value::CreateTensor<bool>(
           allocator_, mask_shape.data(), mask_shape.size());
       bool *bool_data = bool_mask.GetTensorMutableData<bool>();
@@ -496,6 +467,10 @@ class OfflineQwen3ASRModel::Impl {
                                       inputs.data(), inputs.size(),
                                       encoder_output_names_ptr_.data(),
                                       encoder_output_names_ptr_.size());
+    if (outputs.empty()) {
+      SHERPA_ONNX_LOGE("ForwardEncoder: empty outputs");
+      SHERPA_ONNX_EXIT(-1);
+    }
     return std::move(outputs[0]);
   }
 
@@ -509,7 +484,6 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Validate audio_features shape
     if (!audio_features.IsTensor()) {
       SHERPA_ONNX_LOGE("ForwardLLM: audio_features is not a tensor");
       SHERPA_ONNX_EXIT(-1);
@@ -536,10 +510,11 @@ class OfflineQwen3ASRModel::Impl {
 
     std::vector<const char *> input_names_ptr;
     input_names_ptr.reserve(4 + 2 * cache_kv.size());
-    input_names_ptr.push_back(decoder_input_names_ptr_[0]);  // input_ids
-    input_names_ptr.push_back(decoder_input_names_ptr_[1]);   // audio_features
-    input_names_ptr.push_back(decoder_input_names_ptr_[2]);   // attention_mask
-    input_names_ptr.push_back(decoder_input_names_ptr_[3]);   // cache_position
+    input_names_ptr.push_back(decoder_input_names_ptr_[0]);
+    input_names_ptr.push_back(decoder_input_names_ptr_[1]);
+    input_names_ptr.push_back(decoder_input_names_ptr_[2]);
+    input_names_ptr.push_back(
+        decoder_input_names_ptr_[cache_position_input_index_]);
     for (size_t i = 0; i < cache_kv.size(); ++i) {
       input_names_ptr.push_back(
           decoder_input_names_ptr_[past_kv_input_start_index_ + 2 * i]);
@@ -575,7 +550,6 @@ class OfflineQwen3ASRModel::Impl {
 
     Ort::Value logits = std::move(outputs[0]);
 
-    // Validate logits
     if (!logits.IsTensor()) {
       SHERPA_ONNX_LOGE("ForwardLLM: logits is not a tensor");
       SHERPA_ONNX_EXIT(-1);
@@ -584,6 +558,12 @@ class OfflineQwen3ASRModel::Impl {
     auto logits_info = logits.GetTensorTypeAndShapeInfo();
     auto logits_type =
         static_cast<ONNXTensorElementDataType>(logits_info.GetElementType());
+    if (outputs.size() < 1 || ((outputs.size() - 1) % 2) != 0) {
+      SHERPA_ONNX_LOGE(
+          "ForwardLLM: output count mismatch: expect 1+2*num_layers, got %zu",
+          outputs.size());
+      SHERPA_ONNX_EXIT(-1);
+    }
     if (logits_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT &&
         logits_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 &&
         logits_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16) {
@@ -672,8 +652,25 @@ class OfflineQwen3ASRModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    if (!cache_position.IsTensor()) {
+      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: cache_position is not a tensor");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     auto pos_info = cache_position.GetTensorTypeAndShapeInfo();
+    if (pos_info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
+      SHERPA_ONNX_LOGE(
+          "ApplyKvDeltaInplace: cache_position must be int64, got %d",
+          static_cast<int32_t>(pos_info.GetElementType()));
+      SHERPA_ONNX_EXIT(-1);
+    }
     auto pos_shape = pos_info.GetShape();
+    if (pos_shape.size() != 1) {
+      SHERPA_ONNX_LOGE(
+          "ApplyKvDeltaInplace: cache_position must be 1-D, got %zu-D",
+          pos_shape.size());
+      SHERPA_ONNX_EXIT(-1);
+    }
     int64_t S = pos_shape.empty() ? 0 : pos_shape[0];
     if (S <= 0) {
       SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: cache_position has invalid shape");
@@ -706,14 +703,30 @@ class OfflineQwen3ASRModel::Impl {
       const Ort::Value &delta_val = kv_delta[layer].second;
 
       auto ck_info = cache_key.GetTensorTypeAndShapeInfo();
-      auto dk_info = delta_key.GetTensorTypeAndShapeInfo();
-
       auto ck_shape = ck_info.GetShape();
-      auto dk_shape = dk_info.GetShape();
+      auto dk_shape = delta_key.GetTensorTypeAndShapeInfo().GetShape();
+      auto cv_shape = cache_val.GetTensorTypeAndShapeInfo().GetShape();
+      auto dv_shape = delta_val.GetTensorTypeAndShapeInfo().GetShape();
+
+      if (ck_shape.size() < 4 || cv_shape.size() < 4 || dk_shape.size() < 4 ||
+          dv_shape.size() < 4) {
+        SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: KV tensors must be >= 4-D");
+        SHERPA_ONNX_EXIT(-1);
+      }
 
       int64_t B = ck_shape[0];
       int64_t kv_h = ck_shape[2];
       int64_t hd = ck_shape[3];
+      if (B <= 0 || kv_h <= 0 || hd <= 0) {
+        SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: invalid cache key shape");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (dk_shape[0] != B || dv_shape[0] != B || dk_shape[2] != kv_h ||
+          dv_shape[2] != kv_h || dk_shape[3] != hd || dv_shape[3] != hd) {
+        SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: delta shape mismatch");
+        SHERPA_ONNX_EXIT(-1);
+      }
 
       auto elem_type = ck_info.GetElementType();
       size_t elem_bytes = 0;
@@ -739,6 +752,11 @@ class OfflineQwen3ASRModel::Impl {
       const void *src_k = delta_key.GetTensorData<void>();
       const void *src_v = delta_val.GetTensorData<void>();
 
+      int64_t copy_s = std::min<int64_t>(S, dk_shape[1]);
+      if (copy_s <= 0) {
+        continue;
+      }
+
       for (int64_t b = 0; b < B; ++b) {
         size_t dst_off =
             (static_cast<size_t>(b) * static_cast<size_t>(max_total_len_) +
@@ -748,7 +766,7 @@ class OfflineQwen3ASRModel::Impl {
             (static_cast<size_t>(b) * static_cast<size_t>(dk_shape[1])) *
             bytes_per_pos;
 
-        size_t copy_bytes = static_cast<size_t>(S) * bytes_per_pos;
+        size_t copy_bytes = static_cast<size_t>(copy_s) * bytes_per_pos;
 
         uint8_t *dst_k_ptr = static_cast<uint8_t *>(dst_k) + dst_off;
         uint8_t *dst_v_ptr = static_cast<uint8_t *>(dst_v) + dst_off;
@@ -796,18 +814,22 @@ class OfflineQwen3ASRModel::Impl {
   std::vector<std::string> decoder_output_names_;
   std::vector<const char *> decoder_output_names_ptr_;
 
-  ONNXTensorElementDataType conv_in_type_;
-  ONNXTensorElementDataType encoder_in_type_;
-  ONNXTensorElementDataType kv_in_type_;
-  ONNXTensorElementDataType kv_in_type_v_;
+  ONNXTensorElementDataType conv_in_type_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+  ONNXTensorElementDataType encoder_in_type_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+  ONNXTensorElementDataType kv_in_type_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+  ONNXTensorElementDataType kv_in_type_v_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
   Ort::AllocatorWithDefaultOptions allocator_;
   Ort::MemoryInfo cpu_mem_info_;
   std::unique_ptr<Ort::MemoryInfo> cuda_mem_info_;
 
-  bool is_cpu_provider_;
-  bool use_cuda_iobinding_;
-  bool is_kv_delta_model_;
+  bool is_cpu_provider_ = true;
+  bool use_cuda_iobinding_ = false;
+  bool is_kv_delta_model_ = false;
 
   int32_t vocab_size_ = 0;
   int32_t hidden_size_ = 0;
@@ -819,141 +841,6 @@ class OfflineQwen3ASRModel::Impl {
 
   std::vector<int64_t> past_key_shape_tpl_;
   std::vector<int64_t> past_value_shape_tpl_;
-
-  void InitDecoderFromMemory(void *model_data, size_t model_data_length) {
-    decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_decoder_);
-    GetInputNames(decoder_sess_.get(), &decoder_input_names_,
-                  &decoder_input_names_ptr_);
-    GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
-                   &decoder_output_names_ptr_);
-
-    Ort::ModelMetadata meta_data = decoder_sess_->GetModelMetadata();
-    if (config_.debug) {
-      std::ostringstream os;
-      PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("Decoder model metadata:\n%s\n", os.str().c_str());
-    }
-
-    Ort::AllocatorWithDefaultOptions allocator;
-    // Try to read vocab_size from metadata, if not found, infer from output shape
-    auto vocab_size_value =
-        LookupCustomModelMetaData(meta_data, "vocab_size", allocator);
-    if (!vocab_size_value.empty()) {
-      vocab_size_ = atoi(vocab_size_value.c_str());
-    } else {
-      // Infer from decoder logits output shape: (N, T, vocab_size)
-      auto shape = decoder_sess_->GetOutputTypeInfo(0)
-                       .GetTensorTypeAndShapeInfo()
-                       .GetShape();
-      if (shape.size() >= 3 && shape[2] > 0) {
-        vocab_size_ = static_cast<int32_t>(shape[2]);
-      } else {
-        SHERPA_ONNX_LOGE(
-            "Cannot infer vocab_size from decoder output shape. Shape size: %zu",
-            shape.size());
-        SHERPA_ONNX_EXIT(-1);
-      }
-    }
-    if (hidden_size_ == 0) {
-      auto hidden_size_value =
-          LookupCustomModelMetaData(meta_data, "hidden_size", allocator);
-      if (!hidden_size_value.empty()) {
-        hidden_size_ = atoi(hidden_size_value.c_str());
-      }
-    }
-
-    auto model_type_value =
-        LookupCustomModelMetaData(meta_data, "model_type", allocator);
-    is_kv_delta_model_ =
-        (!model_type_value.empty() &&
-         model_type_value.find("kv_delta") != std::string::npos);
-
-    int32_t num_outputs = static_cast<int32_t>(decoder_output_names_.size());
-    if (num_outputs < 1 || (num_outputs - 1) % 2 != 0) {
-      SHERPA_ONNX_LOGE(
-          "Decoder model must have 1 logits output + 2*num_layers KV outputs, "
-          "got %d outputs",
-          num_outputs);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    int32_t inferred_layers = (num_outputs - 1) / 2;
-
-    auto num_layers_value =
-        LookupCustomModelMetaData(meta_data, "num_layers", allocator);
-    if (!num_layers_value.empty()) {
-      num_layers_ = atoi(num_layers_value.c_str());
-      if (num_layers_ <= 0) {
-        SHERPA_ONNX_LOGE("Invalid num_layers=%d from metadata", num_layers_);
-        SHERPA_ONNX_EXIT(-1);
-      }
-      if (num_layers_ != inferred_layers) {
-        SHERPA_ONNX_LOGE("Decoder num_layers mismatch: metadata=%d, inferred=%d",
-                         num_layers_, inferred_layers);
-        SHERPA_ONNX_EXIT(-1);
-      }
-    } else {
-      num_layers_ = inferred_layers;
-    }
-
-    auto max_total_len_value =
-        LookupCustomModelMetaData(meta_data, "max_total_len", allocator);
-    if (!max_total_len_value.empty()) {
-      max_total_len_ = atoi(max_total_len_value.c_str());
-    } else {
-      max_total_len_ = config_.qwen3_asr.max_total_len;
-    }
-    if (max_total_len_ <= 0) {
-      SHERPA_ONNX_LOGE("Failed to determine max_total_len");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    if (decoder_input_names_.size() < 4u) {
-      SHERPA_ONNX_LOGE(
-          "Decoder model inputs must be >=4 (input_ids,audio_features,mask,cache_position)");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    cache_position_input_index_ = 3;
-    past_kv_input_start_index_ = 4;
-
-    int32_t expected_inputs = 4 + 2 * num_layers_;
-    int32_t actual_inputs = static_cast<int32_t>(decoder_input_names_.size());
-    if (actual_inputs != expected_inputs) {
-      SHERPA_ONNX_LOGE(
-          "Decoder model inputs mismatch: expected %d (=4+2*num_layers) got %d",
-          expected_inputs, actual_inputs);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    kv_in_type_ =
-        GetSessionInputElemType(decoder_sess_.get(), past_kv_input_start_index_);
-    kv_in_type_v_ = GetSessionInputElemType(decoder_sess_.get(),
-                                            past_kv_input_start_index_ + 1);
-    if (!(kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
-          kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
-          kv_in_type_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16)) {
-      SHERPA_ONNX_LOGE("Decoder past_key elem_type=%d not supported",
-                       (int)kv_in_type_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    if (!(kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
-          kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
-          kv_in_type_v_ == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16)) {
-      SHERPA_ONNX_LOGE("Decoder past_value elem_type=%d not supported",
-                       (int)kv_in_type_v_);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    auto past_key_ti =
-        decoder_sess_->GetInputTypeInfo(past_kv_input_start_index_);
-    past_key_shape_tpl_ = past_key_ti.GetTensorTypeAndShapeInfo().GetShape();
-
-    auto past_value_ti =
-        decoder_sess_->GetInputTypeInfo(past_kv_input_start_index_ + 1);
-    past_value_shape_tpl_ =
-        past_value_ti.GetTensorTypeAndShapeInfo().GetShape();
-  }
 };
 
 OfflineQwen3ASRModel::OfflineQwen3ASRModel(const OfflineModelConfig &config)
