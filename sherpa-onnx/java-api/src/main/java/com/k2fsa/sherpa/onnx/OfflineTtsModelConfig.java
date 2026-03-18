@@ -6,6 +6,7 @@ public class OfflineTtsModelConfig {
     private final OfflineTtsVitsModelConfig vits;
     private final OfflineTtsMatchaModelConfig matcha;
     private final OfflineTtsKokoroModelConfig kokoro;
+    private final OfflineTtsZipVoiceModelConfig zipvoice;
     private final OfflineTtsKittenModelConfig kitten;
     private final OfflineTtsPocketModelConfig pocket;
     private final OfflineTtsSupertonicModelConfig supertonic;
@@ -17,6 +18,7 @@ public class OfflineTtsModelConfig {
         this.vits = builder.vits;
         this.matcha = builder.matcha;
         this.kokoro = builder.kokoro;
+        this.zipvoice = builder.zipvoice;
         this.kitten = builder.kitten;
         this.pocket = builder.pocket;
         this.supertonic = builder.supertonic;
@@ -41,6 +43,10 @@ public class OfflineTtsModelConfig {
         return kokoro;
     }
 
+    public OfflineTtsZipVoiceModelConfig getZipvoice() {
+        return zipvoice;
+    }
+
     public OfflineTtsKittenModelConfig getKitten() {
         return kitten;
     }
@@ -57,6 +63,7 @@ public class OfflineTtsModelConfig {
         private OfflineTtsVitsModelConfig vits = OfflineTtsVitsModelConfig.builder().build();
         private OfflineTtsMatchaModelConfig matcha = OfflineTtsMatchaModelConfig.builder().build();
         private OfflineTtsKokoroModelConfig kokoro = OfflineTtsKokoroModelConfig.builder().build();
+        private OfflineTtsZipVoiceModelConfig zipvoice = OfflineTtsZipVoiceModelConfig.builder().build();
         private OfflineTtsKittenModelConfig kitten = OfflineTtsKittenModelConfig.builder().build();
         private OfflineTtsPocketModelConfig pocket = OfflineTtsPocketModelConfig.builder().build();
         private OfflineTtsSupertonicModelConfig supertonic = OfflineTtsSupertonicModelConfig.builder().build();
@@ -80,6 +87,11 @@ public class OfflineTtsModelConfig {
 
         public Builder setKokoro(OfflineTtsKokoroModelConfig kokoro) {
             this.kokoro = kokoro;
+            return this;
+        }
+
+        public Builder setZipvoice(OfflineTtsZipVoiceModelConfig zipvoice) {
+            this.zipvoice = zipvoice;
             return this;
         }
 

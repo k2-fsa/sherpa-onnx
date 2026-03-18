@@ -57,6 +57,7 @@ java_files += OfflineTtsKittenModelConfig.java
 java_files += OfflineTtsPocketModelConfig.java
 java_files += OfflineTtsSupertonicModelConfig.java
 java_files += OfflineTtsKokoroModelConfig.java
+java_files += OfflineTtsZipVoiceModelConfig.java
 java_files += OfflineTtsMatchaModelConfig.java
 java_files += OfflineTtsVitsModelConfig.java
 java_files += OfflineTtsModelConfig.java
