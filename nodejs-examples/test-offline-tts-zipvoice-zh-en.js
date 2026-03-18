@@ -3,7 +3,7 @@
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineTts() {
-  let zipvoice = {
+  const zipvoice = {
     encoder: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx',
     decoder: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx',
     tokens: './sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt',
@@ -12,14 +12,14 @@ function createOfflineTts() {
     vocoder: './vocos_24khz.onnx',
   };
 
-  let offlineTtsModelConfig = {
+  const offlineTtsModelConfig = {
     offlineTtsZipVoiceModelConfig: zipvoice,
     numThreads: 1,
     debug: 1,  // set it to 1 to see verbose logs; 0 to disable logs
     provider: 'cpu',
   };
 
-  let offlineTtsConfig = {
+  const offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     maxNumSentences: 1,
   };
