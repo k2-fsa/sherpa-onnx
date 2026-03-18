@@ -38,7 +38,14 @@
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);          \
-                                                                \
+                                                                 \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.tokens);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.encoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.decoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.vocoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.data_dir);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.lexicon);         \
+                                                                 \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);             \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);            \
@@ -202,6 +209,30 @@ static SherpaOnnxOfflineTtsKittenModelConfig GetOfflineTtsKittenModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsZipvoiceModelConfig
+GetOfflineTtsZipvoiceModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineTtsZipvoiceModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("zipvoice") || !obj.Get("zipvoice").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("zipvoice").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vocoder, vocoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(feat_scale, featScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(t_shift, tShift);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(target_rms, targetRms);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(guidance_scale, guidanceScale);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsPocketModelConfig GetOfflineTtsPocketModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsPocketModelConfig c;
@@ -268,6 +299,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   c.matcha = GetOfflineTtsMatchaModelConfig(o);
   c.kokoro = GetOfflineTtsKokoroModelConfig(o);
   c.kitten = GetOfflineTtsKittenModelConfig(o);
+  c.zipvoice = GetOfflineTtsZipvoiceModelConfig(o);
   c.pocket = GetOfflineTtsPocketModelConfig(o);
   c.supertonic = GetOfflineTtsSupertonicModelConfig(o);
 
