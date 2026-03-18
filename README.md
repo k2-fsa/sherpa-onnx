@@ -429,6 +429,14 @@ Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
 a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 
+### [fcitx5-vinput](https://github.com/xifan2333/fcitx5-vinput)
+
+Local offline voice input plugin for [Fcitx5](https://github.com/fcitx/fcitx5) (Linux input method framework).
+It uses C++ with offline ASR for speech recognition, supporting push-to-talk,
+command mode, and optional LLM post-processing.
+
+Video demo in Chinese: [fcitx5-vinput](https://www.bilibili.com/video/BV1a6cUzVE6F)
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
