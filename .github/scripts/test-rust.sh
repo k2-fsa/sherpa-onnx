@@ -10,6 +10,10 @@ rm -rf sherpa-onnx-pocket-*
 ./run-supertonic-tts.sh
 rm -rf sherpa-onnx-supertonic-*
 
+./run-zipvoice-tts.sh
+rm -rf sherpa-onnx-zipvoice-*
+rm -f vocos_24khz.onnx
+
 ./run-online-punctuation.sh
 rm -rf sherpa-onnx-online-punct-*
 

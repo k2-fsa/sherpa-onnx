@@ -3,8 +3,11 @@ use sherpa_onnx_sys as sys;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
-use std::slice;
 use std::ptr;
+use std::slice;
+
+type ProgressCallback = dyn FnMut(&[f32], f32) -> bool;
+type BoxedProgressCallback = Box<ProgressCallback>;
 
 // --- Model config structs ---
 
@@ -428,7 +431,7 @@ impl OfflineTts {
         callback: Option<F>,
     ) -> Option<GeneratedAudio>
     where
-        F: FnMut(&[f32], f32) -> bool,
+        F: FnMut(&[f32], f32) -> bool + 'static,
     {
         let mut cstrings = Vec::new();
 
@@ -461,7 +464,7 @@ impl OfflineTts {
 
         let (c_callback, c_arg): (sys::SherpaOnnxGeneratedAudioProgressCallbackWithArg, *mut c_void) =
             if let Some(cb) = callback {
-                let boxed: Box<Box<dyn FnMut(&[f32], f32) -> bool>> = Box::new(Box::new(cb));
+                let boxed: Box<BoxedProgressCallback> = Box::new(Box::new(cb));
                 let raw = Box::into_raw(boxed);
                 (Some(progress_callback_trampoline), raw as *mut c_void)
             } else {
@@ -481,7 +484,7 @@ impl OfflineTts {
         // Clean up the boxed callback if we allocated one
         if !c_arg.is_null() {
             unsafe {
-                let _ = Box::from_raw(c_arg as *mut Box<dyn FnMut(&[f32], f32) -> bool>);
+                let _ = Box::from_raw(c_arg as *mut BoxedProgressCallback);
             }
         }
 
@@ -507,7 +510,7 @@ unsafe extern "C" fn progress_callback_trampoline(
     progress: f32,
     arg: *mut c_void,
 ) -> i32 {
-    let cb = &mut *(arg as *mut Box<dyn FnMut(&[f32], f32) -> bool>);
+    let cb = &mut *(arg as *mut BoxedProgressCallback);
     let data = if samples.is_null() || n <= 0 {
         &[]
     } else {
