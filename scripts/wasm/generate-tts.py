@@ -157,7 +157,6 @@ def get_models():
 
             git checkout .
             sed -i.bak 's/let modelType = 0/let modelType = 4/g' ../sherpa-onnx-tts.js
-
             rm -rf $model_name
             git diff
             """,

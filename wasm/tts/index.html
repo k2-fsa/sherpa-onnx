@@ -44,9 +44,9 @@
         <br/>
       </div>
       <div id="referenceTextSection" class="hidden">
-        <label for="referenceText">Reference text: </label>
+        <label for="referenceText">Reference transcript (must match the reference audio): </label>
         <br/>
-        <textarea id="referenceText" rows="3" placeholder="Please enter the transcription of the reference audio"></textarea>
+        <textarea id="referenceText" rows="3" placeholder="Please enter the transcript of the reference audio exactly"></textarea>
         <br/>
         <br/>
       </div>
@@ -59,6 +59,7 @@
       <br/>
       <br/>
       <button id="generateBtn" disabled>Generate</button>
+      <div id="generationStatus" style="display: none; margin-top: 0.75rem; font-size: 0.95rem; color: #6c757d;"></div>
     </div>
 
     <section flex="1" overflow="auto" id="sound-clips">

@@ -28,6 +28,18 @@ self.Module = {
 };
 importScripts("sherpa-onnx-wasm-main-tts.js");
 importScripts("sherpa-onnx-tts.js");
+
+function getErrorMessage(err) {
+  if (err instanceof Error) {
+    if (err.stack) {
+      return `${err.message}\n${err.stack}`;
+    }
+    return err.message;
+  }
+
+  return `${err}`;
+}
+
 self.onmessage = async (e) => {
   const { type, text, sid, speed, genConfig } = e.data;
   if (type === "generate") {
@@ -53,7 +65,7 @@ self.onmessage = async (e) => {
     } catch (err) {
       self.postMessage({
         type: "error",
-        message: "Generation failed: " + err.message,
+        message: "Generation failed: " + getErrorMessage(err),
       });
     }
   } else if (type === "generateWithConfig") {
@@ -61,7 +73,16 @@ self.onmessage = async (e) => {
       return;
     }
     try {
-      const audio = tts.generateWithConfig(text, genConfig || {});
+      const config = Object.assign({}, genConfig || {});
+      config.callback = (samples, n, progress) => {
+        self.postMessage({
+          type: "sherpa-onnx-tts-generation-progress",
+          progress: progress,
+        });
+        return 1;
+      };
+
+      const audio = tts.generateWithConfig(text, config);
       const samples = audio.samples;
       const sampleRate = audio.sampleRate;
       self.postMessage(
@@ -75,7 +96,7 @@ self.onmessage = async (e) => {
     } catch (err) {
       self.postMessage({
         type: "error",
-        message: "Generation failed: " + err.message,
+        message: "Generation failed: " + getErrorMessage(err),
       });
     }
   }

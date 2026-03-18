@@ -429,16 +429,14 @@ function initSherpaOnnxOfflineTtsPocketModelConfig(config, Module) {
 function initSherpaOnnxOfflineTtsSupertonicModelConfig(config, Module) {
   const durationPredictorLen =
       Module.lengthBytesUTF8(config.durationPredictor || '') + 1;
-  const textEncoderLen =
-      Module.lengthBytesUTF8(config.textEncoder || '') + 1;
+  const textEncoderLen = Module.lengthBytesUTF8(config.textEncoder || '') + 1;
   const vectorEstimatorLen =
       Module.lengthBytesUTF8(config.vectorEstimator || '') + 1;
   const vocoderLen = Module.lengthBytesUTF8(config.vocoder || '') + 1;
   const ttsJsonLen = Module.lengthBytesUTF8(config.ttsJson || '') + 1;
   const unicodeIndexerLen =
       Module.lengthBytesUTF8(config.unicodeIndexer || '') + 1;
-  const voiceStyleLen =
-      Module.lengthBytesUTF8(config.voiceStyle || '') + 1;
+  const voiceStyleLen = Module.lengthBytesUTF8(config.voiceStyle || '') + 1;
 
   const n = durationPredictorLen + textEncoderLen + vectorEstimatorLen +
       vocoderLen + ttsJsonLen + unicodeIndexerLen + voiceStyleLen;
@@ -471,8 +469,7 @@ function initSherpaOnnxOfflineTtsSupertonicModelConfig(config, Module) {
       config.unicodeIndexer || '', buffer + offset, unicodeIndexerLen);
   offset += unicodeIndexerLen;
 
-  Module.stringToUTF8(
-      config.voiceStyle || '', buffer + offset, voiceStyleLen);
+  Module.stringToUTF8(config.voiceStyle || '', buffer + offset, voiceStyleLen);
   offset += voiceStyleLen;
 
   offset = 0;
@@ -873,13 +870,27 @@ class OfflineTts {
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(text, textPtr, textLen);
 
-    const audioPtr = this.Module._SherpaOnnxOfflineTtsGenerateWithConfig(
-        this.handle, textPtr, cfgWasm.ptr,
-        0,  // callback
-        0   // callback arg
-    );
-    this.Module._free(textPtr);
-    freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
+    let callbackPtr = 0;
+    if (genConfig.callback) {
+      callbackPtr = this.Module.addFunction((samplesPtr, n, progress, arg) => {
+        const heapSamples =
+            this.Module.HEAPF32.subarray(samplesPtr / 4, samplesPtr / 4 + n);
+        const samples = new Float32Array(heapSamples);
+        return genConfig.callback(samples, n, progress, arg);
+      }, 'iiifi');
+    }
+
+    let audioPtr = 0;
+    try {
+      audioPtr = this.Module._SherpaOnnxOfflineTtsGenerateWithConfig(
+          this.handle, textPtr, cfgWasm.ptr, callbackPtr, 0);
+    } finally {
+      this.Module._free(textPtr);
+      freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
+      if (callbackPtr) {
+        this.Module.removeFunction(callbackPtr);
+      }
+    }
 
     if (!audioPtr) {
       throw new Error('Failed to generate audio');

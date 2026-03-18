@@ -11,6 +11,7 @@ const speedValue = document.getElementById('speedValue');
 const textArea = document.getElementById('text');
 const soundClips = document.getElementById('sound-clips');
 const statusElement = document.getElementById('status');
+const generationStatusElement = document.getElementById('generationStatus');
 
 speedValue.innerHTML = speedInput.value;
 
@@ -19,7 +20,7 @@ let index = 0;
 let audioCtx = null;
 const worker = new Worker("sherpa-onnx-tts.worker.js");
 let ttsInstanceInfo = {
-  modelType: 0,
+  modelType: null,
   numSpeakers: 0,
   isReady: false,
 };
@@ -28,8 +29,13 @@ worker.onmessage = (e) => {
     Module.setStatus(e.data.status);
     return;
   }
+  if (e.data.type === "sherpa-onnx-tts-generation-progress") {
+    const percent = Math.max(0, Math.min(100, (e.data.progress || 0) * 100));
+    setGenerationStatus(`Generating audio... ${percent.toFixed(2)}%`);
+    return;
+  }
   if (e.data.type === "sherpa-onnx-tts-ready") {
-    ttsInstanceInfo.modelType = e.data.modelType ?? 0;
+    ttsInstanceInfo.modelType = e.data.modelType;
     ttsInstanceInfo.numSpeakers = e.data.numSpeakers;
     ttsInstanceInfo.isReady = true;
     generateBtn.disabled = false;
@@ -39,11 +45,18 @@ worker.onmessage = (e) => {
     return;
   }
   if (e.data.type === "error") {
-    Module.setStatus(e.data.message);
+    generateBtn.disabled = false;
+    if (ttsInstanceInfo.isReady) {
+      setGenerationStatus(e.data.message);
+    } else {
+      Module.setStatus(e.data.message);
+    }
     return;
   }
   if (e.data.type === "sherpa-onnx-tts-result") {
     let audio = e.data;
+    generateBtn.disabled = false;
+    setGenerationStatus('');
 
     console.log(audio.samples.length, audio.sampleRate);
 
@@ -113,6 +126,15 @@ function updateUiForModelType() {
   referenceTextSection.classList.toggle('hidden', !isZipVoice);
 }
 
+function setGenerationStatus(status) {
+  if (!generationStatusElement) {
+    return;
+  }
+
+  generationStatusElement.textContent = status;
+  generationStatusElement.style.display = status ? 'block' : 'none';
+}
+
 function getMonoSamples(audioBuffer) {
   if (audioBuffer.numberOfChannels === 1) {
     return new Float32Array(audioBuffer.getChannelData(0));
@@ -150,6 +172,21 @@ async function readReferenceAudio(file) {
 function isWaveFile(file) {
   const name = file.name || '';
   return name.toLowerCase().endsWith('.wav');
+}
+
+function sanitizeFilename(name) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, '-');
+}
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }
 
 generateBtn.onclick = async function() {
@@ -199,7 +236,7 @@ generateBtn.onclick = async function() {
 
     const referenceText = referenceTextInput.value.trim();
     if (referenceText.length === 0) {
-      alert('Please input the reference text');
+      alert('Please input the transcript of the reference audio');
       return;
     }
 
@@ -211,9 +248,12 @@ generateBtn.onclick = async function() {
       referenceText: referenceText,
       numSteps: 4,
       extra: {
-        min_char_in_sentence: 30,
+        min_char_in_sentence: 10,
       },
     };
+
+    generateBtn.disabled = true;
+    setGenerationStatus('Generating audio...');
 
     worker.postMessage({
       text,
@@ -236,14 +276,18 @@ function createAudioTag(generateAudio) {
 
   const text = textArea.value.trim().substring(0, 100);
   const clipName = `${index} ${text} ...`;
+  const filename = `${sanitizeFilename(clipName)}.wav`;
   index += 1;
 
   const clipContainer = document.createElement('article');
   const clipLabel = document.createElement('p');
   const audio = document.createElement('audio');
+  const saveButton = document.createElement('button');
   const deleteButton = document.createElement('button');
   clipContainer.classList.add('clip');
   audio.setAttribute('controls', '');
+  saveButton.textContent = 'Save';
+  saveButton.className = 'save';
   deleteButton.textContent = 'Delete';
   deleteButton.className = 'delete';
 
@@ -252,6 +296,7 @@ function createAudioTag(generateAudio) {
   clipContainer.appendChild(audio);
 
   clipContainer.appendChild(clipLabel);
+  clipContainer.appendChild(saveButton);
   clipContainer.appendChild(deleteButton);
   soundClips.appendChild(clipContainer);
 
@@ -259,6 +304,10 @@ function createAudioTag(generateAudio) {
 
   const audioURL = window.URL.createObjectURL(blob);
   audio.src = audioURL;
+
+  saveButton.onclick = function() {
+    downloadBlob(blob, filename);
+  };
 
   deleteButton.onclick = function(e) {
     let evtTgt = e.target;
