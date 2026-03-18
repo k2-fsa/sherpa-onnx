@@ -36,6 +36,25 @@ rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
 ```
 
+PocketTTS example:
+
+```bash
+cd sherpa-onnx/wasm/tts/assets
+
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json ./
+mv sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json ./
+rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+```
+
 You should have the following files in `assets` before you can run
 `build-wasm-simd-tts.sh`
 

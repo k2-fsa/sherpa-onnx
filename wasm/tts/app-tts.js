@@ -123,8 +123,10 @@ speedInput.oninput = function() {
 
 function updateUiForModelType() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
-  speakerIdSection.classList.toggle('hidden', isZipVoice);
-  referenceAudioSection.classList.toggle('hidden', !isZipVoice);
+  const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const useGenerationConfig = isZipVoice || isPocketTts;
+  speakerIdSection.classList.toggle('hidden', useGenerationConfig);
+  referenceAudioSection.classList.toggle('hidden', !useGenerationConfig);
   referenceTextSection.classList.toggle('hidden', !isZipVoice);
 }
 
@@ -193,9 +195,11 @@ function downloadBlob(blob, filename) {
 
 generateBtn.onclick = async function() {
   const isZipVoice = ttsInstanceInfo.modelType === 4;
+  const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const useGenerationConfig = isZipVoice || isPocketTts;
 
   let speakerId = speakerIdInput.value;
-  if (!isZipVoice) {
+  if (!useGenerationConfig) {
     if (speakerId.trim().length == 0) {
       alert('Please input a speakerId');
       return;
@@ -224,7 +228,7 @@ generateBtn.onclick = async function() {
   console.log('speed', speedInput.value);
   console.log('text', text);
 
-  if (isZipVoice) {
+  if (useGenerationConfig) {
     if (!referenceAudioInput.files || referenceAudioInput.files.length === 0) {
       alert('Please select a reference audio file');
       return;
@@ -236,23 +240,26 @@ generateBtn.onclick = async function() {
       return;
     }
 
-    const referenceText = referenceTextInput.value.trim();
-    if (referenceText.length === 0) {
-      alert('Please input the transcript of the reference audio');
-      return;
-    }
-
     const referenceAudio = await readReferenceAudio(referenceFile);
     const genConfig = {
       speed: parseFloat(speedInput.value),
       referenceAudio: referenceAudio.samples,
       referenceSampleRate: referenceAudio.sampleRate,
-      referenceText: referenceText,
-      numSteps: 4,
-      extra: {
-        min_char_in_sentence: 10,
-      },
+      numSteps: isPocketTts ? 5 : 4,
     };
+
+    if (isZipVoice) {
+      const referenceText = referenceTextInput.value.trim();
+      if (referenceText.length === 0) {
+        alert('Please input the transcript of the reference audio');
+        return;
+      }
+
+      genConfig.referenceText = referenceText;
+      genConfig.extra = {
+        min_char_in_sentence: 10,
+      };
+    }
 
     generateBtn.disabled = true;
     setGenerationStatus('Generating audio...');
