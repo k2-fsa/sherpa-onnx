@@ -36,22 +36,23 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 1 | [version](#example-1-show-sherpa-onnx-version) | Show the sherpa-onnx version |
 | 2 | [pocket_tts](#example-2-tts-with-pocket-tts-zero-shot-voice-cloning) | Text-to-speech with zero-shot voice cloning using a reference audio |
 | 3 | [supertonic_tts](#example-3-tts-with-supertonic-tts) | Text-to-speech with Supertonic TTS (multi-speaker, multi-language) |
-| 4 | [streaming_zipformer_en](#example-4-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
-| 5 | [streaming_zipformer_zh_en](#example-5-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
-| 6 | [streaming_zipformer_microphone](#example-6-asr-with-streaming-zipformer-with-a-microphone-real-time-asr) | Real-time streaming ASR from microphone input |
-| 7 | [zipformer_en](#example-7-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
-| 8 | [zipformer_zh_en](#example-8-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
-| 9 | [zipformer_vi](#example-9-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
-| 10 | [nemo_parakeet](#example-10-asr-with-non-streaming-nemo-parakeet-english) | Non-streaming ASR with Nemo Parakeet TDT transducer (English) |
-| 11 | [fire_red_asr_ctc](#example-11-asr-with-non-streaming-fireredasr-ctc-chinese--english) | Non-streaming ASR with FireRedASR CTC model (Chinese + English) |
-| 12 | [moonshine_v2](#example-12-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
-| 13 | [sense_voice](#example-13-asr-with-non-streaming-sensevoice) | Non-streaming ASR with SenseVoice (Chinese, English, Japanese, Korean, Cantonese) |
-| 14 | [silero_vad_remove_silence](#example-14-remove-silences-from-a-file-using-silerovad) | Remove silences from an audio file using Silero VAD |
-| 15 | [offline_speech_enhancement_gtcrn](#example-15-offline-speech-enhancement-with-gtcrn) | Offline speech enhancement with GTCRN |
-| 16 | [offline_speech_enhancement_dpdfnet](#example-16-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
-| 17 | [streaming_speech_enhancement_gtcrn](#example-17-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
-| 18 | [streaming_speech_enhancement_dpdfnet](#example-18-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
-| 19 | [online_punctuation](#example-19-online-punctuation) | Add punctuation to text using online punctuation model |
+| 4 | [zipvoice_tts](#example-4-tts-with-zipvoice-zero-shot-voice-cloning) | Text-to-speech with ZipVoice zero-shot voice cloning |
+| 5 | [streaming_zipformer_en](#example-5-asr-with-streaming-zipformer-english) | Streaming ASR with zipformer transducer (English) |
+| 6 | [streaming_zipformer_zh_en](#example-6-asr-with-streaming-zipformer-chinese--english) | Streaming ASR with zipformer transducer (Chinese + English) |
+| 7 | [streaming_zipformer_microphone](#example-7-asr-with-streaming-zipformer-with-a-microphone-real-time-asr) | Real-time streaming ASR from microphone input |
+| 8 | [zipformer_en](#example-8-asr-with-non-streaming-zipformer-english) | Non-streaming ASR with zipformer transducer (English) |
+| 9 | [zipformer_zh_en](#example-9-asr-with-non-streaming-zipformer-chinese--english) | Non-streaming ASR with zipformer transducer (Chinese + English) |
+| 10 | [zipformer_vi](#example-10-asr-with-non-streaming-zipformer-vietnamese) | Non-streaming ASR with zipformer transducer (Vietnamese) |
+| 11 | [nemo_parakeet](#example-11-asr-with-non-streaming-nemo-parakeet-english) | Non-streaming ASR with Nemo Parakeet TDT transducer (English) |
+| 12 | [fire_red_asr_ctc](#example-12-asr-with-non-streaming-fireredasr-ctc-chinese--english) | Non-streaming ASR with FireRedASR CTC model (Chinese + English) |
+| 13 | [moonshine_v2](#example-13-asr-with-non-streaming-moonshine-v2-english) | Non-streaming ASR with Moonshine v2 (English) |
+| 14 | [sense_voice](#example-14-asr-with-non-streaming-sensevoice) | Non-streaming ASR with SenseVoice (Chinese, English, Japanese, Korean, Cantonese) |
+| 15 | [silero_vad_remove_silence](#example-15-remove-silences-from-a-file-using-silerovad) | Remove silences from an audio file using Silero VAD |
+| 16 | [offline_speech_enhancement_gtcrn](#example-16-offline-speech-enhancement-with-gtcrn) | Offline speech enhancement with GTCRN |
+| 17 | [offline_speech_enhancement_dpdfnet](#example-17-offline-speech-enhancement-with-dpdfnet) | Offline speech enhancement with DPDFNet |
+| 18 | [streaming_speech_enhancement_gtcrn](#example-18-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
+| 19 | [streaming_speech_enhancement_dpdfnet](#example-19-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
+| 20 | [online_punctuation](#example-20-online-punctuation) | Add punctuation to text using online punctuation model |
 
 ## Run it
 
@@ -87,7 +88,19 @@ rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
 cargo run --example supertonic_tts
 ```
 
-### Example 4: ASR with streaming zipformer (English)
+### Example 4: TTS with ZipVoice zero-shot voice cloning
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+cargo run --example zipvoice_tts
+```
+
+### Example 5: ASR with streaming zipformer (English)
 
 ```bash
 curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
@@ -104,7 +117,7 @@ cargo run --example streaming_zipformer -- \
     --debug
 ```
 
-### Example 5: ASR with streaming zipformer (Chinese + English)
+### Example 6: ASR with streaming zipformer (Chinese + English)
 
 ```bash
 curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
@@ -121,7 +134,7 @@ cargo run --example streaming_zipformer -- \
     --debug
 ```
 
-### Example 6: ASR with streaming zipformer (with a microphone, real-time ASR)
+### Example 7: ASR with streaming zipformer (with a microphone, real-time ASR)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
@@ -137,7 +150,7 @@ cargo run --example streaming_zipformer_microphone --features mic -- \
     --debug
 ```
 
-### Example 7: ASR with non-streaming zipformer (English)
+### Example 8: ASR with non-streaming zipformer (English)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04.tar.bz2
@@ -155,7 +168,7 @@ cargo run --example zipformer -- \
     --debug
 ```
 
-### Example 8: ASR with non-streaming zipformer (Chinese + English)
+### Example 9: ASR with non-streaming zipformer (Chinese + English)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
@@ -173,7 +186,7 @@ cargo run --example zipformer -- \
     --debug
 ```
 
-### Example 9: ASR with non-streaming zipformer (Vietnamese)
+### Example 10: ASR with non-streaming zipformer (Vietnamese)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-vi-30M-int8-2026-02-09.tar.bz2
@@ -191,7 +204,7 @@ cargo run --example zipformer -- \
     --debug
 ```
 
-### Example 10: ASR with non-streaming Nemo Parakeet (English)
+### Example 11: ASR with non-streaming Nemo Parakeet (English)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
@@ -209,7 +222,7 @@ cargo run --example nemo_parakeet -- \
     --debug
 ```
 
-### Example 11: ASR with non-streaming FireRedASR CTC (Chinese + English)
+### Example 12: ASR with non-streaming FireRedASR CTC (Chinese + English)
 
 ```bash
 curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
@@ -224,7 +237,7 @@ cargo run --example fire_red_asr_ctc -- \
     --debug
 ```
 
-### Example 12: ASR with non-streaming Moonshine v2 (English)
+### Example 13: ASR with non-streaming Moonshine v2 (English)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
@@ -239,7 +252,7 @@ cargo run --example moonshine_v2 -- \
     --num-threads 2
 ```
 
-### Example 13: ASR with non-streaming SenseVoice
+### Example 14: ASR with non-streaming SenseVoice
 
 ```bash
 curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
@@ -254,7 +267,7 @@ cargo run --example sense_voice -- \
     --debug
 ```
 
-### Example 14: Remove silences from a file using SileroVAD
+### Example 15: Remove silences from a file using SileroVAD
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
@@ -266,7 +279,7 @@ cargo run --example silero_vad_remove_silence -- \
     --silero-vad-model ./silero_vad.onnx
 ```
 
-### Example 15: Offline speech enhancement with GTCRN
+### Example 16: Offline speech enhancement with GTCRN
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
@@ -278,7 +291,7 @@ cargo run --example offline_speech_enhancement_gtcrn -- \
     --output ./enhanced-rust-gtcrn.wav
 ```
 
-### Example 16: Offline speech enhancement with DPDFNet
+### Example 17: Offline speech enhancement with DPDFNet
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
@@ -290,7 +303,7 @@ cargo run --example offline_speech_enhancement_dpdfnet -- \
     --output ./enhanced-rust-dpdfnet.wav
 ```
 
-### Example 17: Streaming speech enhancement with GTCRN
+### Example 18: Streaming speech enhancement with GTCRN
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
@@ -302,7 +315,7 @@ cargo run --example streaming_speech_enhancement_gtcrn -- \
     --output ./enhanced-rust-streaming-gtcrn.wav
 ```
 
-### Example 18: Streaming speech enhancement with DPDFNet
+### Example 19: Streaming speech enhancement with DPDFNet
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
@@ -314,7 +327,7 @@ cargo run --example streaming_speech_enhancement_dpdfnet -- \
     --output ./enhanced-rust-streaming-dpdfnet.wav
 ```
 
-### Example 19: Online punctuation
+### Example 20: Online punctuation
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
