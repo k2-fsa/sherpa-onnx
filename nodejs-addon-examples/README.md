@@ -168,6 +168,7 @@ The following tables list the examples in this folder.
 |[./test_tts_non_streaming_pocket_en_async.js](./test_tts_non_streaming_pocket_en_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API|
 |[./test_tts_non_streaming_zipvoice_zh_en.js](./test_tts_non_streaming_zipvoice_zh_en.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model|
 |[./test_tts_non_streaming_zipvoice_zh_en_async.js](./test_tts_non_streaming_zipvoice_zh_en_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API|
+|[./test_tts_non_streaming_zipvoice_zh_en_play_async.js](./test_tts_non_streaming_zipvoice_zh_en_play_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API and live audio playback|
 |[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
 |[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
 |[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
@@ -593,6 +594,22 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-mode
 
 # The reference text must match the reference audio transcript.
 node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# Install the playback package once.
+npm install speaker
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en_play_async.js
 ```
 
 ### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, sync API)
