@@ -72,8 +72,8 @@ export class OfflineFunASRNanoModelConfig {
   public systemPrompt: string = '';
   public userPrompt: string = '';
   public maxNewTokens: number = 0;
-  public temperature: number = 0;
-  public topP: number = 0;
+  public temperature: number = 1e-6;
+  public topP: number = 0.8;
   public seed: number = 0;
   public language: string = '';
   public itn: number = 0;

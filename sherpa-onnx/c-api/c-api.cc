@@ -370,7 +370,7 @@ const char *SherpaOnnxOnlineStreamGetOption(
 }
 
 int32_t SherpaOnnxOnlineStreamHasOption(const SherpaOnnxOnlineStream *stream,
-                                         const char *key) {
+                                        const char *key) {
   if (!stream || !key) return 0;
   return stream->impl->HasOption(key);
 }
@@ -693,7 +693,7 @@ const char *SherpaOnnxOfflineStreamGetOption(
 }
 
 int32_t SherpaOnnxOfflineStreamHasOption(const SherpaOnnxOfflineStream *stream,
-                                          const char *key) {
+                                         const char *key) {
   if (!stream || !key) return 0;
   return stream->impl->HasOption(key);
 }
@@ -2423,7 +2423,7 @@ struct SherpaOnnxOfflinePunctuation {
   std::unique_ptr<sherpa_onnx::OfflinePunctuation> impl;
 };
 
-const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
+static sherpa_onnx::OfflinePunctuationConfig GetOfflinePunctuationConfig(
     const SherpaOnnxOfflinePunctuationConfig *config) {
   sherpa_onnx::OfflinePunctuationConfig c;
   c.model.ct_transformer = SHERPA_ONNX_OR(config->model.ct_transformer, "");
@@ -2434,13 +2434,24 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
     c.model.provider = "cpu";
   }
 
-  if (c.model.debug) {
+  if (config->model.debug) {
 #if __OHOS__
     SHERPA_ONNX_LOGE("%{public}s\n", c.ToString().c_str());
 #else
     SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
 #endif
   }
+
+  return c;
+}
+
+const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
+    const SherpaOnnxOfflinePunctuationConfig *config) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
+  auto c = GetOfflinePunctuationConfig(config);
 
   if (!c.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config");
@@ -2521,7 +2532,8 @@ const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuation(
   }
 
   auto *p = new SherpaOnnxOnlinePunctuation;
-  p->impl = std::make_unique<sherpa_onnx::OnlinePunctuation>(punctuation_config);
+  p->impl =
+      std::make_unique<sherpa_onnx::OnlinePunctuation>(punctuation_config);
   return p;
 }
 
@@ -3170,7 +3182,8 @@ const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuationOHOS(
 
   auto punctuation_config = GetOnlinePunctuationConfig(config);
   auto *p = new SherpaOnnxOnlinePunctuation;
-  p->impl = std::make_unique<sherpa_onnx::OnlinePunctuation>(mgr, punctuation_config);
+  p->impl =
+      std::make_unique<sherpa_onnx::OnlinePunctuation>(mgr, punctuation_config);
   return p;
 }
 
@@ -3265,7 +3278,30 @@ const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
   return nullptr;
 }
 #endif  // #if SHERPA_ONNX_ENABLE_TTS == 1
-        //
+
+const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuationOHOS(
+    const SherpaOnnxOfflinePunctuationConfig *config,
+    NativeResourceManager *mgr) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
+  if (!mgr) {
+    return SherpaOnnxCreateOfflinePunctuation(config);
+  }
+
+  auto c = GetOfflinePunctuationConfig(config);
+  if (c.model.ct_transformer.empty()) {
+    SHERPA_ONNX_LOGE("Please specify a punctuation model! Return a null pointer");
+    return nullptr;
+  }
+
+  auto *punct = new SherpaOnnxOfflinePunctuation;
+  punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(mgr, c);
+
+  return punct;
+}
+
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
 const SherpaOnnxOfflineSpeakerDiarization *
 SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(

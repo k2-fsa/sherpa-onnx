@@ -319,9 +319,9 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 #if __OHOS__
   // the last argument is a NativeResourceManager
-  if (info.Length() != 3) {
+  if (info.Length() != 1 && info.Length() != 2 && info.Length() != 3) {
     std::ostringstream os;
-    os << "Expect only 3 arguments. Given: " << info.Length();
+    os << "Expect 1, 2, or 3 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -346,13 +346,30 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env,
-                         "You should pass an integer as the second argument.")
+  float buffer_size_in_seconds = 60;
+  if (info.Length() >= 2 && !info[1].IsUndefined() && !info[1].IsNull()) {
+    if (!info[1].IsNumber()) {
+      Napi::TypeError::New(env,
+                           "You should pass a number as the second argument.")
+          .ThrowAsJavaScriptException();
+
+      return {};
+    }
+
+    buffer_size_in_seconds = info[1].As<Napi::Number>().FloatValue();
+  }
+
+#if __OHOS__
+  bool use_resource_manager =
+      info.Length() == 3 && !info[2].IsUndefined() && !info[2].IsNull();
+  if (use_resource_manager && !info[2].IsObject()) {
+    Napi::TypeError::New(
+        env, "You should pass a resource manager as the third argument.")
         .ThrowAsJavaScriptException();
 
     return {};
   }
+#endif
 
   Napi::Object o = info[0].As<Napi::Object>();
 
@@ -374,17 +391,20 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
     }
   }
 
-  float buffer_size_in_seconds = info[1].As<Napi::Number>().FloatValue();
-
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
+  const SherpaOnnxVoiceActivityDetector *vad = nullptr;
 
-  const SherpaOnnxVoiceActivityDetector *vad =
-      SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds,
-                                                mgr.get());
+  if (use_resource_manager) {
+    std::unique_ptr<NativeResourceManager,
+                    decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+        mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]),
+            &OH_ResourceManager_ReleaseNativeResourceManager);
+
+    vad = SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds,
+                                                    mgr.get());
+  } else {
+    vad = SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
+  }
 #else
   const SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);

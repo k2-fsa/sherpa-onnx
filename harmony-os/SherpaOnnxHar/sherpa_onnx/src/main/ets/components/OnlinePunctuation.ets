@@ -19,8 +19,8 @@ export class OnlinePunctuation {
   public config: OnlinePunctuationConfig;
   private handle: object;
 
-  constructor(config: OnlinePunctuationConfig) {
-    this.handle = createOnlinePunctuation(config);
+  constructor(config: OnlinePunctuationConfig, mgr?: object) {
+    this.handle = createOnlinePunctuation(config, mgr);
     this.config = config;
   }
 

@@ -2100,6 +2100,11 @@ SherpaOnnxCreateVoiceActivityDetectorOHOS(
 SHERPA_ONNX_API const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
     const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr);
 
+SHERPA_ONNX_API const SherpaOnnxOfflinePunctuation *
+SherpaOnnxCreateOfflinePunctuationOHOS(
+    const SherpaOnnxOfflinePunctuationConfig *config,
+    NativeResourceManager *mgr);
+
 SHERPA_ONNX_API const SherpaOnnxOnlinePunctuation *
 SherpaOnnxCreateOnlinePunctuationOHOS(
     const SherpaOnnxOnlinePunctuationConfig *config,
