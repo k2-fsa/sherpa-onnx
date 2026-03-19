@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -27,8 +36,8 @@ class OfflineCtTransformerModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflinePunctuationModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflinePunctuationModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -36,7 +45,6 @@ class OfflineCtTransformerModel::Impl {
     auto buf = ReadFile(mgr, config_.ct_transformer);
     Init(buf.data(), buf.size());
   }
-#endif
 
   Ort::Value Forward(Ort::Value text, Ort::Value text_len) {
     std::array<Ort::Value, 2> inputs = {std::move(text), std::move(text_len)};
@@ -142,10 +150,19 @@ OfflineCtTransformerModel::OfflineCtTransformerModel(
     const OfflinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineCtTransformerModel::OfflineCtTransformerModel(
-    AAssetManager *mgr, const OfflinePunctuationModelConfig &config)
+    Manager *mgr, const OfflinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
+
+#if __ANDROID_API__ >= 9
+template OfflineCtTransformerModel::OfflineCtTransformerModel(
+    AAssetManager *mgr, const OfflinePunctuationModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineCtTransformerModel::OfflineCtTransformerModel(
+    NativeResourceManager *mgr, const OfflinePunctuationModelConfig &config);
 #endif
 
 OfflineCtTransformerModel::~OfflineCtTransformerModel() = default;

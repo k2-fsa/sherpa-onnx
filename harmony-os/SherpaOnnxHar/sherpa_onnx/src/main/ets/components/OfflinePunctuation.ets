@@ -18,8 +18,8 @@ export class OfflinePunctuation {
   public config: OfflinePunctuationConfig;
   private handle: object;
 
-  constructor(config: OfflinePunctuationConfig) {
-    this.handle = createOfflinePunctuation(config);
+  constructor(config: OfflinePunctuationConfig, mgr?: object) {
+    this.handle = createOfflinePunctuation(config, mgr);
     this.config = config;
   }
 
