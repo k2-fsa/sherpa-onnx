@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/online-punctuation-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -39,9 +34,8 @@ class OnlinePunctuation {
  public:
   explicit OnlinePunctuation(const OnlinePunctuationConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OnlinePunctuation(AAssetManager *mgr, const OnlinePunctuationConfig &config);
-#endif
+  template <typename Manager>
+  OnlinePunctuation(Manager *mgr, const OnlinePunctuationConfig &config);
 
   ~OnlinePunctuation();
 
