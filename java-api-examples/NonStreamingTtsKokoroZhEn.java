@@ -40,8 +40,12 @@ public class NonStreamingTtsKokoroZhEn {
 
     int sid = 0; // this model has 53 speakers. You can use sid in the range 0-52
     float speed = 1.0f;
+    GenerationConfig genConfig = new GenerationConfig();
+    genConfig.setSid(sid);
+    genConfig.setSpeed(speed);
+    genConfig.setSilenceScale(0.2f);
     long start = System.currentTimeMillis();
-    GeneratedAudio audio = tts.generate(text, sid, speed);
+    GeneratedAudio audio = tts.generateWithConfigAndCallback(text, genConfig, samples -> {});
     long stop = System.currentTimeMillis();
 
     float timeElapsedSeconds = (stop - start) / 1000.0f;

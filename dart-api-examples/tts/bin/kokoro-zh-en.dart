@@ -65,7 +65,6 @@ void main(List<String> arguments) async {
     voices: voices,
     tokens: tokens,
     dataDir: dataDir,
-    lengthScale: 1 / speed,
     lexicon: lexicon,
   );
 
@@ -82,7 +81,12 @@ void main(List<String> arguments) async {
   );
 
   final tts = sherpa_onnx.OfflineTts(config);
-  final audio = tts.generate(text: text, sid: sid, speed: speed);
+  final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+    sid: sid,
+    speed: speed,
+    silenceScale: config.silenceScale,
+  );
+  final audio = tts.generateWithConfig(text: text, config: genConfig);
   tts.free();
 
   sherpa_onnx.writeWave(
