@@ -859,6 +859,12 @@ typedef struct SherpaOnnxKeywordResult {
 
   int32_t count;
 
+  /// Full decoded token sequence for the whole segment (for exact keyword match).
+  /// If full_tokens equals one of your keyword token sequences -> true hit;
+  /// otherwise partial match (e.g. "不要过来" triggers "过来") -> treat as no hit.
+  const char *const *full_tokens_arr;
+  int32_t full_tokens_count;
+
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   float *timestamps;

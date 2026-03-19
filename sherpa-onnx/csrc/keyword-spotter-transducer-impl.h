@@ -44,6 +44,14 @@ KeywordResult Convert(const TransducerKeywordResult &src,
     r.keyword = r.keyword.substr(1);
   }
 
+  r.full_tokens.reserve(src.full_token_ids.size());
+  for (auto i : src.full_token_ids) {
+    if (i == 0) continue;  // skip blank, so full_tokens matches keyword token list
+    if (sym_table.Contains(static_cast<int32_t>(i))) {
+      r.full_tokens.push_back(sym_table[static_cast<int32_t>(i)]);
+    }
+  }
+
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
   for (auto t : src.timestamps) {
     float time = frame_shift_s * t;

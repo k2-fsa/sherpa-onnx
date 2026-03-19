@@ -160,6 +160,7 @@ void TransducerKeywordDecoder::Decode(
           auto &r = (*result)[b];
           r.tokens = {best_hyp.ys.end() - matched_state->level,
                       best_hyp.ys.end()};
+          r.full_token_ids = best_hyp.ys;
           r.timestamps = {best_hyp.timestamps.end() - matched_state->level,
                           best_hyp.timestamps.end()};
           r.keyword = matched_state->phrase;

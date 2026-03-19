@@ -1098,6 +1098,28 @@ const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
     r->tokens_arr = nullptr;
   }
 
+  // copy full_tokens (whole segment, for exact-match filtering)
+  const auto &full_tokens = result.full_tokens;
+  auto full_count = static_cast<int32_t>(full_tokens.size());
+  r->full_tokens_count = full_count;
+  if (full_count > 0) {
+    size_t full_total = 0;
+    for (const auto &t : full_tokens) {
+      full_total += t.size() + 1;
+    }
+    char *pFull = new char[full_total]{};
+    char **pFullArr = new char *[full_count];
+    int32_t pos = 0;
+    for (int32_t i = 0; i < full_count; ++i) {
+      pFullArr[i] = pFull + pos;
+      memcpy(pFull + pos, full_tokens[i].c_str(), full_tokens[i].size());
+      pos += full_tokens[i].size() + 1;
+    }
+    r->full_tokens_arr = pFullArr;
+  } else {
+    r->full_tokens_arr = nullptr;
+  }
+
   return r;
 }
 
@@ -1108,6 +1130,10 @@ void SherpaOnnxDestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->timestamps;
+    if (r->full_tokens_count > 0 && r->full_tokens_arr) {
+      delete[] r->full_tokens_arr[0];  // single buffer for all full_tokens
+      delete[] r->full_tokens_arr;
+    }
     delete r;
   }
 }

@@ -18,8 +18,11 @@ struct TransducerKeywordResult {
   /// Number of frames after subsampling we have decoded so far
   int32_t frame_offset = 0;
 
-  /// The decoded token IDs for keywords
+  /// The decoded token IDs for keywords (matched segment only)
   std::vector<int64_t> tokens;
+
+  /// Full decoded token IDs for the whole segment (for exact-match filtering)
+  std::vector<int64_t> full_token_ids;
 
   /// The triggered keyword
   std::string keyword;

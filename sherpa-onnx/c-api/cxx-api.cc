@@ -728,6 +728,13 @@ KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
     ans.tokens[i] = r->tokens_arr[i];
   }
 
+  if (r->full_tokens_count > 0 && r->full_tokens_arr) {
+    ans.full_tokens.resize(r->full_tokens_count);
+    for (int32_t i = 0; i < r->full_tokens_count; ++i) {
+      ans.full_tokens[i] = r->full_tokens_arr[i];
+    }
+  }
+
   if (r->timestamps) {
     ans.timestamps.resize(r->count);
     std::copy(r->timestamps, r->timestamps + r->count, ans.timestamps.data());
