@@ -122,7 +122,7 @@ export class TtsGenerationConfig {
   public referenceSampleRate: number = 0;
   public referenceText: string = '';
   public numSteps: number = 5;
-  public extra: object = {};
+  public extra: object = new Object();
 }
 
 export class TtsInput {
