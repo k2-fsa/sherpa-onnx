@@ -58,12 +58,16 @@ int32_t main(int32_t argc, char *argv[]) {
   auto tts = OfflineTts::Create(config);
   int32_t sid = 50;
   float speed = 1.0;  // larger -> faster in speech speed
+  GenerationConfig gen_config;
+  gen_config.sid = sid;
+  gen_config.speed = speed;
+  gen_config.silence_scale = 0.2f;
 
 #if 0
   // If you don't want to use a callback, then please enable this branch
-  GeneratedAudio audio = tts.Generate(text, sid, speed);
+  GeneratedAudio audio = tts.Generate(text, gen_config);
 #else
-  GeneratedAudio audio = tts.Generate(text, sid, speed, ProgressCallback);
+  GeneratedAudio audio = tts.Generate(text, gen_config, ProgressCallback);
 #endif
 
   WriteWave(filename, {audio.samples, audio.sample_rate});

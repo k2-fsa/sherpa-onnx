@@ -50,10 +50,11 @@ var
   Param: TPaStreamParameters;
   Stream: PPaStream;
   Wave: TSherpaOnnxWave;
+  GenerationConfig: TSherpaOnnxGenerationConfig;
 
 function GenerateCallback(
       Samples: pcfloat; N: cint32;
-      Arg: Pointer): cint; cdecl;
+      Progress: cfloat; Arg: Pointer): cint; cdecl;
 begin
   EnterCriticalSection(CriticalSection);
   try
@@ -207,8 +208,13 @@ begin
 
   Text := 'Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone.';
 
-  Audio :=  Tts.Generate(Text, SpeakerId, Speed,
-    PSherpaOnnxGeneratedAudioCallbackWithArg(@GenerateCallback), nil);
+  GenerationConfig := Default(TSherpaOnnxGenerationConfig);
+  GenerationConfig.SilenceScale := 0.2;
+  GenerationConfig.Speed := Speed;
+  GenerationConfig.Sid := SpeakerId;
+
+  Audio :=  Tts.Generate(Text, GenerationConfig,
+    @GenerateCallback, nil);
   FinishedGeneration := True;
   SherpaOnnxWriteWave('./kokoro-en-playback-7.wav', Audio.Samples, Audio.SampleRate);
   WriteLn('Saved to ./kokoro-en-playback-7.wav');
@@ -236,4 +242,3 @@ begin
       Exit;
     end;
 end.
-
