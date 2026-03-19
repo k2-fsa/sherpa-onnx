@@ -23,11 +23,16 @@ const tts = createOfflineTts();
 
 const text = 'Alles hat ein Ende, nur die Wurst hat zwei.';
 
+const generationConfig = new sherpa_onnx.GenerationConfig({
+  sid: 0,
+  speed: 1.0,
+  silenceScale: 0.2,
+});
+
 let start = Date.now();
 const audio = tts.generate({
   text: text,
-  sid: 0,
-  speed: 1.0,
+  generationConfig,
   enableExternalBuffer: true,
 });
 let stop = Date.now();

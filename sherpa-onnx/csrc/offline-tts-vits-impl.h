@@ -149,9 +149,27 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return model_->GetMetaData().num_speakers;
   }
 
+  // Supported options in GenerationConfig:
+  //   - sid: Speaker ID for multi-speaker models
+  //   - speed: Speech speed factor (default: 1.0)
+  //   - silence_scale: Scale applied to pauses in the generated audio
+  //
+  // Supported extra options in config.extra:
+  //   - None
   GeneratedAudio Generate(
-      const std::string &_text, int64_t sid = 0, float speed = 1.0,
+      const std::string &_text, const GenerationConfig &gen_config,
       GeneratedAudioCallback callback = nullptr) const override {
+    if (config_.model.debug) {
+      SHERPA_ONNX_LOGE("%s", gen_config.ToString().c_str());
+    }
+
+    int64_t sid = gen_config.sid;
+    float speed = gen_config.speed;
+    if (speed <= 0) {
+      SHERPA_ONNX_LOGE("Speed must be > 0. Given: %f", speed);
+      return {};
+    }
+
     const auto &meta_data = model_->GetMetaData();
     int32_t num_speakers = meta_data.num_speakers;
 
@@ -246,7 +264,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     int32_t x_size = static_cast<int32_t>(x.size());
 
     if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
-      auto ans = Process(x, tones, sid, speed);
+      auto ans = Process(x, tones, sid, speed, gen_config.silence_scale);
       if (callback) {
         callback(ans.samples.data(), ans.samples.size(), 1.0);
       }
@@ -294,7 +312,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         }
       }
 
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio = Process(batch_x, batch_tones, sid, speed,
+                           gen_config.silence_scale);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -319,7 +338,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     if (!batch_x.empty()) {
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio =
+          Process(batch_x, batch_tones, sid, speed, gen_config.silence_scale);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -332,6 +352,17 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     return ans;
+  }
+
+  [[deprecated("Use Generate(text, GenerationConfig, callback) instead")]]
+  GeneratedAudio Generate(
+      const std::string &text, int64_t sid = 0, float speed = 1.0,
+      GeneratedAudioCallback callback = nullptr) const override {
+    GenerationConfig gen_config;
+    gen_config.sid = sid;
+    gen_config.speed = speed;
+    gen_config.silence_scale = config_.silence_scale;
+    return Generate(text, gen_config, std::move(callback));
   }
 
  private:
@@ -413,7 +444,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,
                          const std::vector<std::vector<int64_t>> &tones,
-                         int32_t sid, float speed) const {
+                         int32_t sid, float speed,
+                         float silence_scale) const {
     int32_t num_tokens = 0;
     for (const auto &k : tokens) {
       num_tokens += k.size();
@@ -470,7 +502,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     ans.sample_rate = model_->GetMetaData().sample_rate;
     ans.samples = std::vector<float>(p, p + total);
 
-    float silence_scale = config_.silence_scale;
     if (silence_scale != 1) {
       ans = ans.ScaleSilence(silence_scale);
     }

@@ -33,6 +33,7 @@ end;
 var
   Tts: TSherpaOnnxOfflineTts;
   Audio: TSherpaOnnxGeneratedAudio;
+  GenerationConfig: TSherpaOnnxGenerationConfig;
 
   Text: AnsiString;
   Speed: Single = 1.0;  {Use a larger value to speak faster}
@@ -45,10 +46,14 @@ begin
 
   Text := 'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
-  Audio :=  Tts.Generate(Text, SpeakerId, Speed);
+  GenerationConfig := Default(TSherpaOnnxGenerationConfig);
+  GenerationConfig.SilenceScale := 0.2;
+  GenerationConfig.Speed := Speed;
+  GenerationConfig.Sid := SpeakerId;
+
+  Audio :=  Tts.Generate(Text, GenerationConfig, NIL, NIL);
   SherpaOnnxWriteWave('./libritts_r-generated.wav', Audio.Samples, Audio.SampleRate);
   WriteLn('Saved to ./libritts_r-generated.wav');
 
   FreeAndNil(Tts);
 end.
-

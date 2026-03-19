@@ -368,48 +368,42 @@ or details.
   bool is_zipvoice_tts = !config.model.zipvoice.encoder.empty() &&
                          !config.model.zipvoice.decoder.empty();
 
-  if (is_pocket_tts || is_supertonic_tts || is_zipvoice_tts) {
-    if (is_supertonic_tts) {
-      if (!lang.empty()) {
-        gen_config.extra["lang"] = lang;
-      }
-      gen_config.sid = sid;
-    }
+  gen_config.sid = sid;
 
-    if (is_pocket_tts || is_zipvoice_tts) {
-      if (reference_audio.empty()) {
-        fprintf(stderr,
-                "You need to provide --reference-audio for this TTS model");
-        exit(EXIT_FAILURE);
-      }
-
-      int32_t sample_rate;
-      bool is_ok = false;
-      auto samples =
-          sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
-      if (!is_ok) {
-        fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
-        exit(EXIT_FAILURE);
-      }
-
-      gen_config.reference_audio = std::move(samples);
-      gen_config.reference_sample_rate = sample_rate;
-    }
-
-    if (is_zipvoice_tts) {
-      if (reference_text.empty()) {
-        fprintf(stderr,
-                "You need to provide --reference-text for ZipVoice TTS");
-        exit(EXIT_FAILURE);
-      }
-      gen_config.reference_text = reference_text;
-    }
-
-    audio = tts.Generate(po.GetArg(1), gen_config, AudioGeneratedCallback);
-  } else {
-    audio = tts.Generate(po.GetArg(1), sid, gen_config.speed,
-                         AudioGeneratedCallback);
+  if (is_supertonic_tts && !lang.empty()) {
+    gen_config.extra["lang"] = lang;
   }
+
+  if (is_pocket_tts || is_zipvoice_tts) {
+    if (reference_audio.empty()) {
+      fprintf(stderr,
+              "You need to provide --reference-audio for this TTS model");
+      exit(EXIT_FAILURE);
+    }
+
+    int32_t sample_rate;
+    bool is_ok = false;
+    auto samples =
+        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    if (!is_ok) {
+      fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
+      exit(EXIT_FAILURE);
+    }
+
+    gen_config.reference_audio = std::move(samples);
+    gen_config.reference_sample_rate = sample_rate;
+  }
+
+  if (is_zipvoice_tts) {
+    if (reference_text.empty()) {
+      fprintf(stderr,
+              "You need to provide --reference-text for ZipVoice TTS");
+      exit(EXIT_FAILURE);
+    }
+    gen_config.reference_text = reference_text;
+  }
+
+  audio = tts.Generate(po.GetArg(1), gen_config, AudioGeneratedCallback);
 
   const auto end = std::chrono::steady_clock::now();
   g_stopped = true;

@@ -34,6 +34,7 @@ class OfflineTtsSupertonicImpl : public OfflineTtsImpl {
 
   int32_t NumSpeakers() const override { return num_speakers_; }
 
+  [[deprecated("Use Generate(text, GenerationConfig, callback) instead")]]
   GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const override;

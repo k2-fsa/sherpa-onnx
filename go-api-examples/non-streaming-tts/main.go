@@ -75,7 +75,12 @@ func main() {
 	log.Println("Model created!")
 
 	log.Println("Start generating!")
-	audio := tts.Generate(text, sid, float32(math.Max(float64(speed), 1e-6)))
+	cfg := sherpa.GenerationConfig{
+		SilenceScale: 0.2,
+		Speed:        float32(math.Max(float64(speed), 1e-6)),
+		Sid:          sid,
+	}
+	audio := tts.GenerateWithConfig(text, &cfg, nil)
 
 	log.Println("Done!")
 	if ok := audio.Save(filename); !ok {

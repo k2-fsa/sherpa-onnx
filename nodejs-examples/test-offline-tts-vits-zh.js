@@ -32,8 +32,12 @@ function createOfflineTts() {
 const tts = createOfflineTts();
 const speakerId = 66;
 const speed = 1.0;
-const audio = tts.generate(
-    {text: '3年前中国总人口是1411778724人', sid: speakerId, speed: speed});
+const generationConfig = {
+  sid: speakerId,
+  speed: speed,
+  silenceScale: 0.2,
+};
+const audio = tts.generateWithConfig('3年前中国总人口是1411778724人', generationConfig);
 tts.save('./test-vits-zh.wav', audio);
 console.log('Saved to test-vits-zh.wav successfully.');
 tts.free();
