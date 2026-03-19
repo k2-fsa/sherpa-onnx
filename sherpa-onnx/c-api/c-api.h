@@ -425,7 +425,6 @@ SHERPA_ONNX_API const char *SherpaOnnxOnlineStreamGetOption(
 SHERPA_ONNX_API int32_t SherpaOnnxOnlineStreamHasOption(
     const SherpaOnnxOnlineStream *stream, const char *key);
 
-
 /// Return 1 if an endpoint has been detected.
 ///
 /// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer()
@@ -1336,14 +1335,11 @@ SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
 
 // Deprecated: Please use SherpaOnnxOfflineTtsGenerateWithConfig() instead.
 SHERPA_ONNX_API SHERPA_ONNX_DEPRECATED(
-    "Use SherpaOnnxOfflineTtsGenerateWithConfig() instead")
-const SherpaOnnxGeneratedAudio *
-SherpaOnnxOfflineTtsGenerateWithZipvoice(const SherpaOnnxOfflineTts *tts,
-                                         const char *text,
-                                         const char *prompt_text,
-                                         const float *prompt_samples,
-                                         int32_t n_prompt, int32_t prompt_sr,
-                                         float speed, int32_t num_steps);
+    "Use SherpaOnnxOfflineTtsGenerateWithConfig() instead") const
+    SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
+        const SherpaOnnxOfflineTts *tts, const char *text,
+        const char *prompt_text, const float *prompt_samples, int32_t n_prompt,
+        int32_t prompt_sr, float speed, int32_t num_steps);
 
 typedef struct SherpaOnnxGenerationConfig {
   float silence_scale;
@@ -2103,6 +2099,11 @@ SherpaOnnxCreateVoiceActivityDetectorOHOS(
 
 SHERPA_ONNX_API const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
     const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr);
+
+SHERPA_ONNX_API const SherpaOnnxOnlinePunctuation *
+SherpaOnnxCreateOnlinePunctuationOHOS(
+    const SherpaOnnxOnlinePunctuationConfig *config,
+    NativeResourceManager *mgr);
 
 SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingExtractor *
 SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(

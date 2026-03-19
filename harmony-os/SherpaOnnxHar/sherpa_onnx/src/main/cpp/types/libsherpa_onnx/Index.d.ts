@@ -51,6 +51,11 @@ export const offlineTtsGenerateWithConfig: (handle: object, input: object) => Tt
 export const offlineTtsGenerateAsync: (handle: object, input: object) => Promise<TtsOutput>;
 export const offlineTtsGenerateAsyncWithConfig: (handle: object, input: object) => Promise<TtsOutput>;
 
+export const createOfflinePunctuation: (config: object) => object;
+export const offlinePunctuationAddPunct: (handle: object, text: string) => string;
+export const createOnlinePunctuation: (config: object) => object;
+export const onlinePunctuationAddPunct: (handle: object, text: string) => string;
+
 export const createSpeakerEmbeddingExtractor: (config: object, mgr?: object) => object;
 export const speakerEmbeddingExtractorDim: (handle: object) => number;
 export const speakerEmbeddingExtractorCreateStream: (handle: object) => object;

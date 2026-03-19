@@ -59,6 +59,16 @@ export { OfflineTtsKittenModelConfig,
   TtsInputWithConfig,
 } from './src/main/ets/components/NonStreamingTts';
 
+export { OfflinePunctuationModelConfig,
+  OfflinePunctuationConfig,
+  OfflinePunctuation,
+} from './src/main/ets/components/OfflinePunctuation';
+
+export { OnlinePunctuationModelConfig,
+  OnlinePunctuationConfig,
+  OnlinePunctuation,
+} from './src/main/ets/components/OnlinePunctuation';
+
 export { SpeakerEmbeddingExtractorConfig,
   SpeakerEmbeddingExtractor,
   SpeakerEmbeddingManager,

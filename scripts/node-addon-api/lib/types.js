@@ -52,7 +52,7 @@
 
 /**
  * @typedef {Object} OfflinePunctuationHandle
- * @see src/punctuation.cc
+ * @see src/offline-punctuation.cc
  */
 
 /**
