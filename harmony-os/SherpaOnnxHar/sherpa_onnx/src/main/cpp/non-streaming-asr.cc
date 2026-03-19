@@ -457,9 +457,9 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 #if __OHOS__
   // the last argument is the NativeResourceManager
-  if (info.Length() != 2) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
+    os << "Expect 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -483,18 +483,35 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
+#if __OHOS__
+  bool use_resource_manager =
+      info.Length() == 2 && !info[1].IsUndefined() && !info[1].IsNull();
+  if (use_resource_manager && !info[1].IsObject()) {
+    Napi::TypeError::New(
+        env, "You should pass a resource manager as the second argument.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+#endif
+
   Napi::Object o = info[0].As<Napi::Object>();
 
   SherpaOnnxOfflineRecognizerConfig c = ParseConfig(o);
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
+  const SherpaOnnxOfflineRecognizer *recognizer = nullptr;
 
-  const SherpaOnnxOfflineRecognizer *recognizer =
-      SherpaOnnxCreateOfflineRecognizerOHOS(&c, mgr.get());
+  if (use_resource_manager) {
+    std::unique_ptr<NativeResourceManager,
+                    decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+        mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+            &OH_ResourceManager_ReleaseNativeResourceManager);
+
+    recognizer = SherpaOnnxCreateOfflineRecognizerOHOS(&c, mgr.get());
+  } else {
+    recognizer = SherpaOnnxCreateOfflineRecognizer(&c);
+  }
 #else
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&c);
@@ -617,7 +634,7 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
   }
 
   if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+    Napi::TypeError::New(env, "Argument 0 should be an offline stream pointer.")
         .ThrowAsJavaScriptException();
 
     return;

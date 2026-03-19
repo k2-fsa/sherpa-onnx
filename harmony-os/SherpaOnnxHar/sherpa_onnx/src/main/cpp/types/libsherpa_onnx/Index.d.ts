@@ -10,7 +10,7 @@ export const circularBufferSize: (handle: object) => number;
 export const circularBufferHead: (handle: object) => number;
 export const circularBufferReset: (handle: object) => void;
 
-export const createVoiceActivityDetector: (config: object, bufferSizeInSeconds: number, mgr?: object) => object;
+export const createVoiceActivityDetector: (config: object, bufferSizeInSeconds?: number, mgr?: object) => object;
 export const voiceActivityDetectorAcceptWaveform: (handle: object, samples: Float32Array) => void;
 export const voiceActivityDetectorIsEmpty: (handle: object) => boolean;
 export const voiceActivityDetectorIsDetected: (handle: object) => boolean;
