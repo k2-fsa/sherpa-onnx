@@ -27,7 +27,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
 #include "sherpa-onnx/c-api/c-api.h"
 
 static int32_t ProgressCallback(const float *samples, int32_t num_samples,
-                                float progress) {
+                                float progress, void *arg) {
   fprintf(stderr, "Progress: %.3f%%\n", progress * 100);
   // return 1 to continue generating
   // return 0 to stop generating
@@ -61,17 +61,19 @@ int32_t main(int32_t argc, char *argv[]) {
       "经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。";
 
   const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
-  int32_t sid = 0;
-  float speed = 1.0;  // larger -> faster in speech speed
+  SherpaOnnxGenerationConfig cfg = {0};
+  cfg.sid = 0;
+  cfg.speed = 1.0f;  // larger -> faster in speech speed
+  cfg.silence_scale = config.silence_scale;
 
 #if 0
   // If you don't want to use a callback, then please enable this branch
   const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerate(tts, text, sid, speed);
+      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg, NULL, NULL);
 #else
   const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerateWithProgressCallback(tts, text, sid, speed,
-                                                       ProgressCallback);
+      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg, ProgressCallback,
+                                             NULL);
 #endif
 
   SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate, filename);
@@ -80,7 +82,7 @@ int32_t main(int32_t argc, char *argv[]) {
   SherpaOnnxDestroyOfflineTts(tts);
 
   fprintf(stderr, "Input text is: %s\n", text);
-  fprintf(stderr, "Speaker ID is: %d\n", sid);
+  fprintf(stderr, "Speaker ID is: %d\n", cfg.sid);
   fprintf(stderr, "Saved to: %s\n", filename);
 
   return 0;
