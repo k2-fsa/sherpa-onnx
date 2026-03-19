@@ -143,7 +143,13 @@ class _TtsScreenState extends State<TtsScreen> {
 
                     final stopwatch = Stopwatch();
                     stopwatch.start();
-                    final audio = _tts!.generate(text: text, sid: sid, speed: _speed);
+                    final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+                      sid: sid,
+                      speed: _speed,
+                      silenceScale: 0.2,
+                    );
+                    final audio =
+                        _tts!.generateWithConfig(text: text, config: genConfig);
                     final suffix = '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
                     final filename = await generateWaveFilename(suffix);
 

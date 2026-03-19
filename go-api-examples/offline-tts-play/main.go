@@ -179,14 +179,18 @@ func main() {
 	var generated *sherpa.GeneratedAudio
 
 	start := time.Now()
+	cfg := sherpa.GenerationConfig{
+		SilenceScale: 0.2,
+		Speed:        1.0,
+		Sid:          sid,
+	}
 
 	go func() {
 		defer pcmBuf.Finish()
 
-		generated = tts.GenerateWithProgressCallback(
+		generated = tts.GenerateWithConfig(
 			text,
-			sid,
-			1.0,
+			&cfg,
 			func(samples []float32, progress float32) bool {
 				log.Printf("Progress: %.1f%%", progress*100)
 

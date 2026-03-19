@@ -115,12 +115,15 @@ public class NonStreamingTtsPiperEn {
 
     int sid = 0;
     float speed = 1.0f;
+    GenerationConfig genConfig = new GenerationConfig();
+    genConfig.setSid(sid);
+    genConfig.setSpeed(speed);
+    genConfig.setSilenceScale(config.getSilenceScale());
     long start = System.currentTimeMillis();
     GeneratedAudio audio =
-        tts.generateWithCallback(
+        tts.generateWithConfigAndCallback(
             text,
-            sid,
-            speed,
+            genConfig,
             (float[] samples) -> {
 
               // we use a byte array to save int16 samples

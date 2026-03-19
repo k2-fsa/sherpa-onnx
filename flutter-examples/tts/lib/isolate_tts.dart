@@ -166,10 +166,13 @@ class IsolateTts {
               _PortModel _v = msg;
               final stopwatch = Stopwatch();
               stopwatch.start();
-              final audio = _tts.generate(
-                  text: _v.data['text'],
-                  sid: _v.data['sid'],
-                  speed: _v.data['speed']);
+              final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+                sid: _v.data['sid'],
+                speed: _v.data['speed'],
+                silenceScale: 0.2,
+              );
+              final audio =
+                  _tts.generateWithConfig(text: _v.data['text'], config: genConfig);
               final suffix =
                   '-sid-${_v.data['sid']}-speed-${_v.data['speed'].toStringAsPrecision(2)}';
               final filename = await generateWaveFilename(suffix);
