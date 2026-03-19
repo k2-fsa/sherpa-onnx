@@ -41,6 +41,7 @@ class KokoroTtsPlayDemo
     OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
     genConfig.Sid = sid;
     genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
 
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);

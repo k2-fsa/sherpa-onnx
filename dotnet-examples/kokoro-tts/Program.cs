@@ -41,6 +41,7 @@ class KokoroTtsDemo
     OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
     genConfig.Sid = sid;
     genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
 
     var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
@@ -100,6 +101,7 @@ class KokoroTtsDemo
     OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
     genConfig.Sid = sid;
     genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
 
     var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
