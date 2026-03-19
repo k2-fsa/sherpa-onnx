@@ -67,6 +67,8 @@ export class OnlineModelConfig {
   public modelType: string = '';
   public modelingUnit: string = "cjkchar";
   public bpeVocab: string = '';
+  public tokensBuf: string = '';
+  public tokensBufSize: number = 0;
 }
 
 export class OnlineCtcFstDecoderConfig {
@@ -89,6 +91,8 @@ export class OnlineRecognizerConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
+  public hotwordsBuf: string = '';
+  public hotwordsBufSize: number = 0;
   public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
 }
 

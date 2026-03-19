@@ -47,7 +47,9 @@ export type TtsOutput = {
 };
 
 export const offlineTtsGenerate: (handle: object, input: object) => TtsOutput;
+export const offlineTtsGenerateWithConfig: (handle: object, input: object) => TtsOutput;
 export const offlineTtsGenerateAsync: (handle: object, input: object) => Promise<TtsOutput>;
+export const offlineTtsGenerateAsyncWithConfig: (handle: object, input: object) => Promise<TtsOutput>;
 
 export const createSpeakerEmbeddingExtractor: (config: object, mgr?: object) => object;
 export const speakerEmbeddingExtractorDim: (handle: object) => number;
