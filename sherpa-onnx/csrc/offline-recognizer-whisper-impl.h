@@ -152,6 +152,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
                                    const SymbolTable &sym_table) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(src.tokens.size());
+    r.token_log_probs.reserve(src.token_log_probs.size());
+    r.vocab_log_probs.reserve(src.vocab_log_probs.size());
 
     std::string text;
 
@@ -161,7 +163,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
         config_.model_config.whisper.enable_segment_timestamps;
 
     // Build text, skipping timestamp tokens if in segment timestamp mode
-    for (auto i : src.tokens) {
+    for (size_t idx = 0; idx < src.tokens.size(); ++idx) {
+      auto i = src.tokens[idx];
       // Skip timestamp tokens (they are >= timestamp_begin)
       if (enable_segment_timestamps && i >= timestamp_begin) {
         continue;
@@ -177,6 +180,12 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
       text += s;
       r.tokens.push_back(s);
+      if (idx < src.token_log_probs.size()) {
+        r.token_log_probs.push_back(src.token_log_probs[idx]);
+      }
+      if (idx < src.vocab_log_probs.size()) {
+        r.vocab_log_probs.push_back(src.vocab_log_probs[idx]);
+      }
     }
 
     r.text = text;

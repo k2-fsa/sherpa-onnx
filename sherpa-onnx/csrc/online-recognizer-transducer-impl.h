@@ -76,6 +76,7 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   r.ys_probs = std::move(src.ys_probs);
   r.lm_probs = std::move(src.lm_probs);
   r.context_scores = std::move(src.context_scores);
+  r.vocab_log_probs = src.vocab_log_probs;
 
   r.segment = segment;
   r.start_time = frames_since_start * frame_shift_ms / 1000.;

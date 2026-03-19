@@ -53,6 +53,14 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
 
   r.words = std::move(src.words);
 
+  // Propagate token-level log probabilities (skipping the first 4 control
+  // tokens for non-NanO models, same as tokens/timestamps above)
+  if (!src.token_log_probs.empty()) {
+    for (int32_t i = start; i < static_cast<int32_t>(src.token_log_probs.size()); ++i) {
+      r.token_log_probs.push_back(src.token_log_probs[i]);
+    }
+  }
+
   if (!is_funasr_nano) {
     // parse lang, emotion and event from tokens.
     if (src.tokens.size() >= 3) {

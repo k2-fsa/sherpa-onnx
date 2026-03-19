@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -155,8 +156,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
   }
 
-  std::vector<int32_t> predicted_tokens;
-
   // Storage for accumulated attention weights
   std::vector<std::vector<float>> all_attention_weights;
   int32_t attention_n_heads = 0;
@@ -197,12 +196,46 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
+  std::vector<int32_t> predicted_tokens;
+  // Log probabilities.
+  std::vector<float> predicted_log_probs;
+  std::vector<std::vector<float>> predicted_vocab_log_probs;
+
+  // Reserve capacity to avoid reallocations
+  predicted_tokens.reserve(num_possible_tokens);
+  predicted_log_probs.reserve(num_possible_tokens);
+  predicted_vocab_log_probs.reserve(num_possible_tokens);
+
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
     if (max_token_id == eot) {
       break;
     }
 
+    // Compute log-softmax for the full vocabulary from raw logits
+    const float *raw_logits = std::get<0>(decoder_out).GetTensorData<float>();
+    // For initial iteration, logits have shape (1, n_tokens, vocab_size),
+    // take last token; for subsequent iterations, shape is (1, 1, vocab_size)
+    auto cur_logits_shape = std::get<0>(decoder_out).GetTensorTypeAndShapeInfo().GetShape();
+    const float *current_logits = raw_logits + (cur_logits_shape[1] - 1) * vocab_size;
+
+    std::vector<float> full_vocab_probs(vocab_size);
+    auto max_iter = std::max_element(current_logits, current_logits + vocab_size);
+    float max_logit = *max_iter;
+    double sum_exp = 0.0;
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      sum_exp += std::exp(current_logits[j] - max_logit);
+    }
+    float log_sum = max_logit + std::log(sum_exp);
+    for (int32_t j = 0; j < vocab_size; ++j) {
+      full_vocab_probs[j] = current_logits[j] - log_sum;
+    }
+
+    // Extract log probability for the selected token
+    float log_prob = full_vocab_probs[max_token_id];
+
     predicted_tokens.push_back(max_token_id);
+    predicted_log_probs.push_back(log_prob);
+    predicted_vocab_log_probs.push_back(std::move(full_vocab_probs));
     all_tokens.push_back(max_token_id);
 
     // Track if this is a timestamp token (for filtering in DTW)
@@ -277,6 +310,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   }
 
   ans[0].tokens = std::move(predicted_tokens);
+  ans[0].token_log_probs = std::move(predicted_log_probs);
+  ans[0].vocab_log_probs = std::move(predicted_vocab_log_probs);
 
   // Parse timestamp tokens into segments if using segment timestamp mode
   if (enable_segment_timestamps) {

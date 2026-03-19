@@ -81,7 +81,11 @@ struct OfflineWhisperSegment {
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
+  /// The log probabilities for each token
+  std::vector<float> token_log_probs;
   std::string lang;
+  /// Full vocabulary log probabilities at each token position
+  std::vector<std::vector<float>> vocab_log_probs;
 
   /// Cross-attention weights for token-level timestamps (if enabled)
   /// Shape: (n_heads, n_tokens, n_audio_frames), flattened to 1D

@@ -32,16 +32,18 @@ std::vector<OfflineCtcDecoderResult> OfflineCtcGreedySearchDecoder::Decode(
     int64_t prev_id = -1;
 
     for (int32_t t = 0; t != static_cast<int32_t>(p_log_probs_length[b]); ++t) {
-      auto y = static_cast<int64_t>(std::distance(
+      auto max_it = std::max_element(
           static_cast<const float *>(p_log_probs),
-          std::max_element(
-              static_cast<const float *>(p_log_probs),
-              static_cast<const float *>(p_log_probs) + vocab_size)));
+          static_cast<const float *>(p_log_probs) + vocab_size);
+      auto y = static_cast<int64_t>(std::distance(
+          static_cast<const float *>(p_log_probs), max_it));
+      float log_prob = *max_it;
       p_log_probs += vocab_size;
 
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
         r.timestamps.push_back(t);
+        r.token_log_probs.push_back(log_prob);
       }
       prev_id = y;
     }  // for (int32_t t = 0; ...)
