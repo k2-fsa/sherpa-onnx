@@ -3291,6 +3291,10 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuationOHOS(
   }
 
   auto c = GetOfflinePunctuationConfig(config);
+  if (c.model.ct_transformer.empty()) {
+    SHERPA_ONNX_LOGE("Please specify a punctuation model! Return a null pointer");
+    return nullptr;
+  }
 
   auto *punct = new SherpaOnnxOfflinePunctuation;
   punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(mgr, c);

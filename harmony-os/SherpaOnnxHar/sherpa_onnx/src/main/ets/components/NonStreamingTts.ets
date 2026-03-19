@@ -161,7 +161,7 @@ export class OfflineTts {
    return an object {samples: Float32Array, sampleRate: <a number>}
    */
   generate(input: TtsInput): TtsOutput {
-    return offlineTtsGenerate(this.handle, input) as TtsOutput;
+    return offlineTtsGenerate(this.handle, input);
   }
 
   generateAsync(input: TtsInput): Promise<TtsOutput> {
@@ -169,7 +169,7 @@ export class OfflineTts {
   }
 
   generateWithConfig(input: TtsInputWithConfig): TtsOutput {
-    return offlineTtsGenerateWithConfig(this.handle, input) as TtsOutput;
+    return offlineTtsGenerateWithConfig(this.handle, input);
   }
 
   generateAsyncWithConfig(input: TtsInputWithConfig): Promise<TtsOutput> {

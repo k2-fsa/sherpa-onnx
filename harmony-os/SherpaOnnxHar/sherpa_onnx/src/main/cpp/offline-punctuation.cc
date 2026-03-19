@@ -40,9 +40,9 @@ static Napi::External<SherpaOnnxOfflinePunctuation>
 CreateOfflinePunctuationWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 #if __OHOS__
-  if (info.Length() != 2) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
+    os << "Expect 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -60,7 +60,7 @@ CreateOfflinePunctuationWrapper(const Napi::CallbackInfo &info) {
 #endif
 
   if (!info[0].IsObject()) {
-    Napi::TypeError::New(env, "You should pass an object as the only argument.")
+    Napi::TypeError::New(env, "You should pass an object as the first argument.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -73,13 +73,28 @@ CreateOfflinePunctuationWrapper(const Napi::CallbackInfo &info) {
   c.model = GetOfflinePunctuationModelConfig(o);
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
+  const SherpaOnnxOfflinePunctuation *punct = nullptr;
 
-  const SherpaOnnxOfflinePunctuation *punct =
-      SherpaOnnxCreateOfflinePunctuationOHOS(&c, mgr.get());
+  if (info.Length() == 1 || info[1].IsUndefined() || info[1].IsNull()) {
+    punct = SherpaOnnxCreateOfflinePunctuation(&c);
+  } else {
+    if (!info[1].IsObject()) {
+      Napi::TypeError::New(
+          env, "You should pass a resource manager as the second argument.")
+          .ThrowAsJavaScriptException();
+
+      SHERPA_ONNX_DELETE_C_STR(c.model.ct_transformer);
+      SHERPA_ONNX_DELETE_C_STR(c.model.provider);
+      return {};
+    }
+
+    std::unique_ptr<NativeResourceManager,
+                    decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+        mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+            &OH_ResourceManager_ReleaseNativeResourceManager);
+
+    punct = SherpaOnnxCreateOfflinePunctuationOHOS(&c, mgr.get());
+  }
 #else
   const SherpaOnnxOfflinePunctuation *punct =
       SherpaOnnxCreateOfflinePunctuation(&c);
@@ -102,7 +117,7 @@ CreateOfflinePunctuationWrapper(const Napi::CallbackInfo &info) {
       });
 }
 
-static Napi::String OfflinePunctuationAddPunctWraper(
+static Napi::String OfflinePunctuationAddPunctWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -148,5 +163,5 @@ void InitOfflinePunctuation(Napi::Env env, Napi::Object exports) {
               Napi::Function::New(env, CreateOfflinePunctuationWrapper));
 
   exports.Set(Napi::String::New(env, "offlinePunctuationAddPunct"),
-              Napi::Function::New(env, OfflinePunctuationAddPunctWraper));
+              Napi::Function::New(env, OfflinePunctuationAddPunctWrapper));
 }

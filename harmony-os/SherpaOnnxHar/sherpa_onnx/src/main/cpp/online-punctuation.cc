@@ -105,7 +105,7 @@ CreateOnlinePunctuationWrapper(const Napi::CallbackInfo &info) {
       });
 }
 
-static Napi::String OnlinePunctuationAddPunctWraper(
+static Napi::String OnlinePunctuationAddPunctWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -151,5 +151,5 @@ void InitOnlinePunctuation(Napi::Env env, Napi::Object exports) {
               Napi::Function::New(env, CreateOnlinePunctuationWrapper));
 
   exports.Set(Napi::String::New(env, "onlinePunctuationAddPunct"),
-              Napi::Function::New(env, OnlinePunctuationAddPunctWraper));
+              Napi::Function::New(env, OnlinePunctuationAddPunctWrapper));
 }
