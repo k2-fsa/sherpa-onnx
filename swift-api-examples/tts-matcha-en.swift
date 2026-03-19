@@ -43,11 +43,13 @@ func run() {
 
   let text =
     "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
-  let sid = 0
-  let speed: Float = 1.0
+  var genConfig = SherpaOnnxGenerationConfigSwift()
+  genConfig.sid = 0
+  genConfig.speed = 1.0
+  genConfig.silenceScale = ttsConfig.silenceScale
 
-  let audio = tts.generateWithCallbackWithArg(
-    text: text, callback: callback, arg: arg, sid: sid, speed: speed)
+  let audio = tts.generateWithConfig(
+    text: text, config: genConfig, callback: callback, arg: arg)
   let filename = "test-matcha-en.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {
