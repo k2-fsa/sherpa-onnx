@@ -7,6 +7,10 @@ import 'package:ffi/ffi.dart';
 import './offline_speech_denoiser.dart';
 import './sherpa_onnx_bindings.dart';
 
+/// Streaming speech denoising.
+///
+/// Call [run] on consecutive chunks, then [flush] after the final chunk to
+/// drain any buffered state.
 class OnlineSpeechDenoiserConfig {
   const OnlineSpeechDenoiserConfig({
     this.model = const OfflineSpeechDenoiserModelConfig(),
@@ -34,11 +38,13 @@ class OnlineSpeechDenoiserConfig {
   final OfflineSpeechDenoiserModelConfig model;
 }
 
+/// Streaming speech denoiser.
 class OnlineSpeechDenoiser {
   OnlineSpeechDenoiser.fromPtr({required this.ptr, required this.config});
 
   OnlineSpeechDenoiser._({required this.ptr, required this.config});
 
+  /// Create a streaming denoiser from [config].
   factory OnlineSpeechDenoiser(OnlineSpeechDenoiserConfig config) {
     if (SherpaOnnxBindings.sherpaOnnxCreateOnlineSpeechDenoiser == null) {
       throw Exception('Please initialize sherpa-onnx first');
@@ -69,6 +75,7 @@ class OnlineSpeechDenoiser {
     return OnlineSpeechDenoiser._(ptr: ptr, config: config);
   }
 
+  /// Release the native denoiser.
   void free() {
     if (SherpaOnnxBindings.sherpaOnnxDestroyOnlineSpeechDenoiser == null) {
       throw Exception('Please initialize sherpa-onnx first');
@@ -82,6 +89,7 @@ class OnlineSpeechDenoiser {
     ptr = nullptr;
   }
 
+  /// Denoise one input chunk.
   DenoisedAudio run({required Float32List samples, required int sampleRate}) {
     if (SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserRun == null) {
       throw Exception('Please initialize sherpa-onnx first');
@@ -123,6 +131,7 @@ class OnlineSpeechDenoiser {
     return DenoisedAudio(samples: newSamples, sampleRate: sampleRateOut);
   }
 
+  /// Flush buffered output after the final chunk.
   DenoisedAudio flush() {
     if (SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserFlush == null) {
       throw Exception('Please initialize sherpa-onnx first');
@@ -152,6 +161,7 @@ class OnlineSpeechDenoiser {
     return DenoisedAudio(samples: newSamples, sampleRate: sampleRateOut);
   }
 
+  /// Reset the streaming state.
   void reset() {
     if (SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserReset == null) {
       throw Exception('Please initialize sherpa-onnx first');
@@ -164,6 +174,7 @@ class OnlineSpeechDenoiser {
     SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserReset?.call(ptr);
   }
 
+  /// Return the expected sample rate for this denoiser.
   int get sampleRate {
     if (SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserGetSampleRate ==
         null) {
@@ -180,6 +191,7 @@ class OnlineSpeechDenoiser {
         0;
   }
 
+  /// Return the preferred frame shift in samples.
   int get frameShiftInSamples {
     if (SherpaOnnxBindings.sherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples ==
         null) {
