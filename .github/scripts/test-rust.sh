@@ -10,6 +10,14 @@ rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15
 ./run-audio-tagging-ced.sh
 rm -rf sherpa-onnx-ced-mini-audio-tagging-2024-04-19
 
+./run-speaker-embedding-extractor.sh
+./run-speaker-embedding-manager.sh
+rm -f 3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+rm -rf sr-data
+
+./run-speaker-embedding-cosine-similarity.sh
+rm -f wespeaker_zh_cnceleb_resnet34.onnx fangjun-sr-1.wav fangjun-sr-2.wav leijun-sr-1.wav
+
 ./run-vits-en.sh
 rm -rf vits-piper-en_US-amy-low
 

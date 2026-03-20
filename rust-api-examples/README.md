@@ -62,6 +62,9 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 27 | [online_punctuation](#example-27-online-punctuation) | Add punctuation to text using online punctuation model |
 | 28 | [audio_tagging_zipformer](#example-28-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
 | 29 | [audio_tagging_ced](#example-29-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
+| 30 | [speaker_embedding_extractor](#example-30-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
+| 31 | [speaker_embedding_manager](#example-31-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
+| 32 | [speaker_embedding_cosine_similarity](#example-32-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
 
 ## Run it
 
@@ -246,4 +249,24 @@ to check the RPATH.
 
 ```bash
 ./run-audio-tagging-ced.sh
+```
+
+
+### Example 30: Speaker embedding extractor
+
+```bash
+./run-speaker-embedding-extractor.sh
+```
+
+### Example 31: Speaker embedding manager
+
+```bash
+./run-speaker-embedding-manager.sh
+```
+
+
+### Example 32: Speaker embedding cosine similarity
+
+```bash
+./run-speaker-embedding-cosine-similarity.sh
 ```

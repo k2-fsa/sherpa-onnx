@@ -386,7 +386,7 @@ impl Drop for OnlineRecognizer {
 }
 
 pub struct OnlineStream {
-    ptr: *const sys::OnlineStream,
+    pub(crate) ptr: *const sys::OnlineStream,
 }
 
 impl OnlineStream {
