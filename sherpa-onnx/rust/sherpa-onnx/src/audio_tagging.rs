@@ -1,8 +1,17 @@
+//! Offline audio tagging.
+//!
+//! This API classifies complete audio clips and returns the most likely events.
+//! See:
+//!
+//! - `rust-api-examples/examples/audio_tagging_zipformer.rs`
+//! - `rust-api-examples/examples/audio_tagging_ced.rs`
+
 use crate::utils::to_c_ptr;
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
 #[derive(Clone, Debug, Default)]
+/// Zipformer audio tagging model path.
 pub struct OfflineZipformerAudioTaggingModelConfig {
     pub model: Option<String>,
 }
@@ -16,6 +25,9 @@ impl OfflineZipformerAudioTaggingModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Model-level configuration for audio tagging.
+///
+/// Configure either `zipformer` or `ced` for a concrete model package.
 pub struct AudioTaggingModelConfig {
     pub zipformer: OfflineZipformerAudioTaggingModelConfig,
     pub ced: Option<String>,
@@ -51,6 +63,7 @@ impl AudioTaggingModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Top-level configuration for [`AudioTagging`].
 pub struct AudioTaggingConfig {
     pub model: AudioTaggingModelConfig,
     pub labels: Option<String>,
@@ -80,12 +93,14 @@ impl AudioTaggingConfig {
 }
 
 #[derive(Clone, Debug)]
+/// One predicted audio event.
 pub struct AudioEvent {
     pub name: String,
     pub index: i32,
     pub prob: f32,
 }
 
+/// Offline audio tagger.
 pub struct AudioTagging {
     ptr: *const sys::AudioTagging,
 }
@@ -93,6 +108,7 @@ pub struct AudioTagging {
 unsafe impl Send for AudioTagging {}
 
 impl AudioTagging {
+    /// Create a tagger from `config`.
     pub fn create(config: &AudioTaggingConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
@@ -104,11 +120,13 @@ impl AudioTagging {
         }
     }
 
+    /// Create a stream that accepts one complete clip.
     pub fn create_stream(&self) -> AudioTaggingOfflineStream {
         let ptr = unsafe { sys::SherpaOnnxAudioTaggingCreateOfflineStream(self.ptr) };
         AudioTaggingOfflineStream { ptr }
     }
 
+    /// Compute the top `top_k` events for the provided stream.
     pub fn compute(&self, stream: &AudioTaggingOfflineStream, top_k: i32) -> Vec<AudioEvent> {
         unsafe {
             let p = sys::SherpaOnnxAudioTaggingCompute(self.ptr, stream.ptr, top_k);
@@ -157,11 +175,13 @@ impl Drop for AudioTagging {
     }
 }
 
+/// Input stream for offline audio tagging.
 pub struct AudioTaggingOfflineStream {
     ptr: *const sys::OfflineStream,
 }
 
 impl AudioTaggingOfflineStream {
+    /// Append waveform samples to the clip.
     pub fn accept_waveform(&self, sample_rate: i32, samples: &[f32]) {
         unsafe {
             sys::SherpaOnnxAcceptWaveformOffline(

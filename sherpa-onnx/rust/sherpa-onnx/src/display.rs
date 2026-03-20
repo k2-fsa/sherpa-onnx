@@ -1,9 +1,8 @@
-// Display manager for streaming ASR, inspired by sherpa-display.h
-// Handles finalized sentences and current partial text.
+//! Small terminal display helper for streaming ASR demos.
 
 use std::time::{Duration, Instant};
 
-/// DisplayManager stores finalized sentences and current partial text
+/// Stores finalized sentences and the current partial hypothesis for terminal UIs.
 #[derive(Debug)]
 pub struct DisplayManager {
     sentences: Vec<String>,
@@ -12,7 +11,7 @@ pub struct DisplayManager {
 }
 
 impl DisplayManager {
-    /// Create a new DisplayManager
+    /// Create an empty display manager.
     pub fn new() -> Self {
         Self {
             sentences: Vec::new(),
@@ -21,12 +20,12 @@ impl DisplayManager {
         }
     }
 
-    /// Update the current partial text
+    /// Replace the current partial text shown in the display.
     pub fn update_text(&mut self, text: &str) {
         self.current_text = text.to_string();
     }
 
-    /// Finalize the current sentence and move it to `sentences`
+    /// Move the current partial text into the finalized sentence list.
     pub fn finalize_sentence(&mut self) {
         let trimmed = self
             .current_text
@@ -39,8 +38,9 @@ impl DisplayManager {
             .clear();
     }
 
-    /// Render the display to stdout
-    /// Clears the screen and prints finalized + current text
+    /// Render the current state to stdout.
+    ///
+    /// Rendering is throttled slightly to reduce terminal flicker.
     pub fn render(&mut self) {
         // Throttle rendering to reduce flicker (200ms)
         if self
@@ -74,14 +74,14 @@ impl DisplayManager {
         }
     }
 
-    /// Returns true if there are finalized sentences
+    /// Return `true` if at least one sentence has been finalized.
     pub fn has_sentences(&self) -> bool {
         !self
             .sentences
             .is_empty()
     }
 
-    /// Returns current partial text
+    /// Borrow the current partial text.
     pub fn current_text(&self) -> &str {
         &self.current_text
     }
