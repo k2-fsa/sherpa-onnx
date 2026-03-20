@@ -1,3 +1,11 @@
+//! Speaker embedding extraction and speaker search utilities.
+//!
+//! See:
+//!
+//! - `rust-api-examples/examples/speaker_embedding_extractor.rs`
+//! - `rust-api-examples/examples/speaker_embedding_manager.rs`
+//! - `rust-api-examples/examples/speaker_embedding_cosine_similarity.rs`
+
 use crate::{online_asr::OnlineStream, utils::to_c_ptr};
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
@@ -5,6 +13,7 @@ use std::ptr;
 use std::slice;
 
 #[derive(Clone, Debug)]
+/// Configuration for [`SpeakerEmbeddingExtractor`].
 pub struct SpeakerEmbeddingExtractorConfig {
     pub model: Option<String>,
     pub num_threads: i32,
@@ -35,11 +44,13 @@ impl SpeakerEmbeddingExtractorConfig {
 }
 
 #[derive(Clone, Debug)]
+/// One speaker search result returned by [`SpeakerEmbeddingManager::get_best_matches`].
 pub struct SpeakerEmbeddingMatch {
     pub score: f32,
     pub name: String,
 }
 
+/// Embedding extractor that consumes audio through an [`OnlineStream`].
 pub struct SpeakerEmbeddingExtractor {
     ptr: *const sys::SpeakerEmbeddingExtractor,
     dim: i32,
@@ -48,6 +59,7 @@ pub struct SpeakerEmbeddingExtractor {
 unsafe impl Send for SpeakerEmbeddingExtractor {}
 
 impl SpeakerEmbeddingExtractor {
+    /// Create an extractor from `config`.
     pub fn create(config: &SpeakerEmbeddingExtractorConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
@@ -60,10 +72,12 @@ impl SpeakerEmbeddingExtractor {
         }
     }
 
+    /// Return the embedding dimension.
     pub fn dim(&self) -> i32 {
         self.dim
     }
 
+    /// Create an audio stream that can be filled with waveform chunks.
     pub fn create_stream(&self) -> Option<OnlineStream> {
         let ptr = unsafe { sys::SherpaOnnxSpeakerEmbeddingExtractorCreateStream(self.ptr) };
         if ptr.is_null() {
@@ -73,10 +87,12 @@ impl SpeakerEmbeddingExtractor {
         }
     }
 
+    /// Return `true` if enough audio has been accumulated to compute an embedding.
     pub fn is_ready(&self, stream: &OnlineStream) -> bool {
         unsafe { sys::SherpaOnnxSpeakerEmbeddingExtractorIsReady(self.ptr, stream.ptr) == 1 }
     }
 
+    /// Compute the embedding for `stream`.
     pub fn compute(&self, stream: &OnlineStream) -> Option<Vec<f32>> {
         let p = unsafe { sys::SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(self.ptr, stream.ptr) };
         if p.is_null() {
@@ -99,6 +115,7 @@ impl Drop for SpeakerEmbeddingExtractor {
     }
 }
 
+/// In-memory index of named speaker embeddings.
 pub struct SpeakerEmbeddingManager {
     ptr: *const sys::SpeakerEmbeddingManager,
     dim: i32,
@@ -107,6 +124,7 @@ pub struct SpeakerEmbeddingManager {
 unsafe impl Send for SpeakerEmbeddingManager {}
 
 impl SpeakerEmbeddingManager {
+    /// Create a manager for embeddings with the given dimension.
     pub fn create(dim: i32) -> Option<Self> {
         let ptr = unsafe { sys::SherpaOnnxCreateSpeakerEmbeddingManager(dim) };
         if ptr.is_null() {
@@ -116,10 +134,12 @@ impl SpeakerEmbeddingManager {
         }
     }
 
+    /// Return the embedding dimension expected by the manager.
     pub fn dim(&self) -> i32 {
         self.dim
     }
 
+    /// Add one embedding for `name`.
     pub fn add(&self, name: &str, embedding: &[f32]) -> bool {
         if embedding.len() != self.dim as usize {
             return false;
@@ -133,6 +153,7 @@ impl SpeakerEmbeddingManager {
         unsafe { sys::SherpaOnnxSpeakerEmbeddingManagerAdd(self.ptr, c_name.as_ptr(), embedding.as_ptr()) == 1 }
     }
 
+    /// Add multiple embeddings for `name`.
     pub fn add_list(&self, name: &str, embeddings: &[Vec<f32>]) -> bool {
         if embeddings.is_empty() || embeddings.iter().any(|v| v.len() != self.dim as usize) {
             return false;
@@ -149,6 +170,7 @@ impl SpeakerEmbeddingManager {
         unsafe { sys::SherpaOnnxSpeakerEmbeddingManagerAddList(self.ptr, c_name.as_ptr(), ptrs.as_ptr()) == 1 }
     }
 
+    /// Add multiple embeddings laid out as a flattened slice.
     pub fn add_list_flattened(&self, name: &str, embeddings: &[f32]) -> bool {
         if embeddings.is_empty() || embeddings.len() % self.dim as usize != 0 {
             return false;
@@ -170,6 +192,7 @@ impl SpeakerEmbeddingManager {
         }
     }
 
+    /// Remove all embeddings stored under `name`.
     pub fn remove(&self, name: &str) -> bool {
         let c_name = match CString::new(name) {
             Ok(v) => v,
@@ -179,6 +202,7 @@ impl SpeakerEmbeddingManager {
         unsafe { sys::SherpaOnnxSpeakerEmbeddingManagerRemove(self.ptr, c_name.as_ptr()) == 1 }
     }
 
+    /// Search for the best matching speaker name above `threshold`.
     pub fn search(&self, embedding: &[f32], threshold: f32) -> Option<String> {
         if embedding.len() != self.dim as usize {
             return None;
@@ -200,6 +224,7 @@ impl SpeakerEmbeddingManager {
         }
     }
 
+    /// Return up to `n` best matches above `threshold`.
     pub fn get_best_matches(
         &self,
         embedding: &[f32],

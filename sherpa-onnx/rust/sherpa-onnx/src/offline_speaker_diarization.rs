@@ -1,9 +1,15 @@
+//! Offline speaker diarization.
+//!
+//! This combines segmentation, speaker embedding extraction, and clustering.
+//! See `rust-api-examples/examples/offline_speaker_diarization.rs`.
+
 use crate::{speaker_embedding::SpeakerEmbeddingExtractorConfig, utils::to_c_ptr};
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::slice;
 
 #[derive(Clone, Debug, Default)]
+/// Pyannote segmentation model path.
 pub struct OfflineSpeakerSegmentationPyannoteModelConfig {
     pub model: Option<String>,
 }
@@ -20,6 +26,7 @@ impl OfflineSpeakerSegmentationPyannoteModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Segmentation model configuration for diarization.
 pub struct OfflineSpeakerSegmentationModelConfig {
     pub pyannote: OfflineSpeakerSegmentationPyannoteModelConfig,
     pub num_threads: i32,
@@ -52,6 +59,7 @@ impl OfflineSpeakerSegmentationModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Fast clustering options used after segmentation and embedding extraction.
 pub struct FastClusteringConfig {
     pub num_clusters: i32,
     pub threshold: f32,
@@ -76,6 +84,7 @@ impl FastClusteringConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Top-level configuration for [`OfflineSpeakerDiarization`].
 pub struct OfflineSpeakerDiarizationConfig {
     pub segmentation: OfflineSpeakerSegmentationModelConfig,
     pub embedding: SpeakerEmbeddingExtractorConfig,
@@ -115,12 +124,14 @@ impl OfflineSpeakerDiarizationConfig {
 }
 
 #[derive(Clone, Debug)]
+/// One diarization segment labeled with a speaker index.
 pub struct OfflineSpeakerDiarizationSegment {
     pub start: f32,
     pub end: f32,
     pub speaker: i32,
 }
 
+/// Offline speaker diarizer.
 pub struct OfflineSpeakerDiarization {
     ptr: *const sys::OfflineSpeakerDiarization,
 }
@@ -128,6 +139,7 @@ pub struct OfflineSpeakerDiarization {
 unsafe impl Send for OfflineSpeakerDiarization {}
 
 impl OfflineSpeakerDiarization {
+    /// Create a diarizer from `config`.
     pub fn create(config: &OfflineSpeakerDiarizationConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
@@ -139,16 +151,19 @@ impl OfflineSpeakerDiarization {
         }
     }
 
+    /// Return the sample rate expected by the segmentation model.
     pub fn sample_rate(&self) -> i32 {
         unsafe { sys::SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(self.ptr) }
     }
 
+    /// Replace the current configuration.
     pub fn set_config(&self, config: &OfflineSpeakerDiarizationConfig) {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
         unsafe { sys::SherpaOnnxOfflineSpeakerDiarizationSetConfig(self.ptr, &sys_config) }
     }
 
+    /// Process a complete waveform and return a diarization result.
     pub fn process(&self, samples: &[f32]) -> Option<OfflineSpeakerDiarizationResult> {
         let ptr = unsafe {
             sys::SherpaOnnxOfflineSpeakerDiarizationProcess(
@@ -178,19 +193,23 @@ impl Drop for OfflineSpeakerDiarization {
     }
 }
 
+/// Result object returned by [`OfflineSpeakerDiarization::process`].
 pub struct OfflineSpeakerDiarizationResult {
     ptr: *const sys::OfflineSpeakerDiarizationResult,
 }
 
 impl OfflineSpeakerDiarizationResult {
+    /// Return the number of speakers estimated for the recording.
     pub fn num_speakers(&self) -> i32 {
         unsafe { sys::SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(self.ptr) }
     }
 
+    /// Return the number of diarization segments.
     pub fn num_segments(&self) -> i32 {
         unsafe { sys::SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(self.ptr) }
     }
 
+    /// Return all segments sorted by start time.
     pub fn sort_by_start_time(&self) -> Vec<OfflineSpeakerDiarizationSegment> {
         let n = self.num_segments();
         if n <= 0 {

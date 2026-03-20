@@ -1,3 +1,11 @@
+//! Offline speech denoising.
+//!
+//! Supported model families mirror the native API and currently include GTCRN
+//! and DPDFNet. See the repository examples:
+//!
+//! - `rust-api-examples/examples/offline_speech_enhancement_gtcrn.rs`
+//! - `rust-api-examples/examples/offline_speech_enhancement_dpdfnet.rs`
+
 use crate::utils::to_c_ptr;
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
@@ -5,6 +13,7 @@ use std::ptr;
 use std::slice;
 
 #[derive(Clone, Debug, Default)]
+/// GTCRN model path for offline denoising.
 pub struct OfflineSpeechDenoiserGtcrnModelConfig {
     pub model: Option<String>,
 }
@@ -21,6 +30,7 @@ impl OfflineSpeechDenoiserGtcrnModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// DPDFNet model path for offline denoising.
 pub struct OfflineSpeechDenoiserDpdfNetModelConfig {
     pub model: Option<String>,
 }
@@ -37,6 +47,9 @@ impl OfflineSpeechDenoiserDpdfNetModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Aggregate model configuration for [`OfflineSpeechDenoiser`].
+///
+/// Configure exactly one model family in normal use.
 pub struct OfflineSpeechDenoiserModelConfig {
     pub gtcrn: OfflineSpeechDenoiserGtcrnModelConfig,
     pub dpdfnet: OfflineSpeechDenoiserDpdfNetModelConfig,
@@ -73,6 +86,7 @@ impl OfflineSpeechDenoiserModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Denoised samples returned from an offline or online denoiser.
 pub struct DenoisedAudio {
     pub samples: Vec<f32>,
     pub sample_rate: i32,
@@ -102,6 +116,7 @@ impl DenoisedAudio {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Top-level configuration for [`OfflineSpeechDenoiser`].
 pub struct OfflineSpeechDenoiserConfig {
     pub model: OfflineSpeechDenoiserModelConfig,
 }
@@ -114,11 +129,13 @@ impl OfflineSpeechDenoiserConfig {
     }
 }
 
+/// Offline speech denoiser.
 pub struct OfflineSpeechDenoiser {
     ptr: *const sys::OfflineSpeechDenoiser,
 }
 
 impl OfflineSpeechDenoiser {
+    /// Create a denoiser from `config`.
     pub fn create(config: &OfflineSpeechDenoiserConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
@@ -130,6 +147,7 @@ impl OfflineSpeechDenoiser {
         }
     }
 
+    /// Denoise one chunk or a complete waveform.
     pub fn run(&self, samples: &[f32], sample_rate: i32) -> DenoisedAudio {
         let samples_ptr = if samples.is_empty() {
             ptr::null()
@@ -147,6 +165,7 @@ impl OfflineSpeechDenoiser {
         DenoisedAudio::from_ptr(ptr)
     }
 
+    /// Return the model sample rate expected by this denoiser.
     pub fn sample_rate(&self) -> i32 {
         unsafe { sys::SherpaOnnxOfflineSpeechDenoiserGetSampleRate(self.ptr) }
     }
