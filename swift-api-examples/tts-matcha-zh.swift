@@ -28,7 +28,7 @@ func run() {
   // https://medium.com/codex/swift-c-callback-interoperability-6d57da6c8ee6
   let arg = Unmanaged<MyClass>.passUnretained(myClass).toOpaque()
 
-  let callback: TtsCallbackWithArg = { samples, n, arg in
+  let callback: TtsProgressCallbackWithArg = { samples, n, progress, arg in
     let o = Unmanaged<MyClass>.fromOpaque(arg!).takeUnretainedValue()
     var savedSamples: [Float] = []
     for index in 0..<n {
@@ -47,7 +47,7 @@ func run() {
   var genConfig = SherpaOnnxGenerationConfigSwift()
   genConfig.sid = 0
   genConfig.speed = 1.0
-  genConfig.silenceScale = ttsConfig.silenceScale
+  genConfig.silenceScale = 0.2
 
   let audio = tts.generateWithConfig(
     text: text, config: genConfig, callback: callback, arg: arg)
