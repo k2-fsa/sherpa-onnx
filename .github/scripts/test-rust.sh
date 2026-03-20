@@ -4,6 +4,12 @@ set -ex
 
 cd rust-api-examples
 
+./run-audio-tagging-zipformer.sh
+rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15
+
+./run-audio-tagging-ced.sh
+rm -rf sherpa-onnx-ced-mini-audio-tagging-2024-04-19
+
 ./run-vits-tts.sh
 rm -rf vits-piper-en_US-amy-low
 

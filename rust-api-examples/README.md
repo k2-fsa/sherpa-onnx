@@ -60,6 +60,8 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 25 | [streaming_speech_enhancement_gtcrn](#example-25-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
 | 26 | [streaming_speech_enhancement_dpdfnet](#example-26-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
 | 27 | [online_punctuation](#example-27-online-punctuation) | Add punctuation to text using online punctuation model |
+| 28 | [audio_tagging_zipformer](#example-28-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
+| 29 | [audio_tagging_ced](#example-29-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
 
 ## Run it
 
@@ -429,4 +431,24 @@ rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 cargo run --example online_punctuation -- \
     --cnn-bilstm ./sherpa-onnx-online-punct-en-2024-08-06/model.onnx \
     --bpe-vocab ./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab
+```
+
+### Example 28: Audio tagging with a Zipformer model
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
+tar xvf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
+rm sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
+
+cargo run --example audio_tagging_zipformer
+```
+
+### Example 29: Audio tagging with a CED model
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
+tar xvf sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
+rm sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
+
+cargo run --example audio_tagging_ced
 ```

@@ -1,21 +1,23 @@
+mod audio_tagging;
 mod display;
 mod offline_asr;
 mod offline_speech_denoiser;
 mod online_asr;
-mod online_speech_denoiser;
 mod online_punctuation;
+mod online_speech_denoiser;
 mod speech_denoiser;
 mod tts;
 mod utils;
 mod vad;
 mod wave;
 
+pub use audio_tagging::*;
 pub use display::*;
 pub use offline_asr::*;
 pub use offline_speech_denoiser::*;
 pub use online_asr::*;
-pub use online_speech_denoiser::*;
 pub use online_punctuation::*;
+pub use online_speech_denoiser::*;
 pub use speech_denoiser::*;
 pub use tts::*;
 pub use utils::*;
