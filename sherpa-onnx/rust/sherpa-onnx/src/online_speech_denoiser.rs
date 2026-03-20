@@ -18,7 +18,9 @@ pub struct OnlineSpeechDenoiserConfig {
 impl OnlineSpeechDenoiserConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineSpeechDenoiserConfig {
         sys::OnlineSpeechDenoiserConfig {
-            model: self.model.to_sys(cstrings),
+            model: self
+                .model
+                .to_sys(cstrings),
         }
     }
 }

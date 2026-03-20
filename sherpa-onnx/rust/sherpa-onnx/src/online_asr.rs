@@ -483,7 +483,9 @@ impl OnlineStream {
             if p.is_null() {
                 String::new()
             } else {
-                CStr::from_ptr(p).to_string_lossy().into_owned()
+                CStr::from_ptr(p)
+                    .to_string_lossy()
+                    .into_owned()
             }
         }
     }

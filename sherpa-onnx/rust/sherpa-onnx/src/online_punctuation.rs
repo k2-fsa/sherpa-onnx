@@ -68,7 +68,9 @@ pub struct OnlinePunctuationConfig {
 impl OnlinePunctuationConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlinePunctuationConfig {
         sys::OnlinePunctuationConfig {
-            model: self.model.to_sys(cstrings),
+            model: self
+                .model
+                .to_sys(cstrings),
         }
     }
 }
@@ -109,7 +111,9 @@ impl OnlinePunctuation {
                 return None;
             }
 
-            let ans = CStr::from_ptr(p).to_string_lossy().into_owned();
+            let ans = CStr::from_ptr(p)
+                .to_string_lossy()
+                .into_owned();
             sys::SherpaOnnxOnlinePunctuationFreeText(p);
             Some(ans)
         }
@@ -119,7 +123,10 @@ impl OnlinePunctuation {
 impl Drop for OnlinePunctuation {
     fn drop(&mut self) {
         unsafe {
-            if !self.ptr.is_null() {
+            if !self
+                .ptr
+                .is_null()
+            {
                 sys::SherpaOnnxDestroyOnlinePunctuation(self.ptr);
             }
         }
