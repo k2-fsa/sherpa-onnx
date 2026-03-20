@@ -179,3 +179,4 @@ sherpa-onnx-moonshine-*-quantized-2026-02-27
 sherpa-onnx-supertonic-tts-int8-2026-03-06
 token_scores.json
 sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+doxygen-docs
