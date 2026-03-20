@@ -1,6 +1,7 @@
 mod audio_tagging;
 mod display;
 mod offline_asr;
+mod offline_speaker_diarization;
 mod offline_speech_denoiser;
 mod online_asr;
 mod online_punctuation;
@@ -15,6 +16,7 @@ mod wave;
 pub use audio_tagging::*;
 pub use display::*;
 pub use offline_asr::*;
+pub use offline_speaker_diarization::*;
 pub use offline_speech_denoiser::*;
 pub use online_asr::*;
 pub use online_punctuation::*;

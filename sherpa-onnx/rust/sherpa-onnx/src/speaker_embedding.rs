@@ -24,7 +24,7 @@ impl Default for SpeakerEmbeddingExtractorConfig {
 }
 
 impl SpeakerEmbeddingExtractorConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::SpeakerEmbeddingExtractorConfig {
+    pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::SpeakerEmbeddingExtractorConfig {
         sys::SpeakerEmbeddingExtractorConfig {
             model: to_c_ptr(&self.model, cstrings),
             num_threads: self.num_threads,

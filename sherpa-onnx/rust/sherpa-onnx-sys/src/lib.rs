@@ -13,6 +13,7 @@ extern "C" {
 
 pub mod audio_tagging;
 pub mod offline_asr;
+pub mod offline_speaker_diarization;
 pub mod online_asr;
 pub mod online_punctuation;
 pub mod speaker_embedding;
@@ -23,6 +24,7 @@ pub mod wave;
 
 pub use audio_tagging::*;
 pub use offline_asr::*;
+pub use offline_speaker_diarization::*;
 pub use online_asr::*;
 pub use online_punctuation::*;
 pub use speaker_embedding::*;

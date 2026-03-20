@@ -18,6 +18,10 @@ rm -rf sr-data
 ./run-speaker-embedding-cosine-similarity.sh
 rm -f wespeaker_zh_cnceleb_resnet34.onnx fangjun-sr-1.wav fangjun-sr-2.wav leijun-sr-1.wav
 
+./run-offline-speaker-diarization.sh
+rm -rf sherpa-onnx-pyannote-segmentation-3-0
+rm -f 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx 0-four-speakers-zh.wav
+
 ./run-vits-en.sh
 rm -rf vits-piper-en_US-amy-low
 
