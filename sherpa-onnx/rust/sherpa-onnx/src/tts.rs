@@ -10,6 +10,49 @@
 //! - `rust-api-examples/examples/matcha_tts_zh.rs`
 //! - `rust-api-examples/examples/zipvoice_tts.rs`
 //! - `rust-api-examples/examples/supertonic_tts.rs`
+//!
+//! # Example
+//!
+//! ```no_run
+//! use sherpa_onnx::{
+//!     GenerationConfig, OfflineTts, OfflineTtsConfig, OfflineTtsModelConfig,
+//!     OfflineTtsPocketModelConfig, Wave,
+//! };
+//!
+//! let config = OfflineTtsConfig {
+//!     model: OfflineTtsModelConfig {
+//!         pocket: OfflineTtsPocketModelConfig {
+//!             lm_flow: Some("./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx".into()),
+//!             lm_main: Some("./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx".into()),
+//!             encoder: Some("./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx".into()),
+//!             decoder: Some("./sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx".into()),
+//!             text_conditioner: Some(
+//!                 "./sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx".into(),
+//!             ),
+//!             vocab_json: Some("./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json".into()),
+//!             token_scores_json: Some(
+//!                 "./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json".into(),
+//!             ),
+//!             ..Default::default()
+//!         },
+//!         ..Default::default()
+//!     },
+//!     ..Default::default()
+//! };
+//!
+//! let tts = OfflineTts::create(&config).expect("create tts");
+//! let reference = Wave::read("./sherpa-onnx-pocket-tts-int8-2026-01-26/test_wavs/bria.wav")
+//!     .expect("read reference");
+//! let generation_config = GenerationConfig {
+//!     reference_audio: Some(reference.samples().to_vec()),
+//!     reference_sample_rate: reference.sample_rate(),
+//!     ..Default::default()
+//! };
+//! let audio = tts
+//!     .generate_with_config("Hello from sherpa-onnx", &generation_config, None)
+//!     .expect("generate");
+//! println!("{}", audio.sample_rate());
+//! ```
 
 use crate::utils::to_c_ptr;
 use sherpa_onnx_sys as sys;
@@ -312,16 +355,30 @@ pub struct OfflineTtsModelConfig {
 impl OfflineTtsModelConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineTtsModelConfig {
         sys::OfflineTtsModelConfig {
-            vits: self.vits.to_sys(cstrings),
+            vits: self
+                .vits
+                .to_sys(cstrings),
             num_threads: self.num_threads,
             debug: self.debug as i32,
             provider: to_c_ptr(&self.provider, cstrings),
-            matcha: self.matcha.to_sys(cstrings),
-            kokoro: self.kokoro.to_sys(cstrings),
-            kitten: self.kitten.to_sys(cstrings),
-            zipvoice: self.zipvoice.to_sys(cstrings),
-            pocket: self.pocket.to_sys(cstrings),
-            supertonic: self.supertonic.to_sys(cstrings),
+            matcha: self
+                .matcha
+                .to_sys(cstrings),
+            kokoro: self
+                .kokoro
+                .to_sys(cstrings),
+            kitten: self
+                .kitten
+                .to_sys(cstrings),
+            zipvoice: self
+                .zipvoice
+                .to_sys(cstrings),
+            pocket: self
+                .pocket
+                .to_sys(cstrings),
+            supertonic: self
+                .supertonic
+                .to_sys(cstrings),
         }
     }
 }
@@ -339,7 +396,9 @@ pub struct OfflineTtsConfig {
 impl OfflineTtsConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineTtsConfig {
         sys::OfflineTtsConfig {
-            model: self.model.to_sys(cstrings),
+            model: self
+                .model
+                .to_sys(cstrings),
             rule_fsts: to_c_ptr(&self.rule_fsts, cstrings),
             max_num_sentences: self.max_num_sentences,
             rule_fars: to_c_ptr(&self.rule_fars, cstrings),
@@ -390,7 +449,10 @@ impl GeneratedAudio {
     pub fn samples(&self) -> &[f32] {
         unsafe {
             let p = &*self.ptr;
-            if p.samples.is_null() || p.n <= 0 {
+            if p.samples
+                .is_null()
+                || p.n <= 0
+            {
                 &[]
             } else {
                 slice::from_raw_parts(p.samples, p.n as usize)
@@ -412,7 +474,10 @@ impl GeneratedAudio {
 impl Drop for GeneratedAudio {
     fn drop(&mut self) {
         unsafe {
-            if !self.ptr.is_null() {
+            if !self
+                .ptr
+                .is_null()
+            {
                 sys::SherpaOnnxDestroyOfflineTtsGeneratedAudio(self.ptr);
             }
         }
@@ -524,14 +589,16 @@ impl OfflineTts {
             extra: c_extra.as_ptr(),
         };
 
-        let (c_callback, c_arg): (sys::SherpaOnnxGeneratedAudioProgressCallbackWithArg, *mut c_void) =
-            if let Some(cb) = callback {
-                let boxed: Box<BoxedProgressCallback> = Box::new(Box::new(cb));
-                let raw = Box::into_raw(boxed);
-                (Some(progress_callback_trampoline), raw as *mut c_void)
-            } else {
-                (None, ptr::null_mut())
-            };
+        let (c_callback, c_arg): (
+            sys::SherpaOnnxGeneratedAudioProgressCallbackWithArg,
+            *mut c_void,
+        ) = if let Some(cb) = callback {
+            let boxed: Box<BoxedProgressCallback> = Box::new(Box::new(cb));
+            let raw = Box::into_raw(boxed);
+            (Some(progress_callback_trampoline), raw as *mut c_void)
+        } else {
+            (None, ptr::null_mut())
+        };
 
         let audio_ptr = unsafe {
             sys::SherpaOnnxOfflineTtsGenerateWithConfig(

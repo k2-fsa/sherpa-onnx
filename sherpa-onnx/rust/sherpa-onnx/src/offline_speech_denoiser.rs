@@ -76,11 +76,15 @@ impl OfflineSpeechDenoiserModelConfig {
         cstrings: &mut Vec<CString>,
     ) -> sys::OfflineSpeechDenoiserModelConfig {
         sys::OfflineSpeechDenoiserModelConfig {
-            gtcrn: self.gtcrn.to_sys(cstrings),
+            gtcrn: self
+                .gtcrn
+                .to_sys(cstrings),
             num_threads: self.num_threads,
             debug: self.debug as i32,
             provider: to_c_ptr(&self.provider, cstrings),
-            dpdfnet: self.dpdfnet.to_sys(cstrings),
+            dpdfnet: self
+                .dpdfnet
+                .to_sys(cstrings),
         }
     }
 }
@@ -99,8 +103,14 @@ impl DenoisedAudio {
         }
 
         unsafe {
-            let n = (*ptr).n.max(0) as usize;
-            let samples = if (*ptr).samples.is_null() || n == 0 {
+            let n = (*ptr)
+                .n
+                .max(0) as usize;
+            let samples = if (*ptr)
+                .samples
+                .is_null()
+                || n == 0
+            {
                 vec![]
             } else {
                 slice::from_raw_parts((*ptr).samples, n).to_vec()
@@ -124,7 +134,9 @@ pub struct OfflineSpeechDenoiserConfig {
 impl OfflineSpeechDenoiserConfig {
     fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineSpeechDenoiserConfig {
         sys::OfflineSpeechDenoiserConfig {
-            model: self.model.to_sys(cstrings),
+            model: self
+                .model
+                .to_sys(cstrings),
         }
     }
 }
