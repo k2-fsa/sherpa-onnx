@@ -1,10 +1,10 @@
 use crate::online_asr::{OnlineModelConfig, OnlineStream};
 use crate::utils::to_c_ptr;
 use sherpa_onnx_sys as sys;
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::slice;
 
-fn c_ptr_to_string(ptr: *const i8) -> String {
+fn c_ptr_to_string(ptr: *const c_char) -> String {
     if ptr.is_null() {
         String::new()
     } else {
