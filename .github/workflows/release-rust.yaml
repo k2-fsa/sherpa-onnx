@@ -3,9 +3,7 @@ name: Publish Rust Crates
 on:
   push:
     branches:
-      - rust-api-2
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - release-rust
 
   workflow_dispatch:
 
@@ -18,6 +16,12 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
 
       - name: Update
         shell: bash

@@ -168,7 +168,7 @@ impl Default for OnlineModelConfig {
 }
 
 impl OnlineModelConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineModelConfig {
+    pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineModelConfig {
         sys::OnlineModelConfig {
             transducer: self
                 .transducer
@@ -468,6 +468,29 @@ impl OnlineStream {
     /// Mark the end of input so the recognizer can flush trailing context.
     pub fn input_finished(&self) {
         unsafe { sys::SherpaOnnxOnlineStreamInputFinished(self.ptr) }
+    }
+
+    pub fn set_option(&self, key: &str, value: &str) {
+        let key = CString::new(key).unwrap();
+        let value = CString::new(value).unwrap();
+        unsafe { sys::SherpaOnnxOnlineStreamSetOption(self.ptr, key.as_ptr(), value.as_ptr()) }
+    }
+
+    pub fn get_option(&self, key: &str) -> String {
+        let key = CString::new(key).unwrap();
+        unsafe {
+            let p = sys::SherpaOnnxOnlineStreamGetOption(self.ptr, key.as_ptr());
+            if p.is_null() {
+                String::new()
+            } else {
+                CStr::from_ptr(p).to_string_lossy().into_owned()
+            }
+        }
+    }
+
+    pub fn has_option(&self, key: &str) -> bool {
+        let key = CString::new(key).unwrap();
+        unsafe { sys::SherpaOnnxOnlineStreamHasOption(self.ptr, key.as_ptr()) != 0 }
     }
 }
 

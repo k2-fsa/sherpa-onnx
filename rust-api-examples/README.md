@@ -17,15 +17,15 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 # You can choose any directory you like
 cd $HOME/Downloads
 
-# We use version v1.12.25 below as an example.
+# We use version v1.12.30 below as an example.
 # Please always use the latest version from
 # https://github.com/k2-fsa/sherpa-onnx/releases
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.25/sherpa-onnx-v1.12.25-osx-universal2-shared.tar.bz2
-tar xvf sherpa-onnx-v1.12.25-osx-universal2-shared.tar.bz2
-rm sherpa-onnx-v1.12.25-osx-universal2-shared.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.30/sherpa-onnx-v1.12.30-osx-universal2-shared.tar.bz2
+tar xvf sherpa-onnx-v1.12.30-osx-universal2-shared.tar.bz2
+rm sherpa-onnx-v1.12.30-osx-universal2-shared.tar.bz2
 
-export SHERPA_ONNX_LIB_DIR=$HOME/Downloads/sherpa-onnx-v1.12.25-osx-universal2-shared/lib
+export SHERPA_ONNX_LIB_DIR=$HOME/Downloads/sherpa-onnx-v1.12.30-osx-universal2-shared/lib
 export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 ```
 
@@ -60,12 +60,15 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 25 | [streaming_speech_enhancement_gtcrn](#example-25-streaming-speech-enhancement-with-gtcrn) | Streaming speech enhancement with GTCRN |
 | 26 | [streaming_speech_enhancement_dpdfnet](#example-26-streaming-speech-enhancement-with-dpdfnet) | Streaming speech enhancement with DPDFNet |
 | 27 | [online_punctuation](#example-27-online-punctuation) | Add punctuation to text using online punctuation model |
-| 28 | [audio_tagging_zipformer](#example-28-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
-| 29 | [audio_tagging_ced](#example-29-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
-| 30 | [speaker_embedding_extractor](#example-30-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
-| 31 | [speaker_embedding_manager](#example-31-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
-| 32 | [speaker_embedding_cosine_similarity](#example-32-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
-| 33 | [offline_speaker_diarization](#example-33-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
+| 28 | [keyword_spotter](#example-28-keyword-spotter) | Detect keywords from audio using a Zipformer KWS model |
+| 29 | [spoken_language_identification](#example-29-spoken-language-identification) | Detect the spoken language in a wave file using Whisper |
+| 30 | [offline_punctuation](#example-30-offline-punctuation) | Add punctuation to text using an offline punctuation model |
+| 31 | [audio_tagging_zipformer](#example-31-audio-tagging-with-a-zipformer-model) | Audio tagging with a Zipformer model |
+| 32 | [audio_tagging_ced](#example-32-audio-tagging-with-a-ced-model) | Audio tagging with a CED model |
+| 33 | [speaker_embedding_extractor](#example-33-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
+| 34 | [speaker_embedding_manager](#example-34-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
+| 35 | [speaker_embedding_cosine_similarity](#example-35-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
+| 36 | [offline_speaker_diarization](#example-36-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
 
 ## Run it
 
@@ -240,40 +243,58 @@ to check the RPATH.
 ./run-online-punctuation.sh
 ```
 
-### Example 28: Audio tagging with a Zipformer model
+### Example 28: Keyword spotter
+
+```bash
+./run-keyword-spotter.sh
+```
+
+### Example 29: Spoken language identification
+
+```bash
+./run-spoken-language-identification.sh
+```
+
+### Example 30: Offline punctuation
+
+```bash
+./run-offline-punctuation.sh
+```
+
+### Example 31: Audio tagging with a Zipformer model
 
 ```bash
 ./run-audio-tagging-zipformer.sh
 ```
 
-### Example 29: Audio tagging with a CED model
+### Example 32: Audio tagging with a CED model
 
 ```bash
 ./run-audio-tagging-ced.sh
 ```
 
 
-### Example 30: Speaker embedding extractor
+### Example 33: Speaker embedding extractor
 
 ```bash
 ./run-speaker-embedding-extractor.sh
 ```
 
-### Example 31: Speaker embedding manager
+### Example 34: Speaker embedding manager
 
 ```bash
 ./run-speaker-embedding-manager.sh
 ```
 
 
-### Example 32: Speaker embedding cosine similarity
+### Example 35: Speaker embedding cosine similarity
 
 ```bash
 ./run-speaker-embedding-cosine-similarity.sh
 ```
 
 
-### Example 33: Offline speaker diarization
+### Example 36: Offline speaker diarization
 
 ```bash
 ./run-offline-speaker-diarization.sh

@@ -55,6 +55,15 @@ rm -f vocos_24khz.onnx
 ./run-online-punctuation.sh
 rm -rf sherpa-onnx-online-punct-*
 
+./run-keyword-spotter.sh
+rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
+
+./run-spoken-language-identification.sh
+rm -rf sherpa-onnx-whisper-tiny spoken-language-identification-test-wavs
+
+./run-offline-punctuation.sh
+rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
+
 ./run-version.sh
 
 ./run-moonshine-v2.sh
