@@ -1,3 +1,23 @@
+## 1.12.31
+
+* Fix building har for OHOS (#3361)
+* Refactor MatchaTTS to use the new Generate API (#3362)
+* Refactor Kokoro TTS to use the new Generate API (#3363)
+* Refactor KittenTTS to use the new Generate API (#3364)
+* Refactor VITS to use the new Generate API (#3365)
+* Add Rust API examples for TTS (#3366)
+* Fix Swift tests (#3367)
+* Add Rust API for audio tagging (#3368)
+* Add Rust API for speaker embedding extractor and manager (#3369)
+* Add Rust API for speaker diarization (#3370)
+* Refactor Rust API for speech denoiser (#3371)
+* Add Rust API for KWS, offline punctuation and spoken language identification (#3372)
+* Add doc for c api and cxx api (#3374)
+* Add link to C API doc (#3375)
+* Add doc for Rust API (#3376)
+* Add doc for Dart API (#3377)
+* Add more doc for Rust API (#3378)
+
 ## 1.12.30
 
 * Fix typos in the project (#3293)
