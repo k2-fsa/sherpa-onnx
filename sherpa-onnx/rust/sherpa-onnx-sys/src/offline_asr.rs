@@ -221,6 +221,22 @@ extern "C" {
         n: i32,
     );
 
+    pub fn SherpaOnnxOfflineStreamSetOption(
+        stream: *const OfflineStream,
+        key: *const c_char,
+        value: *const c_char,
+    );
+
+    pub fn SherpaOnnxOfflineStreamGetOption(
+        stream: *const OfflineStream,
+        key: *const c_char,
+    ) -> *const c_char;
+
+    pub fn SherpaOnnxOfflineStreamHasOption(
+        stream: *const OfflineStream,
+        key: *const c_char,
+    ) -> i32;
+
     pub fn SherpaOnnxDecodeOfflineStream(
         recognizer: *const OfflineRecognizer,
         stream: *const OfflineStream,
