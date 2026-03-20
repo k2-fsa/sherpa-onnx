@@ -11,18 +11,20 @@ extern "C" {
     pub fn SherpaOnnxFileExists(filename: *const c_char) -> i32;
 }
 
+pub mod audio_tagging;
 pub mod offline_asr;
 pub mod online_asr;
-pub mod speech_denoiser;
 pub mod online_punctuation;
+pub mod speech_denoiser;
 pub mod tts;
 pub mod vad;
 pub mod wave;
 
+pub use audio_tagging::*;
 pub use offline_asr::*;
 pub use online_asr::*;
-pub use speech_denoiser::*;
 pub use online_punctuation::*;
+pub use speech_denoiser::*;
 pub use tts::*;
 pub use vad::*;
 pub use wave::*;
