@@ -5,6 +5,11 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import './sherpa_onnx_bindings.dart';
 
+/// Offline speech denoising.
+///
+/// Supported model families include GTCRN and DPDFNet. See the examples under
+/// `dart-api-examples/speech-enhancement-gtcrn/` and
+/// `dart-api-examples/speech-enhancement-dpdfnet/`.
 class OfflineSpeechDenoiserGtcrnModelConfig {
   const OfflineSpeechDenoiserGtcrnModelConfig({
     this.model = '',
@@ -29,6 +34,7 @@ class OfflineSpeechDenoiserGtcrnModelConfig {
   final String model;
 }
 
+/// DPDFNet model path for offline speech denoising.
 class OfflineSpeechDenoiserDpdfNetModelConfig {
   const OfflineSpeechDenoiserDpdfNetModelConfig({
     this.model = '',
@@ -53,6 +59,9 @@ class OfflineSpeechDenoiserDpdfNetModelConfig {
   final String model;
 }
 
+/// Aggregate model configuration for [OfflineSpeechDenoiser].
+///
+/// Configure either [gtcrn] or [dpdfnet] for typical use.
 class OfflineSpeechDenoiserModelConfig {
   const OfflineSpeechDenoiserModelConfig({
     this.gtcrn = const OfflineSpeechDenoiserGtcrnModelConfig(),
@@ -98,6 +107,7 @@ class OfflineSpeechDenoiserModelConfig {
   final String provider;
 }
 
+/// Top-level configuration for [OfflineSpeechDenoiser].
 class OfflineSpeechDenoiserConfig {
   const OfflineSpeechDenoiserConfig({
     this.model = const OfflineSpeechDenoiserModelConfig(),
@@ -124,6 +134,7 @@ class OfflineSpeechDenoiserConfig {
   final OfflineSpeechDenoiserModelConfig model;
 }
 
+/// Audio returned by offline or online speech denoisers.
 class DenoisedAudio {
   DenoisedAudio({
     required this.samples,
@@ -134,13 +145,13 @@ class DenoisedAudio {
   final int sampleRate;
 }
 
+/// Offline speech denoiser.
 class OfflineSpeechDenoiser {
   OfflineSpeechDenoiser.fromPtr({required this.ptr, required this.config});
 
   OfflineSpeechDenoiser._({required this.ptr, required this.config});
 
-  /// The user is responsible to call the OfflineSpeechDenoiser.free()
-  /// method of the returned instance to avoid memory leak.
+  /// Create an offline denoiser from [config].
   factory OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config) {
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeechDenoiser == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -171,6 +182,7 @@ class OfflineSpeechDenoiser {
     return OfflineSpeechDenoiser._(ptr: ptr, config: config);
   }
 
+  /// Release the native denoiser.
   void free() {
     if (SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeechDenoiser == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -184,6 +196,7 @@ class OfflineSpeechDenoiser {
     ptr = nullptr;
   }
 
+  /// Denoise one chunk or a complete waveform.
   DenoisedAudio run({required Float32List samples, required int sampleRate}) {
     if (SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserRun == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -221,6 +234,7 @@ class OfflineSpeechDenoiser {
     return DenoisedAudio(samples: newSamples, sampleRate: sampleRateOut);
   }
 
+  /// Return the expected sample rate for this denoiser.
   int get sampleRate {
     if (SherpaOnnxBindings.sherpaOnnxOfflineSpeechDenoiserGetSampleRate ==
         null) {

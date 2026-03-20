@@ -5,6 +5,10 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Write normalized mono PCM samples to a WAV file.
+///
+/// Returns `true` on success and `false` otherwise. This is commonly used with
+/// samples returned from TTS, VAD pipelines, or speech denoisers.
 bool writeWave(
     {required String filename,
     required Float32List samples,
