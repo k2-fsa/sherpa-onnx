@@ -1,4 +1,4 @@
-use crate::speech_denoiser::{DenoisedAudio, OfflineSpeechDenoiserModelConfig};
+use crate::offline_speech_denoiser::{DenoisedAudio, OfflineSpeechDenoiserModelConfig};
 use sherpa_onnx_sys as sys;
 use std::ffi::CString;
 use std::ptr;
