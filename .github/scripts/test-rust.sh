@@ -10,10 +10,10 @@ rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15
 ./run-audio-tagging-ced.sh
 rm -rf sherpa-onnx-ced-mini-audio-tagging-2024-04-19
 
-./run-vits-tts.sh
+./run-vits-en.sh
 rm -rf vits-piper-en_US-amy-low
 
-./run-vits-tts-de.sh
+./run-vits-de.sh
 rm -rf vits-piper-de_DE-glados-high
 
 ./run-matcha-tts-en.sh

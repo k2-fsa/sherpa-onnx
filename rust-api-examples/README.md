@@ -65,10 +65,12 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 
 ## Run it
 
+Each helper script downloads the required files if needed.
+
 ### Example 1: Show sherpa-onnx version
 
 ```bash
-cargo run --example version
+./run-version.sh
 ```
 
 For macOS, you can run
@@ -80,375 +82,168 @@ to check the RPATH.
 ### Example 2: TTS with Pocket TTS (zero-shot voice cloning)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
-tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
-rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
-
-cargo run --example pocket_tts
+./run-pocket-tts.sh
 ```
 
 ### Example 3: TTS with Supertonic TTS
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-
-cargo run --example supertonic_tts
+./run-supertonic-tts.sh
 ```
 
 ### Example 4: TTS with ZipVoice zero-shot voice cloning
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
-tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
-rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
-
-cargo run --example zipvoice_tts
+./run-zipvoice-tts.sh
 ```
 
 
 ### Example 5: TTS with VITS (English Piper)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-tar xf vits-piper-en_US-amy-low.tar.bz2
-rm vits-piper-en_US-amy-low.tar.bz2
-
-cargo run --example vits_tts -- \
-  --model ./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
-  --tokens ./vits-piper-en_US-amy-low/tokens.txt \
-  --data-dir ./vits-piper-en_US-amy-low/espeak-ng-data \
-  --output ./generated-vits-en-rust.wav \
-  --text "Liliana, the most beautiful and lovely assistant of our team!"
+./run-vits-en.sh
 ```
 
 ### Example 6: TTS with VITS (German Piper)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados-high.tar.bz2
-tar xf vits-piper-de_DE-glados-high.tar.bz2
-rm vits-piper-de_DE-glados-high.tar.bz2
-
-cargo run --example vits_tts -- \
-  --model ./vits-piper-de_DE-glados-high/de_DE-glados-high.onnx \
-  --tokens ./vits-piper-de_DE-glados-high/tokens.txt \
-  --data-dir ./vits-piper-de_DE-glados-high/espeak-ng-data \
-  --output ./generated-vits-de-rust.wav \
-  --text "Alles hat ein Ende, nur die Wurst hat zwei."
+./run-vits-de.sh
 ```
 
 ### Example 7: TTS with Matcha (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
-tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
-rm matcha-icefall-en_US-ljspeech.tar.bz2
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
-
-cargo run --example matcha_tts_en
+./run-matcha-tts-en.sh
 ```
 
 ### Example 8: TTS with Matcha (Chinese)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
-tar xvf matcha-icefall-zh-baker.tar.bz2
-rm matcha-icefall-zh-baker.tar.bz2
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
-
-cargo run --example matcha_tts_zh
+./run-matcha-tts-zh.sh
 ```
 
 ### Example 9: TTS with Kokoro (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
-tar xf kokoro-en-v0_19.tar.bz2
-rm kokoro-en-v0_19.tar.bz2
-
-cargo run --example kokoro_tts_en
+./run-kokoro-tts-en.sh
 ```
 
 ### Example 10: TTS with Kokoro (Chinese + English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
-tar xf kokoro-multi-lang-v1_0.tar.bz2
-rm kokoro-multi-lang-v1_0.tar.bz2
-
-cargo run --example kokoro_tts_zh_en
+./run-kokoro-tts-zh-en.sh
 ```
 
 ### Example 11: TTS with Kitten (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
-tar xf kitten-nano-en-v0_1-fp16.tar.bz2
-rm kitten-nano-en-v0_1-fp16.tar.bz2
-
-cargo run --example kitten_tts_en
+./run-kitten-tts-en.sh
 ```
 
 ### Example 12: ASR with streaming zipformer (English)
 
 ```bash
-curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
-rm sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
-
-cargo run --example streaming_zipformer -- \
-    --wav sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/1.wav \
-    --encoder sherpa-onnx-streaming-zipformer-en-2023-06-21/encoder-epoch-99-avg-1.int8.onnx \
-    --decoder sherpa-onnx-streaming-zipformer-en-2023-06-21/decoder-epoch-99-avg-1.onnx \
-    --joiner sherpa-onnx-streaming-zipformer-en-2023-06-21/joiner-epoch-99-avg-1.int8.onnx \
-    --tokens sherpa-onnx-streaming-zipformer-en-2023-06-21/tokens.txt \
-    --provider cpu \
-    --debug
+./run-streaming-zipformer-en.sh
 ```
 
 ### Example 13: ASR with streaming zipformer (Chinese + English)
 
 ```bash
-curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-
-cargo run --example streaming_zipformer -- \
-    --wav sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/2.wav \
-    --encoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx \
-    --decoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
-    --joiner sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx \
-    --tokens sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt \
-    --provider cpu \
-    --debug
+./run-streaming-zipformer-zh-en.sh
 ```
 
 ### Example 14: ASR with streaming zipformer (with a microphone, real-time ASR)
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-
-cargo run --example streaming_zipformer_microphone --features mic -- \
-    --encoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx \
-    --decoder sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
-    --joiner sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx \
-    --tokens sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt \
-    --provider cpu \
-    --debug
+./run-streaming-zipformer-microphone-zh-en.sh
 ```
 
 ### Example 15: ASR with non-streaming zipformer (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04.tar.bz2
-tar xvf icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04.tar.bz2
-rm icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04.tar.bz2
-
-cargo run --example zipformer -- \
-    --wav "./icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04/test_wavs/1089-134686-0001.wav" \
-    --tokens ./icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04/data/lang_bpe_500/tokens.txt \
-    --encoder ./icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04/exp/encoder-epoch-30-avg-4.int8.onnx \
-    --decoder ./icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04/exp/decoder-epoch-30-avg-4.onnx \
-    --joiner ./icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04/exp/joiner-epoch-30-avg-4.int8.onnx \
-    --provider cpu \
-    --num-threads 2 \
-    --debug
+./run-zipformer-en.sh
 ```
 
 ### Example 16: ASR with non-streaming zipformer (Chinese + English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
-tar xvf sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
-rm sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
-
-cargo run --example zipformer -- \
-    --wav "./sherpa-onnx-zipformer-zh-en-2023-11-22/test_wavs/0.wav" \
-    --encoder "./sherpa-onnx-zipformer-zh-en-2023-11-22/encoder-epoch-34-avg-19.int8.onnx" \
-    --decoder "./sherpa-onnx-zipformer-zh-en-2023-11-22/decoder-epoch-34-avg-19.onnx" \
-    --joiner "./sherpa-onnx-zipformer-zh-en-2023-11-22/joiner-epoch-34-avg-19.int8.onnx" \
-    --tokens "./sherpa-onnx-zipformer-zh-en-2023-11-22/tokens.txt" \
-    --provider cpu \
-    --num-threads 2 \
-    --debug
+./run-zipformer-zh-en.sh
 ```
 
 ### Example 17: ASR with non-streaming zipformer (Vietnamese)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-vi-30M-int8-2026-02-09.tar.bz2
-tar xvf sherpa-onnx-zipformer-vi-30M-int8-2026-02-09.tar.bz2
-rm sherpa-onnx-zipformer-vi-30M-int8-2026-02-09.tar.bz2
-
-cargo run --example zipformer -- \
-    --wav "./sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/test_wavs/0.wav" \
-    --encoder "./sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/encoder.int8.onnx" \
-    --decoder "./sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/decoder.onnx" \
-    --joiner "./sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/joiner.int8.onnx" \
-    --tokens "./sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/tokens.txt" \
-    --provider cpu \
-    --num-threads 2 \
-    --debug
+./run-zipformer-vi.sh
 ```
 
 ### Example 18: ASR with non-streaming Nemo Parakeet (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
-tar xvf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
-rm sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
-
-cargo run --example nemo_parakeet -- \
-    --wav "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/test_wavs/0.wav" \
-    --encoder "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/encoder.int8.onnx" \
-    --decoder "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/decoder.int8.onnx" \
-    --joiner "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/joiner.int8.onnx" \
-    --tokens "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/tokens.txt" \
-    --provider cpu \
-    --num-threads 2 \
-    --debug
+./run-nemo-parakeet-en.sh
 ```
 
 ### Example 19: ASR with non-streaming FireRedASR CTC (Chinese + English)
 
 ```bash
-curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
-tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
-rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
-
-cargo run --example fire_red_asr_ctc -- \
-    --wav ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/test_wavs/1.wav \
-    --model ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx \
-    --tokens ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt \
-    --num-threads 2 \
-    --debug
+./run-fire-red-asr-ctc.sh
 ```
 
 ### Example 20: ASR with non-streaming Moonshine v2 (English)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
-tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
-rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
-
-cargo run --example moonshine_v2 -- \
-    --wav ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/test_wavs/0.wav \
-    --encoder ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort \
-    --decoder ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/decoder_model_merged.ort \
-    --tokens ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/tokens.txt \
-    --num-threads 2
+./run-moonshine-v2.sh
 ```
 
 ### Example 21: ASR with non-streaming SenseVoice
 
 ```bash
-curl -SsL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
-rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
-
-cargo run --example sense_voice -- \
-    --wav ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/test_wavs/en.wav \
-    --model ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx \
-    --tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt \
-    --num-threads 2 \
-    --debug
+./run-sense-voice.sh
 ```
 
 ### Example 22: Remove silences from a file using SileroVAD
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
-
-cargo run --example silero_vad_remove_silence -- \
-    --input ./lei-jun-test.wav \
-    --output ./no-silence.wav \
-    --silero-vad-model ./silero_vad.onnx
+./run-silero-vad-remove-silence.sh
 ```
 
 ### Example 23: Offline speech enhancement with GTCRN
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-
-cargo run --example offline_speech_enhancement_gtcrn -- \
-    --model ./gtcrn_simple.onnx \
-    --input ./inp_16k.wav \
-    --output ./enhanced-rust-gtcrn.wav
+./run-offline-speech-enhancement-gtcrn.sh
 ```
 
 ### Example 24: Offline speech enhancement with DPDFNet
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-
-cargo run --example offline_speech_enhancement_dpdfnet -- \
-    --model ./dpdfnet_baseline.onnx \
-    --input ./inp_16k.wav \
-    --output ./enhanced-rust-dpdfnet.wav
+./run-offline-speech-enhancement-dpdfnet.sh
 ```
 
 ### Example 25: Streaming speech enhancement with GTCRN
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-
-cargo run --example streaming_speech_enhancement_gtcrn -- \
-    --model ./gtcrn_simple.onnx \
-    --input ./inp_16k.wav \
-    --output ./enhanced-rust-streaming-gtcrn.wav
+./run-streaming-speech-enhancement-gtcrn.sh
 ```
 
 ### Example 26: Streaming speech enhancement with DPDFNet
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-
-cargo run --example streaming_speech_enhancement_dpdfnet -- \
-    --model ./dpdfnet_baseline.onnx \
-    --input ./inp_16k.wav \
-    --output ./enhanced-rust-streaming-dpdfnet.wav
+./run-streaming-speech-enhancement-dpdfnet.sh
 ```
 
 ### Example 27: Online punctuation
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
-tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
-rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
-
-cargo run --example online_punctuation -- \
-    --cnn-bilstm ./sherpa-onnx-online-punct-en-2024-08-06/model.onnx \
-    --bpe-vocab ./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab
+./run-online-punctuation.sh
 ```
 
 ### Example 28: Audio tagging with a Zipformer model
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
-tar xvf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
-rm sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
-
-cargo run --example audio_tagging_zipformer
+./run-audio-tagging-zipformer.sh
 ```
 
 ### Example 29: Audio tagging with a CED model
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
-tar xvf sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
-rm sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
-
-cargo run --example audio_tagging_ced
+./run-audio-tagging-ced.sh
 ```
