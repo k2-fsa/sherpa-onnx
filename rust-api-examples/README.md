@@ -65,6 +65,7 @@ export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 | 30 | [speaker_embedding_extractor](#example-30-speaker-embedding-extractor) | Compute a speaker embedding from a wave file |
 | 31 | [speaker_embedding_manager](#example-31-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
 | 32 | [speaker_embedding_cosine_similarity](#example-32-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
+| 33 | [offline_speaker_diarization](#example-33-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
 
 ## Run it
 
@@ -269,4 +270,11 @@ to check the RPATH.
 
 ```bash
 ./run-speaker-embedding-cosine-similarity.sh
+```
+
+
+### Example 33: Offline speaker diarization
+
+```bash
+./run-offline-speaker-diarization.sh
 ```
