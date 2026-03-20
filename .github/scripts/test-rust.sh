@@ -4,6 +4,26 @@ set -ex
 
 cd rust-api-examples
 
+./run-vits-tts.sh
+rm -rf vits-piper-en_US-amy-low
+
+./run-vits-tts-de.sh
+rm -rf vits-piper-de_DE-glados-high
+
+./run-matcha-tts-en.sh
+./run-matcha-tts-zh.sh
+rm -rf matcha-icefall-en_US-ljspeech matcha-icefall-zh-baker
+rm -f vocos-22khz-univ.onnx
+
+./run-kokoro-tts-en.sh
+rm -rf kokoro-en-v0_19
+
+./run-kokoro-tts-zh-en.sh
+rm -rf kokoro-multi-lang-v1_0
+
+./run-kitten-tts-en.sh
+rm -rf kitten-nano-en-v0_1-fp16
+
 ./run-pocket-tts.sh
 rm -rf sherpa-onnx-pocket-*
 
