@@ -12,12 +12,12 @@ concurrency:
 
 jobs:
   test-rust-package:
+    name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
 
     env:
       # Placeholder, will be overwritten per OS

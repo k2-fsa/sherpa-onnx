@@ -13,6 +13,58 @@
 //! - audio tagging
 //! - WAV I/O helpers through [`Wave`] and [`write()`]
 //!
+//! # Setup
+//!
+//! This crate links against the public sherpa-onnx shared libraries. You need
+//! to make those libraries visible both when Cargo links your program and when
+//! your operating system loads the executable at runtime.
+//!
+//! There are two common ways to do that:
+//!
+//! - build sherpa-onnx from source and use the generated shared libraries
+//! - download a prebuilt shared-library package from
+//!   [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases)
+//!
+//! In both cases, set `SHERPA_ONNX_LIB_DIR` to the directory that contains the
+//! sherpa-onnx shared libraries.
+//!
+//! Example download URLs for `v1.12.31`:
+//!
+//! - Linux x86_64:
+//!   [sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2)
+//! - Linux aarch64:
+//!   [sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2)
+//! - macOS:
+//!   [sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2)
+//! - Windows x64:
+//!   [sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2)
+//!
+//! ## Linux
+//!
+//! ```bash
+//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
+//! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
+//! ```
+//!
+//! ## macOS
+//!
+//! ```bash
+//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
+//! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
+//! ```
+//!
+//! ## Windows
+//!
+//! ```bash
+//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
+//! export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
+//! ```
+//!
+//! If Windows still loads the wrong `onnxruntime.dll`, copy the DLL files from
+//! `SHERPA_ONNX_LIB_DIR` to the same directory as your executable. For example,
+//! when using the examples in this repository, that directory is usually
+//! `rust-api-examples/target/debug/examples/`.
+//!
 //! # How the Rust API is organized
 //!
 //! Most APIs follow the same pattern:
