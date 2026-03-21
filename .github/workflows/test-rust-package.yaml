@@ -106,5 +106,8 @@ jobs:
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
+            mkdir -p rust-api-examples/target/debug/examples
+            cp -v "$SHERPA_ONNX_LIB_DIR"/*.dll rust-api-examples/target/debug/examples/
+            ls -lh rust-api-examples/target/debug/examples/
           fi
           ./.github/scripts/test-rust.sh
