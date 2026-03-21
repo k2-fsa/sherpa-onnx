@@ -33,6 +33,10 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Set up MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
       # Download prebuilt libraries depending on OS
       - name: Download prebuilt Sherpa-ONNX libraries
         shell: bash
