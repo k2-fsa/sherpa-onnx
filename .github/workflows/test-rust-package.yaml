@@ -104,4 +104,7 @@ jobs:
       - name: Run test
         shell: bash
         run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
+          fi
           ./.github/scripts/test-rust.sh
