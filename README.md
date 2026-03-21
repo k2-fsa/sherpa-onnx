@@ -307,8 +307,6 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 - [Download APK v1.0-beta](https://huggingface.co/CodeBySonu95/Sherpa-onnx-models/resolve/main/VoxSherpa-TTS_test.apk)
 - Android 11+ · 100% offline · No telemetry
 
-## Screenshots
-
 <div align="center">
 
 | Generate | Models | Library | Settings |
