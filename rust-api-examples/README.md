@@ -5,112 +5,76 @@ this repository.
 
 ## Setup
 
-The Rust crate needs to find the sherpa-onnx shared libraries at build time, and
-your operating system needs to find them again at run time.
+`rust-api-examples` now uses the Rust crate's default configuration:
 
-There are two common ways to do that:
+- static linking is enabled by default
+- if `SHERPA_ONNX_LIB_DIR` is not set, the build script downloads a matching
+  prebuilt `-lib` archive automatically
+- if `SHERPA_ONNX_LIB_DIR` is set, that directory is used instead
 
-- Method 1: Build sherpa-onnx from source and use the generated shared libraries
-- Method 2: Download a prebuilt sherpa-onnx shared-library package from GitHub releases
-
-### Method 1: Build from source
-
-Build and install sherpa-onnx first. After that, point `SHERPA_ONNX_LIB_DIR` to
-the generated `lib` directory.
-
-#### Linux
+For most users, this means you can simply run:
 
 ```bash
-export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/build/install/lib
-export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
+cargo run --example version
 ```
 
-#### macOS
+The first build downloads the correct prebuilt libraries for your platform and
+prints the resolved library directory in the Cargo output.
+
+### Use shared libraries instead
+
+If you want to use the shared libraries, disable the default feature and enable
+`shared`:
 
 ```bash
-export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/build/install/lib
-export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
+cargo run --no-default-features --features shared --example version
 ```
 
-#### Windows
+For microphone examples, add `mic` as usual:
 
 ```bash
-export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/build/install/lib
-export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
+cargo run --no-default-features --features "shared,mic" \
+  --example streaming_zipformer_microphone -- --help
 ```
 
-If Windows still reports that it cannot find a DLL, or if it loads a wrong
-`onnxruntime.dll`, copy the DLL files from `%SHERPA_ONNX_LIB_DIR%` to the same
-directory as the generated example executable, e.g.
-`rust-api-examples/target/debug/examples/`.
+On Linux and macOS, the build script adds the runtime rpath automatically for
+downloaded or user-supplied shared libraries. On Windows, it copies the needed
+DLLs next to the generated binaries automatically.
 
-### Method 2: Download prebuilt shared libraries
+### Advanced: use your own sherpa-onnx libraries
 
-This is the easiest method for most users.
+If you build sherpa-onnx yourself or download a release archive manually, set
+`SHERPA_ONNX_LIB_DIR` to the `lib` directory and rebuild:
 
-1. Go to [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases)
-2. Download the archive that matches your operating system
-3. Extract it anywhere you like
-4. Set `SHERPA_ONNX_LIB_DIR` to the extracted `lib` directory
-5. On Linux/macOS, also set `RUSTFLAGS` so the executable can find the shared libraries
-6. On Windows, add the same `lib` directory to `PATH`
+```bash
+export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
+```
+
+That environment variable works for both static and shared builds.
+
+### Prebuilt `-lib` archives used by the build script
 
 Use the latest release in practice. We use `v1.12.31` below only as an example.
 
-#### Which archive should I download?
+#### Default static archives
 
 | OS | Archive example | Download link |
 |----|-----------------|---------------|
-| Linux x86_64 | `sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2) |
-| Linux aarch64 | `sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2) |
-| macOS | `sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2) |
-| Windows x64 | `sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2) |
+| Linux x86_64 | `sherpa-onnx-v1.12.31-linux-x64-static-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-static-lib.tar.bz2) |
+| Linux aarch64 | `sherpa-onnx-v1.12.31-linux-aarch64-static-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-static-lib.tar.bz2) |
+| macOS x86_64 | `sherpa-onnx-v1.12.31-osx-x64-static-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-x64-static-lib.tar.bz2) |
+| macOS arm64 | `sherpa-onnx-v1.12.31-osx-arm64-static-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-arm64-static-lib.tar.bz2) |
+| Windows x64 | `sherpa-onnx-v1.12.31-win-x64-static-MT-Release-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-static-MT-Release-lib.tar.bz2) |
 
-#### Linux
+#### Optional shared archives
 
-```bash
-cd $HOME/Downloads
-
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2
-tar xvf sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2
-rm sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2
-
-export SHERPA_ONNX_LIB_DIR=$HOME/Downloads/sherpa-onnx-v1.12.31-linux-x64-shared/lib
-export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
-```
-
-#### macOS
-
-```bash
-cd $HOME/Downloads
-
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2
-tar xvf sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2
-rm sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2
-
-export SHERPA_ONNX_LIB_DIR=$HOME/Downloads/sherpa-onnx-v1.12.31-osx-universal2-shared/lib
-export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
-```
-
-#### Windows
-
-```bash
-cd /c/Users/$USERNAME/Downloads
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2
-tar xvf sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2
-rm sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2
-
-export SHERPA_ONNX_LIB_DIR=/c/Users/$USERNAME/Downloads/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release/lib
-export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
-```
-
-In most cases, updating `PATH` is enough on Windows. If an example still loads
-the wrong `onnxruntime.dll`, copy the DLL files from
-`$SHERPA_ONNX_LIB_DIR` to `target/debug/examples/` and run the example again.
-
-After setting the environment variables above, you can run the examples in this
-directory with `cargo run --example ...` or use the helper scripts below.
+| OS | Archive example | Download link |
+|----|-----------------|---------------|
+| Linux x86_64 | `sherpa-onnx-v1.12.31-linux-x64-shared-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared-lib.tar.bz2) |
+| Linux aarch64 | `sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu-lib.tar.bz2) |
+| macOS x86_64 | `sherpa-onnx-v1.12.31-osx-x64-shared-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-x64-shared-lib.tar.bz2) |
+| macOS arm64 | `sherpa-onnx-v1.12.31-osx-arm64-shared-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-arm64-shared-lib.tar.bz2) |
+| Windows x64 | `sherpa-onnx-v1.12.31-win-x64-shared-MT-Release-lib.tar.bz2` | [Download](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release-lib.tar.bz2) |
 
 ## Examples
 

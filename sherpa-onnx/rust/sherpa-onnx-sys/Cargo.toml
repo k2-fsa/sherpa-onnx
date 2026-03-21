@@ -20,5 +20,11 @@ include = [
 ]
 
 [features]
-default = []
+default = ["static"]
 static = []
+shared = []
+
+[build-dependencies]
+bzip2 = "0.4"
+tar = "0.4"
+ureq = "2.12"

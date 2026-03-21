@@ -15,79 +15,64 @@
 //!
 //! # Setup
 //!
-//! This crate links against the public sherpa-onnx shared libraries. You need
-//! to make those libraries visible both when Cargo links your program and when
-//! your operating system loads the executable at runtime.
+//! This crate now links statically by default. If `SHERPA_ONNX_LIB_DIR` is not
+//! set, the build script downloads a matching prebuilt `-lib` archive from
+//! [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases) and prints
+//! the resolved library directory in the Cargo output.
 //!
-//! There are two common ways to do that:
-//!
-//! - build sherpa-onnx from source and use the generated shared libraries
-//! - download a prebuilt shared-library package from
-//!   [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases)
-//!
-//! By default this crate links against the shared libraries. To link against the
-//! static libraries instead, enable the `static` cargo feature:
+//! In other words, the default setup for most users is simply:
 //!
 //! ```toml
-//! sherpa-onnx = { version = "1.12.31", features = ["static"] }
+//! sherpa-onnx = "1.12.31"
 //! ```
 //!
-//! In both cases, set `SHERPA_ONNX_LIB_DIR` to the directory that contains the
-//! sherpa-onnx libraries.
+//! If you want shared libraries instead, disable the default feature and enable
+//! `shared`:
 //!
-//! Example download URLs for `v1.12.31`:
+//! ```toml
+//! sherpa-onnx = { version = "1.12.31", default-features = false, features = ["shared"] }
+//! ```
+//!
+//! For advanced use cases, set `SHERPA_ONNX_LIB_DIR` to a directory that already
+//! contains sherpa-onnx libraries:
+//!
+//! ```bash
+//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
+//! ```
+//!
+//! That override works for both static and shared builds.
+//!
+//! On Linux and macOS, the build script adds rpath automatically for shared
+//! builds. On Windows, it copies the required DLLs next to the generated
+//! binaries automatically when using shared libraries.
+//!
+//! Example `v1.12.31` archives used by the build script:
+//!
+//! Default static archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared.tar.bz2)
+//!   [sherpa-onnx-v1.12.31-linux-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-static-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu.tar.bz2)
-//! - macOS:
-//!   [sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-shared.tar.bz2)
+//!   [sherpa-onnx-v1.12.31-linux-aarch64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-static-lib.tar.bz2)
+//! - macOS x86_64:
+//!   [sherpa-onnx-v1.12.31-osx-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-x64-static-lib.tar.bz2)
+//! - macOS arm64:
+//!   [sherpa-onnx-v1.12.31-osx-arm64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-arm64-static-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2)
+//!   [sherpa-onnx-v1.12.31-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-static-MT-Release-lib.tar.bz2)
 //!
-//! Static-library packages for the same release:
+//! Optional shared archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.12.31-linux-x64-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-static.tar.bz2)
+//!   [sherpa-onnx-v1.12.31-linux-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-shared-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.12.31-linux-aarch64-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-static.tar.bz2)
-//! - macOS:
-//!   [sherpa-onnx-v1.12.31-osx-universal2-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-static.tar.bz2)
+//!   [sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-shared-cpu-lib.tar.bz2)
+//! - macOS x86_64:
+//!   [sherpa-onnx-v1.12.31-osx-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-x64-shared-lib.tar.bz2)
+//! - macOS arm64:
+//!   [sherpa-onnx-v1.12.31-osx-arm64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-arm64-shared-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.12.31-win-x64-static-MT-Release.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-static-MT-Release.tar.bz2)
-//!
-//! ## Linux
-//!
-//! ```bash
-//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
-//! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
-//! ```
-//!
-//! When using `features = ["static"]`, you do not need the `RUSTFLAGS` rpath
-//! setting above because the sherpa-onnx libraries are linked statically.
-//!
-//! ## macOS
-//!
-//! ```bash
-//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
-//! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
-//! ```
-//!
-//! When using `features = ["static"]`, you do not need the `RUSTFLAGS` rpath
-//! setting above because the sherpa-onnx libraries are linked statically.
-//!
-//! ## Windows
-//!
-//! ```bash
-//! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
-//! export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
-//! ```
-//!
-//! If Windows still loads the wrong `onnxruntime.dll`, copy the DLL files from
-//! `SHERPA_ONNX_LIB_DIR` to the same directory as your executable. For example,
-//! when using the examples in this repository, that directory is usually
-//! `rust-api-examples/target/debug/examples/`.
+//!   [sherpa-onnx-v1.12.31-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release-lib.tar.bz2)
 //!
 //! # How the Rust API is organized
 //!
