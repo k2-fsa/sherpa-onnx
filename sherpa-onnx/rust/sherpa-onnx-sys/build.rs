@@ -5,6 +5,7 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::{collections::HashSet, ffi::OsString};
 
 use bzip2::read::BzDecoder;
 use tar::Archive;
@@ -42,20 +43,19 @@ fn main() {
 
 fn try_main() -> Result<(), DynError> {
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=SHERPA_ONNX_ARCHIVE_DIR");
 
     let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
     let link_mode = resolve_link_mode()?;
     let lib_dir = resolve_lib_dir(link_mode, &target_os, &target_arch)?;
 
-    println!(
-        "cargo:warning=Using sherpa-onnx libs from {}",
-        lib_dir.display()
-    );
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
     if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos") {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
+        emit_relative_rpath(&target_os);
+        copy_unix_runtime_libs(&lib_dir, &target_os)?;
     }
 
     if link_mode == LinkMode::Shared && target_os == "windows" {
@@ -114,15 +114,11 @@ fn download_prebuilt_libs(
     let archive_stem = archive_name.trim_end_matches(".tar.bz2");
 
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-    let cache_root = out_dir.join("sherpa-onnx-prebuilt");
+    let cache_root = target_dir_from_out_dir(&out_dir)?.join("sherpa-onnx-prebuilt");
     let extracted_dir = cache_root.join(archive_stem);
     let lib_dir = extracted_dir.join("lib");
 
     if lib_dir.is_dir() {
-        println!(
-            "cargo:warning=Reusing downloaded sherpa-onnx archive {}",
-            extracted_dir.display()
-        );
         return Ok(lib_dir);
     }
 
@@ -130,16 +126,29 @@ fn download_prebuilt_libs(
 
     let archive_path = cache_root.join(&archive_name);
     if !archive_path.is_file() {
-        let version = env!("CARGO_PKG_VERSION");
-        let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
-        println!("cargo:warning=Downloading sherpa-onnx libs from {url}");
+        if let Some(local_archive_dir) = env::var_os("SHERPA_ONNX_ARCHIVE_DIR") {
+            let local_archive_path = PathBuf::from(local_archive_dir).join(&archive_name);
+            if !local_archive_path.is_file() {
+                return Err(format!(
+                    "SHERPA_ONNX_ARCHIVE_DIR does not contain expected archive: {}",
+                    local_archive_path.display()
+                )
+                .into());
+            }
 
-        let response = ureq::get(&url)
-            .call()
-            .map_err(|e| format!("Failed to download sherpa-onnx archive from {url}: {e}"))?;
-        let mut reader = response.into_reader();
-        let mut file = File::create(&archive_path)?;
-        io::copy(&mut reader, &mut file)?;
+            fs::copy(&local_archive_path, &archive_path)?;
+        } else {
+            let version = env!("CARGO_PKG_VERSION");
+            let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
+            eprintln!("Downloading sherpa-onnx libs from {url}");
+
+            let response = ureq::get(&url)
+                .call()
+                .map_err(|e| format!("Failed to download sherpa-onnx archive from {url}: {e}"))?;
+            let mut reader = response.into_reader();
+            let mut file = File::create(&archive_path)?;
+            io::copy(&mut reader, &mut file)?;
+        }
     }
 
     if extracted_dir.exists() {
@@ -159,10 +168,7 @@ fn download_prebuilt_libs(
         .into());
     }
 
-    println!(
-        "cargo:warning=Downloaded sherpa-onnx libs to {}",
-        extracted_dir.display()
-    );
+    eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
     Ok(lib_dir)
 }
@@ -214,14 +220,11 @@ fn archive_name(
 }
 
 fn emit_shared_link_directives() {
-    println!("cargo:warning=Using shared sherpa-onnx libraries");
     println!("cargo:rustc-link-lib=dylib=sherpa-onnx-c-api");
     println!("cargo:rustc-link-lib=dylib=onnxruntime");
 }
 
 fn emit_static_link_directives(target_os: &str) {
-    println!("cargo:warning=Using static sherpa-onnx libraries");
-
     for lib in SHERPA_ONNX_STATIC_LIBS {
         println!("cargo:rustc-link-lib=static={lib}");
     }
@@ -241,7 +244,29 @@ fn emit_static_link_directives(target_os: &str) {
     }
 }
 
-fn copy_windows_runtime_dlls(lib_dir: &Path) -> Result<(), DynError> {
+fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
+    out_dir
+        .ancestors()
+        .find(|path| path.file_name() == Some(OsStr::new("target")))
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            format!(
+                "Could not locate Cargo target directory from OUT_DIR: {}",
+                out_dir.display()
+            )
+            .into()
+        })
+}
+
+fn emit_relative_rpath(target_os: &str) {
+    match target_os {
+        "linux" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
+        "macos" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
+        _ => {}
+    }
+}
+
+fn profile_output_dirs() -> Result<[PathBuf; 2], DynError> {
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let profile = env::var("PROFILE")?;
     let profile_dir = out_dir
@@ -255,6 +280,78 @@ fn copy_windows_runtime_dlls(lib_dir: &Path) -> Result<(), DynError> {
         })?
         .to_path_buf();
 
+    Ok([profile_dir.clone(), profile_dir.join("examples")])
+}
+
+fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynError> {
+    let runtime_libs: Vec<PathBuf> = fs::read_dir(lib_dir)?
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .filter(|path| {
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .map(|name| match target_os {
+                    "linux" => name.contains(".so"),
+                    "macos" => name.ends_with(".dylib"),
+                    _ => false,
+                })
+                .unwrap_or(false)
+        })
+        .collect();
+
+    if runtime_libs.is_empty() {
+        return Err(format!(
+            "No shared runtime libraries found in {}",
+            lib_dir.display()
+        )
+        .into());
+    }
+
+    let mut copy_plan = Vec::<(PathBuf, OsString)>::new();
+    let mut planned_names = HashSet::<OsString>::new();
+
+    for lib in runtime_libs {
+        if !lib.exists() {
+            continue;
+        }
+
+        let lib_name = lib
+            .file_name()
+            .ok_or_else(|| format!("Invalid runtime library path: {}", lib.display()))?
+            .to_os_string();
+
+        let source = fs::canonicalize(&lib).unwrap_or(lib.clone());
+        if planned_names.insert(lib_name.clone()) {
+            copy_plan.push((source.clone(), lib_name));
+        }
+
+        if let Some(source_name) = source.file_name() {
+            let source_name = source_name.to_os_string();
+            if planned_names.insert(source_name.clone()) {
+                copy_plan.push((source.clone(), source_name));
+            }
+        }
+    }
+
+    if copy_plan.is_empty() {
+        return Err(format!(
+            "No usable shared runtime libraries found in {}",
+            lib_dir.display()
+        )
+        .into());
+    }
+
+    for dest_dir in profile_output_dirs()? {
+        fs::create_dir_all(&dest_dir)?;
+        for (source, dest_name) in &copy_plan {
+            let dest = dest_dir.join(dest_name);
+            fs::copy(source, &dest)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn copy_windows_runtime_dlls(lib_dir: &Path) -> Result<(), DynError> {
     let dlls: Vec<PathBuf> = fs::read_dir(lib_dir)?
         .filter_map(|entry| {
             entry
@@ -272,7 +369,8 @@ fn copy_windows_runtime_dlls(lib_dir: &Path) -> Result<(), DynError> {
         return Ok(());
     }
 
-    for dest_dir in [profile_dir.clone(), profile_dir.join("examples")] {
+    let [profile_dir, examples_dir] = profile_output_dirs()?;
+    for dest_dir in [profile_dir.clone(), examples_dir] {
         fs::create_dir_all(&dest_dir)?;
         for dll in &dlls {
             let dest = dest_dir.join(

@@ -78,6 +78,11 @@ jobs:
           tar -xvf "$d.tar.bz2"
           ls -lh "$d/lib"
           echo "SHERPA_ONNX_LIB_DIR=$PWD/$d/lib" >> "$GITHUB_ENV"
+          if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
+            echo "LD_LIBRARY_PATH=$PWD/$d/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          elif [[ "${{ matrix.os }}" == macos-* ]]; then
+            echo "DYLD_LIBRARY_PATH=$PWD/$d/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          fi
 
       - name: Show library setup
         shell: bash
@@ -88,6 +93,14 @@ jobs:
             ls -lh "$SHERPA_ONNX_LIB_DIR"
           else
             echo "SHERPA_ONNX_LIB_DIR is not set; build.rs will download the shared libs automatically."
+          fi
+
+          if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+          fi
+
+          if [[ -n "${DYLD_LIBRARY_PATH:-}" ]]; then
+            echo "DYLD_LIBRARY_PATH: $DYLD_LIBRARY_PATH"
           fi
 
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then

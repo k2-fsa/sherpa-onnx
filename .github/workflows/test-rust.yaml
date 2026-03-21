@@ -3,7 +3,7 @@ name: Test rust
 on:
   push:
     branches:
-      - rust-api
+      - rust-static
   workflow_dispatch:
 
 concurrency:
@@ -12,25 +12,26 @@ concurrency:
 
 jobs:
   test-rust:
+    name: Test ${{ matrix.os }} (${{ matrix.link_mode }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
-
-    env:
-      # Placeholder, will be overwritten per OS
-      SHERPA_ONNX_LIB_DIR: ""
-      RUSTFLAGS: ""
+        link_mode: [shared, static]
+        exclude:
+          - os: ubuntu-latest
+            link_mode: static
+          - os: ubuntu-22.04-arm
+            link_mode: static
 
     steps:
-      # Checkout the repository
       - uses: actions/checkout@v4
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-rust
+          key: ${{ matrix.os }}-rust-${{ matrix.link_mode }}
 
       - name: Update version
         shell: bash
@@ -47,9 +48,16 @@ jobs:
 
           mkdir build
           cd build
+
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            build_shared_libs=ON
+          else
+            build_shared_libs=OFF
+          fi
+
           cmake \
             -D SHERPA_ONNX_ENABLE_BINARY=OFF \
-            -D BUILD_SHARED_LIBS=ON \
+            -D BUILD_SHARED_LIBS=$build_shared_libs \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
@@ -65,10 +73,16 @@ jobs:
           make install
           ls -lh install/lib
 
-          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/install/lib" >> $GITHUB_ENV
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/install/lib" >> "$GITHUB_ENV"
 
-      # Install Rust stable
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
+              echo "LD_LIBRARY_PATH=$PWD/install/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+            elif [[ "${{ matrix.os }}" == macos-* ]]; then
+              echo "DYLD_LIBRARY_PATH=$PWD/install/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+            fi
+          fi
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
@@ -76,24 +90,54 @@ jobs:
       - name: Show libs
         shell: bash
         run: |
+          echo "link_mode: ${{ matrix.link_mode }}"
           echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
-          ls -lh $SHERPA_ONNX_LIB_DIR
+          ls -lh "$SHERPA_ONNX_LIB_DIR"
 
-          echo "RUSTFLAGS: $RUSTFLAGS"
+          if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
+            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+          fi
+
+          if [[ -n "${DYLD_LIBRARY_PATH:-}" ]]; then
+            echo "DYLD_LIBRARY_PATH: $DYLD_LIBRARY_PATH"
+          fi
 
       - name: Use local sherpa-onnx crate
+        if: false
         shell: bash
         run: |
           cd rust-api-examples
 
-          sed -i.bak 's|^sherpa-onnx *=.*|sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }|' Cargo.toml
+          sed -i.bak 's|^sherpa-onnx *=.*|sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx", default-features = false }|' Cargo.toml
 
           git diff .
-
           cargo clean
-          cargo run --example version
+
+      - name: Use local sherpa-onnx crates
+        shell: bash
+        run: |
+          mkdir -p rust-api-examples/.cargo
+          cat > rust-api-examples/.cargo/config.toml <<'PATCH'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }
+          PATCH
+
+      - name: Smoke test local crate
+        shell: bash
+        run: |
+          cd rust-api-examples
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            cargo run --no-default-features --features shared --example version
+          else
+            cargo run --example version
+          fi
 
       - name: Run test
         shell: bash
         run: |
-          ./.github/scripts/test-rust.sh
+          if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
+            ./.github/scripts/test-rust-shared.sh
+          else
+            ./.github/scripts/test-rust-static.sh
+          fi

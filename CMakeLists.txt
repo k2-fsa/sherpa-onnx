@@ -237,6 +237,11 @@ endif()
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
+
+# Rust on Linux links static sherpa-onnx archives into PIE executables by
+# default, so static objects need PIC as well.
+if(NOT WIN32)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
