@@ -21,9 +21,15 @@ fn main() {
         }
     }
 
-    // Link the dynamic libraries regardless (cargo will fail later if not found)
+    // Always link against the public sherpa-onnx C API import library.
     println!("cargo:rustc-link-lib=dylib=sherpa-onnx-c-api");
-    println!("cargo:rustc-link-lib=dylib=onnxruntime");
+
+    // On Unix we link directly against onnxruntime as well. The Windows release
+    // archive currently ships the runtime DLLs but not an onnxruntime import
+    // library, and sherpa-onnx-c-api.lib already carries that dependency.
+    if !cfg!(target_os = "windows") {
+        println!("cargo:rustc-link-lib=dylib=onnxruntime");
+    }
 
     // Rebuild if the env variable changes
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_LIB_DIR");
