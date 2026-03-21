@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
+        # os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
+        os: [windows-latest]
 
     env:
       # Placeholder, will be overwritten per OS
@@ -46,6 +47,8 @@ jobs:
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-shared
           elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release
           else
             echo "Unknown ${{ matrix.os }}"
             exit 1
@@ -60,7 +63,16 @@ jobs:
 
           # Export environment variables for this step
           echo "SHERPA_ONNX_LIB_DIR=$PWD/$d/lib" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/$d/lib" >> $GITHUB_ENV
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            if [[ -d "$PWD/$d/bin" ]]; then
+              echo "$PWD/$d/bin" >> $GITHUB_PATH
+              ls -lh $d/bin
+            fi
+            echo "$PWD/$d/lib" >> $GITHUB_PATH
+            echo "RUSTFLAGS=" >> $GITHUB_ENV
+          else
+            echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/$d/lib" >> $GITHUB_ENV
+          fi
 
       - name: Show libs
         shell: bash
