@@ -21,8 +21,9 @@ fn main() {
         }
     }
 
-    // Link the dynamic libraries regardless (cargo will fail later if not found)
+    // Always link against the public sherpa-onnx C API import library.
     println!("cargo:rustc-link-lib=dylib=sherpa-onnx-c-api");
+
     println!("cargo:rustc-link-lib=dylib=onnxruntime");
 
     // Rebuild if the env variable changes

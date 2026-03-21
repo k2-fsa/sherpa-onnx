@@ -111,7 +111,7 @@ if(APPLE)
   endif()
 endif()
 
-if(NOT WIN32)
+if(UNIX)
   target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/sherpa_onnx/lib")
 endif()
 

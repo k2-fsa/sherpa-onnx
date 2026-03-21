@@ -191,6 +191,14 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
+          if [[ $shared_lib == "ON" && -f build/install/lib/onnxruntime.lib ]]; then
+            cp -v build/install/lib/onnxruntime.lib $dst/lib/
+          fi
+
+          rm -rf $dst/lib/pkgconfig
+          rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
+          rm -f $dst/include/cargs.h
+
           ls -lh $dst/bin/
           echo "---"
           ls -lh $dst/lib/
@@ -244,7 +252,7 @@ jobs:
           file: sherpa-onnx-*-win-x64*.tar.bz2
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.12.28
+          tag: v1.12.31
 
       - name: Release pre-compiled binaries and libs for Windows x64
         if: github.repository_owner == 'k2-fsa'&& github.event_name == 'push' && contains(github.ref, 'refs/tags/')

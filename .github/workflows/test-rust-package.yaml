@@ -12,11 +12,12 @@ concurrency:
 
 jobs:
   test-rust-package:
+    name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
 
     env:
       # Placeholder, will be overwritten per OS
@@ -32,6 +33,22 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Set up MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Select MSVC linker
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
+
       # Download prebuilt libraries depending on OS
       - name: Download prebuilt Sherpa-ONNX libraries
         shell: bash
@@ -46,6 +63,8 @@ jobs:
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-shared
           elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
             d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release
           else
             echo "Unknown ${{ matrix.os }}"
             exit 1
@@ -60,7 +79,16 @@ jobs:
 
           # Export environment variables for this step
           echo "SHERPA_ONNX_LIB_DIR=$PWD/$d/lib" >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/$d/lib" >> $GITHUB_ENV
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            if [[ -d "$PWD/$d/bin" ]]; then
+              echo "$PWD/$d/bin" >> $GITHUB_PATH
+              ls -lh $d/bin
+            fi
+            echo "$PWD/$d/lib" >> $GITHUB_PATH
+            echo "RUSTFLAGS=" >> $GITHUB_ENV
+          else
+            echo "RUSTFLAGS=-C link-arg=-Wl,-rpath,$PWD/$d/lib" >> $GITHUB_ENV
+          fi
 
       - name: Show libs
         shell: bash
@@ -69,8 +97,17 @@ jobs:
           ls -lh $SHERPA_ONNX_LIB_DIR
 
           echo "RUSTFLAGS: $RUSTFLAGS"
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER: $CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          fi
 
       - name: Run test
         shell: bash
         run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            export PATH="$SHERPA_ONNX_LIB_DIR:$PATH"
+            mkdir -p rust-api-examples/target/debug/examples
+            cp -v "$SHERPA_ONNX_LIB_DIR"/*.dll rust-api-examples/target/debug/examples/
+            ls -lh rust-api-examples/target/debug/examples/
+          fi
           ./.github/scripts/test-rust.sh

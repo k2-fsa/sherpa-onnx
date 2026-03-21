@@ -179,6 +179,14 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
+          if [[ $shared_lib == "ON" && -f build/install/lib/onnxruntime.lib ]]; then
+            cp -v build/install/lib/onnxruntime.lib $dst/lib/
+          fi
+
+          rm -rf $dst/lib/pkgconfig
+          rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
+          rm -f $dst/include/cargs.h
+
           ls -lh $dst/bin/
           echo "---"
           ls -lh $dst/lib/
