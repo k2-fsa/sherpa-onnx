@@ -31,14 +31,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        # build_type: [Release, Debug, MinSizeRel, RelWithDebInfo]
-        # shared_lib: [ON, OFF]
-        # with_tts: [ON, OFF]
-        # use_static_crt: [ON, OFF]
-        build_type: [Release]
-        shared_lib: [ON]
-        with_tts: [ON]
-        use_static_crt: [ON]
+        build_type: [Release, Debug, MinSizeRel, RelWithDebInfo]
+        shared_lib: [ON, OFF]
+        with_tts: [ON, OFF]
+        use_static_crt: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -247,7 +243,7 @@ jobs:
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for Windows x64
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
