@@ -307,26 +307,17 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 - [Download APK v1.0-beta](https://huggingface.co/CodeBySonu95/Sherpa-onnx-models/resolve/main/VoxSherpa-TTS_test.apk)
 - Android 11+ · 100% offline · No telemetry
 
+## Screenshots
+
+<div align="center">
+
 | Generate | Models | Library | Settings |
 |:---:|:---:|:---:|:---:|
-|
+| <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="180"/> |
 
-![](https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)
+</div>
 
-|
-
-![](https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg)
-
-|
-
-![](https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg)
-
-|
-
-![](https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg)
-
-|
-
+---
 ### [BreezeApp](https://github.com/mtkresearch/BreezeApp) from [MediaTek Research](https://github.com/mtkresearch)
 
 > BreezeAPP is a mobile AI application developed for both Android and iOS platforms.
