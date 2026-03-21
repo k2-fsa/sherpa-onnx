@@ -221,6 +221,19 @@ jobs:
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          if [[ ${{ matrix.shared_lib }} == ON ]]; then
+            cp -av build/install/lib/lib*.so* ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.so ${lib_dst}/lib/libcargs.so.*
+          else
+            cp -av build/install/lib/lib*.a ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.a
+          fi
+          tree ${lib_dst}
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
+
           du -h -d1 .
 
       - name: Release pre-compiled binaries and libs for linux x64
@@ -230,9 +243,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.12.25
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.31
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'

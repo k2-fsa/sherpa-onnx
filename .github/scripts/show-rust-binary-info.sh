@@ -12,11 +12,42 @@ if [[ -z "$os_name" ]]; then
   esac
 fi
 
+show_stripped_size() {
+  local bin="$1"
+  local strip_tool=""
+
+  if command -v llvm-strip >/dev/null 2>&1; then
+    strip_tool="llvm-strip"
+  elif command -v strip >/dev/null 2>&1; then
+    strip_tool="strip"
+  fi
+
+  if [[ -z "$strip_tool" ]]; then
+    echo "No strip tool available on PATH"
+    return 0
+  fi
+
+  local tmp
+  tmp="$(mktemp "${TMPDIR:-/tmp}/$(basename "$bin").XXXXXX")"
+  cp "$bin" "$tmp"
+
+  if "$strip_tool" "$tmp" >/dev/null 2>&1; then
+    echo "=== Binary size after strip ($strip_tool) ==="
+    ls -lh "$tmp"
+  else
+    echo "=== Binary size after strip ($strip_tool) ==="
+    echo "strip failed"
+  fi
+
+  rm -f "$tmp"
+}
+
 show_one() {
   local bin="$1"
 
   echo "=== Binary info: $bin ==="
   ls -lh "$bin"
+  show_stripped_size "$bin"
   echo
   echo "=== Binary dependencies ($os_name) ==="
 
@@ -49,11 +80,19 @@ if [[ "${1:-}" == "--all" ]]; then
   case "$os_name" in
     Windows)
       for bin in target/debug/examples/*.exe; do
+        base="$(basename "$bin" .exe)"
+        if [[ "$base" =~ -[0-9a-f]{16}$ ]]; then
+          continue
+        fi
         bins+=("$bin")
       done
       ;;
     *)
       for bin in target/debug/examples/*; do
+        base="$(basename "$bin")"
+        if [[ "$base" =~ -[0-9a-f]{16}$ ]]; then
+          continue
+        fi
         if [[ -f "$bin" && -x "$bin" && "$bin" != *.d ]]; then
           bins+=("$bin")
         fi

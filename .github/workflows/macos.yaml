@@ -140,6 +140,20 @@ jobs:
         if: matrix.build_type == 'Release'
         shell: bash
         run: |
+          thin_macos_tree() {
+            src_dir="$1"
+            dst_dir="$2"
+            arch="$3"
+
+            cp -a "$src_dir" "$dst_dir"
+
+            while IFS= read -r -d '' f; do
+              tmp="${f}.thin"
+              lipo -thin "$arch" "$f" -output "$tmp"
+              mv "$tmp" "$f"
+            done < <(find "$dst_dir" -type f \( -path "$dst_dir/bin/*" -o -path "$dst_dir/lib/*.dylib*" -o -path "$dst_dir/lib/*.a" \) -print0)
+          }
+
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           if [[ ${{ matrix.with_tts }} == ON ]]; then
@@ -163,16 +177,54 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          if [[ ${{ matrix.lib_type }} == shared ]]; then
+            cp -av build/install/lib/lib*.dylib* ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.dylib ${lib_dst}/lib/libcargs*.dylib
+          else
+            cp -av build/install/lib/lib*.a ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.a
+          fi
+          tree ${lib_dst}
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
+
+          for arch in x86_64 arm64; do
+            if [[ "$arch" == "x86_64" ]]; then
+              arch_name=x64
+            else
+              arch_name=arm64
+            fi
+
+            arch_dst=${dst/osx-universal2/osx-${arch_name}}
+            thin_macos_tree "$dst" "$arch_dst" "$arch"
+            tree "$arch_dst"
+            tar cjvf ${arch_dst}.tar.bz2 ${arch_dst}
+
+            arch_lib_dst=${lib_dst/osx-universal2/osx-${arch_name}}
+            thin_macos_tree "$lib_dst" "$arch_lib_dst" "$arch"
+            tree "$arch_lib_dst"
+            tar cjvf ${arch_lib_dst}.tar.bz2 ${arch_lib_dst}
+          done
+
       - name: Release pre-compiled binaries and libs for macOS
-        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*osx-universal2*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.12.24
+          file: sherpa-onnx-*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.31
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
 
       - name: Test offline FireRedASR
         if: matrix.build_type != 'Debug'
@@ -338,5 +390,3 @@ jobs:
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
-
-
