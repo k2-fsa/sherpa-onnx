@@ -18,3 +18,7 @@ include = [
     "README.md",
     "LICENSE*",
 ]
+
+[features]
+default = []
+static = []

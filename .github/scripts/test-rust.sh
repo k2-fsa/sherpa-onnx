@@ -4,6 +4,8 @@ set -ex
 
 cd rust-api-examples
 
+trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
+
 ./run-audio-tagging-zipformer.sh
 rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15
 

@@ -19,6 +19,10 @@ include = [
     "LICENSE*",
 ]
 
+[features]
+default = []
+static = ["sherpa-onnx-sys/static"]
+
 [dependencies]
 sherpa-onnx-sys = { path = "../sherpa-onnx-sys", version = "1.12.31" }
 serde = { version = "1.0", features = ["derive"] }

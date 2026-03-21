@@ -18,6 +18,7 @@ default = []
 
 # Feature for using microphone
 mic = ["cpal"]
+static = ["sherpa-onnx/static"]
 
 [[example]]
 name = "streaming_zipformer_microphone"

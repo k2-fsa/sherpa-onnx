@@ -25,8 +25,15 @@
 //! - download a prebuilt shared-library package from
 //!   [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases)
 //!
+//! By default this crate links against the shared libraries. To link against the
+//! static libraries instead, enable the `static` cargo feature:
+//!
+//! ```toml
+//! sherpa-onnx = { version = "1.12.31", features = ["static"] }
+//! ```
+//!
 //! In both cases, set `SHERPA_ONNX_LIB_DIR` to the directory that contains the
-//! sherpa-onnx shared libraries.
+//! sherpa-onnx libraries.
 //!
 //! Example download URLs for `v1.12.31`:
 //!
@@ -39,6 +46,17 @@
 //! - Windows x64:
 //!   [sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-shared-MT-Release.tar.bz2)
 //!
+//! Static-library packages for the same release:
+//!
+//! - Linux x86_64:
+//!   [sherpa-onnx-v1.12.31-linux-x64-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-x64-static.tar.bz2)
+//! - Linux aarch64:
+//!   [sherpa-onnx-v1.12.31-linux-aarch64-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-linux-aarch64-static.tar.bz2)
+//! - macOS:
+//!   [sherpa-onnx-v1.12.31-osx-universal2-static.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-osx-universal2-static.tar.bz2)
+//! - Windows x64:
+//!   [sherpa-onnx-v1.12.31-win-x64-static-MT-Release.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.31/sherpa-onnx-v1.12.31-win-x64-static-MT-Release.tar.bz2)
+//!
 //! ## Linux
 //!
 //! ```bash
@@ -46,12 +64,18 @@
 //! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 //! ```
 //!
+//! When using `features = ["static"]`, you do not need the `RUSTFLAGS` rpath
+//! setting above because the sherpa-onnx libraries are linked statically.
+//!
 //! ## macOS
 //!
 //! ```bash
 //! export SHERPA_ONNX_LIB_DIR=/path/to/sherpa-onnx/lib
 //! export RUSTFLAGS="-C link-arg=-Wl,-rpath,$SHERPA_ONNX_LIB_DIR"
 //! ```
+//!
+//! When using `features = ["static"]`, you do not need the `RUSTFLAGS` rpath
+//! setting above because the sherpa-onnx libraries are linked statically.
 //!
 //! ## Windows
 //!

@@ -81,7 +81,7 @@ jobs:
 
           echo "RUSTFLAGS: $RUSTFLAGS"
 
-      - name: Test locally
+      - name: Use local sherpa-onnx crate
         shell: bash
         run: |
           cd rust-api-examples
