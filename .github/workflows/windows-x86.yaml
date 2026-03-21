@@ -191,6 +191,7 @@ jobs:
 
           rm -rf $dst/lib/pkgconfig
           rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
+          rm -f $dst/include/cargs.h
 
           ls -lh $dst/bin/
           echo "---"
