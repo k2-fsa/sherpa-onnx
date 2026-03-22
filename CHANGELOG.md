@@ -1,3 +1,9 @@
+## 1.12.32
+
+* Support static link for Rust package. (#3386)
+* Test Rust API on Windows (#3385)
+* Add VoxSherpa TTS to Projects using sherpa-onnx (#3384)
+
 ## 1.12.31
 
 * Fix building har for OHOS (#3361)
@@ -17,7 +23,6 @@
 * Add doc for Rust API (#3376)
 * Add doc for Dart API (#3377)
 * Add more doc for Rust API (#3378)
-
 ## 1.12.30
 
 * Fix typos in the project (#3293)
