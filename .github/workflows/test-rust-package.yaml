@@ -44,6 +44,7 @@ jobs:
           & where.exe link
 
       - name: Use local sherpa-onnx crates
+        if: false
         shell: bash
         run: |
           mkdir -p rust-api-examples/.cargo
