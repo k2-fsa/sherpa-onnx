@@ -35,10 +35,12 @@ sed -i.bak "$replace_str" ./jitpack.yml
 sed -i.bak "$replace_str" ./android/SherpaOnnxAar/README.md
 
 sed -i.bak "$replace_str" ./rust-api-examples/Cargo.toml
+sed -i.bak "$replace_str" ./rust-api-examples/for-advanced-users.md
+sed -i.bak "$replace_str" ./rust-api-examples/README.md
 sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml
 sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/Cargo.toml
 sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/src/lib.rs
-sed -i.bak "$replace_str" ./rust-api-examples/README.md
+sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/README.md
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;

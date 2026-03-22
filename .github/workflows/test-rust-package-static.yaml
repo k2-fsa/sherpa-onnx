@@ -1,4 +1,4 @@
-name: Test rust package
+name: Test rust package static
 
 on:
   push:
@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: test-rust-package-${{ github.ref }}
+  group: test-rust-package-static-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test-rust-package:
-    name: Test shared ${{ matrix.os }} (${{ matrix.lib_setup }})
+  test-rust-package-static:
+    name: Test static ${{ matrix.os }} (${{ matrix.lib_setup }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -54,22 +54,22 @@ jobs:
           sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }
           PATCH
 
-      - name: Download shared libraries for explicit SHERPA_ONNX_LIB_DIR
+      - name: Download static libraries for explicit SHERPA_ONNX_LIB_DIR
         if: matrix.lib_setup == 'explicit'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
 
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-shared-lib
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-static-lib
           elif [[ "${{ matrix.os }}" == "macos-15-intel" ]]; then
-            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x64-shared-lib
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x64-static-lib
           elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-shared-lib
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-static-lib
           elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
-            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-shared-cpu-lib
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-static-lib
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-shared-MT-Release-lib
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-static-MT-Release-lib
           else
             echo "Unknown ${{ matrix.os }}"
             exit 1
@@ -79,11 +79,6 @@ jobs:
           tar -xvf "$d.tar.bz2"
           ls -lh "$d/lib"
           echo "SHERPA_ONNX_LIB_DIR=$PWD/$d/lib" >> "$GITHUB_ENV"
-          if [[ "${{ matrix.os }}" == ubuntu-* ]]; then
-            echo "LD_LIBRARY_PATH=$PWD/$d/lib:\$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          elif [[ "${{ matrix.os }}" == macos-* ]]; then
-            echo "DYLD_LIBRARY_PATH=$PWD/$d/lib:\$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          fi
 
       - name: Show library setup
         shell: bash
@@ -93,22 +88,14 @@ jobs:
             echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
             ls -lh "$SHERPA_ONNX_LIB_DIR"
           else
-            echo "SHERPA_ONNX_LIB_DIR is not set; build.rs will download the shared libs automatically."
-          fi
-
-          if [[ -n "${LD_LIBRARY_PATH:-}" ]]; then
-            echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-          fi
-
-          if [[ -n "${DYLD_LIBRARY_PATH:-}" ]]; then
-            echo "DYLD_LIBRARY_PATH: $DYLD_LIBRARY_PATH"
+            echo "SHERPA_ONNX_LIB_DIR is not set; build.rs will download the static libs automatically."
           fi
 
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER: $CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
           fi
 
-      - name: Run shared tests
+      - name: Run static tests
         shell: bash
         run: |
-          ./.github/scripts/test-rust-shared.sh
+          ./.github/scripts/test-rust-static.sh
