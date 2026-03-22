@@ -227,7 +227,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
 
       - name: Test offline FireRedASR
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -236,6 +236,7 @@ jobs:
           .github/scripts/test-offline-fire-red-asr.sh
 
       - name: Test offline CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -244,6 +245,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline speech denoiser
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -253,7 +255,7 @@ jobs:
           .github/scripts/test-offline-speech-denoiser.sh
 
       - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
+        if: matrix.with_tts == 'ON' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -262,7 +264,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -271,6 +273,7 @@ jobs:
           .github/scripts/test-offline-moonshine.sh
 
       - name: Test C++ API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -283,6 +286,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline speaker diarization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -292,6 +296,7 @@ jobs:
           .github/scripts/test-speaker-diarization.sh
 
       - name: Test offline transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -300,6 +305,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -308,6 +314,7 @@ jobs:
           .github/scripts/test-online-punctuation.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -316,6 +323,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -324,6 +332,7 @@ jobs:
           .github/scripts/test-offline-punctuation.sh
 
       - name: Test C API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -335,6 +344,7 @@ jobs:
           .github/scripts/test-c-api.sh
 
       - name: Test Audio tagging
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -343,6 +353,7 @@ jobs:
           .github/scripts/test-audio-tagging.sh
 
       - name: Test spoken language identification (C++ API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -351,6 +362,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test transducer kws
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -359,6 +371,7 @@ jobs:
           .github/scripts/test-kws.sh
 
       - name: Test online paraformer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -367,7 +380,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -376,6 +389,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test online transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -384,6 +398,7 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH

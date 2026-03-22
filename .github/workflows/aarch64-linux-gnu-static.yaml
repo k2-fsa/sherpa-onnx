@@ -194,7 +194,7 @@ jobs:
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .

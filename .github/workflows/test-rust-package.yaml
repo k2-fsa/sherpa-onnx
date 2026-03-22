@@ -3,7 +3,7 @@ name: Test rust package
 on:
   push:
     branches:
-      - rust-static
+      - rust-static2
   workflow_dispatch:
 
 concurrency:

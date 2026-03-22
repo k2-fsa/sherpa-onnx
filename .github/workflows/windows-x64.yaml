@@ -276,6 +276,7 @@ jobs:
           file: sherpa-onnx-*-win-x64*.tar.bz2
 
       - name: Test offline Moonshine for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -284,6 +285,7 @@ jobs:
           .github/scripts/test-offline-moonshine.sh
 
       - name: Test C++ API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -294,6 +296,7 @@ jobs:
           .github/scripts/test-cxx-api.sh
 
       - name: Test offline speaker diarization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -302,6 +305,7 @@ jobs:
           .github/scripts/test-speaker-diarization.sh
 
       - name: Test online punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -310,6 +314,7 @@ jobs:
           .github/scripts/test-online-punctuation.sh
 
       - name: Test offline punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -318,6 +323,7 @@ jobs:
           .github/scripts/test-offline-punctuation.sh
 
       - name: Test C API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -329,6 +335,7 @@ jobs:
           .github/scripts/test-c-api.sh
 
       - name: Test Audio tagging
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -337,6 +344,7 @@ jobs:
           .github/scripts/test-audio-tagging.sh
 
       - name: Test spoken language identification (C++ API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -345,6 +353,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -353,7 +362,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
+        if: matrix.with_tts == 'ON' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -362,6 +371,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -370,6 +380,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -378,6 +389,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test offline CTC for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -386,6 +398,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -394,6 +407,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
@@ -402,6 +416,7 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH

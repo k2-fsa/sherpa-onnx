@@ -256,6 +256,7 @@ jobs:
           file: sherpa-onnx-*.tar.bz2
 
       - name: Test offline source separation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -270,6 +271,7 @@ jobs:
           path: ./source-separation-wavs/*.wav
 
       - name: Test offline CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -280,6 +282,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline speech denoiser
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -289,7 +292,7 @@ jobs:
           .github/scripts/test-offline-speech-denoiser.sh
 
       - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
+        if: matrix.with_tts == 'ON' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .
@@ -311,7 +314,7 @@ jobs:
           path: tts
 
       - name: Test offline FireRedASR
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .
@@ -324,7 +327,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .
@@ -337,6 +340,7 @@ jobs:
           du -h -d1 .
 
       - name: Test C++ API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -349,6 +353,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline speaker diarization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -358,6 +363,7 @@ jobs:
           .github/scripts/test-speaker-diarization.sh
 
       - name: Test offline transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -368,6 +374,7 @@ jobs:
           du -h -d1 .
 
       - name: Test online punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -378,6 +385,7 @@ jobs:
           du -h -d1 .
 
       - name: Test online transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -388,6 +396,7 @@ jobs:
           du -h -d1 .
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -398,6 +407,7 @@ jobs:
           du -h -d1 .
 
       - name: Test spoken language identification (C++ API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -408,6 +418,7 @@ jobs:
           du -h -d1 .
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -418,6 +429,7 @@ jobs:
           du -h -d1 .
 
       - name: Test C API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -431,6 +443,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -441,6 +454,7 @@ jobs:
           du -h -d1 .
 
       - name: Test Audio tagging
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -451,6 +465,7 @@ jobs:
           du -h -d1 .
 
       - name: Test transducer kws
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -461,7 +476,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline Whisper
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .
@@ -474,6 +489,7 @@ jobs:
           du -h -d1 .
 
       - name: Test online paraformer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
