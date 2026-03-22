@@ -37,8 +37,8 @@ The build script currently selects archives like this:
 
 ### Default mode
 
-Default mode uses the default crate feature set. Most users just get this
-behavior automatically.
+Default mode uses the default crate feature set, which means **static** linking.
+Most users just get this behavior automatically.
 
 | OS | Architecture | Archive example |
 |----|--------------|-----------------|
@@ -110,7 +110,10 @@ cargo run --no-default-features --features "shared,mic" \
 
 When shared libraries are used:
 
-- Linux and macOS: the build script adds the runtime rpath automatically
+- Linux and macOS: the build script adds both absolute and relative runtime
+  rpath entries automatically
+- Linux and macOS: the build script also copies the required shared runtime
+  libraries next to Cargo-generated binaries and examples
 - Windows: the build script copies the required DLLs next to the generated
   binaries automatically
 

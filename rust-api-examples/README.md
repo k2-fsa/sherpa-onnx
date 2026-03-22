@@ -22,9 +22,17 @@ You can also run examples directly with Cargo:
 cargo run --example version
 ```
 
+The default Rust setup uses **static** linking.
+
 The first build may download the matching sherpa-onnx native libraries for your
 platform automatically. This is usually invisible apart from a short Cargo
 message showing the resolved library directory.
+
+If you want **shared** libraries instead of the default static behavior, use:
+
+```bash
+cargo run --no-default-features --features shared --example version
+```
 
 If you want to customize which libraries are used, set `SHERPA_ONNX_LIB_DIR`,
 choose shared instead of the default behavior, or configure the crate directly
@@ -86,7 +94,7 @@ For macOS, you can run
 ```
 otool -l target/debug/examples/version | grep -A2 LC_RPATH
 ```
-to check the RPATH.
+to check the RPATH for shared builds.
 
 ### Example 2: TTS with Pocket TTS (zero-shot voice cloning)
 

@@ -42,9 +42,16 @@
 //!
 //! That override works for both static and shared builds.
 //!
-//! On Linux and macOS, the build script adds rpath automatically for shared
-//! builds. On Windows, it copies the required DLLs next to the generated
-//! binaries automatically when using shared libraries.
+//! Shared mode is also intended to work out of the box for normal users:
+//!
+//! - Linux and macOS: the build script adds both absolute and relative rpath
+//!   entries automatically, and copies the required shared runtime libraries
+//!   next to Cargo-generated binaries and examples.
+//! - Windows: the build script copies the required DLLs next to the generated
+//!   binaries automatically when using shared libraries.
+//!
+//! So most users do not need to manually set `LD_LIBRARY_PATH` or
+//! `DYLD_LIBRARY_PATH`.
 //!
 //! Example `v1.12.31` archives used by the build script:
 //!
