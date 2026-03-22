@@ -688,6 +688,7 @@ jobs:
       - name: Fix version
         shell: bash
         run: |
+          sleep 60  # Wait for pub.dev to index
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           src_dir=$PWD/flutter/sherpa_onnx
