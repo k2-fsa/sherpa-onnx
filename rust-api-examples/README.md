@@ -25,8 +25,8 @@ cargo run --example version
 The default Rust setup uses **static** linking.
 
 The first build may download the matching sherpa-onnx native libraries for your
-platform automatically. This is usually invisible apart from a short Cargo
-message showing the resolved library directory.
+platform automatically. This process is usually automatic and mostly invisible
+to the user.
 
 If you want **shared** libraries instead of the default static behavior, use:
 

@@ -17,8 +17,8 @@
 //!
 //! This crate now links statically by default. If `SHERPA_ONNX_LIB_DIR` is not
 //! set, the build script downloads a matching prebuilt `-lib` archive from
-//! [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases) and prints
-//! the resolved library directory in the Cargo output.
+//! [GitHub releases](https://github.com/k2-fsa/sherpa-onnx/releases) and uses
+//! it automatically during the build.
 //!
 //! In other words, the default setup for most users is simply:
 //!

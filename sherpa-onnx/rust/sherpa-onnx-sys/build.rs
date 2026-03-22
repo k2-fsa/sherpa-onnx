@@ -136,7 +136,7 @@ fn download_prebuilt_libs(
                 .into());
             }
 
-            fs::copy(&local_archive_path, &archive_path)?;
+            copy_file_atomically(&local_archive_path, &archive_path)?;
         } else {
             let version = env!("CARGO_PKG_VERSION");
             let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
@@ -146,8 +146,7 @@ fn download_prebuilt_libs(
                 .call()
                 .map_err(|e| format!("Failed to download sherpa-onnx archive from {url}: {e}"))?;
             let mut reader = response.into_reader();
-            let mut file = File::create(&archive_path)?;
-            io::copy(&mut reader, &mut file)?;
+            write_reader_atomically(&mut reader, &archive_path)?;
         }
     }
 
@@ -155,10 +154,22 @@ fn download_prebuilt_libs(
         fs::remove_dir_all(&extracted_dir)?;
     }
 
-    let tar_file = File::open(&archive_path)?;
-    let decoder = BzDecoder::new(tar_file);
-    let mut archive = Archive::new(decoder);
-    archive.unpack(&cache_root)?;
+    let unpack_result: Result<(), DynError> = (|| {
+        let tar_file = File::open(&archive_path)?;
+        let decoder = BzDecoder::new(tar_file);
+        let mut archive = Archive::new(decoder);
+        archive.unpack(&cache_root)?;
+        Ok(())
+    })();
+    if let Err(err) = unpack_result {
+        let _ = fs::remove_file(&archive_path);
+        let _ = fs::remove_dir_all(&extracted_dir);
+        return Err(format!(
+            "Failed to unpack cached archive {}: {err}",
+            archive_path.display()
+        )
+        .into());
+    }
 
     if !lib_dir.is_dir() {
         return Err(format!(
@@ -245,17 +256,18 @@ fn emit_static_link_directives(target_os: &str) {
 }
 
 fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
-    out_dir
+    if let Ok(explicit_target_dir) = env::var("CARGO_TARGET_DIR") {
+        return Ok(PathBuf::from(explicit_target_dir));
+    }
+
+    if let Some(target_dir) = out_dir
         .ancestors()
         .find(|path| path.file_name() == Some(OsStr::new("target")))
-        .map(Path::to_path_buf)
-        .ok_or_else(|| {
-            format!(
-                "Could not locate Cargo target directory from OUT_DIR: {}",
-                out_dir.display()
-            )
-            .into()
-        })
+    {
+        return Ok(target_dir.to_path_buf());
+    }
+
+    Ok(out_dir.to_path_buf())
 }
 
 fn emit_relative_rpath(target_os: &str) {
@@ -351,13 +363,44 @@ fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynErro
     Ok(())
 }
 
+fn temp_path_for(path: &Path) -> PathBuf {
+    let mut temp_name = path
+        .file_name()
+        .map(OsStr::to_os_string)
+        .unwrap_or_else(|| OsString::from("tmp"));
+    temp_name.push(".part");
+    path.with_file_name(temp_name)
+}
+
+fn copy_file_atomically(src: &Path, dst: &Path) -> Result<(), DynError> {
+    let temp_path = temp_path_for(dst);
+    if temp_path.exists() {
+        let _ = fs::remove_file(&temp_path);
+    }
+    fs::copy(src, &temp_path)?;
+    fs::rename(&temp_path, dst)?;
+    Ok(())
+}
+
+fn write_reader_atomically(reader: &mut dyn io::Read, dst: &Path) -> Result<(), DynError> {
+    let temp_path = temp_path_for(dst);
+    if temp_path.exists() {
+        let _ = fs::remove_file(&temp_path);
+    }
+
+    {
+        let mut file = File::create(&temp_path)?;
+        io::copy(reader, &mut file)?;
+        file.sync_all()?;
+    }
+
+    fs::rename(&temp_path, dst)?;
+    Ok(())
+}
+
 fn copy_windows_runtime_dlls(lib_dir: &Path) -> Result<(), DynError> {
     let dlls: Vec<PathBuf> = fs::read_dir(lib_dir)?
-        .filter_map(|entry| {
-            entry
-                .ok()
-                .map(|e| e.path())
-        })
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
         .filter(|path| path.extension() == Some(OsStr::new("dll")))
         .collect();
 

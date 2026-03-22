@@ -31,11 +31,10 @@ show_stripped_size() {
   tmp="$(mktemp "${TMPDIR:-/tmp}/$(basename "$bin").XXXXXX")"
   cp "$bin" "$tmp"
 
+  echo "=== Binary size after strip ($strip_tool) ==="
   if "$strip_tool" "$tmp" >/dev/null 2>&1; then
-    echo "=== Binary size after strip ($strip_tool) ==="
     ls -lh "$tmp"
   else
-    echo "=== Binary size after strip ($strip_tool) ==="
     echo "strip failed"
   fi
 
