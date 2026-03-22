@@ -3,6 +3,7 @@ name: Publish Rust Crates
 on:
   push:
     branches:
+      - release
       - release-rust
 
   workflow_dispatch:

@@ -1,6 +1,10 @@
 name: release-nuget-package
 
 on:
+  push:
+    branches:
+      - release
+      - release-nuget
   workflow_dispatch:
 
 concurrency:
