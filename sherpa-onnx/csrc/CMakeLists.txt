@@ -19,6 +19,8 @@ set(sources
   endpoint.cc
   features.cc
   file-utils.cc
+  fire-red-vad-model-config.cc
+  fire-red-vad-model.cc
   fst-utils.cc
   homophone-replacer.cc
   hypothesis.cc
@@ -46,10 +48,10 @@ set(sources
   offline-medasr-ctc-model.cc
   offline-model-config.cc
   offline-moonshine-greedy-search-decoder.cc
-  offline-moonshine-v2-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
   offline-moonshine-model-v2.cc
   offline-moonshine-model.cc
+  offline-moonshine-v2-greedy-search-decoder.cc
   offline-nemo-enc-dec-ctc-model-config.cc
   offline-nemo-enc-dec-ctc-model.cc
   offline-omnilingual-asr-ctc-model-config.cc
