@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/fire-red-vad-model.h"
 
 #include <algorithm>
+#include <deque>
 #include <memory>
 #include <string>
 #include <utility>
@@ -29,6 +30,13 @@ namespace sherpa_onnx {
 
 class FireRedVadModel::Impl {
  public:
+  enum class VadState {
+    kSilence = 0,
+    kPossibleSpeech = 1,
+    kSpeech = 2,
+    kPossibleSilence = 3,
+  };
+
   explicit Impl(const VadModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
@@ -49,12 +57,6 @@ class FireRedVadModel::Impl {
                        config.fire_red_vad.window_size);
       SHERPA_ONNX_EXIT(-1);
     }
-
-    min_silence_samples_ =
-        sample_rate_ * config_.fire_red_vad.min_silence_duration;
-
-    min_speech_samples_ =
-        sample_rate_ * config_.fire_red_vad.min_speech_duration;
   }
 
   template <typename Manager>
@@ -78,21 +80,12 @@ class FireRedVadModel::Impl {
                        config.fire_red_vad.window_size);
       SHERPA_ONNX_EXIT(-1);
     }
-
-    min_silence_samples_ =
-        sample_rate_ * config_.fire_red_vad.min_silence_duration;
-
-    min_speech_samples_ =
-        sample_rate_ * config_.fire_red_vad.min_speech_duration;
   }
 
   void Reset() {
-    triggered_ = false;
-    current_sample_ = 0;
-    temp_start_ = 0;
-    temp_end_ = 0;
-
+    ResetPostProcessor();
     ResetStates();
+    CreateOnlineStream();
   }
 
   bool IsSpeech(const float *samples, int32_t n) {
@@ -101,85 +94,38 @@ class FireRedVadModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
     stream_->AcceptWaveform(16000, samples, n);
-    if (!IsReady()) {
-      return false;
+
+    int32_t is_speech = 0;
+    while (IsReady()) {
+      int32_t &num_processed_frames = stream_->GetNumProcessedFrames();
+      std::vector<float> feature = stream_->GetFrames(num_processed_frames, 1);
+      num_processed_frames += 1;
+      is_speech += Process(feature);
     }
 
-    int32_t &num_processed_frames = stream_->GetNumProcessedFrames();
-    std::vector<float> features = stream_->GetFrames(num_processed_frames, 1);
+    return is_speech;
+  }
 
-    num_processed_frames += 1;
-
-    float prob = Run(features.data(), features.size());
-
-    float threshold = config_.fire_red_vad.threshold;
-
-    current_sample_ += config_.fire_red_vad.window_size;
-
-    if (prob > threshold && temp_end_ != 0) {
-      temp_end_ = 0;
+  float Compute(const float *samples, int32_t n) {
+    if (n != WindowSize()) {
+      SHERPA_ONNX_LOGE("n: %d != window_size: %d", n, WindowSize());
+      SHERPA_ONNX_EXIT(-1);
     }
 
-    if (prob > threshold && temp_start_ == 0) {
-      // start speaking, but we require that it must satisfy
-      // min_speech_duration
-      temp_start_ = current_sample_;
-      return false;
+    stream_->AcceptWaveform(16000, samples, n);
+    while (IsReady()) {
+      int32_t &num_processed_frames = stream_->GetNumProcessedFrames();
+      std::vector<float> feature = stream_->GetFrames(num_processed_frames, 1);
+      num_processed_frames += 1;
+      last_prob_ = Run(feature.data(), static_cast<int32_t>(feature.size()));
     }
 
-    if (prob > threshold && temp_start_ != 0 && !triggered_) {
-      if (current_sample_ - temp_start_ < min_speech_samples_) {
-        return false;
-      }
+    return last_prob_;
+  }
 
-      triggered_ = true;
-
-      return true;
-    }
-
-    if ((prob < threshold) && !triggered_) {
-      // silence
-      temp_start_ = 0;
-      temp_end_ = 0;
-      return false;
-    }
-
-    float neg_threshold;
-    if (config_.fire_red_vad.neg_threshold < 0) {
-      neg_threshold = std::max(threshold - 0.15f, 0.01f);
-    } else {
-      neg_threshold = std::max(config_.fire_red_vad.neg_threshold, 0.01f);
-    }
-    if ((prob > neg_threshold) && triggered_) {
-      // speaking
-      return true;
-    }
-
-    if ((prob > threshold) && !triggered_) {
-      // start speaking
-      triggered_ = true;
-
-      return true;
-    }
-
-    if ((prob < threshold) && triggered_) {
-      // stop to speak
-      if (temp_end_ == 0) {
-        temp_end_ = current_sample_;
-      }
-
-      if (current_sample_ - temp_end_ < min_silence_samples_) {
-        // continue speaking
-        return true;
-      }
-      // stopped speaking
-      temp_start_ = 0;
-      temp_end_ = 0;
-      triggered_ = false;
-      return false;
-    }
-
-    return false;
+  bool Process(const std::vector<float> &features) {
+    last_prob_ = Run(features.data(), static_cast<int32_t>(features.size()));
+    return ProcessOneFrame(last_prob_);
   }
 
   int32_t WindowShift() const { return config_.fire_red_vad.window_size; }
@@ -194,29 +140,11 @@ class FireRedVadModel::Impl {
 
   void SetMinSilenceDuration(float s) {
     min_silence_samples_ = sample_rate_ * s;
+    min_silence_frame_ = std::max(1, static_cast<int32_t>(s * 100 + 0.5f));
   }
 
   void SetThreshold(float threshold) {
     config_.fire_red_vad.threshold = threshold;
-  }
-
-  float RunFromSamples(const float *samples, int32_t n) {
-    if (n != WindowSize()) {
-      SHERPA_ONNX_LOGE("n: %d != window_size: %d", n, WindowSize());
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    stream_->AcceptWaveform(16000, samples, n);
-    if (!IsReady()) {
-      return 0;
-    }
-
-    int32_t &num_processed_frames = stream_->GetNumProcessedFrames();
-    std::vector<float> features = stream_->GetFrames(num_processed_frames, 1);
-
-    num_processed_frames += 1;
-
-    return Run(features.data(), features.size());
   }
 
  private:
@@ -241,13 +169,11 @@ class FireRedVadModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    min_silence_samples_ = sample_rate_ * 0.3f;
+    min_speech_samples_ = sample_rate_ * 0.08f;
+
+    CreateOnlineStream();
     Reset();
-
-    FeatureExtractorConfig feat_config;
-    feat_config.normalize_samples = false;
-    feat_config.snip_edges = true;
-
-    stream_ = std::make_unique<OnlineStream>(feat_config);
   }
 
   void ResetStates() {
@@ -264,7 +190,7 @@ class FireRedVadModel::Impl {
   }
 
   bool IsReady() const {
-    return stream_->GetNumProcessedFrames() + 1 < stream_->NumFramesReady();
+    return stream_->GetNumProcessedFrames() < stream_->NumFramesReady();
   }
 
   float Run(const float *features, int32_t n) {
@@ -298,7 +224,134 @@ class FireRedVadModel::Impl {
     return prob;
   }
 
+  void CreateOnlineStream() {
+    if (stream_) {
+      return;
+    }
+
+    FeatureExtractorConfig feat_config;
+    feat_config.normalize_samples = false;
+    feat_config.snip_edges = true;
+    feat_config.feature_dim = 80;
+    feat_config.frame_length_ms = 25;
+    feat_config.frame_shift_ms = 10;
+    feat_config.dither = 0;
+    stream_ = std::make_unique<OnlineStream>(feat_config);
+  }
+
+  void ResetPostProcessor() {
+    smooth_window_.clear();
+    smooth_window_sum_ = 0;
+    frame_cnt_ = 0;
+    state_ = VadState::kSilence;
+    speech_cnt_ = 0;
+    silence_cnt_ = 0;
+    hit_max_speech_ = false;
+    last_speech_start_frame_ = -1;
+    last_speech_end_frame_ = -1;
+    last_prob_ = 0;
+  }
+
+  float SmoothProb(float prob) {
+    smooth_window_.push_back(prob);
+    smooth_window_sum_ += prob;
+
+    while (static_cast<int32_t>(smooth_window_.size()) > kSmoothWindowSize) {
+      smooth_window_sum_ -= smooth_window_.front();
+      smooth_window_.pop_front();
+    }
+
+    return smooth_window_sum_ / smooth_window_.size();
+  }
+
+  bool ProcessOneFrame(float raw_prob) {
+    ++frame_cnt_;
+
+    float smoothed_prob = SmoothProb(raw_prob);
+    bool is_speech = smoothed_prob >= config_.fire_red_vad.threshold;
+
+    if (hit_max_speech_) {
+      last_speech_start_frame_ = frame_cnt_;
+      hit_max_speech_ = false;
+    }
+
+    switch (state_) {
+      case VadState::kSilence:
+        if (is_speech) {
+          state_ = VadState::kPossibleSpeech;
+          speech_cnt_ += 1;
+        } else {
+          silence_cnt_ += 1;
+          speech_cnt_ = 0;
+        }
+        break;
+
+      case VadState::kPossibleSpeech:
+        if (is_speech) {
+          speech_cnt_ += 1;
+          if (speech_cnt_ >= kMinSpeechFrame) {
+            state_ = VadState::kSpeech;
+            int32_t start_frame =
+                std::max(1, frame_cnt_ - speech_cnt_ + 1 - kPadStartFrame);
+            last_speech_start_frame_ =
+                std::max(start_frame, last_speech_end_frame_ + 1);
+            silence_cnt_ = 0;
+          }
+        } else {
+          state_ = VadState::kSilence;
+          silence_cnt_ = 1;
+          speech_cnt_ = 0;
+        }
+        break;
+
+      case VadState::kSpeech:
+        speech_cnt_ += 1;
+        if (is_speech) {
+          silence_cnt_ = 0;
+          if (speech_cnt_ >= kMaxSpeechFrame) {
+            hit_max_speech_ = true;
+            speech_cnt_ = 0;
+            last_speech_end_frame_ = frame_cnt_;
+            last_speech_start_frame_ = -1;
+          }
+        } else {
+          state_ = VadState::kPossibleSilence;
+          silence_cnt_ += 1;
+        }
+        break;
+
+      case VadState::kPossibleSilence:
+        speech_cnt_ += 1;
+        if (is_speech) {
+          state_ = VadState::kSpeech;
+          silence_cnt_ = 0;
+          if (speech_cnt_ >= kMaxSpeechFrame) {
+            hit_max_speech_ = true;
+            speech_cnt_ = 0;
+            last_speech_end_frame_ = frame_cnt_;
+            last_speech_start_frame_ = -1;
+          }
+        } else {
+          silence_cnt_ += 1;
+          if (silence_cnt_ >= min_silence_frame_) {
+            state_ = VadState::kSilence;
+            last_speech_end_frame_ = frame_cnt_;
+            last_speech_start_frame_ = -1;
+            speech_cnt_ = 0;
+          }
+        }
+        break;
+    }
+
+    return state_ == VadState::kSpeech || state_ == VadState::kPossibleSilence;
+  }
+
  private:
+  static constexpr int32_t kSmoothWindowSize = 5;
+  static constexpr int32_t kPadStartFrame = 5;
+  static constexpr int32_t kMinSpeechFrame = 8;
+  static constexpr int32_t kMaxSpeechFrame = 2000;
+
   VadModelConfig config_;
 
   Ort::Env env_;
@@ -317,15 +370,21 @@ class FireRedVadModel::Impl {
   int64_t sample_rate_;
   int32_t min_silence_samples_;
   int32_t min_speech_samples_;
-
-  bool triggered_ = false;
-  int32_t current_sample_ = 0;
-  int32_t temp_start_ = 0;
-  int32_t temp_end_ = 0;
+  int32_t min_silence_frame_ = 30;
 
   int32_t window_overlap_ = 0;
 
   std::unique_ptr<OnlineStream> stream_;
+  std::deque<float> smooth_window_;
+  float smooth_window_sum_ = 0;
+  int32_t frame_cnt_ = 0;
+  VadState state_ = VadState::kSilence;
+  int32_t speech_cnt_ = 0;
+  int32_t silence_cnt_ = 0;
+  bool hit_max_speech_ = false;
+  int32_t last_speech_start_frame_ = -1;
+  int32_t last_speech_end_frame_ = -1;
+  float last_prob_ = 0;
 };
 
 FireRedVadModel::FireRedVadModel(const VadModelConfig &config)
@@ -364,7 +423,7 @@ void FireRedVadModel::SetThreshold(float threshold) {
 }
 
 float FireRedVadModel::Compute(const float *samples, int32_t n) {
-  return impl_->RunFromSamples(samples, n);
+  return impl_->Compute(samples, n);
 }
 
 #if __ANDROID_API__ >= 9

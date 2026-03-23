@@ -98,7 +98,7 @@ class VoiceActivityDetector::Impl {
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
-        start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
+        start_ = std::max(buffer_.Tail() - 12 * model_->WindowSize() -
                               model_->MinSpeechDurationSamples(),
                           buffer_.Head());
         cur_segment_.start = start_;
@@ -113,7 +113,10 @@ class VoiceActivityDetector::Impl {
 
       if (start_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
-        int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+        int32_t end =
+            std::min(buffer_.Tail() - model_->MinSilenceDurationSamples() +
+                         model_->WindowSize(),
+                     buffer_.Tail());
 
         std::vector<float> s = buffer_.Get(start_, end - start_);
         SpeechSegment segment;
@@ -127,8 +130,7 @@ class VoiceActivityDetector::Impl {
       }
 
       if (start_ == -1) {
-        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
-                      model_->MinSpeechDurationSamples();
+        int32_t end = buffer_.Tail() - model_->MinSpeechDurationSamples();
         int32_t n = std::max(0, end - buffer_.Head());
         if (n > 0) {
           buffer_.Pop(n);
