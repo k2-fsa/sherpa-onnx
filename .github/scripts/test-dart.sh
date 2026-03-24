@@ -193,6 +193,9 @@ popd
 pushd add-punctuations
 echo '----------CT Transformer----------'
 ./run-ct-transformer.sh
+echo '----------Online punctuation----------'
+./run-online.sh
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
 popd
 
 pushd audio-tagging

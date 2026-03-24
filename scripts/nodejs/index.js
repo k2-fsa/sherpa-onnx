@@ -7,6 +7,7 @@ const sherpa_onnx_tts = require('./sherpa-onnx-tts.js');
 const sherpa_onnx_kws = require('./sherpa-onnx-kws.js');
 const sherpa_onnx_wave = require('./sherpa-onnx-wave.js');
 const sherpa_onnx_vad = require('./sherpa-onnx-vad.js');
+const sherpa_onnx_punctuation = require('./sherpa-onnx-punctuation.js');
 const sherpa_onnx_speaker_diarization =
     require('./sherpa-onnx-speaker-diarization.js');
 const sherpa_onnx_speech_enhancement =
@@ -36,6 +37,14 @@ function createCircularBuffer(capacity) {
 
 function createVad(config) {
   return sherpa_onnx_vad.createVad(wasmModule, config);
+}
+
+function createOfflinePunctuation(config) {
+  return new sherpa_onnx_punctuation.OfflinePunctuation(config, wasmModule);
+}
+
+function createOnlinePunctuation(config) {
+  return new sherpa_onnx_punctuation.OnlinePunctuation(config, wasmModule);
 }
 
 function createOfflineSpeakerDiarization(config) {
@@ -92,6 +101,8 @@ module.exports = {
   writeWave,
   createCircularBuffer,
   createVad,
+  createOfflinePunctuation,
+  createOnlinePunctuation,
   createOfflineSpeakerDiarization,
   createOfflineSpeechDenoiser,
   createOnlineSpeechDenoiser,
