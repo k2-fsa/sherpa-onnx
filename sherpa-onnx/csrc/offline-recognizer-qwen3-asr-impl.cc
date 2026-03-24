@@ -28,7 +28,6 @@
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "kaldi-native-fbank/csrc/online-feature.h"
 
 namespace sherpa_onnx {
 
@@ -37,6 +36,10 @@ namespace {
 constexpr int32_t kQwen3ChunkSize = 100;
 
 int32_t FeatToAudioTokensLen(int32_t feat_len, int32_t chunk_size) {
+  if (feat_len <= 0 || chunk_size <= 0) {
+    return 0;
+  }
+
   auto conv_out_len_3x_stride2 = [](int32_t n) -> int32_t {
     int32_t x = (n + 1) / 2;
     x = (x + 1) / 2;
@@ -44,17 +47,42 @@ int32_t FeatToAudioTokensLen(int32_t feat_len, int32_t chunk_size) {
   };
 
   auto aftercnn = [](int32_t x) -> int32_t {
+    if (x <= 0) {
+      return 0;
+    }
     x = (x - 1) / 2 + 1;
     x = (x - 1) / 2 + 1;
     return (x - 1) / 2 + 1;
   };
 
-  int32_t cs = chunk_size;
-  int32_t full = feat_len / cs;
-  int32_t rem = feat_len % cs;
-  int32_t tn = conv_out_len_3x_stride2(cs);
-  int32_t out = full * tn + aftercnn(rem);
+  const int32_t cs = chunk_size;
+  const int32_t full = feat_len / cs;
+  const int32_t rem = feat_len % cs;
+  const int32_t tn = conv_out_len_3x_stride2(cs);
+
+  int32_t out = full * tn;
+  if (rem > 0) {
+    out += aftercnn(rem);
+  }
+
   return std::max(out, 0);
+}
+
+inline bool IsFloatOrHalfBitsTensorType(ONNXTensorElementDataType elem_type) {
+  return elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT ||
+         elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
+         elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16;
+}
+
+inline float ReadFloatOrHalfBitsValue(const float *data_f32,
+                                      const uint16_t *data_f16_bits,
+                                      ONNXTensorElementDataType elem_type,
+                                      int64_t index) {
+  if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    return data_f32[index];
+  }
+
+  return HalfBitsToFloat(data_f16_bits[index]);
 }
 
 Ort::Value TrimAudioFeatures(Ort::Value audio_features,
@@ -67,56 +95,59 @@ Ort::Value TrimAudioFeatures(Ort::Value audio_features,
 
   auto elem_type =
       static_cast<ONNXTensorElementDataType>(info.GetElementType());
-  if (elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT &&
-      elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 &&
-      elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16) {
+  if (!IsFloatOrHalfBitsTensorType(elem_type)) {
     return audio_features;
   }
 
-  int32_t A = static_cast<int32_t>(shape[1]);
-  int32_t H = static_cast<int32_t>(shape[2]);
+  const int32_t A = static_cast<int32_t>(shape[1]);
+  const int32_t H = static_cast<int32_t>(shape[2]);
+
   const float *data_f32 = nullptr;
-  const uint16_t *data_f16 = nullptr;
+  const uint16_t *data_f16_bits = nullptr;
   if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
     data_f32 = audio_features.GetTensorData<float>();
   } else {
-    data_f16 = audio_features.GetTensorData<uint16_t>();
+    data_f16_bits = audio_features.GetTensorData<uint16_t>();
   }
 
-  int32_t A_valid = A;
+  int32_t A_valid = 0;
   const float eps = 1e-6f;
+
   for (int32_t a = A - 1; a >= 0; --a) {
     float max_energy = 0.0f;
-    for (int64_t h = 0; h < H; ++h) {
-      float v = 0.0f;
-      if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-        v = data_f32[a * H + h];
-      } else {
-        v = HalfBitsToFloat(data_f16[a * H + h]);
-      }
-
+    for (int32_t h = 0; h < H; ++h) {
+      float v = ReadFloatOrHalfBitsValue(data_f32, data_f16_bits, elem_type,
+                                         static_cast<int64_t>(a) * H + h);
       float abs_val = std::abs(v);
-      if (abs_val > max_energy) max_energy = abs_val;
+      if (abs_val > max_energy) {
+        max_energy = abs_val;
+      }
     }
+
     if (max_energy > eps) {
       A_valid = a + 1;
       break;
     }
   }
 
-  if (A_valid == A) return audio_features;
+  if (A_valid <= 0) {
+    return audio_features;
+  }
+
+  if (A_valid == A) {
+    return audio_features;
+  }
 
   std::array<int64_t, 3> new_shape{1, static_cast<int64_t>(A_valid), H};
-  Ort::Value trimmed =
-      Ort::Value::CreateTensor(allocator, new_shape.data(), new_shape.size(),
-                               static_cast<ONNXTensorElementDataType>(elem_type));
+  Ort::Value trimmed = Ort::Value::CreateTensor(allocator, new_shape.data(),
+                                                new_shape.size(), elem_type);
 
   if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
     const float *src = audio_features.GetTensorData<float>();
     float *dst = trimmed.GetTensorMutableData<float>();
-    std::memcpy(dst, src,
-                static_cast<size_t>(A_valid) * static_cast<size_t>(H) *
-                    sizeof(float));
+    std::memcpy(
+        dst, src,
+        static_cast<size_t>(A_valid) * static_cast<size_t>(H) * sizeof(float));
   } else {
     const uint16_t *src = audio_features.GetTensorData<uint16_t>();
     uint16_t *dst = trimmed.GetTensorMutableData<uint16_t>();
@@ -155,9 +186,9 @@ Ort::Value TruncateAudioFeatures(Ort::Value audio_features, int32_t keep_frames,
   }
 
   std::array<int64_t, 3> new_shape{1, static_cast<int64_t>(keep_frames), H};
-  Ort::Value truncated =
-      Ort::Value::CreateTensor(allocator, new_shape.data(), new_shape.size(),
-                               static_cast<ONNXTensorElementDataType>(elem_type));
+  Ort::Value truncated = Ort::Value::CreateTensor(
+      allocator, new_shape.data(), new_shape.size(),
+      static_cast<ONNXTensorElementDataType>(elem_type));
 
   if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
     const float *src = audio_features.GetTensorData<float>();
@@ -200,7 +231,52 @@ Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
   return cache_position;
 }
 
-void RemoveUtf8ReplacementChars(std::string *s) {
+inline float TensorAbsMax(const Ort::Value &t, int64_t limit) {
+  auto info = t.GetTensorTypeAndShapeInfo();
+  auto shape = info.GetShape();
+
+  int64_t n = 1;
+  for (auto d : shape) {
+    if (d <= 0) {
+      return 0.0f;
+    }
+    if (n > (std::numeric_limits<int64_t>::max() / d)) {
+      return 0.0f;
+    }
+    n *= d;
+  }
+
+  if (limit > 0 && n > limit) {
+    n = limit;
+  }
+
+  auto elem_type =
+      static_cast<ONNXTensorElementDataType>(info.GetElementType());
+  if (!IsFloatOrHalfBitsTensorType(elem_type)) {
+    return 0.0f;
+  }
+
+  const float *data_f32 = nullptr;
+  const uint16_t *data_f16_bits = nullptr;
+  if (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+    data_f32 = t.GetTensorData<float>();
+  } else {
+    data_f16_bits = t.GetTensorData<uint16_t>();
+  }
+
+  float abs_max = 0.0f;
+  for (int64_t i = 0; i < n; ++i) {
+    float v = std::abs(
+        ReadFloatOrHalfBitsValue(data_f32, data_f16_bits, elem_type, i));
+    if (std::isfinite(v) && v > abs_max) {
+      abs_max = v;
+    }
+  }
+
+  return abs_max;
+}
+
+inline void RemoveUtf8ReplacementChars(std::string *s) {
   if (!s || s->empty()) {
     return;
   }
@@ -239,8 +315,8 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
   InitPromptTemplateIds();
 }
 
-std::unique_ptr<OfflineStream>
-OfflineRecognizerQwen3ASRImpl::CreateStream() const {
+std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
+    const {
   return std::make_unique<OfflineStream>(config_.feat_config);
 }
 
@@ -280,10 +356,10 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
   }
 
   std::vector<int64_t> source_ids;
-  size_t estimated_size = prompt_ids_before_.size() +
-                          static_cast<size_t>(audio_token_len) *
-                              audio_pad_ids_.size() +
-                          prompt_ids_after_.size();
+  size_t estimated_size =
+      prompt_ids_before_.size() +
+      static_cast<size_t>(audio_token_len) * audio_pad_ids_.size() +
+      prompt_ids_after_.size();
   source_ids.reserve(estimated_size);
   source_ids.insert(source_ids.end(), prompt_ids_before_.begin(),
                     prompt_ids_before_.end());
@@ -301,9 +377,14 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
 
 int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenFromLogitsFp16OrFp32(
     const void *logits, bool is_fp16, int32_t vocab_size) const {
+  if (!logits || vocab_size <= 0) {
+    return 0;
+  }
+
   int32_t best = 0;
-  float best_val = -1e30f;
+  float best_val = -std::numeric_limits<float>::infinity();
   bool found_valid = false;
+
   if (is_fp16) {
     const uint16_t *p = reinterpret_cast<const uint16_t *>(logits);
     for (int32_t i = 0; i < vocab_size; ++i) {
@@ -338,23 +419,29 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenFromLogits(
     return 0;
   }
 
-  int32_t time_dim = static_cast<int32_t>(shape[1]);
+  const int32_t time_dim = static_cast<int32_t>(shape[1]);
   if (time_index >= time_dim) {
     return 0;
   }
 
-  int32_t vocab_size = static_cast<int32_t>(shape[2]);
+  const int32_t vocab_size = static_cast<int32_t>(shape[2]);
   auto elem_type =
       static_cast<ONNXTensorElementDataType>(info.GetElementType());
-  bool is_fp16 = (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
-                  elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16);
 
-  const void *base = is_fp16
-                         ? static_cast<const void *>(
-                               logits.GetTensorData<uint16_t>())
-                         : static_cast<const void *>(logits.GetTensorData<float>());
+  if (elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT &&
+      elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 &&
+      elem_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16) {
+    return 0;
+  }
 
-  size_t offset = static_cast<size_t>(time_index) * vocab_size;
+  const bool is_fp16 = (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
+                        elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16);
+
+  const void *base =
+      is_fp16 ? static_cast<const void *>(logits.GetTensorData<uint16_t>())
+              : static_cast<const void *>(logits.GetTensorData<float>());
+
+  const size_t offset = static_cast<size_t>(time_index) * vocab_size;
   const void *row = is_fp16
                         ? static_cast<const void *>(
                               reinterpret_cast<const uint16_t *>(base) + offset)
@@ -366,18 +453,59 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenFromLogits(
 }
 
 int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
-    const void *logits, bool is_fp16, int32_t vocab_size,
-    float temperature, float top_p) const {
-  if (vocab_size <= 0 || temperature <= 1e-6f) {
-    return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
+    const void *logits, bool is_fp16, int32_t vocab_size, float temperature,
+    float top_p, int64_t avoid_id) const {
+  if (!logits || vocab_size <= 0) {
+    return 0;
   }
 
-  std::vector<float> probs(vocab_size);
+  if (temperature <= 1e-6f) {
+    int32_t best = 0;
+    float best_val = -std::numeric_limits<float>::infinity();
+    bool found_valid = false;
+
+    if (is_fp16) {
+      const uint16_t *p = reinterpret_cast<const uint16_t *>(logits);
+      for (int32_t i = 0; i < vocab_size; ++i) {
+        if (avoid_id >= 0 && i == avoid_id) {
+          continue;
+        }
+        float v = HalfBitsToFloat(p[i]);
+        if (std::isfinite(v) && v > best_val) {
+          best_val = v;
+          best = i;
+          found_valid = true;
+        }
+      }
+    } else {
+      const float *p = reinterpret_cast<const float *>(logits);
+      for (int32_t i = 0; i < vocab_size; ++i) {
+        if (avoid_id >= 0 && i == avoid_id) {
+          continue;
+        }
+        float v = p[i];
+        if (std::isfinite(v) && v > best_val) {
+          best_val = v;
+          best = i;
+          found_valid = true;
+        }
+      }
+    }
+
+    return found_valid ? best : 0;
+  }
+
+  std::vector<float> probs(vocab_size, 0.0f);
   float max_logit = -std::numeric_limits<float>::infinity();
 
   if (is_fp16) {
     const uint16_t *p = reinterpret_cast<const uint16_t *>(logits);
     for (int32_t i = 0; i < vocab_size; ++i) {
+      if (avoid_id >= 0 && i == avoid_id) {
+        probs[i] = -std::numeric_limits<float>::infinity();
+        continue;
+      }
+
       float v = HalfBitsToFloat(p[i]);
       if (!std::isfinite(v)) {
         probs[i] = -std::numeric_limits<float>::infinity();
@@ -392,6 +520,11 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
   } else {
     const float *p = reinterpret_cast<const float *>(logits);
     for (int32_t i = 0; i < vocab_size; ++i) {
+      if (avoid_id >= 0 && i == avoid_id) {
+        probs[i] = -std::numeric_limits<float>::infinity();
+        continue;
+      }
+
       float v = p[i];
       if (!std::isfinite(v)) {
         probs[i] = -std::numeric_limits<float>::infinity();
@@ -427,6 +560,7 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
   if (top_p < 1.0f - 1e-6f) {
     std::vector<std::pair<int32_t, float>> prob_idx;
     prob_idx.reserve(vocab_size);
+
     for (int32_t i = 0; i < vocab_size; ++i) {
       if (probs[i] > 0.0f) {
         prob_idx.push_back({i, probs[i]});
@@ -437,11 +571,10 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
       return SampleTokenFromLogitsFp16OrFp32(logits, is_fp16, vocab_size);
     }
 
-    std::sort(prob_idx.begin(), prob_idx.end(),
-              [](const std::pair<int32_t, float> &a,
-                 const std::pair<int32_t, float> &b) {
-                return a.second > b.second;
-              });
+    std::sort(
+        prob_idx.begin(), prob_idx.end(),
+        [](const std::pair<int32_t, float> &a,
+           const std::pair<int32_t, float> &b) { return a.second > b.second; });
 
     float kept_sum = 0.0f;
     int32_t cutoff = static_cast<int32_t>(prob_idx.size());
@@ -474,6 +607,7 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
         return prob_idx[i].first;
       }
     }
+
     return prob_idx[cutoff - 1].first;
   }
 
@@ -485,6 +619,7 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
       return i;
     }
   }
+
   return vocab_size - 1;
 }
 
@@ -498,6 +633,25 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   Ort::Value trimmed_audio_features =
       TrimAudioFeatures(std::move(audio_features), model_->Allocator());
 
+  auto trimmed_shape =
+      trimmed_audio_features.GetTensorTypeAndShapeInfo().GetShape();
+  if (trimmed_shape.size() == 3 && trimmed_shape[1] > 0) {
+    audio_token_len = std::min<int32_t>(audio_token_len,
+                                        static_cast<int32_t>(trimmed_shape[1]));
+  }
+
+  if (config_.model_config.debug) {
+    auto sh = trimmed_audio_features.GetTensorTypeAndShapeInfo().GetShape();
+    float abs_max = TensorAbsMax(trimmed_audio_features, 1LL << 20);
+    SHERPA_ONNX_LOGE(
+        "qwen3-asr: audio_features shape=[%ld,%ld,%ld] abs_max=%f "
+        "audio_token_len=%d",
+        static_cast<long>(sh.size() > 0 ? sh[0] : -1),
+        static_cast<long>(sh.size() > 1 ? sh[1] : -1),
+        static_cast<long>(sh.size() > 2 ? sh[2] : -1), abs_max,
+        audio_token_len);
+  }
+
   if (audio_token_len <= 0) {
     result.text = "";
     return result;
@@ -507,6 +661,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   int32_t fake_audio_token_len = 0;
   std::vector<int64_t> source_ids =
       BuildSourceIds(audio_token_len, &before_len, &fake_audio_token_len);
+
   int32_t context_len = static_cast<int32_t>(source_ids.size());
   if (context_len == 0) {
     result.text = "";
@@ -515,10 +670,10 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
       model_->CreateEmptyKVCache(1);
-  int32_t max_seq_len = model_->GetMaxTotalLen();
+  const int32_t max_seq_len = model_->GetMaxTotalLen();
 
   if (context_len > max_seq_len) {
-    int32_t one_audio_len = static_cast<int32_t>(audio_pad_ids_.size());
+    const int32_t one_audio_len = static_cast<int32_t>(audio_pad_ids_.size());
     if (one_audio_len <= 0) {
       result.text = "";
       return result;
@@ -558,13 +713,16 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       source_ids.clear();
       source_ids.reserve(before_len + keep_audio * one_audio_len + after_len);
       source_ids.insert(source_ids.end(), ids_before.begin(), ids_before.end());
+
       for (int32_t i = 0; i < keep_audio; ++i) {
         source_ids.insert(source_ids.end(), audio_pad_ids_.begin(),
                           audio_pad_ids_.end());
       }
+
       source_ids.insert(source_ids.end(), ids_after.begin(), ids_after.end());
 
       fake_audio_token_len = keep_audio;
+      audio_token_len = keep_audio;
       context_len = static_cast<int32_t>(source_ids.size());
 
       trimmed_audio_features = TruncateAudioFeatures(
@@ -574,9 +732,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   std::vector<int64_t> input_ids = source_ids;
   std::array<int64_t, 2> ids_shape{1, context_len};
-  Ort::Value input_ids_tensor = Ort::Value::CreateTensor(
-      memory_info, input_ids.data(), input_ids.size(), ids_shape.data(),
-      ids_shape.size());
+  Ort::Value input_ids_tensor =
+      Ort::Value::CreateTensor(memory_info, input_ids.data(), input_ids.size(),
+                               ids_shape.data(), ids_shape.size());
 
   std::array<int64_t, 2> attn_mask_shape{1, context_len};
   std::vector<int64_t> attn_mask_vec(context_len, 1);
@@ -588,10 +746,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       attention_mask, context_len, model_->Allocator());
   Ort::Value audio_features_view = View(&trimmed_audio_features);
 
-  auto tmp = model_->ForwardLLM(std::move(input_ids_tensor),
-                                std::move(audio_features_view),
-                                std::move(attention_mask), cache_position,
-                                cache_kv);
+  auto tmp = model_->ForwardLLM(
+      std::move(input_ids_tensor), std::move(audio_features_view),
+      std::move(attention_mask), cache_position, cache_kv);
   Ort::Value logits = std::move(tmp.first);
   auto kv_outputs = std::move(tmp.second);
 
@@ -609,9 +766,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     return result;
   }
 
-  int32_t time_dim = static_cast<int32_t>(log_shape[1]);
-  int32_t last_idx = context_len - 1;
+  const int32_t time_dim = static_cast<int32_t>(log_shape[1]);
+  const int32_t last_idx = context_len - 1;
   if (last_idx >= time_dim) {
+    if (config_.model_config.debug) {
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: logits time_dim (%d) < context_len (%d); "
+          "cannot sample first token",
+          time_dim, context_len);
+    }
     result.text = "";
     return result;
   }
@@ -620,8 +783,39 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       logits, last_idx, qwen3_config.temperature, qwen3_config.top_p);
 
   if (next_id == eos_id) {
-    result.text = "";
-    return result;
+    if (config_.model_config.debug) {
+      float abs_max = TensorAbsMax(logits, 1LL << 20);
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: first token is EOS (eos_id=%ld). logits_abs_max=%f "
+          "context_len=%d max_total_len=%d",
+          static_cast<long>(eos_id), abs_max, context_len, max_seq_len);
+    }
+
+    const int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
+    auto elem_type = static_cast<ONNXTensorElementDataType>(
+        logits.GetTensorTypeAndShapeInfo().GetElementType());
+    const bool is_fp16 = (elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16 ||
+                          elem_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16);
+
+    const void *base =
+        is_fp16 ? static_cast<const void *>(logits.GetTensorData<uint16_t>())
+                : static_cast<const void *>(logits.GetTensorData<float>());
+
+    const size_t offset = static_cast<size_t>(last_idx) * vocab_size;
+    const void *row =
+        is_fp16 ? static_cast<const void *>(
+                      reinterpret_cast<const uint16_t *>(base) + offset)
+                : static_cast<const void *>(
+                      reinterpret_cast<const float *>(base) + offset);
+
+    next_id = SampleTokenWithTemperatureAndTopP(row, is_fp16, vocab_size,
+                                                qwen3_config.temperature,
+                                                qwen3_config.top_p, eos_id);
+
+    if (next_id == eos_id) {
+      result.text = "";
+      return result;
+    }
   }
 
   generated_ids.push_back(next_id);
@@ -632,12 +826,12 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       break;
     }
 
-    int64_t last_token_id = next_id;
+    const int64_t last_token_id = next_id;
     std::vector<int64_t> one_id{last_token_id};
     std::array<int64_t, 2> one_shape{1, 1};
-    Ort::Value one_tensor = Ort::Value::CreateTensor(
-        memory_info, one_id.data(), one_id.size(), one_shape.data(),
-        one_shape.size());
+    Ort::Value one_tensor =
+        Ort::Value::CreateTensor(memory_info, one_id.data(), one_id.size(),
+                                 one_shape.data(), one_shape.size());
 
     std::array<int64_t, 2> mask_shape{1, 1};
     std::vector<int64_t> mask_vec(1, 1);
@@ -653,10 +847,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
     Ort::Value audio_features_view2 = View(&trimmed_audio_features);
 
-    auto tmp2 = model_->ForwardLLM(std::move(one_tensor),
-                                   std::move(audio_features_view2),
-                                   std::move(next_attention_mask),
-                                   next_cache_position, cache_kv);
+    auto tmp2 = model_->ForwardLLM(
+        std::move(one_tensor), std::move(audio_features_view2),
+        std::move(next_attention_mask), next_cache_position, cache_kv);
     logits = std::move(tmp2.first);
     auto kv_outputs2 = std::move(tmp2.second);
 
@@ -667,7 +860,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       break;
     }
 
-    int32_t time_dim2 = static_cast<int32_t>(log_shape2[1]);
+    const int32_t time_dim2 = static_cast<int32_t>(log_shape2[1]);
     if (time_dim2 < 1) {
       break;
     }
@@ -680,7 +873,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     }
 
     generated_ids.push_back(next_id);
-    cur_len += 1;
+    ++cur_len;
   }
 
   result.text = tokenizer_->Decode(generated_ids);
@@ -689,6 +882,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   if (!generated_ids.empty()) {
     result.tokens.reserve(generated_ids.size());
     std::string pending_bytes;
+
     for (int64_t token_id : generated_ids) {
       std::string s =
           tokenizer_->GetTokenStringStreaming(token_id, &pending_bytes);
@@ -696,12 +890,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     }
 
     if (!pending_bytes.empty() && !result.tokens.empty()) {
-      std::string replacement_chars;
-      replacement_chars.reserve(pending_bytes.size() * 3);
-      for (size_t i = 0; i < pending_bytes.size(); ++i) {
-        replacement_chars.append("\xEF\xBF\xBD");
-      }
-      result.tokens.back().append(replacement_chars);
+      result.tokens.back().append("\xEF\xBF\xBD");
     }
   }
 
@@ -742,8 +931,8 @@ void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
       }
     }
 
-    int32_t num_frames = static_cast<int32_t>(
-        f.size() / config_.feat_config.feature_dim);
+    int32_t num_frames =
+        static_cast<int32_t>(f.size() / config_.feat_config.feature_dim);
     if (num_frames < 2) {
       OfflineRecognitionResult r;
       r.text = "";
@@ -786,9 +975,15 @@ void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
         memory_info, tok_mask_int64.data(), tok_mask_int64.size(),
         tok_mask_shape.data(), tok_mask_shape.size());
 
-    Ort::Value audio_features =
-        model_->ForwardEncoder(std::move(conv_output),
-                               std::move(feature_attention_mask));
+    Ort::Value audio_features = model_->ForwardEncoder(
+        std::move(conv_output), std::move(feature_attention_mask));
+
+    if (config_.model_config.debug) {
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: feat_frames=%d conv_frames=%d expected_audio_tokens=%d "
+          "valid_audio_tokens=%d",
+          feat_frames, conv_num_frames, expected_audio_token_len, valid_frames);
+    }
 
     OfflineRecognitionResult r =
         GenerateText(std::move(audio_features), valid_frames);

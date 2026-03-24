@@ -307,10 +307,7 @@ struct OfflineFunASRNanoModelConfig {
   std::string hotwords;
 };
 
-<<<<<<< HEAD
-struct OfflineModelConfig {
-=======
-struct SHERPA_ONNX_API OfflineQwen3ASRModelConfig {
+struct OfflineQwen3ASRModelConfig {
   std::string conv_frontend;
   std::string encoder;
   std::string decoder;
@@ -322,8 +319,7 @@ struct SHERPA_ONNX_API OfflineQwen3ASRModelConfig {
   int32_t seed = 42;
 };
 
-struct SHERPA_ONNX_API OfflineModelConfig {
->>>>>>> 3507d0aa (qwen3-asr offline recognizer)
+struct OfflineModelConfig {
   OfflineTransducerModelConfig transducer;
   OfflineParaformerModelConfig paraformer;
   OfflineNemoEncDecCtcModelConfig nemo_ctc;
@@ -348,11 +344,8 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineMedAsrCtcModelConfig medasr;
   OfflineFunASRNanoModelConfig funasr_nano;
-<<<<<<< HEAD
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
-=======
   OfflineQwen3ASRModelConfig qwen3_asr;
->>>>>>> 3507d0aa (qwen3-asr offline recognizer)
 };
 
 struct OfflineLMConfig {

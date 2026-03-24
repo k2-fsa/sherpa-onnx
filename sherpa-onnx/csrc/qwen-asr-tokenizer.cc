@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <cctype>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -82,7 +83,8 @@ std::string Utf8Encode(uint32_t cp) {
 std::once_flag g_byte_to_unicode_once;
 std::array<std::string, 256> g_byte_to_unicode;
 std::unordered_map<std::string, uint8_t> g_unicode_to_byte;
-std::once_flag g_oov_log_once;
+std::once_flag g_oov_piece_log_once;
+std::once_flag g_incomplete_utf8_log_once;
 
 void InitByteToUnicode() {
   std::array<bool, 256> used{};
@@ -121,7 +123,8 @@ void InitByteToUnicode() {
   }
 
   for (size_t i = 0; i != bytes.size(); ++i) {
-    g_byte_to_unicode[static_cast<size_t>(bytes[i])] = Utf8Encode(code_points[i]);
+    g_byte_to_unicode[static_cast<size_t>(bytes[i])] =
+        Utf8Encode(code_points[i]);
   }
 
   g_unicode_to_byte.clear();
@@ -142,50 +145,246 @@ const std::unordered_map<std::string, uint8_t> &UnicodeToByte() {
   return g_unicode_to_byte;
 }
 
-bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp, size_t *num_bytes) {
-  if (*i >= s.size()) {
+bool Utf8Next(const std::string &s, size_t *i, uint32_t *cp,
+              size_t *num_bytes) {
+  if (!i || !cp || !num_bytes || *i >= s.size()) {
     return false;
   }
 
-  size_t pos = *i;
-  auto c = static_cast<unsigned char>(s[pos]);
+  const size_t pos = *i;
+  const auto b0 = static_cast<uint8_t>(s[pos]);
+  const auto is_cont = [](uint8_t b) -> bool { return (b & 0xC0u) == 0x80u; };
 
-  if (c < 0x80) {
-    *cp = c;
+  if (b0 < 0x80u) {
+    *cp = b0;
     *num_bytes = 1;
-  } else if ((c >> 5) == 0x6) {
+    *i = pos + 1;
+    return true;
+  }
+
+  if (b0 >= 0xC2u && b0 <= 0xDFu) {
     if (pos + 1 >= s.size()) {
       return false;
     }
 
-    *cp = (c & 0x1F) << 6;
-    *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F);
+    const auto b1 = static_cast<uint8_t>(s[pos + 1]);
+    if (!is_cont(b1)) {
+      return false;
+    }
+
+    *cp = ((b0 & 0x1Fu) << 6) | (b1 & 0x3Fu);
     *num_bytes = 2;
-  } else if ((c >> 4) == 0xE) {
+    *i = pos + 2;
+    return true;
+  }
+
+  if (b0 >= 0xE0u && b0 <= 0xEFu) {
     if (pos + 2 >= s.size()) {
       return false;
     }
 
-    *cp = (c & 0x0F) << 12;
-    *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F) << 6;
-    *cp |= (static_cast<unsigned char>(s[pos + 2]) & 0x3F);
+    const auto b1 = static_cast<uint8_t>(s[pos + 1]);
+    const auto b2 = static_cast<uint8_t>(s[pos + 2]);
+    if (!is_cont(b1) || !is_cont(b2)) {
+      return false;
+    }
+
+    if (b0 == 0xE0u && b1 < 0xA0u) {
+      return false;
+    }
+
+    if (b0 == 0xEDu && b1 > 0x9Fu) {
+      return false;
+    }
+
+    *cp = ((b0 & 0x0Fu) << 12) | ((b1 & 0x3Fu) << 6) | (b2 & 0x3Fu);
     *num_bytes = 3;
-  } else if ((c >> 3) == 0x1E) {
+    *i = pos + 3;
+    return true;
+  }
+
+  if (b0 >= 0xF0u && b0 <= 0xF4u) {
     if (pos + 3 >= s.size()) {
       return false;
     }
 
-    *cp = (c & 0x07) << 18;
-    *cp |= (static_cast<unsigned char>(s[pos + 1]) & 0x3F) << 12;
-    *cp |= (static_cast<unsigned char>(s[pos + 2]) & 0x3F) << 6;
-    *cp |= (static_cast<unsigned char>(s[pos + 3]) & 0x3F);
+    const auto b1 = static_cast<uint8_t>(s[pos + 1]);
+    const auto b2 = static_cast<uint8_t>(s[pos + 2]);
+    const auto b3 = static_cast<uint8_t>(s[pos + 3]);
+    if (!is_cont(b1) || !is_cont(b2) || !is_cont(b3)) {
+      return false;
+    }
+
+    if (b0 == 0xF0u && b1 < 0x90u) {
+      return false;
+    }
+
+    if (b0 == 0xF4u && b1 > 0x8Fu) {
+      return false;
+    }
+
+    *cp = ((b0 & 0x07u) << 18) | ((b1 & 0x3Fu) << 12) | ((b2 & 0x3Fu) << 6) |
+          (b3 & 0x3Fu);
     *num_bytes = 4;
-  } else {
-    return false;
+    *i = pos + 4;
+    return true;
   }
 
-  *i = pos + *num_bytes;
-  return true;
+  return false;
+}
+
+enum class Utf8ConsumeStatus {
+  kOk = 0,
+  kIncomplete = 1,
+  kInvalid = 2,
+};
+
+struct Utf8ConsumeResult {
+  std::string prefix;
+  Utf8ConsumeStatus status = Utf8ConsumeStatus::kOk;
+};
+
+Utf8ConsumeResult ConsumeValidUtf8Prefix(std::string *pending) {
+  Utf8ConsumeResult r;
+  if (!pending || pending->empty()) {
+    r.status = Utf8ConsumeStatus::kOk;
+    return r;
+  }
+
+  const auto is_cont = [](uint8_t b) -> bool { return (b & 0xC0u) == 0x80u; };
+
+  const std::string &s = *pending;
+  const size_t n = s.size();
+
+  size_t i = 0;
+  size_t last_good = 0;
+
+  while (i < n) {
+    const auto b0 = static_cast<uint8_t>(s[i]);
+
+    if (b0 < 0x80u) {
+      ++i;
+      last_good = i;
+      continue;
+    }
+
+    if (b0 >= 0xC2u && b0 <= 0xDFu) {
+      if (i + 2 > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+
+      const auto b1 = static_cast<uint8_t>(s[i + 1]);
+      if (!is_cont(b1)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      i += 2;
+      last_good = i;
+      continue;
+    }
+
+    if (b0 >= 0xE0u && b0 <= 0xEFu) {
+      if (i + 3 > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+
+      const auto b1 = static_cast<uint8_t>(s[i + 1]);
+      const auto b2 = static_cast<uint8_t>(s[i + 2]);
+      if (!is_cont(b1) || !is_cont(b2)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xE0u && b1 < 0xA0u) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xEDu && b1 > 0x9Fu) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      i += 3;
+      last_good = i;
+      continue;
+    }
+
+    if (b0 >= 0xF0u && b0 <= 0xF4u) {
+      if (i + 4 > n) {
+        r.status = Utf8ConsumeStatus::kIncomplete;
+        break;
+      }
+
+      const auto b1 = static_cast<uint8_t>(s[i + 1]);
+      const auto b2 = static_cast<uint8_t>(s[i + 2]);
+      const auto b3 = static_cast<uint8_t>(s[i + 3]);
+      if (!is_cont(b1) || !is_cont(b2) || !is_cont(b3)) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xF0u && b1 < 0x90u) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      if (b0 == 0xF4u && b1 > 0x8Fu) {
+        r.status = Utf8ConsumeStatus::kInvalid;
+        break;
+      }
+
+      i += 4;
+      last_good = i;
+      continue;
+    }
+
+    r.status = Utf8ConsumeStatus::kInvalid;
+    break;
+  }
+
+  if (i == n) {
+    r.status = Utf8ConsumeStatus::kOk;
+    last_good = n;
+  }
+
+  if (last_good > 0) {
+    r.prefix = pending->substr(0, last_good);
+    pending->erase(0, last_good);
+  }
+
+  return r;
+}
+
+std::string ConsumeAvailableUtf8(std::string *pending, bool flush_incomplete) {
+  std::string out;
+
+  while (pending && !pending->empty()) {
+    Utf8ConsumeResult r = ConsumeValidUtf8Prefix(pending);
+    out.append(r.prefix);
+
+    if (r.status == Utf8ConsumeStatus::kOk) {
+      break;
+    }
+
+    if (r.status == Utf8ConsumeStatus::kIncomplete) {
+      if (flush_incomplete) {
+        pending->clear();
+        out.append("\xEF\xBF\xBD");
+      }
+      break;
+    }
+
+    if (!pending->empty()) {
+      pending->erase(0, 1);
+    }
+    out.append("\xEF\xBF\xBD");
+  }
+
+  return out;
 }
 
 std::vector<std::string> SplitUtf8ToChars(const std::string &s) {
@@ -207,13 +406,122 @@ std::vector<std::string> SplitUtf8ToChars(const std::string &s) {
   return ans;
 }
 
+bool IsNewline(uint32_t cp) { return cp == '\n' || cp == '\r'; }
+
+bool IsWhitespace(uint32_t cp) {
+  return cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r' || cp == '\v' ||
+         cp == '\f';
+}
+
 bool IsLetter(uint32_t cp) {
-  if (cp >= 'a' && cp <= 'z') return true;
-  if (cp >= 'A' && cp <= 'Z') return true;
-  if (cp >= 0x4E00 && cp <= 0x9FFF) return true;
-  if (cp >= 0x3400 && cp <= 0x4DBF) return true;
-  if (cp >= 0x3040 && cp <= 0x30FF) return true;
-  if (cp >= 0xAC00 && cp <= 0xD7AF) return true;
+  // ASCII
+  if ((cp >= 'a' && cp <= 'z') || (cp >= 'A' && cp <= 'Z')) {
+    return true;
+  }
+
+  // Latin-1 Supplement
+  if ((cp >= 0x00C0 && cp <= 0x00D6) || (cp >= 0x00D8 && cp <= 0x00F6) ||
+      (cp >= 0x00F8 && cp <= 0x00FF)) {
+    return true;
+  }
+
+  // Latin Extended
+  if ((cp >= 0x0100 && cp <= 0x017F) || (cp >= 0x0180 && cp <= 0x024F) ||
+      (cp >= 0x1E00 && cp <= 0x1EFF)) {
+    return true;
+  }
+
+  // Greek + Cyrillic
+  if ((cp >= 0x0370 && cp <= 0x03FF) || (cp >= 0x0400 && cp <= 0x052F)) {
+    return true;
+  }
+
+  // Hebrew + Arabic
+  if ((cp >= 0x0590 && cp <= 0x05FF) || (cp >= 0x0600 && cp <= 0x06FF)) {
+    return true;
+  }
+
+  // Devanagari
+  if (cp >= 0x0900 && cp <= 0x097F) {
+    return true;
+  }
+
+  // CJK
+  if ((cp >= 0x3400 && cp <= 0x4DBF) || (cp >= 0x4E00 && cp <= 0x9FFF)) {
+    return true;
+  }
+
+  // Hiragana + Katakana
+  if (cp >= 0x3040 && cp <= 0x30FF) {
+    return true;
+  }
+
+  // Hangul
+  if (cp >= 0xAC00 && cp <= 0xD7AF) {
+    return true;
+  }
+
+  return false;
+}
+
+bool IsNumber(uint32_t cp) {
+  if (cp >= '0' && cp <= '9') {
+    return true;
+  }
+
+  // Arabic-Indic digits
+  if (cp >= 0x0660 && cp <= 0x0669) {
+    return true;
+  }
+
+  // Devanagari digits
+  if (cp >= 0x0966 && cp <= 0x096F) {
+    return true;
+  }
+
+  // Fullwidth digits
+  if (cp >= 0xFF10 && cp <= 0xFF19) {
+    return true;
+  }
+
+  return false;
+}
+
+bool TryMatchEnglishContraction(const std::string &text, size_t pos,
+                                size_t *matched_len) {
+  if (matched_len) {
+    *matched_len = 0;
+  }
+
+  if (pos >= text.size() || text[pos] != '\'') {
+    return false;
+  }
+
+  auto lower = [](char c) -> char {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  };
+
+  if (pos + 1 < text.size()) {
+    char c1 = lower(text[pos + 1]);
+    if (c1 == 's' || c1 == 't' || c1 == 'm' || c1 == 'd') {
+      if (matched_len) {
+        *matched_len = 2;
+      }
+      return true;
+    }
+
+    if (pos + 2 < text.size()) {
+      char c2 = lower(text[pos + 2]);
+      if ((c1 == 'r' && c2 == 'e') || (c1 == 'v' && c2 == 'e') ||
+          (c1 == 'l' && c2 == 'l')) {
+        if (matched_len) {
+          *matched_len = 3;
+        }
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -221,33 +529,216 @@ std::vector<std::string> SplitByQwen3Pattern(const std::string &text) {
   std::vector<std::string> ans;
   ans.reserve(text.size() / 2 + 1);
 
-  size_t start = 0;
+  auto peek_next_cp = [&](size_t pos, uint32_t *cp2, size_t *n2) -> bool {
+    size_t t = pos;
+    uint32_t x = 0;
+    size_t nn = 0;
+    if (!Utf8Next(text, &t, &x, &nn)) {
+      return false;
+    }
+    if (cp2) {
+      *cp2 = x;
+    }
+    if (n2) {
+      *n2 = nn;
+    }
+    return true;
+  };
+
   size_t i = 0;
   while (i < text.size()) {
-    uint32_t cp = 0;
-    size_t num_bytes = 0;
-    if (Utf8Next(text, &i, &cp, &num_bytes)) {
-      if (IsLetter(cp)) {
+    if (text[i] == '\'') {
+      size_t matched_len = 0;
+      if (TryMatchEnglishContraction(text, i, &matched_len) &&
+          matched_len > 0) {
+        ans.push_back(text.substr(i, matched_len));
+        i += matched_len;
         continue;
       }
+    }
 
-      if (i - num_bytes > start) {
-        ans.push_back(text.substr(start, i - num_bytes - start));
-      }
-      ans.push_back(text.substr(i - num_bytes, num_bytes));
-      start = i;
+    const size_t start = i;
+    uint32_t cp = 0;
+    size_t n = 0;
+    if (!Utf8Next(text, &i, &cp, &n)) {
+      ans.push_back(text.substr(start, 1));
+      i = start + 1;
       continue;
     }
 
-    if (i > start) {
-      ans.push_back(text.substr(start, i - start));
-    }
-    ans.push_back(text.substr(i, 1));
-    ++i;
-    start = i;
-  }
+    {
+      uint32_t next_cp = 0;
+      size_t next_n = 0;
+      bool has_next = peek_next_cp(i, &next_cp, &next_n);
 
-  if (i > start) {
+      bool cur_ok_prefix = (!IsNewline(cp) && !IsLetter(cp) && !IsNumber(cp));
+      bool cur_is_letter = IsLetter(cp);
+
+      if (cur_is_letter || (cur_ok_prefix && has_next && IsLetter(next_cp))) {
+        size_t j = start;
+
+        if (!cur_is_letter) {
+          j = i;
+          while (j < text.size()) {
+            size_t t = j;
+            uint32_t cpl = 0;
+            size_t nl = 0;
+            if (!Utf8Next(text, &t, &cpl, &nl)) {
+              break;
+            }
+            if (!IsLetter(cpl)) {
+              break;
+            }
+            j = t;
+          }
+        } else {
+          j = i;
+          while (j < text.size()) {
+            size_t t = j;
+            uint32_t cpl = 0;
+            size_t nl = 0;
+            if (!Utf8Next(text, &t, &cpl, &nl)) {
+              break;
+            }
+            if (!IsLetter(cpl)) {
+              break;
+            }
+            j = t;
+          }
+        }
+
+        ans.push_back(text.substr(start, j - start));
+        i = j;
+        continue;
+      }
+    }
+
+    if (IsNumber(cp)) {
+      ans.push_back(text.substr(start, i - start));
+      continue;
+    }
+
+    {
+      auto is_punct_like = [&](uint32_t x) -> bool {
+        return (!IsWhitespace(x) && !IsLetter(x) && !IsNumber(x));
+      };
+
+      bool starts_with_space_prefix = (cp == ' ');
+      size_t j = start;
+
+      if (starts_with_space_prefix) {
+        uint32_t next_cp = 0;
+        size_t next_n = 0;
+        if (peek_next_cp(i, &next_cp, &next_n) && is_punct_like(next_cp)) {
+          j = i;
+          while (j < text.size()) {
+            size_t t = j;
+            uint32_t cx = 0;
+            size_t nx = 0;
+            if (!Utf8Next(text, &t, &cx, &nx)) {
+              break;
+            }
+            if (!is_punct_like(cx)) {
+              break;
+            }
+            j = t;
+          }
+
+          while (j < text.size()) {
+            size_t t = j;
+            uint32_t cx = 0;
+            size_t nx = 0;
+            if (!Utf8Next(text, &t, &cx, &nx)) {
+              break;
+            }
+            if (!IsNewline(cx)) {
+              break;
+            }
+            j = t;
+          }
+
+          ans.push_back(text.substr(start, j - start));
+          i = j;
+          continue;
+        }
+      } else if (is_punct_like(cp)) {
+        j = i;
+        while (j < text.size()) {
+          size_t t = j;
+          uint32_t cx = 0;
+          size_t nx = 0;
+          if (!Utf8Next(text, &t, &cx, &nx)) {
+            break;
+          }
+          if (!is_punct_like(cx)) {
+            break;
+          }
+          j = t;
+        }
+
+        while (j < text.size()) {
+          size_t t = j;
+          uint32_t cx = 0;
+          size_t nx = 0;
+          if (!Utf8Next(text, &t, &cx, &nx)) {
+            break;
+          }
+          if (!IsNewline(cx)) {
+            break;
+          }
+          j = t;
+        }
+
+        ans.push_back(text.substr(start, j - start));
+        i = j;
+        continue;
+      }
+    }
+
+    if (IsWhitespace(cp)) {
+      size_t j = start;
+      bool saw_newline = false;
+
+      while (j < text.size()) {
+        size_t t = j;
+        uint32_t cx = 0;
+        size_t nx = 0;
+        if (!Utf8Next(text, &t, &cx, &nx)) {
+          break;
+        }
+
+        if (IsNewline(cx)) {
+          saw_newline = true;
+          break;
+        }
+
+        if (!IsWhitespace(cx)) {
+          break;
+        }
+
+        j = t;
+      }
+
+      if (saw_newline) {
+        while (j < text.size()) {
+          size_t t = j;
+          uint32_t cx = 0;
+          size_t nx = 0;
+          if (!Utf8Next(text, &t, &cx, &nx)) {
+            break;
+          }
+          if (!IsNewline(cx)) {
+            break;
+          }
+          j = t;
+        }
+      }
+
+      ans.push_back(text.substr(start, j - start));
+      i = j;
+      continue;
+    }
+
     ans.push_back(text.substr(start, i - start));
   }
 
@@ -263,8 +754,9 @@ std::string MakeMergeKey(const std::string &left, const std::string &right) {
   return key;
 }
 
-std::string ByteLevelEncode(const std::string &token,
-                            const std::array<std::string, 256> &byte_to_unicode) {
+std::string ByteLevelEncode(
+    const std::string &token,
+    const std::array<std::string, 256> &byte_to_unicode) {
   std::string ans;
   ans.reserve(token.size() * 2);
   for (unsigned char c : token) {
@@ -283,6 +775,10 @@ bool IsSpecialToken(const std::string &token) {
   }
 
   return token.compare(token.size() - 2, 2, "|>") == 0;
+}
+
+bool IsSkippableSpecialToken(const std::string &token) {
+  return token == "<|im_start|>" || token == "<|im_end|>";
 }
 
 bool ParseInt32String(const std::string &s, int32_t *value) {
@@ -589,7 +1085,7 @@ void AppendEncodedPieceIds(
       continue;
     }
 
-    std::call_once(g_oov_log_once, []() {
+    std::call_once(g_oov_piece_log_once, []() {
       SHERPA_ONNX_LOGE(
           "qwen-asr-tokenizer: encountered OOV piece without <unk>; "
           "unmatched pieces will be dropped");
@@ -622,7 +1118,8 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
                                         const std::string &config_content,
                                         const std::string &tokenizer_dir) {
   if (vocab_content.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read vocab.json from: %s", tokenizer_dir.c_str());
+    SHERPA_ONNX_LOGE("Failed to read vocab.json from: %s",
+                     tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -633,12 +1130,14 @@ void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
   byte_to_unicode_ = ByteToUnicode();
 
   if (!ParseVocab(vocab_content, &token2id_, &id2token_)) {
-    SHERPA_ONNX_LOGE("Failed to parse vocab.json from: %s", tokenizer_dir.c_str());
+    SHERPA_ONNX_LOGE("Failed to parse vocab.json from: %s",
+                     tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
   if (!merges_content.empty() && !ParseMerges(merges_content, &merges_rank_)) {
-    SHERPA_ONNX_LOGE("Failed to parse merges.txt from: %s", tokenizer_dir.c_str());
+    SHERPA_ONNX_LOGE("Failed to parse merges.txt from: %s",
+                     tokenizer_dir.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
@@ -704,7 +1203,8 @@ void QwenAsrTokenizer::Init(AAssetManager *mgr,
   const std::string merges_path = tokenizer_dir + "/merges.txt";
   const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
 
-  InitFromContents(ReadTextFile(mgr, vocab_path), ReadTextFile(mgr, merges_path),
+  InitFromContents(ReadTextFile(mgr, vocab_path),
+                   ReadTextFile(mgr, merges_path),
                    ReadTextFile(mgr, config_path), tokenizer_dir);
 }
 #endif
@@ -716,7 +1216,8 @@ void QwenAsrTokenizer::Init(NativeResourceManager *mgr,
   const std::string merges_path = tokenizer_dir + "/merges.txt";
   const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
 
-  InitFromContents(ReadTextFile(mgr, vocab_path), ReadTextFile(mgr, merges_path),
+  InitFromContents(ReadTextFile(mgr, vocab_path),
+                   ReadTextFile(mgr, merges_path),
                    ReadTextFile(mgr, config_path), tokenizer_dir);
 }
 #endif
@@ -776,6 +1277,9 @@ std::string QwenAsrTokenizer::Decode(const std::vector<int64_t> &token_ids) {
 
     const std::string &token = id2token_[static_cast<size_t>(id)];
     if (IsSpecialToken(token)) {
+      if (IsSkippableSpecialToken(token)) {
+        continue;
+      }
       if (!buffer.empty()) {
         ans.append(DecodeBytes(buffer));
         buffer.clear();
@@ -793,48 +1297,47 @@ std::string QwenAsrTokenizer::Decode(const std::vector<int64_t> &token_ids) {
   return ans;
 }
 
-std::string QwenAsrTokenizer::GetTokenStringStreaming(int64_t token_id,
-                                                      std::string *state) const {
+std::string QwenAsrTokenizer::GetTokenStringStreaming(
+    int64_t token_id, std::string *state) const {
+  if (!state) {
+    return "";
+  }
+
   if (token_id < 0 || static_cast<size_t>(token_id) >= id2token_.size()) {
     return "";
   }
 
   const std::string &token = id2token_[static_cast<size_t>(token_id)];
-  if (IsSpecialToken(token)) {
-    if (state && !state->empty()) {
-      std::string out = DecodeBytes(*state);
-      state->clear();
-      out.append(token);
-      return out;
-    }
-    return token;
-  }
-
-  std::string bytes = DecodeBytes(token);
-  if (!state) {
-    return bytes;
-  }
-
-  state->append(bytes);
-
-  size_t i = 0;
-  size_t last_good = 0;
-  while (i < state->size()) {
-    uint32_t cp = 0;
-    size_t num_bytes = 0;
-    if (!Utf8Next(*state, &i, &cp, &num_bytes)) {
-      break;
-    }
-    last_good = i;
-  }
-
-  if (last_good == 0) {
+  if (token.empty()) {
     return "";
   }
 
-  std::string ans = state->substr(0, last_good);
-  state->erase(0, last_good);
-  return ans;
+  if (IsSpecialToken(token)) {
+    if (IsSkippableSpecialToken(token)) {
+      state->clear();
+      return "";
+    }
+
+    std::string out;
+    if (!state->empty()) {
+      out.append(ConsumeAvailableUtf8(state, /*flush_incomplete=*/false));
+
+      if (!state->empty()) {
+        std::call_once(g_incomplete_utf8_log_once, []() {
+          SHERPA_ONNX_LOGE(
+              "qwen-asr-tokenizer: dropping incomplete pending UTF-8 bytes "
+              "before special token in streaming decode");
+        });
+        state->clear();
+      }
+    }
+
+    out.append(token);
+    return out;
+  }
+
+  state->append(DecodeBytes(token));
+  return ConsumeAvailableUtf8(state, /*flush_incomplete=*/false);
 }
 
 }  // namespace sherpa_onnx

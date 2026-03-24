@@ -59,7 +59,6 @@ class QwenAsrTokenizer {
   void Init(NativeResourceManager *mgr, const std::string &tokenizer_dir);
 #endif
 
- private:
   int64_t eos_token_id_ = -1;
   int64_t pad_token_id_ = -1;
   int64_t im_end_token_id_ = -1;

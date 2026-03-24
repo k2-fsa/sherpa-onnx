@@ -16,15 +16,13 @@
 #include "sherpa-onnx/csrc/offline-qwen3-asr-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/qwen-asr-tokenizer.h"
 
 namespace sherpa_onnx {
 
 class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerQwen3ASRImpl(
-      const OfflineRecognizerConfig &config);
+  explicit OfflineRecognizerQwen3ASRImpl(const OfflineRecognizerConfig &config);
 
   template <typename Manager>
   OfflineRecognizerQwen3ASRImpl(Manager *mgr,
@@ -50,8 +48,8 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
 
   int64_t SampleTokenWithTemperatureAndTopP(const void *logits, bool is_fp16,
                                             int32_t vocab_size,
-                                            float temperature,
-                                            float top_p) const;
+                                            float temperature, float top_p,
+                                            int64_t avoid_id = -1) const;
 
   OfflineRecognitionResult GenerateText(Ort::Value audio_features,
                                         int32_t audio_token_len) const;

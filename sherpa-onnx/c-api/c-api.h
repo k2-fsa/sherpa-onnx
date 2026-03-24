@@ -515,10 +515,7 @@ typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
 
-<<<<<<< HEAD
-typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
-=======
-SHERPA_ONNX_API typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
+typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   const char *conv_frontend;
   const char *encoder;
   const char *decoder;
@@ -530,8 +527,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   int32_t seed;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 
-SHERPA_ONNX_API typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
->>>>>>> 3507d0aa (qwen3-asr offline recognizer)
+typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
   const char *model;
 } SherpaOnnxOfflineMedAsrCtcModelConfig;
 
@@ -564,11 +560,8 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineOmnilingualAsrCtcModelConfig omnilingual;
   SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
   SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
-<<<<<<< HEAD
   SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
-=======
   SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
->>>>>>> 3507d0aa (qwen3-asr offline recognizer)
 } SherpaOnnxOfflineModelConfig;
 
 typedef struct SherpaOnnxOfflineRecognizerConfig {

@@ -15,6 +15,7 @@ set(srcs
   offline-fire-red-asr-ctc-model-config.cc
   offline-fire-red-asr-model-config.cc
   offline-funasr-nano-model-config.cc
+  offline-qwen3-asr-model-config.cc
   offline-lm-config.cc
   offline-medasr-ctc-model-config.cc
   offline-model-config.cc

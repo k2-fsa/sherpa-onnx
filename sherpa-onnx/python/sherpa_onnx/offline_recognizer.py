@@ -8,6 +8,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
     OfflineFunASRNanoModelConfig,
+    OfflineQwen3ASRModelConfig,
     OfflineOmnilingualAsrCtcModelConfig,
     OfflineMedAsrCtcModelConfig,
     OfflineFireRedAsrCtcModelConfig,
@@ -383,6 +384,95 @@ class OfflineRecognizer(object):
 
         model_config = OfflineModelConfig(
             funasr_nano=funasr_nano_config,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_qwen3_asr(
+        cls,
+        conv_frontend: str,
+        encoder: str,
+        decoder: str,
+        tokenizer: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 128,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        max_total_len: int = 512,
+        max_new_tokens: int = 64,
+        temperature: float = 1e-6,
+        top_p: float = 0.8,
+        seed: int = 42,
+    ):
+        """
+        Create an offline recognizer for Qwen3-ASR (conv_frontend + encoder +
+        decoder with KV cache; tokenizer directory with vocab.json / merges.txt).
+
+        Args:
+          conv_frontend:
+            Path to ``conv_frontend.onnx``.
+          encoder:
+            Path to ``encoder.onnx``.
+          decoder:
+            Path to ``decoder.onnx`` (KV cache LLM).
+          tokenizer:
+            Path to tokenizer directory (e.g. Qwen3-ASR model folder with
+            ``vocab.json``, ``merges.txt``, ``tokenizer_config.json``).
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of input audio (used by the feature extractor).
+          feature_dim:
+            Mel feature dimension (Qwen3-ASR offline path uses 128 by default).
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda.
+          max_total_len:
+            Maximum KV cache sequence length (see model / ``--qwen3-asr-max-total-len``).
+          max_new_tokens:
+            Maximum new tokens to generate per utterance.
+          temperature:
+            Sampling temperature for decoding.
+          top_p:
+            Top-p (nucleus) sampling threshold.
+          seed:
+            Random seed for sampling.
+        """
+        self = cls.__new__(cls)
+        qwen3 = OfflineQwen3ASRModelConfig()
+        qwen3.conv_frontend = conv_frontend
+        qwen3.encoder = encoder
+        qwen3.decoder = decoder
+        qwen3.tokenizer = tokenizer
+        qwen3.max_total_len = max_total_len
+        qwen3.max_new_tokens = max_new_tokens
+        qwen3.temperature = temperature
+        qwen3.top_p = top_p
+        qwen3.seed = seed
+
+        model_config = OfflineModelConfig(
+            qwen3_asr=qwen3,
             num_threads=num_threads,
             debug=debug,
             provider=provider,
