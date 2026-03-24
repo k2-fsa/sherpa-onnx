@@ -6,11 +6,6 @@
 #include <memory>
 #include <utility>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-ct-transformer-model-meta-data.h"
 #include "sherpa-onnx/csrc/offline-punctuation-model-config.h"
@@ -26,10 +21,9 @@ class OfflineCtTransformerModel {
   explicit OfflineCtTransformerModel(
       const OfflinePunctuationModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineCtTransformerModel(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineCtTransformerModel(Manager *mgr,
                             const OfflinePunctuationModelConfig &config);
-#endif
 
   ~OfflineCtTransformerModel();
 

@@ -7,11 +7,6 @@
 #include <memory>
 #include <utility>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model-meta-data.h"
 #include "sherpa-onnx/csrc/online-punctuation-model-config.h"
@@ -25,10 +20,9 @@ class OnlineCNNBiLSTMModel {
  public:
   explicit OnlineCNNBiLSTMModel(const OnlinePunctuationModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OnlineCNNBiLSTMModel(AAssetManager *mgr,
+  template <typename Manager>
+  OnlineCNNBiLSTMModel(Manager *mgr,
                        const OnlinePunctuationModelConfig &config);
-#endif
 
   ~OnlineCNNBiLSTMModel();
 

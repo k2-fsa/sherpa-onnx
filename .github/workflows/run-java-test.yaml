@@ -341,23 +341,26 @@ jobs:
         run: |
           cd ./java-api-examples
 
-          ./run-pocket-tts.sh
-          ./run-supertonic-tts.sh
-          ./run-non-streaming-tts-kitten-en.sh
-          ./run-non-streaming-tts-kokoro-zh-en.sh
-          ./run-non-streaming-tts-kokoro-en.sh
-          ./run-non-streaming-tts-matcha-zh.sh
+           ./run-pocket-tts.sh
+           ./run-zipvoice-tts.sh
+           ./run-supertonic-tts.sh
+           ./run-non-streaming-tts-kitten-en.sh
+           ./run-non-streaming-tts-kokoro-zh-en.sh
+           ./run-non-streaming-tts-kokoro-en.sh
+           ./run-non-streaming-tts-matcha-zh.sh
           ./run-non-streaming-tts-matcha-en.sh
           ls -lh
 
-          rm -rf sherpa-onnx-pocket-tts-*
-          rm -rf sherpa-onnx-supertonic-tts-*
-          rm -rf kitten-nano-en-*
-          rm -rf kokoro-multi-*
-          rm -rf kokoro-en-*
+           rm -rf sherpa-onnx-pocket-tts-*
+           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+           rm -rf sherpa-onnx-supertonic-tts-*
+           rm -rf kitten-nano-en-*
+           rm -rf kokoro-multi-*
+           rm -rf kokoro-en-*
 
-          rm -rf matcha-icefall-*
-          rm vocos-22khz-univ.onnx
+           rm -rf matcha-icefall-*
+           rm vocos-22khz-univ.onnx
+           rm vocos_24khz.onnx
 
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*

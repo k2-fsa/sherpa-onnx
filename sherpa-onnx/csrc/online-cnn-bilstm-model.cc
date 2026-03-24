@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -27,8 +36,8 @@ class OnlineCNNBiLSTMModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OnlinePunctuationModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlinePunctuationModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -36,7 +45,6 @@ class OnlineCNNBiLSTMModel::Impl {
     auto buf = ReadFile(mgr, config_.cnn_bilstm);
     Init(buf.data(), buf.size());
   }
-#endif
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids,
                                             Ort::Value valid_ids,
@@ -115,11 +123,10 @@ OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
     const OnlinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
-    AAssetManager *mgr, const OnlinePunctuationModelConfig &config)
+    Manager *mgr, const OnlinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OnlineCNNBiLSTMModel::~OnlineCNNBiLSTMModel() = default;
 
@@ -137,5 +144,15 @@ const OnlineCNNBiLSTMModelMetaData &OnlineCNNBiLSTMModel::GetModelMetadata()
     const {
   return impl_->GetModelMetadata();
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
+    AAssetManager *mgr, const OnlinePunctuationModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
+    NativeResourceManager *mgr, const OnlinePunctuationModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - '.github/workflows/test-dot-net.yaml'
+      - '.github/scripts/test-dot-net.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'

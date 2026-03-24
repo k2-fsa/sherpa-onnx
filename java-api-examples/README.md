@@ -76,6 +76,7 @@ downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
 ./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-vits-zh.sh
 ./run-pocket-tts.sh
+./run-zipvoice-tts.sh
 ```
 
 ## Non-Streaming text-to-speech (Playback the audio as it is being generated)

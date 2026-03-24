@@ -164,7 +164,10 @@ type OnlineRecognizerConfig struct {
 
 // It contains the recognition result for a online stream.
 type OnlineRecognizerResult struct {
-	Text string
+	Text      string
+	Tokens    []string
+	Timestamps []float32
+	Json      string
 }
 
 // The online recognizer class. It wraps a pointer from C.
@@ -317,6 +320,33 @@ func (s *OnlineStream) InputFinished() {
 	C.SherpaOnnxOnlineStreamInputFinished(s.impl)
 }
 
+// Set a key-value option on the online stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "is_final" for streaming Paraformer).
+func (s *OnlineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOnlineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the online stream.
+// Returns an empty string if the option is not set.
+func (s *OnlineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOnlineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the online stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OnlineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOnlineStreamHasOption(s.impl, cKey) == 1
+}
+
 // Check whether the stream has enough feature frames for decoding.
 // Return true if this stream is ready for decoding. Return false otherwise.
 //
@@ -377,8 +407,24 @@ func (recognizer *OnlineRecognizer) DecodeStreams(s []*OnlineStream) {
 func (recognizer *OnlineRecognizer) GetResult(s *OnlineStream) *OnlineRecognizerResult {
 	p := C.SherpaOnnxGetOnlineStreamResult(recognizer.impl, s.impl)
 	defer C.SherpaOnnxDestroyOnlineRecognizerResult(p)
+	n := int(p.count)
 	result := &OnlineRecognizerResult{}
 	result.Text = C.GoString(p.text)
+	result.Json = C.GoString(p.json)
+	if n > 0 {
+		result.Tokens = make([]string, n)
+		tokens := unsafe.Slice(p.tokens_arr, n)
+		for i := 0; i < n; i++ {
+			result.Tokens[i] = C.GoString(tokens[i])
+		}
+	}
+	if p.timestamps != nil && n > 0 {
+		result.Timestamps = make([]float32, n)
+		timestamps := unsafe.Slice(p.timestamps, n)
+		for i := 0; i < n; i++ {
+			result.Timestamps[i] = float32(timestamps[i])
+		}
+	}
 
 	return result
 }
@@ -795,6 +841,33 @@ func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 // samples contains the actual audio samples. Each sample is in the range [-1, 1].
 func (s *OfflineStream) AcceptWaveform(sampleRate int, samples []float32) {
 	C.SherpaOnnxAcceptWaveformOffline(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
+}
+
+// Set a key-value option on the offline stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "task", "prompt").
+func (s *OfflineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOfflineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the offline stream.
+// Returns an empty string if the option is not set.
+func (s *OfflineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOfflineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the offline stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OfflineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOfflineStreamHasOption(s.impl, cKey) == 1
 }
 
 // Decode the offline stream.
@@ -1273,6 +1346,7 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	return ans
 }
 
+// Deprecated: Use GenerateWithConfig() instead.
 func (tts *OfflineTts) GenerateWithZipvoice(
 	text, promptText string,
 	promptSamples []float32,
@@ -2134,8 +2208,8 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 // ============================================================
 type OfflinePunctuationModelConfig struct {
 	CtTransformer string
-	NumThreads    C.int
-	Debug         C.int // true to print debug information of the model
+	NumThreads    int
+	Debug         int // true to print debug information of the model
 	Provider      string
 }
 
@@ -2152,8 +2226,8 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	cfg.model.ct_transformer = C.CString(config.Model.CtTransformer)
 	defer C.free(unsafe.Pointer(cfg.model.ct_transformer))
 
-	cfg.model.num_threads = config.Model.NumThreads
-	cfg.model.debug = config.Model.Debug
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
@@ -2172,12 +2246,75 @@ func DeleteOfflinePunc(punc *OfflinePunctuation) {
 }
 
 func (punc *OfflinePunctuation) AddPunct(text string) string {
-	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, C.CString(text))
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
 	defer C.SherpaOfflinePunctuationFreeText(p)
 
 	text_with_punct := C.GoString(p)
 
 	return text_with_punct
+}
+
+type OnlinePunctuationModelConfig struct {
+	CnnBilstm  string
+	BpeVocab   string
+	NumThreads int
+	Debug      int
+	Provider   string
+}
+
+type OnlinePunctuationConfig struct {
+	Model OnlinePunctuationModelConfig
+}
+
+type OnlinePunctuation struct {
+	impl *C.struct_SherpaOnnxOnlinePunctuation
+}
+
+func NewOnlinePunctuation(config *OnlinePunctuationConfig) *OnlinePunctuation {
+	cfg := C.struct_SherpaOnnxOnlinePunctuationConfig{}
+	cfg.model.cnn_bilstm = C.CString(config.Model.CnnBilstm)
+	defer C.free(unsafe.Pointer(cfg.model.cnn_bilstm))
+
+	cfg.model.bpe_vocab = C.CString(config.Model.BpeVocab)
+	defer C.free(unsafe.Pointer(cfg.model.bpe_vocab))
+
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
+	cfg.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(cfg.model.provider))
+
+	impl := C.SherpaOnnxCreateOnlinePunctuation(&cfg)
+	if impl == nil {
+		return nil
+	}
+	punc := &OnlinePunctuation{}
+	punc.impl = impl
+	return punc
+}
+
+func DeleteOnlinePunctuation(punc *OnlinePunctuation) {
+	C.SherpaOnnxDestroyOnlinePunctuation(punc.impl)
+	punc.impl = nil
+}
+
+func (punc *OnlinePunctuation) AddPunct(text string) string {
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+
+	p := C.SherpaOnnxOnlinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
+	defer C.SherpaOnnxOnlinePunctuationFreeText(p)
+
+	textWithPunct := C.GoString(p)
+
+	return textWithPunct
 }
 
 // Configuration for the online/streaming recognizer.

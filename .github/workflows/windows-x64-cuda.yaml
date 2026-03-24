@@ -115,6 +115,7 @@ jobs:
           file: sherpa-onnx-*cuda.tar.bz2
 
       - name: Test spoken language identification
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -123,6 +124,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -131,6 +133,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -139,6 +142,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -147,6 +151,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -155,6 +160,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test offline CTC for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -163,6 +169,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -171,6 +178,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -179,6 +187,7 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH

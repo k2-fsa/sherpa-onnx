@@ -1198,22 +1198,98 @@ std::vector<std::string> SplitByBlankLines(const std::string &text) {
   return paragraphs;
 }
 
+namespace {
+
+bool IsSentenceBoundary(char32_t c) {
+  return c == U'.' || c == U'!' || c == U'?' || c == U'。' || c == U'！' ||
+         c == U'？';
+}
+
+bool IsChunkBoundary(char32_t c) {
+  return IsSentenceBoundary(c) || c == U',' || c == U';' || c == U':' ||
+         c == U'，' || c == U'；' || c == U'：';
+}
+
+bool IsSpace(char32_t c) {
+  return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r' || c == U'\f' ||
+         c == U'\v';
+}
+
+size_t CountCodepoints(const std::string &s) { return Utf8ToUtf32(s).size(); }
+
+bool NeedSpaceBetween(const std::string &left, const std::string &right) {
+  if (left.empty() || right.empty()) {
+    return false;
+  }
+
+  auto left_u32 = Utf8ToUtf32(left);
+  auto right_u32 = Utf8ToUtf32(right);
+  if (left_u32.empty() || right_u32.empty()) {
+    return false;
+  }
+
+  char32_t last = left_u32.back();
+  char32_t first = right_u32.front();
+
+  if (IsSpace(last) || IsSpace(first)) {
+    return false;
+  }
+
+  if (IsCJK(last) || IsCJK(first) || IsChunkBoundary(last) ||
+      IsChunkBoundary(first)) {
+    return false;
+  }
+
+  return true;
+}
+
+}  // namespace
+
 std::vector<std::string> SplitByPunctuation(const std::string &text) {
   std::vector<std::string> sentences;
-  std::string cur;
+  std::u32string cur;
   auto flush = [&]() {
-    std::string s = Trim(cur);
+    std::string s = Trim(Utf32ToUtf8(cur));
     if (!s.empty()) sentences.emplace_back(std::move(s));
     cur.clear();
   };
-  for (char c : text) {
+  for (char32_t c : Utf8ToUtf32(text)) {
     cur.push_back(c);
-    if (c == '.' || c == '!' || c == '?') {
+    if (IsSentenceBoundary(c)) {
       flush();
     }
   }
   flush();
   return sentences;
+}
+
+std::vector<std::string> MergeShortSentences(
+    const std::vector<std::string> &sentences, size_t min_chars) {
+  std::vector<std::string> merged;
+  std::string buffer;
+
+  for (const auto &s : sentences) {
+    std::string piece = Trim(s);
+    if (piece.empty()) {
+      continue;
+    }
+
+    if (!buffer.empty() && NeedSpaceBetween(buffer, piece)) {
+      buffer += " ";
+    }
+    buffer += piece;
+
+    if (CountCodepoints(buffer) >= min_chars) {
+      merged.push_back(Trim(buffer));
+      buffer.clear();
+    }
+  }
+
+  if (!buffer.empty()) {
+    merged.push_back(Trim(buffer));
+  }
+
+  return merged;
 }
 
 std::vector<std::string> SplitLongSentence(const std::string &sentence,
@@ -1223,21 +1299,48 @@ std::vector<std::string> SplitLongSentence(const std::string &sentence,
   std::string s = Trim(sentence);
   if (s.empty()) return chunks;
 
+  std::u32string u32 = Utf8ToUtf32(s);
   size_t start = 0;
-  const size_t len = s.size();
+  const size_t len = u32.size();
   while (start < len) {
-    size_t end = start + max_chars;
+    size_t end = std::min(start + max_chars, len);
     if (end >= len) {
-      chunks.emplace_back(Trim(s.substr(start)));
+      std::string piece = Trim(Utf32ToUtf8(u32.substr(start)));
+      if (!piece.empty()) {
+        chunks.emplace_back(std::move(piece));
+      }
       break;
     }
-    size_t space_pos = s.rfind(' ', end);
-    if (space_pos == std::string::npos || space_pos <= start) {
-      space_pos = end;
+
+    size_t split_pos = end;
+    bool found = false;
+    for (size_t i = end; i > start; --i) {
+      char32_t c = u32[i - 1];
+      if (IsSpace(c)) {
+        split_pos = i - 1;
+        found = true;
+        break;
+      }
+
+      if (IsChunkBoundary(c)) {
+        split_pos = i;
+        found = true;
+        break;
+      }
     }
-    chunks.emplace_back(Trim(s.substr(start, space_pos - start)));
-    start = space_pos;
-    while (start < len && s[start] == ' ') {
+
+    if (!found || split_pos <= start) {
+      split_pos = end;
+    }
+
+    std::string piece =
+        Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
+    if (!piece.empty()) {
+      chunks.emplace_back(std::move(piece));
+    }
+
+    start = split_pos;
+    while (start < len && IsSpace(u32[start])) {
       ++start;
     }
   }

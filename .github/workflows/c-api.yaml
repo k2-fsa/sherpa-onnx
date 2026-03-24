@@ -237,6 +237,46 @@ jobs:
           name: supertonic-tts-wavs-${{ matrix.os }}
           path: ./generated-supertonic-en-c.wav
 
+      - name: Test ZipVoiceTTS
+        shell: bash
+        run: |
+          name=zipvoice-tts-zh-en-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+          tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+          rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          rm $name
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
+
+          ls -lh ./generated-zipvoice-zh-en-c.wav
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zipvoice-tts-wavs-${{ matrix.os }}
+          path: ./generated-zipvoice-zh-en-c.wav
+
       - name: Test FunASR Nano
         shell: bash
         run: |

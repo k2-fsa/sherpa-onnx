@@ -65,6 +65,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancemen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-speech-enhancement-dpdfnet", "streaming-speech-enhancement-dpdfnet\streaming-speech-enhancement-dpdfnet.csproj", "{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts", "zipvoice-tts\zipvoice-tts.csproj", "{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zipvoice-tts-play", "zipvoice-tts-play\zipvoice-tts-play.csproj", "{84A37E18-095E-42A6-93CC-C27CD90B8478}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "online-punctuation", "online-punctuation\online-punctuation.csproj", "{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +201,18 @@ Global
 		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CD66C3E-3AE3-43AA-8FDA-DD5BA456F2EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBC69A08-01A7-4F89-938F-F0D551AD3F6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84A37E18-095E-42A6-93CC-C27CD90B8478}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84A37E18-095E-42A6-93CC-C27CD90B8478}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84A37E18-095E-42A6-93CC-C27CD90B8478}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84A37E18-095E-42A6-93CC-C27CD90B8478}.Release|Any CPU.Build.0 = Release|Any CPU
+		{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{210F6E27-E7FC-4185-BE4B-9F6703ECDA29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

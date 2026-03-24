@@ -40,8 +40,13 @@ public class NonStreamingTtsPiperEn {
 
     int sid = 100;
     float speed = 1.0f;
+    GenerationConfig genConfig = new GenerationConfig();
+    genConfig.setSid(sid);
+    genConfig.setSpeed(speed);
+    genConfig.setSilenceScale(config.getSilenceScale());
     long start = System.currentTimeMillis();
-    GeneratedAudio audio = tts.generate(text, sid, speed);
+    GeneratedAudio audio =
+        tts.generateWithConfigAndCallback(text, genConfig, (float[] samples) -> 1);
     long stop = System.currentTimeMillis();
 
     float timeElapsedSeconds = (stop - start) / 1000.0f;

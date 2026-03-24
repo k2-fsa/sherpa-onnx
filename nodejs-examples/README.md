@@ -23,6 +23,31 @@ npm i
 In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
 for text-to-speech and speech-to-text.
 
+# Punctuation
+
+In the following, we demonstrate how to add punctuations to text with the
+WebAssembly NodeJS package.
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+node ./test-offline-punctuation.js
+node ./test-online-punctuation.js
+```
+
+The punctuation example files are:
+
+```bash
+node ./test-offline-punctuation.js
+node ./test-online-punctuation.js
+```
+
 
 # Speech enhancement
 
@@ -80,6 +105,24 @@ node ./test-offline-speaker-diarization.js
 # Text-to-speech
 
 In the following, we demonstrate how to run text-to-speech.
+
+## ./test-offline-tts-zipvoice-zh-en.js
+
+[./test-offline-tts-zipvoice-zh-en.js](./test-offline-tts-zipvoice-zh-en.js)
+shows how to use ZipVoice for Zero-shot TTS in Chinese and English.
+
+Please make sure that the reference transcript matches the reference audio.
+
+You can use the following command to run it:
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+node ./test-offline-tts-zipvoice-zh-en.js
+```
 
 ## ./test-offline-tts-pocket-en.js
 

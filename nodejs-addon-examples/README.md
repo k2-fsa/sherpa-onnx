@@ -166,6 +166,10 @@ The following tables list the examples in this folder.
 |---|---|
 |[./test_tts_non_streaming_pocket_en.js](./test_tts_non_streaming_pocket_en.js)| Zero-shot text-to-speech with a PocketTTS English Model|
 |[./test_tts_non_streaming_pocket_en_async.js](./test_tts_non_streaming_pocket_en_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API|
+|[./test_tts_non_streaming_pocket_en_play_async.js](./test_tts_non_streaming_pocket_en_play_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API and live audio playback|
+|[./test_tts_non_streaming_zipvoice_zh_en.js](./test_tts_non_streaming_zipvoice_zh_en.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model|
+|[./test_tts_non_streaming_zipvoice_zh_en_async.js](./test_tts_non_streaming_zipvoice_zh_en_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API|
+|[./test_tts_non_streaming_zipvoice_zh_en_play_async.js](./test_tts_non_streaming_zipvoice_zh_en_play_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API and live audio playback|
 |[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
 |[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
 |[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
@@ -173,6 +177,7 @@ The following tables list the examples in this folder.
 |[./test_tts_non_streaming_matcha_icefall_zh.js](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)|
 |[./test_tts_non_streaming_supertonic_en.js](./test_tts_non_streaming_supertonic_en.js)| Text-to-speech with a Supertonic English Model|
 |[./test_tts_non_streaming_supertonic_en_async.js](./test_tts_non_streaming_supertonic_en_async.js)| Text-to-speech with a Supertonic English Model using async JS API|
+|[./test_tts_non_streaming_supertonic_en_play_async.js](./test_tts_non_streaming_supertonic_en_play_async.js)| Text-to-speech with a Supertonic English Model using async JS API and live audio playback|
 |[./test_tts_non_streaming_vits_piper_en.js](./test_tts_non_streaming_vits_piper_en.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model|
 |[./test_tts_non_streaming_vits_coqui_de.js](./test_tts_non_streaming_vits_coqui_de.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model|
 |[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba)|
@@ -570,6 +575,18 @@ rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 node ./test_tts_non_streaming_pocket_en_async.js
 ```
 
+### Zero-shot text-to-speech with PocketTTS models (English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+npm install speaker
+
+node ./test_tts_non_streaming_pocket_en_play_async.js
+```
+
 ### Zero-shot text-to-speech with PocketTTS models (English TTS, sync API)
 
 ```bash
@@ -578,6 +595,48 @@ tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 
 node ./test_tts_non_streaming_pocket_en.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# Install the playback package once.
+npm install speaker
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en_play_async.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en.js
 ```
 
 ### Text-to-speech with KittenTTS models (English TTS)
@@ -608,6 +667,18 @@ tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
 rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
 
 node ./test_tts_non_streaming_supertonic_en_async.js
+```
+
+### Text-to-speech with Supertonic TTS models (English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+npm install speaker
+
+node ./test_tts_non_streaming_supertonic_en_play_async.js
 ```
 
 ### Text-to-speech with Kokoro TTS models (Chinese + English TTS)

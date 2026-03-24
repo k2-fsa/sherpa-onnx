@@ -42,13 +42,9 @@ type
     property GetOutputSampleRate: Integer Read OutputSampleRate;
   end;
 
-  PSherpaOnnxGeneratedAudioCallbackWithArg = ^TSherpaOnnxGeneratedAudioCallbackWithArg;
-
   TSherpaOnnxGeneratedAudioCallbackWithArg = function(
       Samples: pcfloat; N: cint32;
       Arg: Pointer): cint32; cdecl;
-
-  PSherpaOnnxGeneratedAudioProgressCallbackWithArg = ^TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
 
   TSherpaOnnxGeneratedAudioProgressCallbackWithArg = function(
       Samples: pcfloat; N: cint32; P: cfloat;
@@ -209,13 +205,13 @@ type
 
     function Generate(Text: AnsiString; SpeakerId: Integer;
       Speed: Single;
-      Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
     function Generate(Text: AnsiString;
       GenerationConfig: TSherpaOnnxGenerationConfig;
-      Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+      Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
@@ -785,6 +781,7 @@ type
 implementation
 
 uses
+  Math,
   fpjson,
     { See
       - https://wiki.freepascal.org/fcl-json
@@ -1095,7 +1092,7 @@ type
     DictDir: PAnsiChar;
   end;
 
-  PSherpaOnnxGenerationConfig = ^TSherpaOnnxGenerationConfig;
+  PSherpaOnnxGenerationConfig = ^SherpaOnnxGenerationConfig;
 
   SherpaOnnxGenerationConfig = record
     SilenceScale: cfloat;
@@ -1420,13 +1417,13 @@ function SherpaOnnxOfflineTtsGenerate(Tts: Pointer;
 
 function SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Tts: Pointer;
   Text: PAnsiChar; Sid: cint32; Speed: cfloat;
-  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer): PSherpaOnnxGeneratedAudio; cdecl;
   external SherpaOnnxLibName;
 
 function SherpaOnnxOfflineTtsGenerateWithConfig(Tts: Pointer;
   Text: PAnsiChar; config: PSherpaOnnxGenerationConfig;
-  Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
   Arg: Pointer): PSherpaOnnxGeneratedAudio; cdecl;
   external SherpaOnnxLibName;
 
@@ -2920,87 +2917,88 @@ begin
   Self.Handle := nil;
 end;
 
+function ExtractGeneratedAudio(Audio: PSherpaOnnxGeneratedAudio): TSherpaOnnxGeneratedAudio;
+begin
+  Result := Default(TSherpaOnnxGeneratedAudio);
+
+  if Audio = nil then
+    Exit;
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(Audio);
+end;
+
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
 begin
-  Result := Default(TSherpaOnnxGeneratedAudio);
-
   Audio := SherpaOnnxOfflineTtsGenerate(Self.Handle, PAnsiChar(Text), SpeakerId, Speed);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single;
-  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
 begin
-  Result := Default(TSherpaOnnxGeneratedAudio);
-
   Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
     SpeakerId, Speed, Callback, Arg);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString;
   GenerationConfig: TSherpaOnnxGenerationConfig;
-  Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
   C: SherpaOnnxGenerationConfig;
+  ReferenceAudio: TSherpaOnnxSamplesArray;
+  CReferenceAudio: pcfloat;
+  ReferenceText: AnsiString;
+  Extra: AnsiString;
 begin
   C := Default(SherpaOnnxGenerationConfig);
   C.SilenceScale := GenerationConfig.SilenceScale;
   C.Speed := GenerationConfig.Speed;
   C.Sid := GenerationConfig.Sid;
-  C.ReferenceAudio := pcfloat(GenerationConfig.ReferenceAudio);
-  C.ReferenceAudioLen := GenerationConfig.ReferenceAudioLen;
+  ReferenceAudio := GenerationConfig.ReferenceAudio;
+  CReferenceAudio := nil;
+  C.ReferenceAudio := nil;
+  C.ReferenceAudioLen := Length(ReferenceAudio);
+  if C.ReferenceAudioLen > 0 then
+    begin
+      GetMem(CReferenceAudio, C.ReferenceAudioLen * SizeOf(Single));
+      Move(ReferenceAudio[0], CReferenceAudio[0], C.ReferenceAudioLen * SizeOf(Single));
+      C.ReferenceAudio := CReferenceAudio;
+    end;
   C.ReferenceSampleRate:= GenerationConfig.ReferenceSampleRate;
-  C.ReferenceText := PAnsiChar(GenerationConfig.ReferenceText);
+  ReferenceText := GenerationConfig.ReferenceText;
+  C.ReferenceText := PAnsiChar(ReferenceText);
   C.NumSteps := GenerationConfig.NumSteps;
-  C.Extra := PAnsiChar(GenerationConfig.Extra);
+  Extra := GenerationConfig.Extra;
+  C.Extra := PAnsiChar(Extra);
 
-  Result := Default(TSherpaOnnxGeneratedAudio);
+  Audio := nil;
+  try
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @C, Callback, Arg);
+  finally
+    if CReferenceAudio <> nil then
+      FreeMem(CReferenceAudio);
+  end;
 
-  Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-    @C, Callback, Arg);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 constructor TSherpaOnnxLinearResampler.Create(SampleRateIn: Integer; SampleRateOut: Integer);
@@ -3389,5 +3387,14 @@ procedure TSherpaOnnxOnlineSpeechDenoiser.Reset;
 begin
   SherpaOnnxOnlineSpeechDenoiserReset(Self.Handle);
 end;
+
+initialization
+  { Match the C API's default behavior. PocketTTS can raise FP overflow flags
+    during native inference on some platforms, and Free Pascal would otherwise
+    surface them as EOverflow.
+    See also https://github.com/k2-fsa/sherpa-onnx/pull/3351
+  }
+  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow,
+    exUnderflow, exPrecision]);
 
 end.

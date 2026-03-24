@@ -23,7 +23,7 @@ int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Offline/Non-streaming text-to-speech with sherpa-onnx
 
-Usage example:
+Usage examples:
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
@@ -33,9 +33,62 @@ tar xf vits-piper-en_US-amy-low.tar.bz2
  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
  --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
  --output-filename=./generated.wav \
- "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
-It will generate a file ./generated.wav as specified by --output-filename.
+Pocket TTS:
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+./bin/sherpa-onnx-offline-tts \
+ --pocket-lm-flow=./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx \
+ --pocket-lm-main=./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx \
+ --pocket-encoder=./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx \
+ --pocket-decoder=./sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx \
+ --pocket-text-conditioner=./sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx \
+ --pocket-vocab-json=./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json \
+ --pocket-token-scores-json=./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json \
+ --reference-audio=./sherpa-onnx-pocket-tts-int8-2026-01-26/test_wavs/bria.wav \
+ --output-filename=./generated-pocket.wav \
+ "Hello from Pocket TTS"
+
+Supertonic TTS:
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+./bin/sherpa-onnx-offline-tts \
+ --supertonic-duration-predictor=./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx \
+ --supertonic-text-encoder=./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx \
+ --supertonic-vector-estimator=./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx \
+ --supertonic-vocoder=./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx \
+ --supertonic-tts-json=./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json \
+ --supertonic-unicode-indexer=./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin \
+ --supertonic-voice-style=./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin \
+ --lang=en \
+ --output-filename=./generated-supertonic.wav \
+ "Hello from Supertonic TTS"
+
+ZipVoice TTS:
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+./bin/sherpa-onnx-offline-tts \
+ --zipvoice-encoder=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx \
+ --zipvoice-decoder=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx \
+ --zipvoice-data-dir=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data \
+ --zipvoice-lexicon=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt \
+ --zipvoice-tokens=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt \
+ --zipvoice-vocoder=./vocos_24khz.onnx \
+ --reference-audio=./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/test_wavs/leijun-1.wav \
+ --reference-text="那还是三十六年前, 一九八七年. 我呢考上了武汉大学的计算机系." \
+ --num-steps=4 \
+ --output-filename=./generated-zipvoice.wav \
+ "小米的价值观是真诚, 热爱. 真诚，就是不欺人也不自欺. 热爱, 就是全心投入并享受其中."
+
+It will generate a file specified by --output-filename.
 
 You can find more models at
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -52,7 +105,12 @@ or details.
   std::string reference_audio;
   po.Register(
       "reference-audio", &reference_audio,
-      "Path to reference audio if you are using a TTS model supporting that");
+      "Path to reference audio. Required by Pocket TTS and ZipVoice TTS.");
+
+  std::string reference_text;
+  po.Register(
+      "reference-text", &reference_text,
+      "Reference text for the reference audio. Required by ZipVoice TTS.");
 
   sherpa_onnx::GenerationConfig gen_config;
 
@@ -60,14 +118,15 @@ or details.
 
   po.Register(
       "num-steps", &gen_config.num_steps,
-      "Used by some models, e.g., PocketTTS. Number of flow matching steps");
+      "Used by some models, e.g., Pocket TTS and ZipVoice. Number of flow "
+      "matching steps.");
 
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
 
   po.Register("lang", &lang,
-              "Language for text: en, ko, es, pt, fr. Used only for Supertonic "
-              "TTS models.");
+              "Language for text: en, ko, es, pt, fr. Used only by "
+              "Supertonic TTS.");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "
@@ -113,39 +172,45 @@ or details.
 
   bool is_pocket_tts = !config.model.pocket.lm_flow.empty();
   bool is_supertonic_tts = !config.model.supertonic.tts_json.empty();
+  bool is_zipvoice_tts = !config.model.zipvoice.encoder.empty() &&
+                         !config.model.zipvoice.decoder.empty();
 
-  if (is_pocket_tts || is_supertonic_tts) {
-    if (is_supertonic_tts) {
-      if (!lang.empty()) {
-        gen_config.extra["lang"] = lang;
-      }
-      gen_config.sid = sid;
-    }
+  gen_config.sid = sid;
 
-    // Set reference audio for PocketTTS
-    if (is_pocket_tts) {
-      if (reference_audio.empty()) {
-        fprintf(stderr, "You need to provide --reference-audio for Pocket TTS");
-        exit(EXIT_FAILURE);
-      }
-
-      int32_t sample_rate;
-      bool is_ok = false;
-      auto samples =
-          sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
-      if (!is_ok) {
-        fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
-        exit(EXIT_FAILURE);
-      }
-
-      gen_config.reference_audio = std::move(samples);
-      gen_config.reference_sample_rate = sample_rate;
-    }
-
-    audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
-  } else {
-    audio = tts.Generate(po.GetArg(1), sid, gen_config.speed, AudioCallback);
+  if (is_supertonic_tts && !lang.empty()) {
+    gen_config.extra["lang"] = lang;
   }
+
+  if (is_pocket_tts || is_zipvoice_tts) {
+    if (reference_audio.empty()) {
+      fprintf(stderr,
+              "You need to provide --reference-audio for this TTS model");
+      exit(EXIT_FAILURE);
+    }
+
+    int32_t sample_rate;
+    bool is_ok = false;
+    auto samples =
+        sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
+    if (!is_ok) {
+      fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
+      exit(EXIT_FAILURE);
+    }
+
+    gen_config.reference_audio = std::move(samples);
+    gen_config.reference_sample_rate = sample_rate;
+  }
+
+  if (is_zipvoice_tts) {
+    if (reference_text.empty()) {
+      fprintf(stderr,
+              "You need to provide --reference-text for ZipVoice TTS");
+      exit(EXIT_FAILURE);
+    }
+    gen_config.reference_text = reference_text;
+  }
+
+  audio = tts.Generate(po.GetArg(1), gen_config, AudioCallback);
 
   const auto end = std::chrono::steady_clock::now();
 

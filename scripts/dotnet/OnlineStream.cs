@@ -24,6 +24,22 @@ namespace SherpaOnnx
             SherpaOnnxOnlineStreamInputFinished(Handle);
         }
 
+        public void SetOption(string key, string value)
+        {
+            SherpaOnnxOnlineStreamSetOption(Handle, key, value);
+        }
+
+        public string GetOption(string key)
+        {
+            IntPtr p = SherpaOnnxOnlineStreamGetOption(Handle, key);
+            return Marshal.PtrToStringAnsi(p) ?? "";
+        }
+
+        public bool HasOption(string key)
+        {
+            return SherpaOnnxOnlineStreamHasOption(Handle, key) == 1;
+        }
+
         ~OnlineStream()
         {
             Cleanup();
@@ -56,6 +72,15 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxOnlineStreamInputFinished(IntPtr handle);
+
+        [DllImport(Dll.Filename)]
+        private static extern void SherpaOnnxOnlineStreamSetOption(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string key, [MarshalAs(UnmanagedType.LPStr)] string value);
+
+        [DllImport(Dll.Filename)]
+        private static extern IntPtr SherpaOnnxOnlineStreamGetOption(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string key);
+
+        [DllImport(Dll.Filename)]
+        private static extern int SherpaOnnxOnlineStreamHasOption(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string key);
     }
 
 }

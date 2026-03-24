@@ -74,6 +74,12 @@ cd ../pocket-tts-zero-shot
 ls -lh
 rm -rf sherpa-onnx-pocket-*
 
+cd ../zipvoice-tts
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-zipvoice-*
+rm -f vocos_24khz.onnx
+
 cd ../vad-non-streaming-funasr-nano
 ./run-ten-vad.sh
 rm -fv *.onnx
@@ -155,6 +161,7 @@ mkdir tts
 cp -v dotnet-examples/kokoro-tts/*.wav ./tts
 cp -v dotnet-examples/offline-tts/*.wav ./tts
 cp -v dotnet-examples/supertonic-tts/*.wav ./tts
+cp -v dotnet-examples/zipvoice-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization
@@ -185,6 +192,10 @@ rm -rf sherpa-onnx-*
 cd ../offline-punctuation
 ./run.sh
 rm -rf sherpa-onnx-*
+
+cd ../online-punctuation
+./run.sh
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
 
 cd ../speaker-identification
 ./run.sh

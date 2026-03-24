@@ -549,10 +549,13 @@ def main():
 
     logging.info("Start generating ...")
     start_time = time.time()
+    gen_config = sherpa_onnx.GenerationConfig()
+    gen_config.sid = args.sid
+    gen_config.speed = args.speed
+    gen_config.silence_scale = 0.2
     audio = tts.generate(
         args.text,
-        sid=args.sid,
-        speed=args.speed,
+        gen_config,
         callback=generated_audio_callback,
     )
     end_time = time.time()

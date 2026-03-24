@@ -1,3 +1,43 @@
+//! Streaming speech recognition.
+//!
+//! Configure exactly one model family inside [`OnlineModelConfig`], create an
+//! [`OnlineRecognizer`], then feed waveform chunks into an [`OnlineStream`].
+//!
+//! See:
+//!
+//! - `rust-api-examples/examples/streaming_zipformer.rs`
+//! - `rust-api-examples/examples/streaming_zipformer_microphone.rs`
+//!
+//! ```no_run
+//! use sherpa_onnx::{OnlineRecognizer, OnlineRecognizerConfig, Wave};
+//!
+//! let wave = Wave::read("./test.wav").expect("read wave");
+//! let mut config = OnlineRecognizerConfig::default();
+//! config.model_config.transducer.encoder = Some(
+//!     "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx".into(),
+//! );
+//! config.model_config.transducer.decoder = Some(
+//!     "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx".into(),
+//! );
+//! config.model_config.transducer.joiner = Some(
+//!     "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx".into(),
+//! );
+//! config.model_config.tokens = Some(
+//!     "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt".into(),
+//! );
+//! config.enable_endpoint = true;
+//! config.decoding_method = Some("greedy_search".into());
+//!
+//! let recognizer = OnlineRecognizer::create(&config).expect("create recognizer");
+//! let stream = recognizer.create_stream();
+//! stream.accept_waveform(wave.sample_rate(), wave.samples());
+//! stream.input_finished();
+//!
+//! while recognizer.is_ready(&stream) {
+//!     recognizer.decode(&stream);
+//! }
+//! ```
+
 use crate::utils::to_c_ptr;
 use serde::Deserialize;
 use std::ffi::{CStr, CString};
@@ -6,6 +46,7 @@ use std::ptr;
 use sherpa_onnx_sys as sys;
 
 #[derive(Clone, Debug, Default)]
+/// Online transducer model configuration.
 pub struct OnlineTransducerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -23,6 +64,7 @@ impl OnlineTransducerModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Online Paraformer model configuration.
 pub struct OnlineParaformerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -38,6 +80,7 @@ impl OnlineParaformerModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Online Zipformer2 CTC model configuration.
 pub struct OnlineZipformer2CtcModelConfig {
     pub model: Option<String>,
 }
@@ -51,6 +94,7 @@ impl OnlineZipformer2CtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Online NeMo CTC model configuration.
 pub struct OnlineNemoCtcModelConfig {
     pub model: Option<String>,
 }
@@ -64,6 +108,7 @@ impl OnlineNemoCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Online Tone CTC model configuration.
 pub struct OnlineToneCtcModelConfig {
     pub model: Option<String>,
 }
@@ -77,6 +122,9 @@ impl OnlineToneCtcModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Aggregate model configuration for streaming recognition.
+///
+/// Configure exactly one model family for typical use.
 pub struct OnlineModelConfig {
     pub transducer: OnlineTransducerModelConfig,
     pub paraformer: OnlineParaformerModelConfig,
@@ -120,7 +168,7 @@ impl Default for OnlineModelConfig {
 }
 
 impl OnlineModelConfig {
-    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineModelConfig {
+    pub(crate) fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OnlineModelConfig {
         sys::OnlineModelConfig {
             transducer: self
                 .transducer
@@ -160,6 +208,7 @@ impl OnlineModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// FST decoder options for CTC models.
 pub struct OnlineCtcFstDecoderConfig {
     pub graph: Option<String>,
     pub max_active: i32,
@@ -185,6 +234,7 @@ impl OnlineCtcFstDecoderConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Optional homophone replacement resources.
 pub struct HomophoneReplacerConfig {
     pub lexicon: Option<String>,
     pub rule_fsts: Option<String>,
@@ -201,6 +251,7 @@ impl HomophoneReplacerConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Top-level configuration for [`OnlineRecognizer`].
 pub struct OnlineRecognizerConfig {
     pub feat_config: sys::FeatureConfig,
     pub model_config: OnlineModelConfig,
@@ -296,11 +347,13 @@ impl OnlineRecognizerConfig {
     }
 }
 
+/// Streaming speech recognizer.
 pub struct OnlineRecognizer {
     ptr: *const sys::OnlineRecognizer,
 }
 
 impl OnlineRecognizer {
+    /// Create a recognizer from `config`.
     pub fn create(config: &OnlineRecognizerConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
 
@@ -315,21 +368,25 @@ impl OnlineRecognizer {
         }
     }
 
+    /// Create an empty online stream.
     pub fn create_stream(&self) -> OnlineStream {
         let ptr = unsafe { sys::SherpaOnnxCreateOnlineStream(self.ptr) };
         OnlineStream { ptr }
     }
 
+    /// Create a stream with per-stream hotwords.
     pub fn create_stream_with_hotwords(&self, hotwords: &str) -> OnlineStream {
         let c = CString::new(hotwords).unwrap();
         let ptr = unsafe { sys::SherpaOnnxCreateOnlineStreamWithHotwords(self.ptr, c.as_ptr()) };
         OnlineStream { ptr }
     }
 
+    /// Decode one step for `stream`.
     pub fn decode(&self, stream: &OnlineStream) {
         unsafe { sys::SherpaOnnxDecodeOnlineStream(self.ptr, stream.ptr) }
     }
 
+    /// Decode multiple streams in one batch call.
     pub fn decode_multiple_streams(&self, streams: &[&OnlineStream]) {
         let ptrs: Vec<*const sys::OnlineStream> = streams
             .iter()
@@ -340,18 +397,22 @@ impl OnlineRecognizer {
         }
     }
 
+    /// Reset stream state after an endpoint or utterance boundary.
     pub fn reset(&self, stream: &OnlineStream) {
         unsafe { sys::SherpaOnnxOnlineStreamReset(self.ptr, stream.ptr) }
     }
 
+    /// Return `true` if endpointing rules say the current utterance has ended.
     pub fn is_endpoint(&self, stream: &OnlineStream) -> bool {
         unsafe { sys::SherpaOnnxOnlineStreamIsEndpoint(self.ptr, stream.ptr) != 0 }
     }
 
+    /// Return `true` if the recognizer has enough audio to run another step.
     pub fn is_ready(&self, stream: &OnlineStream) -> bool {
         unsafe { sys::SherpaOnnxIsOnlineStreamReady(self.ptr, stream.ptr) != 0 }
     }
 
+    /// Fetch the current recognition hypothesis.
     pub fn get_result(&self, stream: &OnlineStream) -> Option<RecognizerResult> {
         unsafe {
             let cstr = sys::SherpaOnnxGetOnlineStreamResultAsJson(self.ptr, stream.ptr);
@@ -368,6 +429,7 @@ impl OnlineRecognizer {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+/// Streaming ASR result returned by [`OnlineRecognizer::get_result`].
 pub struct RecognizerResult {
     pub text: String,
     pub tokens: Vec<String>,
@@ -385,11 +447,13 @@ impl Drop for OnlineRecognizer {
     }
 }
 
+/// Input stream used by [`OnlineRecognizer`].
 pub struct OnlineStream {
-    ptr: *const sys::OnlineStream,
+    pub(crate) ptr: *const sys::OnlineStream,
 }
 
 impl OnlineStream {
+    /// Append one chunk of waveform samples.
     pub fn accept_waveform(&self, sample_rate: i32, samples: &[f32]) {
         unsafe {
             sys::SherpaOnnxOnlineStreamAcceptWaveform(
@@ -401,8 +465,34 @@ impl OnlineStream {
         }
     }
 
+    /// Mark the end of input so the recognizer can flush trailing context.
     pub fn input_finished(&self) {
         unsafe { sys::SherpaOnnxOnlineStreamInputFinished(self.ptr) }
+    }
+
+    pub fn set_option(&self, key: &str, value: &str) {
+        let key = CString::new(key).unwrap();
+        let value = CString::new(value).unwrap();
+        unsafe { sys::SherpaOnnxOnlineStreamSetOption(self.ptr, key.as_ptr(), value.as_ptr()) }
+    }
+
+    pub fn get_option(&self, key: &str) -> String {
+        let key = CString::new(key).unwrap();
+        unsafe {
+            let p = sys::SherpaOnnxOnlineStreamGetOption(self.ptr, key.as_ptr());
+            if p.is_null() {
+                String::new()
+            } else {
+                CStr::from_ptr(p)
+                    .to_string_lossy()
+                    .into_owned()
+            }
+        }
+    }
+
+    pub fn has_option(&self, key: &str) -> bool {
+        let key = CString::new(key).unwrap();
+        unsafe { sys::SherpaOnnxOnlineStreamHasOption(self.ptr, key.as_ptr()) != 0 }
     }
 }
 

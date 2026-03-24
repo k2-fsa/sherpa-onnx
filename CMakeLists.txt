@@ -19,7 +19,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.12.29")
+set(SHERPA_ONNX_VERSION "1.12.33")
 
 # Disable warning about
 #
@@ -126,7 +126,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_SKIP_BUILD_RPATH FALSE)
   set(BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -138,7 +138,7 @@ else()
   set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
 endif()
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
   set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
 endif()
@@ -237,6 +237,11 @@ endif()
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
+
+# Rust on Linux links static sherpa-onnx archives into PIE executables by
+# default, so static objects need PIC as well.
+if(NOT WIN32)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 

@@ -38,7 +38,14 @@
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.voices);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.tokens);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kitten.data_dir);          \
-                                                                \
+                                                                 \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.tokens);          \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.encoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.decoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.vocoder);         \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.data_dir);        \
+    SHERPA_ONNX_DELETE_C_STR(c.model.zipvoice.lexicon);         \
+                                                                 \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);             \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);            \
     SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);            \
@@ -202,6 +209,30 @@ static SherpaOnnxOfflineTtsKittenModelConfig GetOfflineTtsKittenModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsZipvoiceModelConfig
+GetOfflineTtsZipvoiceModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineTtsZipvoiceModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("zipvoice") || !obj.Get("zipvoice").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("zipvoice").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vocoder, vocoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(feat_scale, featScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(t_shift, tShift);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(target_rms, targetRms);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(guidance_scale, guidanceScale);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsPocketModelConfig GetOfflineTtsPocketModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsPocketModelConfig c;
@@ -268,6 +299,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   c.matcha = GetOfflineTtsMatchaModelConfig(o);
   c.kokoro = GetOfflineTtsKokoroModelConfig(o);
   c.kitten = GetOfflineTtsKittenModelConfig(o);
+  c.zipvoice = GetOfflineTtsZipvoiceModelConfig(o);
   c.pocket = GetOfflineTtsPocketModelConfig(o);
   c.supertonic = GetOfflineTtsSupertonicModelConfig(o);
 
@@ -359,9 +391,9 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   Napi::Env env = info.Env();
 #if __OHOS__
   // the last argument is the NativeResourceManager
-  if (info.Length() != 2) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
+    os << "Expect 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -385,6 +417,18 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
     return {};
   }
 
+#if __OHOS__
+  bool use_resource_manager =
+      info.Length() == 2 && !info[1].IsUndefined() && !info[1].IsNull();
+  if (use_resource_manager && !info[1].IsObject()) {
+    Napi::TypeError::New(
+        env, "You should pass a resource manager as the second argument.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+#endif
+
   Napi::Object o = info[0].As<Napi::Object>();
 
   SherpaOnnxOfflineTtsConfig c;
@@ -395,12 +439,17 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   SHERPA_ONNX_ASSIGN_TTS_ATTR();
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
-  const SherpaOnnxOfflineTts *tts =
-      SherpaOnnxCreateOfflineTtsOHOS(&c, mgr.get());
+  const SherpaOnnxOfflineTts *tts = nullptr;
+
+  if (use_resource_manager) {
+    std::unique_ptr<NativeResourceManager,
+                    decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+        mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+            &OH_ResourceManager_ReleaseNativeResourceManager);
+    tts = SherpaOnnxCreateOfflineTtsOHOS(&c, mgr.get());
+  } else {
+    tts = SherpaOnnxCreateOfflineTts(&c);
+  }
 #else
   const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 #endif

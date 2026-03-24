@@ -1,34 +1,62 @@
 const generateBtn = document.getElementById('generateBtn');
 const speakerIdLabel = document.getElementById('speakerIdLabel');
 const speakerIdInput = document.getElementById('speakerId');
+const speakerIdSection = document.getElementById('speakerIdSection');
+const referenceAudioSection = document.getElementById('referenceAudioSection');
+const referenceTextSection = document.getElementById('referenceTextSection');
+const referenceAudioInput = document.getElementById('referenceAudio');
+const referenceTextInput = document.getElementById('referenceText');
 const speedInput = document.getElementById('speed');
 const speedValue = document.getElementById('speedValue');
 const textArea = document.getElementById('text');
 const soundClips = document.getElementById('sound-clips');
+const statusElement = document.getElementById('status');
+const generationStatusElement = document.getElementById('generationStatus');
 
 speedValue.innerHTML = speedInput.value;
 
 let index = 0;
 
 let audioCtx = null;
-const worker = new Worker("/sherpa-onnx-tts.worker.js");
+const worker = new Worker("sherpa-onnx-tts.worker.js");
 let ttsInstanceInfo = {
+  modelType: null,
   numSpeakers: 0,
   isReady: false,
 };
 worker.onmessage = (e) => {
   if (e.data.type === "sherpa-onnx-tts-progress") {
     Module.setStatus(e.data.status);
+    return;
+  }
+  if (e.data.type === "sherpa-onnx-tts-generation-progress") {
+    const percent = Math.max(0, Math.min(100, (e.data.progress || 0) * 100));
+    setGenerationStatus(`Generating audio... ${percent.toFixed(2)}%`);
+    return;
   }
   if (e.data.type === "sherpa-onnx-tts-ready") {
+    ttsInstanceInfo.modelType = e.data.modelType;
     ttsInstanceInfo.numSpeakers = e.data.numSpeakers;
     ttsInstanceInfo.isReady = true;
     generateBtn.disabled = false;
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${e.data.numSpeakers - 1}):`;
+    updateUiForModelType();
+    Module.setStatus('');
+    return;
+  }
+  if (e.data.type === "error") {
+    generateBtn.disabled = false;
+    if (ttsInstanceInfo.isReady) {
+      setGenerationStatus(e.data.message);
+    } else {
+      Module.setStatus(e.data.message);
+    }
     return;
   }
   if (e.data.type === "sherpa-onnx-tts-result") {
     let audio = e.data;
+    generateBtn.disabled = false;
+    setGenerationStatus('');
 
     console.log(audio.samples.length, audio.sampleRate);
 
@@ -57,7 +85,6 @@ Module = {};
 // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
 Module.setStatus = function(status) {
   console.log(`status ${status}`);
-  const statusElement = document.getElementById('status');
   if (status == 'Running...') {
     status = 'Model downloaded. Initializing text to speech model...'
   }
@@ -68,8 +95,10 @@ Module.setStatus = function(status) {
     const total = BigInt(downloadMatch[2]);
     const percent =
         total === 0 ? 0.00 : Number((downloaded * 10000n) / total) / 100;
-    status = `Downloading data... ${percent.toFixed(2)}% (${downloadMatch[1]}/${
-        downloadMatch[2]})`;
+    const downloadedMB = Number(downloaded) / (1024 * 1024);
+    const totalMB = Number(total) / (1024 * 1024);
+    status = `Downloading data... ${percent.toFixed(2)}% (${downloadedMB.toFixed(2)} MB/${
+        totalMB.toFixed(2)} MB)`;
     console.log(`here ${status}`)
   }
 
@@ -92,23 +121,101 @@ speedInput.oninput = function() {
   speedValue.innerHTML = this.value;
 };
 
-generateBtn.onclick = function() {
-  let speakerId = speakerIdInput.value;
-  if (speakerId.trim().length == 0) {
-    alert('Please input a speakerId');
+function updateUiForModelType() {
+  const isZipVoice = ttsInstanceInfo.modelType === 4;
+  const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const useGenerationConfig = isZipVoice || isPocketTts;
+  speakerIdSection.classList.toggle('hidden', useGenerationConfig);
+  referenceAudioSection.classList.toggle('hidden', !useGenerationConfig);
+  referenceTextSection.classList.toggle('hidden', !isZipVoice);
+}
+
+function setGenerationStatus(status) {
+  if (!generationStatusElement) {
     return;
   }
 
-  if (!speakerId.match(/^\d+$/)) {
-    alert(`Input speakerID ${
-        speakerId} is not a number.\nPlease enter a number between 0 and ${
-        ttsInstanceInfo.numSpeakers - 1}`);
-    return;
+  generationStatusElement.textContent = status;
+  generationStatusElement.style.display = status ? 'block' : 'none';
+}
+
+function getMonoSamples(audioBuffer) {
+  if (audioBuffer.numberOfChannels === 1) {
+    return new Float32Array(audioBuffer.getChannelData(0));
   }
-  speakerId = parseInt(speakerId, 10);
-  if (speakerId > ttsInstanceInfo.numSpeakers - 1) {
-    alert(`Pleaser enter a number between 0 and ${ttsInstanceInfo.numSpeakers - 1}`);
-    return;
+
+  const samples = new Float32Array(audioBuffer.length);
+  for (let c = 0; c < audioBuffer.numberOfChannels; ++c) {
+    const channel = audioBuffer.getChannelData(c);
+    for (let i = 0; i < channel.length; ++i) {
+      samples[i] += channel[i];
+    }
+  }
+
+  for (let i = 0; i < samples.length; ++i) {
+    samples[i] /= audioBuffer.numberOfChannels;
+  }
+
+  return samples;
+}
+
+async function readReferenceAudio(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const ctx = new AudioContext();
+  try {
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    return {
+      samples: getMonoSamples(audioBuffer),
+      sampleRate: audioBuffer.sampleRate,
+    };
+  } finally {
+    await ctx.close();
+  }
+}
+
+function isWaveFile(file) {
+  const name = file.name || '';
+  return name.toLowerCase().endsWith('.wav');
+}
+
+function sanitizeFilename(name) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, '-');
+}
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+generateBtn.onclick = async function() {
+  const isZipVoice = ttsInstanceInfo.modelType === 4;
+  const isPocketTts = ttsInstanceInfo.modelType === 5;
+  const useGenerationConfig = isZipVoice || isPocketTts;
+
+  let speakerId = speakerIdInput.value;
+  if (!useGenerationConfig) {
+    if (speakerId.trim().length == 0) {
+      alert('Please input a speakerId');
+      return;
+    }
+
+    if (!speakerId.match(/^\d+$/)) {
+      alert(`Input speakerID ${
+          speakerId} is not a number.\nPlease enter a number between 0 and ${
+          ttsInstanceInfo.numSpeakers - 1}`);
+      return;
+    }
+    speakerId = parseInt(speakerId, 10);
+    if (speakerId > ttsInstanceInfo.numSpeakers - 1) {
+      alert(`Pleaser enter a number between 0 and ${ttsInstanceInfo.numSpeakers - 1}`);
+      return;
+    }
   }
 
   let text = textArea.value.trim();
@@ -120,10 +227,55 @@ generateBtn.onclick = function() {
   console.log('speakerId', speakerId);
   console.log('speed', speedInput.value);
   console.log('text', text);
+
+  if (useGenerationConfig) {
+    if (!referenceAudioInput.files || referenceAudioInput.files.length === 0) {
+      alert('Please select a reference audio file');
+      return;
+    }
+
+    const referenceFile = referenceAudioInput.files[0];
+    if (!isWaveFile(referenceFile)) {
+      alert('Please select a .wav reference audio file');
+      return;
+    }
+
+    const referenceAudio = await readReferenceAudio(referenceFile);
+    const genConfig = {
+      speed: parseFloat(speedInput.value),
+      referenceAudio: referenceAudio.samples,
+      referenceSampleRate: referenceAudio.sampleRate,
+      numSteps: isPocketTts ? 5 : 4,
+    };
+
+    if (isZipVoice) {
+      const referenceText = referenceTextInput.value.trim();
+      if (referenceText.length === 0) {
+        alert('Please input the transcript of the reference audio');
+        return;
+      }
+
+      genConfig.referenceText = referenceText;
+      genConfig.extra = {
+        min_char_in_sentence: 10,
+      };
+    }
+
+    generateBtn.disabled = true;
+    setGenerationStatus('Generating audio...');
+
+    worker.postMessage({
+      text,
+      genConfig,
+      type: "generateWithConfig",
+    }, [genConfig.referenceAudio.buffer]);
+    return;
+  }
+
   worker.postMessage({
     text,
     sid: speakerId,
-    speed: speedInput.value,
+    speed: parseFloat(speedInput.value),
     type: "generate",
   });
 };
@@ -133,14 +285,18 @@ function createAudioTag(generateAudio) {
 
   const text = textArea.value.trim().substring(0, 100);
   const clipName = `${index} ${text} ...`;
+  const filename = `${sanitizeFilename(clipName)}.wav`;
   index += 1;
 
   const clipContainer = document.createElement('article');
   const clipLabel = document.createElement('p');
   const audio = document.createElement('audio');
+  const saveButton = document.createElement('button');
   const deleteButton = document.createElement('button');
   clipContainer.classList.add('clip');
   audio.setAttribute('controls', '');
+  saveButton.textContent = 'Save';
+  saveButton.className = 'save';
   deleteButton.textContent = 'Delete';
   deleteButton.className = 'delete';
 
@@ -149,6 +305,7 @@ function createAudioTag(generateAudio) {
   clipContainer.appendChild(audio);
 
   clipContainer.appendChild(clipLabel);
+  clipContainer.appendChild(saveButton);
   clipContainer.appendChild(deleteButton);
   soundClips.appendChild(clipContainer);
 
@@ -156,6 +313,10 @@ function createAudioTag(generateAudio) {
 
   const audioURL = window.URL.createObjectURL(blob);
   audio.src = audioURL;
+
+  saveButton.onclick = function() {
+    downloadBlob(blob, filename);
+  };
 
   deleteButton.onclick = function(e) {
     let evtTgt = e.target;
