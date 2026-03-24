@@ -579,15 +579,25 @@ struct OfflineFunASRNanoModelConfig {
   std::string hotwords;
 };
 
+/** @brief Offline Qwen3-ASR model configuration. */
 struct OfflineQwen3ASRModelConfig {
+  /** Conv-frontend ONNX model file. */
   std::string conv_frontend;
+  /** Encoder ONNX model file. */
   std::string encoder;
+  /** Decoder ONNX model file (KV cache). */
   std::string decoder;
+  /** Tokenizer directory (e.g. containing `vocab.json`). */
   std::string tokenizer;
+  /** Maximum total sequence length supported by the model. */
   int32_t max_total_len = 512;
+  /** Maximum number of new tokens to generate. */
   int32_t max_new_tokens = 64;
+  /** Sampling temperature. */
   float temperature = 1e-6f;
+  /** Top-p (nucleus) sampling parameter. */
   float top_p = 0.8f;
+  /** Random seed for reproducible sampling. */
   int32_t seed = 42;
 };
 
@@ -647,6 +657,7 @@ struct OfflineModelConfig {
   OfflineFunASRNanoModelConfig funasr_nano;
   /** FireRed CTC configuration. */
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
+  /** Qwen3-ASR configuration. */
   OfflineQwen3ASRModelConfig qwen3_asr;
 };
 
