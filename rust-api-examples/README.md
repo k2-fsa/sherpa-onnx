@@ -79,6 +79,14 @@ in your own Cargo project, see
 | 34 | [speaker_embedding_manager](#example-34-speaker-embedding-manager) | Register, search, verify, and remove speakers using embeddings |
 | 35 | [speaker_embedding_cosine_similarity](#example-35-speaker-embedding-cosine-similarity) | Compute cosine similarity from three speaker embeddings |
 | 36 | [offline_speaker_diarization](#example-36-offline-speaker-diarization) | Offline speaker diarization with pyannote segmentation and 3D-Speaker embeddings |
+| 37 | [sense_voice_simulate_streaming_microphone](#example-37-simulated-streaming-asr-with-sensevoice-and-vad-from-microphone) | Simulated streaming ASR with SenseVoice and VAD from microphone |
+| 38 | [fire_red_asr_ctc_simulate_streaming_microphone](#example-38-simulated-streaming-asr-with-fireredasr-ctc-and-vad-from-microphone) | Simulated streaming ASR with FireRedASR CTC and VAD from microphone |
+| 39 | [parakeet_tdt_ctc_simulate_streaming_microphone](#example-39-simulated-streaming-asr-with-parakeet-tdt-ctc-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone |
+| 40 | [parakeet_tdt_simulate_streaming_microphone](#example-40-simulated-streaming-asr-with-parakeet-tdt-transducer-and-vad-from-microphone) | Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone |
+| 41 | [wenet_ctc_simulate_streaming_microphone](#example-41-simulated-streaming-asr-with-wenet-ctc-and-vad-from-microphone) | Simulated streaming ASR with WeNet CTC and VAD from microphone |
+| 42 | [zipformer_ctc_simulate_streaming_microphone](#example-42-simulated-streaming-asr-with-zipformer-ctc-and-vad-from-microphone) | Simulated streaming ASR with Zipformer CTC and VAD from microphone |
+| 43 | [zipformer_transducer_simulate_streaming_microphone](#example-43-simulated-streaming-asr-with-zipformer-transducer-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer and VAD from microphone |
+| 44 | [zipformer_transducer_simulate_streaming_microphone](#example-44-simulated-streaming-asr-with-zipformer-transducer-japanese-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone |
 
 ## Run it
 
@@ -308,4 +316,78 @@ to check the RPATH for shared builds.
 
 ```bash
 ./run-offline-speaker-diarization.sh
+```
+
+### Example 37: Simulated streaming ASR with SenseVoice and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+SenseVoice recognizer on each detected segment, providing an experience
+similar to streaming ASR.
+
+```bash
+./run-sense-voice-simulate-streaming-microphone.sh
+```
+
+### Example 38: Simulated streaming ASR with FireRedASR CTC and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+FireRedASR CTC recognizer on each detected segment.
+
+```bash
+./run-fire-red-asr-ctc-simulate-streaming-microphone.sh
+```
+
+### Example 39: Simulated streaming ASR with Parakeet TDT CTC and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+Parakeet TDT CTC recognizer on each detected segment (Japanese).
+
+```bash
+./run-parakeet-tdt-ctc-simulate-streaming-microphone.sh
+```
+
+### Example 40: Simulated streaming ASR with Parakeet TDT transducer and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+Parakeet TDT transducer recognizer on each detected segment (English).
+
+```bash
+./run-parakeet-tdt-simulate-streaming-microphone.sh
+```
+
+### Example 41: Simulated streaming ASR with WeNet CTC and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+WeNet CTC recognizer on each detected segment (Cantonese).
+
+```bash
+./run-wenet-ctc-simulate-streaming-microphone.sh
+```
+
+### Example 42: Simulated streaming ASR with Zipformer CTC and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+Zipformer CTC recognizer on each detected segment (Chinese).
+
+```bash
+./run-zipformer-ctc-simulate-streaming-microphone.sh
+```
+
+### Example 43: Simulated streaming ASR with Zipformer transducer and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+Zipformer transducer recognizer on each detected segment (Chinese).
+
+```bash
+./run-zipformer-transducer-simulate-streaming-microphone.sh
+```
+
+### Example 44: Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone
+
+This example uses Silero VAD to detect speech segments and runs the offline
+Zipformer transducer recognizer on each detected segment (Japanese,
+reazonspeech model).
+
+```bash
+./run-zipformer-ja-reazonspeech-simulate-streaming-microphone.sh
 ```
