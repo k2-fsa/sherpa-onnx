@@ -164,7 +164,10 @@ type OnlineRecognizerConfig struct {
 
 // It contains the recognition result for a online stream.
 type OnlineRecognizerResult struct {
-	Text string
+	Text      string
+	Tokens    []string
+	Timestamps []float32
+	Json      string
 }
 
 // The online recognizer class. It wraps a pointer from C.
@@ -404,8 +407,24 @@ func (recognizer *OnlineRecognizer) DecodeStreams(s []*OnlineStream) {
 func (recognizer *OnlineRecognizer) GetResult(s *OnlineStream) *OnlineRecognizerResult {
 	p := C.SherpaOnnxGetOnlineStreamResult(recognizer.impl, s.impl)
 	defer C.SherpaOnnxDestroyOnlineRecognizerResult(p)
+	n := int(p.count)
 	result := &OnlineRecognizerResult{}
 	result.Text = C.GoString(p.text)
+	result.Json = C.GoString(p.json)
+	if n > 0 {
+		result.Tokens = make([]string, n)
+		tokens := unsafe.Slice(p.tokens_arr, n)
+		for i := 0; i < n; i++ {
+			result.Tokens[i] = C.GoString(tokens[i])
+		}
+	}
+	if p.timestamps != nil && n > 0 {
+		result.Timestamps = make([]float32, n)
+		timestamps := unsafe.Slice(p.timestamps, n)
+		for i := 0; i < n; i++ {
+			result.Timestamps[i] = float32(timestamps[i])
+		}
+	}
 
 	return result
 }
