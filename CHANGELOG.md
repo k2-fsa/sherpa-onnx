@@ -1,3 +1,12 @@
+## 1.12.33
+
+* Add Rust examples for simulated streaming ASR with VAD (#3398)
+* Add Rust example for real-time ASR + VAD (#3397)
+* Fix printing microphone sample rate. (#3396)
+* Add missing fields of OnlineRecongizerResult to Go API. (#3395)
+* Add examples for punctuations (#3394)
+* Fix building MFC examples for TTS (#3388)
+
 ## 1.12.32
 
 * Support static link for Rust package. (#3386)

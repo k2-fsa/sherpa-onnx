@@ -23,14 +23,14 @@
 //! In other words, the default setup for most users is simply:
 //!
 //! ```toml
-//! sherpa-onnx = "1.12.32"
+//! sherpa-onnx = "1.12.33"
 //! ```
 //!
 //! If you want shared libraries instead, disable the default feature and enable
 //! `shared`:
 //!
 //! ```toml
-//! sherpa-onnx = { version = "1.12.32", default-features = false, features = ["shared"] }
+//! sherpa-onnx = { version = "1.12.33", default-features = false, features = ["shared"] }
 //! ```
 //!
 //! For advanced use cases, set `SHERPA_ONNX_LIB_DIR` to a directory that already
@@ -53,33 +53,33 @@
 //! So most users do not need to manually set `LD_LIBRARY_PATH` or
 //! `DYLD_LIBRARY_PATH`.
 //!
-//! Example `v1.12.32` archives used by the build script:
+//! Example `v1.12.33` archives used by the build script:
 //!
 //! Default static archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.12.32-linux-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-linux-x64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-linux-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-linux-x64-static-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.12.32-linux-aarch64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-linux-aarch64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-linux-aarch64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-linux-aarch64-static-lib.tar.bz2)
 //! - macOS x86_64:
-//!   [sherpa-onnx-v1.12.32-osx-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-osx-x64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-osx-x64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-osx-x64-static-lib.tar.bz2)
 //! - macOS arm64:
-//!   [sherpa-onnx-v1.12.32-osx-arm64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-osx-arm64-static-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-osx-arm64-static-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-osx-arm64-static-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.12.32-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-win-x64-static-MT-Release-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-win-x64-static-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-win-x64-static-MT-Release-lib.tar.bz2)
 //!
 //! Optional shared archives:
 //!
 //! - Linux x86_64:
-//!   [sherpa-onnx-v1.12.32-linux-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-linux-x64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-linux-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-linux-x64-shared-lib.tar.bz2)
 //! - Linux aarch64:
-//!   [sherpa-onnx-v1.12.32-linux-aarch64-shared-cpu-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-linux-aarch64-shared-cpu-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-linux-aarch64-shared-cpu-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-linux-aarch64-shared-cpu-lib.tar.bz2)
 //! - macOS x86_64:
-//!   [sherpa-onnx-v1.12.32-osx-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-osx-x64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-osx-x64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-osx-x64-shared-lib.tar.bz2)
 //! - macOS arm64:
-//!   [sherpa-onnx-v1.12.32-osx-arm64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-osx-arm64-shared-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-osx-arm64-shared-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-osx-arm64-shared-lib.tar.bz2)
 //! - Windows x64:
-//!   [sherpa-onnx-v1.12.32-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.32/sherpa-onnx-v1.12.32-win-x64-shared-MT-Release-lib.tar.bz2)
+//!   [sherpa-onnx-v1.12.33-win-x64-shared-MT-Release-lib.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.12.33/sherpa-onnx-v1.12.33-win-x64-shared-MT-Release-lib.tar.bz2)
 //!
 //! # How the Rust API is organized
 //!
