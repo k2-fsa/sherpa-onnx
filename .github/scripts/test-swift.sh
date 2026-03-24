@@ -98,6 +98,10 @@ rm -fv *.wav
 rm ./add-punctuations
 rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
 
+./run-add-punctuations-online.sh
+rm ./add-punctuation-online
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
+
 ./run-keyword-spotting-from-file.sh
 rm ./keyword-spotting-from-file
 rm -rf sherpa-onnx-kws-*

@@ -107,6 +107,15 @@ set(exported_functions
   SherpaOnnxOnlineSpeechDenoiserRun
   SherpaOnnxOnlineSpeechDenoiserFlush
   SherpaOnnxOnlineSpeechDenoiserReset
+  # punctuation
+  SherpaOnnxCreateOfflinePunctuation
+  SherpaOnnxDestroyOfflinePunctuation
+  SherpaOfflinePunctuationAddPunct
+  SherpaOfflinePunctuationFreeText
+  SherpaOnnxCreateOnlinePunctuation
+  SherpaOnnxDestroyOnlinePunctuation
+  SherpaOnnxOnlinePunctuationAddPunct
+  SherpaOnnxOnlinePunctuationFreeText
   # version
   SherpaOnnxGetGitDate
   SherpaOnnxGetGitSha1
@@ -146,6 +155,7 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
   ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
+  ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-punctuation.js
   ${CMAKE_SOURCE_DIR}/wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js
   ${CMAKE_SOURCE_DIR}/wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js
   ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-wave.js

@@ -193,6 +193,10 @@ cd ../offline-punctuation
 ./run.sh
 rm -rf sherpa-onnx-*
 
+cd ../online-punctuation
+./run.sh
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
+
 cd ../speaker-identification
 ./run.sh
 
