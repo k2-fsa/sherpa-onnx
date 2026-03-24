@@ -11,6 +11,7 @@ sherpa-onnx = { version = "1.12.32", default-features = false }
 serde_json = "1.0"
 
 cpal = { version = "0.16", optional = true } # cross-platform audio I/O
+ctrlc = "3.4"
 
 [features]
 # Default to static linking so users can run examples without setting library paths
@@ -23,4 +24,32 @@ shared = ["sherpa-onnx/shared"]
 
 [[example]]
 name = "streaming_zipformer_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "sense_voice_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "fire_red_asr_ctc_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "parakeet_tdt_ctc_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "parakeet_tdt_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "wenet_ctc_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "zipformer_ctc_simulate_streaming_microphone"
+required-features = ["mic"]
+
+[[example]]
+name = "zipformer_transducer_simulate_streaming_microphone"
 required-features = ["mic"]
