@@ -230,7 +230,7 @@ for a list of pre-trained models to download.
       recognizer.DecodeStream(s.get());
       const auto &result = s->GetResult();
       if (!result.text.empty()) {
-        fprintf(stderr, "%.3f -- %.3f: ", start_time, end_time);
+        fprintf(stdout, "%.3f -- %.3f: ", start_time, end_time);
         fprintf(stdout, "%s\n", result.text.c_str());
       }
       vad->Pop();
