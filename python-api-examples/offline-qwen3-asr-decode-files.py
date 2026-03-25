@@ -7,13 +7,18 @@ Decode audio files using Qwen3-ASR with sherpa-onnx Python API.
 
 Usage:
     python offline-qwen3-asr-decode-files.py \\
-        --conv-frontend=/path/to/conv_frontend.onnx \\
-        --encoder=/path/to/encoder.onnx \\
-        --decoder=/path/to/decoder.onnx \\
-        --tokenizer=/path/to/tokenizer_dir \\
-        [--num-threads=4] \\
-        [--provider=cpu] \\
-        audio1.wav audio2.wav ...
+        --conv-frontend=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx \\
+        --encoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx \\
+        --decoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx \\
+        --tokenizer=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer \\
+        --max-new-tokens=128 \\
+        --num-threads=2 \\
+        ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav
+
+Note: If the input audio is too long, you can increase --max-new-tokens (e.g., 256).
+You can also change it per-stream after creating the recognizer:
+    stream = recognizer.create_stream()
+    stream.set_option("max_new_tokens", "256")
 """
 
 import argparse
@@ -73,7 +78,7 @@ def get_args():
     parser.add_argument(
         "--max-new-tokens",
         type=int,
-        default=64,
+        default=128,
         help="Maximum number of new tokens to generate",
     )
 

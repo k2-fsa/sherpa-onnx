@@ -7,10 +7,18 @@
 //
 // clang-format off
 //
-// Prepare a local model directory with:
-//   conv_frontend.onnx, encoder.onnx, decoder.onnx, tokenizer/ (vocab.json, ...)
-// and a 16-bit PCM mono WAV, then adjust paths below.
+// Build:
+//   cmake --build build --target qwen3-asr-c-api
 //
+// Model:
+//   wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+//   tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+//
+// Run:
+//   ./build/bin/qwen3-asr-c-api
+//
+// Note: If the input audio is too long, you can set option on the stream:
+//   SherpaOnnxOfflineStreamSetOption(stream, "max_new_tokens", "256");
 // clang-format on
 
 #include <stdio.h>
@@ -21,11 +29,11 @@
 
 int32_t main() {
   // clang-format off
-  const char *wav_filename = "./test.wav";
-  const char *conv_frontend = "./model/conv_frontend.onnx";
-  const char *encoder = "./model/encoder.onnx";
-  const char *decoder = "./model/decoder.onnx";
-  const char *tokenizer = "./model/tokenizer";
+  const char *wav_filename = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav";
+  const char *conv_frontend = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx";
+  const char *encoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx";
+  const char *decoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
+  const char *tokenizer = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
   // clang-format on
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
@@ -41,7 +49,7 @@ int32_t main() {
   qwen3.decoder = decoder;
   qwen3.tokenizer = tokenizer;
   qwen3.max_total_len = 512;
-  qwen3.max_new_tokens = 64;
+  qwen3.max_new_tokens = 128;
   qwen3.temperature = 1e-6f;
   qwen3.top_p = 0.8f;
   qwen3.seed = 42;

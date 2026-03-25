@@ -6,10 +6,18 @@
 //
 // clang-format off
 //
-// Usage:
-//   Adjust paths to conv_frontend.onnx, encoder.onnx, decoder.onnx, tokenizer/
-//   and input WAV, then build and run this example.
+// Build:
+//   cmake --build build --target qwen3-asr-cxx-api
 //
+// Model:
+//   wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+//   tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+//
+// Run:
+//   ./build/bin/qwen3-asr-cxx-api
+//
+// Note: If the input audio is too long, you can change max_new_tokens via
+//   stream.SetOption("max_new_tokens", "256");
 // clang-format on
 
 #include <chrono>
@@ -28,18 +36,18 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model_config.provider = "cpu";
 
   // clang-format off
-  config.model_config.qwen3_asr.conv_frontend = "./model/conv_frontend.onnx";
-  config.model_config.qwen3_asr.encoder = "./model/encoder.onnx";
-  config.model_config.qwen3_asr.decoder = "./model/decoder.onnx";
-  config.model_config.qwen3_asr.tokenizer = "./model/tokenizer";
+  config.model_config.qwen3_asr.conv_frontend = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx";
+  config.model_config.qwen3_asr.encoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx";
+  config.model_config.qwen3_asr.decoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
+  config.model_config.qwen3_asr.tokenizer = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
   config.model_config.qwen3_asr.max_total_len = 512;
-  config.model_config.qwen3_asr.max_new_tokens = 64;
+  config.model_config.qwen3_asr.max_new_tokens = 128;
   config.model_config.qwen3_asr.temperature = 1e-6f;
   config.model_config.qwen3_asr.top_p = 0.8f;
   config.model_config.qwen3_asr.seed = 42;
   // clang-format on
 
-  std::string wave_filename = "./test.wav";
+  std::string wave_filename = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav";
   if (argc >= 2) {
     wave_filename = argv[1];
   }
