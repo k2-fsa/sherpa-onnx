@@ -592,7 +592,7 @@ struct OfflineQwen3ASRModelConfig {
   /** Maximum total sequence length supported by the model. */
   int32_t max_total_len = 512;
   /** Maximum number of new tokens to generate. */
-  int32_t max_new_tokens = 64;
+  int32_t max_new_tokens = 128;
   /** Sampling temperature. */
   float temperature = 1e-6f;
   /** Top-p (nucleus) sampling parameter. */

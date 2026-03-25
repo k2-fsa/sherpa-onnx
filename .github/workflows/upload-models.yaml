@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models
+      - upload-models-2
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +24,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Collect funasr-nano with LLM int8
+        shell: bash
+        run: |
+          git clone https://www.modelscope.cn/csukuangfj/Qwen3-ASR-test-data.git
+          mv Qwen3-ASR-test-data test_wavs
+          rm -rf test_wavs/.git*
+          rm -fv test_wavs/*.json
+
+          d=sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+          mkdir $d
+
+          cp -av test_wavs $d
+
+          pushd $d
+
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/conv_frontend.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/decoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/encoder.int8.onnx
+
+          mkdir tokenizer
+          cd tokenizer
+
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/merges.txt
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/tokenizer_config.json
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/vocab.json
+
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/Qwen3-ASR-onnx
+
+          The author is https://github.com/Wasser1462
+
+          See also https://qwen.ai/blog?id=qwen3asr
+          and
+          https://github.com/QwenLM/Qwen3-ASR
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+          ls -lh $d.tar.bz2
+
       - name: Upload DPDFNet
+        if: false
         shell: bash
         run: |
 
@@ -1057,6 +1107,17 @@ jobs:
 
           mv models/* .
 
+      - name: Release
+        if: true
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
       - name: Publish to huggingface
         if: true
         env:
@@ -1082,6 +1143,7 @@ jobs:
               sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25
               sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
               sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
+              sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
@@ -1128,37 +1190,22 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
-            for m in *.tar.bz2; do
-              export GIT_LFS_SKIP_SMUDGE=1
-              export GIT_CLONE_PROTECTION_ACTIVE=false
 
-              rm -rf ms
-              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
-              cp -av $m ms/
+            git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
 
-              pushd ms
-              git lfs track "*.tar.bz2"
-              git status
-              ls -lh
-              git add .
+            cp -av *.tar.bz2 ms/
 
-              git commit -m "add models"
-              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+            pushd ms
+            git lfs track "*.tar.bz2"
+            git status
+            ls -lh
+            git add .
 
-              popd
-            done
-
-      - name: Release
-        if: true
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: ./*.tar.bz2
-          overwrite: true
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models
+            git commit -m "add models"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
 
       - name: Release
         if: false

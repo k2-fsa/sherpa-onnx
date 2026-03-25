@@ -417,7 +417,7 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         max_total_len: int = 512,
-        max_new_tokens: int = 64,
+        max_new_tokens: int = 128,
         temperature: float = 1e-6,
         top_p: float = 0.8,
         seed: int = 42,
