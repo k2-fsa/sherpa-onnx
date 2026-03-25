@@ -473,6 +473,30 @@ func sherpaOnnxOfflineMoonshineModelConfig(
   )
 }
 
+func sherpaOnnxOfflineQwen3ASRModelConfig(
+  convFrontend: String = "",
+  encoder: String = "",
+  decoder: String = "",
+  tokenizer: String = "",
+  maxTotalLen: Int = 512,
+  maxNewTokens: Int = 64,
+  temperature: Float = 1e-6,
+  topP: Float = 0.8,
+  seed: Int = 42
+) -> SherpaOnnxOfflineQwen3ASRModelConfig {
+  return SherpaOnnxOfflineQwen3ASRModelConfig(
+    conv_frontend: toCPointer(convFrontend),
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    tokenizer: toCPointer(tokenizer),
+    max_total_len: Int32(maxTotalLen),
+    max_new_tokens: Int32(maxNewTokens),
+    temperature: temperature,
+    top_p: topP,
+    seed: Int32(seed)
+  )
+}
+
 func sherpaOnnxOfflineTdnnModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineTdnnModelConfig {
@@ -565,7 +589,9 @@ func sherpaOnnxOfflineModelConfig(
   funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
     sherpaOnnxOfflineFunASRNanoModelConfig(),
   fireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig =
-    sherpaOnnxOfflineFireRedAsrCtcModelConfig()
+    sherpaOnnxOfflineFireRedAsrCtcModelConfig(),
+  qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig =
+    sherpaOnnxOfflineQwen3ASRModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -591,7 +617,8 @@ func sherpaOnnxOfflineModelConfig(
     omnilingual: omnilingual,
     medasr: medasr,
     funasr_nano: funasrNano,
-    fire_red_asr_ctc: fireRedAsrCtc
+    fire_red_asr_ctc: fireRedAsrCtc,
+    qwen3_asr: qwen3Asr
   )
 }
 

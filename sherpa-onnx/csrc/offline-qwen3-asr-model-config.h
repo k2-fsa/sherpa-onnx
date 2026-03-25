@@ -41,6 +41,22 @@ struct OfflineQwen3ASRModelConfig {
 
   OfflineQwen3ASRModelConfig() = default;
 
+  OfflineQwen3ASRModelConfig(const std::string &conv_frontend,
+                             const std::string &encoder,
+                             const std::string &decoder,
+                             const std::string &tokenizer,
+                             int32_t max_total_len, int32_t max_new_tokens,
+                             float temperature, float top_p, int32_t seed)
+      : conv_frontend(conv_frontend),
+        encoder(encoder),
+        decoder(decoder),
+        tokenizer(tokenizer),
+        max_total_len(max_total_len),
+        max_new_tokens(max_new_tokens),
+        temperature(temperature),
+        top_p(top_p),
+        seed(seed) {}
+
   void Register(ParseOptions *po);
   bool Validate() const;
 

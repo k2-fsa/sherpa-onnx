@@ -6,11 +6,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <cctype>
 #include <string>
 #include <utility>
 #include <vector>
@@ -174,33 +174,38 @@ class OfflineQwen3ASRModel::Impl {
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.qwen3_asr;
 
-    auto buf_conv = ReadFile(mgr, c.conv_frontend);
-    if (buf_conv.empty()) {
-      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.conv_frontend: %s",
-                       c.conv_frontend.c_str());
-      SHERPA_ONNX_EXIT(-1);
+    {
+      auto buf = ReadFile(mgr, c.conv_frontend);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.conv_frontend: %s",
+                         c.conv_frontend.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+      InitConvFrontend(buf.data(), buf.size());
     }
-    InitConvFrontend(buf_conv.data(), buf_conv.size());
-
-    auto buf_encoder = ReadFile(mgr, c.encoder);
-    if (buf_encoder.empty()) {
-      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.encoder: %s",
-                       c.encoder.c_str());
-      SHERPA_ONNX_EXIT(-1);
+    {
+      auto buf = ReadFile(mgr, c.encoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.encoder: %s",
+                         c.encoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+      InitEncoder(buf.data(), buf.size());
     }
-    InitEncoder(buf_encoder.data(), buf_encoder.size());
-
-    auto buf_decoder = ReadFile(mgr, c.decoder);
-    if (buf_decoder.empty()) {
-      SHERPA_ONNX_LOGE("Failed to read qwen3_asr.decoder: %s",
-                       c.decoder.c_str());
-      SHERPA_ONNX_EXIT(-1);
+    {
+      auto buf = ReadFile(mgr, c.decoder);
+      if (buf.empty()) {
+        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.decoder: %s",
+                         c.decoder.c_str());
+        SHERPA_ONNX_EXIT(-1);
+      }
+      InitDecoder(buf.data(), buf.size());
     }
-    InitDecoder(buf_decoder.data(), buf_decoder.size());
 
     InitIoBindingConfig();
   }
 
+ private:
   void InitIoBindingConfig() {
     use_cuda_iobinding_ =
         (!is_cpu_provider_ && IsCudaProvider(config_.provider));
@@ -325,6 +330,7 @@ class OfflineQwen3ASRModel::Impl {
     }
   }
 
+ public:
   Ort::Value ForwardConvFrontend(Ort::Value input_features) {
     if (use_cuda_iobinding_) {
       Ort::IoBinding binding(*conv_sess_);
@@ -343,7 +349,7 @@ class OfflineQwen3ASRModel::Impl {
 
     std::array<Ort::Value, 1> inputs = {std::move(input_features)};
     auto outputs = conv_sess_->Run(
-        {}, conv_input_names_ptr_.data(), inputs.data(), inputs.size(),
+        {}, conv_input_names_ptr_.data(), inputs.data(), 1,
         conv_output_names_ptr_.data(), conv_output_names_ptr_.size());
     if (outputs.empty()) {
       SHERPA_ONNX_LOGE("ForwardConvFrontend: empty outputs");
@@ -357,35 +363,18 @@ class OfflineQwen3ASRModel::Impl {
     auto mask_info = feature_attention_mask.GetTensorTypeAndShapeInfo();
     auto mask_type =
         static_cast<ONNXTensorElementDataType>(mask_info.GetElementType());
-    auto mask_shape = mask_info.GetShape();
-
-    Ort::Value bool_mask;
-    if (mask_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL) {
-      bool_mask = std::move(feature_attention_mask);
-    } else {
-      size_t numel = NumelFromShape(mask_shape);
-      const int64_t *src = nullptr;
-
-      if (mask_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
-        src = feature_attention_mask.GetTensorData<int64_t>();
-      } else {
-        SHERPA_ONNX_LOGE("ForwardEncoder: unsupported mask type %d",
-                         (int)mask_type);
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      bool_mask = Ort::Value::CreateTensor<bool>(allocator_, mask_shape.data(),
-                                                 mask_shape.size());
-      bool *bool_data = bool_mask.GetTensorMutableData<bool>();
-      for (size_t i = 0; i < numel; ++i) {
-        bool_data[i] = (src[i] != 0);
-      }
+    if (mask_type != ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL) {
+      SHERPA_ONNX_LOGE(
+          "ForwardEncoder: feature_attention_mask must be bool, got "
+          "elem_type=%d",
+          static_cast<int>(mask_type));
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (use_cuda_iobinding_) {
       Ort::IoBinding binding(*encoder_sess_);
       binding.BindInput(encoder_input_names_ptr_[0], conv_output);
-      binding.BindInput(encoder_input_names_ptr_[1], bool_mask);
+      binding.BindInput(encoder_input_names_ptr_[1], feature_attention_mask);
       binding.BindOutput(encoder_output_names_ptr_[0], cpu_mem_info_);
       binding.SynchronizeInputs();
       encoder_sess_->Run(Ort::RunOptions{nullptr}, binding);
@@ -399,7 +388,7 @@ class OfflineQwen3ASRModel::Impl {
     }
 
     std::array<Ort::Value, 2> inputs = {std::move(conv_output),
-                                        std::move(bool_mask)};
+                                        std::move(feature_attention_mask)};
     auto outputs = encoder_sess_->Run(
         {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
         encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
@@ -619,16 +608,15 @@ class OfflineQwen3ASRModel::Impl {
     int64_t pos0 = pos_data[0];
 
     if (pos0 < 0) {
-      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0 < 0 (%lld)",
-                       static_cast<long long>(pos0));
+      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0 < 0 (%d)",
+                       static_cast<int32_t>(pos0));
       SHERPA_ONNX_EXIT(-1);
     }
     if (pos0 + S > max_total_len_) {
       SHERPA_ONNX_LOGE(
-          "ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%lld + %lld > "
+          "ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%d + %d > "
           "%d), clamping S",
-          static_cast<long long>(pos0), static_cast<long long>(S),
-          max_total_len_);
+          static_cast<int32_t>(pos0), static_cast<int32_t>(S), max_total_len_);
       S = max_total_len_ - pos0;
       if (S <= 0) return;
     }
@@ -691,10 +679,10 @@ class OfflineQwen3ASRModel::Impl {
 
       if (dk_shape[1] != dv_shape[1]) {
         SHERPA_ONNX_LOGE(
-            "ApplyKvDeltaInplace: delta key/value seq len mismatch: %lld vs "
-            "%lld",
-            static_cast<long long>(dk_shape[1]),
-            static_cast<long long>(dv_shape[1]));
+            "ApplyKvDeltaInplace: delta key/value seq len mismatch: %d vs "
+            "%d",
+            static_cast<int32_t>(dk_shape[1]),
+            static_cast<int32_t>(dv_shape[1]));
         SHERPA_ONNX_EXIT(-1);
       }
 

@@ -12,28 +12,14 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include <android/asset_manager.h>
-#endif
-
-#if __OHOS__
-struct NativeResourceManager;
-#endif
-
 namespace sherpa_onnx {
 
 class QwenAsrTokenizer {
  public:
   explicit QwenAsrTokenizer(const std::string &tokenizer_dir);
 
-#if __ANDROID_API__ >= 9
-  QwenAsrTokenizer(AAssetManager *mgr, const std::string &tokenizer_dir);
-#endif
-
-#if __OHOS__
-  QwenAsrTokenizer(NativeResourceManager *mgr,
-                   const std::string &tokenizer_dir);
-#endif
+  template <typename Manager>
+  QwenAsrTokenizer(Manager *mgr, const std::string &tokenizer_dir);
 
   std::vector<int64_t> Encode(const std::string &text);
   std::string Decode(const std::vector<int64_t> &token_ids);
@@ -51,13 +37,8 @@ class QwenAsrTokenizer {
                         const std::string &config_content,
                         const std::string &tokenizer_dir);
 
-#if __ANDROID_API__ >= 9
-  void Init(AAssetManager *mgr, const std::string &tokenizer_dir);
-#endif
-
-#if __OHOS__
-  void Init(NativeResourceManager *mgr, const std::string &tokenizer_dir);
-#endif
+  template <typename Manager>
+  void Init(Manager *mgr, const std::string &tokenizer_dir);
 
   int64_t eos_token_id_ = -1;
   int64_t pad_token_id_ = -1;

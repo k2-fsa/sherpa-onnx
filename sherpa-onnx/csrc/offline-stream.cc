@@ -50,25 +50,6 @@ class OfflineStream::Impl {
       mfcc_opts_.use_energy = config_.use_energy;
 
       mfcc_ = std::make_unique<knf::OnlineMfcc>(mfcc_opts_);
-    } else if (config.is_whisper) {
-      opts_.frame_opts.dither = config.dither;
-      opts_.frame_opts.snip_edges = config.snip_edges;
-      opts_.frame_opts.samp_freq = config.sampling_rate;
-      opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;
-      opts_.frame_opts.frame_length_ms = config.frame_length_ms;
-      opts_.frame_opts.remove_dc_offset = config.remove_dc_offset;
-      opts_.frame_opts.window_type = config.window_type;
-
-      opts_.mel_opts.num_bins = config.feature_dim;
-      opts_.mel_opts.high_freq = config.high_freq;
-      opts_.mel_opts.low_freq = config.low_freq;
-      opts_.mel_opts.is_librosa = config.is_librosa;
-
-      knf::WhisperFeatureOptions whisper_opts;
-      whisper_opts.frame_opts = opts_.frame_opts;
-      whisper_opts.dim = config.feature_dim;
-
-      whisper_fbank_ = std::make_unique<knf::OnlineWhisperFbank>(whisper_opts);
     } else {
       opts_.frame_opts.dither = config.dither;
       opts_.frame_opts.snip_edges = config.snip_edges;

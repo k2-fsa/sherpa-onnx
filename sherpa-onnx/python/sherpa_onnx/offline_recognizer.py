@@ -460,16 +460,17 @@ class OfflineRecognizer(object):
             Random seed for sampling.
         """
         self = cls.__new__(cls)
-        qwen3 = OfflineQwen3ASRModelConfig()
-        qwen3.conv_frontend = conv_frontend
-        qwen3.encoder = encoder
-        qwen3.decoder = decoder
-        qwen3.tokenizer = tokenizer
-        qwen3.max_total_len = max_total_len
-        qwen3.max_new_tokens = max_new_tokens
-        qwen3.temperature = temperature
-        qwen3.top_p = top_p
-        qwen3.seed = seed
+        qwen3 = OfflineQwen3ASRModelConfig(
+            conv_frontend=conv_frontend,
+            encoder=encoder,
+            decoder=decoder,
+            tokenizer=tokenizer,
+            max_total_len=max_total_len,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            seed=seed,
+        )
 
         model_config = OfflineModelConfig(
             qwen3_asr=qwen3,

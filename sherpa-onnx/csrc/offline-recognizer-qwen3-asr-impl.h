@@ -35,7 +35,6 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
-  void InitFeatConfig();
   void InitPromptTemplateIds();
   std::vector<int64_t> BuildSourceIds(int32_t audio_token_len,
                                       int32_t *before_len,
@@ -52,7 +51,10 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
                                             int64_t avoid_id = -1) const;
 
   OfflineRecognitionResult GenerateText(Ort::Value audio_features,
-                                        int32_t audio_token_len) const;
+                                        int32_t audio_token_len,
+                                        OfflineStream *stream) const;
+
+  void Decode(OfflineStream *stream) const;
 
   OfflineRecognizerConfig config_;
   std::unique_ptr<OfflineQwen3ASRModel> model_;

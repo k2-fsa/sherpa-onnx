@@ -17,28 +17,14 @@
 #include <unordered_set>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include <android/asset_manager.h>
-#endif
-
-#if __OHOS__
-struct NativeResourceManager;
-#endif
-
 namespace sherpa_onnx {
 
 class FunASRNanoTokenizer {
  public:
   explicit FunASRNanoTokenizer(const std::string &tokenizer_dir);
 
-#if __ANDROID_API__ >= 9
-  FunASRNanoTokenizer(AAssetManager *mgr, const std::string &tokenizer_dir);
-#endif
-
-#if __OHOS__
-  FunASRNanoTokenizer(NativeResourceManager *mgr,
-                      const std::string &tokenizer_dir);
-#endif
+  template <typename Manager>
+  FunASRNanoTokenizer(Manager *mgr, const std::string &tokenizer_dir);
 
   std::vector<int64_t> Encode(const std::string &text);
   std::string Decode(const std::vector<int64_t> &token_ids);
@@ -68,13 +54,8 @@ class FunASRNanoTokenizer {
  private:
   void Init(const std::string &tokenizer_dir);
 
-#if __ANDROID_API__ >= 9
-  void Init(AAssetManager *mgr, const std::string &tokenizer_dir);
-#endif
-
-#if __OHOS__
-  void Init(NativeResourceManager *mgr, const std::string &tokenizer_dir);
-#endif
+  template <typename Manager>
+  void Init(Manager *mgr, const std::string &tokenizer_dir);
 
   void FinalizeSpecialIds();
 

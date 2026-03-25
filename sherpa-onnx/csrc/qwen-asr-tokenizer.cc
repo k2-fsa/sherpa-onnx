@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstdint>
 #include <limits>
 #include <mutex>
@@ -14,7 +15,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <cctype>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -1099,19 +1099,11 @@ QwenAsrTokenizer::QwenAsrTokenizer(const std::string &tokenizer_dir) {
   Init(tokenizer_dir);
 }
 
-#if __ANDROID_API__ >= 9
-QwenAsrTokenizer::QwenAsrTokenizer(AAssetManager *mgr,
+template <typename Manager>
+QwenAsrTokenizer::QwenAsrTokenizer(Manager *mgr,
                                    const std::string &tokenizer_dir) {
   Init(mgr, tokenizer_dir);
 }
-#endif
-
-#if __OHOS__
-QwenAsrTokenizer::QwenAsrTokenizer(NativeResourceManager *mgr,
-                                   const std::string &tokenizer_dir) {
-  Init(mgr, tokenizer_dir);
-}
-#endif
 
 void QwenAsrTokenizer::InitFromContents(const std::string &vocab_content,
                                         const std::string &merges_content,
@@ -1196,9 +1188,8 @@ void QwenAsrTokenizer::Init(const std::string &tokenizer_dir) {
                    ReadTextFile(config_path), tokenizer_dir);
 }
 
-#if __ANDROID_API__ >= 9
-void QwenAsrTokenizer::Init(AAssetManager *mgr,
-                            const std::string &tokenizer_dir) {
+template <typename Manager>
+void QwenAsrTokenizer::Init(Manager *mgr, const std::string &tokenizer_dir) {
   const std::string vocab_path = tokenizer_dir + "/vocab.json";
   const std::string merges_path = tokenizer_dir + "/merges.txt";
   const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
@@ -1207,20 +1198,6 @@ void QwenAsrTokenizer::Init(AAssetManager *mgr,
                    ReadTextFile(mgr, merges_path),
                    ReadTextFile(mgr, config_path), tokenizer_dir);
 }
-#endif
-
-#if __OHOS__
-void QwenAsrTokenizer::Init(NativeResourceManager *mgr,
-                            const std::string &tokenizer_dir) {
-  const std::string vocab_path = tokenizer_dir + "/vocab.json";
-  const std::string merges_path = tokenizer_dir + "/merges.txt";
-  const std::string config_path = tokenizer_dir + "/tokenizer_config.json";
-
-  InitFromContents(ReadTextFile(mgr, vocab_path),
-                   ReadTextFile(mgr, merges_path),
-                   ReadTextFile(mgr, config_path), tokenizer_dir);
-}
-#endif
 
 std::vector<int64_t> QwenAsrTokenizer::Encode(const std::string &text) {
   std::vector<int64_t> ans;
@@ -1339,5 +1316,15 @@ std::string QwenAsrTokenizer::GetTokenStringStreaming(
   state->append(DecodeBytes(token));
   return ConsumeAvailableUtf8(state, /*flush_incomplete=*/false);
 }
+
+#if __ANDROID_API__ >= 9
+template QwenAsrTokenizer::QwenAsrTokenizer(AAssetManager *mgr,
+                                            const std::string &tokenizer_dir);
+#endif
+
+#if __OHOS__
+template QwenAsrTokenizer::QwenAsrTokenizer(NativeResourceManager *mgr,
+                                            const std::string &tokenizer_dir);
+#endif
 
 }  // namespace sherpa_onnx

@@ -13,7 +13,14 @@ namespace sherpa_onnx {
 void PybindOfflineQwen3ASRModelConfig(py::module *m) {
   using PyClass = OfflineQwen3ASRModelConfig;
   py::class_<PyClass>(*m, "OfflineQwen3ASRModelConfig")
-      .def(py::init<>())
+      .def(py::init<const std::string &, const std::string &,
+                    const std::string &, const std::string &, int32_t, int32_t,
+                    float, float, int32_t>(),
+           py::arg("conv_frontend") = "", py::arg("encoder") = "",
+           py::arg("decoder") = "", py::arg("tokenizer") = "",
+           py::arg("max_total_len") = 512, py::arg("max_new_tokens") = 64,
+           py::arg("temperature") = 1e-6f, py::arg("top_p") = 0.8f,
+           py::arg("seed") = 42)
       .def_readwrite("conv_frontend", &PyClass::conv_frontend)
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("decoder", &PyClass::decoder)

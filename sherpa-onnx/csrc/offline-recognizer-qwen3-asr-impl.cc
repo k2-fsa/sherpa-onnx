@@ -11,6 +11,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <random>
 #include <string>
 #include <utility>
@@ -27,13 +28,22 @@
 
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
 namespace {
 
+// Mel-frame chunk length (in frames) assumed by the Qwen3-ASR conv frontend
+// when mapping log-mel features to audio tokens. Must match the chunk size
+// baked into the exported ONNX graph; used by FeatToAudioTokensLen() to size
+// the encoder mask.
 constexpr int32_t kQwen3ChunkSize = 100;
+// Number of mel bins per frame for Qwen3-ASR (Whisper-style log-mel). Must
+// match the feature extractor (`WhisperTag` dim), `NormalizeWhisperFeatures`
+// row width, and the last dimension of the conv-frontend ONNX input.
+constexpr int32_t kQwen3MelDim = 128;
 
 int32_t FeatToAudioTokensLen(int32_t feat_len, int32_t chunk_size) {
   if (feat_len <= 0 || chunk_size <= 0) {
@@ -207,26 +217,13 @@ Ort::Value TruncateAudioFeatures(Ort::Value audio_features, int32_t keep_frames,
   return truncated;
 }
 
-Ort::Value BuildCachePositionFromMask(const Ort::Value &attention_mask,
-                                      int32_t seq_len,
-                                      OrtAllocator *allocator) {
-  auto mask_info = attention_mask.GetTensorTypeAndShapeInfo();
-  auto mask_shape = mask_info.GetShape();
-
-  int64_t pos0 = 0;
-  if (mask_shape.size() == 2 && mask_shape[1] > 0) {
-    pos0 = static_cast<int64_t>(mask_shape[1]) - seq_len;
-  }
-  if (pos0 < 0) pos0 = 0;
-
+Ort::Value BuildCachePosition(OrtAllocator *allocator, int32_t seq_len) {
   std::array<int64_t, 1> pos_shape{seq_len};
   Ort::Value cache_position = Ort::Value::CreateTensor<int64_t>(
       allocator, pos_shape.data(), pos_shape.size());
 
   int64_t *p = cache_position.GetTensorMutableData<int64_t>();
-  for (int32_t i = 0; i < seq_len; ++i) {
-    p[i] = pos0 + i;
-  }
+  std::iota(p, p + seq_len, int64_t{0});
 
   return cache_position;
 }
@@ -298,7 +295,6 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
       tokenizer_(std::make_unique<QwenAsrTokenizer>(
           config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
-  InitFeatConfig();
   InitPromptTemplateIds();
 }
 
@@ -311,21 +307,12 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
       tokenizer_(std::make_unique<QwenAsrTokenizer>(
           mgr, config.model_config.qwen3_asr.tokenizer)),
       rng_(config.model_config.qwen3_asr.seed) {
-  InitFeatConfig();
   InitPromptTemplateIds();
 }
 
 std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
     const {
-  return std::make_unique<OfflineStream>(config_.feat_config);
-}
-
-void OfflineRecognizerQwen3ASRImpl::InitFeatConfig() {
-  config_.feat_config.feature_dim = 128;
-  config_.feat_config.is_whisper = true;
-  config_.feat_config.normalize_samples = true;
-  config_.feat_config.snip_edges = false;
-  config_.feat_config.dither = 0.0f;
+  return std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
 }
 
 void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
@@ -624,11 +611,22 @@ int64_t OfflineRecognizerQwen3ASRImpl::SampleTokenWithTemperatureAndTopP(
 }
 
 OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
-    Ort::Value audio_features, int32_t audio_token_len) const {
+    Ort::Value audio_features, int32_t audio_token_len,
+    OfflineStream *stream) const {
   OfflineRecognitionResult result;
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
   const auto &qwen3_config = config_.model_config.qwen3_asr;
+
+  int32_t max_new_tokens =
+      stream->GetOptionInt("max_new_tokens", qwen3_config.max_new_tokens);
+  if (max_new_tokens <= 0) {
+    max_new_tokens = qwen3_config.max_new_tokens;
+  }
+
+  const float temperature =
+      stream->GetOptionFloat("temperature", qwen3_config.temperature);
+  const float top_p = stream->GetOptionFloat("top_p", qwen3_config.top_p);
 
   Ort::Value trimmed_audio_features =
       TrimAudioFeatures(std::move(audio_features), model_->Allocator());
@@ -641,15 +639,14 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   }
 
   if (config_.model_config.debug) {
-    auto sh = trimmed_audio_features.GetTensorTypeAndShapeInfo().GetShape();
     float abs_max = TensorAbsMax(trimmed_audio_features, 1LL << 20);
     SHERPA_ONNX_LOGE(
-        "qwen3-asr: audio_features shape=[%ld,%ld,%ld] abs_max=%f "
+        "qwen3-asr: audio_features shape=[%d,%d,%d] abs_max=%f "
         "audio_token_len=%d",
-        static_cast<long>(sh.size() > 0 ? sh[0] : -1),
-        static_cast<long>(sh.size() > 1 ? sh[1] : -1),
-        static_cast<long>(sh.size() > 2 ? sh[2] : -1), abs_max,
-        audio_token_len);
+        static_cast<int32_t>(trimmed_shape.size() > 0 ? trimmed_shape[0] : -1),
+        static_cast<int32_t>(trimmed_shape.size() > 1 ? trimmed_shape[1] : -1),
+        static_cast<int32_t>(trimmed_shape.size() > 2 ? trimmed_shape[2] : -1),
+        abs_max, audio_token_len);
   }
 
   if (audio_token_len <= 0) {
@@ -670,7 +667,13 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   std::vector<std::pair<Ort::Value, Ort::Value>> cache_kv =
       model_->CreateEmptyKVCache(1);
-  const int32_t max_seq_len = model_->GetMaxTotalLen();
+  const int32_t model_max_len = model_->GetMaxTotalLen();
+  int32_t max_seq_len = model_max_len;
+  const int32_t max_total_len_opt =
+      stream->GetOptionInt("max_total_len", qwen3_config.max_total_len);
+  if (max_total_len_opt > 0) {
+    max_seq_len = std::min(model_max_len, max_total_len_opt);
+  }
 
   if (context_len > max_seq_len) {
     const int32_t one_audio_len = static_cast<int32_t>(audio_pad_ids_.size());
@@ -742,8 +745,8 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       memory_info, attn_mask_vec.data(), attn_mask_vec.size(),
       attn_mask_shape.data(), attn_mask_shape.size());
 
-  Ort::Value cache_position = BuildCachePositionFromMask(
-      attention_mask, context_len, model_->Allocator());
+  Ort::Value cache_position =
+      BuildCachePosition(model_->Allocator(), context_len);
   Ort::Value audio_features_view = View(&trimmed_audio_features);
 
   auto tmp = model_->ForwardLLM(
@@ -755,10 +758,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   model_->ApplyKvDeltaInplace(&cache_kv, kv_outputs, cache_position);
 
   std::vector<int64_t> generated_ids;
-  generated_ids.reserve(qwen3_config.max_new_tokens);
+  generated_ids.reserve(static_cast<size_t>(max_new_tokens));
 
   const int64_t eos_id = tokenizer_->GetEosTokenId();
-  const int32_t max_new_tokens = qwen3_config.max_new_tokens;
 
   auto log_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
   if (log_shape.size() < 3) {
@@ -779,16 +781,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     return result;
   }
 
-  int64_t next_id = SampleTokenFromLogits(
-      logits, last_idx, qwen3_config.temperature, qwen3_config.top_p);
+  int64_t next_id = SampleTokenFromLogits(logits, last_idx, temperature, top_p);
 
   if (next_id == eos_id) {
     if (config_.model_config.debug) {
       float abs_max = TensorAbsMax(logits, 1LL << 20);
       SHERPA_ONNX_LOGE(
-          "qwen3-asr: first token is EOS (eos_id=%ld). logits_abs_max=%f "
+          "qwen3-asr: first token is EOS (eos_id=%d). logits_abs_max=%f "
           "context_len=%d max_total_len=%d",
-          static_cast<long>(eos_id), abs_max, context_len, max_seq_len);
+          static_cast<int32_t>(eos_id), abs_max, context_len, max_seq_len);
     }
 
     const int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
@@ -809,8 +810,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
                       reinterpret_cast<const float *>(base) + offset);
 
     next_id = SampleTokenWithTemperatureAndTopP(row, is_fp16, vocab_size,
-                                                qwen3_config.temperature,
-                                                qwen3_config.top_p, eos_id);
+                                                temperature, top_p, eos_id);
 
     if (next_id == eos_id) {
       result.text = "";
@@ -819,7 +819,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   }
 
   generated_ids.push_back(next_id);
-  int32_t cur_len = context_len + 1;
+  int32_t cur_len = context_len;
 
   for (int32_t step = 1; step < max_new_tokens; ++step) {
     if (cur_len >= max_seq_len) {
@@ -865,8 +865,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       break;
     }
 
-    next_id = SampleTokenFromLogits(
-        logits, time_dim2 - 1, qwen3_config.temperature, qwen3_config.top_p);
+    next_id = SampleTokenFromLogits(logits, time_dim2 - 1, temperature, top_p);
 
     if (next_id == eos_id) {
       break;
@@ -899,97 +898,89 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
 void OfflineRecognizerQwen3ASRImpl::DecodeStreams(OfflineStream **ss,
                                                   int32_t n) const {
+  for (int32_t i = 0; i != n; ++i) {
+    Decode(ss[i]);
+  }
+}
+
+void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-  for (int32_t i = 0; i != n; ++i) {
-    std::vector<float> f = ss[i]->GetFrames();
-    if (f.empty()) {
-      OfflineRecognitionResult r;
-      r.text = "";
-      ss[i]->SetResult(r);
-      continue;
-    }
-
-    if (config_.feat_config.is_whisper) {
-      constexpr float kMinValue = 1e-10f;
-      for (size_t j = 0; j < f.size(); ++j) {
-        f[j] = log10f(f[j] + kMinValue);
-      }
-
-      float max_val = f[0];
-      for (size_t j = 1; j < f.size(); ++j) {
-        if (f[j] > max_val) max_val = f[j];
-      }
-
-      float threshold = max_val - 8.0f;
-      for (size_t j = 0; j < f.size(); ++j) {
-        if (f[j] < threshold) {
-          f[j] = threshold;
-        }
-        f[j] = (f[j] + 4.0f) / 4.0f;
-      }
-    }
-
-    int32_t num_frames =
-        static_cast<int32_t>(f.size() / config_.feat_config.feature_dim);
-    if (num_frames < 2) {
-      OfflineRecognitionResult r;
-      r.text = "";
-      ss[i]->SetResult(r);
-      continue;
-    }
-
-    int32_t F = config_.feat_config.feature_dim;
-    int32_t feat_frames = num_frames;
-
-    std::array<int64_t, 3> conv_input_shape{
-        1, static_cast<int64_t>(feat_frames), static_cast<int64_t>(F)};
-
-    Ort::Value conv_input = Ort::Value::CreateTensor<float>(
-        memory_info, f.data(), static_cast<size_t>(feat_frames) * F,
-        conv_input_shape.data(), conv_input_shape.size());
-
-    Ort::Value conv_output = model_->ForwardConvFrontend(std::move(conv_input));
-
-    auto conv_shape = conv_output.GetTensorTypeAndShapeInfo().GetShape();
-    if (conv_shape.size() < 3 || conv_shape[1] <= 0) {
-      OfflineRecognitionResult r;
-      r.text = "";
-      ss[i]->SetResult(r);
-      continue;
-    }
-
-    int32_t conv_num_frames = static_cast<int32_t>(conv_shape[1]);
-    int32_t expected_audio_token_len =
-        FeatToAudioTokensLen(feat_frames, kQwen3ChunkSize);
-
-    std::vector<int64_t> tok_mask_int64(conv_num_frames, 0);
-    int32_t valid_frames = std::min(expected_audio_token_len, conv_num_frames);
-    for (int32_t j = 0; j < valid_frames; ++j) {
-      tok_mask_int64[j] = 1;
-    }
-
-    std::array<int64_t, 2> tok_mask_shape{1, conv_num_frames};
-    Ort::Value feature_attention_mask = Ort::Value::CreateTensor<int64_t>(
-        memory_info, tok_mask_int64.data(), tok_mask_int64.size(),
-        tok_mask_shape.data(), tok_mask_shape.size());
-
-    Ort::Value audio_features = model_->ForwardEncoder(
-        std::move(conv_output), std::move(feature_attention_mask));
-
-    if (config_.model_config.debug) {
-      SHERPA_ONNX_LOGE(
-          "qwen3-asr: feat_frames=%d conv_frames=%d expected_audio_tokens=%d "
-          "valid_audio_tokens=%d",
-          feat_frames, conv_num_frames, expected_audio_token_len, valid_frames);
-    }
-
-    OfflineRecognitionResult r =
-        GenerateText(std::move(audio_features), valid_frames);
-
-    ss[i]->SetResult(r);
+  std::vector<float> f = stream->GetFrames();
+  if (f.empty()) {
+    OfflineRecognitionResult r;
+    r.text = "";
+    stream->SetResult(r);
+    return;
   }
+
+  int32_t num_frames =
+      static_cast<int32_t>(f.size() / static_cast<size_t>(kQwen3MelDim));
+  if (static_cast<size_t>(num_frames) * static_cast<size_t>(kQwen3MelDim) !=
+      f.size()) {
+    OfflineRecognitionResult r;
+    r.text = "";
+    stream->SetResult(r);
+    return;
+  }
+  if (num_frames < 2) {
+    OfflineRecognitionResult r;
+    r.text = "";
+    stream->SetResult(r);
+    return;
+  }
+
+  NormalizeWhisperFeatures(f.data(), num_frames, kQwen3MelDim);
+
+  int32_t F = kQwen3MelDim;
+  int32_t feat_frames = num_frames;
+
+  std::array<int64_t, 3> conv_input_shape{1, static_cast<int64_t>(feat_frames),
+                                          static_cast<int64_t>(F)};
+
+  Ort::Value conv_input = Ort::Value::CreateTensor<float>(
+      memory_info, f.data(), static_cast<size_t>(feat_frames) * F,
+      conv_input_shape.data(), conv_input_shape.size());
+
+  Ort::Value conv_output = model_->ForwardConvFrontend(std::move(conv_input));
+
+  auto conv_shape = conv_output.GetTensorTypeAndShapeInfo().GetShape();
+  if (conv_shape.size() < 3 || conv_shape[1] <= 0) {
+    OfflineRecognitionResult r;
+    r.text = "";
+    stream->SetResult(r);
+    return;
+  }
+
+  int32_t conv_num_frames = static_cast<int32_t>(conv_shape[1]);
+  int32_t expected_audio_token_len =
+      FeatToAudioTokensLen(feat_frames, kQwen3ChunkSize);
+
+  int32_t valid_frames = std::min(expected_audio_token_len, conv_num_frames);
+  auto mask_buf =
+      std::make_unique<bool[]>(static_cast<size_t>(conv_num_frames));
+  std::fill_n(mask_buf.get(), static_cast<size_t>(valid_frames), true);
+
+  std::array<int64_t, 2> tok_mask_shape{1, conv_num_frames};
+  Ort::Value feature_attention_mask = Ort::Value::CreateTensor<bool>(
+      memory_info, mask_buf.get(), static_cast<size_t>(conv_num_frames),
+      tok_mask_shape.data(), tok_mask_shape.size());
+
+  Ort::Value audio_features = model_->ForwardEncoder(
+      std::move(conv_output), std::move(feature_attention_mask));
+
+  if (config_.model_config.debug) {
+    SHERPA_ONNX_LOGE(
+        "qwen3-asr: feat_frames=%d conv_frames=%d expected_audio_tokens=%d "
+        "valid_audio_tokens=%d",
+        feat_frames, conv_num_frames, expected_audio_token_len, valid_frames);
+  }
+
+  OfflineRecognitionResult r =
+      GenerateText(std::move(audio_features), valid_frames, stream);
+
+  stream->SetResult(r);
 }
 
 #if __ANDROID_API__ >= 9

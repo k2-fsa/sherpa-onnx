@@ -94,6 +94,14 @@ bool OfflineQwen3ASRModelConfig::Validate() const {
     return false;
   }
 
+  if (!FileExists(tokenizer + "/tokenizer_config.json")) {
+    SHERPA_ONNX_LOGE(
+        "'%s/tokenizer_config.json' does not exist. Please check "
+        "--qwen3-asr-tokenizer",
+        tokenizer.c_str());
+    return false;
+  }
+
   if (max_total_len <= 0) {
     SHERPA_ONNX_LOGE("--qwen3-asr-max-total-len should be > 0. Given: %d",
                      max_total_len);
