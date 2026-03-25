@@ -44,6 +44,13 @@ fn main() {
 fn try_main() -> Result<(), DynError> {
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_LIB_DIR");
     println!("cargo:rerun-if-env-changed=SHERPA_ONNX_ARCHIVE_DIR");
+    println!("cargo:rerun-if-env-changed=DOCS_RS");
+
+    if env::var_os("DOCS_RS").is_some() {
+        // docs.rs sets DOCS_RS=1; skip downloading/linking native libraries
+        // so that `cargo doc` can succeed without the real C artifacts.
+        return Ok(());
+    }
 
     let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
