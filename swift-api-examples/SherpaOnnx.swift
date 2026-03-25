@@ -479,7 +479,7 @@ func sherpaOnnxOfflineQwen3ASRModelConfig(
   decoder: String = "",
   tokenizer: String = "",
   maxTotalLen: Int = 512,
-  maxNewTokens: Int = 64,
+  maxNewTokens: Int = 128,
   temperature: Float = 1e-6,
   topP: Float = 0.8,
   seed: Int = 42
@@ -1232,6 +1232,15 @@ typealias TtsCallbackWithArg = (
   ) -> Int32
 )?
 
+class SherpaOnnxCallbackPair {
+  var cb: TtsCallbackWithArg
+  var arg: UnsafeMutableRawPointer?
+  init(cb: TtsCallbackWithArg, arg: UnsafeMutableRawPointer?) {
+    self.cb = cb
+    self.arg = arg
+  }
+}
+
 typealias TtsProgressCallbackWithArg =
   @convention(c) (
     UnsafePointer<Float>?, Int32, Float, UnsafeMutableRawPointer?
@@ -1328,7 +1337,7 @@ class SherpaOnnxOfflineTtsWrapper {
   }
 
   func generate(text: String, sid: Int = 0, speed: Float = 1.0) -> SherpaOnnxGeneratedAudioWrapper {
-    var config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
+    let config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
     return generateWithConfig(text: text, config: config, callback: nil, arg: nil)
   }
 
@@ -1336,13 +1345,17 @@ class SherpaOnnxOfflineTtsWrapper {
     text: String, callback: TtsCallbackWithArg, arg: UnsafeMutableRawPointer, sid: Int = 0,
     speed: Float = 1.0
   ) -> SherpaOnnxGeneratedAudioWrapper {
-    var config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
+    let config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
 
-    let wrapper: TtsProgressCallbackWithArg = { samples, n, progress, arg in
-      return callback(samples, n, arg)
+    let pair = SherpaOnnxCallbackPair(cb: callback, arg: arg)
+    let unmanaged = Unmanaged.passRetained(pair)
+    let wrapper: TtsProgressCallbackWithArg = { samples, n, progress, rawArg in
+      let p = Unmanaged<SherpaOnnxCallbackPair>.fromOpaque(rawArg!).takeUnretainedValue()
+      return p.cb!(samples, n, p.arg)
     }
-
-    return generateWithConfig(text: text, config: config, callback: wrapper, arg: arg)
+    let result = generateWithConfig(text: text, config: config, callback: wrapper, arg: unmanaged.toOpaque())
+    unmanaged.release()
+    return result
   }
 
   func generateWithConfig(
