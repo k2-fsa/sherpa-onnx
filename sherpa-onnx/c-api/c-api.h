@@ -2737,6 +2737,20 @@ SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples,
                                                  char *buffer);
 
 /**
+ * @brief Write multi-channel audio to a WAVE file (16-bit PCM).
+ *
+ * @param samples       samples[c] is a pointer to channel c samples in [-1, 1].
+ * @param n             Number of samples per channel.
+ * @param sample_rate   Sample rate in Hz.
+ * @param num_channels  Number of channels.
+ * @param filename      Output filename.
+ * @return 1 on success; 0 on failure.
+ */
+SHERPA_ONNX_API int32_t SherpaOnnxWriteWaveMultiChannel(
+    const float *const *samples, int32_t n, int32_t sample_rate,
+    int32_t num_channels, const char *filename);
+
+/**
  * @brief Decoded mono WAVE file content.
  *
  * Free this object with SherpaOnnxFreeWave().
@@ -2784,6 +2798,40 @@ SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWaveFromBinaryData(
  * SherpaOnnxReadWaveFromBinaryData().
  */
 SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
+
+/**
+ * @brief Decoded multi-channel WAVE file content.
+ *
+ * Free this object with SherpaOnnxFreeMultiChannelWave().
+ */
+typedef struct SherpaOnnxMultiChannelWave {
+  /** samples[c] points to channel c samples normalized to [-1, 1]. */
+  const float *const *samples;
+  /** Number of channels. */
+  int32_t num_channels;
+  /** Number of samples per channel. */
+  int32_t num_samples;
+  /** Sample rate in Hz. */
+  int32_t sample_rate;
+} SherpaOnnxMultiChannelWave;
+
+/**
+ * @brief Read a multi-channel 16-bit PCM WAVE file.
+ *
+ * @param filename Input WAVE filename.
+ * @return A newly allocated multi-channel wave object, or NULL on error.
+ *         Free it with SherpaOnnxFreeMultiChannelWave().
+ */
+SHERPA_ONNX_API const SherpaOnnxMultiChannelWave *
+SherpaOnnxReadWaveMultiChannel(const char *filename);
+
+/**
+ * @brief Destroy a multi-channel wave object.
+ *
+ * @param wave A pointer returned by SherpaOnnxReadWaveMultiChannel().
+ */
+SHERPA_ONNX_API void SherpaOnnxFreeMultiChannelWave(
+    const SherpaOnnxMultiChannelWave *wave);
 
 // ============================================================
 // For spoken language identification
@@ -4130,6 +4178,130 @@ SherpaOnnxOnlineSpeechDenoiserFlush(const SherpaOnnxOnlineSpeechDenoiser *sd);
 SHERPA_ONNX_API void SherpaOnnxOnlineSpeechDenoiserReset(
     const SherpaOnnxOnlineSpeechDenoiser *sd);
 
+// =========================================================================
+// Source separation
+// =========================================================================
+
+/** @brief Spleeter source-separation model configuration. */
+typedef struct SherpaOnnxOfflineSourceSeparationSpleeterModelConfig {
+  /** Path to the vocals ONNX model. */
+  const char *vocals;
+  /** Path to the accompaniment ONNX model. */
+  const char *accompaniment;
+} SherpaOnnxOfflineSourceSeparationSpleeterModelConfig;
+
+/** @brief UVR (MDX-Net) source-separation model configuration. */
+typedef struct SherpaOnnxOfflineSourceSeparationUvrModelConfig {
+  /** Path to the UVR ONNX model. */
+  const char *model;
+} SherpaOnnxOfflineSourceSeparationUvrModelConfig;
+
+/** @brief Source-separation model configuration. */
+typedef struct SherpaOnnxOfflineSourceSeparationModelConfig {
+  SherpaOnnxOfflineSourceSeparationSpleeterModelConfig spleeter;
+  SherpaOnnxOfflineSourceSeparationUvrModelConfig uvr;
+  int32_t num_threads;
+  int32_t debug;
+  const char *provider;
+} SherpaOnnxOfflineSourceSeparationModelConfig;
+
+/** @brief Top-level source-separation configuration. */
+typedef struct SherpaOnnxOfflineSourceSeparationConfig {
+  SherpaOnnxOfflineSourceSeparationModelConfig model;
+} SherpaOnnxOfflineSourceSeparationConfig;
+
+/** @brief Opaque source-separation engine handle. */
+typedef struct SherpaOnnxOfflineSourceSeparation
+    SherpaOnnxOfflineSourceSeparation;
+
+/**
+ * @brief Create a source-separation engine.
+ *
+ * @param config Source-separation configuration.
+ * @return A newly allocated engine on success, or NULL on error. Free it
+ *         with SherpaOnnxDestroyOfflineSourceSeparation().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineSourceSeparation *
+SherpaOnnxCreateOfflineSourceSeparation(
+    const SherpaOnnxOfflineSourceSeparationConfig *config);
+
+/**
+ * @brief Destroy a source-separation engine.
+ *
+ * @param ss A pointer returned by SherpaOnnxCreateOfflineSourceSeparation().
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineSourceSeparation(
+    const SherpaOnnxOfflineSourceSeparation *ss);
+
+/**
+ * @brief Return the output sample rate of the source-separation engine.
+ *
+ * @param ss A pointer returned by SherpaOnnxCreateOfflineSourceSeparation().
+ * @return Output sample rate in Hz.
+ */
+SHERPA_ONNX_API int32_t SherpaOnnxOfflineSourceSeparationGetOutputSampleRate(
+    const SherpaOnnxOfflineSourceSeparation *ss);
+
+/**
+ * @brief Return the number of stems produced by the engine.
+ *
+ * For Spleeter 2-stems this returns 2 (vocals + accompaniment).
+ *
+ * @param ss A pointer returned by SherpaOnnxCreateOfflineSourceSeparation().
+ * @return Number of output stems.
+ */
+SHERPA_ONNX_API int32_t SherpaOnnxOfflineSourceSeparationGetNumberOfStems(
+    const SherpaOnnxOfflineSourceSeparation *ss);
+
+/** @brief A single stem (one output track) with one or more channels. */
+typedef struct SherpaOnnxSourceSeparationStem {
+  /** samples[c] points to the heap-allocated sample array for channel c. */
+  float **samples;
+  /** Number of channels in this stem. */
+  int32_t num_channels;
+  /** Number of samples per channel. */
+  int32_t n;
+} SherpaOnnxSourceSeparationStem;
+
+/** @brief Output of a source-separation run. */
+typedef struct SherpaOnnxSourceSeparationOutput {
+  /** Heap-allocated array of stems (length num_stems). */
+  const SherpaOnnxSourceSeparationStem *stems;
+  /** Number of stems. */
+  int32_t num_stems;
+  /** Sample rate of every stem in Hz. */
+  int32_t sample_rate;
+} SherpaOnnxSourceSeparationOutput;
+
+/**
+ * @brief Run source separation on multi-channel audio.
+ *
+ * All input channels must have the same number of samples.
+ *
+ * @param ss            A pointer returned by
+ *                      SherpaOnnxCreateOfflineSourceSeparation().
+ * @param samples       samples[c] is a float array for channel c, values in
+ *                      [-1, 1].
+ * @param num_channels  Number of input channels.
+ * @param num_samples   Number of samples per channel (all channels must have
+ *                      the same length).
+ * @param sample_rate   Input sample rate in Hz.
+ * @return A newly allocated output on success, or NULL on error. Free it
+ *         with SherpaOnnxDestroySourceSeparationOutput().
+ */
+SHERPA_ONNX_API const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcess(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate);
+
+/**
+ * @brief Destroy the output of a source-separation run.
+ *
+ * @param p A pointer returned by SherpaOnnxOfflineSourceSeparationProcess().
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroySourceSeparationOutput(
+    const SherpaOnnxSourceSeparationOutput *p);
+
 #ifdef __OHOS__
 
 /**
@@ -4302,6 +4474,22 @@ SherpaOnnxCreateKeywordSpotterOHOS(const SherpaOnnxKeywordSpotterConfig *config,
 SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarization *
 SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
     const SherpaOnnxOfflineSpeakerDiarizationConfig *config,
+    NativeResourceManager *mgr);
+
+/**
+ * @brief Create a source separation engine on HarmonyOS.
+ *
+ * This is the HarmonyOS counterpart of
+ * SherpaOnnxCreateOfflineSourceSeparation().
+ *
+ * @param config Source separation configuration.
+ * @param mgr HarmonyOS resource manager used to resolve bundled assets.
+ * @return A newly allocated source separation engine, or NULL on error. Free it
+ *         with SherpaOnnxDestroyOfflineSourceSeparation().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineSourceSeparation *
+SherpaOnnxCreateOfflineSourceSeparationOHOS(
+    const SherpaOnnxOfflineSourceSeparationConfig *config,
     NativeResourceManager *mgr);
 #endif
 

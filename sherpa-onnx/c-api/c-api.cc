@@ -26,6 +26,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-source-separation.h"
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-punctuation.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -1937,6 +1938,14 @@ void SherpaOnnxWriteWaveToBuffer(const float *samples, int32_t n,
   sherpa_onnx::WriteWave(buffer, sample_rate, samples, n);
 }
 
+int32_t SherpaOnnxWriteWaveMultiChannel(const float *const *samples, int32_t n,
+                                        int32_t sample_rate,
+                                        int32_t num_channels,
+                                        const char *filename) {
+  return sherpa_onnx::WriteWaveMultiChannel(filename, sample_rate, samples,
+                                            num_channels, n);
+}
+
 const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename) {
   int32_t sample_rate = -1;
   bool is_ok = false;
@@ -1987,6 +1996,62 @@ void SherpaOnnxFreeWave(const SherpaOnnxWave *wave) {
     delete[] wave->samples;
     delete wave;
   }
+}
+
+struct SherpaOnnxMultiChannelWaveImpl {
+  std::vector<std::vector<float>> samples;
+};
+
+// Internal wrapper that pairs the public C struct with its C++ implementation
+// so that SherpaOnnxFreeMultiChannelWave can recover the impl pointer.
+struct SherpaOnnxMultiChannelWaveInternal {
+  SherpaOnnxMultiChannelWave pub;
+  SherpaOnnxMultiChannelWaveImpl *impl;
+};
+
+const SherpaOnnxMultiChannelWave *SherpaOnnxReadWaveMultiChannel(
+    const char *filename) {
+  int32_t sample_rate = -1;
+  bool is_ok = false;
+  auto samples =
+      sherpa_onnx::ReadWaveMultiChannel(filename, &sample_rate, &is_ok);
+  if (!is_ok || samples.empty()) {
+    return nullptr;
+  }
+
+  int32_t num_channels = samples.size();
+  int32_t num_samples = samples[0].size();
+
+  // Allocate the internal storage that owns the data.
+  auto *impl = new SherpaOnnxMultiChannelWaveImpl;
+  impl->samples = std::move(samples);
+
+  // Allocate the arrays of pointers visible to the C caller.
+  const float **channel_ptrs = new const float *[num_channels];
+  for (int32_t c = 0; c < num_channels; ++c) {
+    channel_ptrs[c] = impl->samples[c].data();
+  }
+
+  // Pack everything into the public struct.
+  auto *w = new SherpaOnnxMultiChannelWaveInternal;
+  w->pub.samples = channel_ptrs;
+  w->pub.num_channels = num_channels;
+  w->pub.num_samples = num_samples;
+  w->pub.sample_rate = sample_rate;
+  w->impl = impl;
+
+  return &w->pub;
+}
+
+void SherpaOnnxFreeMultiChannelWave(const SherpaOnnxMultiChannelWave *wave) {
+  if (!wave) return;
+  // The SherpaOnnxMultiChannelWave is the first member of
+  // SherpaOnnxMultiChannelWaveInternal, so the pointer values are identical.
+  auto *iw = reinterpret_cast<SherpaOnnxMultiChannelWaveInternal *>(
+      const_cast<SherpaOnnxMultiChannelWave *>(wave));
+  delete[] iw->pub.samples;
+  delete iw->impl;
+  delete iw;
 }
 
 struct SherpaOnnxSpokenLanguageIdentification {
@@ -2719,6 +2784,130 @@ void SherpaOnnxDestroyDenoisedAudio(const SherpaOnnxDenoisedAudio *p) {
   delete p;
 }
 
+// =========================================================================
+// Source separation
+// =========================================================================
+
+struct SherpaOnnxOfflineSourceSeparation {
+  std::unique_ptr<sherpa_onnx::OfflineSourceSeparation> impl;
+};
+
+static sherpa_onnx::OfflineSourceSeparationConfig
+GetOfflineSourceSeparationConfig(
+    const SherpaOnnxOfflineSourceSeparationConfig *config) {
+  sherpa_onnx::OfflineSourceSeparationConfig c;
+  c.model.spleeter.vocals = SHERPA_ONNX_OR(config->model.spleeter.vocals, "");
+  c.model.spleeter.accompaniment =
+      SHERPA_ONNX_OR(config->model.spleeter.accompaniment, "");
+  c.model.uvr.model = SHERPA_ONNX_OR(config->model.uvr.model, "");
+  c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.debug = config->model.debug;
+  c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+
+  if (c.model.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", c.ToString().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
+#endif
+  }
+
+  return c;
+}
+
+const SherpaOnnxOfflineSourceSeparation *
+SherpaOnnxCreateOfflineSourceSeparation(
+    const SherpaOnnxOfflineSourceSeparationConfig *config) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
+  auto ss_config = GetOfflineSourceSeparationConfig(config);
+
+  if (!ss_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in source separation config");
+    return nullptr;
+  }
+
+  auto *ss = new SherpaOnnxOfflineSourceSeparation;
+  ss->impl = std::make_unique<sherpa_onnx::OfflineSourceSeparation>(ss_config);
+
+  return ss;
+}
+
+void SherpaOnnxDestroyOfflineSourceSeparation(
+    const SherpaOnnxOfflineSourceSeparation *ss) {
+  if (!ss) return;
+  delete ss;
+}
+
+int32_t SherpaOnnxOfflineSourceSeparationGetOutputSampleRate(
+    const SherpaOnnxOfflineSourceSeparation *ss) {
+  return ss ? ss->impl->GetOutputSampleRate() : 0;
+}
+
+int32_t SherpaOnnxOfflineSourceSeparationGetNumberOfStems(
+    const SherpaOnnxOfflineSourceSeparation *ss) {
+  return ss ? ss->impl->GetNumberOfStems() : 0;
+}
+
+const SherpaOnnxSourceSeparationOutput *
+SherpaOnnxOfflineSourceSeparationProcess(
+    const SherpaOnnxOfflineSourceSeparation *ss, const float *const *samples,
+    int32_t num_channels, int32_t num_samples, int32_t sample_rate) {
+  if (ss == nullptr) {
+    return nullptr;
+  }
+
+  if (samples == nullptr) {
+    return nullptr;
+  }
+
+  sherpa_onnx::OfflineSourceSeparationInput input;
+  input.sample_rate = sample_rate;
+  input.samples.data.resize(num_channels);
+  for (int32_t i = 0; i < num_channels; ++i) {
+    input.samples.data[i].assign(samples[i], samples[i] + num_samples);
+  }
+
+  auto output = ss->impl->Process(input);
+
+  auto *ans = new SherpaOnnxSourceSeparationOutput;
+  ans->sample_rate = output.sample_rate;
+  ans->num_stems = static_cast<int32_t>(output.stems.size());
+
+  auto *stems = new SherpaOnnxSourceSeparationStem[ans->num_stems];
+  for (int32_t s = 0; s < ans->num_stems; ++s) {
+    auto &stem = output.stems[s];
+    int32_t nc = static_cast<int32_t>(stem.data.size());
+    stems[s].num_channels = nc;
+    stems[s].n = nc > 0 ? static_cast<int32_t>(stem.data[0].size()) : 0;
+
+    auto **channel_data = new float *[nc];
+    for (int32_t c = 0; c < nc; ++c) {
+      channel_data[c] = new float[stem.data[c].size()];
+      std::copy(stem.data[c].begin(), stem.data[c].end(), channel_data[c]);
+    }
+    stems[s].samples = channel_data;
+  }
+  ans->stems = stems;
+
+  return ans;
+}
+
+void SherpaOnnxDestroySourceSeparationOutput(
+    const SherpaOnnxSourceSeparationOutput *p) {
+  if (!p) return;
+  for (int32_t s = 0; s < p->num_stems; ++s) {
+    for (int32_t c = 0; c < p->stems[s].num_channels; ++c) {
+      delete[] p->stems[s].samples[c];
+    }
+    delete[] p->stems[s].samples;
+  }
+  delete[] p->stems;
+  delete p;
+}
+
 struct SherpaOnnxOnlineSpeechDenoiser {
   std::unique_ptr<sherpa_onnx::OnlineSpeechDenoiser> impl;
 };
@@ -3292,7 +3481,8 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuationOHOS(
 
   auto c = GetOfflinePunctuationConfig(config);
   if (c.model.ct_transformer.empty()) {
-    SHERPA_ONNX_LOGE("Please specify a punctuation model! Return a null pointer");
+    SHERPA_ONNX_LOGE(
+        "Please specify a punctuation model! Return a null pointer");
     return nullptr;
   }
 
@@ -3333,5 +3523,26 @@ SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
 }
 
 #endif  // #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+
+const SherpaOnnxOfflineSourceSeparation *
+SherpaOnnxCreateOfflineSourceSeparationOHOS(
+    const SherpaOnnxOfflineSourceSeparationConfig *config,
+    NativeResourceManager *mgr) {
+  if (config == nullptr) {
+    return nullptr;
+  }
+
+  if (!mgr) {
+    return SherpaOnnxCreateOfflineSourceSeparation(config);
+  }
+
+  auto ss_config = GetOfflineSourceSeparationConfig(config);
+
+  auto *ss = new SherpaOnnxOfflineSourceSeparation;
+  ss->impl =
+      std::make_unique<sherpa_onnx::OfflineSourceSeparation>(mgr, ss_config);
+
+  return ss;
+}
 
 #endif  // #ifdef __OHOS__

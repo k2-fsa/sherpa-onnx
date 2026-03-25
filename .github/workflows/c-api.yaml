@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - c-api
     paths:
       - '.github/workflows/c-api.yaml'
       - 'cmake/**'
@@ -74,6 +75,79 @@ jobs:
           if [[ ${{ matrix.os }} == macos-latest ]]; then
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
+
+      - name: Test source separation (Spleeter)
+        shell: bash
+        run: |
+          name=source-separation-spleeter-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+          tar xjf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+          rm sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+          ls -lh *.wav
+
+          mkdir -p source-separation-wavs
+          mv -v vocals.wav accompaniment.wav source-separation-wavs/
+
+          rm -rf sherpa-onnx-spleeter-2stems-fp16 qi-feng-le-zh.wav
+          rm $name
+
+      - name: Test source separation (UVR)
+        shell: bash
+        run: |
+          name=source-separation-uvr-c-api
+          gcc -o $name ./c-api-examples/$name.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR-MDX-NET-Voc_FT.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+          ls -lh *.wav
+
+          mv -v uvr-vocals.wav uvr-non-vocals.wav source-separation-wavs/
+
+          rm UVR-MDX-NET-Voc_FT.onnx qi-feng-le-zh.wav
+          rm $name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-wavs-${{ matrix.os }}
+          path: ./source-separation-wavs/*.wav
 
       - name: Test Moonshine v2
         shell: bash
