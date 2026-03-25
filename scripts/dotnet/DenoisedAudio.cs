@@ -20,11 +20,30 @@ namespace SherpaOnnx
             }
 
             Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+            return WriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
+        }
+
+        public static bool SaveToWaveFile(float[] samples, int sampleRate, String filename)
+        {
+            if (samples == null || samples.Length == 0)
+            {
+                return false;
+            }
+
+            IntPtr p = Marshal.AllocHGlobal(samples.Length * sizeof(float));
+            Marshal.Copy(samples, 0, p, samples.Length);
+            bool ok = WriteWave(p, samples.Length, sampleRate, filename);
+            Marshal.FreeHGlobal(p);
+            return ok;
+        }
+
+        private static bool WriteWave(IntPtr samples, int numSamples, int sampleRate, String filename)
+        {
             byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
             byte[] utf8FilenameWithNull = new byte[utf8Filename.Length + 1]; // +1 for null terminator
             Array.Copy(utf8Filename, utf8FilenameWithNull, utf8Filename.Length);
             utf8FilenameWithNull[utf8Filename.Length] = 0; // Null terminator
-            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, utf8FilenameWithNull);
+            int status = SherpaOnnxWriteWave(samples, numSamples, sampleRate, utf8FilenameWithNull);
             return status == 1;
         }
 

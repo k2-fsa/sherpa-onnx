@@ -4,7 +4,17 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./supertonic-tts
+cd ./source-separation-spleeter
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-spleeter-*
+
+cd ../source-separation-uvr
+./run.sh
+ls -lh
+rm -f UVR-MDX-NET-Voc_FT.onnx
+
+cd ../supertonic-tts
 ./run.sh
 ls -lh
 rm -rf sherpa-onnx-supertonic-*

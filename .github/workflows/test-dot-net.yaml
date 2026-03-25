@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dot-net
     paths:
       - '.github/workflows/test-dot-net.yaml'
       - '.github/scripts/test-dot-net.sh'
