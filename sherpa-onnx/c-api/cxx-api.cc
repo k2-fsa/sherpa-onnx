@@ -337,6 +337,24 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.funasr_nano.itn = config.model_config.funasr_nano.itn ? 1 : 0;
   c.model_config.funasr_nano.hotwords =
       config.model_config.funasr_nano.hotwords.c_str();
+
+  c.model_config.qwen3_asr.conv_frontend =
+      config.model_config.qwen3_asr.conv_frontend.c_str();
+  c.model_config.qwen3_asr.encoder =
+      config.model_config.qwen3_asr.encoder.c_str();
+  c.model_config.qwen3_asr.decoder =
+      config.model_config.qwen3_asr.decoder.c_str();
+  c.model_config.qwen3_asr.tokenizer =
+      config.model_config.qwen3_asr.tokenizer.c_str();
+  c.model_config.qwen3_asr.max_total_len =
+      config.model_config.qwen3_asr.max_total_len;
+  c.model_config.qwen3_asr.max_new_tokens =
+      config.model_config.qwen3_asr.max_new_tokens;
+  c.model_config.qwen3_asr.temperature =
+      config.model_config.qwen3_asr.temperature;
+  c.model_config.qwen3_asr.top_p = config.model_config.qwen3_asr.top_p;
+  c.model_config.qwen3_asr.seed = config.model_config.qwen3_asr.seed;
+
   c.model_config.medasr.model = config.model_config.medasr.model.c_str();
 
   c.model_config.fire_red_asr_ctc.model =

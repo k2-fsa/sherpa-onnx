@@ -981,6 +981,28 @@ typedef struct SherpaOnnxOfflineFunASRNanoModelConfig {
   const char *hotwords;
 } SherpaOnnxOfflineFunASRNanoModelConfig;
 
+/** @brief Configuration for an offline Qwen3-ASR model. */
+typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
+  /** Path to the conv-frontend ONNX model. */
+  const char *conv_frontend;
+  /** Path to the encoder ONNX model. */
+  const char *encoder;
+  /** Path to the decoder ONNX model (with KV cache). */
+  const char *decoder;
+  /** Path to the tokenizer directory (e.g. containing `vocab.json`). */
+  const char *tokenizer;
+  /** Maximum total sequence length supported by the model. */
+  int32_t max_total_len;
+  /** Maximum number of new tokens to generate. */
+  int32_t max_new_tokens;
+  /** Sampling temperature. */
+  float temperature;
+  /** Top-p (nucleus) sampling threshold. */
+  float top_p;
+  /** Random seed for reproducible sampling. */
+  int32_t seed;
+} SherpaOnnxOfflineQwen3ASRModelConfig;
+
 /** @brief Configuration for a MedASR CTC model. */
 typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
   /** Path to the ONNX model. */
@@ -997,7 +1019,7 @@ typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
  * example, set only one of @c transducer, @c paraformer, @c nemo_ctc,
  * @c whisper, @c tdnn, @c sense_voice, @c moonshine, @c fire_red_asr,
  * @c dolphin, @c zipformer_ctc, @c canary, @c wenet_ctc, @c omnilingual,
- * @c medasr, @c funasr_nano, or @c fire_red_asr_ctc.
+ * @c medasr, @c funasr_nano, @c fire_red_asr_ctc, or @c qwen3_asr.
  *
  * If multiple model families are configured at the same time, the
  * implementation will choose one of them, and which one is used is
@@ -1053,6 +1075,8 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
   /** FireRedAsr CTC configuration. */
   SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
+  /** Qwen3-ASR configuration. */
+  SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
 } SherpaOnnxOfflineModelConfig;
 
 /**

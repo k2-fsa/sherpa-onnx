@@ -100,6 +100,9 @@ target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 add_executable(funasr-nano-c-api funasr-nano-c-api.c)
 target_link_libraries(funasr-nano-c-api sherpa-onnx-c-api)
 
+add_executable(qwen3-asr-c-api qwen3-asr-c-api.c)
+target_link_libraries(qwen3-asr-c-api sherpa-onnx-c-api)
+
 add_executable(sense-voice-with-hr-c-api sense-voice-with-hr-c-api.c)
 target_link_libraries(sense-voice-with-hr-c-api sherpa-onnx-c-api)
 

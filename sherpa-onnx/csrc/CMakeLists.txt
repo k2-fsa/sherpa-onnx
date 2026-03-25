@@ -257,6 +257,10 @@ list(APPEND sources
   offline-funasr-nano-model.cc
   offline-recognizer-funasr-nano-impl.cc
   funasr-nano-tokenizer.cc
+  offline-qwen3-asr-model-config.cc
+  offline-qwen3-asr-model.cc
+  offline-recognizer-qwen3-asr-impl.cc
+  qwen-asr-tokenizer.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)

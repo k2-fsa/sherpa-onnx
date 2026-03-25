@@ -28,6 +28,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   funasr_nano.Register(po);
   medasr.Register(po);
   fire_red_asr_ctc.Register(po);
+  qwen3_asr.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -96,9 +97,9 @@ bool OfflineModelConfig::Validate() const {
     }
   }
 
-  // For FunASR-nano, tokens file is not required (tokenizer is loaded from
-  // directory) Check tokens file only if not using funasr_nano
-  if (funasr_nano.encoder_adaptor.empty()) {
+  // For FunASR-nano and Qwen3-ASR, tokens file is not required (tokenizer is
+  // loaded from directory). Check tokens only for other model types.
+  if (funasr_nano.encoder_adaptor.empty() && qwen3_asr.conv_frontend.empty()) {
     if (!FileExists(tokens)) {
       SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
       return false;
@@ -175,6 +176,10 @@ bool OfflineModelConfig::Validate() const {
     return fire_red_asr_ctc.Validate();
   }
 
+  if (!qwen3_asr.conv_frontend.empty()) {
+    return qwen3_asr.Validate();
+  }
+
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
@@ -208,6 +213,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "funasr_nano=" << funasr_nano.ToString() << ", ";
   os << "medasr=" << medasr.ToString() << ", ";
   os << "fire_red_asr_ctc=" << fire_red_asr_ctc.ToString() << ", ";
+  os << "qwen3_asr=" << qwen3_asr.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
