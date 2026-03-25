@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - go
     paths:
       - '.github/workflows/test-go.yaml'
       - 'cmake/**'
@@ -151,6 +152,19 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test non-streaming decoding files with Qwen3 ASR
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-qwen3-asr-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-qwen3-*
 
       - name: Test SupertonicTTS
         shell: bash

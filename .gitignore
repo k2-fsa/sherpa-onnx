@@ -182,3 +182,4 @@ sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
 sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
 sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
 doxygen-docs
+sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25

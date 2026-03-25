@@ -76,6 +76,14 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test Qwen3 ASR
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-qwen3-asr-decode-files
+          ./run.sh
+          rm -rf sherpa-onnx-qwen3-*
+
       - name: Test NeMo Canary ASR
         if: matrix.os != 'windows-2022'
         shell: bash
