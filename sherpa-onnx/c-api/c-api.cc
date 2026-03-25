@@ -1558,8 +1558,12 @@ int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
 static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     std::function<int32_t(const float *, int32_t, float)> callback) {
+  sherpa_onnx::GenerationConfig config;
+  config.sid = sid;
+  config.speed = speed;
+
   sherpa_onnx::GeneratedAudio audio =
-      tts->impl->Generate(text, sid, speed, callback);
+      tts->impl->Generate(text, config, callback);
 
   if (audio.samples.empty()) {
     return nullptr;
@@ -1786,9 +1790,14 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithZipvoice(
                       prompt_samples + static_cast<size_t>(n_prompt));
   }
 
-  auto out = tts->impl->Generate(text_s, ptext_s, prompt_vec, prompt_sr, speed,
-                                 num_steps,
-                                 /*callback=*/nullptr);
+  sherpa_onnx::GenerationConfig config;
+  config.speed = speed;
+  config.reference_audio = std::move(prompt_vec);
+  config.reference_sample_rate = prompt_sr;
+  config.reference_text = ptext_s;
+  config.num_steps = num_steps;
+
+  auto out = tts->impl->Generate(text_s, config, /*callback=*/nullptr);
 
   if (out.samples.empty()) {
     return nullptr;

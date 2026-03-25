@@ -1321,7 +1321,11 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid), C.float(speed))
+	var cCfg C.struct_SherpaOnnxGenerationConfig
+	cCfg.sid = C.int(sid)
+	cCfg.speed = C.float(speed)
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithConfig(tts.impl, s, &cCfg, nil, nil)
 
 	if audio == nil {
 		return nil
@@ -1462,28 +1466,30 @@ func (tts *OfflineTts) GenerateWithProgressCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
+	var cCfg C.struct_SherpaOnnxGenerationConfig
+	cCfg.sid = C.int(sid)
+	cCfg.speed = C.float(speed)
+
 	var audio *C.struct_SherpaOnnxGeneratedAudio
 
 	if cb != nil {
 		h := cgo.NewHandle(cb)
 		defer h.Delete()
 
-		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
 			tts.impl,
 			s,
-			C.int(sid),
-			C.float(speed),
+			&cCfg,
 			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
 				C._cgoGeneratedAudioProgressCallback,
 			),
 			unsafe.Pointer(&h),
 		)
 	} else {
-		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
 			tts.impl,
 			s,
-			C.int(sid),
-			C.float(speed),
+			&cCfg,
 			nil,
 			nil,
 		)

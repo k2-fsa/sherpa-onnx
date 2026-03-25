@@ -515,8 +515,12 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
     jfloat speed) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
 
+  sherpa_onnx::GenerationConfig config;
+  config.sid = sid;
+  config.speed = speed;
+
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, sid, speed);
+      p_text, config);
 
   env->ReleaseStringUTFChars(text, p_text);
 
@@ -532,6 +536,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
+  sherpa_onnx::GenerationConfig config;
+  config.sid = sid;
+  config.speed = speed;
+
   sherpa_onnx::GeneratedAudio audio;
 
   if (callback) {
@@ -544,9 +552,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, sid, speed, callback_wrapper);
+    audio = tts->Generate(p_text, config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, sid, speed, nullptr);
+    audio = tts->Generate(p_text, config, nullptr);
   }
 
   env->ReleaseStringUTFChars(text, p_text);

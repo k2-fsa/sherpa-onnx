@@ -835,9 +835,16 @@ class OfflineTts {
     const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(config.text, textPtr, textLen);
 
-    const h = this.Module._SherpaOnnxOfflineTtsGenerate(
-        this.handle, textPtr, config.sid ?? 0, config.speed ?? 1.0);
+    const genConfig = {
+      sid: config.sid ?? 0,
+      speed: config.speed ?? 1.0,
+    };
+    const cfgWasm = initSherpaOnnxGenerationConfig(genConfig, this.Module);
 
+    const h = this.Module._SherpaOnnxOfflineTtsGenerateWithConfig(
+        this.handle, textPtr, cfgWasm.ptr, 0, 0);
+
+    freeSherpaOnnxGenerationConfig(cfgWasm, this.Module);
     this.Module._free(textPtr);
 
     if (!h) {

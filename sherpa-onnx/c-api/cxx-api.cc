@@ -553,13 +553,14 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
                                     int32_t sid /*= 0*/, float speed /*= 1.0*/,
                                     OfflineTtsCallback callback /*= nullptr*/,
                                     void *arg /*= nullptr*/) const {
-  const SherpaOnnxGeneratedAudio *audio;
-  if (!callback) {
-    audio = SherpaOnnxOfflineTtsGenerate(p_, text.c_str(), sid, speed);
-  } else {
-    audio = SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
-        p_, text.c_str(), sid, speed, callback, arg);
-  }
+  SherpaOnnxGenerationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.sid = sid;
+  c.speed = speed;
+
+  const SherpaOnnxGeneratedAudio *audio =
+      SherpaOnnxOfflineTtsGenerateWithConfig(p_, text.c_str(), &c, callback,
+                                             arg);
 
   GeneratedAudio ans;
 

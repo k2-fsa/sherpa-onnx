@@ -701,7 +701,12 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
   float speed = obj.Get("speed").As<Napi::Number>().FloatValue();
 
   const SherpaOnnxGeneratedAudio *audio;
-  audio = SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
+  SherpaOnnxGenerationConfig gen_config;
+  memset(&gen_config, 0, sizeof(gen_config));
+  gen_config.sid = sid;
+  gen_config.speed = speed;
+  audio = SherpaOnnxOfflineTtsGenerateWithConfig(tts, text.c_str(), &gen_config,
+                                                 nullptr, nullptr);
 
   if (enable_external_buffer) {
     Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
@@ -836,8 +841,12 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
 
       return 1;
     };
-    audio_ = SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
-        tts_, text_.c_str(), sid_, speed_, callback, this);
+    SherpaOnnxGenerationConfig gen_config;
+    memset(&gen_config, 0, sizeof(gen_config));
+    gen_config.sid = sid_;
+    gen_config.speed = speed_;
+    audio_ = SherpaOnnxOfflineTtsGenerateWithConfig(
+        tts_, text_.c_str(), &gen_config, callback, this);
 
     tsfn_.Release();
   }
