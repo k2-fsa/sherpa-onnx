@@ -5,6 +5,8 @@
 #include "sherpa-onnx/csrc/session.h"
 
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -41,10 +43,90 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
   api.ReleaseStatus(status);
 }
 
+static std::string TrimString(const std::string &s) {
+  const auto first = s.find_first_not_of(" \t\r\n");
+  if (first == std::string::npos) {
+    return "";
+  }
+
+  const auto last = s.find_last_not_of(" \t\r\n");
+  return s.substr(first, last - first + 1);
+}
+
+static void SpiltProviderAndConfig(const std::string &s, std::string &provider_str,
+                                 std::unordered_map<std::string, std::string> &config) {
+  provider_str = TrimString(s);
+  config.clear();
+
+  auto pos = provider_str.find(':');
+  if (pos == std::string::npos) {
+    SHERPA_ONNX_LOGE("Provider string: %s", provider_str.c_str());
+    return;
+  }
+
+  std::string config_path = TrimString(provider_str.substr(pos + 1));
+  provider_str = TrimString(provider_str.substr(0, pos));
+
+  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s",
+                   provider_str.c_str(), config_path.c_str());
+
+  if (config_path.empty()) {
+    SHERPA_ONNX_LOGE("Provider config path is empty: %s", s.c_str());
+    return;
+  }
+
+  std::ifstream is(config_path);
+  if (!is.is_open()) {
+    SHERPA_ONNX_LOGE("Failed to open provider config file: %s",
+                     config_path.c_str());
+    return;
+  }
+
+  std::string line;
+  int32_t line_num = 0;
+  while (std::getline(is, line)) {
+    ++line_num;
+    line = TrimString(line);
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+
+    auto sep_pos = line.find(':');
+    if (sep_pos == std::string::npos) {
+      SHERPA_ONNX_LOGE(
+          "Ignore invalid provider config line %d in %s: %s", line_num,
+          config_path.c_str(), line.c_str());
+      continue;
+    }
+
+    std::string key = TrimString(line.substr(0, sep_pos));
+    std::string value = TrimString(line.substr(sep_pos + 1));
+
+    if (key.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Ignore provider config line %d with empty key in %s", line_num,
+          config_path.c_str());
+      continue;
+    }
+
+    SHERPA_ONNX_LOGE("Loaded provider config %s=%s", key.c_str(),
+                     value.c_str());
+    config[std::move(key)] = std::move(value);
+  }
+
+  SHERPA_ONNX_LOGE("Loaded %d provider config entries from %s",
+                   static_cast<int32_t>(config.size()), config_path.c_str());
+}
+
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
     const ProviderConfig *provider_config /*= nullptr*/) {
-  Provider p = StringToProvider(provider_str);
+  std::unordered_map<std::string, std::string> config;
+  std::string new_provider_str;
+
+  SpiltProviderAndConfig(provider_str, new_provider_str, config);
+
+  Provider p = StringToProvider(new_provider_str);
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(num_threads);
@@ -257,14 +339,22 @@ Ort::SessionOptions GetSessionOptionsImpl(
       // inter_op_num_threads to 1 can improve performance.
       // all ops run on ep, no need to create multiple threads in onnxruntime.
       // ep will create SPACEMIT_EP_INTRA_THREAD_NUM threads as intra threads.
-      std::unordered_map<std::string, std::string> provider_options;
+      std::unordered_map<std::string, std::string> provider_options(config);
+      for (const auto &kv : provider_options) {
+        SHERPA_ONNX_LOGE("Use SpacemiT provider option %s=%s", kv.first.c_str(),
+                         kv.second.c_str());
+      }
       SHERPA_ONNX_LOGE("Set IntraOpNumThreads to 1");
       sess_opts.SetIntraOpNumThreads(1);
       SHERPA_ONNX_LOGE("Set InterOpNumThreads to 1");
       sess_opts.SetInterOpNumThreads(1);
-      SHERPA_ONNX_LOGE("Set SPACEMIT_EP_INTRA_THREAD_NUM to %d", num_threads);
-      provider_options.insert(std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM",
-                                             std::to_string(num_threads)));
+
+      if (provider_options.find("SPACEMIT_EP_INTRA_THREAD_NUM") ==
+          provider_options.end()) {
+        SHERPA_ONNX_LOGE("Set SPACEMIT_EP_INTRA_THREAD_NUM to %d", num_threads);
+        provider_options.insert(std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM",
+                                               std::to_string(num_threads)));
+      }
       OrtStatus *sts =
           Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
       if (sts) {
