@@ -14,6 +14,7 @@
 // dotnet run
 
 using SherpaOnnx;
+using System.Diagnostics;
 
 class OfflineSourceSeparationDemo
 {
@@ -35,7 +36,11 @@ class OfflineSourceSeparationDemo
     Console.WriteLine($"Input wave: channels={wave.NumChannels}, samples_per_channel={wave.NumSamples}, sample_rate={wave.SampleRate}");
 
     var channels = wave.GetChannels();
+    Console.WriteLine("Started");
+    var stopwatch = Stopwatch.StartNew();
     var output = ss.Process(channels, wave.SampleRate);
+    stopwatch.Stop();
+    Console.WriteLine("Done");
 
     Console.WriteLine($"Output: {output.NumStems} stems, sample_rate={output.SampleRate}");
 
@@ -53,6 +58,14 @@ class OfflineSourceSeparationDemo
         Console.WriteLine($"Failed to save {filename}");
       }
     }
+
+    float elapsedSeconds = stopwatch.ElapsedMilliseconds / 1000.0f;
+    float duration = wave.NumSamples / (float)wave.SampleRate;
+    float rtf = elapsedSeconds / duration;
+
+    Console.WriteLine($"Duration: {duration:F3}s");
+    Console.WriteLine($"Elapsed seconds: {elapsedSeconds:F3}s");
+    Console.WriteLine($"(Real time factor) RTF = {elapsedSeconds:F3} / {duration:F3} = {rtf:F3}");
 
     output.Dispose();
   }

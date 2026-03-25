@@ -4,8 +4,6 @@
 // models.
 
 using SherpaOnnx;
-using System.Runtime.InteropServices;
-using System.Text;
 
 class StreamingSpeechEnhancementDpdfnet
 {
@@ -28,14 +26,15 @@ class StreamingSpeechEnhancementDpdfnet
       int count = Math.Min(frameShift, samples.Length - start);
       float[] chunk = new float[count];
       Array.Copy(samples, start, chunk, 0, count);
-      output.AddRange(sd.Run(chunk, waveReader.SampleRate).Samples);
+      var audio = sd.Run(chunk, waveReader.SampleRate);
+      output.AddRange(audio.Samples);
     }
 
     output.AddRange(sd.Flush().Samples);
 
     var outFilename = "./enhanced-online-dpdfnet.wav";
-    var outAudio = new GeneratedDenoisedAudio(output.ToArray(), sd.SampleRate);
-    if (outAudio.SaveToWaveFile(outFilename))
+    var ok = DenoisedAudio.SaveToWaveFile(output.ToArray(), sd.SampleRate, outFilename);
+    if (ok)
     {
       Console.WriteLine($"Wrote to {outFilename} succeeded!");
     }
@@ -43,33 +42,5 @@ class StreamingSpeechEnhancementDpdfnet
     {
       Console.WriteLine($"Failed to write {outFilename}");
     }
-  }
-
-  private sealed class GeneratedDenoisedAudio
-  {
-    private readonly float[] _samples;
-    private readonly int _sampleRate;
-
-    public GeneratedDenoisedAudio(float[] samples, int sampleRate)
-    {
-      _samples = samples;
-      _sampleRate = sampleRate;
-    }
-
-    public bool SaveToWaveFile(string filename)
-    {
-      byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
-      byte[] utf8FilenameWithNull = new byte[utf8Filename.Length + 1];
-      Array.Copy(utf8Filename, utf8FilenameWithNull, utf8Filename.Length);
-      utf8FilenameWithNull[utf8Filename.Length] = 0;
-      return SherpaOnnxWriteWave(_samples, _samples.Length, _sampleRate, utf8FilenameWithNull) == 1;
-    }
-
-    [DllImport(Dll.Filename)]
-    private static extern int SherpaOnnxWriteWave(
-        float[] samples,
-        int n,
-        int sampleRate,
-        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Filename);
   }
 }
