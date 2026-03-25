@@ -9,6 +9,12 @@ target_link_libraries(streaming-zipformer-with-hr-cxx-api sherpa-onnx-cxx-api)
 add_executable(speech-enhancement-gtcrn-cxx-api ./speech-enhancement-gtcrn-cxx-api.cc)
 target_link_libraries(speech-enhancement-gtcrn-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(source-separation-spleeter-cxx-api ./source-separation-spleeter-cxx-api.cc)
+target_link_libraries(source-separation-spleeter-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(source-separation-uvr-cxx-api ./source-separation-uvr-cxx-api.cc)
+target_link_libraries(source-separation-uvr-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(speech-enhancement-dpdfnet-cxx-api ./speech-enhancement-dpdfnet-cxx-api.cc)
 target_link_libraries(speech-enhancement-dpdfnet-cxx-api sherpa-onnx-cxx-api)
 

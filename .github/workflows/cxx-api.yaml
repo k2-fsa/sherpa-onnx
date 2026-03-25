@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - cxx-api-asr-non-streaming
+      - cxx-api
     paths:
       - '.github/workflows/cxx-api.yaml'
       - 'cmake/**'
@@ -77,6 +77,86 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test Source Separation (Spleeter)
+        shell: bash
+        run: |
+          name=source-separation-spleeter-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+          tar xjf sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+          rm sherpa-onnx-spleeter-2stems-fp16.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          mkdir source-separation-wavs
+          cp -v spleeter-*.wav source-separation-wavs/
+
+          rm -rf sherpa-onnx-spleeter-*
+          rm -fv qi-feng-le-zh.wav
+          rm -v ./$name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-spleeter-wavs-cxx-${{ matrix.os }}
+          path: ./source-separation-wavs/*.wav
+
+      - name: Test Source Separation (UVR)
+        shell: bash
+        run: |
+          name=source-separation-uvr-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/UVR-MDX-NET-Voc_FT.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/qi-feng-le-zh.wav
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./$name
+
+          cp -v uvr-*.wav source-separation-wavs/
+
+          rm -fv UVR-MDX-NET-Voc_FT.onnx
+          rm -fv qi-feng-le-zh.wav
+          rm -v ./$name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-separation-uvr-wavs-cxx-${{ matrix.os }}
+          path: ./source-separation-wavs/*.wav
 
       - name: Test Moonshine v2
         shell: bash

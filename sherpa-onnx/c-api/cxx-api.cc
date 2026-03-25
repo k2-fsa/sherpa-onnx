@@ -1137,4 +1137,72 @@ std::shared_ptr<std::vector<AudioEvent>> AudioTagging::ComputePtr(
   return std::make_shared<std::vector<AudioEvent>>(events);
 }
 
+// ============================================================
+// For Source Separation
+// ============================================================
+
+static void FillSourceSeparationModelConfig(
+    const OfflineSourceSeparationModelConfig &src,
+    SherpaOnnxOfflineSourceSeparationModelConfig *dst) {
+  memset(dst, 0, sizeof(*dst));
+  dst->spleeter.vocals = src.spleeter.vocals.c_str();
+  dst->spleeter.accompaniment = src.spleeter.accompaniment.c_str();
+  dst->uvr.model = src.uvr.model.c_str();
+  dst->num_threads = src.num_threads;
+  dst->provider = src.provider.c_str();
+  dst->debug = src.debug;
+}
+
+OfflineSourceSeparation OfflineSourceSeparation::Create(
+    const OfflineSourceSeparationConfig &config) {
+  struct SherpaOnnxOfflineSourceSeparationConfig c;
+  memset(&c, 0, sizeof(c));
+  FillSourceSeparationModelConfig(config.model, &c.model);
+
+  auto p = SherpaOnnxCreateOfflineSourceSeparation(&c);
+  return OfflineSourceSeparation(p);
+}
+
+void OfflineSourceSeparation::Destroy(
+    const SherpaOnnxOfflineSourceSeparation *p) const {
+  SherpaOnnxDestroyOfflineSourceSeparation(p);
+}
+
+OfflineSourceSeparation::OfflineSourceSeparation(
+    const SherpaOnnxOfflineSourceSeparation *p)
+    : MoveOnly<OfflineSourceSeparation, SherpaOnnxOfflineSourceSeparation>(p) {}
+
+SourceSeparationOutput OfflineSourceSeparation::Process(
+    const float *const *samples, int32_t num_channels, int32_t num_samples,
+    int32_t sample_rate) const {
+  auto output = SherpaOnnxOfflineSourceSeparationProcess(
+      p_, samples, num_channels, num_samples, sample_rate);
+  if (output == nullptr) {
+    return {};
+  }
+
+  SourceSeparationOutput ans;
+  ans.sample_rate = output->sample_rate;
+  ans.stems.resize(output->num_stems);
+  for (int32_t s = 0; s < output->num_stems; ++s) {
+    auto &stem = ans.stems[s];
+    auto &c_stem = output->stems[s];
+    stem.samples.resize(c_stem.num_channels);
+    for (int32_t c = 0; c < c_stem.num_channels; ++c) {
+      stem.samples[c] = {c_stem.samples[c], c_stem.samples[c] + c_stem.n};
+    }
+  }
+
+  SherpaOnnxDestroySourceSeparationOutput(output);
+  return ans;
+}
+
+int32_t OfflineSourceSeparation::GetOutputSampleRate() const {
+  return SherpaOnnxOfflineSourceSeparationGetOutputSampleRate(p_);
+}
+
+int32_t OfflineSourceSeparation::GetNumberOfStems() const {
+  return SherpaOnnxOfflineSourceSeparationGetNumberOfStems(p_);
+}
+
 }  // namespace sherpa_onnx::cxx
