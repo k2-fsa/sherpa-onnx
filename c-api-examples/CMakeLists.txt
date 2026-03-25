@@ -10,6 +10,12 @@ target_link_libraries(kws-c-api sherpa-onnx-c-api)
 add_executable(speech-enhancement-gtcrn-c-api speech-enhancement-gtcrn-c-api.c)
 target_link_libraries(speech-enhancement-gtcrn-c-api sherpa-onnx-c-api)
 
+add_executable(source-separation-spleeter-c-api source-separation-spleeter-c-api.c)
+target_link_libraries(source-separation-spleeter-c-api sherpa-onnx-c-api)
+
+add_executable(source-separation-uvr-c-api source-separation-uvr-c-api.c)
+target_link_libraries(source-separation-uvr-c-api sherpa-onnx-c-api)
+
 add_executable(speech-enhancement-dpdfnet-c-api speech-enhancement-dpdfnet-c-api.c)
 target_link_libraries(speech-enhancement-dpdfnet-c-api sherpa-onnx-c-api)
 
