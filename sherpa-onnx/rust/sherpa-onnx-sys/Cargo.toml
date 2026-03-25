@@ -28,3 +28,7 @@ shared = []
 bzip2 = "0.4"
 tar = "0.4"
 ureq = "2.12"
+
+[package.metadata.docs.rs]
+default-features = false
+features = []
