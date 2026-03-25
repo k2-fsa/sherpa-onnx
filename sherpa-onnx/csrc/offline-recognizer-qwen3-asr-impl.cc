@@ -875,6 +875,12 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     ++cur_len;
   }
 
+  // drop the first 3 tokens which contain things like:
+  // language None<asr_text>
+  if (generated_ids.size() >= 3) {
+    generated_ids.erase(generated_ids.begin(), generated_ids.begin() + 3);
+  }
+
   result.text = tokenizer_->Decode(generated_ids);
   RemoveUtf8ReplacementChars(&result.text);
 
