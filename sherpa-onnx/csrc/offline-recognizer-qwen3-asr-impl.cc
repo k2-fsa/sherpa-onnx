@@ -826,6 +826,14 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       break;
     }
 
+    if (step + 1 == max_new_tokens) {
+      SHERPA_ONNX_LOGE(
+          "Result is truncated. max_new_tokens %d is too small for "
+          "this audio input. Please either use a shorter audio or use a "
+          "larger max_new_tokens",
+          max_new_tokens);
+    }
+
     const int64_t last_token_id = next_id;
     std::vector<int64_t> one_id{last_token_id};
     std::array<int64_t, 2> one_shape{1, 1};

@@ -18,7 +18,7 @@ void PybindOfflineQwen3ASRModelConfig(py::module *m) {
                     float, float, int32_t>(),
            py::arg("conv_frontend") = "", py::arg("encoder") = "",
            py::arg("decoder") = "", py::arg("tokenizer") = "",
-           py::arg("max_total_len") = 512, py::arg("max_new_tokens") = 64,
+           py::arg("max_total_len") = 512, py::arg("max_new_tokens") = 128,
            py::arg("temperature") = 1e-6f, py::arg("top_p") = 0.8f,
            py::arg("seed") = 42)
       .def_readwrite("conv_frontend", &PyClass::conv_frontend)
