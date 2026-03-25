@@ -75,7 +75,10 @@ int32_t main() {
 
   // Write each stem to a separate multi-channel wave file.
   const char *stem_names[] = {"vocals", "accompaniment"};
-  for (int32_t s = 0; s < output->num_stems && s < 2; ++s) {
+  for (int32_t s = 0;
+       s < output->num_stems &&
+       s < (int32_t)(sizeof(stem_names) / sizeof(stem_names[0]));
+       ++s) {
     int32_t nc = output->stems[s].num_channels;
     int32_t ns = output->stems[s].n;
     char filename[256];

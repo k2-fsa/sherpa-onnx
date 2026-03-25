@@ -66,8 +66,10 @@ int32_t main() {
             << output.sample_rate << "\n";
 
   // Write each stem to a separate multi-channel wave file
-  const char *stem_names[] = {"uvr-vocals", "uvr-non-vocals"};
-  for (int32_t s = 0; s < static_cast<int32_t>(output.stems.size()) && s < 2;
+  std::vector<std::string> stem_names = {"uvr-vocals", "uvr-non-vocals"};
+  for (int32_t s = 0;
+       s < static_cast<int32_t>(output.stems.size()) &&
+       s < static_cast<int32_t>(stem_names.size());
        ++s) {
     auto &stem = output.stems[s];
     int32_t nc = static_cast<int32_t>(stem.samples.size());
@@ -78,10 +80,9 @@ int32_t main() {
       stem_ptrs[c] = stem.samples[c].data();
     }
 
-    char filename[256];
-    snprintf(filename, sizeof(filename), "%s.wav", stem_names[s]);
+    std::string filename = stem_names[s] + ".wav";
     SherpaOnnxWriteWaveMultiChannel(stem_ptrs.data(), ns, output.sample_rate,
-                                    nc, filename);
+                                    nc, filename.c_str());
     std::cout << "Saved " << filename << " (" << nc << " channels, " << ns
               << " samples, " << output.sample_rate << " Hz)\n";
   }
