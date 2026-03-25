@@ -141,10 +141,9 @@ class MainActivity : AppCompatActivity() {
         generate.isEnabled = false
         stopped = false
         Thread {
-            val audio = tts.generateWithCallback(
+            val audio = tts.generateWithConfigAndCallback(
                 text = textStr,
-                sid = sidInt,
-                speed = speedFloat,
+                config = GenerationConfig(sid = sidInt, speed = speedFloat),
                 callback = this::callback
             )
 

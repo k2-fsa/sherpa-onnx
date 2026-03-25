@@ -1301,21 +1301,21 @@ class SherpaOnnxOfflineTtsWrapper {
   }
 
   func generate(text: String, sid: Int = 0, speed: Float = 1.0) -> SherpaOnnxGeneratedAudioWrapper {
-    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? = SherpaOnnxOfflineTtsGenerate(
-      tts, toCPointer(text), Int32(sid), speed)
-
-    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+    var config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
+    return generateWithConfig(text: text, config: config, callback: nil, arg: nil)
   }
 
   func generateWithCallbackWithArg(
     text: String, callback: TtsCallbackWithArg, arg: UnsafeMutableRawPointer, sid: Int = 0,
     speed: Float = 1.0
   ) -> SherpaOnnxGeneratedAudioWrapper {
-    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? =
-      SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-        tts, toCPointer(text), Int32(sid), speed, callback, arg)
+    var config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
 
-    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+    let wrapper: TtsProgressCallbackWithArg = { samples, n, progress, arg in
+      return callback(samples, n, arg)
+    }
+
+    return generateWithConfig(text: text, config: config, callback: wrapper, arg: arg)
   }
 
   func generateWithConfig(

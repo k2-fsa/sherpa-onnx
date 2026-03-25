@@ -2933,12 +2933,30 @@ begin
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(Audio);
 end;
 
+{ Adapts TSherpaOnnxGeneratedAudioCallbackWithArg (no progress) to
+  TSherpaOnnxGeneratedAudioProgressCallbackWithArg so we can use the
+  non-deprecated SherpaOnnxOfflineTtsGenerateWithConfig. }
+var
+  _OfflineTtsCallbackWithArg: TSherpaOnnxGeneratedAudioCallbackWithArg;
+  _OfflineTtsCallbackWithArgUserArg: Pointer;
+
+function _OfflineTtsCallbackWithArgWrapper(Samples: pcfloat; N: cint32;
+  P: cfloat; Arg: Pointer): cint32; cdecl;
+begin
+  Result := _OfflineTtsCallbackWithArg(Samples, N, _OfflineTtsCallbackWithArgUserArg);
+end;
+
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
+  Config: TSherpaOnnxGenerationConfig;
 begin
-  Audio := SherpaOnnxOfflineTtsGenerate(Self.Handle, PAnsiChar(Text), SpeakerId, Speed);
+  Config := Default(TSherpaOnnxGenerationConfig);
+  Config.Sid := SpeakerId;
+  Config.Speed := Speed;
+  Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+    @Config, nil, nil);
   Result := ExtractGeneratedAudio(Audio);
 end;
 
@@ -2949,9 +2967,22 @@ function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
+  Config: TSherpaOnnxGenerationConfig;
 begin
-  Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
-    SpeakerId, Speed, Callback, Arg);
+  Config := Default(TSherpaOnnxGenerationConfig);
+  Config.Sid := SpeakerId;
+  Config.Speed := Speed;
+
+  _OfflineTtsCallbackWithArg := Callback;
+  _OfflineTtsCallbackWithArgUserArg := Arg;
+
+  if Assigned(Callback) then
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @Config, @_OfflineTtsCallbackWithArgWrapper, nil)
+  else
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @Config, nil, nil);
+
   Result := ExtractGeneratedAudio(Audio);
 end;
 

@@ -80,7 +80,10 @@ void PybindOfflineTts(py::module *m) {
              std::function<int32_t(py::array_t<float>, float)> callback)
               -> GeneratedAudio {
             if (!callback) {
-              return self.Generate(text, sid, speed);
+              GenerationConfig config;
+              config.sid = sid;
+              config.speed = speed;
+              return self.Generate(text, config);
             }
 
             std::function<int32_t(const float *, int32_t, float)>
@@ -98,7 +101,10 @@ void PybindOfflineTts(py::module *m) {
                   return callback(array, progress);
                 };
 
-            return self.Generate(text, sid, speed, callback_wrapper);
+            GenerationConfig config;
+            config.sid = sid;
+            config.speed = speed;
+            return self.Generate(text, config, callback_wrapper);
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
           py::arg("callback") = py::none(),
