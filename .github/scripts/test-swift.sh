@@ -7,6 +7,9 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-qwen3-asr.sh
+rm -rf sherpa-onnx-qwen3-*
+
 ./run-test-version.sh
 
 ./run-moonshine-v2-asr.sh
