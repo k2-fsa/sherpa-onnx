@@ -154,6 +154,30 @@ static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineQwen3ASRModelConfig
+GetOfflineQwen3AsrModelConfig(Napi::Object obj) {
+  SherpaOnnxOfflineQwen3ASRModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("qwen3Asr") || !obj.Get("qwen3Asr").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("qwen3Asr").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(conv_frontend, convFrontend);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokenizer, tokenizer);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_total_len, maxTotalLen);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_new_tokens, maxNewTokens);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(temperature, temperature);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(top_p, topP);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(seed, seed);
+
+  return c;
+}
+
 static SherpaOnnxOfflineDolphinModelConfig GetOfflineDolphinModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineDolphinModelConfig c;
@@ -327,6 +351,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.medasr = GetOfflineMedAsrCtcModelConfig(o);
   c.funasr_nano = GetOfflineFunAsrNanoModelConfig(o);
   c.fire_red_asr_ctc = GetOfflineFireRedAsrCtcModelConfig(o);
+  c.qwen3_asr = GetOfflineQwen3AsrModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -434,6 +459,11 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.encoder_adaptor);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr_ctc.model);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.conv_frontend);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.tokenizer);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

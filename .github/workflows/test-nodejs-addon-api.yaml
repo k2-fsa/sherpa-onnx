@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - test-node-addon
     paths:
       - '.github/workflows/test-nodejs-addon-api.yaml'
       - '.github/scripts/test-nodejs-addon-npm.sh'
