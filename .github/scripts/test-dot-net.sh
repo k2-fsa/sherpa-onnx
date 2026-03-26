@@ -4,7 +4,19 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./source-separation-spleeter
+cd ./vad-non-streaming-qwen3-asr
+./run-ten-vad.sh
+rm -fv *.onnx
+
+./run.sh
+rm -fv *.onnx
+
+cd ../non-streaming-qwen3-asr-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-qwen3-*
+
+cd ../source-separation-spleeter
 ./run.sh
 ls -lh
 rm -rf sherpa-onnx-spleeter-*
