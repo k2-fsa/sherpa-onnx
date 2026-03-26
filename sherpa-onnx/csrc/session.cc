@@ -14,6 +14,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #if defined(__APPLE__) && (ORT_API_VERSION >= 15) && \
     !defined(SHERPA_ONNX_DISABLE_COREML)
 #include "coreml_provider_factory.h"  // NOLINT
@@ -43,69 +44,68 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
   api.ReleaseStatus(status);
 }
 
-static std::string TrimString(const std::string &s) {
-  const auto first = s.find_first_not_of(" \t\r\n");
-  if (first == std::string::npos) {
-    return "";
-  }
+static void SplitProviderAndConfig(
+    const std::string &s, std::string &provider_str,
+    std::unordered_map<std::string, std::string> &config) {
+  // provider string format: provider_name[:config_path], e.g., tensorrt:trt_config.config or spacemit:spacemit_config.config or cpu.
+  // The config file is optional. If it is not provided, default config will be used.
+  // The config file should be in the format of key:value per line, e.g.,
+  // GraphOptimizationLevel:0
+  // LogSeverityLevel:1
+  // ProfilingFilePrefix:profile
+  // For spacemit, the config file can contain the following
+  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
+  // ... and so on.
+  // # is treated as comment. Empty lines are ignored.
 
-  const auto last = s.find_last_not_of(" \t\r\n");
-  return s.substr(first, last - first + 1);
-}
-
-static void SpiltProviderAndConfig(const std::string &s, std::string &provider_str,
-                                 std::unordered_map<std::string, std::string> &config) {
-  provider_str = TrimString(s);
+  provider_str = Trim(s);
   config.clear();
 
   auto pos = provider_str.find(':');
   if (pos == std::string::npos) {
-    SHERPA_ONNX_LOGE("Provider string: %s", provider_str.c_str());
     return;
   }
 
-  std::string config_path = TrimString(provider_str.substr(pos + 1));
-  provider_str = TrimString(provider_str.substr(0, pos));
+  std::string config_path = Trim(provider_str.substr(pos + 1));
+  provider_str = Trim(provider_str.substr(0, pos));
 
-  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s",
-                   provider_str.c_str(), config_path.c_str());
+  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s", provider_str.c_str(),
+                   config_path.c_str());
 
   if (config_path.empty()) {
     SHERPA_ONNX_LOGE("Provider config path is empty: %s", s.c_str());
-    return;
+    SHERPA_ONNX_EXIT(-1);
   }
 
   std::ifstream is(config_path);
   if (!is.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open provider config file: %s",
                      config_path.c_str());
-    return;
+    SHERPA_ONNX_EXIT(-1);
   }
 
   std::string line;
   int32_t line_num = 0;
   while (std::getline(is, line)) {
     ++line_num;
-    line = TrimString(line);
+    line = Trim(line);
     if (line.empty() || line[0] == '#') {
       continue;
     }
 
     auto sep_pos = line.find(':');
     if (sep_pos == std::string::npos) {
-      SHERPA_ONNX_LOGE(
-          "Ignore invalid provider config line %d in %s: %s", line_num,
-          config_path.c_str(), line.c_str());
+      SHERPA_ONNX_LOGE("Ignore invalid provider config line %d in %s: %s",
+                       line_num, config_path.c_str(), line.c_str());
       continue;
     }
 
-    std::string key = TrimString(line.substr(0, sep_pos));
-    std::string value = TrimString(line.substr(sep_pos + 1));
+    std::string key = Trim(line.substr(0, sep_pos));
+    std::string value = Trim(line.substr(sep_pos + 1));
 
     if (key.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Ignore provider config line %d with empty key in %s", line_num,
-          config_path.c_str());
+      SHERPA_ONNX_LOGE("Ignore provider config line %d with empty key in %s",
+                       line_num, config_path.c_str());
       continue;
     }
 
@@ -113,9 +113,6 @@ static void SpiltProviderAndConfig(const std::string &s, std::string &provider_s
                      value.c_str());
     config[std::move(key)] = std::move(value);
   }
-
-  SHERPA_ONNX_LOGE("Loaded %d provider config entries from %s",
-                   static_cast<int32_t>(config.size()), config_path.c_str());
 }
 
 Ort::SessionOptions GetSessionOptionsImpl(
@@ -124,7 +121,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
   std::unordered_map<std::string, std::string> config;
   std::string new_provider_str;
 
-  SpiltProviderAndConfig(provider_str, new_provider_str, config);
+  SplitProviderAndConfig(provider_str, new_provider_str, config);
 
   Provider p = StringToProvider(new_provider_str);
 
@@ -140,9 +137,24 @@ Ort::SessionOptions GetSessionOptionsImpl(
   }
 
   // Other possible options
-  // sess_opts.SetGraphOptimizationLevel(ORT_ENABLE_EXTENDED);
-  // sess_opts.SetLogSeverityLevel(ORT_LOGGING_LEVEL_VERBOSE);
-  // sess_opts.EnableProfiling("profile");
+  if (config.find("GraphOptimizationLevel") != config.end()) {
+    int64_t graph_optimization_level =
+        std::stoll(config["GraphOptimizationLevel"]);
+    sess_opts.SetGraphOptimizationLevel(
+        static_cast<GraphOptimizationLevel>(graph_optimization_level));
+    config.erase("GraphOptimizationLevel");
+  }
+
+  if (config.find("LogSeverityLevel") != config.end()) {
+    int64_t log_severity_level = std::stoll(config["LogSeverityLevel"]);
+    sess_opts.SetLogSeverityLevel(static_cast<OrtLoggingLevel>(log_severity_level));
+    config.erase("LogSeverityLevel");
+  }
+
+  if (config.find("ProfilingFilePrefix") != config.end()) {
+    sess_opts.EnableProfiling(config["ProfilingFilePrefix"].c_str());
+    config.erase("ProfilingFilePrefix");
+  }
 
   // If you want to speed up initialization, please uncomment the following line
   // sess_opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
@@ -352,8 +364,8 @@ Ort::SessionOptions GetSessionOptionsImpl(
       if (provider_options.find("SPACEMIT_EP_INTRA_THREAD_NUM") ==
           provider_options.end()) {
         SHERPA_ONNX_LOGE("Set SPACEMIT_EP_INTRA_THREAD_NUM to %d", num_threads);
-        provider_options.insert(std::make_pair("SPACEMIT_EP_INTRA_THREAD_NUM",
-                                               std::to_string(num_threads)));
+        provider_options.emplace("SPACEMIT_EP_INTRA_THREAD_NUM",
+                                 std::to_string(num_threads));
       }
       OrtStatus *sts =
           Ort::SessionOptionsSpaceMITEnvInit(sess_opts, provider_options);
