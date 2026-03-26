@@ -2026,6 +2026,178 @@ class SherpaOnnxOnlineSpeechDenoiserWrapper {
   }
 }
 
+// =========================================================================
+// Source separation
+// =========================================================================
+
+func sherpaOnnxOfflineSourceSeparationSpleeterModelConfig(
+  vocals: String = "",
+  accompaniment: String = ""
+) -> SherpaOnnxOfflineSourceSeparationSpleeterModelConfig {
+  return SherpaOnnxOfflineSourceSeparationSpleeterModelConfig(
+    vocals: toCPointer(vocals),
+    accompaniment: toCPointer(accompaniment)
+  )
+}
+
+func sherpaOnnxOfflineSourceSeparationUvrModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineSourceSeparationUvrModelConfig {
+  return SherpaOnnxOfflineSourceSeparationUvrModelConfig(model: toCPointer(model))
+}
+
+func sherpaOnnxOfflineSourceSeparationModelConfig(
+  spleeter: SherpaOnnxOfflineSourceSeparationSpleeterModelConfig =
+    sherpaOnnxOfflineSourceSeparationSpleeterModelConfig(),
+  uvr: SherpaOnnxOfflineSourceSeparationUvrModelConfig =
+    sherpaOnnxOfflineSourceSeparationUvrModelConfig(),
+  numThreads: Int = 1,
+  provider: String = "cpu",
+  debug: Int = 0
+) -> SherpaOnnxOfflineSourceSeparationModelConfig {
+  return SherpaOnnxOfflineSourceSeparationModelConfig(
+    spleeter: spleeter,
+    uvr: uvr,
+    num_threads: Int32(numThreads),
+    debug: Int32(debug),
+    provider: toCPointer(provider)
+  )
+}
+
+func sherpaOnnxOfflineSourceSeparationConfig(
+  model: SherpaOnnxOfflineSourceSeparationModelConfig =
+    sherpaOnnxOfflineSourceSeparationModelConfig()
+) -> SherpaOnnxOfflineSourceSeparationConfig {
+  return SherpaOnnxOfflineSourceSeparationConfig(model: model)
+}
+
+class SherpaOnnxMultiChannelWaveWrapper {
+  /// A pointer to the underlying counterpart in C
+  let wave: UnsafePointer<SherpaOnnxMultiChannelWave>!
+
+  init(wave: UnsafePointer<SherpaOnnxMultiChannelWave>!) {
+    self.wave = wave
+  }
+
+  deinit {
+    if let wave {
+      SherpaOnnxFreeMultiChannelWave(wave)
+    }
+  }
+
+  var numChannels: Int32 {
+    guard let wave else { return 0 }
+    return wave.pointee.num_channels
+  }
+
+  var numSamples: Int32 {
+    guard let wave else { return 0 }
+    return wave.pointee.num_samples
+  }
+
+  var sampleRate: Int32 {
+    guard let wave else { return 0 }
+    return wave.pointee.sample_rate
+  }
+}
+
+class SherpaOnnxSourceSeparationOutputWrapper {
+  /// A pointer to the underlying counterpart in C
+  let output: UnsafePointer<SherpaOnnxSourceSeparationOutput>!
+
+  init(output: UnsafePointer<SherpaOnnxSourceSeparationOutput>!) {
+    self.output = output
+  }
+
+  deinit {
+    if let output {
+      SherpaOnnxDestroySourceSeparationOutput(output)
+    }
+  }
+
+  var numStems: Int32 {
+    guard let output else { return 0 }
+    return output.pointee.num_stems
+  }
+
+  var sampleRate: Int32 {
+    guard let output else { return 0 }
+    return output.pointee.sample_rate
+  }
+
+  /// Save stem at index `stemIndex` to a multi-channel wave file.
+  func saveStem(stemIndex: Int, filename: String) -> Int32 {
+    guard let output else { return 0 }
+    guard stemIndex >= 0 && stemIndex < Int(output.pointee.num_stems) else {
+      return 0
+    }
+    let stem = output.pointee.stems[stemIndex]
+    let nc = Int(stem.num_channels)
+    var ptrs: [UnsafePointer<Float>?] = []
+    for c in 0..<nc {
+      ptrs.append(UnsafePointer<Float>(stem.samples[c]))
+    }
+    return ptrs.withUnsafeBufferPointer { buf in
+      return SherpaOnnxWriteWaveMultiChannel(
+        buf.baseAddress,
+        stem.n,
+        sampleRate,
+        stem.num_channels,
+        toCPointer(filename)
+      )
+    }
+  }
+}
+
+class SherpaOnnxOfflineSourceSeparationWrapper {
+  /// A pointer to the underlying counterpart in C
+  let impl: OpaquePointer!
+
+  /// Constructor taking a model config
+  init(
+    config: UnsafePointer<SherpaOnnxOfflineSourceSeparationConfig>!
+  ) {
+    impl = SherpaOnnxCreateOfflineSourceSeparation(config)
+  }
+
+  deinit {
+    if let impl {
+      SherpaOnnxDestroyOfflineSourceSeparation(impl)
+    }
+  }
+
+  /// Read a multi-channel wave file
+  static func readWave(filename: String) -> SherpaOnnxMultiChannelWaveWrapper {
+    let wave = SherpaOnnxReadWaveMultiChannel(toCPointer(filename))
+    return SherpaOnnxMultiChannelWaveWrapper(wave: wave)
+  }
+
+  /// Process multi-channel audio and return separated stems
+  func process(
+    wave: SherpaOnnxMultiChannelWaveWrapper
+  ) -> SherpaOnnxSourceSeparationOutputWrapper {
+    guard let wavePtr = wave.wave else {
+      return SherpaOnnxSourceSeparationOutputWrapper(output: nil)
+    }
+    let output = SherpaOnnxOfflineSourceSeparationProcess(
+      impl,
+      wavePtr.pointee.samples,
+      wavePtr.pointee.num_channels,
+      wavePtr.pointee.num_samples,
+      wavePtr.pointee.sample_rate
+    )
+    return SherpaOnnxSourceSeparationOutputWrapper(output: output)
+  }
+
+  var outputSampleRate: Int {
+    return Int(SherpaOnnxOfflineSourceSeparationGetOutputSampleRate(impl))
+  }
+
+  var numberOfStems: Int {
+    return Int(SherpaOnnxOfflineSourceSeparationGetNumberOfStems(impl))
+  }
+}
+
 func getSherpaOnnxVersion() -> String {
   return String(cString: SherpaOnnxGetVersionStr())
 }
