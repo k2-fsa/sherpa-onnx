@@ -303,6 +303,22 @@ rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 node ./test-offline-funasr-nano.js
 ```
 
+## ./test-offline-qwen3-asr.js
+
+[./test-offline-qwen3-asr.js](./test-offline-qwen3-asr.js) demonstrates
+how to decode a file with a Qwen3 ASR model. In the code we use
+[sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test-offline-qwen3-asr.js
+```
+
 ## ./test-offline-medasr-ctc.js
 
 [./test-offline-medasr-ctc.js](./test-offline-medasr-ctc.js) demonstrates
