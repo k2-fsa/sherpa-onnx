@@ -370,6 +370,35 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.dolphin.model, model,
                               dolphin_config_cls, dolphin_config);
 
+  // qwen3 asr
+  fid = env->GetFieldID(model_config_cls, "qwen3Asr",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineQwen3AsrModelConfig;");
+  jobject qwen3_asr_config = env->GetObjectField(model_config, fid);
+  jclass qwen3_asr_config_cls = env->GetObjectClass(qwen3_asr_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.conv_frontend,
+                              convFrontend, qwen3_asr_config_cls,
+                              qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.encoder, encoder,
+                              qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.decoder, decoder,
+                              qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.qwen3_asr.tokenizer, tokenizer,
+                              qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_total_len,
+                           maxTotalLen, qwen3_asr_config_cls,
+                           qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.max_new_tokens,
+                           maxNewTokens, qwen3_asr_config_cls,
+                           qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model_config.qwen3_asr.temperature,
+                             temperature, qwen3_asr_config_cls,
+                             qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model_config.qwen3_asr.top_p, topP,
+                             qwen3_asr_config_cls, qwen3_asr_config);
+  SHERPA_ONNX_JNI_READ_INT(ans.model_config.qwen3_asr.seed, seed,
+                           qwen3_asr_config_cls, qwen3_asr_config);
+
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.telespeech_ctc, teleSpeech,
                               model_config_cls, model_config);
 
