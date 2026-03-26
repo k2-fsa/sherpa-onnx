@@ -408,6 +408,28 @@ final class SherpaOnnxOfflineFunAsrNanoModelConfig extends Struct {
   external Pointer<Utf8> hotwords;
 }
 
+final class SherpaOnnxOfflineQwen3AsrModelConfig extends Struct {
+  external Pointer<Utf8> convFrontend;
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> tokenizer;
+
+  @Int32()
+  external int maxTotalLen;
+
+  @Int32()
+  external int maxNewTokens;
+
+  @Float()
+  external double temperature;
+
+  @Float()
+  external double topP;
+
+  @Int32()
+  external int seed;
+}
+
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -499,6 +521,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineMedAsrCtcModelConfig medasr;
   external SherpaOnnxOfflineFunAsrNanoModelConfig funasrNano;
   external SherpaOnnxOfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
+  external SherpaOnnxOfflineQwen3AsrModelConfig qwen3Asr;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
