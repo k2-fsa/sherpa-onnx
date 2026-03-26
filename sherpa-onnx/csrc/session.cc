@@ -47,6 +47,15 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
 static void ParserConfigFile(
     const std::string &config_path,
     std::unordered_map<std::string, std::string> &config) {
+  // The config file should be in the format of key:value per line, e.g.,
+  // GraphOptimizationLevel:0
+  // LogSeverityLevel:1
+  // ProfilingFilePrefix:profile
+  // For spacemit, the config file can contain the following
+  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
+  // ... and so on.
+  // # is treated as comment. Empty lines are ignored.
+
   std::ifstream is(config_path);
   if (!is.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open provider config file: %s",
@@ -90,16 +99,7 @@ static void SplitProviderAndConfig(
     std::unordered_map<std::string, std::string> &config) {
   // provider string format: provider_name[:config_path], e.g.,
   // tensorrt:trt_config.config or spacemit:spacemit_config.config or cpu. The
-  // config file is optional. If it is not provided, default config will be
-  // used. The config file should be in the format of key:value per line, e.g.,
-  // GraphOptimizationLevel:0
-  // LogSeverityLevel:1
-  // ProfilingFilePrefix:profile
-  // For spacemit, the config file can contain the following
-  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
-  // ... and so on.
-  // # is treated as comment. Empty lines are ignored.
-
+  // config file is optional. If it is not provided, default config will be used.
   provider_str = Trim(s);
   config.clear();
 
@@ -120,6 +120,19 @@ static void SplitProviderAndConfig(
   }
 
   ParserConfigFile(config_path, config);
+}
+
+static int64_t ParseConfigInt64OrExit(const char *key,
+                                      const std::string &value) {
+  int64_t parsed_value = 0;
+  if (!ConvertStringToInteger(value, &parsed_value)) {
+    SHERPA_ONNX_LOGE(
+        "Invalid value for %s: %s. Expected an integer in provider config.",
+        key, value.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  return parsed_value;
 }
 
 Ort::SessionOptions GetSessionOptionsImpl(
@@ -145,15 +158,17 @@ Ort::SessionOptions GetSessionOptionsImpl(
 
   // Other possible options
   if (config.find("GraphOptimizationLevel") != config.end()) {
-    int64_t graph_optimization_level =
-        std::stoll(config["GraphOptimizationLevel"]);
+    int64_t graph_optimization_level = ParseConfigInt64OrExit(
+      "GraphOptimizationLevel", config["GraphOptimizationLevel"]);
     sess_opts.SetGraphOptimizationLevel(
         static_cast<GraphOptimizationLevel>(graph_optimization_level));
     config.erase("GraphOptimizationLevel");
   }
 
   if (config.find("LogSeverityLevel") != config.end()) {
-    int64_t log_severity_level = std::stoll(config["LogSeverityLevel"]);
+    int64_t log_severity_level =
+      ParseConfigInt64OrExit("LogSeverityLevel",
+                   config["LogSeverityLevel"]);
     sess_opts.SetLogSeverityLevel(
         static_cast<OrtLoggingLevel>(log_severity_level));
     config.erase("LogSeverityLevel");
