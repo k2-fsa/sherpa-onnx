@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - pascal
     paths:
       - '.github/workflows/pascal.yaml'
       - 'cmake/**'
@@ -228,6 +229,10 @@ jobs:
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+
+          ./run-qwen3-asr.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
 
           ./run-funasr-nano.sh
           rm -rf sherpa-onnx-*

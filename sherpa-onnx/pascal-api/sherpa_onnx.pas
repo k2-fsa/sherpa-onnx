@@ -399,6 +399,20 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineQwen3ASRModelConfig = record
+    ConvFrontend: AnsiString;
+    Encoder: AnsiString;
+    Decoder: AnsiString;
+    Tokenizer: AnsiString;
+    MaxTotalLen: Integer;
+    MaxNewTokens: Integer;
+    Temperature: Single;
+    TopP: Single;
+    Seed: Integer;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineFunAsrNanoModelConfig = record
     EncoderAdaptor: AnsiString;
     LLM: AnsiString;
@@ -499,6 +513,7 @@ type
     MedAsr: TSherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: TSherpaOnnxOfflineFunAsrNanoModelConfig;
     FireRedAsrCtc: TSherpaOnnxOfflineFireRedAsrCtcModelConfig;
+    Qwen3Asr: TSherpaOnnxOfflineQwen3ASRModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -963,6 +978,17 @@ type
   SherpaOnnxOfflineFireRedAsrCtcModelConfig = record
     Model: PAnsiChar;
   end;
+  SherpaOnnxOfflineQwen3ASRModelConfig = record
+    ConvFrontend: PAnsiChar;
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
+    Tokenizer: PAnsiChar;
+    MaxTotalLen: cint32;
+    MaxNewTokens: cint32;
+    Temperature: cfloat;
+    TopP: cfloat;
+    Seed: cint32;
+  end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -1027,6 +1053,7 @@ type
     MedAsr: SherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: SherpaOnnxOfflineFunAsrNanoModelConfig;
     FireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig;
+    Qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1942,6 +1969,24 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineQwen3ASRModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineQwen3ASRModelConfig(' +
+    'ConvFrontend := %s' +
+    ', Encoder := %s' +
+    ', Decoder := %s' +
+    ', Tokenizer := %s' +
+    ', MaxTotalLen := %d' +
+    ', MaxNewTokens := %d' +
+    ', Temperature := %.3f' +
+    ', TopP := %.3f' +
+    ', Seed := %d' +
+    ')',
+    [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
+     Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
+     Self.TopP, Self.Seed]);
+end;
+
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineFunAsrNanoModelConfig(' +
@@ -2065,6 +2110,7 @@ begin
     ', MedAsr := %s' +
     ', FunAsrNano := %s' +
     ', FireRedAsrCtc := %s' +
+    ', Qwen3Asr := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
@@ -2074,7 +2120,8 @@ begin
      Self.FireRedAsr.ToString, Self.Dolphin.ToString,
      Self.ZipformerCtc.ToString, Self.Canary.ToString, Self.WenetCtc.ToString,
      Self.Omnilingual.ToString, Self.MedAsr.ToString,
-     Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString
+     Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString,
+     Self.Qwen3Asr.ToString
      ]);
 end;
 
@@ -2175,6 +2222,16 @@ begin
   C.ModelConfig.FunAsrNano.Hotwords := PAnsiChar(Config.ModelConfig.FunAsrNano.Hotwords);
 
   C.ModelConfig.FireRedAsrCtc.Model := PAnsiChar(Config.ModelConfig.FireRedAsrCtc.Model);
+
+  C.ModelConfig.Qwen3Asr.ConvFrontend := PAnsiChar(Config.ModelConfig.Qwen3Asr.ConvFrontend);
+  C.ModelConfig.Qwen3Asr.Encoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Encoder);
+  C.ModelConfig.Qwen3Asr.Decoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Decoder);
+  C.ModelConfig.Qwen3Asr.Tokenizer := PAnsiChar(Config.ModelConfig.Qwen3Asr.Tokenizer);
+  C.ModelConfig.Qwen3Asr.MaxTotalLen := Config.ModelConfig.Qwen3Asr.MaxTotalLen;
+  C.ModelConfig.Qwen3Asr.MaxNewTokens := Config.ModelConfig.Qwen3Asr.MaxNewTokens;
+  C.ModelConfig.Qwen3Asr.Temperature := Config.ModelConfig.Qwen3Asr.Temperature;
+  C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
+  C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
@@ -2353,6 +2410,15 @@ begin
   Dest.TopP := 0.8;
   Dest.Seed := 42;
   Dest.UseItn := False;
+end;
+
+class operator TSherpaOnnxOfflineQwen3ASRModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
+begin
+  Dest.MaxTotalLen := 512;
+  Dest.MaxNewTokens := 128;
+  Dest.Temperature := 1e-6;
+  Dest.TopP := 0.8;
+  Dest.Seed := 42;
 end;
 
 class operator TSherpaOnnxSileroVadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
