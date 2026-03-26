@@ -23,11 +23,11 @@ func main() {
 	config.ModelConfig.Provider = "cpu"
 	config.CtcFstDecoderConfig.Graph = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst"
 
-	wav_filename := "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav"
+	waveFilename := "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav"
 
-	wave := sherpa.ReadWave(wav_filename)
+	wave := sherpa.ReadWave(waveFilename)
 	if wave == nil {
-		log.Fatalf("Failed to read %v", wav_filename)
+		log.Fatalf("Failed to read %v", waveFilename)
 	}
 
 	log.Println("Initializing recognizer (may take several seconds)")

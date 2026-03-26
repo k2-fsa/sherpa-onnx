@@ -43,11 +43,12 @@ func main() {
 		log.Fatalf("Please provide one wave file")
 	}
 
-	log.Println("Reading", flag.Arg(0))
+	waveFilename := flag.Arg(0)
+	log.Println("Reading", waveFilename)
 
-	wave := sherpa.ReadWave(flag.Arg(0))
+	wave := sherpa.ReadWave(waveFilename)
 	if wave == nil {
-		log.Fatalf("Failed to read %v", flag.Arg(0))
+		log.Fatalf("Failed to read %v", waveFilename)
 	}
 
 	log.Println("Initializing recognizer (may take several seconds)")
