@@ -68,7 +68,7 @@ void main(List<String> arguments) async {
   final audio = tts.generateWithConfig(
       text: text,
       config: genConfig,
-      callback: (Float32List samples) {
+      onProgress: (Float32List samples, double progress) {
         print('${samples.length} samples received');
         // You can play samples in a separate thread/isolate
 
