@@ -534,6 +534,18 @@ type OfflineMoonshineModelConfig struct {
 	MergedDecoder   string
 }
 
+type OfflineQwen3ASRModelConfig struct {
+	ConvFrontend  string
+	Encoder       string
+	Decoder       string
+	Tokenizer     string
+	MaxTotalLen   int
+	MaxNewTokens  int
+	Temperature   float32
+	TopP          float32
+	Seed          int
+}
+
 type OfflineTdnnModelConfig struct {
 	Model string
 }
@@ -567,6 +579,7 @@ type OfflineModelConfig struct {
 	Omnilingual   OfflineOmnilingualAsrCtcModelConfig
 	MedAsr        OfflineMedAsrCtcModelConfig
 	FireRedAsrCtc OfflineFireRedAsrCtcModelConfig
+	Qwen3ASR      OfflineQwen3ASRModelConfig
 	Tokens        string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -691,6 +704,16 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
 	c.model_config.fire_red_asr_ctc.model = C.CString(config.ModelConfig.FireRedAsrCtc.Model)
 
+	c.model_config.qwen3_asr.conv_frontend = C.CString(config.ModelConfig.Qwen3ASR.ConvFrontend)
+	c.model_config.qwen3_asr.encoder = C.CString(config.ModelConfig.Qwen3ASR.Encoder)
+	c.model_config.qwen3_asr.decoder = C.CString(config.ModelConfig.Qwen3ASR.Decoder)
+	c.model_config.qwen3_asr.tokenizer = C.CString(config.ModelConfig.Qwen3ASR.Tokenizer)
+	c.model_config.qwen3_asr.max_total_len = C.int(config.ModelConfig.Qwen3ASR.MaxTotalLen)
+	c.model_config.qwen3_asr.max_new_tokens = C.int(config.ModelConfig.Qwen3ASR.MaxNewTokens)
+	c.model_config.qwen3_asr.temperature = C.float(config.ModelConfig.Qwen3ASR.Temperature)
+	c.model_config.qwen3_asr.top_p = C.float(config.ModelConfig.Qwen3ASR.TopP)
+	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
 	c.model_config.num_threads = C.int(config.ModelConfig.NumThreads)
@@ -764,6 +787,10 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.wenet_ctc.model,
 		&c.model_config.medasr.model,
 		&c.model_config.fire_red_asr_ctc.model,
+		&c.model_config.qwen3_asr.conv_frontend,
+		&c.model_config.qwen3_asr.encoder,
+		&c.model_config.qwen3_asr.decoder,
+		&c.model_config.qwen3_asr.tokenizer,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,
