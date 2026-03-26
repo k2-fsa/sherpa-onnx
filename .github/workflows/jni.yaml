@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - kotlin
     paths:
       - '.github/workflows/jni.yaml'
       - 'cmake/**'
