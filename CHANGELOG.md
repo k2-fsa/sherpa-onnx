@@ -1,3 +1,26 @@
+## 1.12.34
+
+* Add Pascal API for Qwen3 ASR (#3424)
+* Add Rust API for Qwen3 ASR (#3423)
+* Add Dart API for Qwen3 ASR (#3422)
+* Add Java API and Kotlin API for Qwen3 ASR (#3420)
+* Add JavaScript API (node-addon) for Qwen3 ASR (#3419)
+* Add JavaScript API (WebAssembly) for Qwen3 ASR (#3416)
+* Refactor Go API examples to use sherpa_onnx.ReadWave() (#3415)
+* Fix warnings in Go API (#3414)
+* Add C# API for Qwen3 ASR (#3413)
+* Add Go API for Qwen3 ASR (#3412)
+* Update Swift API example for Qwen3 ASR (#3411)
+* Update tests for Qwen3 ASR (#3410)
+* Upload Qwen3 ASR 0.6B int8 models (#3409)
+* Add Qwen3-ASR support (#3399)
+* Fix TTS deprecated warnings (#3407)
+* Add C# API for source separation (#3406)
+* Add CXX API for source separation (#3405)
+* Add C API for source separation (#3404)
+* Fix building Rust doc (#3403)
+* Update Python subtitle script to support FireRedASR CTC and FunASR Nano (#3400)
+
 ## 1.12.33
 
 * Add Rust examples for simulated streaming ASR with VAD (#3398)

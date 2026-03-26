@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.speaker.diarization"
         minSdk = 21
         targetSdk = 34
-        versionCode = 20260324
-        versionName = "1.12.33"
+        versionCode = 20260326
+        versionName = "1.12.34"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
