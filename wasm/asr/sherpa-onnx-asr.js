@@ -1323,10 +1323,10 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       encoder: '',
       decoder: '',
       tokenizer: '',
-      maxTotalLen: 0,
-      maxNewTokens: 512,
+      maxTotalLen: 512,
+      maxNewTokens: 128,
       temperature: 1e-6,
-      topP: 0.95,
+      topP: 0.8,
       seed: 42,
     };
   }

@@ -1,13 +1,9 @@
 // Copyright (c)  2026  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-const fs = require('fs');
-const {Readable} = require('stream');
-const wav = require('wav');
-
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineRecognizer() {
-  let config = {
+  const config = {
     modelConfig: {
       qwen3Asr: {
         convFrontend:
