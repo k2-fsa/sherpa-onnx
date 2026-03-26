@@ -44,39 +44,9 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
   api.ReleaseStatus(status);
 }
 
-static void SplitProviderAndConfig(
-    const std::string &s, std::string &provider_str,
+static void ParserConfigFile(
+    const std::string &config_path,
     std::unordered_map<std::string, std::string> &config) {
-  // provider string format: provider_name[:config_path], e.g., tensorrt:trt_config.config or spacemit:spacemit_config.config or cpu.
-  // The config file is optional. If it is not provided, default config will be used.
-  // The config file should be in the format of key:value per line, e.g.,
-  // GraphOptimizationLevel:0
-  // LogSeverityLevel:1
-  // ProfilingFilePrefix:profile
-  // For spacemit, the config file can contain the following
-  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
-  // ... and so on.
-  // # is treated as comment. Empty lines are ignored.
-
-  provider_str = Trim(s);
-  config.clear();
-
-  auto pos = provider_str.find(':');
-  if (pos == std::string::npos) {
-    return;
-  }
-
-  std::string config_path = Trim(provider_str.substr(pos + 1));
-  provider_str = Trim(provider_str.substr(0, pos));
-
-  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s", provider_str.c_str(),
-                   config_path.c_str());
-
-  if (config_path.empty()) {
-    SHERPA_ONNX_LOGE("Provider config path is empty: %s", s.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
   std::ifstream is(config_path);
   if (!is.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open provider config file: %s",
@@ -115,6 +85,43 @@ static void SplitProviderAndConfig(
   }
 }
 
+static void SplitProviderAndConfig(
+    const std::string &s, std::string &provider_str,
+    std::unordered_map<std::string, std::string> &config) {
+  // provider string format: provider_name[:config_path], e.g.,
+  // tensorrt:trt_config.config or spacemit:spacemit_config.config or cpu. The
+  // config file is optional. If it is not provided, default config will be
+  // used. The config file should be in the format of key:value per line, e.g.,
+  // GraphOptimizationLevel:0
+  // LogSeverityLevel:1
+  // ProfilingFilePrefix:profile
+  // For spacemit, the config file can contain the following
+  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
+  // ... and so on.
+  // # is treated as comment. Empty lines are ignored.
+
+  provider_str = Trim(s);
+  config.clear();
+
+  auto pos = provider_str.find(':');
+  if (pos == std::string::npos) {
+    return;
+  }
+
+  std::string config_path = Trim(provider_str.substr(pos + 1));
+  provider_str = Trim(provider_str.substr(0, pos));
+
+  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s", provider_str.c_str(),
+                   config_path.c_str());
+
+  if (config_path.empty()) {
+    SHERPA_ONNX_LOGE("Provider config path is empty: %s", s.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  ParserConfigFile(config_path, config);
+}
+
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
     const ProviderConfig *provider_config /*= nullptr*/) {
@@ -147,7 +154,8 @@ Ort::SessionOptions GetSessionOptionsImpl(
 
   if (config.find("LogSeverityLevel") != config.end()) {
     int64_t log_severity_level = std::stoll(config["LogSeverityLevel"]);
-    sess_opts.SetLogSeverityLevel(static_cast<OrtLoggingLevel>(log_severity_level));
+    sess_opts.SetLogSeverityLevel(
+        static_cast<OrtLoggingLevel>(log_severity_level));
     config.erase("LogSeverityLevel");
   }
 
