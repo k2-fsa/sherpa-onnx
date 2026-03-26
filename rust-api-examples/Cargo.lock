@@ -47,9 +47,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5192cca8006f1fd4f7237516f40fa183bb07f8fbdfedaa0036de5ea9b0b45e78"
+checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
 
 [[package]]
 name = "anstyle-parse"
@@ -215,15 +215,15 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a822ea5bc7590f9d40f1ba12c0dc3c2760f3482c6984db1573ad11031420831"
+checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "colorchoice"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
+checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
 name = "combine"
@@ -892,7 +892,7 @@ dependencies = [
 
 [[package]]
 name = "rust-api-examples"
-version = "1.12.32"
+version = "1.12.33"
 dependencies = [
  "anyhow",
  "clap",
@@ -1010,9 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx"
-version = "1.12.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8b9544930304aedcd1fc0ef9d8d435d9f52b82de8fa8312e9a0c018c095fbdd"
+version = "1.12.33"
 dependencies = [
  "serde",
  "serde_json",
@@ -1021,9 +1019,7 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx-sys"
-version = "1.12.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fe6e04e07c9b4206b156235adb3aa6983e6540969db04450215d7d17fd0d552"
+version = "1.12.33"
 dependencies = [
  "bzip2",
  "tar",

@@ -3,7 +3,8 @@ name: Test rust
 on:
   push:
     branches:
-      - rust-static2
+      - master
+      - rust
   workflow_dispatch:
 
 concurrency:

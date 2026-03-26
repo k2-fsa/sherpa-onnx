@@ -140,6 +140,20 @@ pub struct OfflineFireRedAsrCtcModelConfig {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct OfflineQwen3ASRModelConfig {
+    pub conv_frontend: *const c_char,
+    pub encoder: *const c_char,
+    pub decoder: *const c_char,
+    pub tokenizer: *const c_char,
+    pub max_total_len: i32,
+    pub max_new_tokens: i32,
+    pub temperature: c_float,
+    pub top_p: c_float,
+    pub seed: i32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct OfflineModelConfig {
     pub transducer: OfflineTransducerModelConfig,
     pub paraformer: OfflineParaformerModelConfig,
@@ -167,6 +181,7 @@ pub struct OfflineModelConfig {
     pub medasr: OfflineMedAsrCtcModelConfig,
     pub funasr_nano: OfflineFunASRNanoModelConfig,
     pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
+    pub qwen3_asr: OfflineQwen3ASRModelConfig,
 }
 
 #[repr(C)]
