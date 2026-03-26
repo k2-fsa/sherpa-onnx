@@ -53,3 +53,7 @@ required-features = ["mic"]
 [[example]]
 name = "zipformer_transducer_simulate_streaming_microphone"
 required-features = ["mic"]
+
+[[example]]
+name = "qwen3_asr_simulate_streaming_microphone"
+required-features = ["mic"]
