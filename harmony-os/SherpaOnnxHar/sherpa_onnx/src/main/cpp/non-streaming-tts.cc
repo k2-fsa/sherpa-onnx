@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <atomic>
 #include <memory>
+#include <mutex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <vector>
@@ -588,6 +589,7 @@ static Napi::Object OfflineTtsGenerateWithConfigWrapper(
   }
 
   Napi::Object result = Napi::Object::New(env);
+  int32_t sample_rate = audio->sample_rate;
 
   if (enable_external_buffer) {
     Napi::ArrayBuffer buffer = Napi::ArrayBuffer::New(
@@ -611,7 +613,7 @@ static Napi::Object OfflineTtsGenerateWithConfigWrapper(
     result.Set("samples", arr);
   }
 
-  result.Set("sampleRate", audio->sample_rate);
+  result.Set("sampleRate", sample_rate);
   return result;
 }
 
@@ -748,6 +750,11 @@ struct TtsCallbackData {
   std::atomic<bool> cancelled = {false};
 };
 
+// Mutex to protect data_list_ access between background TTS thread and main
+// Node.js thread (TSFN callback). A static mutex is acceptable here because
+// the critical sections are very short (flag checks + push_back/erase).
+static std::mutex g_data_list_mutex;
+
 // see
 // https://github.com/nodejs/node-addon-examples/blob/main/src/6-threadsafe-function/typed_threadsafe_function/node-addon-api/clock.cc
 static void InvokeJsCallback(Napi::Env env, Napi::Function callback,
@@ -770,14 +777,17 @@ static void InvokeJsCallback(Napi::Env env, Napi::Function callback,
 
       auto v = callback.Call(context->Value(), {arg});
 
-      if ((v.IsBoolean() && !v.As<Napi::Boolean>().Value()) ||
-          (v.IsNumber() && v.As<Napi::Number>().Int32Value() == 0)) {
-        data->cancelled = true;
-      } else {
-        data->cancelled = false;
-      }
+      {
+        std::lock_guard<std::mutex> lock(g_data_list_mutex);
+        if ((v.IsBoolean() && !v.As<Napi::Boolean>().Value()) ||
+            (v.IsNumber() && v.As<Napi::Number>().Int32Value() == 0)) {
+          data->cancelled = true;
+        } else {
+          data->cancelled = false;
+        }
 
-      data->processed = true;
+        data->processed = true;
+      }
     }
   }
 }
@@ -813,29 +823,35 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
                        void *arg) -> int32_t {
       TtsGenerateWorker *_this = reinterpret_cast<TtsGenerateWorker *>(arg);
 
-      for (auto it = _this->data_list_.begin();
-           it != _this->data_list_.end();) {
-        if ((*it)->processed) {
-          delete *it;
-          it = _this->data_list_.erase(it);
-        } else {
-          ++it;
-        }
-      }
-
-      for (auto d : _this->data_list_) {
-        if (d->cancelled) {
-#if __OHOS__
-          OH_LOG_INFO(LOG_APP, "TtsGenerate is cancelled");
-#endif
-          return 0;
-        }
-      }
-
       auto data = new TtsCallbackData;
       data->samples = std::vector<float>{samples, samples + n};
       data->progress = progress;
-      _this->data_list_.push_back(data);
+
+      {
+        std::lock_guard<std::mutex> lock(g_data_list_mutex);
+
+        for (auto it = _this->data_list_.begin();
+             it != _this->data_list_.end();) {
+          if ((*it)->processed) {
+            delete *it;
+            it = _this->data_list_.erase(it);
+          } else {
+            ++it;
+          }
+        }
+
+        for (auto d : _this->data_list_) {
+          if (d->cancelled) {
+#if __OHOS__
+            OH_LOG_INFO(LOG_APP, "TtsGenerate is cancelled");
+#endif
+            delete data;
+            return 0;
+          }
+        }
+
+        _this->data_list_.push_back(data);
+      }
 
       _this->tsfn_.NonBlockingCall(data);
 
@@ -1039,26 +1055,34 @@ class TtsGenerateWithConfigWorker : public Napi::AsyncWorker {
       TtsGenerateWithConfigWorker *_this =
           reinterpret_cast<TtsGenerateWithConfigWorker *>(arg);
 
-      // Clean up processed chunks
-      for (auto it = _this->data_list_.begin();
-           it != _this->data_list_.end();) {
-        if ((*it)->processed) {
-          delete *it;
-          it = _this->data_list_.erase(it);
-        } else {
-          ++it;
-        }
-      }
-
-      // Cancel check
-      for (auto d : _this->data_list_) {
-        if (d->cancelled) return 0;
-      }
-
       auto data = new TtsCallbackData;
       data->samples = std::vector<float>{samples, samples + n};
       data->progress = progress;
-      _this->data_list_.push_back(data);
+
+      {
+        std::lock_guard<std::mutex> lock(g_data_list_mutex);
+
+        // Clean up processed chunks
+        for (auto it = _this->data_list_.begin();
+             it != _this->data_list_.end();) {
+          if ((*it)->processed) {
+            delete *it;
+            it = _this->data_list_.erase(it);
+          } else {
+            ++it;
+          }
+        }
+
+        // Cancel check
+        for (auto d : _this->data_list_) {
+          if (d->cancelled) {
+            delete data;
+            return 0;
+          }
+        }
+
+        _this->data_list_.push_back(data);
+      }
 
       _this->tsfn_.NonBlockingCall(data);
 

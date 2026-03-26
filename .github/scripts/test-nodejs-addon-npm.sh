@@ -10,6 +10,16 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Qwen3 ASR----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test_asr_non_streaming_qwen3_asr.js
+node ./test_asr_non_streaming_qwen3_asr_async.js
+
+rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+
 echo "----------Moonshine v2----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
 tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
