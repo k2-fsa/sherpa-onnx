@@ -305,6 +305,61 @@ class OfflineFunAsrNanoModelConfig {
   final String hotwords;
 }
 
+class OfflineQwen3AsrModelConfig {
+  const OfflineQwen3AsrModelConfig({
+    this.convFrontend = '',
+    this.encoder = '',
+    this.decoder = '',
+    this.tokenizer = '',
+    this.maxTotalLen = 512,
+    this.maxNewTokens = 128,
+    this.temperature = 1e-6,
+    this.topP = 0.8,
+    this.seed = 42,
+  });
+
+  factory OfflineQwen3AsrModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineQwen3AsrModelConfig(
+      convFrontend: json['convFrontend'] as String? ?? '',
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      tokenizer: json['tokenizer'] as String? ?? '',
+      maxTotalLen: json['maxTotalLen'] as int? ?? 512,
+      maxNewTokens: json['maxNewTokens'] as int? ?? 128,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
+      topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
+      seed: json['seed'] as int? ?? 42,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
+  }
+
+  Map<String, dynamic> toJson() => {
+    'convFrontend': convFrontend,
+    'encoder': encoder,
+    'decoder': decoder,
+    'tokenizer': tokenizer,
+    'maxTotalLen': maxTotalLen,
+    'maxNewTokens': maxNewTokens,
+    'temperature': temperature,
+    'topP': topP,
+    'seed': seed,
+  };
+
+  final String convFrontend;
+  final String encoder;
+  final String decoder;
+  final String tokenizer;
+  final int maxTotalLen;
+  final int maxNewTokens;
+  final double temperature;
+  final double topP;
+  final int seed;
+}
+
 /// Model files and options for an offline Whisper recognizer.
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig({
@@ -562,6 +617,7 @@ class OfflineModelConfig {
     this.medasr = const OfflineMedAsrCtcModelConfig(),
     this.funasrNano = const OfflineFunAsrNanoModelConfig(),
     this.fireRedAsrCtc = const OfflineFireRedAsrCtcModelConfig(),
+    this.qwen3Asr = const OfflineQwen3AsrModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -654,6 +710,11 @@ class OfflineModelConfig {
               json['fireRedAsrCtc'] as Map<String, dynamic>,
             )
           : const OfflineFireRedAsrCtcModelConfig(),
+      qwen3Asr: json['qwen3Asr'] != null
+          ? OfflineQwen3AsrModelConfig.fromJson(
+              json['qwen3Asr'] as Map<String, dynamic>,
+            )
+          : const OfflineQwen3AsrModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -667,7 +728,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, qwen3Asr: $qwen3Asr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -687,6 +748,7 @@ class OfflineModelConfig {
     'medasr': medasr.toJson(),
     'funasrNano': funasrNano.toJson(),
     'fireRedAsrCtc': fireRedAsrCtc.toJson(),
+    'qwen3Asr': qwen3Asr.toJson(),
     'tokens': tokens,
     'numThreads': numThreads,
     'debug': debug,
@@ -713,6 +775,7 @@ class OfflineModelConfig {
   final OfflineMedAsrCtcModelConfig medasr;
   final OfflineFunAsrNanoModelConfig funasrNano;
   final OfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
+  final OfflineQwen3AsrModelConfig qwen3Asr;
 
   final String tokens;
   final int numThreads;
@@ -1026,6 +1089,20 @@ class OfflineRecognizer {
     c.ref.model.fireRedAsrCtc.model = config.model.fireRedAsrCtc.model
         .toNativeUtf8();
 
+    c.ref.model.qwen3Asr.convFrontend = config.model.qwen3Asr.convFrontend
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.encoder = config.model.qwen3Asr.encoder
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.decoder = config.model.qwen3Asr.decoder
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.tokenizer = config.model.qwen3Asr.tokenizer
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.maxTotalLen = config.model.qwen3Asr.maxTotalLen;
+    c.ref.model.qwen3Asr.maxNewTokens = config.model.qwen3Asr.maxNewTokens;
+    c.ref.model.qwen3Asr.temperature = config.model.qwen3Asr.temperature;
+    c.ref.model.qwen3Asr.topP = config.model.qwen3Asr.topP;
+    c.ref.model.qwen3Asr.seed = config.model.qwen3Asr.seed;
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -1070,6 +1147,10 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.qwen3Asr.tokenizer);
+    calloc.free(c.ref.model.qwen3Asr.decoder);
+    calloc.free(c.ref.model.qwen3Asr.encoder);
+    calloc.free(c.ref.model.qwen3Asr.convFrontend);
     calloc.free(c.ref.model.fireRedAsrCtc.model);
     calloc.free(c.ref.model.funasrNano.hotwords);
     calloc.free(c.ref.model.funasrNano.language);
