@@ -892,7 +892,7 @@ dependencies = [
 
 [[package]]
 name = "rust-api-examples"
-version = "1.12.34"
+version = "1.12.33"
 dependencies = [
  "anyhow",
  "clap",
@@ -1010,9 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx"
-version = "1.12.34"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "273e54bb64c6917f29a0b6abfcce97b2d96fd29a5205a47f3afa65553a152be5"
+version = "1.12.33"
 dependencies = [
  "serde",
  "serde_json",
@@ -1021,9 +1019,7 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx-sys"
-version = "1.12.34"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed0a75557827c187845eb004afdaab8151460152904c42746c9d28d68b89a44c"
+version = "1.12.33"
 dependencies = [
  "bzip2",
  "tar",

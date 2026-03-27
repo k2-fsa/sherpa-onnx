@@ -15,9 +15,7 @@
 //   tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 //
 // Run:
-//   ./build/bin/qwen3-asr-c-api [wav]
-//
-// Hotwords (prompt text) are set via qwen3.hotwords in code, not argv.
+//   ./build/bin/qwen3-asr-c-api
 //
 // Note: If the input audio is too long, you can set option on the stream:
 //   SherpaOnnxOfflineStreamSetOption(stream, "max_new_tokens", "256");
@@ -29,7 +27,7 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-int32_t main(int32_t argc, char* argv[]) {
+int32_t main() {
   // clang-format off
   const char *wav_filename = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav";
   const char *conv_frontend = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx";
@@ -37,10 +35,6 @@ int32_t main(int32_t argc, char* argv[]) {
   const char *decoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
   const char *tokenizer = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
   // clang-format on
-
-  if (argc >= 2) {
-    wav_filename = argv[1];
-  }
 
   const SherpaOnnxWave* wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
