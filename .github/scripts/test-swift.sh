@@ -7,6 +7,15 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-source-separation-spleeter.sh
+rm -rf sherpa-onnx-spleeter-*
+rm vocals.wav accompaniment.wav
+
+./run-source-separation-uvr.sh
+rm -rf UVR-MDX-NET-Voc_FT.onnx
+rm uvr-vocals.wav uvr-non-vocals.wav
+rm -f qi-feng-le-zh.wav
+
 ./run-qwen3-asr.sh
 rm -rf sherpa-onnx-qwen3-*
 
