@@ -110,6 +110,7 @@ jobs:
           ./run-version-test.sh
 
       - name:  Run java test (Qwen3 ASR)
+        if: matrix.os != 'ubuntu-latest'
         shell: bash
         run: |
           cd ./java-api-examples

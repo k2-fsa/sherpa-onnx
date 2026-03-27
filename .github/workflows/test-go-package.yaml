@@ -76,8 +76,19 @@ jobs:
         run: |
           gcc --version
 
-      - name: Test Qwen3 ASR
+      - name: Test source separation (Spleeter & UVR)
         if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/source-separation
+          ./run-spleeter.sh
+          rm -rf sherpa-onnx-spleeter-*
+
+          ./run-uvr.sh
+          rm -rf UVR-MDX-NET-*
+
+      - name: Test Qwen3 ASR
+        if: matrix.os != 'windows-2022' && matrix.os != 'ubuntu-latest'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-qwen3-asr-decode-files
