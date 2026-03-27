@@ -413,6 +413,7 @@ final class SherpaOnnxOfflineQwen3AsrModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
   external Pointer<Utf8> tokenizer;
+  external Pointer<Utf8> hotwords;
 
   @Int32()
   external int maxTotalLen;

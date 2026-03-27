@@ -311,6 +311,7 @@ class OfflineQwen3AsrModelConfig {
     this.encoder = '',
     this.decoder = '',
     this.tokenizer = '',
+    this.hotwords = '',
     this.maxTotalLen = 512,
     this.maxNewTokens = 128,
     this.temperature = 1e-6,
@@ -324,6 +325,7 @@ class OfflineQwen3AsrModelConfig {
       encoder: json['encoder'] as String? ?? '',
       decoder: json['decoder'] as String? ?? '',
       tokenizer: json['tokenizer'] as String? ?? '',
+      hotwords: json['hotwords'] as String? ?? '',
       maxTotalLen: json['maxTotalLen'] as int? ?? 512,
       maxNewTokens: json['maxNewTokens'] as int? ?? 128,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
@@ -334,7 +336,7 @@ class OfflineQwen3AsrModelConfig {
 
   @override
   String toString() {
-    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, hotwords: $hotwords, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -342,6 +344,7 @@ class OfflineQwen3AsrModelConfig {
     'encoder': encoder,
     'decoder': decoder,
     'tokenizer': tokenizer,
+    'hotwords': hotwords,
     'maxTotalLen': maxTotalLen,
     'maxNewTokens': maxNewTokens,
     'temperature': temperature,
@@ -353,6 +356,7 @@ class OfflineQwen3AsrModelConfig {
   final String encoder;
   final String decoder;
   final String tokenizer;
+  final String hotwords;
   final int maxTotalLen;
   final int maxNewTokens;
   final double temperature;
@@ -1097,6 +1101,8 @@ class OfflineRecognizer {
         .toNativeUtf8();
     c.ref.model.qwen3Asr.tokenizer = config.model.qwen3Asr.tokenizer
         .toNativeUtf8();
+    c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
+        .toNativeUtf8();
     c.ref.model.qwen3Asr.maxTotalLen = config.model.qwen3Asr.maxTotalLen;
     c.ref.model.qwen3Asr.maxNewTokens = config.model.qwen3Asr.maxNewTokens;
     c.ref.model.qwen3Asr.temperature = config.model.qwen3Asr.temperature;
@@ -1147,6 +1153,7 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.qwen3Asr.hotwords);
     calloc.free(c.ref.model.qwen3Asr.tokenizer);
     calloc.free(c.ref.model.qwen3Asr.decoder);
     calloc.free(c.ref.model.qwen3Asr.encoder);

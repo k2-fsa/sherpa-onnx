@@ -154,8 +154,8 @@ static SherpaOnnxOfflineFunASRNanoModelConfig GetOfflineFunAsrNanoModelConfig(
   return c;
 }
 
-static SherpaOnnxOfflineQwen3ASRModelConfig
-GetOfflineQwen3AsrModelConfig(Napi::Object obj) {
+static SherpaOnnxOfflineQwen3ASRModelConfig GetOfflineQwen3AsrModelConfig(
+    Napi::Object obj) {
   SherpaOnnxOfflineQwen3ASRModelConfig c;
   memset(&c, 0, sizeof(c));
 
@@ -169,6 +169,7 @@ GetOfflineQwen3AsrModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokenizer, tokenizer);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords, hotwords);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_total_len, maxTotalLen);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_new_tokens, maxNewTokens);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(temperature, temperature);
@@ -457,6 +458,12 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.embedding);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.llm);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.funasr_nano.encoder_adaptor);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.conv_frontend);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.tokenizer);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.hotwords);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr_ctc.model);
 

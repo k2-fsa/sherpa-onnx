@@ -535,15 +535,16 @@ type OfflineMoonshineModelConfig struct {
 }
 
 type OfflineQwen3ASRModelConfig struct {
-	ConvFrontend  string
-	Encoder       string
-	Decoder       string
-	Tokenizer     string
-	MaxTotalLen   int
-	MaxNewTokens  int
-	Temperature   float32
-	TopP          float32
-	Seed          int
+	ConvFrontend string
+	Encoder      string
+	Decoder      string
+	Tokenizer    string
+	Hotwords     string
+	MaxTotalLen  int
+	MaxNewTokens int
+	Temperature  float32
+	TopP         float32
+	Seed         int
 }
 
 type OfflineTdnnModelConfig struct {
@@ -708,6 +709,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.qwen3_asr.encoder = C.CString(config.ModelConfig.Qwen3ASR.Encoder)
 	c.model_config.qwen3_asr.decoder = C.CString(config.ModelConfig.Qwen3ASR.Decoder)
 	c.model_config.qwen3_asr.tokenizer = C.CString(config.ModelConfig.Qwen3ASR.Tokenizer)
+	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
 	c.model_config.qwen3_asr.max_total_len = C.int(config.ModelConfig.Qwen3ASR.MaxTotalLen)
 	c.model_config.qwen3_asr.max_new_tokens = C.int(config.ModelConfig.Qwen3ASR.MaxNewTokens)
 	c.model_config.qwen3_asr.temperature = C.float(config.ModelConfig.Qwen3ASR.Temperature)
@@ -791,6 +793,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.qwen3_asr.encoder,
 		&c.model_config.qwen3_asr.decoder,
 		&c.model_config.qwen3_asr.tokenizer,
+		&c.model_config.qwen3_asr.hotwords,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,
@@ -856,6 +859,15 @@ func DeleteOfflineStream(stream *OfflineStream) {
 func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 	stream := &OfflineStream{}
 	stream.impl = C.SherpaOnnxCreateOfflineStream(recognizer.impl)
+	return stream
+}
+
+// NewOfflineStreamWithHotwords creates a stream with per-utterance hotwords (Qwen3-ASR, transducer, etc.).
+func NewOfflineStreamWithHotwords(recognizer *OfflineRecognizer, hotwords string) *OfflineStream {
+	cs := C.CString(hotwords)
+	defer C.free(unsafe.Pointer(cs))
+	stream := &OfflineStream{}
+	stream.impl = C.SherpaOnnxCreateOfflineStreamWithHotwords(recognizer.impl, cs)
 	return stream
 }
 

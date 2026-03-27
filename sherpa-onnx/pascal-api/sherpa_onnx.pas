@@ -404,6 +404,7 @@ type
     Encoder: AnsiString;
     Decoder: AnsiString;
     Tokenizer: AnsiString;
+    Hotwords: AnsiString;
     MaxTotalLen: Integer;
     MaxNewTokens: Integer;
     Temperature: Single;
@@ -983,6 +984,7 @@ type
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
     Tokenizer: PAnsiChar;
+    Hotwords: PAnsiChar;
     MaxTotalLen: cint32;
     MaxNewTokens: cint32;
     Temperature: cfloat;
@@ -1976,6 +1978,7 @@ begin
     ', Encoder := %s' +
     ', Decoder := %s' +
     ', Tokenizer := %s' +
+    ', Hotwords := %s' +
     ', MaxTotalLen := %d' +
     ', MaxNewTokens := %d' +
     ', Temperature := %.3f' +
@@ -1983,6 +1986,7 @@ begin
     ', Seed := %d' +
     ')',
     [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
+     Self.Hotwords,
      Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
      Self.TopP, Self.Seed]);
 end;
@@ -2227,6 +2231,7 @@ begin
   C.ModelConfig.Qwen3Asr.Encoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Encoder);
   C.ModelConfig.Qwen3Asr.Decoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Decoder);
   C.ModelConfig.Qwen3Asr.Tokenizer := PAnsiChar(Config.ModelConfig.Qwen3Asr.Tokenizer);
+  C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
   C.ModelConfig.Qwen3Asr.MaxTotalLen := Config.ModelConfig.Qwen3Asr.MaxTotalLen;
   C.ModelConfig.Qwen3Asr.MaxNewTokens := Config.ModelConfig.Qwen3Asr.MaxNewTokens;
   C.ModelConfig.Qwen3Asr.Temperature := Config.ModelConfig.Qwen3Asr.Temperature;

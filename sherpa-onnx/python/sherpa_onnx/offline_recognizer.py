@@ -421,6 +421,7 @@ class OfflineRecognizer(object):
         temperature: float = 1e-6,
         top_p: float = 0.8,
         seed: int = 42,
+        hotwords: str = "",
     ):
         """
         Create an offline recognizer for Qwen3-ASR (conv_frontend + encoder +
@@ -458,6 +459,8 @@ class OfflineRecognizer(object):
             Top-p (nucleus) sampling threshold.
           seed:
             Random seed for sampling.
+          hotwords:
+            Optional Qwen3-ASR hotwords.
         """
         self = cls.__new__(cls)
         qwen3 = OfflineQwen3ASRModelConfig(
@@ -465,6 +468,7 @@ class OfflineRecognizer(object):
             encoder=encoder,
             decoder=decoder,
             tokenizer=tokenizer,
+            hotwords=hotwords,
             max_total_len=max_total_len,
             max_new_tokens=max_new_tokens,
             temperature=temperature,

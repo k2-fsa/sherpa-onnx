@@ -39,6 +39,7 @@ begin
   Config.ModelConfig.Qwen3Asr.Encoder := './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx';
   Config.ModelConfig.Qwen3Asr.Decoder := './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx';
   Config.ModelConfig.Qwen3Asr.Tokenizer := './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer';
+  Config.ModelConfig.Qwen3Asr.Hotwords := '';
   Config.ModelConfig.Tokens := '';
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 3;

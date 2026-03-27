@@ -145,6 +145,7 @@ pub struct OfflineQwen3ASRModelConfig {
     pub encoder: *const c_char,
     pub decoder: *const c_char,
     pub tokenizer: *const c_char,
+    pub hotwords: *const c_char,
     pub max_total_len: i32,
     pub max_new_tokens: i32,
     pub temperature: c_float,

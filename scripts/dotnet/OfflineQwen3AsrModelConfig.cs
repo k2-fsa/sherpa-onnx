@@ -14,6 +14,7 @@ namespace SherpaOnnx
             Encoder = "";
             Decoder = "";
             Tokenizer = "";
+            Hotwords = "";
             MaxTotalLen = 512;
             MaxNewTokens = 128;
             Temperature = 1e-6F;
@@ -32,6 +33,9 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string Tokenizer;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Hotwords;
 
         public int MaxTotalLen;
         public int MaxNewTokens;

@@ -37,6 +37,7 @@ void main(List<String> arguments) async {
     encoder: encoder,
     decoder: decoder,
     tokenizer: tokenizer,
+    hotwords: '',
   );
 
   final modelConfig = sherpa_onnx.OfflineModelConfig(

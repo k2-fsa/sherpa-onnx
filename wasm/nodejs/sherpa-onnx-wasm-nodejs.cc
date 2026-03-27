@@ -19,6 +19,7 @@ static_assert(sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 13 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) == 10 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");

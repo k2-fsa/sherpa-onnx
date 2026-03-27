@@ -5,6 +5,7 @@ public class OfflineQwen3AsrModelConfig {
     private final String encoder;
     private final String decoder;
     private final String tokenizer;
+    private final String hotwords;
     private final int maxTotalLen;
     private final int maxNewTokens;
     private final float temperature;
@@ -16,6 +17,7 @@ public class OfflineQwen3AsrModelConfig {
         this.encoder = builder.encoder;
         this.decoder = builder.decoder;
         this.tokenizer = builder.tokenizer;
+        this.hotwords = builder.hotwords;
         this.maxTotalLen = builder.maxTotalLen;
         this.maxNewTokens = builder.maxNewTokens;
         this.temperature = builder.temperature;
@@ -43,6 +45,10 @@ public class OfflineQwen3AsrModelConfig {
         return tokenizer;
     }
 
+    public String getHotwords() {
+        return hotwords;
+    }
+
     public int getMaxTotalLen() {
         return maxTotalLen;
     }
@@ -68,6 +74,7 @@ public class OfflineQwen3AsrModelConfig {
         private String encoder = "";
         private String decoder = "";
         private String tokenizer = "";
+        private String hotwords = "";
         private int maxTotalLen = 512;
         private int maxNewTokens = 128;
         private float temperature = 1e-6f;
@@ -95,6 +102,11 @@ public class OfflineQwen3AsrModelConfig {
 
         public Builder setTokenizer(String tokenizer) {
             this.tokenizer = tokenizer;
+            return this;
+        }
+
+        public Builder setHotwords(String hotwords) {
+            this.hotwords = hotwords;
             return this;
         }
 

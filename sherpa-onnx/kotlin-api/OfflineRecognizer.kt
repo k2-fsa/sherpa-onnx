@@ -75,6 +75,7 @@ data class OfflineQwen3AsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var tokenizer: String = "",
+    var hotwords: String = "",
     var maxTotalLen: Int = 512,
     var maxNewTokens: Int = 128,
     var temperature: Float = 1e-6f,
@@ -193,6 +194,11 @@ class OfflineRecognizer(
         return OfflineStream(p)
     }
 
+    fun createStream(hotwords: String): OfflineStream {
+        val p = createStream(ptr, hotwords)
+        return OfflineStream(p)
+    }
+
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
         return getResult(stream.ptr)
     }
@@ -204,6 +210,8 @@ class OfflineRecognizer(
     private external fun delete(ptr: Long)
 
     private external fun createStream(ptr: Long): Long
+
+    private external fun createStream(ptr: Long, hotwords: String): Long
 
     private external fun setConfig(ptr: Long, config: OfflineRecognizerConfig)
 
@@ -968,6 +976,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     encoder = "$modelDir/encoder.int8.onnx",
                     decoder = "$modelDir/decoder.int8.onnx",
                     tokenizer = "$modelDir/tokenizer",
+                    hotwords = "",
                 ),
                 tokens = "",
                 numThreads=3,

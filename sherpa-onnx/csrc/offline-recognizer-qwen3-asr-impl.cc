@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -44,6 +45,95 @@ constexpr int32_t kQwen3ChunkSize = 100;
 // match the feature extractor (`WhisperTag` dim), `NormalizeWhisperFeatures`
 // row width, and the last dimension of the conv-frontend ONNX input.
 constexpr int32_t kQwen3MelDim = 128;
+
+// Qwen3-ASR hotwords are placed in the system-role segment of the chat template
+constexpr char kQwen3SystemPromptPrefix[] = "<|im_start|>system\n";
+constexpr char kQwen3SystemPromptSuffix[] =
+    "<|im_end|>\n<|im_start|>user\n<|audio_start|>";
+
+static std::string NormalizeQwen3AsrHotwordSlashes(std::string hw) {
+  for (char &c : hw) {
+    if (c == '/') {
+      c = ' ';
+    }
+  }
+  return hw;
+}
+
+static inline void Qwen3TrimInplace(std::string *s) {
+  if (!s) return;
+  auto &str = *s;
+  auto not_space = [](unsigned char c) { return !std::isspace(c); };
+  str.erase(str.begin(), std::find_if(str.begin(), str.end(), not_space));
+  str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(),
+            str.end());
+}
+
+static std::vector<std::string> Qwen3ParseHotwordsCsv(const std::string &csv) {
+  std::vector<std::string> out;
+  std::string cur;
+  cur.reserve(csv.size());
+
+  for (size_t i = 0; i < csv.size(); ++i) {
+    unsigned char ch = static_cast<unsigned char>(csv[i]);
+    bool is_separator = false;
+    if (ch == ',' || ch == ';' || ch == '\n' || ch == '\r' || ch == '\t') {
+      is_separator = true;
+    } else if (ch == 0xEF) {
+      if (i + 2 < csv.size()) {
+        unsigned char ch1 = static_cast<unsigned char>(csv[i + 1]);
+        unsigned char ch2 = static_cast<unsigned char>(csv[i + 2]);
+        if (ch1 == 0xBC && (ch2 == 0x8C || ch2 == 0x9B)) {
+          is_separator = true;
+          i += 2;
+        } else if (ch1 >= 0x80 && ch1 <= 0xBF && ch2 >= 0x80 && ch2 <= 0xBF) {
+          cur.push_back(csv[i]);
+          cur.push_back(csv[i + 1]);
+          cur.push_back(csv[i + 2]);
+          i += 2;
+          continue;
+        }
+      }
+    }
+
+    if (is_separator) {
+      Qwen3TrimInplace(&cur);
+      if (!cur.empty()) out.push_back(cur);
+      cur.clear();
+    } else {
+      cur.push_back(csv[i]);
+    }
+  }
+  Qwen3TrimInplace(&cur);
+  if (!cur.empty()) out.push_back(cur);
+  return out;
+}
+
+static std::string Qwen3FormatHotwordsForPrompt(const std::string &csv) {
+  std::vector<std::string> parts = Qwen3ParseHotwordsCsv(csv);
+  std::string s;
+  for (size_t i = 0; i < parts.size(); ++i) {
+    if (i) s += ' ';
+    s += NormalizeQwen3AsrHotwordSlashes(std::move(parts[i]));
+  }
+  return s;
+}
+
+static void Qwen3LogMaxTotalLenSuggestions(int32_t max_seq_len,
+                                           int32_t model_max_len) {
+  SHERPA_ONNX_LOGE(
+      "The max_total_len (%d) caps prompt + audio KV (model limit %d). "
+      "Suggestions:",
+      max_seq_len, model_max_len);
+  SHERPA_ONNX_LOGE(
+      "  1) Reduce hotwords: fewer or shorter hotwords shorten the prompt.");
+  SHERPA_ONNX_LOGE(
+      "  2) Shorten audio: shorter clips yield fewer audio_token_len.");
+  SHERPA_ONNX_LOGE(
+      "  3) Re-export the Qwen3-ASR decoder ONNX with a larger max_total_len, "
+      "raise --qwen3-asr-max-total-len (up to the model limit), and/or "
+      "increase --qwen3-asr-max-new-tokens if generation is truncated.");
+}
 
 int32_t FeatToAudioTokensLen(int32_t feat_len, int32_t chunk_size) {
   if (feat_len <= 0 || chunk_size <= 0) {
@@ -315,14 +405,20 @@ std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
   return std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
 }
 
+std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream(
+    const std::string &hotwords) const {
+  auto s = std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
+  if (!hotwords.empty()) {
+    s->SetOption("hotwords", hotwords);
+  }
+  return s;
+}
+
 void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
-  const std::string system_text = "<|im_start|>system\n<|im_end|>\n";
-  const std::string user_prefix = "<|im_start|>user\n<|audio_start|>";
   const std::string audio_pad = "<|audio_pad|>";
   const std::string user_suffix = "<|audio_end|><|im_end|>\n";
   const std::string assistant_text = "<|im_start|>assistant\n";
 
-  prompt_ids_before_ = tokenizer_->Encode(system_text + user_prefix);
   audio_pad_ids_ = tokenizer_->Encode(audio_pad);
   prompt_ids_after_ = tokenizer_->Encode(user_suffix + assistant_text);
 
@@ -333,10 +429,14 @@ void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
 }
 
 std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
-    int32_t audio_token_len, int32_t *before_len,
+    const std::string &hotwords, int32_t audio_token_len, int32_t *before_len,
     int32_t *fake_audio_token_len) const {
+  const std::string before_utf8 = std::string(kQwen3SystemPromptPrefix) +
+                                  hotwords + kQwen3SystemPromptSuffix;
+  std::vector<int64_t> prompt_ids_before = tokenizer_->Encode(before_utf8);
+
   if (before_len) {
-    *before_len = static_cast<int32_t>(prompt_ids_before_.size());
+    *before_len = static_cast<int32_t>(prompt_ids_before.size());
   }
   if (fake_audio_token_len) {
     *fake_audio_token_len = audio_token_len;
@@ -344,12 +444,12 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
 
   std::vector<int64_t> source_ids;
   size_t estimated_size =
-      prompt_ids_before_.size() +
+      prompt_ids_before.size() +
       static_cast<size_t>(audio_token_len) * audio_pad_ids_.size() +
       prompt_ids_after_.size();
   source_ids.reserve(estimated_size);
-  source_ids.insert(source_ids.end(), prompt_ids_before_.begin(),
-                    prompt_ids_before_.end());
+  source_ids.insert(source_ids.end(), prompt_ids_before.begin(),
+                    prompt_ids_before.end());
 
   for (int32_t i = 0; i < audio_token_len; ++i) {
     source_ids.insert(source_ids.end(), audio_pad_ids_.begin(),
@@ -654,10 +754,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     return result;
   }
 
+  const std::string hotwords_raw = stream->HasOption("hotwords")
+                                       ? stream->GetOption("hotwords")
+                                       : qwen3_config.hotwords;
+  const std::string hotwords = Qwen3FormatHotwordsForPrompt(hotwords_raw);
+
   int32_t before_len = 0;
   int32_t fake_audio_token_len = 0;
-  std::vector<int64_t> source_ids =
-      BuildSourceIds(audio_token_len, &before_len, &fake_audio_token_len);
+  std::vector<int64_t> source_ids = BuildSourceIds(
+      hotwords, audio_token_len, &before_len, &fake_audio_token_len);
 
   int32_t context_len = static_cast<int32_t>(source_ids.size());
   if (context_len == 0) {
@@ -673,6 +778,30 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       stream->GetOptionInt("max_total_len", qwen3_config.max_total_len);
   if (max_total_len_opt > 0) {
     max_seq_len = std::min(model_max_len, max_total_len_opt);
+  }
+
+  if (!hotwords.empty()) {
+    const std::string scaffold_no_hw =
+        std::string(kQwen3SystemPromptPrefix) + kQwen3SystemPromptSuffix;
+    const std::vector<int64_t> base_ids = tokenizer_->Encode(scaffold_no_hw);
+    const int32_t base_before = static_cast<int32_t>(base_ids.size());
+    const int32_t hotword_tokens = std::max(0, before_len - base_before);
+
+    const int32_t tail_len = static_cast<int32_t>(prompt_ids_after_.size());
+    const int32_t one_audio_len = static_cast<int32_t>(audio_pad_ids_.size());
+    const int32_t room = max_seq_len - before_len - tail_len;
+    const bool tight = hotword_tokens >= 48 ||
+                       (one_audio_len > 0 && room < one_audio_len * 32);
+
+    if (config_.model_config.debug || tight) {
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: hotwords add %d tokenizer tokens in the prompt head "
+          "(before_audio=%d, scaffold_without_hotwords=%d).",
+          hotword_tokens, before_len, base_before);
+    }
+    if (tight) {
+      Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
+    }
   }
 
   if (context_len > max_seq_len) {
@@ -694,6 +823,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
           "qwen3-asr prompt scaffold exceeds max_total_len: before=%d after=%d "
           "max_total_len=%d",
           before_len, after_len, max_seq_len);
+      Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       result.text = "";
       return result;
     }
@@ -703,11 +833,19 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
           "qwen3-asr max_total_len=%d leaves no room for audio placeholders "
           "(before=%d after=%d)",
           max_seq_len, before_len, after_len);
+      Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       result.text = "";
       return result;
     }
 
     if (keep_audio < fake_audio_token_len) {
+      SHERPA_ONNX_LOGE(
+          "qwen3-asr: context_len (%d) exceeds max_total_len (%d). Truncating "
+          "audio placeholders: audio_token_len=%d -> keep_audio=%d (before=%d "
+          "after=%d).",
+          context_len, max_seq_len, fake_audio_token_len, keep_audio,
+          before_len, after_len);
+      Qwen3LogMaxTotalLenSuggestions(max_seq_len, model_max_len);
       std::vector<int64_t> ids_before(source_ids.begin(),
                                       source_ids.begin() + before_len);
       std::vector<int64_t> ids_after(source_ids.end() - after_len,
@@ -893,17 +1031,38 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   RemoveUtf8ReplacementChars(&result.text);
 
   if (!generated_ids.empty()) {
-    result.tokens.reserve(generated_ids.size());
+    std::vector<std::string> all_tokens;
+    all_tokens.reserve(generated_ids.size());
     std::string pending_bytes;
 
     for (int64_t token_id : generated_ids) {
       std::string s =
           tokenizer_->GetTokenStringStreaming(token_id, &pending_bytes);
-      result.tokens.push_back(std::move(s));
+      all_tokens.push_back(std::move(s));
     }
 
-    if (!pending_bytes.empty() && !result.tokens.empty()) {
-      result.tokens.back().append("\xEF\xBF\xBD");
+    if (!pending_bytes.empty() && !all_tokens.empty()) {
+      all_tokens.back().append("\xEF\xBF\xBD");
+    }
+
+    std::string concat;
+    size_t skip = 0;
+    bool stripped = false;
+    for (size_t i = 0; i < all_tokens.size(); ++i) {
+      concat += all_tokens[i];
+      if (concat.find("<asr_text>") != std::string::npos) {
+        skip = i + 1;
+        stripped = true;
+        break;
+      }
+    }
+    if (stripped && skip <= all_tokens.size()) {
+      result.tokens.reserve(all_tokens.size() - skip);
+      for (size_t i = skip; i < all_tokens.size(); ++i) {
+        result.tokens.push_back(std::move(all_tokens[i]));
+      }
+    } else {
+      result.tokens = std::move(all_tokens);
     }
   }
 

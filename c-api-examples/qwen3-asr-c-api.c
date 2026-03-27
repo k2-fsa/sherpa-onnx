@@ -15,7 +15,9 @@
 //   tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 //
 // Run:
-//   ./build/bin/qwen3-asr-c-api
+//   ./build/bin/qwen3-asr-c-api [wav]
+//
+// Hotwords (prompt text) are set via qwen3.hotwords in code, not argv.
 //
 // Note: If the input audio is too long, you can set option on the stream:
 //   SherpaOnnxOfflineStreamSetOption(stream, "max_new_tokens", "256");
@@ -27,7 +29,7 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-int32_t main() {
+int32_t main(int32_t argc, char* argv[]) {
   // clang-format off
   const char *wav_filename = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav";
   const char *conv_frontend = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx";
@@ -36,7 +38,11 @@ int32_t main() {
   const char *tokenizer = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
   // clang-format on
 
-  const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
+  if (argc >= 2) {
+    wav_filename = argv[1];
+  }
+
+  const SherpaOnnxWave* wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
@@ -48,6 +54,7 @@ int32_t main() {
   qwen3.encoder = encoder;
   qwen3.decoder = decoder;
   qwen3.tokenizer = tokenizer;
+  qwen3.hotwords = "";
   qwen3.max_total_len = 512;
   qwen3.max_new_tokens = 128;
   qwen3.temperature = 1e-6f;
@@ -66,7 +73,7 @@ int32_t main() {
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = offline_model_config;
 
-  const SherpaOnnxOfflineRecognizer *recognizer =
+  const SherpaOnnxOfflineRecognizer* recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);
 
   if (recognizer == NULL) {
@@ -75,13 +82,13 @@ int32_t main() {
     return -1;
   }
 
-  const SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream* stream =
       SherpaOnnxCreateOfflineStream(recognizer);
 
   SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
                                   wave->num_samples);
   SherpaOnnxDecodeOfflineStream(recognizer, stream);
-  const SherpaOnnxOfflineRecognizerResult *result =
+  const SherpaOnnxOfflineRecognizerResult* result =
       SherpaOnnxGetOfflineStreamResult(stream);
 
   fprintf(stderr, "Decoded text: %s\n", result->text);
