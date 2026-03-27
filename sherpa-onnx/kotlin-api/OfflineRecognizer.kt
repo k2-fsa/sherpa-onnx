@@ -195,7 +195,7 @@ class OfflineRecognizer(
     }
 
     fun createStream(hotwords: String): OfflineStream {
-        val p = createStream(ptr, hotwords)
+        val p = createStreamWithHotwords(ptr, hotwords)
         return OfflineStream(p)
     }
 
@@ -211,7 +211,7 @@ class OfflineRecognizer(
 
     private external fun createStream(ptr: Long): Long
 
-    private external fun createStream(ptr: Long, hotwords: String): Long
+    private external fun createStreamWithHotwords(ptr: Long, hotwords: String): Long
 
     private external fun setConfig(ptr: Long, config: OfflineRecognizerConfig)
 

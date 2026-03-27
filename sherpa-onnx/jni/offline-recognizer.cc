@@ -539,7 +539,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream__JLjava_lang_String_2(
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStreamWithHotwords(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring j_hotwords) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
   if (!j_hotwords) {

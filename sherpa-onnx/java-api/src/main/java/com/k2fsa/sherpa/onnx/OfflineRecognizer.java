@@ -43,7 +43,7 @@ public class OfflineRecognizer {
     }
 
     public OfflineStream createStream(String hotwords) {
-        long p = createStream(ptr, hotwords);
+        long p = createStreamWithHotwords(ptr, hotwords);
         return new OfflineStream(p);
     }
 
@@ -71,7 +71,7 @@ public class OfflineRecognizer {
 
     private native long createStream(long ptr);
 
-    private native long createStream(long ptr, String hotwords);
+    private native long createStreamWithHotwords(long ptr, String hotwords);
 
     private native void decode(long ptr, long streamPtr);
 
