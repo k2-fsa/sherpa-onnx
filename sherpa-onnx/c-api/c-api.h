@@ -2830,7 +2830,8 @@ SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
  */
 typedef struct SherpaOnnxMultiChannelWave {
   /** samples[c] points to channel c samples normalized to [-1, 1].
-   * Note that samples[c] and samples[c+1] are contiguous in memory.
+   * Note: The sample data for all channels are stored in a single contiguous
+   * memory block, one channel after another.
    * */
   const float *const *samples;
   /** Number of channels. */
