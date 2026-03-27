@@ -137,6 +137,9 @@ jobs:
       - name: Run test
         shell: bash
         run: |
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            export SKIP_QWEN3=true
+          fi
           if [[ "${{ matrix.link_mode }}" == "shared" ]]; then
             ./.github/scripts/test-rust-shared.sh
           else

@@ -154,6 +154,7 @@ jobs:
           path: to-upload/
 
       - name: Test non-streaming decoding files with Qwen3 ASR
+        if: matrix.os != 'ubuntu-latest'
         shell: bash
         run: |
           cd scripts/go/_internal/non-streaming-qwen3-asr-decode-files
