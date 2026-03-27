@@ -124,6 +124,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-speaker-identification
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-spoken-language-identification
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/zero-shot-pocket-tts
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/source-separation
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/supertonic-tts
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
@@ -152,6 +153,22 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test source separation (Spleeter & UVR)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/source-separation
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run-spleeter.sh
+          rm -rf sherpa-onnx-spleeter-*
+
+          ./run-uvr.sh
+          rm -rf UVR-MDX-NET-*
 
       - name: Test non-streaming decoding files with Qwen3 ASR
         if: matrix.os != 'ubuntu-latest'
