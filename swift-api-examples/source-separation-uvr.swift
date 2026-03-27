@@ -23,7 +23,7 @@ func run() {
     return
   }
 
-  guard let input = AudioBuffer(filename: "./qi-feng-le-zh.wav") else {
+  guard let input = AudioData(filename: "./qi-feng-le-zh.wav") else {
     print("Failed to read ./qi-feng-le-zh.wav")
     return
   }
@@ -41,7 +41,9 @@ func run() {
   let rtf = elapsed / audioDuration
 
   print("Output: \(stems.count) stems, sampleRate=\(input.sampleRate)")
-  print("Elapsed: \(String(format: "%.2f", elapsed))s, Audio: \(String(format: "%.2f", audioDuration))s, RTF = \(String(format: "%.3f", rtf))")
+  print(
+    "Elapsed: \(String(format: "%.2f", elapsed))s, Audio: \(String(format: "%.2f", audioDuration))s, RTF = \(String(format: "%.3f", rtf))"
+  )
 
   let stemNames = ["uvr-vocals", "uvr-non-vocals"]
   for i in 0..<min(stems.count, stemNames.count) {
