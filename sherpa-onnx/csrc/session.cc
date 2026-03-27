@@ -92,16 +92,6 @@ static void ParseConfigFile(
 
     config[std::move(key)] = std::move(value);
   }
-
-  if (config.find("DEBUG") != config.end()) {
-    auto config_debug = ToIntOrDefault(config["DEBUG"], 0) == 1;
-    if (config_debug) {
-      for (const auto &kv : config) {
-        SHERPA_ONNX_LOGE("Provider config: %s=%s", kv.first.c_str(),
-                         kv.second.c_str());
-      }
-    }
-  }
 }
 
 static void SplitProviderAndConfig(
@@ -121,15 +111,24 @@ static void SplitProviderAndConfig(
   std::string config_path = Trim(provider_str.substr(pos + 1));
   provider_str = Trim(provider_str.substr(0, pos));
 
-  SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s", provider_str.c_str(),
-                   config_path.c_str());
-
   if (config_path.empty()) {
     SHERPA_ONNX_LOGE("Provider config path is empty: %s", s.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
 
   ParseConfigFile(config_path, config);
+
+  if (config.find("DEBUG") != config.end()) {
+    auto config_debug = ToIntOrDefault(config["DEBUG"], 0) == 1;
+    if (config_debug) {
+      SHERPA_ONNX_LOGE("Provider string: %s. Config path: %s",
+                       provider_str.c_str(), config_path.c_str());
+      for (const auto &kv : config) {
+        SHERPA_ONNX_LOGE("Provider config: %s=%s", kv.first.c_str(),
+                         kv.second.c_str());
+      }
+    }
+  }
 }
 
 Ort::SessionOptions GetSessionOptionsImpl(
