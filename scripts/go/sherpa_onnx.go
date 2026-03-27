@@ -2732,8 +2732,8 @@ type OfflineSourceSeparationUvrModelConfig struct {
 }
 
 type OfflineSourceSeparationModelConfig struct {
-	Spleeter   SpleeterConfig
-	Uvr        UvrConfig
+	Spleeter   OfflineSourceSeparationSpleeterModelConfig
+	Uvr        OfflineSourceSeparationUvrModelConfig
 	NumThreads int
 	Debug      bool
 	Provider   string // e.g., "cpu", "cuda", "coreml"
@@ -2743,8 +2743,6 @@ type OfflineSourceSeparationModelConfig struct {
 type OfflineSourceSeparationConfig struct {
 	Model OfflineSourceSeparationModelConfig
 }
-
-// MARK: - Audio Buffer
 
 type AudioBuffer struct {
 	Samples           []float32
@@ -2804,14 +2802,21 @@ func (b *AudioBuffer) Save(filename string) bool {
 	cStr := C.CString(filename)
 	defer C.free(unsafe.Pointer(cStr))
 
-	ptrs := make([]*C.float, b.ChannelCount)
+	// Allocate the pointer array in C memory to avoid "Go pointer to Go pointer" panic.
+	// We need an array of (float*) with size (ChannelCount).
+	ptrSize := unsafe.Sizeof((*C.float)(nil))
+	cPtrs := (*[1 << 20]*C.float)(C.malloc(C.size_t(uintptr(b.ChannelCount) * ptrSize)))
+	defer C.free(unsafe.Pointer(cPtrs))
+
 	for i := 0; i < b.ChannelCount; i++ {
 		offset := i * b.SamplesPerChannel
-		ptrs[i] = (*C.float)(unsafe.Pointer(&b.Samples[offset]))
+		// It is safe to pass a pointer to Go memory as a C argument,
+		// but NOT as a member of a Go-allocated struct/slice passed to C.
+		cPtrs[i] = (*C.float)(unsafe.Pointer(&b.Samples[offset]))
 	}
 
 	res := C.SherpaOnnxWriteWaveMultiChannel(
-		(**C.float)(unsafe.Pointer(&ptrs[0])),
+		(**C.float)(unsafe.Pointer(cPtrs)),
 		C.int32_t(b.SamplesPerChannel),
 		C.int32_t(b.SampleRate),
 		C.int32_t(b.ChannelCount),
@@ -2819,8 +2824,6 @@ func (b *AudioBuffer) Save(filename string) bool {
 	)
 	return res == 1
 }
-
-// MARK: - Source Separator Engine
 
 type SourceSeparator struct {
 	handle *C.SherpaOnnxOfflineSourceSeparation
@@ -2880,16 +2883,19 @@ func (ss *SourceSeparator) Process(buf *AudioBuffer) []*AudioBuffer {
 		return nil
 	}
 
-	// Pointer-to-pointer setup
-	ptrs := make([]*C.float, buf.ChannelCount)
+	// FIX: Allocate the pointer array in C memory
+	ptrSize := unsafe.Sizeof((*C.float)(nil))
+	cPtrs := (*[1 << 20]*C.float)(C.malloc(C.size_t(uintptr(buf.ChannelCount) * ptrSize)))
+	defer C.free(unsafe.Pointer(cPtrs))
+
 	for i := 0; i < buf.ChannelCount; i++ {
 		offset := i * buf.SamplesPerChannel
-		ptrs[i] = (*C.float)(unsafe.Pointer(&buf.Samples[offset]))
+		cPtrs[i] = (*C.float)(unsafe.Pointer(&buf.Samples[offset]))
 	}
 
 	cOut := C.SherpaOnnxOfflineSourceSeparationProcess(
 		ss.handle,
-		(**C.float)(unsafe.Pointer(&ptrs[0])),
+		(**C.float)(unsafe.Pointer(cPtrs)),
 		C.int32_t(buf.ChannelCount),
 		C.int32_t(buf.SamplesPerChannel),
 		C.int32_t(buf.SampleRate),
