@@ -1,6 +1,9 @@
 /// swift-api-examples/SherpaOnnx.swift
 /// Copyright (c)  2023  Xiaomi Corporation
 
+// =========================================================================
+// Source separation
+// =========================================================================
 import Foundation  // For NSString
 
 /// Convert a String from swift to a `const char*` so that we can pass it to
@@ -1122,7 +1125,8 @@ func sherpaOnnxOfflineTtsModelConfig(
   kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig(),
   zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig(),
   pocket: SherpaOnnxOfflineTtsPocketModelConfig = sherpaOnnxOfflineTtsPocketModelConfig(),
-  supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig = sherpaOnnxOfflineTtsSupertonicModelConfig()
+  supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig =
+    sherpaOnnxOfflineTtsSupertonicModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
     vits: vits,
@@ -1353,7 +1357,8 @@ class SherpaOnnxOfflineTtsWrapper {
       let p = Unmanaged<SherpaOnnxCallbackPair>.fromOpaque(rawArg!).takeUnretainedValue()
       return p.cb!(samples, n, p.arg)
     }
-    let result = generateWithConfig(text: text, config: config, callback: wrapper, arg: unmanaged.toOpaque())
+    let result = generateWithConfig(
+      text: text, config: config, callback: wrapper, arg: unmanaged.toOpaque())
     unmanaged.release()
     return result
   }
@@ -2026,178 +2031,6 @@ class SherpaOnnxOnlineSpeechDenoiserWrapper {
   }
 }
 
-// =========================================================================
-// Source separation
-// =========================================================================
-
-func sherpaOnnxOfflineSourceSeparationSpleeterModelConfig(
-  vocals: String = "",
-  accompaniment: String = ""
-) -> SherpaOnnxOfflineSourceSeparationSpleeterModelConfig {
-  return SherpaOnnxOfflineSourceSeparationSpleeterModelConfig(
-    vocals: toCPointer(vocals),
-    accompaniment: toCPointer(accompaniment)
-  )
-}
-
-func sherpaOnnxOfflineSourceSeparationUvrModelConfig(
-  model: String = ""
-) -> SherpaOnnxOfflineSourceSeparationUvrModelConfig {
-  return SherpaOnnxOfflineSourceSeparationUvrModelConfig(model: toCPointer(model))
-}
-
-func sherpaOnnxOfflineSourceSeparationModelConfig(
-  spleeter: SherpaOnnxOfflineSourceSeparationSpleeterModelConfig =
-    sherpaOnnxOfflineSourceSeparationSpleeterModelConfig(),
-  uvr: SherpaOnnxOfflineSourceSeparationUvrModelConfig =
-    sherpaOnnxOfflineSourceSeparationUvrModelConfig(),
-  numThreads: Int = 1,
-  provider: String = "cpu",
-  debug: Int = 0
-) -> SherpaOnnxOfflineSourceSeparationModelConfig {
-  return SherpaOnnxOfflineSourceSeparationModelConfig(
-    spleeter: spleeter,
-    uvr: uvr,
-    num_threads: Int32(numThreads),
-    debug: Int32(debug),
-    provider: toCPointer(provider)
-  )
-}
-
-func sherpaOnnxOfflineSourceSeparationConfig(
-  model: SherpaOnnxOfflineSourceSeparationModelConfig =
-    sherpaOnnxOfflineSourceSeparationModelConfig()
-) -> SherpaOnnxOfflineSourceSeparationConfig {
-  return SherpaOnnxOfflineSourceSeparationConfig(model: model)
-}
-
-class SherpaOnnxMultiChannelWaveWrapper {
-  /// A pointer to the underlying counterpart in C
-  let wave: UnsafePointer<SherpaOnnxMultiChannelWave>!
-
-  init(wave: UnsafePointer<SherpaOnnxMultiChannelWave>!) {
-    self.wave = wave
-  }
-
-  deinit {
-    if let wave {
-      SherpaOnnxFreeMultiChannelWave(wave)
-    }
-  }
-
-  var numChannels: Int32 {
-    guard let wave else { return 0 }
-    return wave.pointee.num_channels
-  }
-
-  var numSamples: Int32 {
-    guard let wave else { return 0 }
-    return wave.pointee.num_samples
-  }
-
-  var sampleRate: Int32 {
-    guard let wave else { return 0 }
-    return wave.pointee.sample_rate
-  }
-}
-
-class SherpaOnnxSourceSeparationOutputWrapper {
-  /// A pointer to the underlying counterpart in C
-  let output: UnsafePointer<SherpaOnnxSourceSeparationOutput>!
-
-  init(output: UnsafePointer<SherpaOnnxSourceSeparationOutput>!) {
-    self.output = output
-  }
-
-  deinit {
-    if let output {
-      SherpaOnnxDestroySourceSeparationOutput(output)
-    }
-  }
-
-  var numStems: Int32 {
-    guard let output else { return 0 }
-    return output.pointee.num_stems
-  }
-
-  var sampleRate: Int32 {
-    guard let output else { return 0 }
-    return output.pointee.sample_rate
-  }
-
-  /// Save stem at index `stemIndex` to a multi-channel wave file.
-  func saveStem(stemIndex: Int, filename: String) -> Int32 {
-    guard let output else { return 0 }
-    guard stemIndex >= 0 && stemIndex < Int(output.pointee.num_stems) else {
-      return 0
-    }
-    let stem = output.pointee.stems[stemIndex]
-    let nc = Int(stem.num_channels)
-    var ptrs: [UnsafePointer<Float>?] = []
-    for c in 0..<nc {
-      ptrs.append(UnsafePointer<Float>(stem.samples[c]))
-    }
-    return ptrs.withUnsafeBufferPointer { buf in
-      return SherpaOnnxWriteWaveMultiChannel(
-        buf.baseAddress,
-        stem.n,
-        sampleRate,
-        stem.num_channels,
-        toCPointer(filename)
-      )
-    }
-  }
-}
-
-class SherpaOnnxOfflineSourceSeparationWrapper {
-  /// A pointer to the underlying counterpart in C
-  let impl: OpaquePointer!
-
-  /// Constructor taking a model config
-  init(
-    config: UnsafePointer<SherpaOnnxOfflineSourceSeparationConfig>!
-  ) {
-    impl = SherpaOnnxCreateOfflineSourceSeparation(config)
-  }
-
-  deinit {
-    if let impl {
-      SherpaOnnxDestroyOfflineSourceSeparation(impl)
-    }
-  }
-
-  /// Read a multi-channel wave file
-  static func readWave(filename: String) -> SherpaOnnxMultiChannelWaveWrapper {
-    let wave = SherpaOnnxReadWaveMultiChannel(toCPointer(filename))
-    return SherpaOnnxMultiChannelWaveWrapper(wave: wave)
-  }
-
-  /// Process multi-channel audio and return separated stems
-  func process(
-    wave: SherpaOnnxMultiChannelWaveWrapper
-  ) -> SherpaOnnxSourceSeparationOutputWrapper {
-    guard let wavePtr = wave.wave else {
-      return SherpaOnnxSourceSeparationOutputWrapper(output: nil)
-    }
-    let output = SherpaOnnxOfflineSourceSeparationProcess(
-      impl,
-      wavePtr.pointee.samples,
-      wavePtr.pointee.num_channels,
-      wavePtr.pointee.num_samples,
-      wavePtr.pointee.sample_rate
-    )
-    return SherpaOnnxSourceSeparationOutputWrapper(output: output)
-  }
-
-  var outputSampleRate: Int {
-    return Int(SherpaOnnxOfflineSourceSeparationGetOutputSampleRate(impl))
-  }
-
-  var numberOfStems: Int {
-    return Int(SherpaOnnxOfflineSourceSeparationGetNumberOfStems(impl))
-  }
-}
-
 func getSherpaOnnxVersion() -> String {
   return String(cString: SherpaOnnxGetVersionStr())
 }
@@ -2208,4 +2041,187 @@ func getSherpaOnnxGitSha1() -> String {
 
 func getSherpaOnnxGitDate() -> String {
   return String(cString: SherpaOnnxGetGitDate())
+}
+//---------------------------
+// Source separation
+//---------------------------
+
+/// A private class to ensure SherpaOnnxFreeMultiChannelWave is called
+/// only when no more AudioBuffers are referencing the C memory.
+private class ManagedWave {
+  let pointer: UnsafePointer<SherpaOnnxMultiChannelWave>
+
+  init(_ pointer: UnsafePointer<SherpaOnnxMultiChannelWave>) {
+    self.pointer = pointer
+  }
+
+  deinit {
+    SherpaOnnxFreeMultiChannelWave(pointer)
+  }
+}
+
+// MARK: - Hybrid Audio Buffer
+struct AudioBuffer {
+  private enum Storage {
+    case owned([Float])
+    case wrapped(ManagedWave)
+  }
+
+  private let storage: Storage
+  let channelCount: Int
+  let samplesPerChannel: Int
+  let sampleRate: Int
+
+  /// Initialize from Swift-owned data (Copies/Allocates)
+  init(samples: [Float], channelCount: Int, sampleRate: Int) {
+    self.storage = .owned(samples)
+    self.channelCount = channelCount
+    self.sampleRate = sampleRate
+    self.samplesPerChannel = channelCount > 0 ? samples.count / channelCount : 0
+  }
+
+  /// Initialize from C API (Zero-Copy)
+  /// This will automatically free the C memory when the buffer (and its copies) are destroyed.
+  init?(filename: String) {
+    guard let ptr = SherpaOnnxReadWaveMultiChannel(filename) else { return nil }
+    let managed = ManagedWave(ptr)
+    self.storage = .wrapped(managed)
+    self.channelCount = Int(ptr.pointee.num_channels)
+    self.samplesPerChannel = Int(ptr.pointee.num_samples)
+    self.sampleRate = Int(ptr.pointee.sample_rate)
+  }
+
+  /// Provides access to the underlying flat memory, regardless of storage type.
+  func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) -> R) -> R {
+    switch storage {
+    case .owned(let array):
+      return array.withUnsafeBufferPointer(body)
+    case .wrapped(let managed):
+      // We assume the C pointer provided by sherpa-onnx is a contiguous planar block.
+      // We wrap from the start of the first channel to the end of the last.
+      let totalSize = Int(
+        managed.pointer.pointee.num_channels * managed.pointer.pointee.num_samples)
+      let buffer = UnsafeBufferPointer(start: managed.pointer.pointee.samples[0], count: totalSize)
+      return body(buffer)
+    }
+  }
+
+  @discardableResult
+  func save(to filename: String) -> Bool {
+    return withUnsafeBufferPointer { buf in
+      guard let base = buf.baseAddress else { return false }
+      var ptrs = (0..<channelCount).map { base + ($0 * samplesPerChannel) }
+      return SherpaOnnxWriteWaveMultiChannel(
+        &ptrs, Int32(samplesPerChannel), Int32(sampleRate), Int32(channelCount), filename) == 1
+    }
+  }
+
+}
+
+struct SourceSeparationConfig {
+  struct SpleeterConfig {
+    var vocalsPath: String
+    var accompanimentPath: String
+  }
+  struct UvrConfig {
+    var modelPath: String
+  }
+
+  var spleeter: SpleeterConfig?
+  var uvr: UvrConfig?
+  var numThreads: Int = 1
+  var debug: Bool = false
+  var provider: String = "cpu"
+}
+
+extension SourceSeparationConfig {
+  func withCConfig<R>(_ body: (UnsafePointer<SherpaOnnxOfflineSourceSeparationConfig>) -> R) -> R {
+    var cConfig = SherpaOnnxOfflineSourceSeparationConfig()
+    cConfig.model.num_threads = Int32(self.numThreads)
+    cConfig.model.debug = self.debug ? 1 : 0
+
+    var storage: [String: [Int8]] = [:]
+    func bridge(_ key: String, _ value: String?) -> UnsafePointer<Int8>? {
+      guard let val = value else { return nil }
+      let cArray = Array(val.utf8CString)
+      storage[key] = cArray
+      return storage[key]!.withUnsafeBufferPointer { $0.baseAddress }
+    }
+
+    cConfig.model.provider = bridge("provider", provider)
+    cConfig.model.spleeter.vocals = bridge("spleeter.vocals", spleeter?.vocalsPath)
+    cConfig.model.spleeter.accompaniment = bridge(
+      "spleeter.accompaniment", spleeter?.accompanimentPath)
+    cConfig.model.uvr.model = bridge("uvr.model", uvr?.modelPath)
+
+    return body(&cConfig)
+  }
+}
+
+class SourceSeparator {
+  private var engine: OpaquePointer?
+
+  init?(config: SourceSeparationConfig) {
+    let ptr = config.withCConfig { SherpaOnnxCreateOfflineSourceSeparation($0) }
+    guard let p = ptr else { return nil }
+    self.engine = UnsafeMutablePointer(mutating: p)
+  }
+
+  deinit {
+    if let engine = engine {
+      SherpaOnnxDestroyOfflineSourceSeparation(engine)
+    }
+  }
+
+  func process(buffer: AudioBuffer) -> [AudioBuffer]? {
+    guard let engine = engine else { return nil }
+
+    return buffer.withUnsafeBufferPointer { flatBuf in
+      guard let base = flatBuf.baseAddress else { return nil }
+
+      // Generate channel pointers for the C API
+      var channelPointers: [UnsafePointer<Float>?] = (0..<buffer.channelCount).map { i in
+        base + (i * buffer.samplesPerChannel)
+      }
+
+      guard
+        let resultRaw = SherpaOnnxOfflineSourceSeparationProcess(
+          engine,
+          &channelPointers,
+          Int32(buffer.channelCount),
+          Int32(buffer.samplesPerChannel),
+          Int32(buffer.sampleRate)
+        )
+      else { return nil }
+
+      let output = convertToFlatBuffers(resultRaw)
+      SherpaOnnxDestroySourceSeparationOutput(resultRaw)
+      return output
+    }
+  }
+
+  private func convertToFlatBuffers(_ cOutput: UnsafePointer<SherpaOnnxSourceSeparationOutput>)
+    -> [AudioBuffer]
+  {
+    let stemCount = Int(cOutput.pointee.num_stems)
+    let sampleRate = Int(cOutput.pointee.sample_rate)
+
+    return (0..<stemCount).map { i in
+      let cStem = cOutput.pointee.stems[i]
+      let chCount = Int(cStem.num_channels)
+      let sCount = Int(cStem.n)
+
+      var flat = [Float](repeating: 0, count: chCount * sCount)
+      for c in 0..<chCount {
+        if let src = cStem.samples[c] {
+          let offset = c * sCount
+          flat.withUnsafeMutableBufferPointer { dest in
+            let slice = UnsafeMutableBufferPointer(rebasing: dest[offset..<(offset + sCount)])
+            _ = slice.initialize(from: UnsafeBufferPointer(start: src, count: sCount))
+          }
+        }
+      }
+      return AudioBuffer(samples: flat, channelCount: chCount, sampleRate: sampleRate)
+    }
+  }
 }
