@@ -2043,8 +2043,7 @@ func getSherpaOnnxGitDate() -> String {
 // Source separation
 //---------------------------
 
-// MARK: - Audio Buffer
-struct AudioBuffer {
+struct AudioData {
   private enum Storage {
     case owned([Float])
     case wrapped(ManagedWave)
@@ -2105,7 +2104,6 @@ struct AudioBuffer {
   }
 }
 
-// MARK: - Configuration Struct
 struct SourceSeparationConfig {
   struct Spleeter {
     var vocals: String
@@ -2155,7 +2153,7 @@ class SourceSeparator {
     }
   }
 
-  func process(buffer: AudioBuffer) -> [AudioBuffer]? {
+  func process(buffer: AudioData) -> [AudioData]? {
     guard let engine = engine else { return nil }
 
     return buffer.withUnsafeBufferPointer { flatBuf in
@@ -2190,7 +2188,7 @@ class SourceSeparator {
             }
           }
         }
-        return AudioBuffer(
+        return AudioData(
           samples: flat, channelCount: chs, sampleRate: Int(raw.pointee.sample_rate))
       }
 
