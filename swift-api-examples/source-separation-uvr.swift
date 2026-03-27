@@ -9,6 +9,8 @@
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/source-separation-models
 // to download files used in this script
 
+import Foundation
+
 func run() {
   let config = SourceSeparationConfig(
     uvr: .init(model: "./UVR-MDX-NET-Voc_FT.onnx"),
@@ -29,12 +31,17 @@ func run() {
     "Input: channels=\(input.channelCount), samples=\(input.samplesPerChannel), sampleRate=\(input.sampleRate)"
   )
 
+  let start = CFAbsoluteTimeGetCurrent()
   guard let stems = separator.process(buffer: input) else {
     print("Source separation failed")
     return
   }
+  let elapsed = CFAbsoluteTimeGetCurrent() - start
+  let audioDuration = Double(input.samplesPerChannel) / Double(input.sampleRate)
+  let rtf = elapsed / audioDuration
 
   print("Output: \(stems.count) stems, sampleRate=\(input.sampleRate)")
+  print("Elapsed: \(String(format: "%.2f", elapsed))s, Audio: \(String(format: "%.2f", audioDuration))s, RTF = \(String(format: "%.3f", rtf))")
 
   let stemNames = ["uvr-vocals", "uvr-non-vocals"]
   for i in 0..<min(stems.count, stemNames.count) {
