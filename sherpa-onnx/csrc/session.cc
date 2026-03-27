@@ -122,19 +122,6 @@ static void SplitProviderAndConfig(
   ParserConfigFile(config_path, config);
 }
 
-static int64_t ParseConfigInt64OrExit(const char *key,
-                                      const std::string &value) {
-  int64_t parsed_value = 0;
-  if (!ConvertStringToInteger(value, &parsed_value)) {
-    SHERPA_ONNX_LOGE(
-        "Invalid value for %s: %s. Expected an integer in provider config.",
-        key, value.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  return parsed_value;
-}
-
 Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
     const ProviderConfig *provider_config /*= nullptr*/) {
@@ -158,17 +145,18 @@ Ort::SessionOptions GetSessionOptionsImpl(
 
   // Other possible options
   if (config.find("GraphOptimizationLevel") != config.end()) {
-    int64_t graph_optimization_level = ParseConfigInt64OrExit(
-      "GraphOptimizationLevel", config["GraphOptimizationLevel"]);
+    int32_t graph_optimization_level = ToIntOrDefault(
+        config["GraphOptimizationLevel"],
+        static_cast<int32_t>(GraphOptimizationLevel::ORT_ENABLE_ALL));
     sess_opts.SetGraphOptimizationLevel(
         static_cast<GraphOptimizationLevel>(graph_optimization_level));
     config.erase("GraphOptimizationLevel");
   }
 
   if (config.find("LogSeverityLevel") != config.end()) {
-    int64_t log_severity_level =
-      ParseConfigInt64OrExit("LogSeverityLevel",
-                   config["LogSeverityLevel"]);
+    int32_t log_severity_level = ToIntOrDefault(
+        config["LogSeverityLevel"],
+        static_cast<int32_t>(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING));
     sess_opts.SetLogSeverityLevel(
         static_cast<OrtLoggingLevel>(log_severity_level));
     config.erase("LogSeverityLevel");
