@@ -467,11 +467,6 @@ static void FreeConfig(const SherpaOnnxOfflineRecognizerConfig &c) {
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr_ctc.model);
 
-  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.conv_frontend);
-  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.encoder);
-  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.decoder);
-  SHERPA_ONNX_DELETE_C_STR(c.model_config.qwen3_asr.tokenizer);
-
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.model_type);
