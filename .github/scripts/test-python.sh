@@ -8,7 +8,7 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
-if [[ $SKIP_QWEN3 != "true" ]]; then
+if [[ "$SKIP_QWEN3" != "true" ]]; then
   log "test Qwen3 ASR"
 
   wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2

@@ -6,7 +6,7 @@ cd rust-api-examples
 
 trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 
-if [[ $SKIP_QWEN3 != "true" ]]; then
+if [[ "$SKIP_QWEN3" != "true" ]]; then
   ./run-qwen3-asr.sh
   rm -rf sherpa-onnx-qwen3-*
 fi

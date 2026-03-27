@@ -4,7 +4,7 @@ set -ex
 
 cd dotnet-examples/
 
-if [[ $SKIP_QWEN3 != "true" ]]; then
+if [[ "$SKIP_QWEN3" != "true" ]]; then
   cd ./vad-non-streaming-qwen3-asr
   ./run-ten-vad.sh
   rm -fv *.onnx

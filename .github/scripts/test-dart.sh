@@ -6,7 +6,7 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
-if [[ $SKIP_QWEN3 != "true" ]]; then
+if [[ "$SKIP_QWEN3" != "true" ]]; then
   echo '----------Qwen3 ASR----------'
   ./run-qwen3-asr.sh
   rm -rf sherpa-onnx-*

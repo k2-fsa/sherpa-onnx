@@ -10,7 +10,7 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
-if [[ $SKIP_QWEN3 != "true" ]]; then
+if [[ "$SKIP_QWEN3" != "true" ]]; then
   echo "----------Qwen3 ASR----------"
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
   tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
