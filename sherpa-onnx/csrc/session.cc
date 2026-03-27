@@ -44,17 +44,19 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
   api.ReleaseStatus(status);
 }
 
-static void ParserConfigFile(
+static void ParseConfigFile(
     const std::string &config_path,
     std::unordered_map<std::string, std::string> &config) {
-  // The config file should be in the format of key:value per line, e.g.,
-  // GraphOptimizationLevel:0
-  // LogSeverityLevel:1
-  // ProfilingFilePrefix:profile
+  // The config file should be in the format of key=value per line, e.g.,
+  // GraphOptimizationLevel=0 or GraphOptimizationLevel = 0
+  // LogSeverityLevel=1
+  // ProfilingFilePrefix=profile
   // For spacemit, the config file can contain the following
-  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD:1
+  // SPACEMIT_EP_USE_GLOBAL_INTRA_THREAD=1
   // ... and so on.
-  // # is treated as comment. Empty lines are ignored.
+  // # is treated as comment. Empty lines are ignored. The legacy key:value
+  // format is still supported for backward compatibility.
+  // additionally, DEBUG=1 can be set to print all configs read from the file.
 
   std::ifstream is(config_path);
   if (!is.is_open()) {
@@ -72,7 +74,7 @@ static void ParserConfigFile(
       continue;
     }
 
-    auto sep_pos = line.find(':');
+    auto sep_pos = line.find('=');
     if (sep_pos == std::string::npos) {
       SHERPA_ONNX_LOGE("Ignore invalid provider config line %d in %s: %s",
                        line_num, config_path.c_str(), line.c_str());
@@ -88,9 +90,17 @@ static void ParserConfigFile(
       continue;
     }
 
-    SHERPA_ONNX_LOGE("Loaded provider config %s=%s", key.c_str(),
-                     value.c_str());
     config[std::move(key)] = std::move(value);
+  }
+
+  if (config.find("DEBUG") != config.end()) {
+    auto config_debug = ToIntOrDefault(config["DEBUG"], 0) == 1;
+    if (config_debug) {
+      for (const auto &kv : config) {
+        SHERPA_ONNX_LOGE("Provider config: %s=%s", kv.first.c_str(),
+                         kv.second.c_str());
+      }
+    }
   }
 }
 
@@ -119,7 +129,7 @@ static void SplitProviderAndConfig(
     SHERPA_ONNX_EXIT(-1);
   }
 
-  ParserConfigFile(config_path, config);
+  ParseConfigFile(config_path, config);
 }
 
 Ort::SessionOptions GetSessionOptionsImpl(
@@ -363,10 +373,6 @@ Ort::SessionOptions GetSessionOptionsImpl(
       // all ops run on ep, no need to create multiple threads in onnxruntime.
       // ep will create SPACEMIT_EP_INTRA_THREAD_NUM threads as intra threads.
       std::unordered_map<std::string, std::string> provider_options(config);
-      for (const auto &kv : provider_options) {
-        SHERPA_ONNX_LOGE("Use SpacemiT provider option %s=%s", kv.first.c_str(),
-                         kv.second.c_str());
-      }
       SHERPA_ONNX_LOGE("Set IntraOpNumThreads to 1");
       sess_opts.SetIntraOpNumThreads(1);
       SHERPA_ONNX_LOGE("Set InterOpNumThreads to 1");
