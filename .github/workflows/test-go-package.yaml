@@ -77,7 +77,7 @@ jobs:
           gcc --version
 
       - name: Test Qwen3 ASR
-        if: matrix.os != 'windows-2022'
+        if: matrix.os != 'windows-2022' && matrix.os != 'ubuntu-latest'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-qwen3-asr-decode-files

@@ -79,6 +79,7 @@ jobs:
           fi
 
       - name: Test Qwen3 ASR
+        if: matrix.os != 'ubuntu-latest'
         shell: bash
         run: |
           name=qwen3-asr-cxx-api

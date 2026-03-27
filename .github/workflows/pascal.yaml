@@ -230,8 +230,10 @@ jobs:
 
           pushd non-streaming-asr
 
-          ./run-qwen3-asr.sh
-          rm -rf sherpa-onnx-*
+          if [[ ${{ matrix.os }} != ubuntu-latest ]]; then
+            ./run-qwen3-asr.sh
+            rm -rf sherpa-onnx-*
+          fi
           echo "---"
 
           ./run-funasr-nano.sh

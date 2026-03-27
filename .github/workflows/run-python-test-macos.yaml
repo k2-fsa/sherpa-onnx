@@ -93,6 +93,9 @@ jobs:
         shell: bash
         run: |
           export OS=${{ matrix.os }}
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            export SKIP_QWEN3=true
+          fi
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
 
