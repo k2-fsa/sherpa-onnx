@@ -298,6 +298,13 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [Speed of Sound](https://github.com/zugaldia/speedofsound)
+
+A voice-typing application for the Linux desktop (GTK4/Adwaita).
+It captures microphone audio, transcribes it offline using Sherpa ONNX ASR models,
+optionally polishes the text with an LLM, and types the result into the active window
+via XDG Remote Desktop Portal keyboard simulation.
+
 ### [VoxSherpa TTS](https://github.com/CodeBySonu95/VoxSherpa-TTS)
 
 > VoxSherpa TTS is a 100% offline Android Text-to-Speech app powered by Sherpa-ONNX.
