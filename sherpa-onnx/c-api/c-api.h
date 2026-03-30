@@ -991,8 +991,6 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   const char *decoder;
   /** Path to the tokenizer directory (e.g. containing `vocab.json`). */
   const char *tokenizer;
-  /** Optional Qwen3-ASR hotwords. */
-  const char *hotwords;
   /** Maximum total sequence length supported by the model. */
   int32_t max_total_len;
   /** Maximum number of new tokens to generate. */
@@ -1003,6 +1001,8 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   float top_p;
   /** Random seed for reproducible sampling. */
   int32_t seed;
+  /** Optional Qwen3-ASR hotwords. */
+  const char *hotwords;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 
 /** @brief Configuration for a MedASR CTC model. */

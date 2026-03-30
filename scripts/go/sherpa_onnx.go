@@ -862,15 +862,6 @@ func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 	return stream
 }
 
-// NewOfflineStreamWithHotwords creates a stream with per-utterance hotwords (Qwen3-ASR, transducer, etc.).
-func NewOfflineStreamWithHotwords(recognizer *OfflineRecognizer, hotwords string) *OfflineStream {
-	cs := C.CString(hotwords)
-	defer C.free(unsafe.Pointer(cs))
-	stream := &OfflineStream{}
-	stream.impl = C.SherpaOnnxCreateOfflineStreamWithHotwords(recognizer.impl, cs)
-	return stream
-}
-
 // Input audio samples for the offline stream.
 // Please only call it once. That is, input all samples at once.
 //

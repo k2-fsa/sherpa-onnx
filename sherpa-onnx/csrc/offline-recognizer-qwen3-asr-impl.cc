@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -31,6 +30,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -51,70 +51,16 @@ constexpr char kQwen3SystemPromptPrefix[] = "<|im_start|>system\n";
 constexpr char kQwen3SystemPromptSuffix[] =
     "<|im_end|>\n<|im_start|>user\n<|audio_start|>";
 
-static std::string NormalizeQwen3AsrHotwordSlashes(std::string hw) {
-  for (char &c : hw) {
-    if (c == '/') {
-      c = ' ';
-    }
-  }
-  return hw;
-}
-
-static inline void Qwen3TrimInplace(std::string *s) {
-  if (!s) return;
-  auto &str = *s;
-  auto not_space = [](unsigned char c) { return !std::isspace(c); };
-  str.erase(str.begin(), std::find_if(str.begin(), str.end(), not_space));
-  str.erase(std::find_if(str.rbegin(), str.rend(), not_space).base(),
-            str.end());
-}
-
-static std::vector<std::string> Qwen3ParseHotwordsCsv(const std::string &csv) {
-  std::vector<std::string> out;
-  std::string cur;
-  cur.reserve(csv.size());
-
-  for (size_t i = 0; i < csv.size(); ++i) {
-    unsigned char ch = static_cast<unsigned char>(csv[i]);
-    bool is_separator = false;
-    if (ch == ',' || ch == ';' || ch == '\n' || ch == '\r' || ch == '\t') {
-      is_separator = true;
-    } else if (ch == 0xEF) {
-      if (i + 2 < csv.size()) {
-        unsigned char ch1 = static_cast<unsigned char>(csv[i + 1]);
-        unsigned char ch2 = static_cast<unsigned char>(csv[i + 2]);
-        if (ch1 == 0xBC && (ch2 == 0x8C || ch2 == 0x9B)) {
-          is_separator = true;
-          i += 2;
-        } else if (ch1 >= 0x80 && ch1 <= 0xBF && ch2 >= 0x80 && ch2 <= 0xBF) {
-          cur.push_back(csv[i]);
-          cur.push_back(csv[i + 1]);
-          cur.push_back(csv[i + 2]);
-          i += 2;
-          continue;
-        }
-      }
-    }
-
-    if (is_separator) {
-      Qwen3TrimInplace(&cur);
-      if (!cur.empty()) out.push_back(cur);
-      cur.clear();
-    } else {
-      cur.push_back(csv[i]);
-    }
-  }
-  Qwen3TrimInplace(&cur);
-  if (!cur.empty()) out.push_back(cur);
-  return out;
-}
-
+// Format hotwords for the Qwen3 chat template: ASCII comma-separated list
+// (e.g. "foo,bar,baz"); fields are trimmed, empty fields dropped, then joined
+// with spaces for the system prompt. Same delimiter convention as elsewhere
+// (comma-only); no alternate separators or '/' rewriting.
 static std::string Qwen3FormatHotwordsForPrompt(const std::string &csv) {
-  std::vector<std::string> parts = Qwen3ParseHotwordsCsv(csv);
+  const std::vector<std::string> parts = SplitStringAndTrim(csv, ',');
   std::string s;
   for (size_t i = 0; i < parts.size(); ++i) {
     if (i) s += ' ';
-    s += NormalizeQwen3AsrHotwordSlashes(std::move(parts[i]));
+    s += parts[i];
   }
   return s;
 }

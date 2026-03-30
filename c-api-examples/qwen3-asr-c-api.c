@@ -48,12 +48,12 @@ int32_t main() {
   qwen3.encoder = encoder;
   qwen3.decoder = decoder;
   qwen3.tokenizer = tokenizer;
-  qwen3.hotwords = "";
   qwen3.max_total_len = 512;
   qwen3.max_new_tokens = 128;
   qwen3.temperature = 1e-6f;
   qwen3.top_p = 0.8f;
   qwen3.seed = 42;
+  qwen3.hotwords = "";
 
   SherpaOnnxOfflineModelConfig offline_model_config;
   memset(&offline_model_config, 0, sizeof(offline_model_config));
