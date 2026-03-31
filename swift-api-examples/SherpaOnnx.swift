@@ -490,12 +490,12 @@ func sherpaOnnxOfflineQwen3ASRModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
     tokenizer: toCPointer(tokenizer),
-    hotwords: toCPointer(hotwords),
     max_total_len: Int32(maxTotalLen),
     max_new_tokens: Int32(maxNewTokens),
     temperature: temperature,
     top_p: topP,
-    seed: Int32(seed)
+    seed: Int32(seed),
+    hotwords: toCPointer(hotwords)
   )
 }
 

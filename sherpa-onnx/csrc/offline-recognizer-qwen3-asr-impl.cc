@@ -684,8 +684,10 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     return result;
   }
 
-  const std::string hotwords =
-      Qwen3FormatHotwordsForPrompt(qwen3_config.hotwords);
+  // Optional per-stream hotwords via SetOption("hotwords", comma-separated
+  // CSV).
+  const std::string hotwords = Qwen3FormatHotwordsForPrompt(
+      stream->HasOption("hotwords") ? stream->GetOption("hotwords") : "");
 
   int32_t before_len = 0;
   int32_t fake_audio_token_len = 0;
