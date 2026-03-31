@@ -24,7 +24,7 @@ struct OfflineQwen3ASRModelConfig {
   // Path to tokenizer directory (e.g., Qwen3-ASR-0.6B)
   std::string tokenizer;
 
-  // Qwen3-ASR hotwords
+  // Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "foo,bar,baz".
   std::string hotwords;
 
   // Maximum total sequence length (from model metadata or config)

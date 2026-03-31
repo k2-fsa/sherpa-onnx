@@ -30,9 +30,6 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
 
   std::unique_ptr<OfflineStream> CreateStream() const override;
 
-  std::unique_ptr<OfflineStream> CreateStream(
-      const std::string &hotwords) const override;
-
   void DecodeStreams(OfflineStream **ss, int32_t n) const override;
 
   OfflineRecognizerConfig GetConfig() const override { return config_; }

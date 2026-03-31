@@ -71,9 +71,12 @@ def get_args():
     parser.add_argument(
         "--hotwords",
         type=str,
-        help="Optional Qwen3-ASR hotwords (prompt text).",
         default="",
         required=False,
+        help="""
+        Optional comma-separated hotword phrases for Qwen3-ASR, e.g.
+        "foo,bar,baz"
+        """,
     )
 
     parser.add_argument(

@@ -26,9 +26,9 @@ void OfflineQwen3ASRModelConfig::Register(ParseOptions *po) {
       "qwen3-asr-tokenizer", &tokenizer,
       "Path to tokenizer directory (e.g., Qwen3-ASR-0.6B) for Qwen3-ASR");
 
-  po->Register(
-      "qwen3-asr-hotwords", &hotwords,
-      "Optional Qwen3-ASR hotwords (prompt text).");
+  po->Register("qwen3-asr-hotwords", &hotwords,
+               "Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "
+               "\"foo,bar,baz\".");
 
   po->Register("qwen3-asr-max-total-len", &max_total_len,
                "Maximum total sequence length for Qwen3-ASR");

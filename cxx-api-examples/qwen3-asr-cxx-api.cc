@@ -16,6 +16,8 @@
 // Run:
 //   ./build/bin/qwen3-asr-cxx-api
 //
+// Hotwords (optional): comma-separated in qwen3.hotwords, e.g. "foo,bar".
+//
 // Note: If the input audio is too long, you can change max_new_tokens via
 //   stream.SetOption("max_new_tokens", "256");
 // clang-format on
@@ -40,7 +42,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model_config.qwen3_asr.encoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx";
   config.model_config.qwen3_asr.decoder = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
   config.model_config.qwen3_asr.tokenizer = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
-  config.model_config.qwen3_asr.hotwords = "";
+  config.model_config.qwen3_asr.hotwords = "";  // optional; e.g. "foo,bar"
   config.model_config.qwen3_asr.max_total_len = 512;
   config.model_config.qwen3_asr.max_new_tokens = 128;
   config.model_config.qwen3_asr.temperature = 1e-6f;

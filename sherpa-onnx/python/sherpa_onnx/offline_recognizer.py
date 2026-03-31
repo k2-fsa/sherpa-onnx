@@ -460,7 +460,7 @@ class OfflineRecognizer(object):
           seed:
             Random seed for sampling.
           hotwords:
-            Optional Qwen3-ASR hotwords.
+            Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. ``"foo,bar,baz"``.
         """
         self = cls.__new__(cls)
         qwen3 = OfflineQwen3ASRModelConfig(

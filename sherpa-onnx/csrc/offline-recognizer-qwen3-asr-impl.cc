@@ -52,17 +52,10 @@ constexpr char kQwen3SystemPromptSuffix[] =
     "<|im_end|>\n<|im_start|>user\n<|audio_start|>";
 
 // Format hotwords for the Qwen3 chat template: ASCII comma-separated list
-// (e.g. "foo,bar,baz"); fields are trimmed, empty fields dropped, then joined
-// with spaces for the system prompt. Same delimiter convention as elsewhere
-// (comma-only); no alternate separators or '/' rewriting.
+// (e.g. "foo,bar,baz");
 static std::string Qwen3FormatHotwordsForPrompt(const std::string &csv) {
   const std::vector<std::string> parts = SplitStringAndTrim(csv, ',');
-  std::string s;
-  for (size_t i = 0; i < parts.size(); ++i) {
-    if (i) s += ' ';
-    s += parts[i];
-  }
-  return s;
+  return Join(parts, " ");
 }
 
 static void Qwen3LogMaxTotalLenSuggestions(int32_t max_seq_len,
@@ -349,15 +342,6 @@ OfflineRecognizerQwen3ASRImpl::OfflineRecognizerQwen3ASRImpl(
 std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream()
     const {
   return std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
-}
-
-std::unique_ptr<OfflineStream> OfflineRecognizerQwen3ASRImpl::CreateStream(
-    const std::string &hotwords) const {
-  auto s = std::make_unique<OfflineStream>(WhisperTag{kQwen3MelDim});
-  if (!hotwords.empty()) {
-    s->SetOption("hotwords", hotwords);
-  }
-  return s;
 }
 
 void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
@@ -700,10 +684,8 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     return result;
   }
 
-  const std::string hotwords_raw = stream->HasOption("hotwords")
-                                       ? stream->GetOption("hotwords")
-                                       : qwen3_config.hotwords;
-  const std::string hotwords = Qwen3FormatHotwordsForPrompt(hotwords_raw);
+  const std::string hotwords =
+      Qwen3FormatHotwordsForPrompt(qwen3_config.hotwords);
 
   int32_t before_len = 0;
   int32_t fake_audio_token_len = 0;

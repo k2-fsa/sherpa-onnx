@@ -1001,7 +1001,8 @@ typedef struct SherpaOnnxOfflineQwen3ASRModelConfig {
   float top_p;
   /** Random seed for reproducible sampling. */
   int32_t seed;
-  /** Optional Qwen3-ASR hotwords. */
+  /** Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. @c
+   * "foo,bar,baz". */
   const char *hotwords;
 } SherpaOnnxOfflineQwen3ASRModelConfig;
 

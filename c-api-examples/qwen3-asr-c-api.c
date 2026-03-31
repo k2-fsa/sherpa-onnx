@@ -17,6 +17,8 @@
 // Run:
 //   ./build/bin/qwen3-asr-c-api
 //
+// Hotwords (optional): comma-separated in qwen3.hotwords, e.g. "foo,bar".
+//
 // Note: If the input audio is too long, you can set option on the stream:
 //   SherpaOnnxOfflineStreamSetOption(stream, "max_new_tokens", "256");
 // clang-format on
@@ -53,7 +55,7 @@ int32_t main() {
   qwen3.temperature = 1e-6f;
   qwen3.top_p = 0.8f;
   qwen3.seed = 42;
-  qwen3.hotwords = "";
+  qwen3.hotwords = "";  // optional; e.g. "foo,bar"
 
   SherpaOnnxOfflineModelConfig offline_model_config;
   memset(&offline_model_config, 0, sizeof(offline_model_config));
