@@ -463,7 +463,11 @@ command mode, and optional LLM post-processing.
 Video demo in Chinese: [fcitx5-vinput](https://www.bilibili.com/video/BV1a6cUzVE6F)
 
 ### [Wake Word](https://github.com/analyticsinmotion/wake-word)
-A VS Code extension for hands-free voice-activated coding. It uses sherpa-onnx for real-time keyword spotting (KWS) to detect custom wake phrases and trigger VS Code commands by voice. Audio capture is handled by [decibri](https://github.com/analyticsinmotion/decibri), a cross-platform Node.js microphone streaming library with prebuilt native binaries.
+
+A VS Code extension for hands-free voice-activated coding. It uses sherpa-onnx for real-time
+keyword spotting (KWS) to detect custom wake phrases and trigger VS Code commands by voice.
+Audio capture is handled by [decibri](https://github.com/analyticsinmotion/decibri), a
+cross-platform Node.js microphone streaming library with prebuilt native binaries.
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AnalyticsInMotion.wake-word)
 - [Open VSX](https://open-vsx.org/extension/AnalyticsInMotion/wake-word)
