@@ -13,12 +13,12 @@ func run() {
     encoder: encoder,
     decoder: decoder,
     tokenizer: tokenizer,
-    hotwords: "",
     maxTotalLen: 512,
     maxNewTokens: 128,
     temperature: 1e-6,
     topP: 0.8,
-    seed: 42
+    seed: 42,
+    hotwords: ""
   )
 
   let modelConfig = sherpaOnnxOfflineModelConfig(

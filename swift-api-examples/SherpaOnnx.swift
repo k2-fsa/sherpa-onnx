@@ -478,12 +478,12 @@ func sherpaOnnxOfflineQwen3ASRModelConfig(
   encoder: String = "",
   decoder: String = "",
   tokenizer: String = "",
-  hotwords: String = "",
   maxTotalLen: Int = 512,
   maxNewTokens: Int = 128,
   temperature: Float = 1e-6,
   topP: Float = 0.8,
-  seed: Int = 42
+  seed: Int = 42,
+  hotwords: String = ""
 ) -> SherpaOnnxOfflineQwen3ASRModelConfig {
   return SherpaOnnxOfflineQwen3ASRModelConfig(
     conv_frontend: toCPointer(convFrontend),

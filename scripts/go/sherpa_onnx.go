@@ -539,12 +539,12 @@ type OfflineQwen3ASRModelConfig struct {
 	Encoder      string
 	Decoder      string
 	Tokenizer    string
-	Hotwords     string
 	MaxTotalLen  int
 	MaxNewTokens int
 	Temperature  float32
 	TopP         float32
 	Seed         int
+	Hotwords     string
 }
 
 type OfflineTdnnModelConfig struct {
@@ -709,12 +709,12 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.qwen3_asr.encoder = C.CString(config.ModelConfig.Qwen3ASR.Encoder)
 	c.model_config.qwen3_asr.decoder = C.CString(config.ModelConfig.Qwen3ASR.Decoder)
 	c.model_config.qwen3_asr.tokenizer = C.CString(config.ModelConfig.Qwen3ASR.Tokenizer)
-	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
 	c.model_config.qwen3_asr.max_total_len = C.int(config.ModelConfig.Qwen3ASR.MaxTotalLen)
 	c.model_config.qwen3_asr.max_new_tokens = C.int(config.ModelConfig.Qwen3ASR.MaxNewTokens)
 	c.model_config.qwen3_asr.temperature = C.float(config.ModelConfig.Qwen3ASR.Temperature)
 	c.model_config.qwen3_asr.top_p = C.float(config.ModelConfig.Qwen3ASR.TopP)
 	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
+	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 

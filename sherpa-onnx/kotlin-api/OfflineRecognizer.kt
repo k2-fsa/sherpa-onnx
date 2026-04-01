@@ -75,12 +75,12 @@ data class OfflineQwen3AsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var tokenizer: String = "",
-    var hotwords: String = "",
     var maxTotalLen: Int = 512,
     var maxNewTokens: Int = 128,
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
     var seed: Int = 42,
+    var hotwords: String = "",
 )
 
 data class OfflineWhisperModelConfig(
@@ -976,7 +976,6 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     encoder = "$modelDir/encoder.int8.onnx",
                     decoder = "$modelDir/decoder.int8.onnx",
                     tokenizer = "$modelDir/tokenizer",
-                    hotwords = "",
                 ),
                 tokens = "",
                 numThreads=3,

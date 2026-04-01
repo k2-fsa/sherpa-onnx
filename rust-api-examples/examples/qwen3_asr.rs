@@ -61,7 +61,6 @@ fn main() {
         encoder: Some(args.encoder.clone()),
         decoder: Some(args.decoder.clone()),
         tokenizer: Some(args.tokenizer.clone()),
-        hotwords: Some(String::new()),
         ..Default::default()
     };
 

@@ -404,12 +404,12 @@ type
     Encoder: AnsiString;
     Decoder: AnsiString;
     Tokenizer: AnsiString;
-    Hotwords: AnsiString;
     MaxTotalLen: Integer;
     MaxNewTokens: Integer;
     Temperature: Single;
     TopP: Single;
     Seed: Integer;
+    Hotwords: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
     function ToString: AnsiString;
   end;
@@ -984,12 +984,12 @@ type
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
     Tokenizer: PAnsiChar;
-    Hotwords: PAnsiChar;
     MaxTotalLen: cint32;
     MaxNewTokens: cint32;
     Temperature: cfloat;
     TopP: cfloat;
     Seed: cint32;
+    Hotwords: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
@@ -1978,17 +1978,16 @@ begin
     ', Encoder := %s' +
     ', Decoder := %s' +
     ', Tokenizer := %s' +
-    ', Hotwords := %s' +
     ', MaxTotalLen := %d' +
     ', MaxNewTokens := %d' +
     ', Temperature := %.3f' +
     ', TopP := %.3f' +
     ', Seed := %d' +
+    ', Hotwords := %s' +
     ')',
     [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
-     Self.Hotwords,
      Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
-     Self.TopP, Self.Seed]);
+     Self.TopP, Self.Seed, Self.Hotwords]);
 end;
 
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
@@ -2231,12 +2230,12 @@ begin
   C.ModelConfig.Qwen3Asr.Encoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Encoder);
   C.ModelConfig.Qwen3Asr.Decoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Decoder);
   C.ModelConfig.Qwen3Asr.Tokenizer := PAnsiChar(Config.ModelConfig.Qwen3Asr.Tokenizer);
-  C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
   C.ModelConfig.Qwen3Asr.MaxTotalLen := Config.ModelConfig.Qwen3Asr.MaxTotalLen;
   C.ModelConfig.Qwen3Asr.MaxNewTokens := Config.ModelConfig.Qwen3Asr.MaxNewTokens;
   C.ModelConfig.Qwen3Asr.Temperature := Config.ModelConfig.Qwen3Asr.Temperature;
   C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
   C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
+  C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;

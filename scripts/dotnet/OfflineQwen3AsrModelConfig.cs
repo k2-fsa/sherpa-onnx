@@ -14,12 +14,12 @@ namespace SherpaOnnx
             Encoder = "";
             Decoder = "";
             Tokenizer = "";
-            Hotwords = "";
             MaxTotalLen = 512;
             MaxNewTokens = 128;
             Temperature = 1e-6F;
             TopP = 0.8F;
             Seed = 42;
+            Hotwords = "";
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -34,13 +34,13 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Tokenizer;
 
-        [MarshalAs(UnmanagedType.LPStr)]
-        public string Hotwords;
-
         public int MaxTotalLen;
         public int MaxNewTokens;
         public float Temperature;
         public float TopP;
         public int Seed;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Hotwords;
     }
 }

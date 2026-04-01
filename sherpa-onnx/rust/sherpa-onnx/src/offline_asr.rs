@@ -327,12 +327,12 @@ pub struct OfflineQwen3ASRModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
     pub tokenizer: Option<String>,
-    pub hotwords: Option<String>,
     pub max_total_len: i32,
     pub max_new_tokens: i32,
     pub temperature: f32,
     pub top_p: f32,
     pub seed: i32,
+    pub hotwords: Option<String>,
 }
 impl Default for OfflineQwen3ASRModelConfig {
     fn default() -> Self {
@@ -341,12 +341,12 @@ impl Default for OfflineQwen3ASRModelConfig {
             encoder: None,
             decoder: None,
             tokenizer: None,
-            hotwords: None,
             max_total_len: 512,
             max_new_tokens: 128,
             temperature: 1e-6,
             top_p: 0.8,
             seed: 42,
+            hotwords: None,
         }
     }
 }
@@ -357,12 +357,12 @@ impl OfflineQwen3ASRModelConfig {
             encoder: to_c_ptr(&self.encoder, cstrings),
             decoder: to_c_ptr(&self.decoder, cstrings),
             tokenizer: to_c_ptr(&self.tokenizer, cstrings),
-            hotwords: to_c_ptr(&self.hotwords, cstrings),
             max_total_len: self.max_total_len,
             max_new_tokens: self.max_new_tokens,
             temperature: self.temperature,
             top_p: self.top_p,
             seed: self.seed,
+            hotwords: to_c_ptr(&self.hotwords, cstrings),
         }
     }
 }

@@ -85,12 +85,12 @@ export class OfflineQwen3AsrModelConfig {
   public encoder: string = '';
   public decoder: string = '';
   public tokenizer: string = '';
-  public hotwords: string = '';
   public maxTotalLen: number = 512;
   public maxNewTokens: number = 64;
   public temperature: number = 1e-6;
   public topP: number = 0.8;
   public seed: number = 42;
+  public hotwords: string = '';
 }
 
 export class OfflineZipformerCtcModelConfig {

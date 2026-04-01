@@ -169,12 +169,12 @@ static SherpaOnnxOfflineQwen3ASRModelConfig GetOfflineQwen3AsrModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokenizer, tokenizer);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords, hotwords);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_total_len, maxTotalLen);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_new_tokens, maxNewTokens);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(temperature, temperature);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(top_p, topP);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(seed, seed);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords, hotwords);
 
   return c;
 }

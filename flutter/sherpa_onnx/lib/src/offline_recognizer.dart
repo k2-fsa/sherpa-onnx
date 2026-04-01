@@ -311,12 +311,12 @@ class OfflineQwen3AsrModelConfig {
     this.encoder = '',
     this.decoder = '',
     this.tokenizer = '',
-    this.hotwords = '',
     this.maxTotalLen = 512,
     this.maxNewTokens = 128,
     this.temperature = 1e-6,
     this.topP = 0.8,
     this.seed = 42,
+    this.hotwords = '',
   });
 
   factory OfflineQwen3AsrModelConfig.fromJson(Map<String, dynamic> json) {
@@ -325,18 +325,18 @@ class OfflineQwen3AsrModelConfig {
       encoder: json['encoder'] as String? ?? '',
       decoder: json['decoder'] as String? ?? '',
       tokenizer: json['tokenizer'] as String? ?? '',
-      hotwords: json['hotwords'] as String? ?? '',
       maxTotalLen: json['maxTotalLen'] as int? ?? 512,
       maxNewTokens: json['maxNewTokens'] as int? ?? 128,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
       topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
       seed: json['seed'] as int? ?? 42,
+      hotwords: json['hotwords'] as String? ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, hotwords: $hotwords, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed)';
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -344,24 +344,24 @@ class OfflineQwen3AsrModelConfig {
     'encoder': encoder,
     'decoder': decoder,
     'tokenizer': tokenizer,
-    'hotwords': hotwords,
     'maxTotalLen': maxTotalLen,
     'maxNewTokens': maxNewTokens,
     'temperature': temperature,
     'topP': topP,
     'seed': seed,
+    'hotwords': hotwords,
   };
 
   final String convFrontend;
   final String encoder;
   final String decoder;
   final String tokenizer;
-  final String hotwords;
   final int maxTotalLen;
   final int maxNewTokens;
   final double temperature;
   final double topP;
   final int seed;
+  final String hotwords;
 }
 
 /// Model files and options for an offline Whisper recognizer.
@@ -1101,13 +1101,13 @@ class OfflineRecognizer {
         .toNativeUtf8();
     c.ref.model.qwen3Asr.tokenizer = config.model.qwen3Asr.tokenizer
         .toNativeUtf8();
-    c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
-        .toNativeUtf8();
     c.ref.model.qwen3Asr.maxTotalLen = config.model.qwen3Asr.maxTotalLen;
     c.ref.model.qwen3Asr.maxNewTokens = config.model.qwen3Asr.maxNewTokens;
     c.ref.model.qwen3Asr.temperature = config.model.qwen3Asr.temperature;
     c.ref.model.qwen3Asr.topP = config.model.qwen3Asr.topP;
     c.ref.model.qwen3Asr.seed = config.model.qwen3Asr.seed;
+    c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
+        .toNativeUtf8();
 
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
