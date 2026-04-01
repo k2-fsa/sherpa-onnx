@@ -19,6 +19,7 @@ namespace SherpaOnnx
             Temperature = 1e-6F;
             TopP = 0.8F;
             Seed = 42;
+            Hotwords = "";
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -38,5 +39,8 @@ namespace SherpaOnnx
         public float Temperature;
         public float TopP;
         public int Seed;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Hotwords;
     }
 }

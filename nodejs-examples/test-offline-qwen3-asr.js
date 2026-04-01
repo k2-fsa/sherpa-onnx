@@ -13,6 +13,7 @@ function createOfflineRecognizer() {
         decoder:
             './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx',
         tokenizer: './sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer',
+        hotwords: '',
       },
       tokens: '',
     }

@@ -80,6 +80,7 @@ data class OfflineQwen3AsrModelConfig(
     var temperature: Float = 1e-6f,
     var topP: Float = 0.8f,
     var seed: Int = 42,
+    var hotwords: String = "",
 )
 
 data class OfflineWhisperModelConfig(
@@ -193,6 +194,11 @@ class OfflineRecognizer(
         return OfflineStream(p)
     }
 
+    fun createStream(hotwords: String): OfflineStream {
+        val p = createStreamWithHotwords(ptr, hotwords)
+        return OfflineStream(p)
+    }
+
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
         return getResult(stream.ptr)
     }
@@ -204,6 +210,8 @@ class OfflineRecognizer(
     private external fun delete(ptr: Long)
 
     private external fun createStream(ptr: Long): Long
+
+    private external fun createStreamWithHotwords(ptr: Long, hotwords: String): Long
 
     private external fun setConfig(ptr: Long, config: OfflineRecognizerConfig)
 

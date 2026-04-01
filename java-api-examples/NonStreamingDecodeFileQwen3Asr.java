@@ -25,6 +25,7 @@ public class NonStreamingDecodeFileQwen3Asr {
             .setEncoder(encoder)
             .setDecoder(decoder)
             .setTokenizer(tokenizer)
+            .setHotwords("")
             .build();
 
     OfflineModelConfig modelConfig =

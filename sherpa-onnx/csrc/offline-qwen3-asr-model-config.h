@@ -24,6 +24,9 @@ struct OfflineQwen3ASRModelConfig {
   // Path to tokenizer directory (e.g., Qwen3-ASR-0.6B)
   std::string tokenizer;
 
+  // Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. "foo,bar,baz".
+  std::string hotwords;
+
   // Maximum total sequence length (from model metadata or config)
   int32_t max_total_len = 512;
 
@@ -46,11 +49,13 @@ struct OfflineQwen3ASRModelConfig {
                              const std::string &decoder,
                              const std::string &tokenizer,
                              int32_t max_total_len, int32_t max_new_tokens,
-                             float temperature, float top_p, int32_t seed)
+                             float temperature, float top_p, int32_t seed,
+                             const std::string &hotwords = "")
       : conv_frontend(conv_frontend),
         encoder(encoder),
         decoder(decoder),
         tokenizer(tokenizer),
+        hotwords(hotwords),
         max_total_len(max_total_len),
         max_new_tokens(max_new_tokens),
         temperature(temperature),

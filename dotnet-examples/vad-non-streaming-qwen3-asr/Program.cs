@@ -17,6 +17,7 @@ class VadNonStreamingQwen3Asr
     config.ModelConfig.Qwen3Asr.Encoder = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx";
     config.ModelConfig.Qwen3Asr.Decoder = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
     config.ModelConfig.Qwen3Asr.Tokenizer = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
+    config.ModelConfig.Qwen3Asr.Hotwords = "";
     config.ModelConfig.Tokens = "";
     config.ModelConfig.Debug = 0;
     var recognizer = new OfflineRecognizer(config);

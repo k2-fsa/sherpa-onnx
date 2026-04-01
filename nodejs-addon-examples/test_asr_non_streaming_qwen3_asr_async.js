@@ -18,6 +18,7 @@ async function createRecognizerAsync(modelDir, numThreads = 2, debug = 1) {
         encoder: path.join(modelDir, 'encoder.int8.onnx'),
         decoder: path.join(modelDir, 'decoder.int8.onnx'),
         tokenizer: path.join(modelDir, 'tokenizer'),
+        hotwords: '',
       },
       tokens: '',
       numThreads,

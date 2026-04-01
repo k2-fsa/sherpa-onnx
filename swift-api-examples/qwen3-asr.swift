@@ -17,7 +17,8 @@ func run() {
     maxNewTokens: 128,
     temperature: 1e-6,
     topP: 0.8,
-    seed: 42
+    seed: 42,
+    hotwords: ""
   )
 
   let modelConfig = sherpaOnnxOfflineModelConfig(

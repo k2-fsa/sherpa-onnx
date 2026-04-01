@@ -150,6 +150,7 @@ pub struct OfflineQwen3ASRModelConfig {
     pub temperature: c_float,
     pub top_p: c_float,
     pub seed: i32,
+    pub hotwords: *const c_char,
 }
 
 #[repr(C)]

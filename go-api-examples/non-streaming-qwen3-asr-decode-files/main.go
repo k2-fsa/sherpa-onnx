@@ -16,6 +16,7 @@ func main() {
 	config.ModelConfig.Qwen3ASR.Encoder = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx"
 	config.ModelConfig.Qwen3ASR.Decoder = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx"
 	config.ModelConfig.Qwen3ASR.Tokenizer = "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer"
+	config.ModelConfig.Qwen3ASR.Hotwords = ""
 	// Seed for reproducibility (default: 42)
 	config.ModelConfig.Qwen3ASR.Seed = 42
 

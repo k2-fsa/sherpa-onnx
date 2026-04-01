@@ -332,6 +332,7 @@ pub struct OfflineQwen3ASRModelConfig {
     pub temperature: f32,
     pub top_p: f32,
     pub seed: i32,
+    pub hotwords: Option<String>,
 }
 impl Default for OfflineQwen3ASRModelConfig {
     fn default() -> Self {
@@ -345,6 +346,7 @@ impl Default for OfflineQwen3ASRModelConfig {
             temperature: 1e-6,
             top_p: 0.8,
             seed: 42,
+            hotwords: None,
         }
     }
 }
@@ -360,6 +362,7 @@ impl OfflineQwen3ASRModelConfig {
             temperature: self.temperature,
             top_p: self.top_p,
             seed: self.seed,
+            hotwords: to_c_ptr(&self.hotwords, cstrings),
         }
     }
 }

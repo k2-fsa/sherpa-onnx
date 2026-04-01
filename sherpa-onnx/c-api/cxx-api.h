@@ -589,6 +589,9 @@ struct OfflineQwen3ASRModelConfig {
   std::string decoder;
   /** Tokenizer directory (e.g. containing `vocab.json`). */
   std::string tokenizer;
+  /** Optional comma-separated hotwords (UTF-8, ASCII ','), e.g. @c
+   * "foo,bar,baz". */
+  std::string hotwords;
   /** Maximum total sequence length supported by the model. */
   int32_t max_total_len = 512;
   /** Maximum number of new tokens to generate. */

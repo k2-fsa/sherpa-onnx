@@ -409,6 +409,7 @@ type
     Temperature: Single;
     TopP: Single;
     Seed: Integer;
+    Hotwords: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
     function ToString: AnsiString;
   end;
@@ -988,6 +989,7 @@ type
     Temperature: cfloat;
     TopP: cfloat;
     Seed: cint32;
+    Hotwords: PAnsiChar;
   end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
@@ -1981,10 +1983,11 @@ begin
     ', Temperature := %.3f' +
     ', TopP := %.3f' +
     ', Seed := %d' +
+    ', Hotwords := %s' +
     ')',
     [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
      Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
-     Self.TopP, Self.Seed]);
+     Self.TopP, Self.Seed, Self.Hotwords]);
 end;
 
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
@@ -2232,6 +2235,7 @@ begin
   C.ModelConfig.Qwen3Asr.Temperature := Config.ModelConfig.Qwen3Asr.Temperature;
   C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
   C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
+  C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;

@@ -428,6 +428,8 @@ final class SherpaOnnxOfflineQwen3AsrModelConfig extends Struct {
 
   @Int32()
   external int seed;
+
+  external Pointer<Utf8> hotwords;
 }
 
 final class SherpaOnnxOfflineWhisperModelConfig extends Struct {

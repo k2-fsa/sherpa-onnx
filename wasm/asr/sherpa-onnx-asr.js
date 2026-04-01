@@ -957,11 +957,13 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
   const tokenizerLen = Module.lengthBytesUTF8(config.tokenizer || '') + 1;
+  const hotwordsLen = Module.lengthBytesUTF8(config.hotwords || '') + 1;
 
-  const n = convFrontendLen + encoderLen + decoderLen + tokenizerLen;
+  const n = convFrontendLen + encoderLen + decoderLen + tokenizerLen +
+      hotwordsLen;
   const buffer = Module._malloc(n);
 
-  const len = 9 * 4;  // 4 pointers + 3 int32 + 2 float
+  const len = 10 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -977,6 +979,9 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
 
   Module.stringToUTF8(config.tokenizer || '', buffer + offset, tokenizerLen);
   offset += tokenizerLen;
+
+  Module.stringToUTF8(config.hotwords || '', buffer + offset, hotwordsLen);
+  offset += hotwordsLen;
 
   offset = 0;
   Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
@@ -996,6 +1001,8 @@ function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
   Module.setValue(ptr + 6 * 4, config.temperature || 1e-6, 'float');
   Module.setValue(ptr + 7 * 4, config.topP || 0.8, 'float');
   Module.setValue(ptr + 8 * 4, config.seed || 42, 'i32');
+  Module.setValue(ptr + 9 * 4, buffer + offset, 'i8*');
+  offset += hotwordsLen;
 
   return {
     buffer: buffer,
@@ -1328,6 +1335,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       temperature: 1e-6,
       topP: 0.8,
       seed: 42,
+      hotwords: '',
     };
   }
 

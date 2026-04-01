@@ -69,6 +69,17 @@ def get_args():
     )
 
     parser.add_argument(
+        "--hotwords",
+        type=str,
+        default="",
+        required=False,
+        help="""
+        Optional comma-separated hotword phrases for Qwen3-ASR, e.g.
+        "foo,bar,baz"
+        """,
+    )
+
+    parser.add_argument(
         "--max-total-len",
         type=int,
         default=512,
@@ -154,6 +165,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         encoder=args.encoder,
         decoder=args.decoder,
         tokenizer=args.tokenizer,
+        hotwords=args.hotwords,
         num_threads=args.num_threads,
         sample_rate=args.sample_rate,
         feature_dim=args.feature_dim,

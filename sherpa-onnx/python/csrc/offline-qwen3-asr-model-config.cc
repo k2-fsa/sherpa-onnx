@@ -25,6 +25,7 @@ void PybindOfflineQwen3ASRModelConfig(py::module *m) {
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("decoder", &PyClass::decoder)
       .def_readwrite("tokenizer", &PyClass::tokenizer)
+      .def_readwrite("hotwords", &PyClass::hotwords)
       .def_readwrite("max_total_len", &PyClass::max_total_len)
       .def_readwrite("max_new_tokens", &PyClass::max_new_tokens)
       .def_readwrite("temperature", &PyClass::temperature)

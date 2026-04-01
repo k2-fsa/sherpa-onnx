@@ -544,6 +544,7 @@ type OfflineQwen3ASRModelConfig struct {
 	Temperature  float32
 	TopP         float32
 	Seed         int
+	Hotwords     string
 }
 
 type OfflineTdnnModelConfig struct {
@@ -713,6 +714,7 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.qwen3_asr.temperature = C.float(config.ModelConfig.Qwen3ASR.Temperature)
 	c.model_config.qwen3_asr.top_p = C.float(config.ModelConfig.Qwen3ASR.TopP)
 	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
+	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
@@ -791,6 +793,7 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.qwen3_asr.encoder,
 		&c.model_config.qwen3_asr.decoder,
 		&c.model_config.qwen3_asr.tokenizer,
+		&c.model_config.qwen3_asr.hotwords,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,

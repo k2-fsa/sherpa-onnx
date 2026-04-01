@@ -346,6 +346,8 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
       config.model_config.qwen3_asr.decoder.c_str();
   c.model_config.qwen3_asr.tokenizer =
       config.model_config.qwen3_asr.tokenizer.c_str();
+  c.model_config.qwen3_asr.hotwords =
+      config.model_config.qwen3_asr.hotwords.c_str();
   c.model_config.qwen3_asr.max_total_len =
       config.model_config.qwen3_asr.max_total_len;
   c.model_config.qwen3_asr.max_new_tokens =
