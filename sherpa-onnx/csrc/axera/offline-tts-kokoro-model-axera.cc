@@ -470,10 +470,10 @@ class OfflineTtsKokoroModelAxera::Impl {
                             float speed, std::vector<float> &audio,
                             int32_t &actual_content_frames,
                             int32_t &total_frames) {
-    bool is_doubled = false;
+    int32_t repeat_count = 1;
     int32_t original_actual_len = actual_len;
 
-    PrepareInputIds(input_ids, actual_len, is_doubled);
+    PrepareInputIds(input_ids, actual_len, repeat_count);
 
     std::vector<int32_t> input_ids_i32(input_ids.begin(), input_ids.end());
 
@@ -577,11 +577,11 @@ class OfflineTtsKokoroModelAxera::Impl {
     std::vector<float> x_out = axera_models_[2]->GetOutputTensorData("x");
     PostprocessXToAudio(x_out, 23041, audio);
 
-    if (is_doubled) {
+    if (repeat_count > 1) {
       actual_content_frames = std::accumulate(
           pred_dur.begin(), pred_dur.begin() + original_actual_len, 0);
-      audio.erase(audio.begin() + audio.size() / 2, audio.end());
-      total_frames = total_frames / 2;
+      audio.erase(audio.begin() + audio.size() / repeat_count, audio.end());
+      total_frames = total_frames / repeat_count;
     } else {
       actual_content_frames =
           std::accumulate(pred_dur.begin(), pred_dur.begin() + actual_len, 0);
@@ -730,31 +730,37 @@ class OfflineTtsKokoroModelAxera::Impl {
   }
 
   void PrepareInputIds(std::vector<int64_t> &input_ids, int32_t &actual_len,
-                       bool &is_doubled) {
-    is_doubled = false;
+                       int32_t &repeat_count) {
+    repeat_count = 1;
     int32_t original_actual_len = actual_len;
 
-    if (actual_len <= 32) {  // DOUBLE_INPUT_THRESHOLD
-      is_doubled = true;
-      std::vector<int64_t> valid_content(input_ids.begin(),
-                                         input_ids.begin() + actual_len);
-      std::vector<int64_t> input_ids_doubled;
-      input_ids_doubled.insert(input_ids_doubled.end(), valid_content.begin(),
-                               valid_content.end());
-      input_ids_doubled.insert(input_ids_doubled.end(), valid_content.begin(),
-                               valid_content.end());
-
-      int32_t padding_len = max_seq_len_ - 2 * actual_len;
-      if (padding_len > 0) {
-        std::vector<int64_t> padding(padding_len, 0);
-        input_ids_doubled.insert(input_ids_doubled.end(), padding.begin(),
-                                 padding.end());
-      } else {
-        input_ids_doubled.resize(max_seq_len_);
+    if (actual_len <= 32) {  // REPEAT_INPUT_THRESHOLD
+      repeat_count = std::min(3, max_seq_len_ / std::max(actual_len, 1));
+      if (repeat_count <= 1) {
+        return;
       }
 
-      input_ids = input_ids_doubled;
-      actual_len = std::min(original_actual_len * 2, max_seq_len_);
+      std::vector<int64_t> valid_content(input_ids.begin(),
+                                         input_ids.begin() + actual_len);
+      std::vector<int64_t> repeated_input_ids;
+      repeated_input_ids.reserve(max_seq_len_);
+
+      for (int32_t i = 0; i < repeat_count; ++i) {
+        repeated_input_ids.insert(repeated_input_ids.end(),
+                                  valid_content.begin(), valid_content.end());
+      }
+
+      int32_t padding_len = max_seq_len_ - repeat_count * actual_len;
+      if (padding_len > 0) {
+        std::vector<int64_t> padding(padding_len, 0);
+        repeated_input_ids.insert(repeated_input_ids.end(), padding.begin(),
+                                  padding.end());
+      } else {
+        repeated_input_ids.resize(max_seq_len_);
+      }
+
+      input_ids = repeated_input_ids;
+      actual_len = std::min(original_actual_len * repeat_count, max_seq_len_);
     }
   }
 
