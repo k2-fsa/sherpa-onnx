@@ -28,22 +28,22 @@ jobs:
         if: true
         shell: bash
         run: |
-          d=sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01
+          d=sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
           mkdir -p $d
           pushd $d
 
           mkdir ./test_wavs
           cd ./test_wavs
           for w in ar de en es fr ja ko vi zh; do
-            curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01/resolve/master/test_wavs/ar.wav
+            curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/test_wavs/$w.wav
           done
           ls -lh
           cd ..
 
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01/resolve/master/README.md
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01/resolve/master/decoder.int8.onnx
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx.data
-          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/README.md
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/decoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx.data
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx
 
           ls -lh
           popd
@@ -1172,7 +1172,7 @@ jobs:
               sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
               sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
               sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
-              sherpa-onnx-cohere-transcribe-19-lang-int8-2026-04-01
+              sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
