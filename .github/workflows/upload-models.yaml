@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models-2
+      - upload-models
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +24,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download cohere-transcribe
+        if: true
+        shell: bash
+        run: |
+          d=sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+          mkdir -p $d
+          pushd $d
+
+          mkdir ./test_wavs
+          cd ./test_wavs
+          for w in ar de en es fr ja ko vi zh; do
+            curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/test_wavs/$w.wav
+          done
+          ls -lh
+          cd ..
+
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/README.md
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/decoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx.data
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx
+
+          ls -lh
+          popd
+
+          tar cjvf $d.tar.bz2 $d
+          ls -lh $d $d.tar.bz2
+
       - name: Collect funasr-nano with LLM int8
+        if: false
         shell: bash
         run: |
           git clone https://www.modelscope.cn/csukuangfj/Qwen3-ASR-test-data.git
@@ -1144,6 +1172,7 @@ jobs:
               sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
               sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
               sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+              sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
             )
             for d in ${models[@]}; do
               if [ ! -d $d ]; then
@@ -1179,7 +1208,7 @@ jobs:
             rm -rf huggingface
 
       - name: Publish to modelscope
-        if: true
+        if: false
         env:
           MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
         uses: nick-fields/retry@v3
