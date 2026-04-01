@@ -469,8 +469,8 @@ keyword spotting (KWS) to detect custom wake phrases and trigger VS Code command
 Audio capture is handled by [decibri](https://github.com/analyticsinmotion/decibri), a
 cross-platform Node.js microphone streaming library with prebuilt native binaries.
 
-- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AnalyticsInMotion.wake-word)
-- [Open VSX](https://open-vsx.org/extension/AnalyticsInMotion/wake-word)
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
+- [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
 - [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
 
 [silero-vad]: https://github.com/snakers4/silero-vad
