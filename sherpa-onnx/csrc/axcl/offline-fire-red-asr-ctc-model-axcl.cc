@@ -5,6 +5,8 @@
 #include "sherpa-onnx/csrc/axcl/offline-fire-red-asr-ctc-model-axcl.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -64,27 +66,46 @@ class OfflineFireRedAsrCtcModelAxcl::Impl {
     int32_t expected_frames = expected_shape[1];
 
     int32_t valid_frames = std::min<int32_t>(num_frames, expected_frames);
+    valid_frames = std::min<int32_t>(valid_frames,
+                                     static_cast<int32_t>(p_features_length[0]));
     std::vector<float> padded_features(expected_frames * feat_dim, 0.0f);
     std::copy(p_features, p_features + valid_frames * feat_dim,
               padded_features.begin());
 
     std::vector<int32_t> speech_length = {valid_frames};
 
-    model_->SetInputTensorData(model_->InputTensorNames()[0],
-                               padded_features.data(), padded_features.size());
-    model_->SetInputTensorData(model_->InputTensorNames()[1],
-                               speech_length.data(), speech_length.size());
+    if (!model_->SetInputTensorData(model_->InputTensorNames()[0],
+                                    padded_features.data(),
+                                    padded_features.size()) ||
+        !model_->SetInputTensorData(model_->InputTensorNames()[1],
+                                    speech_length.data(),
+                                    speech_length.size())) {
+      SHERPA_ONNX_LOGE("Failed to set input tensors for axcl FireRedASR CTC");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
-    model_->Run();
+    if (!model_->Run()) {
+      SHERPA_ONNX_LOGE("Failed to run axcl FireRedASR CTC model");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     auto out_logits =
         model_->GetOutputTensorData(model_->OutputTensorNames()[0]);
-    auto out_lengths =
-        model_->GetOutputTensorData(model_->OutputTensorNames()[1]);
+    auto out_lengths_raw =
+        model_->GetOutputTensorDataRaw(model_->OutputTensorNames()[1]);
 
     auto out_shape = model_->TensorShape(model_->OutputTensorNames()[0]);
     int32_t out_frames = out_shape[1];
     int32_t vocab_size = out_shape[2];
+
+    if (static_cast<int32_t>(out_logits.size()) != out_frames * vocab_size) {
+      SHERPA_ONNX_LOGE(
+          "Unexpected logits size from axcl FireRedASR CTC. Got %d values. "
+          "Expected %d x %d = %d",
+          static_cast<int32_t>(out_logits.size()), out_frames, vocab_size,
+          out_frames * vocab_size);
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     std::array<int64_t, 3> logits_shape = {1, out_frames, vocab_size};
     Ort::Value logits = Ort::Value::CreateTensor<float>(
@@ -96,7 +117,7 @@ class OfflineFireRedAsrCtcModelAxcl::Impl {
     Ort::Value lengths = Ort::Value::CreateTensor<int64_t>(
         allocator_, lengths_shape.data(), lengths_shape.size());
     int64_t *p_lengths = lengths.GetTensorMutableData<int64_t>();
-    p_lengths[0] = static_cast<int64_t>(out_lengths[0]);
+    p_lengths[0] = ReadOutputLength(out_lengths_raw, out_frames);
 
     std::vector<Ort::Value> ans;
     ans.push_back(std::move(logits));
@@ -131,6 +152,55 @@ class OfflineFireRedAsrCtcModelAxcl::Impl {
   }
 
  private:
+  static int64_t ReadOutputLength(const std::vector<uint8_t> &raw,
+                                  int32_t max_frames) {
+    if (raw.empty()) {
+      SHERPA_ONNX_LOGE(
+          "The output-length tensor from axcl FireRedASR CTC is empty");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    auto in_range = [max_frames](int64_t value) {
+      return 0 <= value && value <= max_frames;
+    };
+
+    if (raw.size() == sizeof(int64_t)) {
+      int64_t value = 0;
+      std::memcpy(&value, raw.data(), sizeof(value));
+      if (in_range(value)) {
+        return value;
+      }
+    }
+
+    if (raw.size() >= sizeof(int32_t)) {
+      int32_t value_i32 = 0;
+      std::memcpy(&value_i32, raw.data(), sizeof(value_i32));
+      if (in_range(value_i32)) {
+        return value_i32;
+      }
+
+      uint32_t value_u32 = 0;
+      std::memcpy(&value_u32, raw.data(), sizeof(value_u32));
+      if (value_u32 <= static_cast<uint32_t>(max_frames)) {
+        return value_u32;
+      }
+
+      float value_f32 = 0;
+      std::memcpy(&value_f32, raw.data(), sizeof(value_f32));
+      if (std::isfinite(value_f32) && value_f32 >= 0 &&
+          value_f32 <= static_cast<float>(max_frames)) {
+        return static_cast<int64_t>(value_f32);
+      }
+    }
+
+    SHERPA_ONNX_LOGE(
+        "Failed to interpret the output-length tensor from axcl FireRedASR "
+        "CTC. Byte size: %d. Max frames: %d",
+        static_cast<int32_t>(raw.size()), max_frames);
+    SHERPA_ONNX_EXIT(-1);
+    return 0;
+  }
+
   void Init() {
     if (!model_->IsInitialized()) {
       SHERPA_ONNX_LOGE("Failed to initialize the model with '%s'",
