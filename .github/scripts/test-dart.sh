@@ -6,6 +6,10 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------Cohere Transcribe----------'
+./run-cohere-transcribe.sh
+rm -rf sherpa-onnx-*
+
 if [[ "$SKIP_QWEN3" != "true" ]]; then
   echo '----------Qwen3 ASR----------'
   ./run-qwen3-asr.sh
