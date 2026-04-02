@@ -7,6 +7,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
+    OfflineCohereTranscribeModelConfig,
     OfflineFunASRNanoModelConfig,
     OfflineQwen3ASRModelConfig,
     OfflineOmnilingualAsrCtcModelConfig,

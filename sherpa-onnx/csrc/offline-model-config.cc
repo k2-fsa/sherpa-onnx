@@ -24,6 +24,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   moonshine.Register(po);
   dolphin.Register(po);
   canary.Register(po);
+  cohere_transcribe.Register(po);
   omnilingual.Register(po);
   funasr_nano.Register(po);
   medasr.Register(po);
@@ -160,6 +161,10 @@ bool OfflineModelConfig::Validate() const {
     return canary.Validate();
   }
 
+  if (!cohere_transcribe.encoder.empty()) {
+    return cohere_transcribe.Validate();
+  }
+
   if (!omnilingual.model.empty()) {
     return omnilingual.Validate();
   }
@@ -209,6 +214,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "moonshine=" << moonshine.ToString() << ", ";
   os << "dolphin=" << dolphin.ToString() << ", ";
   os << "canary=" << canary.ToString() << ", ";
+  os << "cohere_transcribe=" << cohere_transcribe.ToString() << ", ";
   os << "omnilingual=" << omnilingual.ToString() << ", ";
   os << "funasr_nano=" << funasr_nano.ToString() << ", ";
   os << "medasr=" << medasr.ToString() << ", ";

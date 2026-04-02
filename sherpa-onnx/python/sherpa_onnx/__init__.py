@@ -12,6 +12,7 @@ from sherpa_onnx.lib._sherpa_onnx import (
     GenerationConfig,
     HomophoneReplacerConfig,
     OfflineCanaryModelConfig,
+    OfflineCohereTranscribeModelConfig,
     OfflineCtcFstDecoderConfig,
     OfflineDolphinModelConfig,
     OfflineFireRedAsrModelConfig,

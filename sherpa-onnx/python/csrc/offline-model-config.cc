@@ -9,6 +9,7 @@
 
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-canary-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-cohere-transcribe-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-dolphin-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-fire-red-asr-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-fire-red-asr-model-config.h"
@@ -41,6 +42,7 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineMoonshineModelConfig(m);
   PybindOfflineDolphinModelConfig(m);
   PybindOfflineCanaryModelConfig(m);
+  PybindOfflineCohereTranscribeModelConfig(m);
   PybindOfflineOmnilingualAsrCtcModelConfig(m);
   PybindOfflineFunASRNanoModelConfig(m);
   PybindOfflineMedAsrCtcModelConfig(m);
@@ -61,6 +63,7 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineMoonshineModelConfig &,
                     const OfflineDolphinModelConfig &,
                     const OfflineCanaryModelConfig &,
+                    const OfflineCohereTranscribeModelConfig &,
                     const OfflineOmnilingualAsrCtcModelConfig &,
                     const OfflineFunASRNanoModelConfig &,
                     const OfflineMedAsrCtcModelConfig &,
@@ -81,6 +84,8 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("moonshine") = OfflineMoonshineModelConfig(),
            py::arg("dolphin") = OfflineDolphinModelConfig(),
            py::arg("canary") = OfflineCanaryModelConfig(),
+           py::arg("cohere_transcribe") =
+               OfflineCohereTranscribeModelConfig(),
            py::arg("omnilingual") = OfflineOmnilingualAsrCtcModelConfig(),
            py::arg("funasr_nano") = OfflineFunASRNanoModelConfig(),
            py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
@@ -102,6 +107,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("moonshine", &PyClass::moonshine)
       .def_readwrite("dolphin", &PyClass::dolphin)
       .def_readwrite("canary", &PyClass::canary)
+      .def_readwrite("cohere_transcribe", &PyClass::cohere_transcribe)
       .def_readwrite("omnilingual", &PyClass::omnilingual)
       .def_readwrite("funasr_nano", &PyClass::funasr_nano)
       .def_readwrite("medasr", &PyClass::medasr)
