@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - nodejs-api
     paths:
       - '.github/workflows/test-nodejs.yaml'
       - 'build-wasm-simd-nodejs.sh'

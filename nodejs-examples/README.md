@@ -303,6 +303,23 @@ rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
 node ./test-offline-funasr-nano.js
 ```
 
+## ./test-offline-cohere-transcribe.js
+
+[./test-offline-cohere-transcribe.js](./test-offline-cohere-transcribe.js)
+demonstrates how to decode a file with a Cohere Transcribe model. In the code
+we use
+[sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test-offline-cohere-transcribe.js
+```
+
 ## ./test-offline-qwen3-asr.js
 
 [./test-offline-qwen3-asr.js](./test-offline-qwen3-asr.js) demonstrates

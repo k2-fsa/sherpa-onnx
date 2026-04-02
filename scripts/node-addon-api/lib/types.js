@@ -235,6 +235,16 @@
  */
 
 /**
+ * Offline Cohere Transcribe model config
+ * @typedef {Object} OfflineCohereTranscribeModelConfig
+ * @property {string} [encoder]
+ * @property {string} [decoder]
+ * @property {string} [language]
+ * @property {number} [usePunct]
+ * @property {number} [useItn]
+ */
+
+/**
  * Offline model config.
  * @typedef {Object} OfflineModelConfig
  * @property {OfflineTransducerModelConfig} [transducer]
@@ -248,9 +258,10 @@
  * @property {OfflineCanaryModelConfig} [canary]
  * @property {OfflineWhisperModelConfig} [whisper]
  * @property {OfflineFireRedAsrModelConfig} [fireRedAsr]
- * @property {OfflineMoonshineModelConfig} [moonshine]
- * @property {OfflineTdnnModelConfig} [tdnn]
- * @property {OfflineSenseVoiceModelConfig} [senseVoice]
+  * @property {OfflineMoonshineModelConfig} [moonshine]
+  * @property {OfflineTdnnModelConfig} [tdnn]
+  * @property {OfflineSenseVoiceModelConfig} [senseVoice]
+ * @property {OfflineCohereTranscribeModelConfig} [cohereTranscribe]
  * @property {string} [tokens]
  * @property {number} [numThreads]
  * @property {boolean|number} [debug]
