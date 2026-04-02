@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - jni
       - java
     paths:
       - '.github/workflows/run-java-test.yaml'

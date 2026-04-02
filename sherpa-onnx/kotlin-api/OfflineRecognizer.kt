@@ -101,6 +101,14 @@ data class OfflineCanaryModelConfig(
     var usePnc: Boolean = true,
 )
 
+data class OfflineCohereTranscribeModelConfig(
+    var encoder: String = "",
+    var decoder: String = "",
+    var language: String = "",
+    var usePunct: Boolean = true,
+    var useItn: Boolean = true,
+)
+
 data class OfflineFireRedAsrModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -142,6 +150,8 @@ data class OfflineModelConfig(
     var qwen3Asr: OfflineQwen3AsrModelConfig = OfflineQwen3AsrModelConfig(),
     var fireRedAsrCtc: OfflineFireRedAsrCtcModelConfig = OfflineFireRedAsrCtcModelConfig(),
     var canary: OfflineCanaryModelConfig = OfflineCanaryModelConfig(),
+    var cohereTranscribe: OfflineCohereTranscribeModelConfig =
+        OfflineCohereTranscribeModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
