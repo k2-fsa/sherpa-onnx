@@ -10,6 +10,7 @@ on:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-online-ctc.sh'
@@ -274,6 +275,15 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*-win-x64*.tar.bz2
+
+      - name: Test offline Cohere Transcribe for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-cohere-transcribe.sh
 
       - name: Test offline Moonshine for windows x64
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

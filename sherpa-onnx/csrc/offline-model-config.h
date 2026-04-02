@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/offline-canary-model-config.h"
+#include "sherpa-onnx/csrc/offline-cohere-transcribe-model-config.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
@@ -39,6 +40,7 @@ struct OfflineModelConfig {
   OfflineMoonshineModelConfig moonshine;
   OfflineDolphinModelConfig dolphin;
   OfflineCanaryModelConfig canary;
+  OfflineCohereTranscribeModelConfig cohere_transcribe;
   OfflineOmnilingualAsrCtcModelConfig omnilingual;
   OfflineFunASRNanoModelConfig funasr_nano;
   OfflineMedAsrCtcModelConfig medasr;
@@ -78,6 +80,7 @@ struct OfflineModelConfig {
                      const OfflineMoonshineModelConfig &moonshine,
                      const OfflineDolphinModelConfig &dolphin,
                      const OfflineCanaryModelConfig &canary,
+                     const OfflineCohereTranscribeModelConfig &cohere_transcribe,
                      const OfflineOmnilingualAsrCtcModelConfig &omnilingual,
                      const OfflineFunASRNanoModelConfig &funasr_nano,
                      const OfflineMedAsrCtcModelConfig &medasr,
@@ -100,6 +103,7 @@ struct OfflineModelConfig {
         moonshine(moonshine),
         dolphin(dolphin),
         canary(canary),
+        cohere_transcribe(cohere_transcribe),
         omnilingual(omnilingual),
         funasr_nano(funasr_nano),
         medasr(medasr),

@@ -133,6 +133,15 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*osx-universal2*.tar.bz2
 
+      - name: Test offline Cohere Transcribe
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
       - name: Test offline CTC
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
@@ -303,5 +312,3 @@ jobs:
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
-
-

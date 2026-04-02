@@ -10,6 +10,7 @@ set(srcs
   homophone-replacer.cc
   keyword-spotter.cc
   offline-canary-model-config.cc
+  offline-cohere-transcribe-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-ctc-model-config.cc

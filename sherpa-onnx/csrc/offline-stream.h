@@ -122,8 +122,7 @@ class OfflineStream {
   // Returns the value for the given key, or an empty string if the key
   // does not exist. No exception is thrown for missing keys.
   const std::string &GetOption(const std::string &key) const;
-  int32_t GetOptionInt(const std::string &key,
-                       int32_t default_value = 0) const;
+  int32_t GetOptionInt(const std::string &key, int32_t default_value = 0) const;
   float GetOptionFloat(const std::string &key,
                        float default_value = 0.0f) const;
 

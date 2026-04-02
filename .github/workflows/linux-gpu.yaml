@@ -10,6 +10,7 @@ on:
       - '.github/workflows/linux-gpu.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-online-ctc.sh'
@@ -181,6 +182,15 @@ jobs:
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+      - name: Test offline Cohere Transcribe
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
       - name: Test spoken language identification
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
@@ -216,7 +226,6 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-paraformer.sh
-
 
       - name: Test offline Whisper
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -262,7 +271,6 @@ jobs:
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
-
 
 
 
