@@ -28,9 +28,6 @@ OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
                                  const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
-  if (!src.vocab_log_probs.empty()) {
-    r.vocab_log_probs.reserve(src.tokens.size());
-  }
 
   std::string text;
   for (size_t idx = 0; idx < src.tokens.size(); ++idx) {
@@ -47,7 +44,7 @@ OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
       r.token_log_probs.push_back(src.token_log_probs[idx]);
     }
 
-    if (!src.vocab_log_probs.empty() && idx < src.vocab_log_probs.size()) {
+    if (idx < src.vocab_log_probs.size()) {
       r.vocab_log_probs.push_back(src.vocab_log_probs[idx]);
     }
   }

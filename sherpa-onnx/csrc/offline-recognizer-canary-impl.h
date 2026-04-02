@@ -6,7 +6,6 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CANARY_IMPL_H_
 
 #include <algorithm>
-#include <cmath>
 #include <ios>
 #include <memory>
 #include <string>
@@ -14,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-canary-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -59,8 +59,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     auto enc_out = RunEncoder(s);
 
     if (enc_out.empty()) {
-      OfflineRecognitionResult empty_result;
-      s->SetResult(empty_result);
       return;
     }
 
@@ -97,29 +95,22 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     int32_t num_tokens =
         static_cast<int32_t>(num_feature_frames / 100.0 * 30) + 1;
 
-    // Reserve space to reduce reallocations
-    tokens.reserve(num_tokens + 1);
-    token_log_probs.reserve(num_tokens + 1);
-    vocab_log_probs.reserve(num_tokens + 1);
-
-    if (max_token_id != eos) {
-      for (int32_t i = 1; i <= num_tokens; ++i) {
-        if (tokens.back() == eos) {
-          break;
-        }
-
-        std::tie(logits, decoder_states) =
-            RunDecoder(tokens.back(), i, std::move(decoder_states),
-                       View(&enc_states), View(&enc_mask));
-
-        std::vector<float> next_full_vocab_probs;
-        auto [next_token_id, next_confidence] =
-            GetMaxTokenIdWithConfidence(&logits, &next_full_vocab_probs);
-
-        tokens.push_back(next_token_id);
-        token_log_probs.push_back(next_confidence);
-        vocab_log_probs.push_back(std::move(next_full_vocab_probs));
+    for (int32_t i = 1; i <= num_tokens; ++i) {
+      if (tokens.back() == eos) {
+        break;
       }
+
+      std::tie(logits, decoder_states) =
+          RunDecoder(tokens.back(), i, std::move(decoder_states),
+                     View(&enc_states), View(&enc_mask));
+
+      std::vector<float> next_full_vocab_probs;
+      auto [next_token_id, next_confidence] =
+          GetMaxTokenIdWithConfidence(&logits, &next_full_vocab_probs);
+
+      tokens.push_back(next_token_id);
+      token_log_probs.push_back(next_confidence);
+      vocab_log_probs.push_back(std::move(next_full_vocab_probs));
     }
 
     // remove the last eos token and its confidence
@@ -129,8 +120,6 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       vocab_log_probs.pop_back();
     }
 
-    // Convert with vocab_log_probs - filtering happens in one place for alignment
-    // Move vocab_log_probs since they won't be used after this
     auto r = Convert(tokens, token_log_probs, std::move(vocab_log_probs));
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
@@ -153,12 +142,9 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
   OfflineRecognitionResult Convert(
       const std::vector<int32_t> &tokens,
       const std::vector<float> &token_log_probs,
-      std::vector<std::vector<float>> vocab_log_probs = {}) const {
+      std::vector<std::vector<float>> vocab_log_probs) const {
     OfflineRecognitionResult r;
     r.tokens.reserve(tokens.size());
-    if (!vocab_log_probs.empty()) {
-      r.vocab_log_probs.reserve(tokens.size());
-    }
 
     std::string text;
     for (size_t idx = 0; idx < tokens.size(); ++idx) {
@@ -176,8 +162,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         r.token_log_probs.push_back(token_log_probs[idx]);
       }
 
-      // Filter vocab_log_probs in the same loop to maintain alignment
-      if (!vocab_log_probs.empty() && idx < vocab_log_probs.size()) {
+      if (idx < vocab_log_probs.size()) {
         r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
       }
     }
@@ -194,42 +179,16 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
     auto meta = model_->GetModelMetadata();
     const float *p_logits = logits->GetTensorData<float>();
 
-    // Find max for numerical stability
-    float max_logit = *std::max_element(p_logits, p_logits + meta.vocab_size);
+    // Compute log-softmax into the output distribution (or a temporary)
+    std::vector<float> log_probs(p_logits, p_logits + meta.vocab_size);
+    LogSoftmax(log_probs.data(), meta.vocab_size);
 
-    // Compute log_softmax using double for intermediate precision
-    double sum_exp = 0.0;
-    for (int32_t i = 0; i < meta.vocab_size; ++i) {
-      sum_exp += std::exp(p_logits[i] - max_logit);
-    }
-    float log_sum = max_logit + static_cast<float>(std::log(sum_exp));
-
-    // Find the max token and its log probability
-    // If full_distribution is requested, compute both in a single pass
-    int32_t max_token_id = 0;
-    float max_log_prob = p_logits[0] - log_sum;
+    int32_t max_token_id =
+        MaxElementIndex(log_probs.data(), meta.vocab_size);
+    float max_log_prob = log_probs[max_token_id];
 
     if (full_distribution != nullptr) {
-      full_distribution->resize(meta.vocab_size);
-      full_distribution->at(0) = max_log_prob;
-
-      for (int32_t i = 1; i < meta.vocab_size; ++i) {
-        float log_prob = p_logits[i] - log_sum;
-        full_distribution->at(i) = log_prob;
-        if (log_prob > max_log_prob) {
-          max_log_prob = log_prob;
-          max_token_id = i;
-        }
-      }
-    } else {
-      // Only find max if full distribution not needed
-      for (int32_t i = 1; i < meta.vocab_size; ++i) {
-        float log_prob = p_logits[i] - log_sum;
-        if (log_prob > max_log_prob) {
-          max_log_prob = log_prob;
-          max_token_id = i;
-        }
-      }
+      *full_distribution = std::move(log_probs);
     }
 
     return {max_token_id, max_log_prob};

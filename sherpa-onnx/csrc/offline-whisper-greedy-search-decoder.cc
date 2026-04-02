@@ -5,7 +5,6 @@
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 
 #include <algorithm>
-#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -156,6 +155,10 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     }
   }
 
+  std::vector<int32_t> predicted_tokens;
+  std::vector<float> predicted_log_probs;
+  std::vector<std::vector<float>> predicted_vocab_log_probs;
+
   // Storage for accumulated attention weights
   std::vector<std::vector<float>> all_attention_weights;
   int32_t attention_n_heads = 0;
@@ -196,16 +199,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
 
-  std::vector<int32_t> predicted_tokens;
-  // Log probabilities.
-  std::vector<float> predicted_log_probs;
-  std::vector<std::vector<float>> predicted_vocab_log_probs;
-
-  // Reserve capacity to avoid reallocations
-  predicted_tokens.reserve(num_possible_tokens);
-  predicted_log_probs.reserve(num_possible_tokens);
-  predicted_vocab_log_probs.reserve(num_possible_tokens);
-
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
     if (max_token_id == eot) {
       break;
@@ -218,17 +211,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     auto cur_logits_shape = std::get<0>(decoder_out).GetTensorTypeAndShapeInfo().GetShape();
     const float *current_logits = raw_logits + (cur_logits_shape[1] - 1) * vocab_size;
 
-    std::vector<float> full_vocab_probs(vocab_size);
-    auto max_iter = std::max_element(current_logits, current_logits + vocab_size);
-    float max_logit = *max_iter;
-    double sum_exp = 0.0;
-    for (int32_t j = 0; j < vocab_size; ++j) {
-      sum_exp += std::exp(current_logits[j] - max_logit);
-    }
-    float log_sum = max_logit + std::log(sum_exp);
-    for (int32_t j = 0; j < vocab_size; ++j) {
-      full_vocab_probs[j] = current_logits[j] - log_sum;
-    }
+    std::vector<float> full_vocab_probs(current_logits,
+                                        current_logits + vocab_size);
+    LogSoftmax(full_vocab_probs.data(), vocab_size);
 
     // Extract log probability for the selected token
     float log_prob = full_vocab_probs[max_token_id];
