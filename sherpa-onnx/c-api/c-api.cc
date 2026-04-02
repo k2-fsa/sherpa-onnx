@@ -542,6 +542,21 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.canary.use_pnc =
       config->model_config.canary.use_pnc;
 
+  recognizer_config.model_config.cohere_transcribe.encoder =
+      SHERPA_ONNX_OR(config->model_config.cohere_transcribe.encoder, "");
+
+  recognizer_config.model_config.cohere_transcribe.decoder =
+      SHERPA_ONNX_OR(config->model_config.cohere_transcribe.decoder, "");
+
+  recognizer_config.model_config.cohere_transcribe.language =
+      SHERPA_ONNX_OR(config->model_config.cohere_transcribe.language, "");
+
+  recognizer_config.model_config.cohere_transcribe.use_punct =
+      config->model_config.cohere_transcribe.use_punct;
+
+  recognizer_config.model_config.cohere_transcribe.use_itn =
+      config->model_config.cohere_transcribe.use_itn;
+
   recognizer_config.model_config.wenet_ctc.model =
       SHERPA_ONNX_OR(config->model_config.wenet_ctc.model, "");
 

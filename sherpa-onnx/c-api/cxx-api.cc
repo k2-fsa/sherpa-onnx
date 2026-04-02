@@ -310,6 +310,17 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
   c.model_config.canary.tgt_lang = config.model_config.canary.tgt_lang.c_str();
   c.model_config.canary.use_pnc = config.model_config.canary.use_pnc;
 
+  c.model_config.cohere_transcribe.encoder =
+      config.model_config.cohere_transcribe.encoder.c_str();
+  c.model_config.cohere_transcribe.decoder =
+      config.model_config.cohere_transcribe.decoder.c_str();
+  c.model_config.cohere_transcribe.language =
+      config.model_config.cohere_transcribe.language.c_str();
+  c.model_config.cohere_transcribe.use_punct =
+      config.model_config.cohere_transcribe.use_punct;
+  c.model_config.cohere_transcribe.use_itn =
+      config.model_config.cohere_transcribe.use_itn;
+
   c.model_config.wenet_ctc.model = config.model_config.wenet_ctc.model.c_str();
 
   c.model_config.omnilingual.model =

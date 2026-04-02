@@ -475,6 +475,20 @@ struct OfflineCanaryModelConfig {
   bool use_pnc = true;
 };
 
+/** @brief Offline Cohere Transcribe model configuration. */
+struct OfflineCohereTranscribeModelConfig {
+  /** Encoder ONNX model. */
+  std::string encoder;
+  /** Decoder ONNX model. */
+  std::string decoder;
+  /** Cohere language string such as `"en"` or `"zh"`. */
+  std::string language;
+  /** Whether punctuation is enabled by the model. */
+  bool use_punct = true;
+  /** Whether inverse text normalization is enabled. */
+  bool use_itn = true;
+};
+
 /** @brief Offline FireRed ASR model files. */
 struct OfflineFireRedAsrModelConfig {
   /** Encoder ONNX model. */
@@ -662,6 +676,8 @@ struct OfflineModelConfig {
   OfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   /** Qwen3-ASR configuration. */
   OfflineQwen3ASRModelConfig qwen3_asr;
+  /** Cohere Transcribe configuration. */
+  OfflineCohereTranscribeModelConfig cohere_transcribe;
 };
 
 /** @brief Optional language-model rescoring configuration for offline ASR. */

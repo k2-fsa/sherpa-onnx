@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This file shows how to use a non-streaming Canary model from NeMo
+This file shows how to use a non-streaming Cohere Transcribe model
 to decode files.
 
 Please download model files from
