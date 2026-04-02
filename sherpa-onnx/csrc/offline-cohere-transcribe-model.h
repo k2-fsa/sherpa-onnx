@@ -80,6 +80,7 @@ class OfflineCohereTranscribeModel {
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
+  int32_t GetMaxSeqLen() const;
 
  private:
   class Impl;

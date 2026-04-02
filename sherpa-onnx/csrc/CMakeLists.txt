@@ -29,6 +29,7 @@ set(sources
   normal-data-generator.cc
   offline-canary-model-config.cc
   offline-canary-model.cc
+  offline-cohere-transcribe-greedy-search-decoder.cc
   offline-cohere-transcribe-model-config.cc
   offline-cohere-transcribe-model.cc
   offline-ctc-fst-decoder-config.cc

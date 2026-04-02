@@ -13,8 +13,6 @@
 
 namespace sherpa_onnx {
 
-namespace {
-
 bool IsValidCohereTranscribeLanguage(const std::string &language) {
   static const std::unordered_set<std::string> kSupportedLanguages = {
       "ar", "de", "el", "en", "es", "fr", "it",
@@ -22,8 +20,6 @@ bool IsValidCohereTranscribeLanguage(const std::string &language) {
 
   return kSupportedLanguages.count(language) != 0;
 }
-
-}  // namespace
 
 void OfflineCohereTranscribeModelConfig::Register(ParseOptions *po) {
   po->Register("cohere-transcribe-encoder", &encoder,

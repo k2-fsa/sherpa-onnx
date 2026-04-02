@@ -26,6 +26,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-canary-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-cohere-transcribe-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-funasr-nano-impl.h"
@@ -241,6 +242,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.whisper.encoder.empty()) {
     return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+  }
+
+  if (!config.model_config.cohere_transcribe.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerCohereTranscribeImpl>(config);
   }
 
   if (!config.model_config.fire_red_asr.encoder.empty()) {
@@ -585,6 +590,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.whisper.encoder.empty()) {
     return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
+  }
+
+  if (!config.model_config.cohere_transcribe.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerCohereTranscribeImpl>(mgr, config);
   }
 
   if (!config.model_config.fire_red_asr.encoder.empty()) {

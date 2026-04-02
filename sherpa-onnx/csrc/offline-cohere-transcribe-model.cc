@@ -150,6 +150,8 @@ class OfflineCohereTranscribeModel::Impl {
 
   OrtAllocator *Allocator() { return allocator_; }
 
+  int32_t GetMaxSeqLen() const { return max_seq_len_; }
+
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
     if (model_data) {
@@ -362,6 +364,10 @@ OfflineCohereTranscribeModel::GetInitialSelfKVCache() const {
 
 OrtAllocator *OfflineCohereTranscribeModel::Allocator() const {
   return impl_->Allocator();
+}
+
+int32_t OfflineCohereTranscribeModel::GetMaxSeqLen() const {
+  return impl_->GetMaxSeqLen();
 }
 
 #if __ANDROID_API__ >= 9
