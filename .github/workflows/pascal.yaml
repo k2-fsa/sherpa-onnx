@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - pascal-api
       - pascal
     paths:
       - '.github/workflows/pascal.yaml'
@@ -132,6 +133,19 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
+
+      - name:  Run Pascal test (Cohere Transcribe)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd non-streaming-asr
+          ./run-cohere-transcribe.sh
+          rm -rf sherpa-onnx-cohere-transcribe-*
+          echo "---"
+          popd
 
       - name:  Run Speech Enhancement test
         shell: bash
