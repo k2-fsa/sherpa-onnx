@@ -30,6 +30,7 @@ set(sources
   offline-canary-model-config.cc
   offline-canary-model.cc
   offline-cohere-transcribe-model-config.cc
+  offline-cohere-transcribe-model.cc
   offline-ctc-fst-decoder-config.cc
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
