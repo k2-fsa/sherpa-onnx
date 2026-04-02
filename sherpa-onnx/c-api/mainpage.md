@@ -89,6 +89,7 @@ Useful examples include:
 
 - [`decode-file-c-api.c`](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/decode-file-c-api.c)
 - [`whisper-c-api.c`](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/whisper-c-api.c)
+- [`cohere-transcribe-c-api.c`](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/cohere-transcribe-c-api.c)
 - [`sense-voice-c-api.c`](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/sense-voice-c-api.c)
 - [`nemo-parakeet-c-api.c`](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/nemo-parakeet-c-api.c)
 - [`streaming-zipformer-with-hr-cxx-api.cc`](https://github.com/k2-fsa/sherpa-onnx/blob/master/cxx-api-examples/streaming-zipformer-with-hr-cxx-api.cc)

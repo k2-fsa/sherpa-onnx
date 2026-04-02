@@ -875,6 +875,20 @@ typedef struct SherpaOnnxOfflineCanaryModelConfig {
   int32_t use_pnc;
 } SherpaOnnxOfflineCanaryModelConfig;
 
+/** @brief Configuration for a Cohere Transcribe model. */
+typedef struct SherpaOnnxOfflineCohereTranscribeModelConfig {
+  /** Path to the encoder ONNX model. */
+  const char *encoder;
+  /** Path to the decoder ONNX model. */
+  const char *decoder;
+  /** Optional language hint, for example "en" or "zh". */
+  const char *language;
+  /** Non-zero to enable punctuation. */
+  int32_t use_punct;
+  /** Non-zero to enable inverse text normalization. */
+  int32_t use_itn;
+} SherpaOnnxOfflineCohereTranscribeModelConfig;
+
 /** @brief Configuration for a FireRedAsr encoder/decoder model. */
 typedef struct SherpaOnnxOfflineFireRedAsrModelConfig {
   /** Path to the encoder ONNX model. */
@@ -1021,8 +1035,9 @@ typedef struct SherpaOnnxOfflineMedAsrCtcModelConfig {
  * Exactly one model family should be configured for each recognizer. For
  * example, set only one of @c transducer, @c paraformer, @c nemo_ctc,
  * @c whisper, @c tdnn, @c sense_voice, @c moonshine, @c fire_red_asr,
- * @c dolphin, @c zipformer_ctc, @c canary, @c wenet_ctc, @c omnilingual,
- * @c medasr, @c funasr_nano, @c fire_red_asr_ctc, or @c qwen3_asr.
+ * @c dolphin, @c zipformer_ctc, @c canary, @c cohere_transcribe,
+ * @c wenet_ctc, @c omnilingual, @c medasr, @c funasr_nano,
+ * @c fire_red_asr_ctc, or @c qwen3_asr.
  *
  * If multiple model families are configured at the same time, the
  * implementation will choose one of them, and which one is used is
@@ -1080,6 +1095,8 @@ typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
   /** Qwen3-ASR configuration. */
   SherpaOnnxOfflineQwen3ASRModelConfig qwen3_asr;
+  /** Cohere Transcribe configuration. */
+  SherpaOnnxOfflineCohereTranscribeModelConfig cohere_transcribe;
 } SherpaOnnxOfflineModelConfig;
 
 /**

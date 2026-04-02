@@ -91,6 +91,9 @@ target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
 add_executable(nemo-canary-c-api nemo-canary-c-api.c)
 target_link_libraries(nemo-canary-c-api sherpa-onnx-c-api)
 
+add_executable(cohere-transcribe-c-api cohere-transcribe-c-api.c)
+target_link_libraries(cohere-transcribe-c-api sherpa-onnx-c-api)
+
 add_executable(nemo-parakeet-c-api nemo-parakeet-c-api.c)
 target_link_libraries(nemo-parakeet-c-api sherpa-onnx-c-api)
 
