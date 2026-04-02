@@ -99,6 +99,15 @@ jobs:
 
           .github/scripts/test-online-punctuation.sh
 
+      - name: Test offline Cohere Transcribe
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
       - name: Test offline punctuation
         shell: bash
         run: |

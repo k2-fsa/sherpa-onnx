@@ -1342,6 +1342,103 @@ class OfflineRecognizer(object):
         return self
 
     @classmethod
+    def from_cohere_transcribe(
+        cls,
+        encoder: str,
+        decoder: str,
+        tokens: str,
+        num_threads: int = 1,
+        language: str = "",
+        use_punct: bool = True,
+        use_itn: bool = True,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        hr_dict_dir: str = "",
+        hr_rule_fsts: str = "",
+        hr_lexicon: str = "",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/cohere_transcribe/index.html>`_
+        to download pre-trained models
+
+        Args:
+          encoder:
+            Path to the encoder model, e.g., encoder.int8.onnx
+          decoder:
+            Path to the merged decoder model, e.g., decoder.int8.onnx
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          language:
+            The default language to use. Valid values are:
+            ar, de, el, en, es, fr, it, ja, ko, nl, pl, pt, vi, zh.
+            Note that you can set language per stream. For example,
+            stream.set_option("language", "de").
+          use_punct:
+            True to enable punctuations and cases.
+          use_itn:
+            True to enable inverse text normalization.
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda.
+            To use NVIDIA GPUs, you have to first install a CUDA-enabled version
+            of sherpa-onnx
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            cohere_transcribe=OfflineCohereTranscribeModelConfig(
+                encoder=encoder,
+                decoder=decoder,
+                language=language,
+                use_itn=use_itn,
+                use_punct=use_punct,
+            ),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        unused_feat_config = FeatureExtractorConfig(
+            sampling_rate=16000,
+            feature_dim=128,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            model_config=model_config,
+            feat_config=unused_feat_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+            hr=HomophoneReplacerConfig(
+                dict_dir=hr_dict_dir,
+                lexicon=hr_lexicon,
+                rule_fsts=hr_rule_fsts,
+            ),
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
     def from_moonshine(
         cls,
         preprocessor: str,

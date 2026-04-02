@@ -22,6 +22,7 @@ for English, zh for Chinese, de for German, es for Spanish, etc.
 """
 
 from pathlib import Path
+import time
 
 import sherpa_onnx
 import soundfile as sf
@@ -85,13 +86,25 @@ def main():
     zh_audio, zh_sample_rate = sf.read(zh_wav, dtype="float32", always_2d=True)
     zh_audio = zh_audio[:, 0]  # only use the first channel
 
+    audio_duration = (
+        en_audio.shape[0] / en_sample_rate
+        + de_audio.shape[0] / de_sample_rate
+        + zh_audio.shape[0] / zh_sample_rate
+    )
+
+    start_time = time.time()
     en_wav_result = decode(recognizer, en_audio, en_sample_rate, lang="en")
     de_wav_result = decode(recognizer, de_audio, de_sample_rate, lang="de")
     zh_wav_result = decode(recognizer, zh_audio, zh_sample_rate, lang="zh")
+    end_time = time.time()
+
+    elapsed_seconds = end_time - start_time
+    rtf = elapsed_seconds / audio_duration
 
     print("en_wav_result", en_wav_result)
     print("de_wav_result", de_wav_result)
     print("zh_wav_result", zh_wav_result)
+    print(f"RTF = {elapsed_seconds:.3f}/{audio_duration:.3f} = {rtf:.3f}")
 
 
 if __name__ == "__main__":

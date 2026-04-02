@@ -8,6 +8,14 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Cohere Transcribe"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+python3 ./python-api-examples/offline-cohere-transcribe-decode-files.py
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
 if [[ "$SKIP_QWEN3" != "true" ]]; then
   log "test Qwen3 ASR"
 
