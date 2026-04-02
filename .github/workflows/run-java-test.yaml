@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - java
     paths:
       - '.github/workflows/run-java-test.yaml'
       - 'cmake/**'
@@ -108,6 +109,14 @@ jobs:
           cd ./java-api-examples
           ./run-version-test.sh
 
+      - name:  Run java test (Qwen3 ASR)
+        if: matrix.os != 'ubuntu-latest'
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-qwen3-asr.sh
+          rm -rf sherpa-onnx-qwen3-*
+
       - name:  Run java test (Non-Streaming ASR)
         shell: bash
         run: |
@@ -207,14 +216,17 @@ jobs:
           rm *.wav
           rm -rf sherpa-onnx-dolphin-*
 
-      - name:  Run speech enhancement (GTCRN)
+      - name:  Run speech enhancement
         shell: bash
         run: |
           cd ./java-api-examples
           ./run-non-streaming-speech-enhancement-gtcrn.sh
+          ./run-non-streaming-speech-enhancement-dpdfnet.sh
+          ./run-streaming-speech-enhancement-gtcrn.sh
+          ./run-streaming-speech-enhancement-dpdfnet.sh
           ls -lh *.wav
 
-          rm -fv gtcrn_simple.onnx *.wav
+          rm -fv gtcrn_simple.onnx dpdfnet_baseline.onnx *.wav
 
       - name:  Run java test (Online add punctuations)
         shell: bash
@@ -338,23 +350,26 @@ jobs:
         run: |
           cd ./java-api-examples
 
-          ./run-pocket-tts.sh
-          ./run-supertonic-tts.sh
-          ./run-non-streaming-tts-kitten-en.sh
-          ./run-non-streaming-tts-kokoro-zh-en.sh
-          ./run-non-streaming-tts-kokoro-en.sh
-          ./run-non-streaming-tts-matcha-zh.sh
+           ./run-pocket-tts.sh
+           ./run-zipvoice-tts.sh
+           ./run-supertonic-tts.sh
+           ./run-non-streaming-tts-kitten-en.sh
+           ./run-non-streaming-tts-kokoro-zh-en.sh
+           ./run-non-streaming-tts-kokoro-en.sh
+           ./run-non-streaming-tts-matcha-zh.sh
           ./run-non-streaming-tts-matcha-en.sh
           ls -lh
 
-          rm -rf sherpa-onnx-pocket-tts-*
-          rm -rf sherpa-onnx-supertonic-tts-*
-          rm -rf kitten-nano-en-*
-          rm -rf kokoro-multi-*
-          rm -rf kokoro-en-*
+           rm -rf sherpa-onnx-pocket-tts-*
+           rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+           rm -rf sherpa-onnx-supertonic-tts-*
+           rm -rf kitten-nano-en-*
+           rm -rf kokoro-multi-*
+           rm -rf kokoro-en-*
 
-          rm -rf matcha-icefall-*
-          rm vocos-22khz-univ.onnx
+           rm -rf matcha-icefall-*
+           rm vocos-22khz-univ.onnx
+           rm vocos_24khz.onnx
 
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*

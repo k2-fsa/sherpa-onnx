@@ -1,9 +1,51 @@
+//! Offline speech recognition.
+//!
+//! The Rust wrapper exposes the same model families as the native C API. In
+//! typical use, configure exactly one model family inside [`OfflineModelConfig`]
+//! and then create an [`OfflineRecognizer`].
+//!
+//! Repository examples:
+//!
+//! - `rust-api-examples/examples/sense_voice.rs`
+//! - `rust-api-examples/examples/nemo_parakeet.rs`
+//! - `rust-api-examples/examples/moonshine_v2.rs`
+//! - `rust-api-examples/examples/fire_red_asr_ctc.rs`
+//!
+//! ```no_run
+//! use sherpa_onnx::{
+//!     OfflineRecognizer, OfflineRecognizerConfig, OfflineSenseVoiceModelConfig, Wave,
+//! };
+//!
+//! let wave = Wave::read("./test.wav").expect("read wave");
+//! let mut config = OfflineRecognizerConfig::default();
+//! config.model_config.sense_voice = OfflineSenseVoiceModelConfig {
+//!     model: Some(
+//!         "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8/model.int8.onnx".into(),
+//!     ),
+//!     language: Some("auto".into()),
+//!     use_itn: true,
+//! };
+//! config.model_config.tokens = Some(
+//!     "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8/tokens.txt".into(),
+//! );
+//!
+//! let recognizer = OfflineRecognizer::create(&config).expect("create recognizer");
+//! let stream = recognizer.create_stream();
+//! stream.accept_waveform(wave.sample_rate(), wave.samples());
+//! recognizer.decode(&stream);
+//! println!("{}", stream.get_result().expect("result").text);
+//! ```
+
 use crate::utils::to_c_ptr;
 use serde::Deserialize;
 use sherpa_onnx_sys as sys;
 use std::ffi::{CStr, CString};
 
 #[derive(Clone, Debug, Default)]
+/// Offline transducer model configuration.
+///
+/// This is used for transducer-style models such as the Parakeet example in
+/// `rust-api-examples/examples/nemo_parakeet.rs`.
 pub struct OfflineTransducerModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -21,6 +63,7 @@ impl OfflineTransducerModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline Paraformer model configuration.
 pub struct OfflineParaformerModelConfig {
     pub model: Option<String>,
 }
@@ -34,6 +77,7 @@ impl OfflineParaformerModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline NeMo CTC model configuration.
 pub struct OfflineNemoEncDecCtcModelConfig {
     pub model: Option<String>,
 }
@@ -47,6 +91,7 @@ impl OfflineNemoEncDecCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline Whisper model configuration.
 pub struct OfflineWhisperModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -72,6 +117,7 @@ impl OfflineWhisperModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline Canary model configuration.
 pub struct OfflineCanaryModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -93,6 +139,7 @@ impl OfflineCanaryModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline FireRed ASR transducer configuration.
 pub struct OfflineFireRedAsrModelConfig {
     pub encoder: Option<String>,
     pub decoder: Option<String>,
@@ -113,6 +160,7 @@ impl OfflineFireRedAsrModelConfig {
 /// For Moonshine v2, you need 2 models:
 ///  - encoder, merged_decoder
 #[derive(Clone, Debug, Default)]
+/// Offline Moonshine model configuration.
 pub struct OfflineMoonshineModelConfig {
     pub preprocessor: Option<String>,
     pub encoder: Option<String>,
@@ -134,6 +182,7 @@ impl OfflineMoonshineModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline TDNN model configuration.
 pub struct OfflineTdnnModelConfig {
     pub model: Option<String>,
 }
@@ -147,6 +196,7 @@ impl OfflineTdnnModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Optional external language model configuration for offline ASR.
 pub struct OfflineLMConfig {
     pub model: Option<String>,
     pub scale: f32,
@@ -169,6 +219,7 @@ impl OfflineLMConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline SenseVoice model configuration.
 pub struct OfflineSenseVoiceModelConfig {
     pub model: Option<String>,
     pub language: Option<String>,
@@ -186,6 +237,7 @@ impl OfflineSenseVoiceModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline Dolphin model configuration.
 pub struct OfflineDolphinModelConfig {
     pub model: Option<String>,
 }
@@ -199,6 +251,7 @@ impl OfflineDolphinModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline Zipformer CTC model configuration.
 pub struct OfflineZipformerCtcModelConfig {
     pub model: Option<String>,
 }
@@ -212,6 +265,7 @@ impl OfflineZipformerCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline WeNet CTC model configuration.
 pub struct OfflineWenetCtcModelConfig {
     pub model: Option<String>,
 }
@@ -225,6 +279,7 @@ impl OfflineWenetCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline omnilingual CTC model configuration.
 pub struct OfflineOmnilingualAsrCtcModelConfig {
     pub model: Option<String>,
 }
@@ -238,6 +293,7 @@ impl OfflineOmnilingualAsrCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline MedASR CTC model configuration.
 pub struct OfflineMedAsrCtcModelConfig {
     pub model: Option<String>,
 }
@@ -251,6 +307,7 @@ impl OfflineMedAsrCtcModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Offline FireRed ASR CTC model configuration.
 pub struct OfflineFireRedAsrCtcModelConfig {
     pub model: Option<String>,
 }
@@ -264,6 +321,53 @@ impl OfflineFireRedAsrCtcModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Offline Qwen3 ASR model configuration.
+pub struct OfflineQwen3ASRModelConfig {
+    pub conv_frontend: Option<String>,
+    pub encoder: Option<String>,
+    pub decoder: Option<String>,
+    pub tokenizer: Option<String>,
+    pub max_total_len: i32,
+    pub max_new_tokens: i32,
+    pub temperature: f32,
+    pub top_p: f32,
+    pub seed: i32,
+    pub hotwords: Option<String>,
+}
+impl Default for OfflineQwen3ASRModelConfig {
+    fn default() -> Self {
+        Self {
+            conv_frontend: None,
+            encoder: None,
+            decoder: None,
+            tokenizer: None,
+            max_total_len: 512,
+            max_new_tokens: 128,
+            temperature: 1e-6,
+            top_p: 0.8,
+            seed: 42,
+            hotwords: None,
+        }
+    }
+}
+impl OfflineQwen3ASRModelConfig {
+    fn to_sys(&self, cstrings: &mut Vec<CString>) -> sys::OfflineQwen3ASRModelConfig {
+        sys::OfflineQwen3ASRModelConfig {
+            conv_frontend: to_c_ptr(&self.conv_frontend, cstrings),
+            encoder: to_c_ptr(&self.encoder, cstrings),
+            decoder: to_c_ptr(&self.decoder, cstrings),
+            tokenizer: to_c_ptr(&self.tokenizer, cstrings),
+            max_total_len: self.max_total_len,
+            max_new_tokens: self.max_new_tokens,
+            temperature: self.temperature,
+            top_p: self.top_p,
+            seed: self.seed,
+            hotwords: to_c_ptr(&self.hotwords, cstrings),
+        }
+    }
+}
+#[derive(Clone, Debug)]
+/// Offline FunASR Nano model configuration.
 pub struct OfflineFunASRNanoModelConfig {
     pub encoder_adaptor: Option<String>,
     pub llm: Option<String>,
@@ -319,6 +423,10 @@ impl OfflineFunASRNanoModelConfig {
 }
 
 #[derive(Clone, Debug, Default)]
+/// Aggregate model configuration for offline recognition.
+///
+/// Configure exactly one model family for typical use. Shared options such as
+/// `tokens`, `provider`, and `num_threads` live here as well.
 pub struct OfflineModelConfig {
     pub transducer: OfflineTransducerModelConfig,
     pub paraformer: OfflineParaformerModelConfig,
@@ -336,6 +444,7 @@ pub struct OfflineModelConfig {
     pub medasr: OfflineMedAsrCtcModelConfig,
     pub funasr_nano: OfflineFunASRNanoModelConfig,
     pub fire_red_asr_ctc: OfflineFireRedAsrCtcModelConfig,
+    pub qwen3_asr: OfflineQwen3ASRModelConfig,
 
     pub tokens: Option<String>,
     pub num_threads: i32,
@@ -398,6 +507,9 @@ impl OfflineModelConfig {
             fire_red_asr_ctc: self
                 .fire_red_asr_ctc
                 .to_sys(cstrings),
+            qwen3_asr: self
+                .qwen3_asr
+                .to_sys(cstrings),
 
             tokens: to_c_ptr(&self.tokens, cstrings),
             num_threads: self.num_threads,
@@ -412,6 +524,10 @@ impl OfflineModelConfig {
 }
 
 #[derive(Clone, Debug)]
+/// Top-level configuration for [`OfflineRecognizer`].
+///
+/// Use [`Default`] as a starting point, then fill the fields for the model you
+/// want to run.
 pub struct OfflineRecognizerConfig {
     pub feat_config: sys::FeatureConfig,
     pub model_config: OfflineModelConfig,
@@ -473,6 +589,7 @@ impl Default for OfflineRecognizerConfig {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+/// Recognition result returned by [`OfflineStream::get_result`].
 pub struct OfflineRecognizerResult {
     pub text: String,
     pub tokens: Vec<String>,
@@ -480,11 +597,37 @@ pub struct OfflineRecognizerResult {
     pub durations: Option<Vec<f32>>,
 }
 
+/// Offline speech recognizer.
+///
+/// ```no_run
+/// use sherpa_onnx::{
+///     OfflineRecognizer, OfflineRecognizerConfig, OfflineTransducerModelConfig, Wave,
+/// };
+///
+/// let wave = Wave::read("./test.wav").expect("read wave");
+/// let mut config = OfflineRecognizerConfig::default();
+/// config.model_config.transducer = OfflineTransducerModelConfig {
+///     encoder: Some("./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/encoder.int8.onnx".into()),
+///     decoder: Some("./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/decoder.int8.onnx".into()),
+///     joiner: Some("./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/joiner.int8.onnx".into()),
+/// };
+/// config.model_config.tokens =
+///     Some("./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/tokens.txt".into());
+/// config.model_config.model_type = Some("nemo_transducer".into());
+///
+/// let recognizer = OfflineRecognizer::create(&config).expect("create recognizer");
+/// let stream = recognizer.create_stream();
+/// stream.accept_waveform(wave.sample_rate(), wave.samples());
+/// recognizer.decode(&stream);
+/// let result = stream.get_result().expect("result");
+/// println!("{}", result.text);
+/// ```
 pub struct OfflineRecognizer {
     ptr: *const sys::OfflineRecognizer,
 }
 
 impl OfflineRecognizer {
+    /// Create a recognizer from `config`.
     pub fn create(config: &OfflineRecognizerConfig) -> Option<Self> {
         let mut cstrings = Vec::new();
         let sys_config = config.to_sys(&mut cstrings);
@@ -496,21 +639,25 @@ impl OfflineRecognizer {
         }
     }
 
+    /// Create an empty offline stream.
     pub fn create_stream(&self) -> OfflineStream {
         let ptr = unsafe { sys::SherpaOnnxCreateOfflineStream(self.ptr) };
         OfflineStream { ptr }
     }
 
+    /// Create a stream with per-stream hotwords.
     pub fn create_stream_with_hotwords(&self, hotwords: &str) -> OfflineStream {
         let c = CString::new(hotwords).unwrap();
         let ptr = unsafe { sys::SherpaOnnxCreateOfflineStreamWithHotwords(self.ptr, c.as_ptr()) };
         OfflineStream { ptr }
     }
 
+    /// Decode one stream.
     pub fn decode(&self, stream: &OfflineStream) {
         unsafe { sys::SherpaOnnxDecodeOfflineStream(self.ptr, stream.ptr) }
     }
 
+    /// Decode multiple streams in one batch call.
     pub fn decode_multiple_streams(&self, streams: &[&OfflineStream]) {
         let ptrs: Vec<*const sys::OfflineStream> = streams
             .iter()
@@ -530,11 +677,13 @@ impl Drop for OfflineRecognizer {
     }
 }
 
+/// Input stream used by [`OfflineRecognizer`].
 pub struct OfflineStream {
-    ptr: *const sys::OfflineStream,
+    pub(crate) ptr: *const sys::OfflineStream,
 }
 
 impl OfflineStream {
+    /// Append samples to the stream.
     pub fn accept_waveform(&self, sample_rate: i32, samples: &[f32]) {
         unsafe {
             sys::SherpaOnnxAcceptWaveformOffline(
@@ -546,6 +695,7 @@ impl OfflineStream {
         }
     }
 
+    /// Fetch the current recognition result.
     pub fn get_result(&self) -> Option<OfflineRecognizerResult> {
         unsafe {
             let cstr = sys::SherpaOnnxGetOfflineStreamResultAsJson(self.ptr);
@@ -558,6 +708,31 @@ impl OfflineStream {
             sys::SherpaOnnxDestroyOfflineStreamResultJson(cstr);
             serde_json::from_str(&s).ok()
         }
+    }
+
+    pub fn set_option(&self, key: &str, value: &str) {
+        let key = CString::new(key).unwrap();
+        let value = CString::new(value).unwrap();
+        unsafe { sys::SherpaOnnxOfflineStreamSetOption(self.ptr, key.as_ptr(), value.as_ptr()) }
+    }
+
+    pub fn get_option(&self, key: &str) -> String {
+        let key = CString::new(key).unwrap();
+        unsafe {
+            let p = sys::SherpaOnnxOfflineStreamGetOption(self.ptr, key.as_ptr());
+            if p.is_null() {
+                String::new()
+            } else {
+                CStr::from_ptr(p)
+                    .to_string_lossy()
+                    .into_owned()
+            }
+        }
+    }
+
+    pub fn has_option(&self, key: &str) -> bool {
+        let key = CString::new(key).unwrap();
+        unsafe { sys::SherpaOnnxOfflineStreamHasOption(self.ptr, key.as_ptr()) != 0 }
     }
 }
 

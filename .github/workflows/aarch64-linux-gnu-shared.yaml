@@ -199,10 +199,36 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          cp -av build/install/lib/lib*.so* ${lib_dst}/lib/
+          rm -f ${lib_dst}/lib/libcargs.so ${lib_dst}/lib/libcargs.so.*
+          tree ${lib_dst}
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
+
       - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-linux-aarch64-shared-gpu-${{ matrix.gpu }}-onnxruntime-${{ matrix.onnxruntime_version }}
-          path: sherpa-onnx-*linux-aarch64-shared*.tar.bz2
+          path: sherpa-onnx-*.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.32
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -238,27 +264,10 @@ jobs:
 
             git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
-      - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*linux-aarch64*.tar.bz2
 
-      - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*linux-aarch64*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.12.17
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .

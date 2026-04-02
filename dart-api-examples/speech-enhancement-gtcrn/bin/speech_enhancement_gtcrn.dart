@@ -9,7 +9,7 @@ void main(List<String> arguments) async {
   await initSherpaOnnx();
 
   final parser = ArgParser()
-    ..addOption('model', help: 'Path to gtcrn onnx model')
+    ..addOption('model', help: 'Path to a GTCRN onnx model')
     ..addOption('input-wav', help: 'Path to input.wav')
     ..addOption('output-wav', help: 'Path to output.wav');
 
@@ -28,6 +28,7 @@ void main(List<String> arguments) async {
   final config = sherpa_onnx.OfflineSpeechDenoiserConfig(
       model: sherpa_onnx.OfflineSpeechDenoiserModelConfig(
     gtcrn: sherpa_onnx.OfflineSpeechDenoiserGtcrnModelConfig(model: model),
+    dpdfnet: const sherpa_onnx.OfflineSpeechDenoiserDpdfNetModelConfig(),
     numThreads: 1,
     debug: true,
     provider: 'cpu',

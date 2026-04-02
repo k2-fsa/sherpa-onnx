@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -34,6 +35,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/normal-data-generator.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -46,7 +48,8 @@ constexpr float kMinDuration = 0.1f;
 constexpr int32_t kMaxLatentLen = 10000;
 
 constexpr std::array<std::string_view, 5> kSupertonicAvailableLangs = {
-    "en", "ko", "es", "pt", "fr"};
+    "en", "ko", "es", "pt", "fr",
+};
 
 void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
                        int32_t base_chunk_size, int32_t chunk_compress_factor,
@@ -260,11 +263,9 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
                                      silence_duration, seed, callback);
 }
 
-GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
-                                                 const std::string &lang,
-                                                 int64_t sid, int32_t num_steps,
-                                                 float speed,
-                                                 std::mt19937 &gen) const {
+GeneratedAudio OfflineTtsSupertonicImpl::Process(
+    const std::string &text, const std::string &lang, int64_t sid,
+    int32_t num_steps, float speed, NormalDataGenerator &gen) const {
   const auto &cfg = model_->GetConfig();
   StyleSliceView slice = GetStyleSliceForSid(sid);
   const int32_t bsz = 1;
@@ -371,7 +372,6 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   }
 
   int32_t latent_dim = cfg.ttl.latent_dim * cfg.ttl.chunk_compress_factor;
-  std::normal_distribution<float> dist(0.0f, 1.0f);
   size_t latent_total_size = static_cast<size_t>(bsz) *
                              static_cast<size_t>(latent_dim) *
                              static_cast<size_t>(latent_len);
@@ -386,9 +386,9 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
   }
 
   std::vector<float> xt_flat(latent_total_size);
-  for (size_t i = 0; i < latent_total_size; ++i) {
-    xt_flat[i] = dist(gen);
-  }
+
+  gen.Fill(xt_flat.data(), xt_flat.size());
+
   std::vector<float> latent_mask_flat;
   std::vector<int64_t> latent_mask_shape;
   GetLatentMaskFlat(wav_lengths, cfg.ae.base_chunk_size,
@@ -489,8 +489,8 @@ GeneratedAudio OfflineTtsSupertonicImpl::Process(const std::string &text,
       (wav_shape.size() == 3 && wav_shape[0] == bsz && wav_shape[1] == 1)) {
     int64_t samples_per_batch =
         (wav_shape.size() == 2) ? wav_shape[1] : wav_shape[2];
-    result.samples.reserve(static_cast<size_t>(
-        std::accumulate(wav_lengths.begin(), wav_lengths.end(), int64_t(0))));
+    result.samples.reserve(static_cast<size_t>(std::accumulate(
+        wav_lengths.begin(), wav_lengths.end(), static_cast<int64_t>(0))));
     for (int32_t b = 0; b < bsz; ++b) {
       int64_t actual_len = wav_lengths[b];
       if (actual_len > samples_per_batch) {
@@ -533,8 +533,7 @@ GeneratedAudio OfflineTtsSupertonicImpl::ProcessChunksAndConcatenate(
     const std::vector<std::string> &text_chunks, const std::string &lang,
     int64_t sid, int32_t num_steps, float speed, float silence_duration,
     int32_t seed, GeneratedAudioCallback callback) const {
-  std::mt19937 gen(seed >= 0 ? static_cast<unsigned>(seed)
-                             : std::random_device{}());
+  NormalDataGenerator gen(0, 1, seed);
   GeneratedAudio result;
   std::vector<std::vector<float>> chunk_samples;
   chunk_samples.reserve(text_chunks.size());

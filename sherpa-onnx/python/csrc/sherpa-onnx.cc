@@ -25,6 +25,7 @@
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-punctuation.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
+#include "sherpa-onnx/python/csrc/online-speech-denoiser.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
@@ -118,6 +119,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 
   PybindAlsa(&m);
   PybindOfflineSpeechDenoiser(&m);
+  PybindOnlineSpeechDenoiser(&m);
   PybindOfflineSourceSeparation(&m);
   PybindVersion(&m);
 }

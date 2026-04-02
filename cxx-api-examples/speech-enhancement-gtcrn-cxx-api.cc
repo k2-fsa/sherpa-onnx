@@ -1,20 +1,20 @@
 // cxx-api-examples/speech-enhancement-gtcrn-cxx-api.cc
 //
-// Copyright (c)  2025  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 //
-// We assume you have pre-downloaded model
-// from
+// We assume you have pre-downloaded the GTCRN model and sample test wave from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 //
-//
-// An example command to download
+// An example command to download:
 // clang-format off
 /*
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 */
 // clang-format on
+
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -24,10 +24,10 @@ int32_t main() {
   using namespace sherpa_onnx::cxx;  // NOLINT
 
   OfflineSpeechDenoiserConfig config;
+  std::string model_filename = "./gtcrn_simple.onnx";
   std::string wav_filename = "./inp_16k.wav";
-  std::string out_wave_filename = "./enhanced_16k.wav";
-
-  config.model.gtcrn.model = "./gtcrn_simple.onnx";
+  std::string out_wave_filename = "./enhanced-gtcrn.wav";
+  config.model.gtcrn.model = model_filename;
 
   auto sd = OfflineSpeechDenoiser::Create(config);
   if (!sd.Get()) {
@@ -62,4 +62,5 @@ int32_t main() {
   printf("Elapsed seconds: %.3fs\n", elapsed_seconds);
   printf("(Real time factor) RTF = %.3f / %.3f = %.3f\n", elapsed_seconds,
          duration, rtf);
+  return 0;
 }

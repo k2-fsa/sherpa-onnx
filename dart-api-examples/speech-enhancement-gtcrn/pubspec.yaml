@@ -1,7 +1,7 @@
 name: speech_enhancement_gtcrn
 
 description: >
-  This example demonstrates how to use the Dart API for speech enhancement/denoising.
+  This example demonstrates how to use the Dart API for GTCRN speech enhancement/denoising.
 
 version: 1.0.0
 
@@ -10,7 +10,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  sherpa_onnx: ^1.12.29
+  sherpa_onnx: ^1.12.34
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
   path: ^1.9.0

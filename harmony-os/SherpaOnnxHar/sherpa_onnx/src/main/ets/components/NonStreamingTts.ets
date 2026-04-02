@@ -3,7 +3,9 @@ import {
   getOfflineTtsNumSpeakers,
   getOfflineTtsSampleRate,
   offlineTtsGenerate,
+  offlineTtsGenerateAsyncWithConfig,
   offlineTtsGenerateAsync,
+  offlineTtsGenerateWithConfig,
 } from 'libsherpa_onnx.so';
 
 export class OfflineTtsVitsModelConfig {
@@ -47,11 +49,48 @@ export class OfflineTtsKittenModelConfig {
   public lengthScale: number = 1.0;
 }
 
+export class OfflineTtsZipvoiceModelConfig {
+  public tokens: string = '';
+  public encoder: string = '';
+  public decoder: string = '';
+  public vocoder: string = '';
+  public dataDir: string = '';
+  public lexicon: string = '';
+  public featScale: number = 0.1;
+  public tShift: number = 0.5;
+  public targetRms: number = 0.1;
+  public guidanceScale: number = 1.0;
+}
+
+export class OfflineTtsPocketModelConfig {
+  public lmFlow: string = '';
+  public lmMain: string = '';
+  public encoder: string = '';
+  public decoder: string = '';
+  public textConditioner: string = '';
+  public vocabJson: string = '';
+  public tokenScoresJson: string = '';
+  public voiceEmbeddingCacheCapacity: number = 50;
+}
+
+export class OfflineTtsSupertonicModelConfig {
+  public durationPredictor: string = '';
+  public textEncoder: string = '';
+  public vectorEstimator: string = '';
+  public vocoder: string = '';
+  public ttsJson: string = '';
+  public unicodeIndexer: string = '';
+  public voiceStyle: string = '';
+}
+
 export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
   public matcha: OfflineTtsMatchaModelConfig = new OfflineTtsMatchaModelConfig();
   public kokoro: OfflineTtsKokoroModelConfig = new OfflineTtsKokoroModelConfig();
   public kitten: OfflineTtsKittenModelConfig = new OfflineTtsKittenModelConfig();
+  public zipvoice: OfflineTtsZipvoiceModelConfig = new OfflineTtsZipvoiceModelConfig();
+  public pocket: OfflineTtsPocketModelConfig = new OfflineTtsPocketModelConfig();
+  public supertonic: OfflineTtsSupertonicModelConfig = new OfflineTtsSupertonicModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';
@@ -75,10 +114,29 @@ interface TtsCallbackData {
   progress: number;
 }
 
+export class TtsGenerationConfig {
+  public silenceScale: number = 0.2;
+  public speed: number = 1.0;
+  public sid: number = 0;
+  public referenceAudio?: Float32Array;
+  public referenceSampleRate: number = 0;
+  public referenceText: string = '';
+  public numSteps: number = 5;
+  public extra: object = new Object();
+}
+
 export class TtsInput {
   public text: string = '';
   public sid: number = 0;
   public speed: number = 1.0;
+  public enableExternalBuffer: boolean = true;
+  public callback?: (data: TtsCallbackData) => number;
+}
+
+export class TtsInputWithConfig {
+  public text: string = '';
+  public generationConfig: TtsGenerationConfig = new TtsGenerationConfig();
+  public enableExternalBuffer: boolean = true;
   public callback?: (data: TtsCallbackData) => number;
 }
 
@@ -103,10 +161,18 @@ export class OfflineTts {
    return an object {samples: Float32Array, sampleRate: <a number>}
    */
   generate(input: TtsInput): TtsOutput {
-    return offlineTtsGenerate(this.handle, input) as TtsOutput;
+    return offlineTtsGenerate(this.handle, input);
   }
 
   generateAsync(input: TtsInput): Promise<TtsOutput> {
     return offlineTtsGenerateAsync(this.handle, input);
+  }
+
+  generateWithConfig(input: TtsInputWithConfig): TtsOutput {
+    return offlineTtsGenerateWithConfig(this.handle, input);
+  }
+
+  generateAsyncWithConfig(input: TtsInputWithConfig): Promise<TtsOutput> {
+    return offlineTtsGenerateAsyncWithConfig(this.handle, input);
   }
 }

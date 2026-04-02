@@ -164,7 +164,10 @@ type OnlineRecognizerConfig struct {
 
 // It contains the recognition result for a online stream.
 type OnlineRecognizerResult struct {
-	Text string
+	Text       string
+	Tokens     []string
+	Timestamps []float32
+	Json       string
 }
 
 // The online recognizer class. It wraps a pointer from C.
@@ -317,6 +320,33 @@ func (s *OnlineStream) InputFinished() {
 	C.SherpaOnnxOnlineStreamInputFinished(s.impl)
 }
 
+// Set a key-value option on the online stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "is_final" for streaming Paraformer).
+func (s *OnlineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOnlineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the online stream.
+// Returns an empty string if the option is not set.
+func (s *OnlineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOnlineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the online stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OnlineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOnlineStreamHasOption(s.impl, cKey) == 1
+}
+
 // Check whether the stream has enough feature frames for decoding.
 // Return true if this stream is ready for decoding. Return false otherwise.
 //
@@ -377,8 +407,24 @@ func (recognizer *OnlineRecognizer) DecodeStreams(s []*OnlineStream) {
 func (recognizer *OnlineRecognizer) GetResult(s *OnlineStream) *OnlineRecognizerResult {
 	p := C.SherpaOnnxGetOnlineStreamResult(recognizer.impl, s.impl)
 	defer C.SherpaOnnxDestroyOnlineRecognizerResult(p)
+	n := int(p.count)
 	result := &OnlineRecognizerResult{}
 	result.Text = C.GoString(p.text)
+	result.Json = C.GoString(p.json)
+	if n > 0 {
+		result.Tokens = make([]string, n)
+		tokens := unsafe.Slice(p.tokens_arr, n)
+		for i := 0; i < n; i++ {
+			result.Tokens[i] = C.GoString(tokens[i])
+		}
+	}
+	if p.timestamps != nil && n > 0 {
+		result.Timestamps = make([]float32, n)
+		timestamps := unsafe.Slice(p.timestamps, n)
+		for i := 0; i < n; i++ {
+			result.Timestamps[i] = float32(timestamps[i])
+		}
+	}
 
 	return result
 }
@@ -488,6 +534,19 @@ type OfflineMoonshineModelConfig struct {
 	MergedDecoder   string
 }
 
+type OfflineQwen3ASRModelConfig struct {
+	ConvFrontend string
+	Encoder      string
+	Decoder      string
+	Tokenizer    string
+	MaxTotalLen  int
+	MaxNewTokens int
+	Temperature  float32
+	TopP         float32
+	Seed         int
+	Hotwords     string
+}
+
 type OfflineTdnnModelConfig struct {
 	Model string
 }
@@ -521,6 +580,7 @@ type OfflineModelConfig struct {
 	Omnilingual   OfflineOmnilingualAsrCtcModelConfig
 	MedAsr        OfflineMedAsrCtcModelConfig
 	FireRedAsrCtc OfflineFireRedAsrCtcModelConfig
+	Qwen3ASR      OfflineQwen3ASRModelConfig
 	Tokens        string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -645,6 +705,17 @@ func newCOfflineRecognizerConfig(config *OfflineRecognizerConfig) *C.struct_Sher
 	c.model_config.medasr.model = C.CString(config.ModelConfig.MedAsr.Model)
 	c.model_config.fire_red_asr_ctc.model = C.CString(config.ModelConfig.FireRedAsrCtc.Model)
 
+	c.model_config.qwen3_asr.conv_frontend = C.CString(config.ModelConfig.Qwen3ASR.ConvFrontend)
+	c.model_config.qwen3_asr.encoder = C.CString(config.ModelConfig.Qwen3ASR.Encoder)
+	c.model_config.qwen3_asr.decoder = C.CString(config.ModelConfig.Qwen3ASR.Decoder)
+	c.model_config.qwen3_asr.tokenizer = C.CString(config.ModelConfig.Qwen3ASR.Tokenizer)
+	c.model_config.qwen3_asr.max_total_len = C.int(config.ModelConfig.Qwen3ASR.MaxTotalLen)
+	c.model_config.qwen3_asr.max_new_tokens = C.int(config.ModelConfig.Qwen3ASR.MaxNewTokens)
+	c.model_config.qwen3_asr.temperature = C.float(config.ModelConfig.Qwen3ASR.Temperature)
+	c.model_config.qwen3_asr.top_p = C.float(config.ModelConfig.Qwen3ASR.TopP)
+	c.model_config.qwen3_asr.seed = C.int(config.ModelConfig.Qwen3ASR.Seed)
+	c.model_config.qwen3_asr.hotwords = C.CString(config.ModelConfig.Qwen3ASR.Hotwords)
+
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 
 	c.model_config.num_threads = C.int(config.ModelConfig.NumThreads)
@@ -718,6 +789,11 @@ func freeCOfflineRecognizerConfig(c *C.struct_SherpaOnnxOfflineRecognizerConfig)
 		&c.model_config.wenet_ctc.model,
 		&c.model_config.medasr.model,
 		&c.model_config.fire_red_asr_ctc.model,
+		&c.model_config.qwen3_asr.conv_frontend,
+		&c.model_config.qwen3_asr.encoder,
+		&c.model_config.qwen3_asr.decoder,
+		&c.model_config.qwen3_asr.tokenizer,
+		&c.model_config.qwen3_asr.hotwords,
 		&c.model_config.omnilingual.model,
 		&c.model_config.tokens,
 		&c.model_config.provider,
@@ -795,6 +871,33 @@ func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 // samples contains the actual audio samples. Each sample is in the range [-1, 1].
 func (s *OfflineStream) AcceptWaveform(sampleRate int, samples []float32) {
 	C.SherpaOnnxAcceptWaveformOffline(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
+}
+
+// Set a key-value option on the offline stream.
+// This provides a generic mechanism for passing per-stream runtime parameters
+// to the recognizer (e.g., "task", "prompt").
+func (s *OfflineStream) SetOption(key string, value string) {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	C.SherpaOnnxOfflineStreamSetOption(s.impl, cKey, cValue)
+}
+
+// Get a key-value option from the offline stream.
+// Returns an empty string if the option is not set.
+func (s *OfflineStream) GetOption(key string) string {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.GoString(C.SherpaOnnxOfflineStreamGetOption(s.impl, cKey))
+}
+
+// Check whether the given option exists in the offline stream.
+// Return true if the option exists. Return false otherwise.
+func (s *OfflineStream) HasOption(key string) bool {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	return C.SherpaOnnxOfflineStreamHasOption(s.impl, cKey) == 1
 }
 
 // Decode the offline stream.
@@ -1248,7 +1351,11 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid), C.float(speed))
+	var cCfg C.struct_SherpaOnnxGenerationConfig
+	cCfg.sid = C.int(sid)
+	cCfg.speed = C.float(speed)
+
+	audio := C.SherpaOnnxOfflineTtsGenerateWithConfig(tts.impl, s, &cCfg, nil, nil)
 
 	if audio == nil {
 		return nil
@@ -1273,6 +1380,7 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	return ans
 }
 
+// Deprecated: Use GenerateWithConfig() instead.
 func (tts *OfflineTts) GenerateWithZipvoice(
 	text, promptText string,
 	promptSamples []float32,
@@ -1280,48 +1388,14 @@ func (tts *OfflineTts) GenerateWithZipvoice(
 	speed float32,
 	numSteps int,
 ) *GeneratedAudio {
-
-	cText := C.CString(text)
-	defer C.free(unsafe.Pointer(cText))
-
-	cPromptText := C.CString(promptText)
-	defer C.free(unsafe.Pointer(cPromptText))
-
-	var p *C.float
-	var n C.int
-	if len(promptSamples) > 0 {
-		p = (*C.float)(unsafe.Pointer(&promptSamples[0]))
-		n = C.int(len(promptSamples))
+	cfg := &GenerationConfig{
+		Speed:               speed,
+		NumSteps:            numSteps,
+		ReferenceAudio:      promptSamples,
+		ReferenceSampleRate: promptSampleRate,
+		ReferenceText:       promptText,
 	}
-
-	audio := C.SherpaOnnxOfflineTtsGenerateWithZipvoice(
-		tts.impl,
-		cText,
-		cPromptText,
-		p,
-		n,
-		C.int(promptSampleRate),
-		C.float(speed),
-		C.int(numSteps),
-	)
-	if audio == nil {
-		return nil
-	}
-	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
-
-	nn := int(audio.n)
-	arr := unsafe.Slice(
-		(*float32)(unsafe.Pointer(audio.samples)),
-		nn,
-	)
-
-	ans := &GeneratedAudio{
-		SampleRate: int(audio.sample_rate),
-		Samples:    make([]float32, nn),
-	}
-	copy(ans.Samples, arr)
-
-	return ans
+	return tts.GenerateWithConfig(text, cfg, nil)
 }
 
 func (tts *OfflineTts) GenerateWithCallback(
@@ -1330,53 +1404,19 @@ func (tts *OfflineTts) GenerateWithCallback(
 	speed float32,
 	cb sherpaOnnxGeneratedAudioCallbackWithArg,
 ) *GeneratedAudio {
+	cfg := &GenerationConfig{
+		Speed: speed,
+		Sid:   sid,
+	}
 
-	s := C.CString(text)
-	defer C.free(unsafe.Pointer(s))
-
-	var audio *C.struct_SherpaOnnxGeneratedAudio
-
+	var pcb sherpaOnnxGeneratedAudioProgressCallbackWithArg
 	if cb != nil {
-		h := cgo.NewHandle(cb)
-		defer h.Delete()
-
-		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-			tts.impl,
-			s,
-			C.int(sid),
-			C.float(speed),
-			C.SherpaOnnxGeneratedAudioCallbackWithArg(C._cgoGeneratedAudioCallback),
-			unsafe.Pointer(&h),
-		)
-	} else {
-		audio = C.SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-			tts.impl,
-			s,
-			C.int(sid),
-			C.float(speed),
-			nil,
-			nil,
-		)
+		pcb = func(samples []float32, _ float32) bool {
+			return cb(samples)
+		}
 	}
 
-	if audio == nil {
-		return nil
-	}
-	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
-
-	n := int(audio.n)
-	samples := unsafe.Slice(
-		(*float32)(unsafe.Pointer(audio.samples)),
-		n,
-	)
-
-	ans := &GeneratedAudio{
-		SampleRate: int(audio.sample_rate),
-		Samples:    make([]float32, n),
-	}
-	copy(ans.Samples, samples)
-
-	return ans
+	return tts.GenerateWithConfig(text, cfg, pcb)
 }
 
 func (tts *OfflineTts) GenerateWithProgressCallback(
@@ -1388,28 +1428,30 @@ func (tts *OfflineTts) GenerateWithProgressCallback(
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
+	var cCfg C.struct_SherpaOnnxGenerationConfig
+	cCfg.sid = C.int(sid)
+	cCfg.speed = C.float(speed)
+
 	var audio *C.struct_SherpaOnnxGeneratedAudio
 
 	if cb != nil {
 		h := cgo.NewHandle(cb)
 		defer h.Delete()
 
-		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
 			tts.impl,
 			s,
-			C.int(sid),
-			C.float(speed),
+			&cCfg,
 			C.SherpaOnnxGeneratedAudioProgressCallbackWithArg(
 				C._cgoGeneratedAudioProgressCallback,
 			),
 			unsafe.Pointer(&h),
 		)
 	} else {
-		audio = C.SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+		audio = C.SherpaOnnxOfflineTtsGenerateWithConfig(
 			tts.impl,
 			s,
-			C.int(sid),
-			C.float(speed),
+			&cCfg,
 			nil,
 			nil,
 		)
@@ -2134,8 +2176,8 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 // ============================================================
 type OfflinePunctuationModelConfig struct {
 	CtTransformer string
-	NumThreads    C.int
-	Debug         C.int // true to print debug information of the model
+	NumThreads    int
+	Debug         int // true to print debug information of the model
 	Provider      string
 }
 
@@ -2152,8 +2194,8 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	cfg.model.ct_transformer = C.CString(config.Model.CtTransformer)
 	defer C.free(unsafe.Pointer(cfg.model.ct_transformer))
 
-	cfg.model.num_threads = config.Model.NumThreads
-	cfg.model.debug = config.Model.Debug
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
@@ -2172,12 +2214,75 @@ func DeleteOfflinePunc(punc *OfflinePunctuation) {
 }
 
 func (punc *OfflinePunctuation) AddPunct(text string) string {
-	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, C.CString(text))
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
 	defer C.SherpaOfflinePunctuationFreeText(p)
 
 	text_with_punct := C.GoString(p)
 
 	return text_with_punct
+}
+
+type OnlinePunctuationModelConfig struct {
+	CnnBilstm  string
+	BpeVocab   string
+	NumThreads int
+	Debug      int
+	Provider   string
+}
+
+type OnlinePunctuationConfig struct {
+	Model OnlinePunctuationModelConfig
+}
+
+type OnlinePunctuation struct {
+	impl *C.struct_SherpaOnnxOnlinePunctuation
+}
+
+func NewOnlinePunctuation(config *OnlinePunctuationConfig) *OnlinePunctuation {
+	cfg := C.struct_SherpaOnnxOnlinePunctuationConfig{}
+	cfg.model.cnn_bilstm = C.CString(config.Model.CnnBilstm)
+	defer C.free(unsafe.Pointer(cfg.model.cnn_bilstm))
+
+	cfg.model.bpe_vocab = C.CString(config.Model.BpeVocab)
+	defer C.free(unsafe.Pointer(cfg.model.bpe_vocab))
+
+	cfg.model.num_threads = C.int(config.Model.NumThreads)
+	cfg.model.debug = C.int(config.Model.Debug)
+	cfg.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(cfg.model.provider))
+
+	impl := C.SherpaOnnxCreateOnlinePunctuation(&cfg)
+	if impl == nil {
+		return nil
+	}
+	punc := &OnlinePunctuation{}
+	punc.impl = impl
+	return punc
+}
+
+func DeleteOnlinePunctuation(punc *OnlinePunctuation) {
+	C.SherpaOnnxDestroyOnlinePunctuation(punc.impl)
+	punc.impl = nil
+}
+
+func (punc *OnlinePunctuation) AddPunct(text string) string {
+	inputText := C.CString(text)
+	defer C.free(unsafe.Pointer(inputText))
+
+	p := C.SherpaOnnxOnlinePunctuationAddPunct(punc.impl, inputText)
+	if p == nil {
+		return ""
+	}
+	defer C.SherpaOnnxOnlinePunctuationFreeText(p)
+
+	textWithPunct := C.GoString(p)
+
+	return textWithPunct
 }
 
 // Configuration for the online/streaming recognizer.
@@ -2438,8 +2543,13 @@ type OfflineSpeechDenoiserGtcrnModelConfig struct {
 	Model string
 }
 
+type OfflineSpeechDenoiserDpdfNetModelConfig struct {
+	Model string
+}
+
 type OfflineSpeechDenoiserModelConfig struct {
 	Gtcrn      OfflineSpeechDenoiserGtcrnModelConfig
+	DpdfNet    OfflineSpeechDenoiserDpdfNetModelConfig
 	NumThreads int32
 	Debug      int32
 	Provider   string
@@ -2453,11 +2563,51 @@ type OfflineSpeechDenoiser struct {
 	impl *C.struct_SherpaOnnxOfflineSpeechDenoiser
 }
 
+type OnlineSpeechDenoiserConfig struct {
+	Model OfflineSpeechDenoiserModelConfig
+}
+
+type OnlineSpeechDenoiser struct {
+	impl *C.struct_SherpaOnnxOnlineSpeechDenoiser
+}
+
 type DenoisedAudio struct {
 	// Normalized samples in the range [-1, 1]
 	Samples []float32
 
 	SampleRate int
+}
+
+func floatPointer(samples []float32) *C.float {
+	if len(samples) == 0 {
+		return nil
+	}
+
+	return (*C.float)(&samples[0])
+}
+
+func denoisedAudioFromPointer(audio *C.struct_SherpaOnnxDenoisedAudio) *DenoisedAudio {
+	if audio == nil {
+		return &DenoisedAudio{}
+	}
+
+	defer C.SherpaOnnxDestroyDenoisedAudio(audio)
+
+	ans := &DenoisedAudio{}
+	ans.SampleRate = int(audio.sample_rate)
+	n := int(audio.n)
+	ans.Samples = make([]float32, n)
+
+	if n == 0 || audio.samples == nil {
+		return ans
+	}
+
+	denoisedSamples := unsafe.Slice(audio.samples, n)
+	for i := 0; i < n; i++ {
+		ans.Samples[i] = float32(denoisedSamples[i])
+	}
+
+	return ans
 }
 
 // Free the internal pointer inside the OfflineSpeechDenoiser to avoid memory leak.
@@ -2472,6 +2622,8 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 	c := C.struct_SherpaOnnxOfflineSpeechDenoiserConfig{}
 	c.model.gtcrn.model = C.CString(config.Model.Gtcrn.Model)
 	defer C.free(unsafe.Pointer(c.model.gtcrn.model))
+	c.model.dpdfnet.model = C.CString(config.Model.DpdfNet.Model)
+	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
@@ -2490,33 +2642,74 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 }
 
 func (sd *OfflineSpeechDenoiser) Run(samples []float32, sampleRate int) *DenoisedAudio {
-	audio := C.SherpaOnnxOfflineSpeechDenoiserRun(sd.impl, (*C.float)(&samples[0]), C.int(len(samples)), C.int(sampleRate))
-	defer C.SherpaOnnxDestroyDenoisedAudio(audio)
-
-	ans := &DenoisedAudio{}
-	ans.SampleRate = int(audio.sample_rate)
-	n := int(audio.n)
-	ans.Samples = make([]float32, n)
-
-	denoisedSamples := unsafe.Slice(audio.samples, n)
-	for i := 0; i < n; i++ {
-		ans.Samples[i] = float32(denoisedSamples[i])
-	}
-
-	return ans
+	audio := C.SherpaOnnxOfflineSpeechDenoiserRun(sd.impl, floatPointer(samples), C.int(len(samples)), C.int(sampleRate))
+	return denoisedAudioFromPointer(audio)
 }
 
 func (audio *DenoisedAudio) Save(filename string) bool {
 	s := C.CString(filename)
 	defer C.free(unsafe.Pointer(s))
 
-	ok := int(C.SherpaOnnxWriteWave((*C.float)(&audio.Samples[0]), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
+	ok := int(C.SherpaOnnxWriteWave(floatPointer(audio.Samples), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
 
 	return ok == 1
 }
 
 func (sd *OfflineSpeechDenoiser) SampleRate() int {
 	return int(C.SherpaOnnxOfflineSpeechDenoiserGetSampleRate(sd.impl))
+}
+
+// Free the internal pointer inside the OnlineSpeechDenoiser to avoid memory leak.
+func DeleteOnlineSpeechDenoiser(sd *OnlineSpeechDenoiser) {
+	C.SherpaOnnxDestroyOnlineSpeechDenoiser(sd.impl)
+	sd.impl = nil
+}
+
+// The user is responsible to invoke [DeleteOnlineSpeechDenoiser]() to free
+// the returned denoiser to avoid memory leak.
+func NewOnlineSpeechDenoiser(config *OnlineSpeechDenoiserConfig) *OnlineSpeechDenoiser {
+	c := C.struct_SherpaOnnxOnlineSpeechDenoiserConfig{}
+	c.model.gtcrn.model = C.CString(config.Model.Gtcrn.Model)
+	defer C.free(unsafe.Pointer(c.model.gtcrn.model))
+	c.model.dpdfnet.model = C.CString(config.Model.DpdfNet.Model)
+	defer C.free(unsafe.Pointer(c.model.dpdfnet.model))
+
+	c.model.num_threads = C.int(config.Model.NumThreads)
+	c.model.debug = C.int(config.Model.Debug)
+
+	c.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(c.model.provider))
+
+	impl := C.SherpaOnnxCreateOnlineSpeechDenoiser(&c)
+	if impl == nil {
+		return nil
+	}
+
+	sd := &OnlineSpeechDenoiser{}
+	sd.impl = impl
+	return sd
+}
+
+func (sd *OnlineSpeechDenoiser) Run(samples []float32, sampleRate int) *DenoisedAudio {
+	audio := C.SherpaOnnxOnlineSpeechDenoiserRun(sd.impl, floatPointer(samples), C.int(len(samples)), C.int(sampleRate))
+	return denoisedAudioFromPointer(audio)
+}
+
+func (sd *OnlineSpeechDenoiser) Flush() *DenoisedAudio {
+	audio := C.SherpaOnnxOnlineSpeechDenoiserFlush(sd.impl)
+	return denoisedAudioFromPointer(audio)
+}
+
+func (sd *OnlineSpeechDenoiser) Reset() {
+	C.SherpaOnnxOnlineSpeechDenoiserReset(sd.impl)
+}
+
+func (sd *OnlineSpeechDenoiser) SampleRate() int {
+	return int(C.SherpaOnnxOnlineSpeechDenoiserGetSampleRate(sd.impl))
+}
+
+func (sd *OnlineSpeechDenoiser) FrameShiftInSamples() int {
+	return int(C.SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(sd.impl))
 }
 
 func GetVersion() string {
@@ -2529,4 +2722,209 @@ func GetGitSha1() string {
 
 func GetGitDate() string {
 	return C.GoString(C.SherpaOnnxGetGitDate())
+}
+
+type OfflineSourceSeparationSpleeterModelConfig struct {
+	Vocals        string
+	Accompaniment string
+}
+
+// UvrConfig wraps SherpaOnnxOfflineSourceSeparationUvrModelConfig
+type OfflineSourceSeparationUvrModelConfig struct {
+	Model string
+}
+
+type OfflineSourceSeparationModelConfig struct {
+	Spleeter   OfflineSourceSeparationSpleeterModelConfig
+	Uvr        OfflineSourceSeparationUvrModelConfig
+	NumThreads int
+	Debug      bool
+	Provider   string // e.g., "cpu", "cuda", "coreml"
+}
+
+// Config is the top-level configuration class
+type OfflineSourceSeparationConfig struct {
+	Model OfflineSourceSeparationModelConfig
+}
+
+type AudioBuffer struct {
+	Samples           []float32
+	ChannelCount      int
+	SampleRate        int
+	SamplesPerChannel int
+	cWave             *C.SherpaOnnxMultiChannelWave // Pointer if C-managed
+}
+
+// NewAudioBuffer creates a buffer from Go-managed memory
+func NewAudioBuffer(samples []float32, channelCount int, sampleRate int) *AudioBuffer {
+	return &AudioBuffer{
+		Samples:           samples,
+		ChannelCount:      channelCount,
+		SampleRate:        sampleRate,
+		SamplesPerChannel: len(samples) / channelCount,
+	}
+}
+
+// ReadWave reads from disk into C-managed memory (Zero-Copy)
+// Note that you have to use AudioBuffer.Release() to avoid memory leak
+func ReadWaveMultiChannel(filename string) *AudioBuffer {
+	cStr := C.CString(filename)
+	defer C.free(unsafe.Pointer(cStr))
+
+	ptr := C.SherpaOnnxReadWaveMultiChannel(cStr)
+	if ptr == nil {
+		return nil
+	}
+
+	buf := &AudioBuffer{
+		ChannelCount:      int(ptr.num_channels),
+		SamplesPerChannel: int(ptr.num_samples),
+		SampleRate:        int(ptr.sample_rate),
+		cWave:             ptr,
+	}
+
+	total := buf.ChannelCount * buf.SamplesPerChannel
+	// View C memory as a Go slice
+	buf.Samples = (*[1 << 30]float32)(unsafe.Pointer(*ptr.samples))[:total:total]
+	return buf
+}
+
+// Release manually frees C-allocated memory
+func (b *AudioBuffer) Release() {
+	if b.cWave != nil {
+		C.SherpaOnnxFreeMultiChannelWave(b.cWave)
+		b.cWave = nil
+		b.Samples = nil
+	}
+}
+
+func (b *AudioBuffer) Save(filename string) bool {
+	if len(b.Samples) == 0 {
+		return false
+	}
+	cStr := C.CString(filename)
+	defer C.free(unsafe.Pointer(cStr))
+
+	// Allocate the pointer array in C memory to avoid "Go pointer to Go pointer" panic.
+	// We need an array of (float*) with size (ChannelCount).
+	ptrSize := unsafe.Sizeof((*C.float)(nil))
+	cPtrs := (*[1 << 20]*C.float)(C.malloc(C.size_t(uintptr(b.ChannelCount) * ptrSize)))
+	defer C.free(unsafe.Pointer(cPtrs))
+
+	for i := 0; i < b.ChannelCount; i++ {
+		offset := i * b.SamplesPerChannel
+		// It is safe to pass a pointer to Go memory as a C argument,
+		// but NOT as a member of a Go-allocated struct/slice passed to C.
+		cPtrs[i] = (*C.float)(unsafe.Pointer(&b.Samples[offset]))
+	}
+
+	res := C.SherpaOnnxWriteWaveMultiChannel(
+		(**C.float)(unsafe.Pointer(cPtrs)),
+		C.int32_t(b.SamplesPerChannel),
+		C.int32_t(b.SampleRate),
+		C.int32_t(b.ChannelCount),
+		cStr,
+	)
+	return res == 1
+}
+
+type SourceSeparator struct {
+	handle *C.SherpaOnnxOfflineSourceSeparation
+}
+
+// Please use SourceSeparator.Delete() to avoid memory leak
+func NewSourceSeparator(cfg OfflineSourceSeparationConfig) *SourceSeparator {
+	var cCfg C.SherpaOnnxOfflineSourceSeparationConfig
+
+	// Map Model Config
+	cCfg.model.num_threads = C.int32_t(cfg.Model.NumThreads)
+	if cfg.Model.Debug {
+		cCfg.model.debug = 1
+	}
+
+	// Helper to track and free C strings
+	var allocated []*C.char
+	toC := func(s string) *C.char {
+		if s == "" {
+			return nil
+		}
+		ptr := C.CString(s)
+		allocated = append(allocated, ptr)
+		return ptr
+	}
+
+	// String conversions
+	cCfg.model.provider = toC(cfg.Model.Provider)
+	cCfg.model.spleeter.vocals = toC(cfg.Model.Spleeter.Vocals)
+	cCfg.model.spleeter.accompaniment = toC(cfg.Model.Spleeter.Accompaniment)
+	cCfg.model.uvr.model = toC(cfg.Model.Uvr.Model)
+
+	// Free strings after creation call
+	defer func() {
+		for _, ptr := range allocated {
+			C.free(unsafe.Pointer(ptr))
+		}
+	}()
+
+	h := C.SherpaOnnxCreateOfflineSourceSeparation(&cCfg)
+	if h == nil {
+		return nil
+	}
+
+	return &SourceSeparator{handle: h}
+}
+
+func (ss *SourceSeparator) Delete() {
+	if ss.handle != nil {
+		C.SherpaOnnxDestroyOfflineSourceSeparation(ss.handle)
+		ss.handle = nil
+	}
+}
+
+func (ss *SourceSeparator) Process(buf *AudioBuffer) []*AudioBuffer {
+	if ss.handle == nil || len(buf.Samples) == 0 {
+		return nil
+	}
+
+	// FIX: Allocate the pointer array in C memory
+	ptrSize := unsafe.Sizeof((*C.float)(nil))
+	cPtrs := (*[1 << 20]*C.float)(C.malloc(C.size_t(uintptr(buf.ChannelCount) * ptrSize)))
+	defer C.free(unsafe.Pointer(cPtrs))
+
+	for i := 0; i < buf.ChannelCount; i++ {
+		offset := i * buf.SamplesPerChannel
+		cPtrs[i] = (*C.float)(unsafe.Pointer(&buf.Samples[offset]))
+	}
+
+	cOut := C.SherpaOnnxOfflineSourceSeparationProcess(
+		ss.handle,
+		(**C.float)(unsafe.Pointer(cPtrs)),
+		C.int32_t(buf.ChannelCount),
+		C.int32_t(buf.SamplesPerChannel),
+		C.int32_t(buf.SampleRate),
+	)
+	if cOut == nil {
+		return nil
+	}
+	defer C.SherpaOnnxDestroySourceSeparationOutput(cOut)
+
+	numStems := int(cOut.num_stems)
+	sampleRate := int(cOut.sample_rate)
+	stems := make([]*AudioBuffer, numStems)
+
+	for i := 0; i < numStems; i++ {
+		cStem := (*[1 << 20]C.SherpaOnnxSourceSeparationStem)(unsafe.Pointer(cOut.stems))[i]
+		chCount := int(cStem.num_channels)
+		sCount := int(cStem.n)
+
+		flat := make([]float32, chCount*sCount)
+		for c := 0; c < chCount; c++ {
+			cChannelPtr := (*[1 << 20]*C.float)(unsafe.Pointer(cStem.samples))[c]
+			source := (*[1 << 30]float32)(unsafe.Pointer(cChannelPtr))[:sCount:sCount]
+			copy(flat[c*sCount:], source)
+		}
+		stems[i] = NewAudioBuffer(flat, chCount, sampleRate)
+	}
+
+	return stems
 }

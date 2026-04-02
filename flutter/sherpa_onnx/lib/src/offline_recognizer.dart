@@ -10,6 +10,44 @@ import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
 
+/// Offline speech recognition.
+///
+/// This module covers non-streaming ASR model families such as transducer,
+/// Paraformer, Whisper, SenseVoice, Moonshine, Canary, Fire-Red-ASR, WeNet,
+/// Omnilingual-ASR, TeleSpeech-CTC, FunASR-Nano, and several CTC variants.
+///
+/// See `dart-api-examples/non-streaming-asr/bin/` for concrete usage,
+/// including `sense-voice.dart`, `whisper.dart`, `nemo-transducer.dart`,
+/// `moonshine_v2.dart`, and `fire-red-asr-ctc.dart`.
+///
+/// Example:
+///
+/// ```dart
+/// final whisper = OfflineWhisperModelConfig(
+///   encoder: './sherpa-onnx-whisper-tiny/encoder.int8.onnx',
+///   decoder: './sherpa-onnx-whisper-tiny/decoder.int8.onnx',
+/// );
+///
+/// final model = OfflineModelConfig(
+///   whisper: whisper,
+///   tokens: './sherpa-onnx-whisper-tiny/tokens.txt',
+///   modelType: 'whisper',
+///   numThreads: 1,
+/// );
+///
+/// final recognizer = OfflineRecognizer(OfflineRecognizerConfig(model: model));
+/// final wave = readWave('./test.wav');
+/// final stream = recognizer.createStream();
+/// stream.acceptWaveform(samples: wave.samples, sampleRate: wave.sampleRate);
+/// recognizer.decode(stream);
+/// print(recognizer.getResult(stream).text);
+/// stream.free();
+/// recognizer.free();
+/// ```
+
+/// Model files for an offline transducer recognizer.
+///
+/// This family is also used by NeMo Parakeet TDT-style examples.
 class OfflineTransducerModelConfig {
   const OfflineTransducerModelConfig({
     this.encoder = '',
@@ -41,6 +79,7 @@ class OfflineTransducerModelConfig {
   final String joiner;
 }
 
+/// Model files for an offline Paraformer recognizer.
 class OfflineParaformerModelConfig {
   const OfflineParaformerModelConfig({this.model = ''});
 
@@ -58,6 +97,7 @@ class OfflineParaformerModelConfig {
   final String model;
 }
 
+/// Model files for an offline NeMo CTC recognizer.
 class OfflineNemoEncDecCtcModelConfig {
   const OfflineNemoEncDecCtcModelConfig({this.model = ''});
 
@@ -77,6 +117,7 @@ class OfflineNemoEncDecCtcModelConfig {
   final String model;
 }
 
+/// Model files for an offline Dolphin recognizer.
 class OfflineDolphinModelConfig {
   const OfflineDolphinModelConfig({this.model = ''});
 
@@ -94,6 +135,7 @@ class OfflineDolphinModelConfig {
   final String model;
 }
 
+/// Model files for an offline Zipformer CTC recognizer.
 class OfflineZipformerCtcModelConfig {
   const OfflineZipformerCtcModelConfig({this.model = ''});
 
@@ -113,6 +155,7 @@ class OfflineZipformerCtcModelConfig {
   final String model;
 }
 
+/// Model files for an offline WeNet CTC recognizer.
 class OfflineWenetCtcModelConfig {
   const OfflineWenetCtcModelConfig({this.model = ''});
 
@@ -130,6 +173,7 @@ class OfflineWenetCtcModelConfig {
   final String model;
 }
 
+/// Model files for the omnilingual ASR CTC recognizer.
 class OfflineOmnilingualAsrCtcModelConfig {
   const OfflineOmnilingualAsrCtcModelConfig({this.model = ''});
 
@@ -151,6 +195,7 @@ class OfflineOmnilingualAsrCtcModelConfig {
   final String model;
 }
 
+/// Model files for the MedASR CTC recognizer.
 class OfflineMedAsrCtcModelConfig {
   const OfflineMedAsrCtcModelConfig({this.model = ''});
 
@@ -168,6 +213,7 @@ class OfflineMedAsrCtcModelConfig {
   final String model;
 }
 
+/// Model files for the Fire-Red-ASR CTC recognizer.
 class OfflineFireRedAsrCtcModelConfig {
   const OfflineFireRedAsrCtcModelConfig({this.model = ''});
 
@@ -187,6 +233,7 @@ class OfflineFireRedAsrCtcModelConfig {
   final String model;
 }
 
+/// Model files and prompt settings for FunASR-Nano.
 class OfflineFunAsrNanoModelConfig {
   const OfflineFunAsrNanoModelConfig({
     this.encoderAdaptor = '',
@@ -258,6 +305,66 @@ class OfflineFunAsrNanoModelConfig {
   final String hotwords;
 }
 
+class OfflineQwen3AsrModelConfig {
+  const OfflineQwen3AsrModelConfig({
+    this.convFrontend = '',
+    this.encoder = '',
+    this.decoder = '',
+    this.tokenizer = '',
+    this.maxTotalLen = 512,
+    this.maxNewTokens = 128,
+    this.temperature = 1e-6,
+    this.topP = 0.8,
+    this.seed = 42,
+    this.hotwords = '',
+  });
+
+  factory OfflineQwen3AsrModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineQwen3AsrModelConfig(
+      convFrontend: json['convFrontend'] as String? ?? '',
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      tokenizer: json['tokenizer'] as String? ?? '',
+      maxTotalLen: json['maxTotalLen'] as int? ?? 512,
+      maxNewTokens: json['maxNewTokens'] as int? ?? 128,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 1e-6,
+      topP: (json['topP'] as num?)?.toDouble() ?? 0.8,
+      seed: json['seed'] as int? ?? 42,
+      hotwords: json['hotwords'] as String? ?? '',
+    );
+  }
+
+  @override
+  String toString() {
+    return 'OfflineQwen3AsrModelConfig(convFrontend: $convFrontend, encoder: $encoder, decoder: $decoder, tokenizer: $tokenizer, maxTotalLen: $maxTotalLen, maxNewTokens: $maxNewTokens, temperature: $temperature, topP: $topP, seed: $seed, hotwords: $hotwords)';
+  }
+
+  Map<String, dynamic> toJson() => {
+    'convFrontend': convFrontend,
+    'encoder': encoder,
+    'decoder': decoder,
+    'tokenizer': tokenizer,
+    'maxTotalLen': maxTotalLen,
+    'maxNewTokens': maxNewTokens,
+    'temperature': temperature,
+    'topP': topP,
+    'seed': seed,
+    'hotwords': hotwords,
+  };
+
+  final String convFrontend;
+  final String encoder;
+  final String decoder;
+  final String tokenizer;
+  final int maxTotalLen;
+  final int maxNewTokens;
+  final double temperature;
+  final double topP;
+  final int seed;
+  final String hotwords;
+}
+
+/// Model files and options for an offline Whisper recognizer.
 class OfflineWhisperModelConfig {
   const OfflineWhisperModelConfig({
     this.encoder = '',
@@ -306,6 +413,7 @@ class OfflineWhisperModelConfig {
   final bool enableSegmentTimestamps;
 }
 
+/// Model files and translation options for NeMo Canary.
 class OfflineCanaryModelConfig {
   const OfflineCanaryModelConfig({
     this.encoder = '',
@@ -345,6 +453,7 @@ class OfflineCanaryModelConfig {
   final bool usePnc;
 }
 
+/// Model files for the Fire-Red-ASR transducer recognizer.
 class OfflineFireRedAsrModelConfig {
   const OfflineFireRedAsrModelConfig({this.encoder = '', this.decoder = ''});
 
@@ -371,6 +480,7 @@ class OfflineFireRedAsrModelConfig {
 //
 // For Moonshine v2, you need 2 models:
 //  - encoder, mergedDecoder
+/// Model files for Moonshine v1 or v2.
 class OfflineMoonshineModelConfig {
   const OfflineMoonshineModelConfig({
     this.preprocessor = '',
@@ -410,6 +520,7 @@ class OfflineMoonshineModelConfig {
   final String mergedDecoder;
 }
 
+/// Model files for an offline TDNN recognizer.
 class OfflineTdnnModelConfig {
   const OfflineTdnnModelConfig({this.model = ''});
 
@@ -427,6 +538,10 @@ class OfflineTdnnModelConfig {
   final String model;
 }
 
+/// Model files and options for SenseVoice.
+///
+/// In the examples, this is typically paired with the
+/// `sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8` package.
 class OfflineSenseVoiceModelConfig {
   const OfflineSenseVoiceModelConfig({
     this.model = '',
@@ -459,6 +574,7 @@ class OfflineSenseVoiceModelConfig {
   final bool useInverseTextNormalization;
 }
 
+/// Optional external language model settings for offline ASR.
 class OfflineLMConfig {
   const OfflineLMConfig({this.model = '', this.scale = 1.0});
 
@@ -480,6 +596,13 @@ class OfflineLMConfig {
   final double scale;
 }
 
+/// Aggregate model configuration for offline recognition.
+///
+/// In typical use, configure exactly one model family and set the shared
+/// options such as [tokens], [provider], and [numThreads].
+///
+/// For NeMo Parakeet-style transducer models, set [modelType] to
+/// `nemo_transducer`, matching the repository examples.
 class OfflineModelConfig {
   const OfflineModelConfig({
     this.transducer = const OfflineTransducerModelConfig(),
@@ -498,6 +621,7 @@ class OfflineModelConfig {
     this.medasr = const OfflineMedAsrCtcModelConfig(),
     this.funasrNano = const OfflineFunAsrNanoModelConfig(),
     this.fireRedAsrCtc = const OfflineFireRedAsrCtcModelConfig(),
+    this.qwen3Asr = const OfflineQwen3AsrModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -590,6 +714,11 @@ class OfflineModelConfig {
               json['fireRedAsrCtc'] as Map<String, dynamic>,
             )
           : const OfflineFireRedAsrCtcModelConfig(),
+      qwen3Asr: json['qwen3Asr'] != null
+          ? OfflineQwen3AsrModelConfig.fromJson(
+              json['qwen3Asr'] as Map<String, dynamic>,
+            )
+          : const OfflineQwen3AsrModelConfig(),
       tokens: json['tokens'] as String,
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
@@ -603,7 +732,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, dolphin: $dolphin, zipformerCtc: $zipformerCtc, canary: $canary, wenetCtc: $wenetCtc, omnilingual: $omnilingual, medasr: $medasr, funasrNano: $funasrNano, fireRedAsrCtc: $fireRedAsrCtc, qwen3Asr: $qwen3Asr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -623,6 +752,7 @@ class OfflineModelConfig {
     'medasr': medasr.toJson(),
     'funasrNano': funasrNano.toJson(),
     'fireRedAsrCtc': fireRedAsrCtc.toJson(),
+    'qwen3Asr': qwen3Asr.toJson(),
     'tokens': tokens,
     'numThreads': numThreads,
     'debug': debug,
@@ -649,6 +779,7 @@ class OfflineModelConfig {
   final OfflineMedAsrCtcModelConfig medasr;
   final OfflineFunAsrNanoModelConfig funasrNano;
   final OfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
+  final OfflineQwen3AsrModelConfig qwen3Asr;
 
   final String tokens;
   final int numThreads;
@@ -660,6 +791,11 @@ class OfflineModelConfig {
   final String telespeechCtc;
 }
 
+/// Top-level configuration for [OfflineRecognizer].
+///
+/// This combines feature extraction, the selected model family, optional
+/// language model settings, hotwords, grammar resources, and optional
+/// homophone replacement resources.
 class OfflineRecognizerConfig {
   const OfflineRecognizerConfig({
     this.feat = const FeatureConfig(),
@@ -732,6 +868,10 @@ class OfflineRecognizerConfig {
   final HomophoneReplacerConfig hr;
 }
 
+/// Recognition result returned by [OfflineRecognizer.getResult].
+///
+/// Some model families populate [lang], [emotion], or [event] in addition to
+/// the decoded text and token timestamps.
 class OfflineRecognizerResult {
   OfflineRecognizerResult({
     required this.text,
@@ -786,12 +926,25 @@ class OfflineRecognizerResult {
   final String event;
 }
 
+/// Offline speech recognizer.
+///
+/// Create one from an [OfflineRecognizerConfig], then create an
+/// [OfflineStream], feed waveform samples, call [decode], and fetch the final
+/// hypothesis with [getResult].
 class OfflineRecognizer {
   OfflineRecognizer.fromPtr({required this.ptr, required this.config});
 
   OfflineRecognizer._({required this.ptr, required this.config});
 
+  /// Release the native recognizer.
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineRecognizer?.call(ptr);
     ptr = nullptr;
   }
@@ -799,6 +952,7 @@ class OfflineRecognizer {
   /// The user is responsible to call the OfflineRecognizer.free()
   /// method of the returned instance to avoid memory leak.
 
+  /// Create a recognizer from [config].
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
     if (SherpaOnnxBindings.createOfflineRecognizer == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -819,7 +973,16 @@ class OfflineRecognizer {
     }
   }
 
+  /// Replace the runtime configuration.
   void setConfig(OfflineRecognizerConfig config) {
+    if (SherpaOnnxBindings.offlineRecognizerSetConfig == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final c = convertConfig(config);
     try {
       SherpaOnnxBindings.offlineRecognizerSetConfig?.call(ptr, c);
@@ -938,6 +1101,22 @@ class OfflineRecognizer {
     c.ref.model.fireRedAsrCtc.model = config.model.fireRedAsrCtc.model
         .toNativeUtf8();
 
+    c.ref.model.qwen3Asr.convFrontend = config.model.qwen3Asr.convFrontend
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.encoder = config.model.qwen3Asr.encoder
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.decoder = config.model.qwen3Asr.decoder
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.tokenizer = config.model.qwen3Asr.tokenizer
+        .toNativeUtf8();
+    c.ref.model.qwen3Asr.maxTotalLen = config.model.qwen3Asr.maxTotalLen;
+    c.ref.model.qwen3Asr.maxNewTokens = config.model.qwen3Asr.maxNewTokens;
+    c.ref.model.qwen3Asr.temperature = config.model.qwen3Asr.temperature;
+    c.ref.model.qwen3Asr.topP = config.model.qwen3Asr.topP;
+    c.ref.model.qwen3Asr.seed = config.model.qwen3Asr.seed;
+    c.ref.model.qwen3Asr.hotwords = config.model.qwen3Asr.hotwords
+        .toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -982,6 +1161,11 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.qwen3Asr.hotwords);
+    calloc.free(c.ref.model.qwen3Asr.tokenizer);
+    calloc.free(c.ref.model.qwen3Asr.decoder);
+    calloc.free(c.ref.model.qwen3Asr.encoder);
+    calloc.free(c.ref.model.qwen3Asr.convFrontend);
     calloc.free(c.ref.model.fireRedAsrCtc.model);
     calloc.free(c.ref.model.funasrNano.hotwords);
     calloc.free(c.ref.model.funasrNano.language);
@@ -1024,16 +1208,55 @@ class OfflineRecognizer {
 
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
+  /// Create an offline stream.
   OfflineStream createStream() {
+    if (SherpaOnnxBindings.createOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     final p = SherpaOnnxBindings.createOfflineStream?.call(ptr) ?? nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 
+  /// Decode one stream.
   void decode(OfflineStream stream) {
+    if (SherpaOnnxBindings.decodeOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.decodeOfflineStream?.call(ptr, stream.ptr);
   }
 
+  /// Fetch the current recognition result for [stream].
   OfflineRecognizerResult getResult(OfflineStream stream) {
+    if (SherpaOnnxBindings.getOfflineStreamResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return OfflineRecognizerResult(
+        text: '',
+        tokens: [],
+        timestamps: [],
+        lang: '',
+        emotion: '',
+        event: '',
+      );
+    }
+
     final json =
         SherpaOnnxBindings.getOfflineStreamResultAsJson?.call(stream.ptr) ??
         nullptr;

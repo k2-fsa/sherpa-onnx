@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - go
     paths:
       - '.github/workflows/test-go.yaml'
       - 'cmake/**'
@@ -98,6 +99,7 @@ jobs:
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation-online
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/audio-tagging
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
@@ -111,7 +113,10 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speech-enhancement-gtcrn
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speech-enhancement-dpdfnet
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-speech-enhancement-gtcrn
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-speech-enhancement-dpdfnet
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-asr-paraformer
@@ -119,6 +124,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-speaker-identification
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-spoken-language-identification
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/zero-shot-pocket-tts
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/source-separation
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/supertonic-tts
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
@@ -147,6 +153,36 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test source separation (Spleeter & UVR)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/source-separation
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run-spleeter.sh
+          rm -rf sherpa-onnx-spleeter-*
+
+          ./run-uvr.sh
+          rm -rf UVR-MDX-NET-*
+
+      - name: Test non-streaming decoding files with Qwen3 ASR
+        if: matrix.os != 'ubuntu-latest'
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-qwen3-asr-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-qwen3-*
 
       - name: Test SupertonicTTS
         shell: bash
@@ -202,6 +238,21 @@ jobs:
           rm -rf sherpa-onnx-*
           ls -lh *.wav
 
+      - name: Test ZeroShot TTS with ZipVoice
+        shell: bash
+        run: |
+          cd scripts/go/_internal/zero-shot-zipvoice-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
+          ls -lh *.wav
+
       - name: Test non-streaming decoding files with FunASR Nano
         shell: bash
         run: |
@@ -253,15 +304,10 @@ jobs:
           go build
           ls -lh
 
-          echo "Test zipvoice"
-          ./run-zipvoice.sh
-          ls -lh
-
           echo "Test kitten en"
           ./run-kitten-en.sh
           rm -rf kitten-*
           ls -lh
-          rm -rf sherpa-onnx-zipvoice-distill-zh-en-emilia
 
           echo "Test kokoro zh+en"
           ./run-kokoro-zh-en.sh
@@ -420,6 +466,33 @@ jobs:
 
           ls -lh
 
+      - name: Test speech enhancement (DPDFNet)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/speech-enhancement-dpdfnet/
+
+          ./run.sh
+
+          ls -lh
+
+      - name: Test streaming speech enhancement (GTCRN)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-speech-enhancement-gtcrn/
+
+          ./run.sh
+
+          ls -lh
+
+      - name: Test streaming speech enhancement (DPDFNet)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-speech-enhancement-dpdfnet/
+
+          ./run.sh
+
+          ls -lh
+
       - name: Test audio tagging
         shell: bash
         run: |
@@ -442,6 +515,12 @@ jobs:
         shell: bash
         run: |
           cd scripts/go/_internal/add-punctuation/
+          ./run.sh
+
+      - name: Test adding online punctuation
+        shell: bash
+        run: |
+          cd scripts/go/_internal/add-punctuation-online/
           ./run.sh
 
       - name: Test non-streaming speaker diarization

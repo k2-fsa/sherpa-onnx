@@ -4,7 +4,33 @@ set -ex
 
 cd dotnet-examples/
 
-cd ./supertonic-tts
+if [[ "$SKIP_QWEN3" != "true" ]]; then
+  cd ./vad-non-streaming-qwen3-asr
+  ./run-ten-vad.sh
+  rm -fv *.onnx
+
+  ./run.sh
+  rm -fv *.onnx
+
+  cd ../non-streaming-qwen3-asr-decode-files
+  ./run.sh
+  ls -lh
+  rm -rf sherpa-onnx-qwen3-*
+
+  cd ..
+fi
+
+cd ./source-separation-spleeter
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-spleeter-*
+
+cd ../source-separation-uvr
+./run.sh
+ls -lh
+rm -f UVR-MDX-NET-Voc_FT.onnx
+
+cd ../supertonic-tts
 ./run.sh
 ls -lh
 rm -rf sherpa-onnx-supertonic-*
@@ -74,6 +100,12 @@ cd ../pocket-tts-zero-shot
 ls -lh
 rm -rf sherpa-onnx-pocket-*
 
+cd ../zipvoice-tts
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-zipvoice-*
+rm -f vocos_24khz.onnx
+
 cd ../vad-non-streaming-funasr-nano
 ./run-ten-vad.sh
 rm -fv *.onnx
@@ -119,6 +151,18 @@ cd ../speech-enhancement-gtcrn
 ./run.sh
 ls -lh
 
+cd ../speech-enhancement-dpdfnet
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-gtcrn
+./run.sh
+ls -lh
+
+cd ../streaming-speech-enhancement-dpdfnet
+./run.sh
+ls -lh
+
 cd ../kokoro-tts
 ./run-kokoro.sh
 ls -lh
@@ -143,6 +187,7 @@ mkdir tts
 cp -v dotnet-examples/kokoro-tts/*.wav ./tts
 cp -v dotnet-examples/offline-tts/*.wav ./tts
 cp -v dotnet-examples/supertonic-tts/*.wav ./tts
+cp -v dotnet-examples/zipvoice-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization
@@ -173,6 +218,10 @@ rm -rf sherpa-onnx-*
 cd ../offline-punctuation
 ./run.sh
 rm -rf sherpa-onnx-*
+
+cd ../online-punctuation
+./run.sh
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
 
 cd ../speaker-identification
 ./run.sh

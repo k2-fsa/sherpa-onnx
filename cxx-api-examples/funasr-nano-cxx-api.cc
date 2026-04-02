@@ -16,6 +16,7 @@
 // clang-format on
 
 #include <chrono>
+#include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <string>

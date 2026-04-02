@@ -67,6 +67,14 @@ function freeConfig(config, Module) {
     freeConfig(config.fireRedAsrCtc, Module)
   }
 
+  if ('qwen3Asr' in config) {
+    freeConfig(config.qwen3Asr, Module)
+  }
+
+  if ('cohereTranscribe' in config) {
+    freeConfig(config.cohereTranscribe, Module)
+  }
+
   if ('funasrNano' in config) {
     freeConfig(config.funasrNano, Module)
   }
@@ -948,6 +956,65 @@ function initSherpaOnnxOfflineFunAsrNanoModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineQwen3AsrModelConfig(config, Module) {
+  const convFrontendLen = Module.lengthBytesUTF8(config.convFrontend || '') + 1;
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
+  const tokenizerLen = Module.lengthBytesUTF8(config.tokenizer || '') + 1;
+  const hotwordsLen = Module.lengthBytesUTF8(config.hotwords || '') + 1;
+
+  const n = convFrontendLen + encoderLen + decoderLen + tokenizerLen +
+      hotwordsLen;
+  const buffer = Module._malloc(n);
+
+  const len = 10 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(
+      config.convFrontend || '', buffer + offset, convFrontendLen);
+  offset += convFrontendLen;
+
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(config.tokenizer || '', buffer + offset, tokenizerLen);
+  offset += tokenizerLen;
+
+  Module.stringToUTF8(config.hotwords || '', buffer + offset, hotwordsLen);
+  offset += hotwordsLen;
+
+  offset = 0;
+  Module.setValue(ptr + 0 * 4, buffer + offset, 'i8*');
+  offset += convFrontendLen;
+
+  Module.setValue(ptr + 1 * 4, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 2 * 4, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 3 * 4, buffer + offset, 'i8*');
+  offset += tokenizerLen;
+
+  Module.setValue(ptr + 4 * 4, config.maxTotalLen || 512, 'i32');
+  Module.setValue(ptr + 5 * 4, config.maxNewTokens || 128, 'i32');
+  Module.setValue(ptr + 6 * 4, config.temperature || 1e-6, 'float');
+  Module.setValue(ptr + 7 * 4, config.topP || 0.8, 'float');
+  Module.setValue(ptr + 8 * 4, config.seed || 42, 'i32');
+  Module.setValue(ptr + 9 * 4, buffer + offset, 'i8*');
+  offset += hotwordsLen;
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
@@ -1152,6 +1219,47 @@ function initSherpaOnnxOfflineTdnnModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineCohereTranscribeModelConfig(config, Module) {
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
+  const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
+
+  const n = encoderLen + decoderLen + languageLen;
+  const buffer = Module._malloc(n);
+
+  const len = 5 * 4;  // 3 pointers + 2 ints
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(config.language || '', buffer + offset, languageLen);
+  offset += languageLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += languageLen;
+
+  Module.setValue(ptr + 12, config.usePunct ?? 1, 'i32');
+  Module.setValue(ptr + 16, config.useItn ?? 1, 'i32');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineSenseVoiceModelConfig(config, Module) {
   const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
   const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
@@ -1258,6 +1366,31 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   if (!('fireRedAsrCtc' in config)) {
     config.fireRedAsrCtc = {
       model: '',
+    };
+  }
+
+  if (!('qwen3Asr' in config)) {
+    config.qwen3Asr = {
+      convFrontend: '',
+      encoder: '',
+      decoder: '',
+      tokenizer: '',
+      maxTotalLen: 512,
+      maxNewTokens: 128,
+      temperature: 1e-6,
+      topP: 0.8,
+      seed: 42,
+      hotwords: '',
+    };
+  }
+
+  if (!('cohereTranscribe' in config)) {
+    config.cohereTranscribe = {
+      encoder: '',
+      decoder: '',
+      language: '',
+      usePunct: 1,
+      useItn: 1,
     };
   }
 
@@ -1378,10 +1511,17 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const fireRedAsrCtc = initSherpaOnnxOfflineFireRedAsrCtcModelConfig(
       config.fireRedAsrCtc, Module);
 
+  const qwen3Asr =
+      initSherpaOnnxOfflineQwen3AsrModelConfig(config.qwen3Asr, Module);
+
+  const cohereTranscribe = initSherpaOnnxOfflineCohereTranscribeModelConfig(
+      config.cohereTranscribe, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
-      omnilingual.len + medasr.len + funasrNano.len + fireRedAsrCtc.len;
+      omnilingual.len + medasr.len + funasrNano.len + fireRedAsrCtc.len +
+      qwen3Asr.len + cohereTranscribe.len;
 
   const ptr = Module._malloc(len);
 
@@ -1504,6 +1644,12 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(fireRedAsrCtc.ptr, fireRedAsrCtc.len, ptr + offset);
   offset += fireRedAsrCtc.len;
 
+  Module._CopyHeap(qwen3Asr.ptr, qwen3Asr.len, ptr + offset);
+  offset += qwen3Asr.len;
+
+  Module._CopyHeap(cohereTranscribe.ptr, cohereTranscribe.len, ptr + offset);
+  offset += cohereTranscribe.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -1523,7 +1669,9 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     omnilingual: omnilingual,
     medasr: medasr,
     funasrNano: funasrNano,
-    fireRedAsrCtc: fireRedAsrCtc
+    fireRedAsrCtc: fireRedAsrCtc,
+    qwen3Asr: qwen3Asr,
+    cohereTranscribe: cohereTranscribe
   };
 }
 
@@ -1656,6 +1804,37 @@ class OfflineStream {
         this.handle, sampleRate, pointer, samples.length);
     this.Module._free(pointer);
   }
+
+  /**
+   * @param key {String} The option name
+   * @param value {String} The option value
+   */
+  setOption(key, value) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const valueLen = this.Module.lengthBytesUTF8(value) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    const pValue = this.Module._malloc(valueLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    this.Module.stringToUTF8(value, pValue, valueLen);
+    this.Module._SherpaOnnxOfflineStreamSetOption(this.handle, pKey, pValue);
+    this.Module._free(pKey);
+    this.Module._free(pValue);
+  }
+
+  /**
+   * @param key {String} The option name
+   * @returns {String} The option value, or empty string if not set
+   */
+  getOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const pValue =
+        this.Module._SherpaOnnxOfflineStreamGetOption(this.handle, pKey);
+    const value = this.Module.UTF8ToString(pValue);
+    this.Module._free(pKey);
+    return value;
+  }
 };
 
 class OfflineRecognizer {
@@ -1738,6 +1917,37 @@ class OnlineStream {
 
   inputFinished() {
     this.Module._SherpaOnnxOnlineStreamInputFinished(this.handle);
+  }
+
+  /**
+   * @param key {String} The option name
+   * @param value {String} The option value
+   */
+  setOption(key, value) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const valueLen = this.Module.lengthBytesUTF8(value) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    const pValue = this.Module._malloc(valueLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    this.Module.stringToUTF8(value, pValue, valueLen);
+    this.Module._SherpaOnnxOnlineStreamSetOption(this.handle, pKey, pValue);
+    this.Module._free(pKey);
+    this.Module._free(pValue);
+  }
+
+  /**
+   * @param key {String} The option name
+   * @returns {String} The option value, or empty string if not set
+   */
+  getOption(key) {
+    const keyLen = this.Module.lengthBytesUTF8(key) + 1;
+    const pKey = this.Module._malloc(keyLen);
+    this.Module.stringToUTF8(key, pKey, keyLen);
+    const pValue =
+        this.Module._SherpaOnnxOnlineStreamGetOption(this.handle, pKey);
+    const value = this.Module.UTF8ToString(pValue);
+    this.Module._free(pKey);
+    return value;
   }
 };
 

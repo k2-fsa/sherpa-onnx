@@ -115,6 +115,26 @@ Please replace --silero-vad-model with --ten-vad-model below to use ten-vad.
   --model-type nemo_transducer \
   /path/to/test.mp4
 
+(9) For FireRedAsr CTC models
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=./silero_vad.onnx \
+  --fire-red-asr-ctc=./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx \
+  --tokens=./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt \
+  --num-threads=2 \
+  /path/to/test.mp4
+
+(10) For FunASR Nano models
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=./silero_vad.onnx \
+  --funasr-nano-encoder-adaptor=./sherpa-onnx-funasr-nano-int8-2025-12-30/encoder_adaptor.int8.onnx \
+  --funasr-nano-llm=./sherpa-onnx-funasr-nano-int8-2025-12-30/llm.int8.onnx \
+  --funasr-nano-tokenizer=./sherpa-onnx-funasr-nano-int8-2025-12-30/Qwen3-0.6B \
+  --funasr-nano-embedding=./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx \
+  --num-threads=2 \
+  /path/to/test.mp4
+
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
 to install sherpa-onnx and to download non-streaming pre-trained models
@@ -203,6 +223,41 @@ def get_args():
         default="",
         type=str,
         help="Path to the CTC model.onnx from WeNet",
+    )
+
+    parser.add_argument(
+        "--fire-red-asr-ctc",
+        default="",
+        type=str,
+        help="Path to the FireRedAsr CTC model.onnx",
+    )
+
+    parser.add_argument(
+        "--funasr-nano-encoder-adaptor",
+        default="",
+        type=str,
+        help="Path to FunASR Nano encoder_adaptor.onnx",
+    )
+
+    parser.add_argument(
+        "--funasr-nano-llm",
+        default="",
+        type=str,
+        help="Path to FunASR Nano llm.onnx",
+    )
+
+    parser.add_argument(
+        "--funasr-nano-tokenizer",
+        default="",
+        type=str,
+        help="Path to FunASR Nano tokenizer directory (e.g., Qwen3-0.6B)",
+    )
+
+    parser.add_argument(
+        "--funasr-nano-embedding",
+        default="",
+        type=str,
+        help="Path to FunASR Nano embedding.onnx",
     )
 
     parser.add_argument(
@@ -358,6 +413,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
@@ -388,6 +445,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
@@ -412,6 +471,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
@@ -432,6 +493,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
@@ -455,6 +518,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert_file_exists(args.whisper_decoder)
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
         assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
         assert (
@@ -476,6 +541,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     elif args.moonshine_preprocessor:
         assert len(args.fire_red_asr_encoder) == 0, args.fire_red_asr_encoder
         assert len(args.fire_red_asr_decoder) == 0, args.fire_red_asr_decoder
+        assert len(args.fire_red_asr_ctc) == 0, args.fire_red_asr_ctc
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
         assert_file_exists(args.moonshine_preprocessor)
         assert_file_exists(args.moonshine_encoder)
         assert_file_exists(args.moonshine_uncached_decoder)
@@ -498,6 +565,32 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tokens=args.tokens,
             num_threads=args.num_threads,
             decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.fire_red_asr_ctc:
+        assert len(args.funasr_nano_encoder_adaptor) == 0, args.funasr_nano_encoder_adaptor
+
+        assert_file_exists(args.fire_red_asr_ctc)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_fire_red_asr_ctc(
+            model=args.fire_red_asr_ctc,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.funasr_nano_encoder_adaptor:
+        assert_file_exists(args.funasr_nano_encoder_adaptor)
+        assert_file_exists(args.funasr_nano_llm)
+        assert_file_exists(args.funasr_nano_tokenizer)
+        assert_file_exists(args.funasr_nano_embedding)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_funasr_nano(
+            encoder_adaptor=args.funasr_nano_encoder_adaptor,
+            llm=args.funasr_nano_llm,
+            embedding=args.funasr_nano_embedding,
+            tokenizer=args.funasr_nano_tokenizer,
+            num_threads=args.num_threads,
             debug=args.debug,
         )
     else:
@@ -528,7 +621,8 @@ class Segment:
 
 def main():
     args = get_args()
-    assert_file_exists(args.tokens)
+    if not args.funasr_nano_encoder_adaptor:
+        assert_file_exists(args.tokens)
     if args.silero_vad_model:
         assert_file_exists(args.silero_vad_model)
     elif args.ten_vad_model:

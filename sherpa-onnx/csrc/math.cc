@@ -23,6 +23,18 @@ void Scale(const float *src, float scale, int32_t n, float *out) {
   out_vec = scale * src_vec;
 }
 
+std::vector<float> MakeVorbisWindow(int32_t window_length) {
+  constexpr float kPi = 3.14159265358979323846f;
+  std::vector<float> window(window_length);
+  const float half = window_length / 2.0f;
+  for (int32_t i = 0; i != window_length; ++i) {
+    float s = std::sin(0.5f * kPi * (i + 0.5f) / half);
+    window[i] = std::sin(0.5f * kPi * s * s);
+  }
+
+  return window;
+}
+
 // this if for Paraformer
 std::vector<float> ComputeAcousticEmbedding(
     const std::vector<float> &encoder_out, const std::vector<float> &alphas,

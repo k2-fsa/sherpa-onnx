@@ -39,7 +39,9 @@ set(srcs
   src/non-streaming-speaker-diarization.cc
   src/non-streaming-speech-denoiser.cc
   src/non-streaming-tts.cc
-  src/punctuation.cc
+  src/offline-punctuation.cc
+  src/online-punctuation.cc
+  src/streaming-speech-denoiser.cc
   src/sherpa-onnx-node-addon-api.cc
   src/speaker-identification.cc
   src/spoken-language-identification.cc

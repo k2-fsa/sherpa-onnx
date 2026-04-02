@@ -14,12 +14,36 @@ namespace SherpaOnnx
 
         public bool SaveToWaveFile(String filename)
         {
+            if (Handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
             Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+            return WriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
+        }
+
+        public static bool SaveToWaveFile(float[] samples, int sampleRate, String filename)
+        {
+            if (samples == null || samples.Length == 0)
+            {
+                return false;
+            }
+
+            IntPtr p = Marshal.AllocHGlobal(samples.Length * sizeof(float));
+            Marshal.Copy(samples, 0, p, samples.Length);
+            bool ok = WriteWave(p, samples.Length, sampleRate, filename);
+            Marshal.FreeHGlobal(p);
+            return ok;
+        }
+
+        private static bool WriteWave(IntPtr samples, int numSamples, int sampleRate, String filename)
+        {
             byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
             byte[] utf8FilenameWithNull = new byte[utf8Filename.Length + 1]; // +1 for null terminator
             Array.Copy(utf8Filename, utf8FilenameWithNull, utf8Filename.Length);
             utf8FilenameWithNull[utf8Filename.Length] = 0; // Null terminator
-            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, utf8FilenameWithNull);
+            int status = SherpaOnnxWriteWave(samples, numSamples, sampleRate, utf8FilenameWithNull);
             return status == 1;
         }
 
@@ -38,7 +62,10 @@ namespace SherpaOnnx
 
         private void Cleanup()
         {
-            SherpaOnnxDestroyDenoisedAudio(Handle);
+            if (Handle != IntPtr.Zero)
+            {
+                SherpaOnnxDestroyDenoisedAudio(Handle);
+            }
 
             // Don't permit the handle to be used again.
             _handle = new HandleRef(this, IntPtr.Zero);
@@ -59,6 +86,11 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero)
+                {
+                    return 0;
+                }
+
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
                 return impl.NumSamples;
             }
@@ -68,6 +100,11 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero)
+                {
+                    return 0;
+                }
+
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
                 return impl.SampleRate;
             }
@@ -77,10 +114,18 @@ namespace SherpaOnnx
         {
             get
             {
+                if (Handle == IntPtr.Zero)
+                {
+                    return new float[0];
+                }
+
                 Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
 
                 float[] samples = new float[impl.NumSamples];
-                Marshal.Copy(impl.Samples, samples, 0, impl.NumSamples);
+                if (impl.NumSamples > 0 && impl.Samples != IntPtr.Zero)
+                {
+                    Marshal.Copy(impl.Samples, samples, 0, impl.NumSamples);
+                }
                 return samples;
             }
         }

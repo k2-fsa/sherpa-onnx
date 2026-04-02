@@ -10,11 +10,13 @@ set(srcs
   homophone-replacer.cc
   keyword-spotter.cc
   offline-canary-model-config.cc
+  offline-cohere-transcribe-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
   offline-fire-red-asr-ctc-model-config.cc
   offline-fire-red-asr-model-config.cc
   offline-funasr-nano-model-config.cc
+  offline-qwen3-asr-model-config.cc
   offline-lm-config.cc
   offline-medasr-ctc-model-config.cc
   offline-model-config.cc
@@ -29,6 +31,7 @@ set(srcs
   offline-source-separation-spleeter-model-config.cc
   offline-source-separation-uvr-model-config.cc
   offline-source-separation.cc
+  offline-speech-denoiser-dpdfnet-model-config.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc
@@ -45,6 +48,7 @@ set(srcs
   online-paraformer-model-config.cc
   online-punctuation.cc
   online-recognizer.cc
+  online-speech-denoiser.cc
   online-stream.cc
   online-t-one-ctc-model-config.cc
   online-transducer-model-config.cc
@@ -109,7 +113,7 @@ if(APPLE)
   endif()
 endif()
 
-if(NOT WIN32)
+if(UNIX)
   target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/sherpa_onnx/lib")
 endif()
 

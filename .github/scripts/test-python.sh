@@ -8,6 +8,33 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test Cohere Transcribe"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+python3 ./python-api-examples/offline-cohere-transcribe-decode-files.py
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
+if [[ "$SKIP_QWEN3" != "true" ]]; then
+  log "test Qwen3 ASR"
+
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+  tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+  rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+  python3 ./python-api-examples/offline-qwen3-asr-decode-files.py \
+    --conv-frontend=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx \
+    --encoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx \
+    --decoder=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx \
+    --tokenizer=./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer \
+    --max-new-tokens=128 \
+    --num-threads=2 \
+    ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/test_wavs/raokouling.wav
+
+  rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+fi
+
 log "test Supertonic TTS"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
@@ -63,6 +90,21 @@ rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 python3 ./python-api-examples/pocket-tts.py
 
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+
+log "test ZipVoice TTS"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+python3 ./python-api-examples/zipvoice-tts.py
+
+cp generated-zipvoice-zh-en-python.wav tts/
+
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+rm -f vocos_24khz.onnx
 
 log "test Google MedASR"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
@@ -140,8 +182,12 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 log "test offline speech enhancement (GTCRN)"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
 python3 ./python-api-examples/offline-speech-enhancement-gtcrn.py
+python3 ./python-api-examples/offline-speech-enhancement-dpdfnet.py
+python3 ./python-api-examples/online-speech-enhancement-gtcrn.py
+python3 ./python-api-examples/online-speech-enhancement-dpdfnet.py
 ls -lh *.wav
 
 log "test offline zipformer (byte-level bpe, Chinese+English)"

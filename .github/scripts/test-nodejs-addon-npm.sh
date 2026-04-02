@@ -10,6 +10,28 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Cohere Transcribe----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe.js
+node ./test_asr_non_streaming_cohere_transcribe_async.js
+
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
+if [[ "$SKIP_QWEN3" != "true" ]]; then
+  echo "----------Qwen3 ASR----------"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+  tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+  rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+  node ./test_asr_non_streaming_qwen3_asr.js
+  node ./test_asr_non_streaming_qwen3_asr_async.js
+
+  rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+fi
+
 echo "----------Moonshine v2----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
 tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
@@ -39,6 +61,20 @@ node ./test_tts_non_streaming_pocket_en.js
 node ./test_tts_non_streaming_pocket_en_async.js
 
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+
+echo "----------ZipVoice----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+node ./test_tts_non_streaming_zipvoice_zh_en.js
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+rm -f vocos_24khz.onnx
 
 echo "----------non-streaming ASR FunASR Nano----------"
 
@@ -150,10 +186,15 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 echo "----------non-streaming speech denoiser----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
 node ./test_offline_speech_enhancement_gtcrn.js
+node ./test_offline_speech_enhancement_dpdfnet.js
+node ./test_online_speech_enhancement_gtcrn.js
+node ./test_online_speech_enhancement_dpdfnet.js
 rm gtcrn_simple.onnx
+rm dpdfnet_baseline.onnx
 ls -lh *.wav
 
 echo "----------non-streaming asr FireRedAsr----------"

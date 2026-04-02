@@ -19,6 +19,9 @@ static_assert(sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) == 13 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) == 10 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig) == 5 * 4,
+              "");
 static_assert(sizeof(SherpaOnnxOfflineDolphinModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 7 * 4, "");
@@ -45,7 +48,9 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineOmnilingualAsrCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineMedAsrCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineFunASRNanoModelConfig) +
-                      sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig),
+                      sizeof(SherpaOnnxOfflineFireRedAsrCtcModelConfig) +
+                      sizeof(SherpaOnnxOfflineQwen3ASRModelConfig) +
+                      sizeof(SherpaOnnxOfflineCohereTranscribeModelConfig),
 
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
@@ -166,6 +171,8 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto medasr = &model_config->medasr;
   auto funasr_nano = &model_config->funasr_nano;
   auto fire_red_asr_ctc = &model_config->fire_red_asr_ctc;
+  auto qwen3_asr = &model_config->qwen3_asr;
+  auto cohere_transcribe = &model_config->cohere_transcribe;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -240,6 +247,25 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline FireRedASR CTC model config----------\n");
   fprintf(stdout, "model: %s\n", fire_red_asr_ctc->model);
+
+  fprintf(stdout, "----------offline Qwen3 ASR model config----------\n");
+  fprintf(stdout, "conv_frontend: %s\n", qwen3_asr->conv_frontend);
+  fprintf(stdout, "encoder: %s\n", qwen3_asr->encoder);
+  fprintf(stdout, "decoder: %s\n", qwen3_asr->decoder);
+  fprintf(stdout, "tokenizer: %s\n", qwen3_asr->tokenizer);
+  fprintf(stdout, "max_total_len: %d\n", qwen3_asr->max_total_len);
+  fprintf(stdout, "max_new_tokens: %d\n", qwen3_asr->max_new_tokens);
+  fprintf(stdout, "temperature: %f\n", qwen3_asr->temperature);
+  fprintf(stdout, "top_p: %f\n", qwen3_asr->top_p);
+  fprintf(stdout, "seed: %d\n", qwen3_asr->seed);
+  fprintf(stdout, "hotwords: %s\n", qwen3_asr->hotwords);
+
+  fprintf(stdout, "----------offline Cohere Transcribe model config----------\n");
+  fprintf(stdout, "encoder: %s\n", cohere_transcribe->encoder);
+  fprintf(stdout, "decoder: %s\n", cohere_transcribe->decoder);
+  fprintf(stdout, "language: %s\n", cohere_transcribe->language);
+  fprintf(stdout, "use_punct: %d\n", cohere_transcribe->use_punct);
+  fprintf(stdout, "use_itn: %d\n", cohere_transcribe->use_itn);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

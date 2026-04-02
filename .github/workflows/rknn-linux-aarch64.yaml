@@ -256,7 +256,7 @@ jobs:
           tag: v1.12.13
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .

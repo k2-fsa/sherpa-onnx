@@ -7,6 +7,7 @@ use sherpa_onnx::{
     GenerationConfig, OfflineTts, OfflineTtsConfig, OfflineTtsSupertonicModelConfig,
 };
 use std::collections::HashMap;
+use std::time::Instant;
 
 fn main() {
     let config = OfflineTtsConfig {
@@ -59,6 +60,8 @@ fn main() {
         ..Default::default()
     };
 
+    let start = Instant::now();
+
     let audio = tts
         .generate_with_config(
             text,
@@ -69,6 +72,18 @@ fn main() {
             }),
         )
         .expect("Generation failed");
+
+    let elapsed_seconds = start.elapsed().as_secs_f32();
+    let duration = audio.samples().len() as f32 / audio.sample_rate() as f32;
+    let rtf = elapsed_seconds / duration;
+
+    println!("Number of threads: {}", config.model.num_threads);
+    println!("Elapsed seconds: {:.3} s", elapsed_seconds);
+    println!("Audio duration: {:.3} s", duration);
+    println!(
+        "Real-time factor (RTF): {:.3}/{:.3} = {:.3}",
+        elapsed_seconds, duration, rtf
+    );
 
     let filename = "./generated-supertonic-en-rust.wav";
     if audio.save(filename) {

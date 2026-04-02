@@ -7,6 +7,11 @@ import 'package:ffi/ffi.dart';
 import './sherpa_onnx_bindings.dart';
 import './speaker_identification.dart';
 
+/// Offline speaker diarization.
+///
+/// This module combines segmentation, speaker embedding extraction, and
+/// clustering to assign speaker labels to time spans. See
+/// `dart-api-examples/speaker-diarization/` for a complete example.
 class OfflineSpeakerDiarizationSegment {
   const OfflineSpeakerDiarizationSegment({
     required this.start,
@@ -38,6 +43,7 @@ class OfflineSpeakerDiarizationSegment {
   final int speaker;
 }
 
+/// Pyannote segmentation model path.
 class OfflineSpeakerSegmentationPyannoteModelConfig {
   const OfflineSpeakerSegmentationPyannoteModelConfig({
     this.model = '',
@@ -62,6 +68,7 @@ class OfflineSpeakerSegmentationPyannoteModelConfig {
   final String model;
 }
 
+/// Segmentation model configuration for speaker diarization.
 class OfflineSpeakerSegmentationModelConfig {
   const OfflineSpeakerSegmentationModelConfig({
     this.pyannote = const OfflineSpeakerSegmentationPyannoteModelConfig(),
@@ -102,6 +109,7 @@ class OfflineSpeakerSegmentationModelConfig {
   final String provider;
 }
 
+/// Clustering options used after segmentation and embedding extraction.
 class FastClusteringConfig {
   const FastClusteringConfig({
     this.numClusters = -1,
@@ -129,6 +137,7 @@ class FastClusteringConfig {
   final double threshold;
 }
 
+/// Top-level configuration for [OfflineSpeakerDiarization].
 class OfflineSpeakerDiarizationConfig {
   const OfflineSpeakerDiarizationConfig({
     this.segmentation = const OfflineSpeakerSegmentationModelConfig(),
@@ -177,6 +186,7 @@ class OfflineSpeakerDiarizationConfig {
   final double minDurationOn; // in seconds
 }
 
+/// Offline speaker diarizer.
 class OfflineSpeakerDiarization {
   OfflineSpeakerDiarization.fromPtr(
       {required this.ptr, required this.config, required this.sampleRate});
@@ -184,13 +194,20 @@ class OfflineSpeakerDiarization {
   OfflineSpeakerDiarization._(
       {required this.ptr, required this.config, required this.sampleRate});
 
+  /// Release the native diarizer.
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeakerDiarization == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeakerDiarization?.call(ptr);
     ptr = nullptr;
   }
 
-  /// The user is responsible to call the OfflineSpeakerDiarization.free()
-  /// method of the returned instance to avoid memory leak.
+  /// Create a diarizer from [config].
   factory OfflineSpeakerDiarization(OfflineSpeakerDiarizationConfig config) {
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -238,8 +255,13 @@ class OfflineSpeakerDiarization {
         ptr: ptr, config: config, sampleRate: sampleRate);
   }
 
+  /// Process a complete waveform and return speaker-labeled segments.
   List<OfflineSpeakerDiarizationSegment> process(
       {required Float32List samples}) {
+    if (SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationProcess == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     if (ptr == nullptr) {
       return <OfflineSpeakerDiarizationSegment>[];
     }
@@ -266,6 +288,12 @@ class OfflineSpeakerDiarization {
     required Float32List samples,
     required int Function(int numProcessedChunks, int numTotalChunks) callback,
   }) {
+    if (SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
     if (ptr == nullptr) {
       return <OfflineSpeakerDiarizationSegment>[];
     }

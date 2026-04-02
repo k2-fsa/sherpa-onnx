@@ -324,8 +324,11 @@ JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
-    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
+JNIEXPORT jboolean JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(JNIEnv * /*env*/,
+                                                       jobject /*obj*/,
+                                                       jlong ptr,
+                                                       jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
 
@@ -408,8 +411,8 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
 
   // tokens
   jclass string_cls = env->FindClass("java/lang/String");
-  jobjectArray tokens = env->NewObjectArray(
-      result.tokens.size(), string_cls, nullptr);
+  jobjectArray tokens =
+      env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
   env->DeleteLocalRef(string_cls);
   for (size_t i = 0; i < result.tokens.size(); ++i) {
     jstring token_str = env->NewStringUTF(result.tokens[i].c_str());

@@ -7,6 +7,27 @@ import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
 
+/// Spoken language identification.
+///
+/// This module identifies the language spoken in an audio clip, using the
+/// Whisper-based language ID model family exposed by the native library.
+///
+/// Example:
+///
+/// ```dart
+/// final sli = SpokenLanguageIdentification(
+///   SpokenLanguageIdentificationConfig(
+///     whisper: const SpokenLanguageIdentificationWhisperConfig(
+///       encoder: './sherpa-onnx-whisper-tiny/encoder.int8.onnx',
+///       decoder: './sherpa-onnx-whisper-tiny/decoder.int8.onnx',
+///     ),
+///   ),
+/// );
+///
+/// final stream = sli.createStream();
+/// stream.acceptWaveform(samples: wave.samples, sampleRate: wave.sampleRate);
+/// print(sli.compute(stream).lang);
+/// ```
 class SpokenLanguageIdentificationWhisperConfig {
   const SpokenLanguageIdentificationWhisperConfig({
     this.encoder = '',
@@ -39,6 +60,7 @@ class SpokenLanguageIdentificationWhisperConfig {
   final int tailPaddings;
 }
 
+/// Top-level configuration for [SpokenLanguageIdentification].
 class SpokenLanguageIdentificationConfig {
   const SpokenLanguageIdentificationConfig({
     this.whisper = const SpokenLanguageIdentificationWhisperConfig(),
@@ -78,6 +100,7 @@ class SpokenLanguageIdentificationConfig {
   final String provider;
 }
 
+/// Result returned by [SpokenLanguageIdentification.compute].
 class SpokenLanguageIdentificationResult {
   const SpokenLanguageIdentificationResult({
     required this.lang,
@@ -102,19 +125,28 @@ class SpokenLanguageIdentificationResult {
   final String lang;
 }
 
+/// Spoken language identifier.
 class SpokenLanguageIdentification {
   SpokenLanguageIdentification.fromPtr(
       {required this.ptr, required this.config});
 
   SpokenLanguageIdentification._({required this.ptr, required this.config});
 
+  /// Release the native language identifier.
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroySpokenLanguageIdentification ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroySpokenLanguageIdentification?.call(ptr);
     ptr = nullptr;
   }
 
-  /// The user is responsible to call the SpokenLanguageIdentification.free()
-  /// method of the returned instance to avoid memory leak.
+  /// Create a language identifier from [config].
   factory SpokenLanguageIdentification(
       SpokenLanguageIdentificationConfig config) {
     final c = convertConfig(config);
@@ -163,17 +195,41 @@ class SpokenLanguageIdentification {
     malloc.free(c);
   }
 
-  /// The user has to invoke stream.free() on the returned instance
-  /// to avoid memory leak
+  /// Create an offline stream for one audio clip.
   OfflineStream createStream() {
+    if (SherpaOnnxBindings
+            .sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     final p = SherpaOnnxBindings
             .sherpaOnnxSpokenLanguageIdentificationCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 
+  /// Compute the spoken language for [stream].
   SpokenLanguageIdentificationResult compute(OfflineStream stream) {
+    if (SherpaOnnxBindings.sherpaOnnxSpokenLanguageIdentificationCompute ==
+        null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return const SpokenLanguageIdentificationResult(lang: '');
+    }
+
     final result = SherpaOnnxBindings
             .sherpaOnnxSpokenLanguageIdentificationCompute
             ?.call(ptr, stream.ptr) ??

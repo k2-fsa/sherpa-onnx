@@ -10,6 +10,27 @@ import './online_recognizer.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
 
+/// Streaming keyword spotting.
+///
+/// See `dart-api-examples/keyword-spotter/` for end-to-end usage.
+///
+/// Example:
+///
+/// ```dart
+/// final spotter = KeywordSpotter(
+///   KeywordSpotterConfig(
+///     model: onlineModelConfig,
+///     keywordsFile: './keywords.txt',
+///   ),
+/// );
+///
+/// final stream = spotter.createStream();
+/// stream.acceptWaveform(samples: chunk, sampleRate: 16000);
+/// while (spotter.isReady(stream)) {
+///   spotter.decode(stream);
+/// }
+/// print(spotter.getResult(stream).keyword);
+/// ```
 class KeywordSpotterConfig {
   const KeywordSpotterConfig({
     this.feat = const FeatureConfig(),
@@ -70,6 +91,7 @@ class KeywordSpotterConfig {
   final int keywordsBufSize;
 }
 
+/// Result returned by [KeywordSpotter.getResult].
 class KeywordResult {
   KeywordResult({required this.keyword});
 
@@ -91,13 +113,13 @@ class KeywordResult {
   final String keyword;
 }
 
+/// Streaming keyword spotter.
 class KeywordSpotter {
   KeywordSpotter.fromPtr({required this.ptr, required this.config});
 
   KeywordSpotter._({required this.ptr, required this.config});
 
-  /// The user is responsible to call the OnlineRecognizer.free()
-  /// method of the returned instance to avoid memory leak.
+  /// Create a keyword spotter from [config].
   factory KeywordSpotter(KeywordSpotterConfig config) {
     final c = calloc<SherpaOnnxKeywordSpotterConfig>();
     c.ref.feat.sampleRate = config.feat.sampleRate;
@@ -170,16 +192,43 @@ class KeywordSpotter {
     return KeywordSpotter._(ptr: ptr, config: config);
   }
 
+  /// Release the native keyword spotter.
   void free() {
+    if (SherpaOnnxBindings.destroyKeywordSpotter == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyKeywordSpotter?.call(ptr);
     ptr = nullptr;
   }
 
-  /// The user has to invoke stream.free() on the returned instance
-  /// to avoid memory leak
+  /// Create a streaming input stream.
+  ///
+  /// If [keywords] is provided, it overrides the configured keywords for that
+  /// stream.
   OnlineStream createStream({String keywords = ''}) {
     if (keywords == '') {
+      if (SherpaOnnxBindings.createKeywordStream == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    } else {
+      if (SherpaOnnxBindings.createKeywordStreamWithKeywords == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
+    if (keywords == '') {
       final p = SherpaOnnxBindings.createKeywordStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -188,17 +237,40 @@ class KeywordSpotter {
         SherpaOnnxBindings.createKeywordStreamWithKeywords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 
+  /// Return `true` if [stream] has enough audio for another decode step.
   bool isReady(OnlineStream stream) {
+    if (SherpaOnnxBindings.isKeywordStreamReady == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int ready =
         SherpaOnnxBindings.isKeywordStreamReady?.call(ptr, stream.ptr) ?? 0;
 
     return ready == 1;
   }
 
+  /// Fetch the current keyword spotting result for [stream].
   KeywordResult getResult(OnlineStream stream) {
+    if (SherpaOnnxBindings.getKeywordResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return KeywordResult(keyword: '');
+    }
+
     final json =
         SherpaOnnxBindings.getKeywordResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
@@ -215,11 +287,27 @@ class KeywordSpotter {
     );
   }
 
+  /// Decode one incremental step for [stream].
   void decode(OnlineStream stream) {
+    if (SherpaOnnxBindings.decodeKeywordStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.decodeKeywordStream?.call(ptr, stream.ptr);
   }
 
+  /// Reset the internal state for [stream].
   void reset(OnlineStream stream) {
+    if (SherpaOnnxBindings.resetKeywordStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.resetKeywordStream?.call(ptr, stream.ptr);
   }
 

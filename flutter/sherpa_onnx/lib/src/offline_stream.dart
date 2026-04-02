@@ -5,11 +5,21 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Input stream for offline APIs such as offline ASR, audio tagging, and
+/// spoken language identification.
 class OfflineStream {
   /// The user has to call OfflineStream.free() to avoid memory leak.
   OfflineStream({required this.ptr});
 
+  /// Release the native stream.
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineStream?.call(ptr);
     ptr = nullptr;
   }
@@ -21,7 +31,20 @@ class OfflineStream {
   ///  https://api.flutter.dev/flutter/dart-core/List-class.html
   /// and
   ///  https://api.flutter.dev/flutter/dart-typed_data/Float32List-class.html
+  /// Append waveform samples to the stream.
+  ///
+  /// [samples] must contain mono floating-point PCM data normalized to
+  /// `[-1, 1]`. [sampleRate] should match the model expectation, typically
+  /// 16000 for the provided examples.
   void acceptWaveform({required Float32List samples, required int sampleRate}) {
+    if (SherpaOnnxBindings.acceptWaveformOffline == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
     final n = samples.length;
     final Pointer<Float> p = calloc<Float>(n);
 

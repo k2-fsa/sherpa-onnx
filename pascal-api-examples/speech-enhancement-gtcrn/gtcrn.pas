@@ -17,16 +17,17 @@ uses
 
 var
   Wave: TSherpaOnnxWave;
+  Model: AnsiString;
 
   Config: TSherpaOnnxOfflineSpeechDenoiserConfig;
   Sd: TSherpaOnnxOfflineSpeechDenoiser;
   Audio: TSherpaOnnxDenoisedAudio;
 begin
   Wave := SherpaOnnxReadWave('./inp_16k.wav');
+  Model := './gtcrn_simple.onnx';
 
   Initialize(Config);
-
-  Config.Model.Gtcrn.Model := './gtcrn_simple.onnx';
+  Config.Model.Gtcrn.Model := Model;
   Config.Model.NumThreads:= 1;
   Config.Model.Debug:= True;
   Config.Model.Provider:= 'cpu';
@@ -35,9 +36,8 @@ begin
 
   Audio := Sd.Run(Wave.Samples, Wave.SampleRate);
 
-  SherpaOnnxWriteWave('./enhanced-16k.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./enhanced-16k.wav');
+  SherpaOnnxWriteWave('./enhanced.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./enhanced.wav');
 
   FreeAndNil(Sd);
 end.
-

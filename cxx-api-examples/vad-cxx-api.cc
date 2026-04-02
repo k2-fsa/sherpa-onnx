@@ -15,8 +15,10 @@
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
 //
 // clang-format on
+#include <cstdio>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 

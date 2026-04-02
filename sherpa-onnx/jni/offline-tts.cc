@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
@@ -198,6 +201,43 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_FLOAT(ans.model.kokoro.length_scale, lengthScale,
                              kokoro_cls, kokoro);
 
+  // zipvoice
+  fid = env->GetFieldID(
+      model_config_cls, "zipvoice",
+      "Lcom/k2fsa/sherpa/onnx/OfflineTtsZipVoiceModelConfig;");
+  jobject zipvoice = env->GetObjectField(model, fid);
+  jclass zipvoice_cls = env->GetObjectClass(zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.tokens, tokens, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.encoder, encoder, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.decoder, decoder, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.vocoder, vocoder, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.data_dir, dataDir, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model.zipvoice.lexicon, lexicon, zipvoice_cls,
+                              zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.feat_scale, featScale,
+                             zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.t_shift, tShift, zipvoice_cls,
+                             zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.target_rms, targetRms,
+                             zipvoice_cls, zipvoice);
+
+  SHERPA_ONNX_JNI_READ_FLOAT(ans.model.zipvoice.guidance_scale, guidanceScale,
+                             zipvoice_cls, zipvoice);
+
   // kitten
   fid = env->GetFieldID(model_config_cls, "kitten",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTtsKittenModelConfig;");
@@ -300,6 +340,8 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config,
   env->DeleteLocalRef(matcha_cls);
   env->DeleteLocalRef(kokoro);
   env->DeleteLocalRef(kokoro_cls);
+  env->DeleteLocalRef(zipvoice);
+  env->DeleteLocalRef(zipvoice_cls);
   env->DeleteLocalRef(kitten);
   env->DeleteLocalRef(kitten_cls);
   env->DeleteLocalRef(pocket);
@@ -473,8 +515,12 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(
     jfloat speed) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
 
+  sherpa_onnx::GenerationConfig config;
+  config.sid = sid;
+  config.speed = speed;
+
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, sid, speed);
+      p_text, config);
 
   env->ReleaseStringUTFChars(text, p_text);
 
@@ -490,6 +536,10 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
 
   auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
 
+  sherpa_onnx::GenerationConfig config;
+  config.sid = sid;
+  config.speed = speed;
+
   sherpa_onnx::GeneratedAudio audio;
 
   if (callback) {
@@ -502,9 +552,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
       return ret;
     };
 
-    audio = tts->Generate(p_text, sid, speed, callback_wrapper);
+    audio = tts->Generate(p_text, config, callback_wrapper);
   } else {
-    audio = tts->Generate(p_text, sid, speed, nullptr);
+    audio = tts->Generate(p_text, config, nullptr);
   }
 
   env->ReleaseStringUTFChars(text, p_text);

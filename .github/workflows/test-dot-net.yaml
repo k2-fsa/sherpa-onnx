@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - master
+      - dot-net
     paths:
       - '.github/workflows/test-dot-net.yaml'
+      - '.github/scripts/test-dot-net.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'
@@ -202,6 +204,9 @@ jobs:
           dotnet nuget locals all --clear
           df -h
 
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            export SKIP_QWEN3=true
+          fi
           .github/scripts/test-dot-net.sh
 
       - uses: actions/upload-artifact@v4

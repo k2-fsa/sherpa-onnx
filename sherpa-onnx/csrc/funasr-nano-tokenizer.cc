@@ -4,6 +4,15 @@
 
 #include "sherpa-onnx/csrc/funasr-nano-tokenizer.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -11,6 +20,8 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -1127,19 +1138,11 @@ FunASRNanoTokenizer::FunASRNanoTokenizer(const std::string &tokenizer_dir) {
   Init(tokenizer_dir);
 }
 
-#if __ANDROID_API__ >= 9
-FunASRNanoTokenizer::FunASRNanoTokenizer(AAssetManager *mgr,
+template <typename Manager>
+FunASRNanoTokenizer::FunASRNanoTokenizer(Manager *mgr,
                                          const std::string &tokenizer_dir) {
   Init(mgr, tokenizer_dir);
 }
-#endif
-
-#if __OHOS__
-FunASRNanoTokenizer::FunASRNanoTokenizer(NativeResourceManager *mgr,
-                                         const std::string &tokenizer_dir) {
-  Init(mgr, tokenizer_dir);
-}
-#endif
 
 void FunASRNanoTokenizer::Init(const std::string &tokenizer_dir) {
   std::string tok_json = FindTokenizerJson(tokenizer_dir);
@@ -1195,9 +1198,8 @@ void FunASRNanoTokenizer::Init(const std::string &tokenizer_dir) {
   FinalizeSpecialIds();
 }
 
-#if __ANDROID_API__ >= 9
-void FunASRNanoTokenizer::Init(AAssetManager *mgr,
-                               const std::string &tokenizer_dir) {
+template <typename Manager>
+void FunASRNanoTokenizer::Init(Manager *mgr, const std::string &tokenizer_dir) {
   std::string tok_json = tokenizer_dir + "/tokenizer.json";
   std::string vocab_json = tokenizer_dir + "/vocab.json";
   std::string merges_txt = tokenizer_dir + "/merges.txt";
@@ -1207,68 +1209,27 @@ void FunASRNanoTokenizer::Init(AAssetManager *mgr,
   const std::string merges_blob = LoadBytesFromFile(mgr, merges_txt);
 
   if (tok_blob.empty() || vocab_blob.empty() || merges_blob.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read tokenizer files from assets: %s",
-                     tokenizer_dir.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  BuildBytesToUnicode(byte_to_unicode_, &unicode_to_byte_);
-
-  if (!ParseVocabJson(vocab_blob, &token2id_)) {
-    SHERPA_ONNX_LOGE("Failed to parse vocab.json from assets: %s",
-                     vocab_json.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  if (!ParseMergesTxt(merges_blob, &merges_rank_)) {
-    SHERPA_ONNX_LOGE("Failed to parse merges.txt from assets: %s",
-                     merges_txt.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  if (!ParseAddedTokensFromTokenizerJson(tok_blob, &added_tokens_)) {
-    SHERPA_ONNX_LOGE("Failed to parse added_tokens from assets tokenizer.json");
-    SHERPA_ONNX_EXIT(-1);
-  }
-  MergeVocabAndAddedTokens(&token2id_, added_tokens_, &added_token_contents_);
-  BuildIdToToken(token2id_, added_token_contents_, &id2token_);
-  BuildAddedTokensTrie(added_tokens_, &trie_);
-  FinalizeSpecialIds();
-}
-#endif
-
-#if __OHOS__
-void FunASRNanoTokenizer::Init(NativeResourceManager *mgr,
-                               const std::string &tokenizer_dir) {
-  std::string tok_json = tokenizer_dir + "/tokenizer.json";
-  std::string vocab_json = tokenizer_dir + "/vocab.json";
-  std::string merges_txt = tokenizer_dir + "/merges.txt";
-
-  const std::string tok_blob = LoadBytesFromFile(mgr, tok_json);
-  const std::string vocab_blob = LoadBytesFromFile(mgr, vocab_json);
-  const std::string merges_blob = LoadBytesFromFile(mgr, merges_txt);
-
-  if (tok_blob.empty() || vocab_blob.empty() || merges_blob.empty()) {
-    SHERPA_ONNX_LOGE("Failed to read tokenizer files from rawfile: %s",
-                     tokenizer_dir.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  BuildBytesToUnicode(byte_to_unicode_, &unicode_to_byte_);
-
-  if (!ParseVocabJson(vocab_blob, &token2id_)) {
-    SHERPA_ONNX_LOGE("Failed to parse vocab.json from rawfile: %s",
-                     vocab_json.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-  if (!ParseMergesTxt(merges_blob, &merges_rank_)) {
-    SHERPA_ONNX_LOGE("Failed to parse merges.txt from rawfile: %s",
-                     merges_txt.c_str());
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  if (!ParseAddedTokensFromTokenizerJson(tok_blob, &added_tokens_)) {
     SHERPA_ONNX_LOGE(
-        "Failed to parse added_tokens from rawfile tokenizer.json");
+        "Failed to read tokenizer files via resource manager "
+        "(tokenizer_dir=%s)",
+        tokenizer_dir.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  BuildBytesToUnicode(byte_to_unicode_, &unicode_to_byte_);
+
+  if (!ParseVocabJson(vocab_blob, &token2id_)) {
+    SHERPA_ONNX_LOGE("Failed to parse vocab.json: %s", vocab_json.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+  if (!ParseMergesTxt(merges_blob, &merges_rank_)) {
+    SHERPA_ONNX_LOGE("Failed to parse merges.txt: %s", merges_txt.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  if (!ParseAddedTokensFromTokenizerJson(tok_blob, &added_tokens_)) {
+    SHERPA_ONNX_LOGE("Failed to parse added_tokens from tokenizer.json: %s",
+                     tok_json.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
   MergeVocabAndAddedTokens(&token2id_, added_tokens_, &added_token_contents_);
@@ -1276,7 +1237,6 @@ void FunASRNanoTokenizer::Init(NativeResourceManager *mgr,
   BuildAddedTokensTrie(added_tokens_, &trie_);
   FinalizeSpecialIds();
 }
-#endif
 
 void FunASRNanoTokenizer::FinalizeSpecialIds() {
   im_end_token_id_ = TokenToIdOrDefault(token2id_, "<|im_end|>", 151645);
@@ -1561,5 +1521,15 @@ std::string FunASRNanoTokenizer::Decode(const std::vector<int64_t> &token_ids) {
   TrimInPlace(&out);
   return out;
 }
+
+#if __ANDROID_API__ >= 9
+template FunASRNanoTokenizer::FunASRNanoTokenizer(
+    AAssetManager *mgr, const std::string &tokenizer_dir);
+#endif
+
+#if __OHOS__
+template FunASRNanoTokenizer::FunASRNanoTokenizer(
+    NativeResourceManager *mgr, const std::string &tokenizer_dir);
+#endif
 
 }  // namespace sherpa_onnx

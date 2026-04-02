@@ -16,6 +16,9 @@ tts-matcha-en
 tts-kokoro-en
 tts-kokoro-zh-en
 speech-enhancement-gtcrn
+speech-enhancement-dpdfnet
+online-speech-enhancement-gtcrn
+online-speech-enhancement-dpdfnet
 decode-file-sense-voice-with-hr
 test-version
 zipformer-ctc-asr
@@ -31,3 +34,6 @@ funasr-nano
 fire-red-asr-ctc
 moonshine-v2-asr
 tts-supertonic-en
+tts-zipvoice
+source-separation-spleeter
+source-separation-uvr

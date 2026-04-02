@@ -34,6 +34,7 @@
 #include "sherpa-onnx/csrc/offline-tts-pocket-model.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/sentence-piece-tokenizer.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -287,89 +288,6 @@ class OfflineTtsPocketImpl : public OfflineTtsImpl {
     }
 
     return result;
-  }
-
-  static std::vector<std::string> MergeShortSentences(
-      const std::vector<std::string> &sentences, size_t min_chars = 30) {
-    std::vector<std::string> merged;
-    std::string buffer;
-
-    for (const auto &s : sentences) {
-      if (!buffer.empty()) {
-        buffer += " ";
-      }
-      buffer += s;
-
-      if (buffer.size() >= min_chars) {
-        merged.push_back(buffer);
-        buffer.clear();
-      }
-    }
-
-    if (!buffer.empty()) {
-      merged.push_back(buffer);
-    }
-
-    return merged;
-  }
-
-  static std::vector<std::string> SplitLongSentence(const std::string &sentence,
-                                                    size_t max_chars = 200) {
-    std::vector<std::string> chunks;
-    size_t start = 0;
-    size_t len = sentence.size();
-
-    while (start < len) {
-      size_t end = start + max_chars;
-      if (end >= len) {
-        chunks.push_back(sentence.substr(start));
-        break;
-      }
-
-      // Try to break at last space within max_chars
-      size_t space_pos = sentence.rfind(' ', end);
-      if (space_pos == std::string::npos || space_pos < start) {
-        space_pos = end;  // no space found, force split
-      }
-
-      chunks.push_back(sentence.substr(start, space_pos - start));
-      start = space_pos;
-
-      // Skip spaces at start of next chunk
-      while (start < len && sentence[start] == ' ') {
-        ++start;
-      }
-    }
-
-    return chunks;
-  }
-
-  static std::vector<std::string> SplitByPunctuation(const std::string &text) {
-    std::vector<std::string> sentences;
-    std::string cur;
-
-    auto flush = [&]() {
-      if (!cur.empty()) {
-        // trim leading/trailing spaces
-        auto begin = cur.find_first_not_of(" \t\n");
-        auto end = cur.find_last_not_of(" \t\n");
-        if (begin != std::string::npos) {
-          sentences.emplace_back(cur.substr(begin, end - begin + 1));
-        }
-        cur.clear();
-      }
-    };
-
-    for (char c : text) {
-      cur.push_back(c);
-      if (c == '.' || c == '!' || c == '?') {
-        flush();
-      }
-    }
-
-    flush();
-
-    return sentences;
   }
 
   static size_t ComputeHash(const float *p, size_t n) {

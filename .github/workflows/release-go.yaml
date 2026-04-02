@@ -1,6 +1,10 @@
 name: release-go
 
 on:
+  push:
+    branches:
+      - release
+      - release-go
   workflow_dispatch:
 
 concurrency:

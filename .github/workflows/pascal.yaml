@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - pascal
     paths:
       - '.github/workflows/pascal.yaml'
       - 'cmake/**'
@@ -111,7 +112,10 @@ jobs:
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
             cp -v install/lib/*.dll ../pascal-api-examples/speaker-diarization
             cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-gtcrn
+            cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-dpdfnet
             cp -v install/lib/*.dll ../pascal-api-examples/streaming-asr
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-gtcrn
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-dpdfnet
             cp -v install/lib/*.dll ../pascal-api-examples/tts
             cp -v install/lib/*.dll ../pascal-api-examples/vad
             cp -v install/lib/*.dll ../pascal-api-examples/vad-with-non-streaming-asr
@@ -120,11 +124,41 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/read-wav
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speaker-diarization
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-gtcrn
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-dpdfnet
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-asr
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-gtcrn
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-dpdfnet
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/tts
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
+
+      - name:  Run Speech Enhancement test
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd speech-enhancement-gtcrn
+          ./run-gtcrn.sh
+          ls -lh
+          popd
+
+          pushd speech-enhancement-dpdfnet
+          ./run-dpdfnet.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-gtcrn
+          ./run-gtcrn.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-dpdfnet
+          ./run-dpdfnet.sh
+          ls -lh
+          popd
 
       - name:  Run Pascal test (TTS)
         shell: bash
@@ -173,6 +207,13 @@ jobs:
           ls -lh
           echo "---"
 
+          ./run-zipvoice-zh-en.sh
+          rm -rf sherpa-onnx-zipvoice-*
+          rm -f vocos_24khz.onnx
+          rm zipvoice-zh-en
+          ls -lh
+          echo "---"
+
           popd
 
       - uses: actions/upload-artifact@v4
@@ -188,6 +229,12 @@ jobs:
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+
+          if [[ ${{ matrix.os }} != ubuntu-latest ]]; then
+            ./run-qwen3-asr.sh
+            rm -rf sherpa-onnx-*
+          fi
+          echo "---"
 
           ./run-funasr-nano.sh
           rm -rf sherpa-onnx-*
@@ -322,17 +369,6 @@ jobs:
           ls -lh
 
           popd
-
-      - name:  Run Speech Enhancement test (GTCRN)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd speech-enhancement-gtcrn
-          ./run-gtcrn.sh
-          ls -lh
 
       - name:  Run Pascal test (Speaker diarization)
         shell: bash

@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.k2fsa.sherpa.onnx.GenerationConfig
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -215,10 +216,9 @@ class MainActivity : ComponentActivity() {
                                                     val startTime = timeSource.markNow()
 
                                                     val audio =
-                                                        TtsEngine.tts!!.generateWithCallback(
+                                                        TtsEngine.tts!!.generateWithConfigAndCallback(
                                                             text = testText,
-                                                            sid = TtsEngine.speakerId,
-                                                            speed = TtsEngine.speed,
+                                                            config = GenerationConfig(sid = TtsEngine.speakerId, speed = TtsEngine.speed),
                                                             callback = ::callback,
                                                         )
 

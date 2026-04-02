@@ -1017,6 +1017,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25",
+            idx=61,
+            lang="52_lang",
+            lang2="52_lang",
+            short_name="qwen3_asr_0.6B_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

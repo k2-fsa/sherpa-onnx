@@ -28,6 +28,27 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
   --speech-denoiser-gtcrn-model=gtcrn_simple.onnx \
   --input-wav=input.wav \
   --output-wav=output_16k.wav
+
+(2) Use DPDFNet models at 16 kHz or 48 kHz
+
+# Download DPDFNet models from either:
+#   https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+#   https://huggingface.co/Ceva-IP/DPDFNet
+
+./bin/sherpa-onnx-offline-denoiser \
+  --speech-denoiser-dpdfnet-model=dpdfnet4.onnx \
+  --input-wav=input.wav \
+  --output-wav=output_16k.wav
+
+# You can also use other 16 kHz DPDFNet models such as:
+#   dpdfnet_baseline.onnx
+#   dpdfnet2.onnx
+#   dpdfnet8.onnx
+
+./bin/sherpa-onnx-offline-denoiser \
+  --speech-denoiser-dpdfnet-model=dpdfnet2_48khz_hr.onnx \
+  --input-wav=input.wav \
+  --output-wav=output_48k.wav
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);

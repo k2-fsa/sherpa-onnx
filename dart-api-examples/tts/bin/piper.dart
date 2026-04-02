@@ -47,7 +47,6 @@ void main(List<String> arguments) async {
     model: model,
     tokens: tokens,
     dataDir: dataDir,
-    lengthScale: 1 / speed,
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
@@ -61,11 +60,15 @@ void main(List<String> arguments) async {
   );
 
   final tts = sherpa_onnx.OfflineTts(config);
-  final audio = tts.generateWithCallback(
+  final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+    sid: sid,
+    speed: speed,
+    silenceScale: 0.2,
+  );
+  final audio = tts.generateWithConfig(
       text: text,
-      sid: sid,
-      speed: speed,
-      callback: (Float32List samples) {
+      config: genConfig,
+      onProgress: (Float32List samples, double progress) {
         print('${samples.length} samples received');
         // You can play samples in a separate thread/isolate
 
