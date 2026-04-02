@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dotnet-api
       - dot-net
     paths:
       - '.github/workflows/test-dot-net.yaml'
