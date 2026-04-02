@@ -34,6 +34,14 @@ void OfflineCohereTranscribeModelConfig::Register(ParseOptions *po) {
       "Example values: "
       "ar, de, el, en, es, fr, it, ja, ko, nl, pl, pt, vi, zh. "
       "You have to provide exactly one language");
+
+  po->Register("cohere-transcribe-use-punct", &use_punct,
+               "true to enable punctuations. false to disable punctuations");
+
+  po->Register(
+      "cohere-transcribe-use-itn", &use_itn,
+      "true to enable inverse text normalization. false to disable inverse "
+      "text normalization");
 }
 
 bool OfflineCohereTranscribeModelConfig::Validate() const {
@@ -79,7 +87,9 @@ std::string OfflineCohereTranscribeModelConfig::ToString() const {
   os << "OfflineCohereTranscribeModelConfig(";
   os << "encoder=\"" << encoder << "\", ";
   os << "decoder=\"" << decoder << "\", ";
-  os << "language=\"" << language << "\")";
+  os << "language=\"" << language << "\", ";
+  os << "use_punct=" << (use_punct ? "True" : "False") << ", ";
+  os << "use_itn=" << (use_itn ? "True" : "False") << ")";
 
   return os.str();
 }

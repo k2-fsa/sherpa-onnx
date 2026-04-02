@@ -60,6 +60,8 @@ class OfflineCohereTranscribeModel::Impl {
     InitDecoder(nullptr, 0);
 
     InitCudaIOBinding();
+
+    InitState();
   }
 
   template <typename Manager>

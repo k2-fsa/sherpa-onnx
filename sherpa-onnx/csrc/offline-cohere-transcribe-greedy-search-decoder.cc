@@ -37,9 +37,8 @@ OfflineCohereTranscribeGreedySearchDecoder::Decode(
       token_shape.data(), token_shape.size());
 
   int64_t offset_v = 0;
-  std::array<int64_t, 1> offset_shape{1};
-  Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
-      memory_info, &offset_v, 1, offset_shape.data(), offset_shape.size());
+  Ort::Value offset =
+      Ort::Value::CreateTensor<int64_t>(memory_info, &offset_v, 1, nullptr, 0);
 
   auto self_kv_cache = model_->GetInitialSelfKVCache();
 

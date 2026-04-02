@@ -184,3 +184,4 @@ sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8
 doxygen-docs
 sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 sherpa-onnx-spleeter-2stems-fp16
+sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
