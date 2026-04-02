@@ -71,6 +71,10 @@ function freeConfig(config, Module) {
     freeConfig(config.qwen3Asr, Module)
   }
 
+  if ('cohereTranscribe' in config) {
+    freeConfig(config.cohereTranscribe, Module)
+  }
+
   if ('funasrNano' in config) {
     freeConfig(config.funasrNano, Module)
   }
@@ -1215,6 +1219,47 @@ function initSherpaOnnxOfflineTdnnModelConfig(config, Module) {
   };
 }
 
+function initSherpaOnnxOfflineCohereTranscribeModelConfig(config, Module) {
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder || '') + 1;
+  const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
+
+  const n = encoderLen + decoderLen + languageLen;
+  const buffer = Module._malloc(n);
+
+  const len = 5 * 4;  // 3 pointers + 2 ints
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(config.decoder || '', buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(config.language || '', buffer + offset, languageLen);
+  offset += languageLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += languageLen;
+
+  Module.setValue(ptr + 12, config.usePunct ?? 1, 'i32');
+  Module.setValue(ptr + 16, config.useItn ?? 1, 'i32');
+
+  return {
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
+}
+
 function initSherpaOnnxOfflineSenseVoiceModelConfig(config, Module) {
   const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
   const languageLen = Module.lengthBytesUTF8(config.language || '') + 1;
@@ -1339,6 +1384,16 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('cohereTranscribe' in config)) {
+    config.cohereTranscribe = {
+      encoder: '',
+      decoder: '',
+      language: '',
+      usePunct: 1,
+      useItn: 1,
+    };
+  }
+
   if (!('funasrNano' in config)) {
     config.funasrNano = {
       encoderAdaptor: '',
@@ -1459,11 +1514,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const qwen3Asr =
       initSherpaOnnxOfflineQwen3AsrModelConfig(config.qwen3Asr, Module);
 
+  const cohereTranscribe = initSherpaOnnxOfflineCohereTranscribeModelConfig(
+      config.cohereTranscribe, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
       tdnn.len + 8 * 4 + senseVoice.len + moonshine.len + fireRedAsr.len +
       dolphin.len + zipformerCtc.len + canary.len + wenetCtc.len +
       omnilingual.len + medasr.len + funasrNano.len + fireRedAsrCtc.len +
-      qwen3Asr.len;
+      qwen3Asr.len + cohereTranscribe.len;
 
   const ptr = Module._malloc(len);
 
@@ -1589,6 +1647,9 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   Module._CopyHeap(qwen3Asr.ptr, qwen3Asr.len, ptr + offset);
   offset += qwen3Asr.len;
 
+  Module._CopyHeap(cohereTranscribe.ptr, cohereTranscribe.len, ptr + offset);
+  offset += cohereTranscribe.len;
+
   return {
     buffer: buffer,
     ptr: ptr,
@@ -1609,7 +1670,8 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     medasr: medasr,
     funasrNano: funasrNano,
     fireRedAsrCtc: fireRedAsrCtc,
-    qwen3Asr: qwen3Asr
+    qwen3Asr: qwen3Asr,
+    cohereTranscribe: cohereTranscribe
   };
 }
 

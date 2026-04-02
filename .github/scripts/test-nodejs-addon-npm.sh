@@ -10,6 +10,16 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Cohere Transcribe----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe.js
+node ./test_asr_non_streaming_cohere_transcribe_async.js
+
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
 if [[ "$SKIP_QWEN3" != "true" ]]; then
   echo "----------Qwen3 ASR----------"
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
