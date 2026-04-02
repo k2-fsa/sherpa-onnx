@@ -444,6 +444,22 @@ func sherpaOnnxOfflineCanaryModelConfig(
   )
 }
 
+func sherpaOnnxOfflineCohereTranscribeModelConfig(
+  encoder: String = "",
+  decoder: String = "",
+  language: String = "",
+  usePunct: Bool = true,
+  useInverseTextNormalization: Bool = true
+) -> SherpaOnnxOfflineCohereTranscribeModelConfig {
+  return SherpaOnnxOfflineCohereTranscribeModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    language: toCPointer(language),
+    use_punct: usePunct ? 1 : 0,
+    use_itn: useInverseTextNormalization ? 1 : 0
+  )
+}
+
 func sherpaOnnxOfflineFireRedAsrModelConfig(
   encoder: String = "",
   decoder: String = ""
@@ -593,7 +609,9 @@ func sherpaOnnxOfflineModelConfig(
   fireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig =
     sherpaOnnxOfflineFireRedAsrCtcModelConfig(),
   qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig =
-    sherpaOnnxOfflineQwen3ASRModelConfig()
+    sherpaOnnxOfflineQwen3ASRModelConfig(),
+  cohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig =
+    sherpaOnnxOfflineCohereTranscribeModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -620,7 +638,8 @@ func sherpaOnnxOfflineModelConfig(
     medasr: medasr,
     funasr_nano: funasrNano,
     fire_red_asr_ctc: fireRedAsrCtc,
-    qwen3_asr: qwen3Asr
+    qwen3_asr: qwen3Asr,
+    cohere_transcribe: cohereTranscribe
   )
 }
 
@@ -767,25 +786,54 @@ class SherpaOnnxOfflineRecognizer {
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model.
   func decode(samples: [Float], sampleRate: Int = 16_000) -> SherpaOnnxOfflineRecongitionResult {
+    let stream = createStream()
+    stream.acceptWaveform(samples: samples, sampleRate: sampleRate)
+    decode(stream: stream)
+    return getResult(stream: stream)
+  }
+
+  func setConfig(config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>) {
+    SherpaOnnxOfflineRecognizerSetConfig(recognizer, config)
+  }
+
+  func createStream() -> SherpaOnnxOfflineStreamWrapper {
     guard let stream = SherpaOnnxCreateOfflineStream(recognizer) else {
       fatalError("Failed to create offline stream")
     }
 
-    defer { SherpaOnnxDestroyOfflineStream(stream) }
+    return SherpaOnnxOfflineStreamWrapper(stream: stream)
+  }
 
-    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
+  func decode(stream: SherpaOnnxOfflineStreamWrapper) {
+    SherpaOnnxDecodeOfflineStream(recognizer, stream.stream)
+  }
 
-    SherpaOnnxDecodeOfflineStream(recognizer, stream)
-
-    guard let resultPtr = SherpaOnnxGetOfflineStreamResult(stream) else {
+  func getResult(stream: SherpaOnnxOfflineStreamWrapper) -> SherpaOnnxOfflineRecongitionResult {
+    guard let resultPtr = SherpaOnnxGetOfflineStreamResult(stream.stream) else {
       fatalError("Failed to get offline recognition result")
     }
 
     return SherpaOnnxOfflineRecongitionResult(result: resultPtr)
   }
+}
 
-  func setConfig(config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>) {
-    SherpaOnnxOfflineRecognizerSetConfig(recognizer, config)
+class SherpaOnnxOfflineStreamWrapper {
+  let stream: OpaquePointer
+
+  init(stream: OpaquePointer) {
+    self.stream = stream
+  }
+
+  deinit {
+    SherpaOnnxDestroyOfflineStream(stream)
+  }
+
+  func setOption(key: String, value: String) {
+    SherpaOnnxOfflineStreamSetOption(stream, toCPointer(key), toCPointer(value))
+  }
+
+  func acceptWaveform(samples: [Float], sampleRate: Int = 16_000) {
+    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
 }
 

@@ -7,6 +7,9 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-cohere-transcribe.sh
+rm -rf sherpa-onnx-cohere-transcribe-*
+
 ./run-source-separation-spleeter.sh
 rm -rf sherpa-onnx-spleeter-*
 rm vocals.wav accompaniment.wav
