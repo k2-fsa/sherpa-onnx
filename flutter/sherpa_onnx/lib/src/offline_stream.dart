@@ -56,5 +56,22 @@ class OfflineStream {
     calloc.free(p);
   }
 
+  /// Set a string option on the underlying stream.
+  void setOption({required String key, required String value}) {
+    if (SherpaOnnxBindings.offlineStreamSetOption == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
+    final pKey = key.toNativeUtf8();
+    final pValue = value.toNativeUtf8();
+    SherpaOnnxBindings.offlineStreamSetOption?.call(ptr, pKey, pValue);
+    calloc.free(pKey);
+    calloc.free(pValue);
+  }
+
   Pointer<SherpaOnnxOfflineStream> ptr;
 }

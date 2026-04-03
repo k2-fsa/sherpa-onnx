@@ -458,6 +458,18 @@ final class SherpaOnnxOfflineCanaryModelConfig extends Struct {
   external int usePnc;
 }
 
+final class SherpaOnnxOfflineCohereTranscribeModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> language;
+
+  @Int32()
+  external int usePunct;
+
+  @Int32()
+  external int useItn;
+}
+
 final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
   external Pointer<Utf8> preprocessor;
   external Pointer<Utf8> encoder;
@@ -524,6 +536,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external SherpaOnnxOfflineFunAsrNanoModelConfig funasrNano;
   external SherpaOnnxOfflineFireRedAsrCtcModelConfig fireRedAsrCtc;
   external SherpaOnnxOfflineQwen3AsrModelConfig qwen3Asr;
+  external SherpaOnnxOfflineCohereTranscribeModelConfig cohereTranscribe;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -1364,6 +1377,20 @@ typedef AcceptWaveformOfflineNative =
 typedef AcceptWaveformOffline =
     void Function(Pointer<SherpaOnnxOfflineStream>, int, Pointer<Float>, int);
 
+typedef OfflineStreamSetOptionNative =
+    Void Function(
+      Pointer<SherpaOnnxOfflineStream>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
+
+typedef OfflineStreamSetOption =
+    void Function(
+      Pointer<SherpaOnnxOfflineStream>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
+
 typedef DecodeOfflineStreamNative =
     Void Function(
       Pointer<SherpaOnnxOfflineRecognizer>,
@@ -1926,6 +1953,7 @@ class SherpaOnnxBindings {
   static CreateOfflineStream? createOfflineStream;
   static DestroyOfflineStream? destroyOfflineStream;
   static AcceptWaveformOffline? acceptWaveformOffline;
+  static OfflineStreamSetOption? offlineStreamSetOption;
   static DecodeOfflineStream? decodeOfflineStream;
   static GetOfflineStreamResultAsJson? getOfflineStreamResultAsJson;
   static DestroyOfflineStreamResultJson? destroyOfflineStreamResultJson;
@@ -2458,6 +2486,12 @@ class SherpaOnnxBindings {
     acceptWaveformOffline ??= dynamicLibrary
         .lookup<NativeFunction<AcceptWaveformOfflineNative>>(
           'SherpaOnnxAcceptWaveformOffline',
+        )
+        .asFunction();
+
+    offlineStreamSetOption ??= dynamicLibrary
+        .lookup<NativeFunction<OfflineStreamSetOptionNative>>(
+          'SherpaOnnxOfflineStreamSetOption',
         )
         .asFunction();
 

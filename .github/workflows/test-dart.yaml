@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dart-api
       - dart
     paths:
       - '.github/workflows/test-dart.yaml'
