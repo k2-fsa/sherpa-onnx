@@ -4,6 +4,13 @@ set -ex
 
 cd dotnet-examples/
 
+cd ./non-streaming-cohere-transcribe-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-cohere-transcribe-*
+
+cd ..
+
 if [[ "$SKIP_QWEN3" != "true" ]]; then
   cd ./vad-non-streaming-qwen3-asr
   ./run-ten-vad.sh

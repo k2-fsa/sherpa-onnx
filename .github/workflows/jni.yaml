@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - jni
       - kotlin
     paths:
       - '.github/workflows/jni.yaml'

@@ -172,7 +172,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
   }
 
   if (config.find("ProfilingFilePrefix") != config.end()) {
-    sess_opts.EnableProfiling(config["ProfilingFilePrefix"].c_str());
+    sess_opts.EnableProfiling(SHERPA_ONNX_TO_ORT_PATH(config["ProfilingFilePrefix"]));
     config.erase("ProfilingFilePrefix");
   }
 

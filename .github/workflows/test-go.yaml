@@ -103,6 +103,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/audio-tagging
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-canary-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-cohere-transcribe-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-fire-red-asr-ctc-decode-files
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-funasr-nano-decode-files
@@ -169,6 +170,19 @@ jobs:
 
           ./run-uvr.sh
           rm -rf UVR-MDX-NET-*
+
+      - name: Test non-streaming decoding files with Cohere Transcribe
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-cohere-transcribe-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-cohere-transcribe-*
 
       - name: Test non-streaming decoding files with Qwen3 ASR
         if: matrix.os != 'ubuntu-latest'

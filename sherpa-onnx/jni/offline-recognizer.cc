@@ -391,6 +391,33 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.canary.use_pnc, usePnc,
                             canary_config_cls, canary_config);
 
+  fid = env->GetFieldID(
+      model_config_cls, "cohereTranscribe",
+      "Lcom/k2fsa/sherpa/onnx/OfflineCohereTranscribeModelConfig;");
+  jobject cohere_transcribe_config = env->GetObjectField(model_config, fid);
+  jclass cohere_transcribe_config_cls =
+      env->GetObjectClass(cohere_transcribe_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.cohere_transcribe.encoder,
+                              encoder, cohere_transcribe_config_cls,
+                              cohere_transcribe_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.cohere_transcribe.decoder,
+                              decoder, cohere_transcribe_config_cls,
+                              cohere_transcribe_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.model_config.cohere_transcribe.language,
+                              language, cohere_transcribe_config_cls,
+                              cohere_transcribe_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.cohere_transcribe.use_punct,
+                            usePunct, cohere_transcribe_config_cls,
+                            cohere_transcribe_config);
+
+  SHERPA_ONNX_JNI_READ_BOOL(ans.model_config.cohere_transcribe.use_itn, useItn,
+                            cohere_transcribe_config_cls,
+                            cohere_transcribe_config);
+
   fid = env->GetFieldID(model_config_cls, "dolphin",
                         "Lcom/k2fsa/sherpa/onnx/OfflineDolphinModelConfig;");
   jobject dolphin_config = env->GetObjectField(model_config, fid);
