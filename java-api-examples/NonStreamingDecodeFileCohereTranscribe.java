@@ -42,11 +42,20 @@ public class NonStreamingDecodeFileCohereTranscribe {
     stream.setOption("language", "en");
     stream.acceptWaveform(reader.getSamples(), reader.getSampleRate());
 
+    long start = System.currentTimeMillis();
     recognizer.decode(stream);
+    long stop = System.currentTimeMillis();
 
     String text = recognizer.getResult(stream).getText();
 
+    float timeElapsedSeconds = (stop - start) / 1000.0f;
+    float audioDuration = reader.getSamples().length / (float) reader.getSampleRate();
+    float realTimeFactor = timeElapsedSeconds / audioDuration;
+
     System.out.printf("filename:%s\nresult:%s\n", waveFilename, text);
+    System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
+    System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
+    System.out.printf("-- real-time factor (RTF): %.3f\n", realTimeFactor);
 
     stream.release();
     recognizer.release();

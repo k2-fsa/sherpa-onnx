@@ -31,8 +31,9 @@ java_files += OnlineRecognizerConfig.java
 java_files += OnlineRecognizerResult.java
 java_files += OnlineRecognizer.java
 
-java_files += OfflineTransducerModelConfig.java
+java_files += OfflineCohereTranscribeModelConfig.java
 java_files += OfflineParaformerModelConfig.java
+java_files += OfflineTransducerModelConfig.java
 java_files += OfflineWhisperModelConfig.java
 java_files += OfflineFireRedAsrModelConfig.java
 java_files += OfflineMoonshineModelConfig.java
