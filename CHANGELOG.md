@@ -1,3 +1,29 @@
+## 1.12.35
+
+* Add Go API for Cohere Transcribe (#3466)
+* Add Rust API for Cohere Transcribe (#3465)
+* Add Dart API for Cohere Transcribe (#3464)
+* Add C# API for Cohere Transcribe (#3462)
+* Add Pascal API for Cohere Transcribe (#3463)
+* Add Java and Kotlin API for Cohere Transcribe (#3461)
+* Add JavaScript API for Cohere Transcribe. (#3458)
+* Add Swift API for Cohere Transcribe (#3460)
+* Add C API and CXX API for Cohere transcribe models (#3457)
+* Add C++ runtime and Python API for Cohere Transcribe (#3456)
+* Upload models for https://huggingface.co/CohereLabs/cohere-transcribe-03-2026 (#3453)
+* Add issue template (#3452)
+* Add hotwords support for Qwen3-ASR (#3434)
+* Fix links in README.md to use correct casing (#3451)
+* Add Wake Word and decibri to projects using sherpa-onnx (#3447)
+* Remove num_threads assertion from OnlineRecognizer model configs (#3448)
+* Add Speed of Sound to projects using sherpa-onnx (#3438)
+* Fix Swift tests (#3433)
+* spacemit provider: add provider with config file, then update to 2.0.2 (#3421)
+* Add Go API for source separation (#3432)
+* Fix C API for reading multi-channel wave files (#3430)
+* Add Swift API for source separation (#3426)
+* Fix CI tests (#3429)
+
 ## 1.12.34
 
 * Add Pascal API for Qwen3 ASR (#3424)
