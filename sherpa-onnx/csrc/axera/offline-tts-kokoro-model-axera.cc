@@ -6,12 +6,14 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
-#include <complex>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
 #include <numeric>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -28,7 +30,6 @@
 
 #include "ax_engine_api.h"  // NOLINT
 #include "ax_sys_api.h"     // NOLINT
-#include "kaldi-native-fbank/csrc/istft.h"
 #include "sherpa-onnx/csrc/axera/ax-engine-guard.h"
 #include "sherpa-onnx/csrc/axera/utils.h"
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -39,42 +40,181 @@
 
 namespace sherpa_onnx {
 
-static std::vector<float> Sigmoid(const std::vector<float> &x) {
-  std::vector<float> result(x.size());
-  for (size_t i = 0; i < x.size(); i++) {
-    result[i] = 1.0f / (1.0f + std::exp(-x[i]));
+namespace {
+
+constexpr int32_t kKokoroSampleRate = 24000;
+constexpr int32_t kKokoroVersion = 2;
+constexpr int32_t kKokoroVoiceStyleLength = 510;
+constexpr int32_t kKokoroStyleRank = 3;
+constexpr int32_t kKokoroStyleMiddleDim = 1;
+constexpr int32_t kKokoroTimbreDim = 128;
+constexpr int32_t kHarmonicCount = 8;
+constexpr int32_t kHarmonicDim = kHarmonicCount + 1;
+constexpr int32_t kStftNfft = 20;
+constexpr int32_t kStftHop = 5;
+constexpr float kPi = 3.14159265358979323846f;
+constexpr float kTwoPi = 2.0f * kPi;
+constexpr float kSineAmp = 0.1f;
+constexpr float kNoiseStd = 0.003f;
+constexpr float kUnvoicedNoiseScale = kSineAmp / 3.0f;
+constexpr float kVoicedThreshold = 10.0f;
+constexpr char kDefaultVoice[] = "en-us";
+constexpr std::array<float, kHarmonicDim> kHarmonicMergeWeights = {
+    -0.08154187f, -0.18519667f, -0.18263398f, -0.17837206f, -0.09873895f,
+    0.08264039f,  0.08743999f,  -0.39068547f, -0.54774433f,
+};
+constexpr float kHarmonicMergeBias = -0.02945026f;
+
+static int32_t GetNumElements(const std::vector<int32_t> &shape) {
+  if (shape.empty()) {
+    return 0;
   }
-  return result;
+
+  int32_t ans = 1;
+  for (auto dim : shape) {
+    ans *= dim;
+  }
+
+  return ans;
 }
 
-template <typename T>
-static std::vector<size_t> Argsort(const std::vector<T> &v, int32_t len,
-                                   bool reverse) {
-  std::vector<size_t> idx(len);
-  std::iota(idx.begin(), idx.end(), 0);
-
-  if (!reverse) {
-    std::stable_sort(idx.begin(), idx.end(),
-                     [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-  } else {
-    std::stable_sort(idx.begin(), idx.end(),
-                     [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
+static std::string Basename(const std::string &path) {
+  auto pos = path.find_last_of("/\\");
+  if (pos == std::string::npos) {
+    return path;
   }
 
-  return idx;
+  return path.substr(pos + 1);
 }
 
-template <typename T>
-static std::vector<T> NpRepeat(const std::vector<T> &v,
-                               const std::vector<int32_t> &times) {
-  std::vector<T> result;
-  for (size_t i = 0; i < times.size(); i++) {
-    for (int32_t n = 0; n < times[i]; n++) {
-      result.push_back(v[i]);
+static int32_t ExtractIntegerAfterTag(const std::string &s,
+                                      const std::string &tag) {
+  auto pos = s.find(tag);
+  if (pos == std::string::npos) {
+    return -1;
+  }
+
+  pos += tag.size();
+  int32_t value = 0;
+  bool found = false;
+  while (pos < s.size() && std::isdigit(static_cast<unsigned char>(s[pos]))) {
+    found = true;
+    value = value * 10 + (s[pos] - '0');
+    ++pos;
+  }
+
+  return found ? value : -1;
+}
+
+static std::vector<float> CropLastDim(const std::vector<float> &src,
+                                      int32_t outer_dim,
+                                      int32_t src_last_dim,
+                                      int32_t dst_last_dim) {
+  std::vector<float> ans(outer_dim * dst_last_dim);
+  for (int32_t i = 0; i != outer_dim; ++i) {
+    std::memcpy(ans.data() + i * dst_last_dim,
+                src.data() + i * src_last_dim,
+                dst_last_dim * sizeof(float));
+  }
+
+  return ans;
+}
+
+static std::vector<float> PadLastDim(const std::vector<float> &src,
+                                     int32_t outer_dim, int32_t src_last_dim,
+                                     int32_t dst_last_dim) {
+  std::vector<float> ans(outer_dim * dst_last_dim, 0.0f);
+  for (int32_t i = 0; i != outer_dim; ++i) {
+    std::memcpy(ans.data() + i * dst_last_dim,
+                src.data() + i * src_last_dim,
+                src_last_dim * sizeof(float));
+  }
+
+  return ans;
+}
+
+static std::vector<float> PadAlignment(const std::vector<float> &src,
+                                       int32_t src_token_len,
+                                       int32_t src_frame_len,
+                                       int32_t dst_token_len,
+                                       int32_t dst_frame_len) {
+  std::vector<float> ans(dst_token_len * dst_frame_len, 0.0f);
+  for (int32_t i = 0; i != src_token_len; ++i) {
+    std::memcpy(ans.data() + i * dst_frame_len,
+                src.data() + i * src_frame_len,
+                src_frame_len * sizeof(float));
+  }
+
+  return ans;
+}
+
+static std::vector<uint8_t> BuildPaddedTextMask(int32_t token_len,
+                                                int32_t token_bucket) {
+  std::vector<uint8_t> mask(token_bucket, 0);
+  for (int32_t i = token_len; i < token_bucket; ++i) {
+    mask[i] = 1;
+  }
+
+  return mask;
+}
+
+struct ModelPaths {
+  std::string encoder;
+  std::string duration_predictor;
+  std::string text_encoder;
+  std::string f0n_shared;
+  std::string f0n_head;
+  std::string decoder_front;
+  std::string vocoder;
+};
+
+static ModelPaths ParseModelPaths(const std::string &model_str) {
+  std::vector<std::string> files;
+  SplitStringToVector(model_str, ",", false, &files);
+
+  ModelPaths paths;
+  for (const auto &f : files) {
+    if (!FileExists(f)) {
+      SHERPA_ONNX_LOGE("Model file '%s' does not exist", f.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    std::string name = Basename(f);
+    if (name.find("duration_predictor") != std::string::npos) {
+      paths.duration_predictor = f;
+    } else if (name.find("text_encoder_token_") != std::string::npos) {
+      paths.text_encoder = f;
+    } else if (name.find("encoder_token_") != std::string::npos) {
+      paths.encoder = f;
+    } else if (name.find("f0n_shared_frame_") != std::string::npos) {
+      paths.f0n_shared = f;
+    } else if (name.find("f0n_head_frame_") != std::string::npos) {
+      paths.f0n_head = f;
+    } else if (name.find("decoder_front") != std::string::npos) {
+      paths.decoder_front = f;
+    } else if (name.find("vocoder") != std::string::npos) {
+      paths.vocoder = f;
     }
   }
-  return result;
+
+  if (paths.encoder.empty() || paths.duration_predictor.empty() ||
+      paths.text_encoder.empty() || paths.f0n_shared.empty() ||
+      paths.f0n_head.empty() || paths.decoder_front.empty() ||
+      paths.vocoder.empty()) {
+    SHERPA_ONNX_LOGE(
+        "For the new Axera Kokoro pipeline, --kokoro-model must contain these "
+        "7 files in any order: encoder_token_*.axmodel, "
+        "duration_predictor.onnx, text_encoder_token_*_frame_*.axmodel, "
+        "f0n_shared_frame_*.axmodel, f0n_head_frame_*.axmodel, "
+        "decoder_front*.axmodel, vocoder*.axmodel. Given: %s",
+        model_str.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  return paths;
 }
+
+}  // namespace
 
 class AxeraModel {
  public:
@@ -123,7 +263,6 @@ class AxeraModel {
     int32_t i = it->second;
     size_t expected_size = io_info_->pInputs[i].nSize;
     size_t given_size = n * sizeof(T);
-
     if (expected_size != given_size) {
       SHERPA_ONNX_LOGE(
           "Input tensor '%s' size mismatch. Expected %zu bytes, got %zu bytes",
@@ -151,12 +290,11 @@ class AxeraModel {
     size_t out_elems = out_meta.nSize / sizeof(float);
     std::vector<float> out(out_elems);
     std::memcpy(out.data(), out_buf.pVirAddr, out_meta.nSize);
-
     return out;
   }
 
   bool Run() {
-    auto ret = AX_ENGINE_RunSync(handle_, &io_data_);
+    int ret = AX_ENGINE_RunSync(handle_, &io_data_);
     if (ret != 0) {
       SHERPA_ONNX_LOGE("AX_ENGINE_RunSync failed, ret = %d", ret);
       return false;
@@ -196,22 +334,9 @@ class AxeraModel {
 
   std::unordered_map<std::string, int32_t> input_name_to_index_;
   std::unordered_map<std::string, int32_t> output_name_to_index_;
-
   std::vector<std::vector<int32_t>> input_tensor_shapes_;
   std::vector<std::vector<int32_t>> output_tensor_shapes_;
 };
-
-static std::string GetModelPath(const std::string &model, const std::string &p,
-                                bool is_onnx = false) {
-  std::string suffix = is_onnx ? ".onnx" : ".axmodel";
-
-  std::string path1 = model + "/kokoro_" + p + suffix;
-  if (FileExists(path1)) {
-    return path1;
-  }
-
-  return model + "_" + p + suffix;
-}
 
 class OfflineTtsKokoroModelAxera::Impl {
  public:
@@ -220,7 +345,7 @@ class OfflineTtsKokoroModelAxera::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init(config);
+    Init(config, [](const std::string &filename) { return ReadFile(filename); });
   }
 
   template <typename Manager>
@@ -229,14 +354,14 @@ class OfflineTtsKokoroModelAxera::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init(mgr, config);
+    Init(config, [mgr](const std::string &filename) { return ReadFile(mgr, filename); });
   }
 
   const OfflineTtsKokoroModelMetaData &GetMetaData() const {
     return meta_data_;
   }
 
-  std::vector<float> Run(std::vector<int64_t> input_ids, int64_t sid,
+  std::vector<float> Run(const std::vector<int64_t> &input_ids, int64_t sid,
                          float speed) {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -245,19 +370,20 @@ class OfflineTtsKokoroModelAxera::Impl {
     }
 
     if (config_.kokoro.length_scale != 1 && speed == 1) {
-      speed = 1. / config_.kokoro.length_scale;
+      speed = 1.0f / config_.kokoro.length_scale;
     }
 
     int32_t phoneme_len = static_cast<int32_t>(input_ids.size()) - 2;
-    if (phoneme_len < 0) phoneme_len = 0;
+    if (phoneme_len < 0) {
+      phoneme_len = 0;
+    }
 
     std::vector<float> ref_s =
         LoadVoiceEmbedding(static_cast<int32_t>(sid), phoneme_len);
 
     std::vector<float> audio;
-    bool success = RunModels(input_ids, ref_s, speed, audio);
-    if (!success) {
-      SHERPA_ONNX_LOGE("Run models failed!");
+    if (!RunModels(input_ids, ref_s, speed, &audio)) {
+      SHERPA_ONNX_LOGE("Run Kokoro Axera static pipeline failed");
       return {};
     }
 
@@ -265,515 +391,447 @@ class OfflineTtsKokoroModelAxera::Impl {
   }
 
  private:
-  void Init(const OfflineTtsModelConfig &config) {
-    std::string model_str = config.kokoro.model;
-
-    std::vector<std::string> model_files;
-    SplitStringToVector(model_str, ",", false, &model_files);
-
-    std::vector<std::string> model_paths;
-
-    if (config_.provider == "axera") {
-      // axera provider requires exactly 4 model files
-      if (model_files.size() != 4) {
-        SHERPA_ONNX_LOGE(
-            "For axera provider, model should contain exactly 4 files "
-            "separated by comma. Given %d files: %s",
-            static_cast<int32_t>(model_files.size()), model_str.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-
-      // Validate all 4 files exist
-      for (int32_t i = 0; i < 4; ++i) {
-        if (!FileExists(model_files[i])) {
-          SHERPA_ONNX_LOGE("Model file '%s' does not exist",
-                           model_files[i].c_str());
-          SHERPA_ONNX_EXIT(-1);
-        }
-      }
-      model_paths = model_files;
-    } else {
+  template <typename ReadBytes>
+  void Init(const OfflineTtsModelConfig &config, ReadBytes &&read_bytes) {
+    if (config_.provider != "axera") {
       SHERPA_ONNX_LOGE(
           "This model only supports axera provider. Please use provider=axera");
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Load axera models (indices 0, 1, 2)
-    for (int32_t i = 0; i < 3; ++i) {
-      axera_models_.push_back(std::make_unique<AxeraModel>(model_paths[i]));
-    }
+    auto paths = ParseModelPaths(config.kokoro.model);
 
-    // Load onnx model (index 3)
-    auto buf4 = ReadFile(model_paths[3]);
-    model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
-                                             sess_opts_);
-    GetInputNames(model4_.get(), &model4_input_names_,
-                  &model4_input_names_ptr_);
-    GetOutputNames(model4_.get(), &model4_output_names_,
-                   &model4_output_names_ptr_);
+    auto encoder_buf = read_bytes(paths.encoder);
+    encoder_model_ = std::make_unique<AxeraModel>(encoder_buf.data(),
+                                                  encoder_buf.size());
 
-    auto voices_buf = ReadFile(config.kokoro.voices);
+    auto text_encoder_buf = read_bytes(paths.text_encoder);
+    text_encoder_model_ = std::make_unique<AxeraModel>(
+        text_encoder_buf.data(), text_encoder_buf.size());
+
+    auto f0n_shared_buf = read_bytes(paths.f0n_shared);
+    f0n_shared_model_ =
+        std::make_unique<AxeraModel>(f0n_shared_buf.data(), f0n_shared_buf.size());
+
+    auto f0n_head_buf = read_bytes(paths.f0n_head);
+    f0n_head_model_ =
+        std::make_unique<AxeraModel>(f0n_head_buf.data(), f0n_head_buf.size());
+
+    auto decoder_front_buf = read_bytes(paths.decoder_front);
+    decoder_front_model_ = std::make_unique<AxeraModel>(decoder_front_buf.data(),
+                                                        decoder_front_buf.size());
+
+    auto vocoder_buf = read_bytes(paths.vocoder);
+    vocoder_model_ =
+        std::make_unique<AxeraModel>(vocoder_buf.data(), vocoder_buf.size());
+
+    auto duration_buf = read_bytes(paths.duration_predictor);
+    duration_predictor_ = std::make_unique<Ort::Session>(
+        env_, duration_buf.data(), duration_buf.size(), sess_opts_);
+    GetInputNames(duration_predictor_.get(), &duration_input_names_,
+                  &duration_input_names_ptr_);
+    GetOutputNames(duration_predictor_.get(), &duration_output_names_,
+                   &duration_output_names_ptr_);
+
+    InitModelShapes(paths);
+
+    auto voices_buf = read_bytes(config.kokoro.voices);
     LoadVoices(voices_buf.data(), voices_buf.size());
   }
 
-  template <typename Manager>
-  void Init(Manager *mgr, const OfflineTtsModelConfig &config) {
-    std::string model_str = config.kokoro.model;
+  void InitModelShapes(const ModelPaths &paths) {
+    auto encoder_input_shape = encoder_model_->TensorShape("input_ids");
+    auto encoder_mask_shape = encoder_model_->TensorShape("text_mask");
+    auto text_encoder_input_shape = text_encoder_model_->TensorShape("input_ids");
+    auto text_encoder_aln_shape = text_encoder_model_->TensorShape("pred_aln_trg");
+    auto f0n_shared_input_shape = f0n_shared_model_->TensorShape("en");
+    auto f0n_head_ref_shape = f0n_head_model_->TensorShape("ref_s");
+    auto f0n_head_output_shape = f0n_head_model_->TensorShape("F0_pred");
+    auto decoder_asr_shape = decoder_front_model_->TensorShape("asr");
+    auto decoder_timbre_shape = decoder_front_model_->TensorShape("timbre");
+    auto vocoder_har_shape = vocoder_model_->TensorShape("har");
+    auto vocoder_output_shape = vocoder_model_->TensorShape("waveform");
 
-    std::vector<std::string> model_files;
-    SplitStringToVector(model_str, ",", false, &model_files);
-
-    std::vector<std::string> model_paths;
-
-    if (config_.provider == "axera") {
-      // axera provider requires exactly 4 model files
-      if (model_files.size() != 4) {
-        SHERPA_ONNX_LOGE(
-            "For axera provider, model should contain exactly 4 files "
-            "separated by comma. Given %d files: %s",
-            static_cast<int32_t>(model_files.size()), model_str.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      model_paths = model_files;
-    } else {
-      SHERPA_ONNX_LOGE(
-          "This model only supports axera provider. Please use provider=axera");
+    if (encoder_input_shape.size() != 2 || encoder_mask_shape.size() != 2 ||
+        text_encoder_input_shape.size() != 2 || text_encoder_aln_shape.size() != 3 ||
+        f0n_shared_input_shape.size() != 3 || f0n_head_ref_shape.size() != 2 ||
+        f0n_head_output_shape.size() != 2 || decoder_asr_shape.size() != 3 ||
+        decoder_timbre_shape.size() != 2 || vocoder_har_shape.size() != 3) {
+      SHERPA_ONNX_LOGE("Unexpected Kokoro Axera model shapes in: %s",
+                       config_.kokoro.model.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
-    // Load axera models (indices 0, 1, 2)
-    for (int32_t i = 0; i < 3; ++i) {
-      auto buf = ReadFile(mgr, model_paths[i]);
-      axera_models_.push_back(
-          std::make_unique<AxeraModel>(buf.data(), buf.size()));
+    token_bucket_ = encoder_input_shape[1];
+    frame_bucket_ = text_encoder_aln_shape[2];
+    pitch_bucket_ = f0n_head_output_shape[1];
+    ref_s_dim_ = f0n_head_ref_shape[1];
+    timbre_dim_ = decoder_timbre_shape[1];
+    har_channels_ = vocoder_har_shape[1];
+    har_frames_ = vocoder_har_shape[2];
+    sample_bucket_ = GetNumElements(vocoder_output_shape);
+
+    if (token_bucket_ != text_encoder_input_shape[1] ||
+        token_bucket_ != text_encoder_aln_shape[1] ||
+        frame_bucket_ != f0n_shared_input_shape[2] ||
+        frame_bucket_ != decoder_asr_shape[2]) {
+      SHERPA_ONNX_LOGE("Kokoro Axera bucket mismatch detected in: %s",
+                       config_.kokoro.model.c_str());
+      SHERPA_ONNX_EXIT(-1);
     }
 
-    // Load onnx model (index 3)
-    auto buf4 = ReadFile(mgr, model_paths[3]);
-    model4_ = std::make_unique<Ort::Session>(env_, buf4.data(), buf4.size(),
-                                             sess_opts_);
-    GetInputNames(model4_.get(), &model4_input_names_,
-                  &model4_input_names_ptr_);
-    GetOutputNames(model4_.get(), &model4_output_names_,
-                   &model4_output_names_ptr_);
+    if (ref_s_dim_ <= 0 || timbre_dim_ <= 0 || timbre_dim_ > ref_s_dim_) {
+      SHERPA_ONNX_LOGE("Invalid Kokoro style dims. ref_s=%d, timbre=%d",
+                       ref_s_dim_, timbre_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
 
-    auto voices_buf = ReadFile(mgr, config.kokoro.voices);
-    LoadVoices(voices_buf.data(), voices_buf.size());
+    if (har_channels_ != kStftNfft + 2) {
+      SHERPA_ONNX_LOGE("Expected har channels %d. Given: %d", kStftNfft + 2,
+                       har_channels_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (sample_bucket_ % pitch_bucket_ != 0 || sample_bucket_ % frame_bucket_ != 0) {
+      SHERPA_ONNX_LOGE(
+          "Unexpected Kokoro Axera bucket relation. sample=%d pitch=%d frame=%d",
+          sample_bucket_, pitch_bucket_, frame_bucket_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    upsample_scale_ = sample_bucket_ / pitch_bucket_;
+    samples_per_frame_ = sample_bucket_ / frame_bucket_;
+    int32_t expected_har_frames = sample_bucket_ / kStftHop + 1;
+    if (har_frames_ != expected_har_frames) {
+      SHERPA_ONNX_LOGE("Expected har frames %d. Given: %d", expected_har_frames,
+                       har_frames_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (ExtractIntegerAfterTag(Basename(paths.encoder), "encoder_token_") != -1 &&
+        ExtractIntegerAfterTag(Basename(paths.encoder), "encoder_token_") !=
+            token_bucket_) {
+      SHERPA_ONNX_LOGE("Encoder filename bucket does not match model shape: %s",
+                       paths.encoder.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
   void LoadVoices(const char *voices_data, size_t voices_data_length) {
-    // Get metadata from model4 (ONNX model)
-    Ort::ModelMetadata meta_data = model4_->GetModelMetadata();
-    Ort::AllocatorWithDefaultOptions allocator;
+    meta_data_.sample_rate = kKokoroSampleRate;
+    meta_data_.version = kKokoroVersion;
+    meta_data_.has_espeak = 1;
+    meta_data_.voice = config_.kokoro.lang.empty() ? kDefaultVoice : config_.kokoro.lang;
+    meta_data_.max_token_len = kKokoroVoiceStyleLength;
 
-    SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
-    SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
-    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
-                                                "en-us");
-    SHERPA_ONNX_READ_META_DATA_VEC(style_dim_, "style_dim");
-
-    if (style_dim_.size() != 3) {
-      SHERPA_ONNX_LOGE("style_dim should be 3-d, given: %d",
-                       static_cast<int32_t>(style_dim_.size()));
+    style_dim_ = {kKokoroVoiceStyleLength, kKokoroStyleMiddleDim, ref_s_dim_};
+    if (style_dim_.size() != kKokoroStyleRank || style_dim_[1] != 1) {
+      SHERPA_ONNX_LOGE("Unexpected Kokoro style_dim");
       SHERPA_ONNX_EXIT(-1);
     }
 
-    if (style_dim_[1] != 1) {
-      SHERPA_ONNX_LOGE("style_dim[1] should be 1, given: %d", style_dim_[1]);
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    meta_data_.max_token_len = style_dim_[0];
-
-    int32_t actual_num_floats = voices_data_length / sizeof(float);
-    int32_t expected_num_floats =
-        style_dim_[0] * style_dim_[2] * meta_data_.num_speakers;
-
-    if (actual_num_floats != expected_num_floats) {
+    int32_t actual_num_floats = static_cast<int32_t>(voices_data_length / sizeof(float));
+    int32_t floats_per_speaker = style_dim_[0] * style_dim_[2];
+    if (floats_per_speaker <= 0 || actual_num_floats % floats_per_speaker != 0) {
       SHERPA_ONNX_LOGE(
-          "Corrupted voices file. Expected #floats: %d, actual: %d",
-          expected_num_floats, actual_num_floats);
-      SHERPA_ONNX_EXIT(-1);
-    }
-    styles_ = std::vector<float>(
-        reinterpret_cast<const float *>(voices_data),
-        reinterpret_cast<const float *>(voices_data) + actual_num_floats);
-
-    auto shape1 = axera_models_[0]->TensorShape("input_ids");
-    if (shape1.size() < 2) {
-      SHERPA_ONNX_LOGE("Unexpected shape rank for input_ids: %d",
-                       static_cast<int32_t>(shape1.size()));
+          "Corrupted voices file '%s'. Expected a multiple of %d floats. Got %d",
+          config_.kokoro.voices.c_str(), floats_per_speaker, actual_num_floats);
       SHERPA_ONNX_EXIT(-1);
     }
 
-    max_seq_len_ = shape1[1];
+    meta_data_.num_speakers = actual_num_floats / floats_per_speaker;
+    styles_ = std::vector<float>(reinterpret_cast<const float *>(voices_data),
+                                 reinterpret_cast<const float *>(voices_data) +
+                                     actual_num_floats);
   }
 
-  std::vector<float> LoadVoiceEmbedding(int32_t sid, int32_t phoneme_len) {
-    int32_t style_dim0 = style_dim_[0];
-    int32_t style_dim1 = style_dim_[2];
-    phoneme_len = std::max(phoneme_len, 0);
+  std::vector<float> LoadVoiceEmbedding(int32_t sid, int32_t phoneme_len) const {
+    int32_t style_len = style_dim_[0];
+    int32_t style_dim = style_dim_[2];
 
     sid = std::max(sid, 0);
     if (meta_data_.num_speakers > 0) {
       sid = std::min(sid, meta_data_.num_speakers - 1);
     }
 
-    std::vector<float> ref_s(style_dim1);
-    if (phoneme_len < style_dim0) {
-      const float *p = styles_.data() + sid * style_dim0 * style_dim1 +
-                       phoneme_len * style_dim1;
-      std::copy(p, p + style_dim1, ref_s.begin());
-    } else {
-      int32_t idx = style_dim0 / 2;
-      const float *p =
-          styles_.data() + sid * style_dim0 * style_dim1 + idx * style_dim1;
-      std::copy(p, p + style_dim1, ref_s.begin());
-    }
+    phoneme_len = std::max(phoneme_len, 0);
+
+    std::vector<float> ref_s(style_dim);
+    int32_t index = phoneme_len < style_len ? phoneme_len : style_len / 2;
+    const float *src = styles_.data() + sid * style_len * style_dim +
+                       index * style_dim;
+    std::copy(src, src + style_dim, ref_s.begin());
     return ref_s;
   }
 
-  bool RunModels(std::vector<int64_t> &input_ids,
-                 const std::vector<float> &ref_s, float speed,
-                 std::vector<float> &audio) {
-    int32_t actual_len = input_ids.size();
-    if (actual_len > max_seq_len_) {
-      SHERPA_ONNX_LOGE(
-          "Input ids length %d exceeds max_seq_len %d, truncating.", actual_len,
-          max_seq_len_);
-      input_ids.resize(max_seq_len_);
-      actual_len = max_seq_len_;
-    }
+  std::vector<float> BuildHar(const std::vector<float> &f0_pred) const {
+    std::vector<float> phase_coarse(pitch_bucket_ * kHarmonicDim, 0.0f);
+    std::array<float, kHarmonicDim> cumulative{};
 
-    int32_t padding_len = max_seq_len_ - actual_len;
-    if (padding_len > 0) {
-      std::vector<int64_t> padding(padding_len, 0);
-      input_ids.insert(input_ids.end(), padding.begin(), padding.end());
-    }
-
-    int32_t actual_content_frames = 0;
-    int32_t total_frames = 0;
-    if (!InferenceSingleChunk(input_ids, ref_s, actual_len, speed, audio,
-                              actual_content_frames, total_frames)) {
-      return false;
-    }
-
-    TrimAudioByContent(audio, actual_content_frames, total_frames, actual_len);
-
-    return true;
-  }
-
-  bool InferenceSingleChunk(std::vector<int64_t> &input_ids,
-                            const std::vector<float> &ref_s, int32_t actual_len,
-                            float speed, std::vector<float> &audio,
-                            int32_t &actual_content_frames,
-                            int32_t &total_frames) {
-    int32_t repeat_count = 1;
-    int32_t original_actual_len = actual_len;
-
-    PrepareInputIds(input_ids, actual_len, repeat_count);
-
-    std::vector<int32_t> input_ids_i32(input_ids.begin(), input_ids.end());
-
-    std::vector<int32_t> text_mask;
-    ComputeExternalPreprocessing(actual_len, text_mask);
-
-    std::vector<uint8_t> text_mask_u8(text_mask.begin(), text_mask.end());
-
-    if (!axera_models_[0]->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                              input_ids_i32.size()) ||
-        !axera_models_[0]->SetInputTensorData("ref_s", ref_s.data(),
-                                              ref_s.size()) ||
-        !axera_models_[0]->SetInputTensorData("text_mask", text_mask_u8.data(),
-                                              text_mask_u8.size())) {
-      return false;
-    }
-
-    if (!axera_models_[0]->Run()) {
-      return false;
-    }
-
-    std::vector<float> duration =
-        axera_models_[0]->GetOutputTensorData("duration");
-    std::vector<float> d = axera_models_[0]->GetOutputTensorData("d");
-
-    std::vector<int32_t> pred_dur;
-    ProcessDuration(duration, actual_len, speed, pred_dur, total_frames);
-
-    std::vector<float> pred_aln_trg =
-        CreateAlignmentMatrix(pred_dur, total_frames);
-
-    int32_t d_shape_2 = 640;
-    std::vector<float> en(total_frames * d_shape_2, 0.0f);
-
-    for (int32_t j = 0; j < d_shape_2; ++j) {
-      for (int32_t k = 0; k < total_frames; ++k) {
-        float sum = 0.0f;
-        for (int32_t i = 0; i < max_seq_len_; ++i) {
-          sum += d[i * d_shape_2 + j] * pred_aln_trg[i * total_frames + k];
+    for (int32_t t = 0; t != pitch_bucket_; ++t) {
+      float base_f0 = f0_pred[t];
+      for (int32_t h = 0; h != kHarmonicDim; ++h) {
+        float harmonic = base_f0 * static_cast<float>(h + 1);
+        float rad = std::fmod(harmonic / static_cast<float>(kKokoroSampleRate), 1.0f);
+        if (rad < 0) {
+          rad += 1.0f;
         }
-        en[j * total_frames + k] = sum;
+        cumulative[h] += rad;
+        phase_coarse[t * kHarmonicDim + h] =
+            cumulative[h] * kTwoPi * static_cast<float>(upsample_scale_);
       }
     }
 
-    std::vector<float> text_mask_float(text_mask.begin(), text_mask.end());
+    std::vector<float> sine_merge(sample_bucket_);
+    std::mt19937 rng(0);
+    std::normal_distribution<float> normal(0.0f, 1.0f);
 
-    if (!axera_models_[1]->SetInputTensorData("en", en.data(), en.size()) ||
-        !axera_models_[1]->SetInputTensorData("ref_s", ref_s.data(),
-                                              ref_s.size()) ||
-        !axera_models_[1]->SetInputTensorData("input_ids", input_ids_i32.data(),
-                                              input_ids_i32.size()) ||
-        !axera_models_[1]->SetInputTensorData(
-            "text_mask", text_mask_float.data(), text_mask_float.size()) ||
-        !axera_models_[1]->SetInputTensorData(
-            "pred_aln_trg", pred_aln_trg.data(), pred_aln_trg.size())) {
+    for (int32_t sample_index = 0; sample_index != sample_bucket_; ++sample_index) {
+      int32_t coarse_index = sample_index / upsample_scale_;
+      float coarse_f0 = f0_pred[coarse_index];
+      float uv = coarse_f0 > kVoicedThreshold ? 1.0f : 0.0f;
+      float noise_amp = uv * kNoiseStd + (1.0f - uv) * kUnvoicedNoiseScale;
+
+      float src = (static_cast<float>(sample_index) + 0.5f) /
+                      static_cast<float>(upsample_scale_) -
+                  0.5f;
+      if (src < 0.0f) {
+        src = 0.0f;
+      }
+
+      int32_t left = static_cast<int32_t>(std::floor(src));
+      int32_t right = std::min(left + 1, pitch_bucket_ - 1);
+      float w = src - static_cast<float>(left);
+      if (left >= pitch_bucket_ - 1) {
+        left = pitch_bucket_ - 1;
+        right = left;
+        w = 0.0f;
+      }
+
+      float merged = kHarmonicMergeBias;
+      for (int32_t h = 0; h != kHarmonicDim; ++h) {
+        float phase_left = phase_coarse[left * kHarmonicDim + h];
+        float phase_right = phase_coarse[right * kHarmonicDim + h];
+        float phase = phase_left * (1.0f - w) + phase_right * w;
+        float sine = std::sin(phase) * kSineAmp;
+        float noise = noise_amp * normal(rng);
+        float sine_wave = sine * uv + noise;
+        merged += sine_wave * kHarmonicMergeWeights[h];
+      }
+
+      sine_merge[sample_index] = std::tanh(merged);
+    }
+
+    std::vector<float> padded(sample_bucket_ + kStftNfft, 0.0f);
+    int32_t pad = kStftNfft / 2;
+    std::copy(sine_merge.begin(), sine_merge.end(), padded.begin() + pad);
+    std::fill(padded.begin(), padded.begin() + pad, sine_merge.front());
+    std::fill(padded.end() - pad, padded.end(), sine_merge.back());
+
+    std::array<float, kStftNfft> window{};
+    std::array<std::array<float, kStftNfft>, kStftNfft / 2 + 1> cos_table{};
+    std::array<std::array<float, kStftNfft>, kStftNfft / 2 + 1> sin_table{};
+
+    for (int32_t n = 0; n != kStftNfft; ++n) {
+      window[n] = 0.5f - 0.5f * std::cos(kTwoPi * n / static_cast<float>(kStftNfft));
+    }
+
+    for (int32_t k = 0; k != kStftNfft / 2 + 1; ++k) {
+      for (int32_t n = 0; n != kStftNfft; ++n) {
+        float angle = kTwoPi * k * n / static_cast<float>(kStftNfft);
+        cos_table[k][n] = std::cos(angle);
+        sin_table[k][n] = -std::sin(angle);
+      }
+    }
+
+    std::vector<float> har(har_channels_ * har_frames_);
+    for (int32_t frame = 0; frame != har_frames_; ++frame) {
+      const float *segment = padded.data() + frame * kStftHop;
+      for (int32_t k = 0; k != kStftNfft / 2 + 1; ++k) {
+        float real = 0.0f;
+        float imag = 0.0f;
+        for (int32_t n = 0; n != kStftNfft; ++n) {
+          float value = segment[n] * window[n];
+          real += value * cos_table[k][n];
+          imag += value * sin_table[k][n];
+        }
+
+        har[k * har_frames_ + frame] =
+            std::sqrt(real * real + imag * imag + 1e-14f);
+        float phase = std::atan2(imag, real);
+        if (imag == 0.0f && real < 0.0f) {
+          phase = kPi;
+        }
+        har[(k + kStftNfft / 2 + 1) * har_frames_ + frame] = phase;
+      }
+    }
+
+    return har;
+  }
+
+  bool RunModels(const std::vector<int64_t> &input_ids,
+                 const std::vector<float> &ref_s, float speed,
+                 std::vector<float> *audio) {
+    int32_t token_length = static_cast<int32_t>(input_ids.size());
+    if (token_length > token_bucket_) {
+      SHERPA_ONNX_LOGE(
+          "Token length %d exceeds Axera token bucket %d. Use a shorter text "
+          "or export a larger static bucket.",
+          token_length, token_bucket_);
       return false;
     }
 
-    if (!axera_models_[1]->Run()) {
+    std::vector<int32_t> padded_input_ids(token_bucket_, 0);
+    for (int32_t i = 0; i != token_length; ++i) {
+      padded_input_ids[i] = static_cast<int32_t>(input_ids[i]);
+    }
+
+    std::vector<uint8_t> padded_text_mask =
+        BuildPaddedTextMask(token_length, token_bucket_);
+
+    if (!encoder_model_->SetInputTensorData("input_ids", padded_input_ids.data(),
+                                            padded_input_ids.size()) ||
+        !encoder_model_->SetInputTensorData("text_mask", padded_text_mask.data(),
+                                            padded_text_mask.size()) ||
+        !encoder_model_->Run()) {
       return false;
     }
 
-    std::vector<float> f0_pred =
-        axera_models_[1]->GetOutputTensorData("F0_pred");
-    std::vector<float> n_pred = axera_models_[1]->GetOutputTensorData("N_pred");
-    std::vector<float> asr = axera_models_[1]->GetOutputTensorData("asr");
+    std::vector<float> padded_d_en = encoder_model_->GetOutputTensorData("d_en");
+    std::vector<float> d_en =
+        CropLastDim(padded_d_en, 512, token_bucket_, token_length);
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-    std::array<int64_t, 2> f0_shape = {1, static_cast<int64_t>(f0_pred.size())};
-    Ort::Value f0_tensor =
-        Ort::Value::CreateTensor(memory_info, f0_pred.data(), f0_pred.size(),
-                                 f0_shape.data(), f0_shape.size());
 
-    auto out4 = model4_->Run({}, model4_input_names_ptr_.data(), &f0_tensor, 1,
-                             model4_output_names_ptr_.data(),
-                             model4_output_names_ptr_.size());
-    float *p_har = out4[0].GetTensorMutableData<float>();
-    auto har_shape = out4[0].GetTensorTypeAndShapeInfo().GetShape();
-    int64_t har_num_elements = 1;
-    for (auto d : har_shape) {
-      har_num_elements *= d;
-    }
-    std::vector<float> har(p_har, p_har + har_num_elements);
+    std::array<int64_t, 3> d_en_shape = {1, 512, token_length};
+    std::array<int64_t, 2> ref_s_shape = {1, ref_s_dim_};
+    std::array<int64_t, 1> input_lengths_shape = {1};
+    std::array<int64_t, 2> duration_text_mask_shape = {1, token_length};
+    std::array<int64_t, 1> speed_shape = {1};
 
-    if (!axera_models_[2]->SetInputTensorData("asr", asr.data(), asr.size()) ||
-        !axera_models_[2]->SetInputTensorData("F0_pred", f0_pred.data(),
-                                              f0_pred.size()) ||
-        !axera_models_[2]->SetInputTensorData("N_pred", n_pred.data(),
-                                              n_pred.size()) ||
-        !axera_models_[2]->SetInputTensorData("ref_s", ref_s.data(),
-                                              ref_s.size()) ||
-        !axera_models_[2]->SetInputTensorData("har", har.data(), har.size())) {
+    std::array<int64_t, 1> input_lengths = {token_length};
+    std::unique_ptr<bool[]> duration_text_mask(new bool[token_length]());
+
+    Ort::Value d_en_tensor = Ort::Value::CreateTensor(
+        memory_info, d_en.data(), d_en.size(), d_en_shape.data(), d_en_shape.size());
+    Ort::Value ref_s_tensor = Ort::Value::CreateTensor(
+        memory_info, const_cast<float *>(ref_s.data()), ref_s.size(),
+        ref_s_shape.data(), ref_s_shape.size());
+    Ort::Value input_lengths_tensor = Ort::Value::CreateTensor(
+        memory_info, input_lengths.data(), input_lengths.size(),
+        input_lengths_shape.data(), input_lengths_shape.size());
+    Ort::Value duration_text_mask_tensor = Ort::Value::CreateTensor(
+        memory_info, duration_text_mask.get(), token_length,
+        duration_text_mask_shape.data(), duration_text_mask_shape.size());
+    Ort::Value speed_tensor = Ort::Value::CreateTensor(
+        memory_info, &speed, 1, speed_shape.data(), speed_shape.size());
+
+    std::array<Ort::Value, 5> duration_inputs = {
+        std::move(d_en_tensor), std::move(ref_s_tensor),
+        std::move(input_lengths_tensor), std::move(duration_text_mask_tensor),
+        std::move(speed_tensor)};
+
+    auto duration_outputs = duration_predictor_->Run(
+        {}, duration_input_names_ptr_.data(), duration_inputs.data(),
+        duration_inputs.size(), duration_output_names_ptr_.data(),
+        duration_output_names_ptr_.size());
+
+    auto pred_aln_shape = duration_outputs[2].GetTensorTypeAndShapeInfo().GetShape();
+    auto en_shape = duration_outputs[3].GetTensorTypeAndShapeInfo().GetShape();
+    if (pred_aln_shape.size() != 3 || en_shape.size() != 3) {
+      SHERPA_ONNX_LOGE("Unexpected duration predictor output shapes");
       return false;
     }
 
-    if (!axera_models_[2]->Run()) {
+    int32_t frame_length = static_cast<int32_t>(pred_aln_shape[2]);
+    if (frame_length > frame_bucket_) {
+      SHERPA_ONNX_LOGE(
+          "Frame length %d exceeds Axera frame bucket %d. Use a shorter text, "
+          "increase speed, or export a larger static bucket.",
+          frame_length, frame_bucket_);
       return false;
     }
 
-    std::vector<float> x_out = axera_models_[2]->GetOutputTensorData("x");
-    PostprocessXToAudio(x_out, 23041, audio);
+    const float *pred_aln_ptr = duration_outputs[2].GetTensorData<float>();
+    int32_t pred_aln_elems =
+        static_cast<int32_t>(duration_outputs[2].GetTensorTypeAndShapeInfo().GetElementCount());
+    std::vector<float> pred_aln_trg(pred_aln_ptr, pred_aln_ptr + pred_aln_elems);
+    std::vector<float> padded_alignment = PadAlignment(
+        pred_aln_trg, token_length, frame_length, token_bucket_, frame_bucket_);
 
-    if (repeat_count > 1) {
-      actual_content_frames = std::accumulate(
-          pred_dur.begin(), pred_dur.begin() + original_actual_len, 0);
-      audio.erase(audio.begin() + audio.size() / repeat_count, audio.end());
-      total_frames = total_frames / repeat_count;
-    } else {
-      actual_content_frames =
-          std::accumulate(pred_dur.begin(), pred_dur.begin() + actual_len, 0);
+    if (!text_encoder_model_->SetInputTensorData("input_ids", padded_input_ids.data(),
+                                                 padded_input_ids.size()) ||
+        !text_encoder_model_->SetInputTensorData("pred_aln_trg",
+                                                 padded_alignment.data(),
+                                                 padded_alignment.size()) ||
+        !text_encoder_model_->SetInputTensorData("text_mask",
+                                                 padded_text_mask.data(),
+                                                 padded_text_mask.size()) ||
+        !text_encoder_model_->Run()) {
+      return false;
     }
+
+    std::vector<float> asr = text_encoder_model_->GetOutputTensorData("asr");
+
+    const float *en_ptr = duration_outputs[3].GetTensorData<float>();
+    int32_t en_elems = static_cast<int32_t>(
+        duration_outputs[3].GetTensorTypeAndShapeInfo().GetElementCount());
+    std::vector<float> en(en_ptr, en_ptr + en_elems);
+    std::vector<float> padded_en = PadLastDim(en, 640, frame_length, frame_bucket_);
+
+    if (!f0n_shared_model_->SetInputTensorData("en", padded_en.data(),
+                                               padded_en.size()) ||
+        !f0n_shared_model_->Run()) {
+      return false;
+    }
+
+    std::vector<float> shared = f0n_shared_model_->GetOutputTensorData("shared");
+    if (!f0n_head_model_->SetInputTensorData("shared", shared.data(), shared.size()) ||
+        !f0n_head_model_->SetInputTensorData("ref_s", ref_s.data(), ref_s.size()) ||
+        !f0n_head_model_->Run()) {
+      return false;
+    }
+
+    std::vector<float> f0_pred = f0n_head_model_->GetOutputTensorData("F0_pred");
+    std::vector<float> n_pred = f0n_head_model_->GetOutputTensorData("N_pred");
+    std::vector<float> timbre(ref_s.begin(), ref_s.begin() + timbre_dim_);
+
+    if (!decoder_front_model_->SetInputTensorData("asr", asr.data(), asr.size()) ||
+        !decoder_front_model_->SetInputTensorData("F0_pred", f0_pred.data(),
+                                                  f0_pred.size()) ||
+        !decoder_front_model_->SetInputTensorData("N_pred", n_pred.data(),
+                                                  n_pred.size()) ||
+        !decoder_front_model_->SetInputTensorData("timbre", timbre.data(),
+                                                  timbre.size()) ||
+        !decoder_front_model_->Run()) {
+      return false;
+    }
+
+    std::vector<float> decoder_state =
+        decoder_front_model_->GetOutputTensorData("decoder_state");
+    std::vector<float> har = BuildHar(f0_pred);
+
+    if (!vocoder_model_->SetInputTensorData("decoder_state", decoder_state.data(),
+                                            decoder_state.size()) ||
+        !vocoder_model_->SetInputTensorData("timbre", timbre.data(),
+                                            timbre.size()) ||
+        !vocoder_model_->SetInputTensorData("har", har.data(), har.size()) ||
+        !vocoder_model_->Run()) {
+      return false;
+    }
+
+    *audio = vocoder_model_->GetOutputTensorData("waveform");
+    int32_t sample_length = frame_length * samples_per_frame_;
+    if (sample_length < static_cast<int32_t>(audio->size())) {
+      audio->resize(sample_length);
+    }
+
     return true;
   }
 
-  void ProcessDuration(const std::vector<float> &duration, int32_t actual_len,
-                       float speed, std::vector<int32_t> &pred_dur,
-                       int32_t &total_frames) {
-    std::vector<int32_t> pred_dur_original(actual_len, 0);
-    std::vector<float> duration_processed = Sigmoid(duration);
-
-    int32_t dur_shape_2 = 50;
-    for (int32_t i = 0; i < actual_len; i++) {
-      float sum = 0;
-      for (int32_t n = 0; n < dur_shape_2; n++) {
-        sum += duration_processed[i * dur_shape_2 + n];
-      }
-      sum /= speed;
-      pred_dur_original[i] =
-          static_cast<int32_t>(std::max(1.f, std::round(sum)));
-    }
-
-    std::vector<int32_t> pred_dur_padding(max_seq_len_ - actual_len, 0);
-    pred_dur = pred_dur_original;
-    pred_dur.insert(pred_dur.end(), pred_dur_padding.begin(),
-                    pred_dur_padding.end());
-
-    int32_t fixed_total_frames = max_seq_len_ * 2;
-    int32_t actual_frames =
-        std::accumulate(pred_dur.begin(), pred_dur.begin() + actual_len, 0);
-    int32_t diff = fixed_total_frames - actual_frames;
-
-    if (diff < 0) {
-      auto indices = Argsort(pred_dur, actual_len, true);
-      int32_t decreased = 0;
-      for (auto idx : indices) {
-        if (pred_dur[idx] > 1 && decreased < std::abs(diff)) {
-          pred_dur[idx]--;
-          decreased++;
-        }
-        if (decreased >= std::abs(diff)) break;
-      }
-    }
-
-    actual_frames =
-        std::accumulate(pred_dur.begin(), pred_dur.begin() + actual_len, 0);
-    int32_t remaining_frames = fixed_total_frames - actual_frames;
-    int32_t padding_len = max_seq_len_ - actual_len;
-
-    if (remaining_frames > 0 && padding_len > 0) {
-      int32_t frames_per_padding = remaining_frames / padding_len;
-      int32_t remainder = remaining_frames % padding_len;
-
-      for (int32_t i = actual_len; i < static_cast<int32_t>(pred_dur.size());
-           i++)
-        pred_dur[i] = frames_per_padding;
-
-      if (remainder > 0) {
-        for (int32_t i = actual_len; i < actual_len + remainder; i++)
-          pred_dur[i] += 1;
-      }
-    }
-
-    total_frames = std::accumulate(pred_dur.begin(), pred_dur.end(), 0);
-  }
-
-  std::vector<float> CreateAlignmentMatrix(const std::vector<int32_t> &pred_dur,
-                                           int32_t total_frames) {
-    std::vector<int32_t> seq_range(max_seq_len_);
-    std::iota(seq_range.begin(), seq_range.end(), 0);
-    auto indices = NpRepeat(seq_range, pred_dur);
-
-    std::vector<float> pred_aln_trg(max_seq_len_ * total_frames, 0.0f);
-    if (!indices.empty()) {
-      int32_t col = 0;
-      for (auto i : indices) {
-        pred_aln_trg[i * total_frames + col] = 1.0f;
-        col++;
-      }
-    }
-
-    return pred_aln_trg;
-  }
-
-  void PostprocessXToAudio(const std::vector<float> &x, int32_t num_frames,
-                           std::vector<float> &audio) {
-    int32_t n_fft = 20;
-    int32_t hop_length = 5;
-    int32_t half_n_fft = n_fft / 2 + 1;
-
-    std::vector<float> spec_part(half_n_fft * num_frames);
-    std::vector<float> phase_part(half_n_fft * num_frames);
-    std::vector<float> cos_part(half_n_fft * num_frames);
-    spec_part.assign(x.begin(), x.begin() + half_n_fft * num_frames);
-    phase_part.assign(x.begin() + half_n_fft * num_frames, x.end());
-
-    for (int32_t i = 0; i < half_n_fft * num_frames; i++) {
-      spec_part[i] = std::exp(spec_part[i]);
-      phase_part[i] = std::sin(phase_part[i]);
-      cos_part[i] = std::sqrt(
-          1.f - std::max(0.f, std::min(phase_part[i] * phase_part[i], 1.0f)));
-    }
-
-    knf::StftResult stft_result;
-    stft_result.num_frames = num_frames;
-    stft_result.real.resize(half_n_fft * num_frames);
-    stft_result.imag.resize(half_n_fft * num_frames);
-
-    for (int32_t i = 0; i < half_n_fft; i++) {
-      for (int32_t n = 0; n < num_frames; n++) {
-        float spec = spec_part[i * num_frames + n];
-        float real_part = spec * cos_part[i * num_frames + n];
-        float imag_part = spec * phase_part[i * num_frames + n];
-
-        // StftResult layout is [frame_index * half_n_fft + bin]
-        stft_result.real[n * half_n_fft + i] = real_part;
-        stft_result.imag[n * half_n_fft + i] = imag_part;
-      }
-    }
-
-    knf::StftConfig stft_config;
-    stft_config.n_fft = n_fft;
-    stft_config.hop_length = hop_length;
-    stft_config.win_length = n_fft;
-    stft_config.center = true;
-    stft_config.normalized = false;
-    stft_config.window_type = "hann";
-    stft_config.pad_mode = "reflect";
-
-    knf::IStft istft(stft_config);
-    audio = istft.Compute(stft_result);
-  }
-
-  void TrimAudioByContent(std::vector<float> &audio,
-                          int32_t actual_content_frames, int32_t total_frames,
-                          int32_t actual_len) {
-    int32_t padding_len = max_seq_len_ - actual_len;
-    if (padding_len > 0) {
-      float content_ratio = actual_content_frames * 1.0f / total_frames;
-      int32_t audio_len_to_keep =
-          static_cast<int32_t>(audio.size() * content_ratio);
-      audio.resize(audio_len_to_keep);
-    }
-  }
-
-  void PrepareInputIds(std::vector<int64_t> &input_ids, int32_t &actual_len,
-                       int32_t &repeat_count) {
-    repeat_count = 1;
-    int32_t original_actual_len = actual_len;
-
-    if (actual_len <= 32) {  // REPEAT_INPUT_THRESHOLD
-      repeat_count = std::min(3, max_seq_len_ / std::max(actual_len, 1));
-      if (repeat_count <= 1) {
-        return;
-      }
-
-      std::vector<int64_t> valid_content(input_ids.begin(),
-                                         input_ids.begin() + actual_len);
-      std::vector<int64_t> repeated_input_ids;
-      repeated_input_ids.reserve(max_seq_len_);
-
-      for (int32_t i = 0; i < repeat_count; ++i) {
-        repeated_input_ids.insert(repeated_input_ids.end(),
-                                  valid_content.begin(), valid_content.end());
-      }
-
-      int32_t padding_len = max_seq_len_ - repeat_count * actual_len;
-      if (padding_len > 0) {
-        std::vector<int64_t> padding(padding_len, 0);
-        repeated_input_ids.insert(repeated_input_ids.end(), padding.begin(),
-                                  padding.end());
-      } else {
-        repeated_input_ids.resize(max_seq_len_);
-      }
-
-      input_ids = repeated_input_ids;
-      actual_len = std::min(original_actual_len * repeat_count, max_seq_len_);
-    }
-  }
-
-  void ComputeExternalPreprocessing(int32_t actual_len,
-                                    std::vector<int32_t> &text_mask) {
-    text_mask.resize(max_seq_len_);
-    for (int32_t i = 0; i < max_seq_len_; i++) {
-      text_mask[i] = (i >= actual_len) ? 1 : 0;
-    }
-  }
-
  private:
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   AxEngineGuard ax_engine_guard_;
 
   OfflineTtsModelConfig config_;
@@ -781,19 +839,33 @@ class OfflineTtsKokoroModelAxera::Impl {
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
-  std::vector<std::unique_ptr<AxeraModel>> axera_models_;
+  std::unique_ptr<AxeraModel> encoder_model_;
+  std::unique_ptr<AxeraModel> text_encoder_model_;
+  std::unique_ptr<AxeraModel> f0n_shared_model_;
+  std::unique_ptr<AxeraModel> f0n_head_model_;
+  std::unique_ptr<AxeraModel> decoder_front_model_;
+  std::unique_ptr<AxeraModel> vocoder_model_;
 
-  std::unique_ptr<Ort::Session> model4_;
-  std::vector<std::string> model4_input_names_;
-  std::vector<const char *> model4_input_names_ptr_;
-  std::vector<std::string> model4_output_names_;
-  std::vector<const char *> model4_output_names_ptr_;
+  std::unique_ptr<Ort::Session> duration_predictor_;
+  std::vector<std::string> duration_input_names_;
+  std::vector<const char *> duration_input_names_ptr_;
+  std::vector<std::string> duration_output_names_;
+  std::vector<const char *> duration_output_names_ptr_;
 
   OfflineTtsKokoroModelMetaData meta_data_;
   std::vector<int32_t> style_dim_;
   std::vector<float> styles_;
 
-  int32_t max_seq_len_;
+  int32_t token_bucket_ = 0;
+  int32_t frame_bucket_ = 0;
+  int32_t pitch_bucket_ = 0;
+  int32_t sample_bucket_ = 0;
+  int32_t ref_s_dim_ = 0;
+  int32_t timbre_dim_ = 0;
+  int32_t har_channels_ = 0;
+  int32_t har_frames_ = 0;
+  int32_t upsample_scale_ = 0;
+  int32_t samples_per_frame_ = 0;
 };
 
 OfflineTtsKokoroModelAxera::~OfflineTtsKokoroModelAxera() = default;
