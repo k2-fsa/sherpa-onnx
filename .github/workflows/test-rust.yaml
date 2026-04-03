@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - rust-api
       - rust
   workflow_dispatch:
 
