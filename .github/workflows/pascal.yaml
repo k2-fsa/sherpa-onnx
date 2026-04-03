@@ -61,18 +61,16 @@ jobs:
           brew install fpc
           # brew install --cask lazarus
           #
-      - name: Install Free pascal compiler (windows)
+      # See https://github.com/gcarreno/setup-lazarus
+      - uses: gcarreno/setup-lazarus@v3.3.1
         if: matrix.os == 'windows-2022'
-        shell: bash
-        run: |
-          choco install lazarus
-
-          ls -lh /c/lazarus/fpc/3.2.2/bin/x86_64-win64/
+        with:
+          lazarus-version: "stable"
+          with-cache: false
 
       - name: FPC info
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
           which fpc
           fpc -i
 
@@ -137,8 +135,6 @@ jobs:
       - name:  Run Pascal test (Cohere Transcribe)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
@@ -150,8 +146,6 @@ jobs:
       - name:  Run Speech Enhancement test
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd speech-enhancement-gtcrn
@@ -177,8 +171,6 @@ jobs:
       - name:  Run Pascal test (TTS)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
           pushd tts
 
@@ -238,8 +230,6 @@ jobs:
       - name:  Run Pascal test (Non Streaming ASR)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
@@ -329,8 +319,6 @@ jobs:
       - name:  Run Pascal test (Streaming ASR)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd streaming-asr
@@ -366,8 +354,6 @@ jobs:
       - name:  Run Pascal test (VAD test)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd vad
@@ -387,8 +373,6 @@ jobs:
       - name:  Run Pascal test (Speaker diarization)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
           pushd speaker-diarization
 
@@ -402,8 +386,6 @@ jobs:
       - name:  Run Pascal test (VAD + non-streaming ASR)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd vad-with-non-streaming-asr
@@ -435,8 +417,6 @@ jobs:
       - name:  Run Pascal test (Read wav test)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd read-wav
