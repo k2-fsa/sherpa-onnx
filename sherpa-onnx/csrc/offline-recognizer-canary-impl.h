@@ -157,14 +157,8 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       const auto &s = symbol_table_[token_id];
       text += s;
       r.tokens.push_back(s);
-
-      if (idx < token_log_probs.size()) {
-        r.token_log_probs.push_back(token_log_probs[idx]);
-      }
-
-      if (idx < vocab_log_probs.size()) {
-        r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
-      }
+      r.token_log_probs.push_back(token_log_probs[idx]);
+      r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
     }
 
     r.text = std::move(text);
@@ -174,12 +168,11 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
 
   std::pair<int32_t, float> GetMaxTokenIdWithConfidence(
       Ort::Value *logits,
-      std::vector<float> *full_distribution = nullptr) const {
+      std::vector<float> *full_distribution) const {
     // logits is of shape (1, 1, vocab_size)
     auto meta = model_->GetModelMetadata();
     const float *p_logits = logits->GetTensorData<float>();
 
-    // Compute log-softmax into the output distribution (or a temporary)
     std::vector<float> log_probs(p_logits, p_logits + meta.vocab_size);
     LogSoftmax(log_probs.data(), meta.vocab_size);
 
@@ -187,9 +180,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
         MaxElementIndex(log_probs.data(), meta.vocab_size);
     float max_log_prob = log_probs[max_token_id];
 
-    if (full_distribution != nullptr) {
-      *full_distribution = std::move(log_probs);
-    }
+    *full_distribution = std::move(log_probs);
 
     return {max_token_id, max_log_prob};
   }

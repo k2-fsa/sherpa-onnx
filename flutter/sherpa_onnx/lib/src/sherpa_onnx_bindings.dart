@@ -822,6 +822,35 @@ final class SherpaOnnxVocabLogProbs extends Struct {
   external int vocabSize;
 }
 
+/// Read a native [SherpaOnnxVocabLogProbs] pointer into a Dart list-of-lists
+/// and free the native memory via [destroyFunc].  Returns `null` when
+/// [vocabPtr] is null or the sizes look invalid.
+List<List<double>>? readAndFreeVocabLogProbs(
+  Pointer<SherpaOnnxVocabLogProbs> vocabPtr,
+  void Function(Pointer<SherpaOnnxVocabLogProbs>) destroyFunc,
+) {
+  if (vocabPtr == nullptr) {
+    return null;
+  }
+
+  final ref = vocabPtr.ref;
+  final numTokens = ref.numTokens;
+  final vocabSize = ref.vocabSize;
+
+  if (numTokens <= 0 || vocabSize <= 0 ||
+      numTokens > 10000 || vocabSize > 100000) {
+    destroyFunc(vocabPtr);
+    return null;
+  }
+
+  final flat = ref.logProbs.asTypedList(numTokens * vocabSize);
+  final result = List.generate(numTokens, (i) =>
+      List<double>.generate(vocabSize, (j) => flat[i * vocabSize + j]));
+
+  destroyFunc(vocabPtr);
+  return result;
+}
+
 final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
 
 final class SherpaOnnxOnlineSpeechDenoiser extends Opaque {}

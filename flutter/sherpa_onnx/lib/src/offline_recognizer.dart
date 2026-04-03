@@ -1250,6 +1250,7 @@ class OfflineRecognizer {
       return OfflineRecognizerResult(
         text: '',
         tokens: [],
+        tokenLogProbs: [],
         timestamps: [],
         lang: '',
         emotion: '',

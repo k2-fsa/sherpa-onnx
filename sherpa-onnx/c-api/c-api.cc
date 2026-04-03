@@ -937,15 +937,25 @@ static const SherpaOnnxVocabLogProbs *FlattenVocabLogProbs(
     return nullptr;
   }
 
-  auto vocab_probs = new SherpaOnnxVocabLogProbs;
-  vocab_probs->num_tokens = vocab_log_probs.size();
-  vocab_probs->vocab_size = vocab_log_probs[0].size();
+  int32_t num_tokens = vocab_log_probs.size();
+  int32_t vocab_size = vocab_log_probs[0].size();
 
-  float *flat_probs =
-      new float[vocab_probs->num_tokens * vocab_probs->vocab_size];
-  for (int32_t i = 0; i < vocab_probs->num_tokens; ++i) {
+  auto vocab_probs = new SherpaOnnxVocabLogProbs;
+  vocab_probs->num_tokens = num_tokens;
+  vocab_probs->vocab_size = vocab_size;
+
+  float *flat_probs = new float[num_tokens * vocab_size];
+  for (int32_t i = 0; i < num_tokens; ++i) {
+    if (static_cast<int32_t>(vocab_log_probs[i].size()) != vocab_size) {
+      SHERPA_ONNX_LOGE("vocab_log_probs[%d] size %d != expected %d", i,
+                        static_cast<int32_t>(vocab_log_probs[i].size()),
+                        vocab_size);
+      delete[] flat_probs;
+      delete vocab_probs;
+      return nullptr;
+    }
     std::copy(vocab_log_probs[i].begin(), vocab_log_probs[i].end(),
-              flat_probs + i * vocab_probs->vocab_size);
+              flat_probs + i * vocab_size);
   }
   vocab_probs->log_probs = flat_probs;
 
