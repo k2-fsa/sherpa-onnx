@@ -37,6 +37,7 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
  private:
   void InitPromptTemplateIds();
   std::vector<int64_t> BuildSourceIds(const std::string &hotwords,
+                                      const std::string &language,
                                       int32_t audio_token_len,
                                       int32_t *before_len,
                                       int32_t *fake_audio_token_len) const;
@@ -62,6 +63,7 @@ class OfflineRecognizerQwen3ASRImpl : public OfflineRecognizerImpl {
   std::unique_ptr<QwenAsrTokenizer> tokenizer_;
   std::vector<int64_t> audio_pad_ids_;
   std::vector<int64_t> prompt_ids_after_;
+  int64_t asr_text_token_id_ = -1;
   mutable std::mt19937 rng_;
 };
 

@@ -356,10 +356,17 @@ void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
     SHERPA_ONNX_LOGE("Failed to tokenize <|audio_pad|> for qwen3-asr prompt");
     SHERPA_ONNX_EXIT(-1);
   }
+
+  asr_text_token_id_ = tokenizer_->GetTokenId("<asr_text>");
+  if (asr_text_token_id_ < 0) {
+    SHERPA_ONNX_LOGE("Failed to locate <asr_text> token id for qwen3-asr");
+    SHERPA_ONNX_EXIT(-1);
+  }
 }
 
 std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
-    const std::string &hotwords, int32_t audio_token_len, int32_t *before_len,
+    const std::string &hotwords, const std::string &language,
+    int32_t audio_token_len, int32_t *before_len,
     int32_t *fake_audio_token_len) const {
   const std::string before_utf8 = std::string(kQwen3SystemPromptPrefix) +
                                   hotwords + kQwen3SystemPromptSuffix;
@@ -372,11 +379,27 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
     *fake_audio_token_len = audio_token_len;
   }
 
+  std::vector<int64_t> prompt_ids_after_with_language;
+  const std::vector<int64_t> *ids_after = &prompt_ids_after_;
+  if (!language.empty()) {
+    auto language_ids = tokenizer_->Encode("language " + language);
+    prompt_ids_after_with_language.reserve(prompt_ids_after_.size() +
+                                           language_ids.size() + 1);
+    prompt_ids_after_with_language.insert(prompt_ids_after_with_language.end(),
+                                          prompt_ids_after_.begin(),
+                                          prompt_ids_after_.end());
+    prompt_ids_after_with_language.insert(prompt_ids_after_with_language.end(),
+                                          language_ids.begin(),
+                                          language_ids.end());
+    prompt_ids_after_with_language.push_back(asr_text_token_id_);
+    ids_after = &prompt_ids_after_with_language;
+  }
+
   std::vector<int64_t> source_ids;
   size_t estimated_size =
       prompt_ids_before.size() +
       static_cast<size_t>(audio_token_len) * audio_pad_ids_.size() +
-      prompt_ids_after_.size();
+      ids_after->size();
   source_ids.reserve(estimated_size);
   source_ids.insert(source_ids.end(), prompt_ids_before.begin(),
                     prompt_ids_before.end());
@@ -386,8 +409,7 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
                       audio_pad_ids_.end());
   }
 
-  source_ids.insert(source_ids.end(), prompt_ids_after_.begin(),
-                    prompt_ids_after_.end());
+  source_ids.insert(source_ids.end(), ids_after->begin(), ids_after->end());
 
   return source_ids;
 }
@@ -689,10 +711,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   const std::string hotwords = Qwen3FormatHotwordsForPrompt(
       stream->HasOption("hotwords") ? stream->GetOption("hotwords") : "");
 
+  std::string language;
+  if (stream->HasOption("language")) {
+    language = stream->GetOption("language");
+  }
+
   int32_t before_len = 0;
   int32_t fake_audio_token_len = 0;
   std::vector<int64_t> source_ids = BuildSourceIds(
-      hotwords, audio_token_len, &before_len, &fake_audio_token_len);
+      hotwords, language, audio_token_len, &before_len, &fake_audio_token_len);
 
   int32_t context_len = static_cast<int32_t>(source_ids.size());
   if (context_len == 0) {
@@ -953,7 +980,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
 
   // drop the first 3 tokens which contain things like:
   // language None<asr_text>
-  if (generated_ids.size() >= 3) {
+  // When a language hint is pre-filled, the model does not generate these
+  // tokens, so skip the drop to avoid destroying real transcript tokens.
+  if (language.empty() && generated_ids.size() >= 3) {
     generated_ids.erase(generated_ids.begin(), generated_ids.begin() + 3);
   }
 

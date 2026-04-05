@@ -25,6 +25,7 @@ class QwenAsrTokenizer {
   std::string Decode(const std::vector<int64_t> &token_ids);
   std::string GetTokenStringStreaming(int64_t token_id,
                                       std::string *pending_bytes) const;
+  int64_t GetTokenId(const std::string &token) const;
 
   int64_t GetEosTokenId() const { return eos_token_id_; }
   int64_t GetPadTokenId() const { return pad_token_id_; }

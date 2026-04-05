@@ -1243,6 +1243,15 @@ std::vector<int64_t> QwenAsrTokenizer::Encode(const std::string &text) {
   return ans;
 }
 
+int64_t QwenAsrTokenizer::GetTokenId(const std::string &token) const {
+  auto it = token2id_.find(token);
+  if (it == token2id_.end()) {
+    return -1;
+  }
+
+  return it->second;
+}
+
 std::string QwenAsrTokenizer::Decode(const std::vector<int64_t> &token_ids) {
   std::string ans;
   std::string buffer;
