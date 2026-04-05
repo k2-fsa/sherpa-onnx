@@ -978,23 +978,37 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     ++cur_len;
   }
 
-  // drop the first 3 tokens which contain things like:
-  // language None<asr_text>
-  // When a language hint is pre-filled, the model does not generate these
-  // tokens, so skip the drop to avoid destroying real transcript tokens.
-  if (language.empty() && generated_ids.size() >= 3) {
-    generated_ids.erase(generated_ids.begin(), generated_ids.begin() + 3);
+  std::vector<int64_t> cleaned_ids = generated_ids;
+  if (!generated_ids.empty()) {
+    const size_t prefix_window = std::min<size_t>(16, generated_ids.size());
+    auto asr_text_it = std::find(generated_ids.begin(),
+                                 generated_ids.begin() + prefix_window,
+                                 asr_text_token_id_);
+
+    // Only strip a leading scaffold prefix recognized by token ID.
+    if (asr_text_it != generated_ids.begin() + prefix_window &&
+        asr_text_it != generated_ids.begin()) {
+      std::vector<int64_t> prefix_ids(generated_ids.begin(),
+                                      std::next(asr_text_it));
+      std::string prefix_text = tokenizer_->Decode(prefix_ids);
+      if (prefix_text.rfind("language ", 0) == 0 &&
+          prefix_text.size() >= 10 &&
+          prefix_text.compare(prefix_text.size() - 10, 10, "<asr_text>") ==
+              0) {
+        cleaned_ids.assign(std::next(asr_text_it), generated_ids.end());
+      }
+    }
   }
 
-  result.text = tokenizer_->Decode(generated_ids);
+  result.text = tokenizer_->Decode(cleaned_ids);
   RemoveUtf8ReplacementChars(&result.text);
 
-  if (!generated_ids.empty()) {
+  if (!cleaned_ids.empty()) {
     std::vector<std::string> all_tokens;
-    all_tokens.reserve(generated_ids.size());
+    all_tokens.reserve(cleaned_ids.size());
     std::string pending_bytes;
 
-    for (int64_t token_id : generated_ids) {
+    for (int64_t token_id : cleaned_ids) {
       std::string s =
           tokenizer_->GetTokenStringStreaming(token_id, &pending_bytes);
       all_tokens.push_back(std::move(s));
@@ -1004,25 +1018,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       all_tokens.back().append("\xEF\xBF\xBD");
     }
 
-    std::string concat;
-    size_t skip = 0;
-    bool stripped = false;
-    for (size_t i = 0; i < all_tokens.size(); ++i) {
-      concat += all_tokens[i];
-      if (concat.find("<asr_text>") != std::string::npos) {
-        skip = i + 1;
-        stripped = true;
-        break;
-      }
-    }
-    if (stripped && skip <= all_tokens.size()) {
-      result.tokens.reserve(all_tokens.size() - skip);
-      for (size_t i = skip; i < all_tokens.size(); ++i) {
-        result.tokens.push_back(std::move(all_tokens[i]));
-      }
-    } else {
-      result.tokens = std::move(all_tokens);
-    }
+    result.tokens = std::move(all_tokens);
   }
 
   return result;
