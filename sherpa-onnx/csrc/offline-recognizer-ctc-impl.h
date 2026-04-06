@@ -59,7 +59,9 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
 
     r.tokens.push_back(std::move(sym));
-    r.token_log_probs.push_back(src.token_log_probs[i]);
+    if (i < static_cast<int32_t>(src.token_log_probs.size())) {
+      r.token_log_probs.push_back(src.token_log_probs[i]);
+    }
   }
 
   if (sym_table.IsByteBpe()) {
