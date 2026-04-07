@@ -75,6 +75,9 @@ static OfflineRecognitionResult Convert(
   // Copy token log probabilities (confidence scores)
   r.ys_log_probs = src.ys_log_probs;
 
+  // Copy full vocabulary log probabilities
+  r.vocab_log_probs = src.vocab_log_probs;
+
   return r;
 }
 

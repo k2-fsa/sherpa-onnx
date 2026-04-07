@@ -27,6 +27,11 @@ struct OfflineTransducerDecoderResult {
 
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
+
+  /// Full vocabulary log probabilities at each decoded token position.
+  /// vocab_log_probs[i] has vocab_size entries for tokens[i].
+  /// May be empty if not captured by the decoder.
+  std::vector<std::vector<float>> vocab_log_probs;
 };
 
 class OfflineTransducerDecoder {

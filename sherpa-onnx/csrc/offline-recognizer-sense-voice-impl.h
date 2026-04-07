@@ -58,6 +58,9 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
   for (int32_t i = start; i < static_cast<int32_t>(src.token_log_probs.size()); ++i) {
     r.token_log_probs.push_back(src.token_log_probs[i]);
   }
+  for (int32_t i = start; i < static_cast<int32_t>(src.vocab_log_probs.size()); ++i) {
+    r.vocab_log_probs.push_back(src.vocab_log_probs[i]);
+  }
 
   if (!is_funasr_nano) {
     // parse lang, emotion and event from tokens.

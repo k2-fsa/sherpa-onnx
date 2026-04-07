@@ -85,6 +85,7 @@ static OfflineTransducerDecoderResult DecodeOne(
         ans.tokens.push_back(y);
         ans.timestamps.push_back(t);
         ans.ys_log_probs.push_back(log_prob);
+        ans.vocab_log_probs.emplace_back(p_logit, p_logit + vocab_size);
 
         decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
@@ -169,6 +170,8 @@ static OfflineTransducerDecoderResult DecodeOneTDT(
       ans.timestamps.push_back(t);
       ans.durations.push_back(skip);
       ans.ys_log_probs.push_back(log_prob);
+      ans.vocab_log_probs.emplace_back(
+          token_logits_copy.begin(), token_logits_copy.end());
 
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 

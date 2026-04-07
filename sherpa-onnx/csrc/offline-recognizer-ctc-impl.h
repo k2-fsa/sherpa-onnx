@@ -62,6 +62,9 @@ OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     if (i < static_cast<int32_t>(src.token_log_probs.size())) {
       r.token_log_probs.push_back(src.token_log_probs[i]);
     }
+    if (i < static_cast<int32_t>(src.vocab_log_probs.size())) {
+      r.vocab_log_probs.push_back(src.vocab_log_probs[i]);
+    }
   }
 
   if (sym_table.IsByteBpe()) {

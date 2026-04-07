@@ -35,13 +35,15 @@ std::vector<OfflineCtcDecoderResult> OfflineCtcGreedySearchDecoder::Decode(
       int32_t idx = MaxElementIndex(p_log_probs, vocab_size);
       auto y = static_cast<int64_t>(idx);
       float log_prob = p_log_probs[idx];
-      p_log_probs += vocab_size;
 
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
         r.timestamps.push_back(t);
         r.token_log_probs.push_back(log_prob);
+        r.vocab_log_probs.emplace_back(p_log_probs, p_log_probs + vocab_size);
       }
+
+      p_log_probs += vocab_size;
       prev_id = y;
     }  // for (int32_t t = 0; ...)
 
