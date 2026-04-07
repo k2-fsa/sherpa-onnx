@@ -356,10 +356,17 @@ void OfflineRecognizerQwen3ASRImpl::InitPromptTemplateIds() {
     SHERPA_ONNX_LOGE("Failed to tokenize <|audio_pad|> for qwen3-asr prompt");
     SHERPA_ONNX_EXIT(-1);
   }
+
+  asr_text_token_id_ = tokenizer_->GetTokenId("<asr_text>");
+  if (asr_text_token_id_ < 0) {
+    SHERPA_ONNX_LOGE("Failed to locate <asr_text> token id for qwen3-asr");
+    SHERPA_ONNX_EXIT(-1);
+  }
 }
 
 std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
-    const std::string &hotwords, int32_t audio_token_len, int32_t *before_len,
+    const std::string &hotwords, const std::string &language,
+    int32_t audio_token_len, int32_t *before_len,
     int32_t *fake_audio_token_len) const {
   const std::string before_utf8 = std::string(kQwen3SystemPromptPrefix) +
                                   hotwords + kQwen3SystemPromptSuffix;
@@ -372,11 +379,27 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
     *fake_audio_token_len = audio_token_len;
   }
 
+  std::vector<int64_t> prompt_ids_after_with_language;
+  const std::vector<int64_t> *ids_after = &prompt_ids_after_;
+  if (!language.empty()) {
+    auto language_ids = tokenizer_->Encode("language " + language);
+    prompt_ids_after_with_language.reserve(prompt_ids_after_.size() +
+                                           language_ids.size() + 1);
+    prompt_ids_after_with_language.insert(prompt_ids_after_with_language.end(),
+                                          prompt_ids_after_.begin(),
+                                          prompt_ids_after_.end());
+    prompt_ids_after_with_language.insert(prompt_ids_after_with_language.end(),
+                                          language_ids.begin(),
+                                          language_ids.end());
+    prompt_ids_after_with_language.push_back(asr_text_token_id_);
+    ids_after = &prompt_ids_after_with_language;
+  }
+
   std::vector<int64_t> source_ids;
   size_t estimated_size =
       prompt_ids_before.size() +
       static_cast<size_t>(audio_token_len) * audio_pad_ids_.size() +
-      prompt_ids_after_.size();
+      ids_after->size();
   source_ids.reserve(estimated_size);
   source_ids.insert(source_ids.end(), prompt_ids_before.begin(),
                     prompt_ids_before.end());
@@ -386,8 +409,7 @@ std::vector<int64_t> OfflineRecognizerQwen3ASRImpl::BuildSourceIds(
                       audio_pad_ids_.end());
   }
 
-  source_ids.insert(source_ids.end(), prompt_ids_after_.begin(),
-                    prompt_ids_after_.end());
+  source_ids.insert(source_ids.end(), ids_after->begin(), ids_after->end());
 
   return source_ids;
 }
@@ -689,10 +711,15 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   const std::string hotwords = Qwen3FormatHotwordsForPrompt(
       stream->HasOption("hotwords") ? stream->GetOption("hotwords") : "");
 
+  std::string language;
+  if (stream->HasOption("language")) {
+    language = stream->GetOption("language");
+  }
+
   int32_t before_len = 0;
   int32_t fake_audio_token_len = 0;
   std::vector<int64_t> source_ids = BuildSourceIds(
-      hotwords, audio_token_len, &before_len, &fake_audio_token_len);
+      hotwords, language, audio_token_len, &before_len, &fake_audio_token_len);
 
   int32_t context_len = static_cast<int32_t>(source_ids.size());
   if (context_len == 0) {
@@ -951,21 +978,37 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
     ++cur_len;
   }
 
-  // drop the first 3 tokens which contain things like:
-  // language None<asr_text>
-  if (generated_ids.size() >= 3) {
-    generated_ids.erase(generated_ids.begin(), generated_ids.begin() + 3);
+  std::vector<int64_t> cleaned_ids = generated_ids;
+  if (!generated_ids.empty()) {
+    const size_t prefix_window = std::min<size_t>(16, generated_ids.size());
+    auto asr_text_it = std::find(generated_ids.begin(),
+                                 generated_ids.begin() + prefix_window,
+                                 asr_text_token_id_);
+
+    // Only strip a leading scaffold prefix recognized by token ID.
+    if (asr_text_it != generated_ids.begin() + prefix_window &&
+        asr_text_it != generated_ids.begin()) {
+      std::vector<int64_t> prefix_ids(generated_ids.begin(),
+                                      std::next(asr_text_it));
+      std::string prefix_text = tokenizer_->Decode(prefix_ids);
+      if (prefix_text.rfind("language ", 0) == 0 &&
+          prefix_text.size() >= 10 &&
+          prefix_text.compare(prefix_text.size() - 10, 10, "<asr_text>") ==
+              0) {
+        cleaned_ids.assign(std::next(asr_text_it), generated_ids.end());
+      }
+    }
   }
 
-  result.text = tokenizer_->Decode(generated_ids);
+  result.text = tokenizer_->Decode(cleaned_ids);
   RemoveUtf8ReplacementChars(&result.text);
 
-  if (!generated_ids.empty()) {
+  if (!cleaned_ids.empty()) {
     std::vector<std::string> all_tokens;
-    all_tokens.reserve(generated_ids.size());
+    all_tokens.reserve(cleaned_ids.size());
     std::string pending_bytes;
 
-    for (int64_t token_id : generated_ids) {
+    for (int64_t token_id : cleaned_ids) {
       std::string s =
           tokenizer_->GetTokenStringStreaming(token_id, &pending_bytes);
       all_tokens.push_back(std::move(s));
@@ -975,25 +1018,7 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       all_tokens.back().append("\xEF\xBF\xBD");
     }
 
-    std::string concat;
-    size_t skip = 0;
-    bool stripped = false;
-    for (size_t i = 0; i < all_tokens.size(); ++i) {
-      concat += all_tokens[i];
-      if (concat.find("<asr_text>") != std::string::npos) {
-        skip = i + 1;
-        stripped = true;
-        break;
-      }
-    }
-    if (stripped && skip <= all_tokens.size()) {
-      result.tokens.reserve(all_tokens.size() - skip);
-      for (size_t i = skip; i < all_tokens.size(); ++i) {
-        result.tokens.push_back(std::move(all_tokens[i]));
-      }
-    } else {
-      result.tokens = std::move(all_tokens);
-    }
+    result.tokens = std::move(all_tokens);
   }
 
   return result;

@@ -74,6 +74,7 @@ int32_t main(int32_t argc, char *argv[]) {
   const auto begin = std::chrono::steady_clock::now();
 
   OfflineStream stream = recognizer.CreateStream();
+  // stream.SetOption("language", "Korean");  // optional: force transcription language
   stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                         wave.samples.size());
 
