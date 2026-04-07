@@ -191,9 +191,6 @@ jobs:
           export LD_LIBRARY_PATH=$p:$LD_LIBRARY_PATH
           echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-          if [[ ${{ matrix.os }} == ubuntu-24.04 ]]; then
-            export SKIP_QWEN3=true
-          fi
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
 

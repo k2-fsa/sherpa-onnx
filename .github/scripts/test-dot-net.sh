@@ -11,21 +11,19 @@ rm -rf sherpa-onnx-cohere-transcribe-*
 
 cd ..
 
-if [[ "$SKIP_QWEN3" != "true" ]]; then
-  cd ./vad-non-streaming-qwen3-asr
-  ./run-ten-vad.sh
-  rm -fv *.onnx
+cd ./vad-non-streaming-qwen3-asr
+./run-ten-vad.sh
+rm -fv *.onnx
 
-  ./run.sh
-  rm -fv *.onnx
+./run.sh
+rm -fv *.onnx
 
-  cd ../non-streaming-qwen3-asr-decode-files
-  ./run.sh
-  ls -lh
-  rm -rf sherpa-onnx-qwen3-*
+cd ../non-streaming-qwen3-asr-decode-files
+./run.sh
+ls -lh
+rm -rf sherpa-onnx-qwen3-*
 
-  cd ..
-fi
+cd ..
 
 cd ./source-separation-spleeter
 ./run.sh

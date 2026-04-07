@@ -135,7 +135,4 @@ jobs:
 
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
-            export SKIP_QWEN3=true
-          fi
           .github/scripts/test-dart.sh
