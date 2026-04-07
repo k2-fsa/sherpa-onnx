@@ -709,7 +709,8 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   // Optional per-stream hotwords via SetOption("hotwords", comma-separated
   // CSV).
   const std::string hotwords = Qwen3FormatHotwordsForPrompt(
-      stream->HasOption("hotwords") ? stream->GetOption("hotwords") : "");
+      stream->HasOption("hotwords") ? stream->GetOption("hotwords")
+                                    : qwen3_config.hotwords);
 
   std::string language;
   if (stream->HasOption("language")) {
@@ -981,9 +982,9 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
   std::vector<int64_t> cleaned_ids = generated_ids;
   if (!generated_ids.empty()) {
     const size_t prefix_window = std::min<size_t>(16, generated_ids.size());
-    auto asr_text_it = std::find(generated_ids.begin(),
-                                 generated_ids.begin() + prefix_window,
-                                 asr_text_token_id_);
+    auto asr_text_it =
+        std::find(generated_ids.begin(), generated_ids.begin() + prefix_window,
+                  asr_text_token_id_);
 
     // Only strip a leading scaffold prefix recognized by token ID.
     if (asr_text_it != generated_ids.begin() + prefix_window &&
@@ -991,10 +992,8 @@ OfflineRecognitionResult OfflineRecognizerQwen3ASRImpl::GenerateText(
       std::vector<int64_t> prefix_ids(generated_ids.begin(),
                                       std::next(asr_text_it));
       std::string prefix_text = tokenizer_->Decode(prefix_ids);
-      if (prefix_text.rfind("language ", 0) == 0 &&
-          prefix_text.size() >= 10 &&
-          prefix_text.compare(prefix_text.size() - 10, 10, "<asr_text>") ==
-              0) {
+      if (prefix_text.rfind("language ", 0) == 0 && prefix_text.size() >= 10 &&
+          prefix_text.compare(prefix_text.size() - 10, 10, "<asr_text>") == 0) {
         cleaned_ids.assign(std::next(asr_text_it), generated_ids.end());
       }
     }
