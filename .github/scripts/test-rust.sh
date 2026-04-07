@@ -9,10 +9,8 @@ trap 'bash ../.github/scripts/show-rust-binary-info.sh --all || true' EXIT
 ./run-cohere-transcribe.sh
 rm -rf sherpa-onnx-cohere-transcribe-*
 
-if [[ "$SKIP_QWEN3" != "true" ]]; then
-  ./run-qwen3-asr.sh
-  rm -rf sherpa-onnx-qwen3-*
-fi
+./run-qwen3-asr.sh
+rm -rf sherpa-onnx-qwen3-*
 
 ./run-audio-tagging-zipformer.sh
 rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15

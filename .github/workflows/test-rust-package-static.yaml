@@ -98,7 +98,4 @@ jobs:
       - name: Run static tests
         shell: bash
         run: |
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
-            export SKIP_QWEN3=true
-          fi
           ./.github/scripts/test-rust-static.sh

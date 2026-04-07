@@ -168,7 +168,4 @@ jobs:
           cp -v scripts/node-addon-api/lib/*.js $d/
           cp -v ./build/install/lib/lib*  $d/
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
-            export SKIP_QWEN3=true
-          fi
           .github/scripts/test-nodejs-addon-npm.sh

@@ -10,11 +10,9 @@ echo '----------Cohere Transcribe----------'
 ./run-cohere-transcribe.sh
 rm -rf sherpa-onnx-*
 
-if [[ "$SKIP_QWEN3" != "true" ]]; then
-  echo '----------Qwen3 ASR----------'
-  ./run-qwen3-asr.sh
-  rm -rf sherpa-onnx-*
-fi
+echo '----------Qwen3 ASR----------'
+./run-qwen3-asr.sh
+rm -rf sherpa-onnx-*
 
 echo '----------Moonshine v2----------'
 ./run-moonshine-v2.sh

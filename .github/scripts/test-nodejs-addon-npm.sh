@@ -20,17 +20,15 @@ node ./test_asr_non_streaming_cohere_transcribe_async.js
 
 rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
 
-if [[ "$SKIP_QWEN3" != "true" ]]; then
-  echo "----------Qwen3 ASR----------"
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
-  tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
-  rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+echo "----------Qwen3 ASR----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
 
-  node ./test_asr_non_streaming_qwen3_asr.js
-  node ./test_asr_non_streaming_qwen3_asr_async.js
+node ./test_asr_non_streaming_qwen3_asr.js
+node ./test_asr_non_streaming_qwen3_asr_async.js
 
-  rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
-fi
+rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
 echo "----------Moonshine v2----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
