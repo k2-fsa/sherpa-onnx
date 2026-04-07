@@ -937,7 +937,7 @@ class OfflineRecognizerResult {
     return OfflineRecognizerResult(
       text: json['text'] as String? ?? '',
       tokens: (json['tokens'] as List?)?.map((e) => e as String).toList() ?? [],
-      tokenLogProbs: (json['token_log_probs'] as List?)
+      tokenLogProbs: (json['ys_log_probs'] as List?)
               ?.map((e) => (e as num).toDouble())
               .toList() ??
           [],
@@ -960,7 +960,7 @@ class OfflineRecognizerResult {
   Map<String, dynamic> toJson() => {
     'text': text,
     'tokens': tokens,
-    'token_log_probs': tokenLogProbs,
+    'ys_log_probs': tokenLogProbs,
     'timestamps': timestamps,
     'lang': lang,
     'emotion': emotion,
