@@ -1,0 +1,14 @@
+CMAKE_MODULE_LINKER_FLAGS
+-------------------------
+
+Linker flags to be used to create modules.
+
+These flags will be used by the linker when creating a module for all build
+configurations.
+
+.. include:: ../variable/include/LINKER_FLAGS.rst
+
+See Also
+^^^^^^^^
+
+* :variable:`CMAKE_MODULE_LINKER_FLAGS_<CONFIG>`

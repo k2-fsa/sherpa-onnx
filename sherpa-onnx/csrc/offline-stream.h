@@ -57,8 +57,8 @@ struct OfflineRecognitionResult {
 
   std::string AsJsonString() const;
 
-  /// Token-level probabilities
-  std::vector<float> token_log_probs;
+  /// Full vocabulary log probabilities at each decoded token position.
+  /// vocab_log_probs[i] has vocab_size entries for tokens[i].
   std::vector<std::vector<float>> vocab_log_probs;
 };
 

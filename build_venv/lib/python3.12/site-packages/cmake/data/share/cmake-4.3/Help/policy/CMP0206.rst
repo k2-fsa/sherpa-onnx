@@ -1,0 +1,30 @@
+CMP0206
+-------
+
+.. versionadded:: 4.3
+
+The :cpack_gen:`CPack Archive Generator` defaults to UID 0 and GID 0.
+
+In CMake 4.2 and below, the :cpack_gen:`CPack Archive Generator` always used
+the current user's UID/GID in archive entries.  CMake 4.3 added the
+:variable:`CPACK_ARCHIVE_UID` and :variable:`CPACK_ARCHIVE_GID` variables
+to control them.  If either is set, the default for the other is ``0``.
+If neither is set, CMake 4.3 and above prefer to default both UID and GID
+to ``0`` so that unpacking by ``root`` produces paths owned by ``root``.
+This policy provides compatibility with projects that have not been updated
+to expect the new behavior.
+
+The ``OLD`` behavior for this policy is to produce archive entries with
+the current user's UID/GID by default.
+The ``NEW`` behavior for this policy is to produce archive entries with
+the UID/GID set to 0/0 by default.
+
+.. |INTRODUCED_IN_CMAKE_VERSION| replace:: 4.3
+.. |WARNS_OR_DOES_NOT_WARN| replace:: does *not* warn
+.. include:: include/STANDARD_ADVICE.rst
+
+See documentation of the
+:variable:`CMAKE_POLICY_WARNING_CMP0206 <CMAKE_POLICY_WARNING_CMP<NNNN>>`
+variable to control the warning.
+
+.. include:: include/DEPRECATED.rst

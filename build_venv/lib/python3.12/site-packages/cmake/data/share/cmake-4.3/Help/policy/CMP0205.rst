@@ -1,0 +1,23 @@
+CMP0205
+-------
+
+.. versionadded:: 4.3
+
+:command:`file(CREATE_LINK)` with ``COPY_ON_ERROR`` copies directory content.
+
+The :command:`file(CREATE_LINK)` command's ``COPY_ON_ERROR`` option copies
+the source file to the destination as a fallback if linking it fails.
+If the source is a directory, CMake 4.2 and below create the destination
+directory but do not copy its contents.  CMake 4.3 and above prefer to
+copy the directory contents too.  This policy provides compatibility with
+projects that have not been updated to expect the contents to be copied.
+
+The ``OLD`` behavior for this policy is to create the destination directory
+without copying contents.  The ``NEW`` behavior for this policy to create
+the destination directory and copy contents from the source directory.
+
+.. |INTRODUCED_IN_CMAKE_VERSION| replace:: 4.3
+.. |WARNS_OR_DOES_NOT_WARN| replace:: warns
+.. include:: include/STANDARD_ADVICE.rst
+
+.. include:: include/DEPRECATED.rst

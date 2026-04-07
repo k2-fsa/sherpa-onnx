@@ -56,7 +56,7 @@ OfflineRecognitionResult ConvertSenseVoiceResult(
   // Propagate token-level log probabilities (skipping the first 4 control
   // tokens for non-NanO models, same as tokens/timestamps above)
   for (int32_t i = start; i < static_cast<int32_t>(src.token_log_probs.size()); ++i) {
-    r.token_log_probs.push_back(src.token_log_probs[i]);
+    r.ys_log_probs.push_back(src.token_log_probs[i]);
   }
   for (int32_t i = start; i < static_cast<int32_t>(src.vocab_log_probs.size()); ++i) {
     r.vocab_log_probs.push_back(src.vocab_log_probs[i]);

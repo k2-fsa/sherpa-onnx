@@ -157,7 +157,7 @@ class OfflineRecognizerCanaryImpl : public OfflineRecognizerImpl {
       const auto &s = symbol_table_[token_id];
       text += s;
       r.tokens.push_back(s);
-      r.token_log_probs.push_back(token_log_probs[idx]);
+      r.ys_log_probs.push_back(token_log_probs[idx]);
       r.vocab_log_probs.push_back(std::move(vocab_log_probs[idx]));
     }
 

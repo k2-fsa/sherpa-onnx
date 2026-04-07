@@ -1,0 +1,27 @@
+CMP0209
+-------
+
+.. versionadded:: 4.3
+
+Verify interface header sets checks executables without exports.
+
+When :prop_tgt:`VERIFY_INTERFACE_HEADER_SETS` is set to true on an executable
+target, CMake 4.2 and below would only perform those checks if the target's
+:prop_tgt:`ENABLE_EXPORTS` property was true.  The reasoning behind this
+exclusion was that no other target could consume the headers of an executable
+target if that executable target didn't export symbols.  Since then, other
+use cases have emerged for verifying header file sets where exporting symbols
+is no longer a requirement.  Therefore, CMake 4.3 and above prefer to verify
+interface file sets of executable targets regardless of whether they export
+symbols or not.
+
+The ``OLD`` behavior of this policy only verifies interface file sets of an
+executable target if its :prop_tgt:`ENABLE_EXPORTS` property is set to true.
+The ``NEW`` behavior always verifies interface file sets of an executable
+target when :prop_tgt:`VERIFY_INTERFACE_HEADER_SETS` is set to true.
+
+.. |INTRODUCED_IN_CMAKE_VERSION| replace:: 4.3
+.. |WARNS_OR_DOES_NOT_WARN| replace:: warns
+.. include:: include/STANDARD_ADVICE.rst
+
+.. include:: include/DEPRECATED.rst

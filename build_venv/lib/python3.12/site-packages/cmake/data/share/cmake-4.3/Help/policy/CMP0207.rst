@@ -1,0 +1,26 @@
+CMP0207
+-------
+
+.. versionadded:: 4.3
+
+:command:`file(GET_RUNTIME_DEPENDENCIES)` normalizes paths before matching.
+
+The :command:`file(GET_RUNTIME_DEPENDENCIES)` and
+:command:`install(RUNTIME_DEPENDENCY_SET)` commands support filtering
+resolved dependencies using regular expressions matching their paths.
+In CMake 4.2 and below, callers were responsible for matching both forward
+and backward slashes as path separators on Windows, e.g., via ``[\/]``.
+CMake 4.3 and above prefer to normalize paths to use forward slashes before
+matching.  This policy provides compaitiblity for projects that may have
+been relying on matching backslashes only.
+
+The ``OLD`` behavior for this policy matches filters against paths that
+may contain any combination of forward and backward slashes on Windows.
+The ``NEW`` behavior for this policy to convert all paths to forward
+slashes before matching filters.
+
+.. |INTRODUCED_IN_CMAKE_VERSION| replace:: 4.3
+.. |WARNS_OR_DOES_NOT_WARN| replace:: warns
+.. include:: include/STANDARD_ADVICE.rst
+
+.. include:: include/DEPRECATED.rst

@@ -1,0 +1,30 @@
+CMP0210
+-------
+
+.. versionadded:: 4.3
+
+:variable:`CMAKE_<LANG>_LINK_FLAGS` adds link flags to all target types.
+
+In CMake 4.2 and below, :variable:`CMAKE_<LANG>_LINK_FLAGS` held flags
+relevant to target creation and applied when linking executables only. It was
+undocumented and originally intended for internal use only, but still
+available for projects and users to set in order to control linking behavior.
+
+CMake 4.3 and above repurpose this variable to add per-language link flags for
+all target types that link (executables, shared libraries, and module
+libraries).
+
+This policy provides compatibility with projects that relied on this variable
+and have not been updated to be aware of the change.
+
+The ``OLD`` behavior for this policy is to apply
+:variable:`CMAKE_<LANG>_LINK_FLAGS` to invocations of the compiler which drive
+linking for executables only. The ``NEW`` behavior is to apply the flags to
+all target types.
+
+.. |INTRODUCED_IN_CMAKE_VERSION| replace:: 4.3
+.. |WARNS_OR_DOES_NOT_WARN| replace::
+    warns when :variable:`CMAKE_<LANG>_LINK_FLAGS` is set
+.. include:: include/STANDARD_ADVICE.rst
+
+.. include:: include/DEPRECATED.rst

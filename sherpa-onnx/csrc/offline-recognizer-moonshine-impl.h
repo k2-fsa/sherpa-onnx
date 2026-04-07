@@ -40,7 +40,7 @@ OfflineRecognitionResult Convert(const OfflineMoonshineDecoderResult &src,
     text += s;
     r.tokens.push_back(s);
     if (idx < src.token_log_probs.size()) {
-      r.token_log_probs.push_back(src.token_log_probs[idx]);
+      r.ys_log_probs.push_back(src.token_log_probs[idx]);
     }
     if (idx < src.vocab_log_probs.size()) {
       r.vocab_log_probs.push_back(src.vocab_log_probs[idx]);

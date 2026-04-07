@@ -480,11 +480,11 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  // Serialize token_log_probs
-  if (!token_log_probs.empty()) {
+  // Serialize ys_log_probs (token-level confidence scores)
+  if (!ys_log_probs.empty()) {
     os << "\"token_log_probs\": [";
     sep = "";
-    for (auto prob : token_log_probs) {
+    for (auto prob : ys_log_probs) {
       os << sep << std::fixed << std::setprecision(6) << prob;
       sep = ", ";
     }

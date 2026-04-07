@@ -1,0 +1,294 @@
+CMake 4.3 Release Notes
+***********************
+
+.. only:: html
+
+  .. contents::
+
+Changes made since CMake 4.2 include the following.
+
+New Features
+============
+
+Common Package Specification
+----------------------------
+
+* Support for importing and exporting packages described using the |CPS|_
+  (CPS) was added.  This improves build system interoperability by allowing
+  expressive, feature-rich package descriptions to be exchanged in a format
+  other than CMake Language.
+
+  * The :command:`find_package` now searches for and can import CPS packages.
+
+  * The :command:`install` and :command:`export` commands gained a new
+    ``PACKAGE_INFO`` sub-command to generate CPS package descriptions.
+
+  * The :command:`project` command gained new ``COMPAT_VERSION`` and
+    ``SPDX_LICENSE`` options.  These values may be inherited when creating a
+    CPS package description.  See the :command:`install(PACKAGE_INFO)`
+    documentation for details.
+
+.. _CPS: https://cps-org.github.io/cps/
+.. |CPS| replace:: Common Package Specification
+
+Instrumentation
+---------------
+
+* :manual:`cmake-instrumentation(7)` was added to enable collection of
+  timing data, target information, and system diagnostic information during
+  the configure, generate, build, test, and install steps of a CMake project:
+
+  * Instrumentation data are :ref:`indexed <cmake-instrumentation Indexing>`
+    and provided to :ref:`callbacks <cmake-instrumentation Callbacks>` for
+    custom processing.
+
+  * Instrumentation data are included in submissions to CDash.
+
+  * Optionally,
+    :ref:`Google Trace Event Format <cmake-instrumentation Google Trace File>`
+    files may be generated to visualize instrumentation data.
+
+Presets
+-------
+
+* :manual:`cmake-presets(7)` files now support schema version ``11``.
+  The ``jobs`` field under test presets now supports an empty string, to
+  match the behavior of :option:`ctest --parallel` with the value omitted.
+* The ``jobs`` field under both build and test presets no longer accept
+  negative integer values, regardless of the schema version.
+
+File-Based API
+--------------
+
+* The :manual:`cmake-file-api(7)` "codemodel" version 2 version field
+  has been updated to 2.10.
+
+* The :manual:`cmake-file-api(7)` "codemodel" version 2 "target" object
+  gained a new ``interfaceSources`` array field, and the ``sourceGroups``
+  array items gained a new ``interfaceSourceIndexes`` array field.
+
+Platforms
+---------
+
+* ``HIP`` language code may now be compiled for SPIR-V targets,
+  e.g., via chipStar.  See the :variable:`CMAKE_HIP_PLATFORM` variable.
+
+Command-Line
+------------
+
+* :option:`cmake --version` now supports a ``=json-v1`` value to print
+  detailed version information in a JSON format.
+
+* :option:`cmake --build` now supports specifying a build directory and
+  preset together.  The build preset will be used with the explicit
+  build directory substituted.
+
+* The :option:`cmake -E` commands
+  :option:`md5sum <cmake-E md5sum>`,
+  :option:`sha1sum <cmake-E sha1sum>`,
+  :option:`sha224sum <cmake-E sha224sum>`,
+  :option:`sha256sum <cmake-E sha256sum>`,
+  :option:`sha384sum <cmake-E sha384sum>`, and
+  :option:`sha512sum <cmake-E sha512sum>`
+  now support reading from standard input by passing ``-``.
+
+* The :option:`cmake -E bin2c <cmake-E bin2c>` command-line tool was added.
+
+* The :option:`cmake -E tar <cmake-E tar>` command-line tool:
+
+  * Gained a ``--cmake-tar-compression-level`` flag to specify the
+    compression level.
+  * Gained a ``--cmake-tar-compression-method`` flag to specify the
+    compression method.
+  * Gained a ``--cmake-tar-threads`` flag to enable multithreaded operations.
+  * Now supports specifying compression method and level for ``7zip`` and
+    ``zip`` formats.
+  * Gained a ``--format=raw`` flag to disable compression.
+  * Gained a ``--lzma`` flag to specify ``LZMA`` compression.
+
+Commands
+--------
+
+* The :command:`cmake_instrumentation` command was added to make
+  project-level instrumentation queries.
+
+* The :command:`file(ARCHIVE_CREATE)` command:
+
+  * Gained a ``THREADS`` option to enable multithreaded operations.
+  * Now supports ``COMPRESSION`` method ``Deflate`` as an alias for ``GZip``.
+  * Now supports ``COMPRESSION`` method ``LZMA``.
+  * Now supports ``COMPRESSION`` method ``LZMA2`` as an alias for ``XZ``.
+  * Now supports ``COMPRESSION`` method ``PPMd`` for format ``7zip``.
+  * Now supports ``COMPRESSION`` and ``COMPRESSION_LEVEL`` options
+    for formats ``7zip`` and ``zip``.
+
+* The :command:`get_property` and :command:`set_property` commands
+  now support a ``FILE_SET`` scope for file set properties of a target.
+
+* The :command:`string(JSON)` command gained new ``GET_RAW`` and
+  ``STRING_ENCODE`` modes.
+
+* The :command:`source_group` command now supports
+  :manual:`generator expressions <cmake-generator-expressions(7)>`.
+
+* The :command:`cmake_host_system_information` command gained a
+  ``LOCALE_CHARSET`` query for the expected :manual:`cmake-language(7)`
+  script encoding.
+
+Variables
+---------
+
+* The :variable:`CMAKE_<LANG>_LINK_FLAGS` and
+  :variable:`CMAKE_<LANG>_LINK_FLAGS_<CONFIG>` variables were added
+  to support per-language link flags for all target types.
+  See policy :policy:`CMP0210`.
+
+* The :variable:`CMAKE_VERIFY_PRIVATE_HEADER_SETS` variable and corresponding
+  :prop_tgt:`VERIFY_PRIVATE_HEADER_SETS` target property were added to
+  enable build rules that verify all headers in private file sets can be used
+  on their own.
+
+Properties
+----------
+
+* A :prop_tgt:`<LANG>_PVS_STUDIO` target property and supporting
+  :variable:`CMAKE_<LANG>_PVS_STUDIO` variable were introduced to tell
+  :ref:`Makefile Generators` and :ref:`Ninja Generators` to run
+  ``pvs-studio-analyzer`` with the compiler for ``C`` and ``CXX`` languages.
+
+* When :prop_tgt:`VERIFY_INTERFACE_HEADER_SETS` is set to true on an executable
+  target, that target's interface file sets are verified regardless of its
+  :prop_tgt:`ENABLE_EXPORTS` property. See policy :policy:`CMP0209`.
+
+* The :prop_tgt:`PRIVATE_HEADER_SETS_TO_VERIFY` target property was added to
+  customize which private file sets to verify when the target's
+  :prop_tgt:`VERIFY_PRIVATE_HEADER_SETS` property is true.
+
+Modules
+-------
+
+* The :module:`FindCUDAToolkit` module now creates a ``CUDA::bin2c``
+  imported target for the :ref:`bin2c <FindCUDAToolkit_bin2c>` utility.
+
+* The :module:`FindLibXml2` module gained a ``LibXml2_USE_STATIC_LIBS`` hint
+  to select static libraries.
+
+* The :module:`FindRuby` module now provides imported targets.
+
+* The :module:`FindSQLite3` module now provides imported
+  targets with the ``SQLite3::`` prefix.
+
+* The :module:`UseJava` module's :command:`add_jar` command now accepts a new
+  ``INCLUDE_MODULES`` option that adds its arguments to the ``--module-path``
+  argument to the Java compiler. This allows building JAR files that use JPMS
+  modules in their build.
+
+Generator Expressions
+---------------------
+
+* :ref:`String Comparison <String Comparisons Generator Expressions>`
+  generator expressions were added.
+
+* :genex:`$<STRING:...>` generator expressions were added for
+  :ref:`query <String Queries Generator Expressions>`,
+  :ref:`generation <String Generating Generator Expressions>`, and
+  :ref:`transformation <String Transforming Generator Expressions>`
+  operations on strings.
+
+* The :genex:`$<FILE_SET_EXISTS>` and :genex:`$<FILE_SET_PROPERTY>` generator
+  expressions were added to query file set existence and properties.
+
+* The :genex:`$<SOURCE_EXISTS>` and :genex:`$<SOURCE_PROPERTY>` generator
+  expressions were added to query source file existence and properties.
+
+CTest
+-----
+
+* The :module:`CTestCoverageCollectGCOV` module:
+
+  * Now supports ``TARBALL_COMPRESSION`` method ``LZMA``.
+
+  * Now supports ``TARBALL_COMPRESSION`` method ``LZMA2``
+    as an alias for ``XZ``.
+
+  * Now supports ``FROM_EXT`` with file extensions corresponding to
+    ``LZMA`` and ``ZSTD`` compression.
+
+CPack
+-----
+
+* :module:`CPack` gained the :variable:`CPACK_COMPRESSION_LEVEL`
+  variable to control the compression level used when creating
+  packages.
+
+* The :cpack_gen:`CPack Archive Generator`:
+
+  * Now supports compression method specification for formats
+    ``7zip`` and ``zip``.
+
+  * Gained a :variable:`CPACK_ARCHIVE_COMPRESSION_LEVEL` option to
+    control the compression level used when creating archive packages.
+
+  * Gained :variable:`CPACK_ARCHIVE_UID` and :variable:`CPACK_ARCHIVE_GID`
+    options to specify the UID and GID of archive entries, respectively.
+    The defaults are UID ``0`` and GID ``0``.  See policy :policy:`CMP0206`.
+
+* The :cpack_gen:`CPack DEB Generator` gained a new
+  :variable:`CPACK_DEBIAN_COMPRESSION_LEVEL` variable to control the
+  compression level used when creating Debian packages.
+
+* The :cpack_gen:`CPack WIX Generator` now supports per-user installers
+  by setting :variable:`CPACK_WIX_INSTALL_SCOPE` to ``perUser``.
+
+Deprecated and Removed Features
+===============================
+
+* The :variable:`CMAKE_ENABLE_EXPORTS` variable is deprecated in favor of
+  the :variable:`CMAKE_EXECUTABLE_ENABLE_EXPORTS` and
+  :variable:`CMAKE_SHARED_LIBRARY_ENABLE_EXPORTS` variables.
+
+* The :command:`export(EXPORT)` command no longer allows certain
+  arguments to be missing or empty.  See policy :policy:`CMP0208`.
+
+Other Changes
+=============
+
+* The :option:`cmake -E tar <cmake-E tar>` command-line tool
+  and the :command:`file(ARCHIVE_EXTRACT)` command now reject archive
+  entries whose paths are absolute or contain ``..`` path traversal
+  components.
+
+* The family of :option:`cmake --trace` and related commands now print "end"
+  commands for control structures: :command:`endblock`, :command:`endforeach`,
+  :command:`endfunction`, :command:`endif`, :command:`endmacro`, and
+  :command:`endwhile`.
+
+* The :command:`file(CREATE_LINK)` command's ``COPY_ON_ERROR`` option,
+  when used with a directory, now copies directory content.
+  See policy :policy:`CMP0205`.
+
+* The :command:`file(GET_RUNTIME_DEPENDENCIES)`
+  and :command:`install(RUNTIME_DEPENDENCY_SET)` commands now normalize
+  paths before matching filters.  See policy :policy:`CMP0207`.
+
+* The precompiled Linux ``aarch64`` binaries provided on
+  `cmake.org <https://cmake.org/download/>`_ now require GLIBC 2.28 or higher.
+
+* The precompiled macOS binary provided on ``cmake.org`` for macOS 10.13+
+  now requires macOS 12 or newer for the :manual:`cmake-gui(1)` application.
+  The command-line tools still run on macOS 10.13.
+
+* The precompiled Windows binaries provided on
+  `cmake.org <https://cmake.org/download/>`_ now require Windows 10 or higher.
+
+Updates
+=======
+
+Changes made since CMake 4.3.0 include the following.
+
+4.3.1
+-----
+
+* This version made no changes to documented features or interfaces.
+  Some implementation updates were made to support ecosystem changes
+  and/or fix regressions.

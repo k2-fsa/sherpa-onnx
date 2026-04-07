@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "Information about a single dependency.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the dependency."
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the dependency.",
+            "enum": [
+              "system",
+              "bundled"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the dependency if available."
+          },
+          "via": {
+            "type": "string",
+            "description": "The source from which the dependency is came from. Not presented for direct CMake dependencies."
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "additionalProperties": false
+      },
+      "additionalItems": false
+    },
+    "program": {
+      "type": "object",
+      "description": "Information about the CMake tool.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the CMake tool."
+        },
+        "version": {
+          "type": "object",
+          "description": "Information about the version of the CMake tool.",
+          "properties": {
+            "major": {
+              "type": "integer",
+              "description": "The major version of the CMake tool."
+            },
+            "minor": {
+              "type": "integer",
+              "description": "The minor version of the CMake tool."
+            },
+            "patch": {
+              "type": "integer",
+              "description": "The patch version of the CMake tool."
+            },
+            "string": {
+              "type": "string",
+              "description": "The full version string of the CMake tool."
+            }
+          },
+          "required": [
+            "major",
+            "minor",
+            "patch",
+            "string"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "integer",
+          "description": "The major version of the JSON output format."
+        },
+        "minor": {
+          "type": "integer",
+          "description": "The minor version of the JSON output format."
+        }
+      },
+      "required": [
+        "major",
+        "minor"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "dependencies",
+    "program",
+    "version"
+  ],
+  "additionalProperties": false
+}

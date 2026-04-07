@@ -1,0 +1,2 @@
+[nbdev]
+whisper_normalizer = whisper_normalizer._modidx:d
