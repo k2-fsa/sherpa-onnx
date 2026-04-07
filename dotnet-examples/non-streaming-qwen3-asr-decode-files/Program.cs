@@ -1,9 +1,9 @@
-// Copyright (c)  2026  Xiaomi Corporation
+﻿// Copyright (c)  2026  Xiaomi Corporation
 //
 // This file shows how to use a Qwen3 ASR model for speech recognition.
 //
 // You can find the model doc at
-// https://k2-fsa.github.io/sherpa/onnx/qwen3-asr.html
+// https://k2-fsa.github.io/sherpa/onnx/qwen3-asr
 using SherpaOnnx;
 
 class NonStreamingQwen3Asr
