@@ -177,3 +177,9 @@ sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 non-streaming-fire-red-asr-ctc-decode-files
 sherpa-onnx-moonshine-*-quantized-2026-02-27
 sherpa-onnx-supertonic-tts-int8-2026-03-06
+
+ax620e_bsp_sdk-2.0.0_P7
+ax650n_bsp_sdk-1.45.0_p39
+aarch64-linux-gnu-g*
+kokoro-multi-lang-v1_1
+kokoro-v1_1-zh.pth
