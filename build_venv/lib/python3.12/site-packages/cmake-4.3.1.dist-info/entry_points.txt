@@ -1,6 +1,0 @@
-[console_scripts]
-ccmake = cmake:ccmake
-cmake = cmake:cmake
-cpack = cmake:cpack
-ctest = cmake:ctest
-

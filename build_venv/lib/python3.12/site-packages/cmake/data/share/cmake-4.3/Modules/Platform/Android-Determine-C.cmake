@@ -1,5 +1,0 @@
-if(CMAKE_C_COMPILER)
-  return()
-endif()
-include(Platform/Android/Determine-Compiler)
-__android_determine_compiler(C)

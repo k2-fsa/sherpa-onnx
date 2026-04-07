@@ -1,3 +1,0 @@
-if(NOT CMAKE_C_COMPILER_NAMES)
-  set(CMAKE_C_COMPILER_NAMES emcc)
-endif()

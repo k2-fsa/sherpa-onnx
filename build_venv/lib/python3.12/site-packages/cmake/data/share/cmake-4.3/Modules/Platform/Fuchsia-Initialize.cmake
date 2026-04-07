@@ -1,1 +1,0 @@
-set(FUCHSIA 1)
