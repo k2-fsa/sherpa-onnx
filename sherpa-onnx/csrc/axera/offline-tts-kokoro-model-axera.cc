@@ -78,6 +78,19 @@ static int32_t GetNumElements(const std::vector<int32_t> &shape) {
   return ans;
 }
 
+static int64_t GetNumElements(const std::vector<int64_t> &shape) {
+  if (shape.empty()) {
+    return 0;
+  }
+
+  int64_t ans = 1;
+  for (auto dim : shape) {
+    ans *= dim;
+  }
+
+  return ans;
+}
+
 static std::string Basename(const std::string &path) {
   auto pos = path.find_last_of("/\\");
   if (pos == std::string::npos) {
@@ -158,6 +171,28 @@ static std::vector<uint8_t> BuildPaddedTextMask(int32_t token_len,
   return mask;
 }
 
+static std::vector<int64_t> GetOrtTensorShape(Ort::Session *sess,
+                                              const std::string &name,
+                                              bool is_input) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  size_t count = is_input ? sess->GetInputCount() : sess->GetOutputCount();
+  for (size_t i = 0; i != count; ++i) {
+    Ort::AllocatedStringPtr tensor_name =
+        is_input ? sess->GetInputNameAllocated(i, allocator)
+                 : sess->GetOutputNameAllocated(i, allocator);
+
+    if (name == tensor_name.get()) {
+      auto type_info =
+          is_input ? sess->GetInputTypeInfo(i) : sess->GetOutputTypeInfo(i);
+      return type_info.GetTensorTypeAndShapeInfo().GetShape();
+    }
+  }
+
+  SHERPA_ONNX_LOGE("Found no %s tensor with name: '%s'",
+                   is_input ? "input" : "output", name.c_str());
+  return {};
+}
+
 struct ModelPaths {
   std::string encoder;
   std::string duration_predictor;
@@ -165,7 +200,8 @@ struct ModelPaths {
   std::string f0n_shared;
   std::string f0n_head;
   std::string decoder_front;
-  std::string vocoder;
+  std::string vocoder_core;
+  std::string vocoder_tail;
 };
 
 static ModelPaths ParseModelPaths(const std::string &model_str) {
@@ -192,21 +228,24 @@ static ModelPaths ParseModelPaths(const std::string &model_str) {
       paths.f0n_head = f;
     } else if (name.find("decoder_front") != std::string::npos) {
       paths.decoder_front = f;
-    } else if (name.find("vocoder") != std::string::npos) {
-      paths.vocoder = f;
+    } else if (name.find("vocoder_tail") != std::string::npos) {
+      paths.vocoder_tail = f;
+    } else if (name.find("vocoder_core") != std::string::npos) {
+      paths.vocoder_core = f;
     }
   }
 
   if (paths.encoder.empty() || paths.duration_predictor.empty() ||
       paths.text_encoder.empty() || paths.f0n_shared.empty() ||
       paths.f0n_head.empty() || paths.decoder_front.empty() ||
-      paths.vocoder.empty()) {
+      paths.vocoder_core.empty() || paths.vocoder_tail.empty()) {
     SHERPA_ONNX_LOGE(
         "For the new Axera Kokoro pipeline, --kokoro-model must contain these "
-        "7 files in any order: encoder_token_*.axmodel, "
+        "8 files in any order: encoder_token_*.axmodel, "
         "duration_predictor.onnx, text_encoder_token_*_frame_*.axmodel, "
         "f0n_shared_frame_*.axmodel, f0n_head_frame_*.axmodel, "
-        "decoder_front*.axmodel, vocoder*.axmodel. Given: %s",
+        "decoder_front*.axmodel, vocoder_core*.axmodel, "
+        "vocoder_tail*.onnx. Given: %s",
         model_str.c_str());
     SHERPA_ONNX_EXIT(-1);
   }
@@ -421,9 +460,17 @@ class OfflineTtsKokoroModelAxera::Impl {
     decoder_front_model_ = std::make_unique<AxeraModel>(decoder_front_buf.data(),
                                                         decoder_front_buf.size());
 
-    auto vocoder_buf = read_bytes(paths.vocoder);
-    vocoder_model_ =
-        std::make_unique<AxeraModel>(vocoder_buf.data(), vocoder_buf.size());
+    auto vocoder_core_buf = read_bytes(paths.vocoder_core);
+    vocoder_core_model_ = std::make_unique<AxeraModel>(vocoder_core_buf.data(),
+                               vocoder_core_buf.size());
+
+    auto vocoder_tail_buf = read_bytes(paths.vocoder_tail);
+    vocoder_tail_ = std::make_unique<Ort::Session>(
+      env_, vocoder_tail_buf.data(), vocoder_tail_buf.size(), sess_opts_);
+    GetInputNames(vocoder_tail_.get(), &vocoder_tail_input_names_,
+            &vocoder_tail_input_names_ptr_);
+    GetOutputNames(vocoder_tail_.get(), &vocoder_tail_output_names_,
+             &vocoder_tail_output_names_ptr_);
 
     auto duration_buf = read_bytes(paths.duration_predictor);
     duration_predictor_ = std::make_unique<Ort::Session>(
@@ -449,14 +496,27 @@ class OfflineTtsKokoroModelAxera::Impl {
     auto f0n_head_output_shape = f0n_head_model_->TensorShape("F0_pred");
     auto decoder_asr_shape = decoder_front_model_->TensorShape("asr");
     auto decoder_timbre_shape = decoder_front_model_->TensorShape("timbre");
-    auto vocoder_har_shape = vocoder_model_->TensorShape("har");
-    auto vocoder_output_shape = vocoder_model_->TensorShape("waveform");
+    auto vocoder_core_state_shape =
+      vocoder_core_model_->TensorShape("decoder_state");
+    auto vocoder_core_timbre_shape = vocoder_core_model_->TensorShape("timbre");
+    auto vocoder_core_har_shape = vocoder_core_model_->TensorShape("har");
+    auto vocoder_core_hidden_shape =
+      vocoder_core_model_->TensorShape("vocoder_hidden");
+    auto vocoder_tail_hidden_shape =
+      GetOrtTensorShape(vocoder_tail_.get(), "vocoder_hidden", true);
+    auto vocoder_tail_output_shape =
+      GetOrtTensorShape(vocoder_tail_.get(), "waveform", false);
 
     if (encoder_input_shape.size() != 2 || encoder_mask_shape.size() != 2 ||
         text_encoder_input_shape.size() != 2 || text_encoder_aln_shape.size() != 3 ||
         f0n_shared_input_shape.size() != 3 || f0n_head_ref_shape.size() != 2 ||
         f0n_head_output_shape.size() != 2 || decoder_asr_shape.size() != 3 ||
-        decoder_timbre_shape.size() != 2 || vocoder_har_shape.size() != 3) {
+      decoder_timbre_shape.size() != 2 || vocoder_core_state_shape.size() != 3 ||
+      vocoder_core_timbre_shape.size() != 2 ||
+      vocoder_core_har_shape.size() != 3 ||
+      vocoder_core_hidden_shape.size() != 3 ||
+      vocoder_tail_hidden_shape.size() != 3 ||
+      vocoder_tail_output_shape.size() != 1) {
       SHERPA_ONNX_LOGE("Unexpected Kokoro Axera model shapes in: %s",
                        config_.kokoro.model.c_str());
       SHERPA_ONNX_EXIT(-1);
@@ -467,9 +527,11 @@ class OfflineTtsKokoroModelAxera::Impl {
     pitch_bucket_ = f0n_head_output_shape[1];
     ref_s_dim_ = f0n_head_ref_shape[1];
     timbre_dim_ = decoder_timbre_shape[1];
-    har_channels_ = vocoder_har_shape[1];
-    har_frames_ = vocoder_har_shape[2];
-    sample_bucket_ = GetNumElements(vocoder_output_shape);
+    har_channels_ = vocoder_core_har_shape[1];
+    har_frames_ = vocoder_core_har_shape[2];
+    vocoder_hidden_channels_ = vocoder_core_hidden_shape[1];
+    vocoder_hidden_frames_ = vocoder_core_hidden_shape[2];
+    sample_bucket_ = static_cast<int32_t>(GetNumElements(vocoder_tail_output_shape));
 
     if (token_bucket_ != text_encoder_input_shape[1] ||
         token_bucket_ != text_encoder_aln_shape[1] ||
@@ -483,6 +545,15 @@ class OfflineTtsKokoroModelAxera::Impl {
     if (ref_s_dim_ <= 0 || timbre_dim_ <= 0 || timbre_dim_ > ref_s_dim_) {
       SHERPA_ONNX_LOGE("Invalid Kokoro style dims. ref_s=%d, timbre=%d",
                        ref_s_dim_, timbre_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (vocoder_core_state_shape != decoder_front_model_->TensorShape("decoder_state") ||
+        vocoder_core_timbre_shape[1] != timbre_dim_ ||
+        vocoder_tail_hidden_shape[1] != vocoder_hidden_channels_ ||
+        vocoder_tail_hidden_shape[2] != vocoder_hidden_frames_) {
+      SHERPA_ONNX_LOGE("Kokoro Axera vocoder_core/tail shape mismatch in: %s",
+                       config_.kokoro.model.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -812,16 +883,39 @@ class OfflineTtsKokoroModelAxera::Impl {
         decoder_front_model_->GetOutputTensorData("decoder_state");
     std::vector<float> har = BuildHar(f0_pred);
 
-    if (!vocoder_model_->SetInputTensorData("decoder_state", decoder_state.data(),
-                                            decoder_state.size()) ||
-        !vocoder_model_->SetInputTensorData("timbre", timbre.data(),
-                                            timbre.size()) ||
-        !vocoder_model_->SetInputTensorData("har", har.data(), har.size()) ||
-        !vocoder_model_->Run()) {
+    if (!vocoder_core_model_->SetInputTensorData("decoder_state",
+                           decoder_state.data(),
+                           decoder_state.size()) ||
+      !vocoder_core_model_->SetInputTensorData("timbre", timbre.data(),
+                           timbre.size()) ||
+      !vocoder_core_model_->SetInputTensorData("har", har.data(), har.size()) ||
+      !vocoder_core_model_->Run()) {
       return false;
     }
 
-    *audio = vocoder_model_->GetOutputTensorData("waveform");
+    std::vector<float> vocoder_hidden =
+      vocoder_core_model_->GetOutputTensorData("vocoder_hidden");
+    std::array<int64_t, 3> vocoder_hidden_shape = {
+      1, vocoder_hidden_channels_, vocoder_hidden_frames_};
+    Ort::Value vocoder_hidden_tensor = Ort::Value::CreateTensor(
+      memory_info, vocoder_hidden.data(), vocoder_hidden.size(),
+      vocoder_hidden_shape.data(), vocoder_hidden_shape.size());
+    std::array<Ort::Value, 1> vocoder_tail_inputs = {
+      std::move(vocoder_hidden_tensor)};
+
+    auto vocoder_tail_outputs = vocoder_tail_->Run(
+      {}, vocoder_tail_input_names_ptr_.data(), vocoder_tail_inputs.data(),
+      vocoder_tail_inputs.size(), vocoder_tail_output_names_ptr_.data(),
+      vocoder_tail_output_names_ptr_.size());
+    if (vocoder_tail_outputs.empty()) {
+      SHERPA_ONNX_LOGE("Unexpected empty vocoder_tail outputs");
+      return false;
+    }
+
+    const float *waveform_ptr = vocoder_tail_outputs[0].GetTensorData<float>();
+    int32_t waveform_elems = static_cast<int32_t>(
+      vocoder_tail_outputs[0].GetTensorTypeAndShapeInfo().GetElementCount());
+    *audio = std::vector<float>(waveform_ptr, waveform_ptr + waveform_elems);
     int32_t sample_length = frame_length * samples_per_frame_;
     if (sample_length < static_cast<int32_t>(audio->size())) {
       audio->resize(sample_length);
@@ -844,13 +938,18 @@ class OfflineTtsKokoroModelAxera::Impl {
   std::unique_ptr<AxeraModel> f0n_shared_model_;
   std::unique_ptr<AxeraModel> f0n_head_model_;
   std::unique_ptr<AxeraModel> decoder_front_model_;
-  std::unique_ptr<AxeraModel> vocoder_model_;
+  std::unique_ptr<AxeraModel> vocoder_core_model_;
 
   std::unique_ptr<Ort::Session> duration_predictor_;
+  std::unique_ptr<Ort::Session> vocoder_tail_;
   std::vector<std::string> duration_input_names_;
   std::vector<const char *> duration_input_names_ptr_;
   std::vector<std::string> duration_output_names_;
   std::vector<const char *> duration_output_names_ptr_;
+  std::vector<std::string> vocoder_tail_input_names_;
+  std::vector<const char *> vocoder_tail_input_names_ptr_;
+  std::vector<std::string> vocoder_tail_output_names_;
+  std::vector<const char *> vocoder_tail_output_names_ptr_;
 
   OfflineTtsKokoroModelMetaData meta_data_;
   std::vector<int32_t> style_dim_;
@@ -864,6 +963,8 @@ class OfflineTtsKokoroModelAxera::Impl {
   int32_t timbre_dim_ = 0;
   int32_t har_channels_ = 0;
   int32_t har_frames_ = 0;
+  int64_t vocoder_hidden_channels_ = 0;
+  int64_t vocoder_hidden_frames_ = 0;
   int32_t upsample_scale_ = 0;
   int32_t samples_per_frame_ = 0;
 };
