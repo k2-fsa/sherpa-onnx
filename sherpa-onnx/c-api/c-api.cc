@@ -317,6 +317,22 @@ const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(
     r->tokens_arr = nullptr;
   }
 
+  // Copy vocab_log_probs (flattened 2D: count * vocab_size)
+  if (!result.vocab_log_probs.empty() &&
+      static_cast<int32_t>(result.vocab_log_probs.size()) == r->count) {
+    int32_t vocab_size = result.vocab_log_probs[0].size();
+    r->vocab_size = vocab_size;
+    float *flat = new float[r->count * vocab_size];
+    for (int32_t i = 0; i < r->count; ++i) {
+      std::copy(result.vocab_log_probs[i].begin(),
+                result.vocab_log_probs[i].end(), flat + i * vocab_size);
+    }
+    r->vocab_log_probs = flat;
+  } else {
+    r->vocab_log_probs = nullptr;
+    r->vocab_size = 0;
+  }
+
   return r;
 }
 
@@ -328,6 +344,7 @@ void SherpaOnnxDestroyOnlineRecognizerResult(
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->timestamps;
+    delete[] r->vocab_log_probs;
     delete r;
   }
 }
@@ -848,6 +865,22 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     r->ys_log_probs = nullptr;
   }
 
+  // Copy vocab_log_probs (flattened 2D: count * vocab_size)
+  if (!result.vocab_log_probs.empty() &&
+      static_cast<int32_t>(result.vocab_log_probs.size()) == r->count) {
+    int32_t vocab_size = result.vocab_log_probs[0].size();
+    r->vocab_size = vocab_size;
+    float *flat = new float[r->count * vocab_size];
+    for (int32_t i = 0; i < r->count; ++i) {
+      std::copy(result.vocab_log_probs[i].begin(),
+                result.vocab_log_probs[i].end(), flat + i * vocab_size);
+    }
+    r->vocab_log_probs = flat;
+  } else {
+    r->vocab_log_probs = nullptr;
+    r->vocab_size = 0;
+  }
+
   // Copy segment-level timestamps (from Whisper with segment timestamps)
   auto segment_count = result.segment_texts.size();
   if (segment_count > 0 && result.segment_timestamps.size() == segment_count &&
@@ -911,6 +944,7 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
     delete[] r->segment_durations;
     delete[] r->segment_texts;
     delete[] r->segment_texts_arr;
+    delete[] r->vocab_log_probs;
     delete r;
   }
 }
@@ -931,54 +965,6 @@ void SherpaOnnxDestroyOfflineStreamResultJson(const char *s) {
   delete[] s;
 }
 
-static const SherpaOnnxVocabLogProbs *FlattenVocabLogProbs(
-    const std::vector<std::vector<float>> &vocab_log_probs) {
-  if (vocab_log_probs.empty()) {
-    return nullptr;
-  }
-
-  int32_t num_tokens = vocab_log_probs.size();
-  int32_t vocab_size = vocab_log_probs[0].size();
-
-  auto vocab_probs = new SherpaOnnxVocabLogProbs;
-  vocab_probs->num_tokens = num_tokens;
-  vocab_probs->vocab_size = vocab_size;
-
-  float *flat_probs = new float[num_tokens * vocab_size];
-  for (int32_t i = 0; i < num_tokens; ++i) {
-    if (static_cast<int32_t>(vocab_log_probs[i].size()) != vocab_size) {
-      SHERPA_ONNX_LOGE("vocab_log_probs[%d] size %d != expected %d", i,
-                        static_cast<int32_t>(vocab_log_probs[i].size()),
-                        vocab_size);
-      delete[] flat_probs;
-      delete vocab_probs;
-      return nullptr;
-    }
-    std::copy(vocab_log_probs[i].begin(), vocab_log_probs[i].end(),
-              flat_probs + i * vocab_size);
-  }
-  vocab_probs->log_probs = flat_probs;
-
-  return vocab_probs;
-}
-
-const struct SherpaOnnxVocabLogProbs *SherpaOnnxOnlineStreamGetVocabLogProbs(
-    const SherpaOnnxOnlineStream *stream) {
-  return FlattenVocabLogProbs(stream->impl->GetResult().vocab_log_probs);
-}
-
-const struct SherpaOnnxVocabLogProbs *SherpaOnnxOfflineStreamGetVocabLogProbs(
-    const SherpaOnnxOfflineStream *stream) {
-  return FlattenVocabLogProbs(stream->impl->GetResult().vocab_log_probs);
-}
-
-void SherpaOnnxDestroyVocabLogProbs(
-    const struct SherpaOnnxVocabLogProbs *log_probs) {
-  if (log_probs) {
-    delete[] log_probs->log_probs;
-    delete log_probs;
-  }
-}
 
 // ============================================================
 // For Keyword Spot

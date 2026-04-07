@@ -67,13 +67,5 @@ class OnlineStream {
     SherpaOnnxBindings.onlineStreamInputFinished?.call(ptr);
   }
 
-  List<List<double>>? getVocabLogProbs() {
-    final getFunc = SherpaOnnxBindings.getOnlineStreamVocabLogProbs;
-    final destroyFunc = SherpaOnnxBindings.destroyVocabLogProbs;
-    if (getFunc == null || destroyFunc == null) return null;
-
-    return readAndFreeVocabLogProbs(getFunc(ptr), destroyFunc);
-  }
-
   Pointer<SherpaOnnxOnlineStream> ptr;
 }

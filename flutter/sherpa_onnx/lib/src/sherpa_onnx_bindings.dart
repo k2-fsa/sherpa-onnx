@@ -824,44 +824,59 @@ final class SherpaOnnxSpokenLanguageIdentificationResult extends Struct {
 
 final class SherpaOnnxSpokenLanguageIdentification extends Opaque {}
 
-final class SherpaOnnxVocabLogProbs extends Struct {
-  // Flattened 2D array
-  external Pointer<Float> logProbs;
-
+/// FFI struct for the online recognizer result (mirrors C API struct layout).
+final class SherpaOnnxOnlineRecognizerResultNative extends Struct {
+  external Pointer<Utf8> text;
+  external Pointer<Utf8> tokens;
+  external Pointer<Pointer<Utf8>> tokensArr;
+  external Pointer<Float> timestamps;
   @Int32()
-  external int numTokens;
-
+  external int count;
+  external Pointer<Utf8> json;
+  external Pointer<Float> vocabLogProbs;
   @Int32()
   external int vocabSize;
 }
 
-/// Read a native [SherpaOnnxVocabLogProbs] pointer into a Dart list-of-lists
-/// and free the native memory via [destroyFunc].  Returns `null` when
-/// [vocabPtr] is null or the sizes look invalid.
-List<List<double>>? readAndFreeVocabLogProbs(
-  Pointer<SherpaOnnxVocabLogProbs> vocabPtr,
-  void Function(Pointer<SherpaOnnxVocabLogProbs>) destroyFunc,
+/// FFI struct for the offline recognizer result (mirrors C API struct layout).
+final class SherpaOnnxOfflineRecognizerResultNative extends Struct {
+  external Pointer<Utf8> text;
+  external Pointer<Float> timestamps;
+  @Int32()
+  external int count;
+  external Pointer<Utf8> tokens;
+  external Pointer<Pointer<Utf8>> tokensArr;
+  external Pointer<Utf8> json;
+  external Pointer<Utf8> lang;
+  external Pointer<Utf8> emotion;
+  external Pointer<Utf8> event;
+  external Pointer<Float> durations;
+  external Pointer<Float> ysLogProbs;
+  external Pointer<Float> segmentTimestamps;
+  external Pointer<Float> segmentDurations;
+  external Pointer<Utf8> segmentTexts;
+  external Pointer<Pointer<Utf8>> segmentTextsArr;
+  @Int32()
+  external int segmentCount;
+  external Pointer<Float> vocabLogProbs;
+  @Int32()
+  external int vocabSize;
+}
+
+/// Read vocab_log_probs from a native result struct into a Dart list-of-lists.
+/// Returns `null` when vocab_log_probs is null or sizes are invalid.
+List<List<double>>? readVocabLogProbsFromResult(
+  Pointer<Float> vocabLogProbs,
+  int count,
+  int vocabSize,
 ) {
-  if (vocabPtr == nullptr) {
+  if (vocabLogProbs == nullptr || count <= 0 || vocabSize <= 0) {
     return null;
   }
 
-  final ref = vocabPtr.ref;
-  final numTokens = ref.numTokens;
-  final vocabSize = ref.vocabSize;
-
-  if (numTokens <= 0 || vocabSize <= 0 ||
-      numTokens > 10000 || vocabSize > 100000) {
-    destroyFunc(vocabPtr);
-    return null;
-  }
-
-  final flat = ref.logProbs.asTypedList(numTokens * vocabSize);
-  final result = List.generate(numTokens, (i) =>
+  final flat = vocabLogProbs.asTypedList(count * vocabSize);
+  return List.generate(count, (i) =>
       List<double>.generate(vocabSize, (j) => flat[i * vocabSize + j]));
-
-  destroyFunc(vocabPtr);
-  return result;
 }
 
 final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
@@ -1886,19 +1901,24 @@ typedef SherpaOnnxGetGitSha1 = SherpaOnnxGetGitSha1Native;
 typedef SherpaOnnxGetGitDateNative = Pointer<Utf8> Function();
 typedef SherpaOnnxGetGitDate = SherpaOnnxGetGitDateNative;
 
-typedef SherpaOnnxOnlineStreamGetVocabLogProbsNative
-    = Pointer<SherpaOnnxVocabLogProbs> Function(
+typedef SherpaOnnxGetOnlineStreamResultNative
+    = Pointer<SherpaOnnxOnlineRecognizerResultNative> Function(
+        Pointer<SherpaOnnxOnlineRecognizer> recognizer,
         Pointer<SherpaOnnxOnlineStream> stream);
 
-typedef SherpaOnnxOfflineStreamGetVocabLogProbsNative
-    = Pointer<SherpaOnnxVocabLogProbs> Function(
+typedef SherpaOnnxDestroyOnlineRecognizerResultNative = Void Function(
+    Pointer<SherpaOnnxOnlineRecognizerResultNative> r);
+typedef SherpaOnnxDestroyOnlineRecognizerResultDart = void Function(
+    Pointer<SherpaOnnxOnlineRecognizerResultNative> r);
+
+typedef SherpaOnnxGetOfflineStreamResultNative
+    = Pointer<SherpaOnnxOfflineRecognizerResultNative> Function(
         Pointer<SherpaOnnxOfflineStream> stream);
 
-typedef SherpaOnnxDestroyVocabLogProbsNative = Void Function(
-    Pointer<SherpaOnnxVocabLogProbs> logProbs);
-
-typedef SherpaOnnxDestroyVocabLogProbsDart = void Function(
-    Pointer<SherpaOnnxVocabLogProbs>);
+typedef SherpaOnnxDestroyOfflineRecognizerResultNative = Void Function(
+    Pointer<SherpaOnnxOfflineRecognizerResultNative> r);
+typedef SherpaOnnxDestroyOfflineRecognizerResultDart = void Function(
+    Pointer<SherpaOnnxOfflineRecognizerResultNative> r);
 
 class SherpaOnnxBindings {
   static SherpaOnnxCreateOfflineSpeechDenoiser?
@@ -2141,11 +2161,12 @@ class SherpaOnnxBindings {
   static SherpaOnnxGetGitSha1? getGitSha1;
   static SherpaOnnxGetGitDate? getGitDate;
 
-  static SherpaOnnxOnlineStreamGetVocabLogProbsNative?
-      getOnlineStreamVocabLogProbs;
-  static SherpaOnnxOfflineStreamGetVocabLogProbsNative?
-      getOfflineStreamVocabLogProbs;
-  static SherpaOnnxDestroyVocabLogProbsDart? destroyVocabLogProbs;
+  static SherpaOnnxGetOnlineStreamResultNative? getOnlineStreamResult;
+  static SherpaOnnxDestroyOnlineRecognizerResultDart?
+      destroyOnlineRecognizerResult;
+  static SherpaOnnxGetOfflineStreamResultNative? getOfflineStreamResult;
+  static SherpaOnnxDestroyOfflineRecognizerResultDart?
+      destroyOfflineRecognizerResult;
 
   static void init(DynamicLibrary dynamicLibrary) {
     sherpaOnnxCreateOfflineSpeechDenoiser ??= dynamicLibrary
@@ -2921,21 +2942,27 @@ class SherpaOnnxBindings {
         )
         .asFunction();
 
-    getOnlineStreamVocabLogProbs ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnnxOnlineStreamGetVocabLogProbsNative>>(
-          'SherpaOnnxOnlineStreamGetVocabLogProbs',
+    getOnlineStreamResult ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxGetOnlineStreamResultNative>>(
+          'SherpaOnnxGetOnlineStreamResult',
         )
         .asFunction();
 
-    getOfflineStreamVocabLogProbs ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnnxOfflineStreamGetVocabLogProbsNative>>(
-          'SherpaOnnxOfflineStreamGetVocabLogProbs',
+    destroyOnlineRecognizerResult ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOnlineRecognizerResultNative>>(
+          'SherpaOnnxDestroyOnlineRecognizerResult',
         )
         .asFunction();
 
-    destroyVocabLogProbs ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnnxDestroyVocabLogProbsNative>>(
-          'SherpaOnnxDestroyVocabLogProbs',
+    getOfflineStreamResult ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxGetOfflineStreamResultNative>>(
+          'SherpaOnnxGetOfflineStreamResult',
+        )
+        .asFunction();
+
+    destroyOfflineRecognizerResult ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOfflineRecognizerResultNative>>(
+          'SherpaOnnxDestroyOfflineRecognizerResult',
         )
         .asFunction();
   }

@@ -416,6 +416,19 @@ typedef struct SherpaOnnxOnlineRecognizerResult {
 
   /** JSON serialization of the result. */
   const char *json;
+
+  /**
+   * Optional flattened vocabulary log-probability matrix.
+   *
+   * When non-NULL, this is a contiguous row-major array of
+   * @c count * @c vocab_size floats.  Row @c i (starting at offset
+   * <code>i * vocab_size</code>) holds the full log-probability
+   * distribution over the vocabulary for the @c i-th emitted token.
+   */
+  const float *vocab_log_probs;
+
+  /** Vocabulary size (number of columns in @c vocab_log_probs). */
+  int32_t vocab_size;
 } SherpaOnnxOnlineRecognizerResult;
 
 /** @brief Streaming recognizer handle. */
@@ -1499,22 +1512,21 @@ typedef struct SherpaOnnxOfflineRecognizerResult {
 
   /** Number of segment entries in the segment-level arrays. */
   int32_t segment_count;
+
+  /**
+   * Optional flattened vocabulary log-probability matrix.
+   *
+   * When non-NULL, this is a contiguous row-major array of
+   * @c count * @c vocab_size floats.  Row @c i (starting at offset
+   * <code>i * vocab_size</code>) holds the full log-probability
+   * distribution over the vocabulary for the @c i-th emitted token.
+   */
+  const float *vocab_log_probs;
+
+  /** Vocabulary size (number of columns in @c vocab_log_probs). */
+  int32_t vocab_size;
 } SherpaOnnxOfflineRecognizerResult;
 
-SHERPA_ONNX_API typedef struct SherpaOnnxVocabLogProbs {
-  const float *log_probs;  // Flattened 2D array [num_tokens][vocab_size]
-  int32_t num_tokens;
-  int32_t vocab_size;
-} SherpaOnnxVocabLogProbs;
-
-SHERPA_ONNX_API const SherpaOnnxVocabLogProbs *
-SherpaOnnxOnlineStreamGetVocabLogProbs(const SherpaOnnxOnlineStream *stream);
-
-SHERPA_ONNX_API const SherpaOnnxVocabLogProbs *
-SherpaOnnxOfflineStreamGetVocabLogProbs(const SherpaOnnxOfflineStream *stream);
-
-SHERPA_ONNX_API void SherpaOnnxDestroyVocabLogProbs(
-    const SherpaOnnxVocabLogProbs *log_probs);
 
 /**
  * @brief Get the recognition result for an offline ASR stream.

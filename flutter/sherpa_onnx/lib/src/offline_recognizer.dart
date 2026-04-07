@@ -1313,6 +1313,29 @@ class OfflineRecognizer {
     SherpaOnnxBindings.decodeOfflineStream?.call(ptr, stream.ptr);
   }
 
+  /// Fetch the full vocabulary log-probability distributions for [stream].
+  ///
+  /// Returns a list of lists, where each inner list is the log-probability
+  /// distribution over the vocabulary for one emitted token.  Returns `null`
+  /// if no vocab_log_probs are available.
+  List<List<double>>? getVocabLogProbs(OfflineStream stream) {
+    final getFunc = SherpaOnnxBindings.getOfflineStreamResult;
+    final destroyFunc = SherpaOnnxBindings.destroyOfflineRecognizerResult;
+    if (getFunc == null || destroyFunc == null) return null;
+
+    if (ptr == nullptr || stream.ptr == nullptr) return null;
+
+    final resultPtr = getFunc(stream.ptr);
+    if (resultPtr == nullptr) return null;
+
+    final ref = resultPtr.ref;
+    final probs = readVocabLogProbsFromResult(
+        ref.vocabLogProbs, ref.count, ref.vocabSize);
+
+    destroyFunc(resultPtr);
+    return probs;
+  }
+
   /// Fetch the current recognition result for [stream].
   OfflineRecognizerResult getResult(OfflineStream stream) {
     if (SherpaOnnxBindings.getOfflineStreamResultAsJson == null) {

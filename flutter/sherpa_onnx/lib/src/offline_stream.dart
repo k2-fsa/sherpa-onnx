@@ -56,14 +56,6 @@ class OfflineStream {
     calloc.free(p);
   }
 
-  List<List<double>>? getVocabLogProbs() {
-    final getFunc = SherpaOnnxBindings.getOfflineStreamVocabLogProbs;
-    final destroyFunc = SherpaOnnxBindings.destroyVocabLogProbs;
-    if (getFunc == null || destroyFunc == null) return null;
-
-    return readAndFreeVocabLogProbs(getFunc(ptr), destroyFunc);
-  }
-
   /// Set a string option on the underlying stream.
   void setOption({required String key, required String value}) {
     if (SherpaOnnxBindings.offlineStreamSetOption == null) {
