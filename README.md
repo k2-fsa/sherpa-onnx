@@ -91,6 +91,8 @@ on the following platforms and operating systems:
   - [旭日X3派][旭日X3派]
   - [爱芯派][爱芯派]
   - [RK3588][RK3588]
+  - [SpacemiT-K1][SpacemiT-K1]
+  - [SpacemiT-K3][SpacemiT-K3]
   - etc
 
 with the following APIs
@@ -640,3 +642,5 @@ cross-platform Node.js microphone streaming library with prebuilt native binarie
 [qnn-doc]: https://k2-fsa.github.io/sherpa/onnx/qnn/index.html
 [ascend-doc]: https://k2-fsa.github.io/sherpa/onnx/ascend/index.html
 [axera-npu]: https://axera-tech.com/Skill/166.html
+[SpacemiT-K1]: https://cdn-resource.spacemit.com/file/chip/K1/K1_brief_zh.pdf
+[SpacemiT-K3]: https://cdn-resource.spacemit.com/file/chip/K3/K3_brief_zh.pdf
