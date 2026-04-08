@@ -24,7 +24,9 @@ export src_dir
 mkdir -p $src_dir
 pushd $src_dir
 
-mkdir -p linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
+RIDS=(linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64)
+
+mkdir -p ${RIDS[@]}
 
 linux_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_x86_64.whl
 linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
@@ -182,46 +184,18 @@ fi
 
 popd
 
-mkdir -p macos-x64 macos-arm64 linux-x64 linux-arm64 windows-x64 windows-x86 windows-arm64 all
+mkdir -p ${RIDS[@]} all
 
 cp ./*.cs all
 
 ./generate.py
 
-pushd linux-x64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd linux-arm64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd macos-x64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd macos-arm64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd windows-x64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd windows-x86
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
-
-pushd windows-arm64
-dotnet build -c Release
-dotnet pack -c Release -o ../packages
-popd
+for rid in "${RIDS[@]}"; do
+  pushd "$rid"
+  dotnet build -c Release
+  dotnet pack -c Release -o ../packages
+  popd
+done
 
 pushd all
 dotnet build -c Release
