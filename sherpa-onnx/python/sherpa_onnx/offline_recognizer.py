@@ -588,6 +588,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 40,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -619,7 +620,10 @@ class OfflineRecognizer(object):
             Dimension of the feature used to train the model. It is ignored
             and is hard-coded in C++ to 40.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -649,6 +653,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
@@ -668,6 +673,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -697,7 +703,10 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -727,6 +736,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
@@ -746,6 +756,7 @@ class OfflineRecognizer(object):
         tokens: str,
         num_threads: int = 1,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -766,7 +777,10 @@ class OfflineRecognizer(object):
           num_threads:
             Number of threads for neural network computation.
           decoding_method:
-            The only supported decoding method is greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -784,6 +798,7 @@ class OfflineRecognizer(object):
         recognizer_config = OfflineRecognizerConfig(
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -796,6 +811,7 @@ class OfflineRecognizer(object):
         tokens: str,
         num_threads: int = 1,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -816,7 +832,10 @@ class OfflineRecognizer(object):
           num_threads:
             Number of threads for neural network computation.
           decoding_method:
-            The only supported decoding method is greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -834,6 +853,7 @@ class OfflineRecognizer(object):
         recognizer_config = OfflineRecognizerConfig(
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -846,6 +866,7 @@ class OfflineRecognizer(object):
         tokens: str,
         num_threads: int = 1,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -866,7 +887,10 @@ class OfflineRecognizer(object):
           num_threads:
             Number of threads for neural network computation.
           decoding_method:
-            The only supported decoding method is greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -884,6 +908,7 @@ class OfflineRecognizer(object):
         recognizer_config = OfflineRecognizerConfig(
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -898,6 +923,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -928,7 +954,10 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -958,6 +987,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
@@ -979,6 +1009,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -1009,7 +1040,10 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -1040,6 +1074,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
@@ -1617,6 +1652,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 8000,
         feature_dim: int = 23,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -1646,7 +1682,10 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -1677,6 +1716,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
@@ -1698,6 +1738,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         debug: bool = False,
         provider: str = "cpu",
         rule_fsts: str = "",
@@ -1728,7 +1769,10 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search.
+            Valid values are greedy_search and prefix_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is prefix_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -1759,6 +1803,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,
             hr=HomophoneReplacerConfig(
