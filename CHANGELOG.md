@@ -1,3 +1,15 @@
+## 1.12.36
+
+* Dotnet Android arm64 targeting (#3485)
+* Use file path to initialize onnxruntime session. (#3482)
+* update onnxruntime package name and hash for riscv64-spacemit (#3481)
+* Fix initializing fp32 Qwen3-ASR models. (#3480)
+* Fix Qwen3ASR hotwords handling (#3477)
+* Update Qwen3 ASR models (#3476)
+* Fix building for vad+asr (#3475)
+* Add per-stream language hint for Qwen3-ASR (and tighten scaffold cleanup) (#3472)
+* Add hotwords argument to OfflineQwen3ASRModelConfig (#3468)
+
 ## 1.12.35
 
 * Add Go API for Cohere Transcribe (#3466)
