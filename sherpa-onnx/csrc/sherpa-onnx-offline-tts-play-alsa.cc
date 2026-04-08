@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/alsa-play.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -41,7 +42,7 @@ static bool g_killed = false;
 
 static void Handler(int32_t /*sig*/) {
   if (g_killed) {
-    exit(0);
+    SHERPA_ONNX_EXIT(0);
   }
 
   g_killed = true;
@@ -226,7 +227,7 @@ or details.
   if (po.NumArgs() == 0) {
     fprintf(stderr, "Error: Please provide the text to generate audio.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (po.NumArgs() > 1) {
@@ -234,12 +235,12 @@ or details.
             "Error: Accept only one positional argument. Please use single "
             "quotes to wrap your text\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (!config.Validate()) {
     fprintf(stderr, "Errors in config!\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (config.max_num_sentences != 1) {
@@ -273,7 +274,7 @@ or details.
     if (reference_audio.empty()) {
       fprintf(stderr,
               "You need to provide --reference-audio for this TTS model");
-      exit(EXIT_FAILURE);
+      SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
 
     int32_t sample_rate;
@@ -282,7 +283,7 @@ or details.
         sherpa_onnx::ReadWave(reference_audio, &sample_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'", reference_audio.c_str());
-      exit(EXIT_FAILURE);
+      SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
 
     gen_config.reference_audio = std::move(samples);
@@ -293,7 +294,7 @@ or details.
     if (reference_text.empty()) {
       fprintf(stderr,
               "You need to provide --reference-text for ZipVoice TTS");
-      exit(EXIT_FAILURE);
+      SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
     gen_config.reference_text = reference_text;
   }
@@ -308,7 +309,7 @@ or details.
     fprintf(
         stderr,
         "Error in generating audio. Please read previous error messages.\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   float elapsed_seconds =
@@ -327,7 +328,7 @@ or details.
                                    audio.samples.data(), audio.samples.size());
   if (!ok) {
     fprintf(stderr, "Failed to write wave to %s\n", output_filename.c_str());
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "The text is: %s. Speaker ID: %d\n\n", po.GetArg(1).c_str(),

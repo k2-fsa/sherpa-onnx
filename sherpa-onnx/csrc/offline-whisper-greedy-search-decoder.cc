@@ -56,7 +56,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
       if (!lang2id.count(config_.language)) {
         SHERPA_ONNX_LOGE("Invalid language: %s", config_.language.c_str());
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       int32_t lang_id = lang2id.at(config_.language);

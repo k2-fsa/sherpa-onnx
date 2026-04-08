@@ -3,6 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-source-separation-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <memory>

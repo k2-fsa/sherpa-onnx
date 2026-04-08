@@ -178,12 +178,12 @@ void ParseOptions::RegisterSpecific(const std::string &name,
 void ParseOptions::DisableOption(const std::string &name) {
   if (argv_ != nullptr) {
     SHERPA_ONNX_LOGE("DisableOption must not be called after calling Read().");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   if (doc_map_.erase(name) == 0) {
     SHERPA_ONNX_LOGE("Option %s was not registered so cannot be disabled: ",
                      name.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   bool_map_.erase(name);
   int_map_.erase(name);
@@ -199,7 +199,7 @@ int32_t ParseOptions::NumArgs() const { return positional_args_.size(); }
 std::string ParseOptions::GetArg(int32_t i) const {
   if (i < 1 || i > static_cast<int32_t>(positional_args_.size())) {
     SHERPA_ONNX_LOGE("ParseOptions::GetArg, invalid index %d", i);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   return positional_args_[i - 1];
@@ -326,7 +326,7 @@ int32_t ParseOptions::Read(int32_t argc, const char *const *argv) {
         ReadConfigFile(value);
       } else if (key == "help") {
         PrintUsage();
-        exit(0);
+        SHERPA_ONNX_EXIT(0);
       }
     }
   }
@@ -349,7 +349,7 @@ int32_t ParseOptions::Read(int32_t argc, const char *const *argv) {
       if (!SetOption(key, value, has_equal_sign)) {
         PrintUsage(true);
         SHERPA_ONNX_LOGE("Invalid option %s", argv[i]);
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
     } else {
       break;
@@ -437,7 +437,7 @@ void ParseOptions::PrintConfig(std::ostream &os) const {
     } else {
       SHERPA_ONNX_LOGE("PrintConfig: unrecognized option %s [code error]",
                        key.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     os << '\n';
   }
@@ -448,7 +448,7 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
   std::ifstream is(filename.c_str(), std::ifstream::in);
   if (!is.good()) {
     SHERPA_ONNX_LOGE("Cannot open config file: %s", filename.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   std::string line, key, value;
@@ -471,7 +471,7 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
           "be of the form --x=y.  Note: config files intended to "
           "be sourced by shell scripts lack the '--'.",
           filename.c_str(), line_number);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // parse option
@@ -483,7 +483,7 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
       PrintUsage(true);
       SHERPA_ONNX_LOGE("Invalid option %s in config file %s: line %d",
                        line.c_str(), filename.c_str(), line_number);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 }
@@ -501,7 +501,7 @@ void ParseOptions::SplitLongArg(const std::string &in, std::string *key,
   } else if (pos == 2) {  // we also don't allow empty keys: --=value
     PrintUsage(true);
     SHERPA_ONNX_LOGE("Invalid option (no key): %s", in.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   } else {                         // normal case: --option=value
     *key = in.substr(2, pos - 2);  // 2 because starts with --.
     *value = in.substr(pos + 1);
@@ -543,7 +543,7 @@ bool ParseOptions::SetOption(const std::string &key, const std::string &value,
   if (bool_map_.end() != bool_map_.find(key)) {
     if (has_equal_sign && value.empty()) {
       SHERPA_ONNX_LOGE("Invalid option --%s=", key.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     *(bool_map_[key]) = ToBool(value);
   } else if (int_map_.end() != int_map_.find(key)) {
@@ -560,7 +560,7 @@ bool ParseOptions::SetOption(const std::string &key, const std::string &value,
     if (!has_equal_sign) {
       SHERPA_ONNX_LOGE("Invalid option --%s (option format is --x=y).",
                        key.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     *(string_map_[key]) = value;
   } else {
@@ -584,7 +584,7 @@ bool ParseOptions::ToBool(std::string str) const {
   SHERPA_ONNX_LOGE(
       "Invalid format for boolean argument [expected true or false]: %s",
       str.c_str());
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
   return false;  // never reached
 }
 
@@ -592,7 +592,7 @@ int32_t ParseOptions::ToInt(const std::string &str) const {
   int32_t ret = 0;
   if (!ConvertStringToInteger(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid integer option \"%s\"", str.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   return ret;
 }
@@ -601,7 +601,7 @@ int64_t ParseOptions::ToInt64(const std::string &str) const {
   int64_t ret = 0;
   if (!ConvertStringToInteger(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid integer int64 option \"%s\"", str.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   return ret;
 }
@@ -610,7 +610,7 @@ uint32_t ParseOptions::ToUint(const std::string &str) const {
   uint32_t ret = 0;
   if (!ConvertStringToInteger(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid integer option \"%s\"", str.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   return ret;
 }
@@ -619,7 +619,7 @@ float ParseOptions::ToFloat(const std::string &str) const {
   float ret = 0;
   if (!ConvertStringToReal(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid floating-point option \"%s\"", str.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   return ret;
 }
@@ -628,7 +628,7 @@ double ParseOptions::ToDouble(const std::string &str) const {
   double ret = 0;
   if (!ConvertStringToReal(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid floating-point option \"%s\"", str.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   return ret;
 }

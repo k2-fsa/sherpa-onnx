@@ -279,7 +279,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       SHERPA_ONNX_LOGE(
           "We expect that tokens.txt contains "
           "the symbol <blk> or <eps> or <blank> and its ID.");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int32_t blank_id = 0;
@@ -302,7 +302,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       SHERPA_ONNX_LOGE(
           "Unsupported decoding method: %s for streaming CTC models",
           config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

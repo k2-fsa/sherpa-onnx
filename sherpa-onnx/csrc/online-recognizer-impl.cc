@@ -27,6 +27,7 @@
 #include "sherpa-onnx/csrc/online-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
@@ -66,9 +67,9 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     sess_opts.SetIntraOpNumThreads(1);
     sess_opts.SetInterOpNumThreads(1);
 
-    auto decoder_model = ReadFile(config.model_config.transducer.decoder);
-    auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(),
-                                               decoder_model.size(), sess_opts);
+    auto sess = std::make_unique<Ort::Session>(
+        env, SHERPA_ONNX_TO_ORT_PATH(config.model_config.transducer.decoder),
+        sess_opts);
 
     size_t node_count = sess->GetOutputCount();
 

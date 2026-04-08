@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -87,7 +88,7 @@ for a list of pre-trained models to download.
   if (po.NumArgs() < 1) {
     po.PrintUsage();
     fprintf(stderr, "Error! Please provide at lease 1 wav file\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());

@@ -13,6 +13,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/fast-clustering.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"

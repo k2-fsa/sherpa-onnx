@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -34,13 +35,14 @@ class SileroVadModel::Impl {
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
-    auto buf = ReadFile(config.silero_vad.model);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.silero_vad.model), sess_opts_);
+    Init(nullptr, 0);
 
     if (sample_rate_ != 16000) {
       SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
                        config.sample_rate);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     min_silence_samples_ =
@@ -62,7 +64,7 @@ class SileroVadModel::Impl {
     if (sample_rate_ != 16000) {
       SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
                        config.sample_rate);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     min_silence_samples_ =
@@ -95,7 +97,7 @@ class SileroVadModel::Impl {
   bool IsSpeech(const float *samples, int32_t n) {
     if (n != WindowSize()) {
       SHERPA_ONNX_LOGE("n: %d != window_size: %d", n, WindowSize());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     float prob = Run(samples, n);
@@ -190,8 +192,15 @@ class SileroVadModel::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
@@ -209,11 +218,11 @@ class SileroVadModel::Impl {
       if (config_.silero_vad.window_size != 512) {
         SHERPA_ONNX_LOGE(
             "For silero_vad  v5, we require window_size to be 512 for 16kHz");
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
     } else {
       SHERPA_ONNX_LOGE("Unsupported silero vad model");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     Check();
@@ -285,51 +294,51 @@ class SileroVadModel::Impl {
     if (input_names_.size() != 4) {
       SHERPA_ONNX_LOGE("Expect 4 inputs. Given: %d",
                        static_cast<int32_t>(input_names_.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[0] != "input") {
       SHERPA_ONNX_LOGE("Input[0]: %s. Expected: input",
                        input_names_[0].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[1] != "sr") {
       SHERPA_ONNX_LOGE("Input[1]: %s. Expected: sr", input_names_[1].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[2] != "h") {
       SHERPA_ONNX_LOGE("Input[2]: %s. Expected: h", input_names_[2].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[3] != "c") {
       SHERPA_ONNX_LOGE("Input[3]: %s. Expected: c", input_names_[3].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Now for outputs
     if (output_names_.size() != 3) {
       SHERPA_ONNX_LOGE("Expect 3 outputs. Given: %d",
                        static_cast<int32_t>(output_names_.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (output_names_[0] != "output") {
       SHERPA_ONNX_LOGE("Output[0]: %s. Expected: output",
                        output_names_[0].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (output_names_[1] != "hn") {
       SHERPA_ONNX_LOGE("Output[1]: %s. Expected: sr", output_names_[1].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (output_names_[2] != "cn") {
       SHERPA_ONNX_LOGE("Output[2]: %s. Expected: sr", output_names_[2].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -337,43 +346,43 @@ class SileroVadModel::Impl {
     if (input_names_.size() != 3) {
       SHERPA_ONNX_LOGE("Expect 3 inputs. Given: %d",
                        static_cast<int32_t>(input_names_.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[0] != "input") {
       SHERPA_ONNX_LOGE("Input[0]: %s. Expected: input",
                        input_names_[0].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[1] != "state") {
       SHERPA_ONNX_LOGE("Input[1]: %s. Expected: state",
                        input_names_[1].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (input_names_[2] != "sr") {
       SHERPA_ONNX_LOGE("Input[2]: %s. Expected: sr", input_names_[2].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Now for outputs
     if (output_names_.size() != 2) {
       SHERPA_ONNX_LOGE("Expect 2 outputs. Given: %d",
                        static_cast<int32_t>(output_names_.size()));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (output_names_[0] != "output") {
       SHERPA_ONNX_LOGE("Output[0]: %s. Expected: output",
                        output_names_[0].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (output_names_[1] != "stateN") {
       SHERPA_ONNX_LOGE("Output[1]: %s. Expected: stateN",
                        output_names_[1].c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

@@ -27,6 +27,8 @@
 #include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
 #include "sherpa-onnx/csrc/online-zipformer2-transducer-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace {
 
@@ -42,6 +44,54 @@ enum class ModelType : std::uint8_t {
 }  // namespace
 
 namespace sherpa_onnx {
+
+static ModelType GetModelType(const std::string &model_path, bool debug) {
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
+  auto sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
+
+
+  Ort::ModelMetadata meta_data = sess->GetModelMetadata();
+  if (debug) {
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+  }
+
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
+    SHERPA_ONNX_LOGE(
+        "No model_type in the metadata!\n"
+        "Please make sure you are using the latest export-onnx.py from icefall "
+        "to export your transducer models");
+    return ModelType::kUnknown;
+  }
+
+  if (model_type == "conformer") {
+    return ModelType::kConformer;
+  } else if (model_type == "ebranchformer") {
+    return ModelType::kEbranchformer;
+  } else if (model_type == "lstm") {
+    return ModelType::kLstm;
+  } else if (model_type == "zipformer") {
+    return ModelType::kZipformer;
+  } else if (model_type == "zipformer2") {
+    return ModelType::kZipformer2;
+  } else {
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+    return ModelType::kUnknown;
+  }
+}
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
@@ -114,9 +164,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   ModelType model_type = ModelType::kUnknown;
 
   {
-    auto buffer = ReadFile(config.transducer.encoder);
-
-    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+    model_type = GetModelType(config.transducer.encoder, config.debug);
   }
 
   switch (model_type) {

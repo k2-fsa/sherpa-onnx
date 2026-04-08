@@ -163,10 +163,8 @@ class OnlineRnnLM::Impl {
 
  private:
   void Init(const OnlineLMConfig &config) {
-    auto buf = ReadFile(config_.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
-                                           sess_opts_);
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.model), sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);

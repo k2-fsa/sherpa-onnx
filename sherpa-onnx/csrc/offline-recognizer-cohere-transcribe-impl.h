@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-cohere-transcribe-model.h"

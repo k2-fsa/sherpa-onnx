@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
@@ -64,20 +65,20 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
   if (po.NumArgs() != 0) {
     fprintf(stderr, "Please don't give positional arguments\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
   if (input_wave.empty()) {
     fprintf(stderr, "Please provide --input-wav\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (output_wave.empty()) {
     fprintf(stderr, "Please provide --output-wav\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   sherpa_onnx::OfflineSpeechDenoiser denoiser(config);
