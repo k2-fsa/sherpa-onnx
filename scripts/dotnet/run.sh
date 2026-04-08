@@ -24,7 +24,7 @@ export src_dir
 mkdir -p $src_dir
 pushd $src_dir
 
-RIDS=(linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64)
+RIDS=(linux-x64 linux-arm64 android-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64)
 
 mkdir -p ${RIDS[@]}
 
@@ -81,6 +81,16 @@ if [ ! -f $src_dir/linux-arm64/libsherpa-onnx-c-api.so ]; then
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
   rm -rf wheel
+  ls -lh
+  cd ..
+fi
+
+if [ ! -f $src_dir/android-arm64/libsherpa-onnx-c-api.so ]; then
+  echo "---android arm64---"
+  cd android-arm64
+  # TODO this obviously necessitates a build because we can't get these from the wheels repository
+  # is https://beeware.org/mobile-wheels/ relevant here?
+  cp -v "$SHERPA_ONNX_DIR"/build-android-arm64-v8a/install/lib/*.so* ./
   ls -lh
   cd ..
 fi
