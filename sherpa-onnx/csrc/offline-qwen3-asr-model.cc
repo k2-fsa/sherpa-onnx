@@ -29,6 +29,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -131,33 +132,21 @@ class OfflineQwen3ASRModel::Impl {
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.qwen3_asr;
 
-    {
-      auto buf = ReadFile(c.conv_frontend);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.conv_frontend: %s",
-                         c.conv_frontend.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitConvFrontend(buf.data(), buf.size());
-    }
-    {
-      auto buf = ReadFile(c.encoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.encoder: %s",
-                         c.encoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitEncoder(buf.data(), buf.size());
-    }
-    {
-      auto buf = ReadFile(c.decoder);
-      if (buf.empty()) {
-        SHERPA_ONNX_LOGE("Failed to read qwen3_asr.decoder: %s",
-                         c.decoder.c_str());
-        SHERPA_ONNX_EXIT(-1);
-      }
-      InitDecoder(buf.data(), buf.size());
-    }
+    conv_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(c.conv_frontend), sess_opts_conv_);
+
+    InitConvFrontend(nullptr, 0);
+
+    encoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(c.encoder), sess_opts_encoder_);
+
+    InitEncoder(nullptr, 0);
+
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(c.decoder), sess_opts_decoder_);
+
+    InitDecoder(nullptr, 0);
+
     InitIoBindingConfig();
   }
 
@@ -224,8 +213,16 @@ class OfflineQwen3ASRModel::Impl {
   }
 
   void InitConvFrontend(void *model_data, size_t model_data_length) {
-    conv_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_conv_);
+    if (model_data) {
+      conv_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_conv_);
+    } else if (!conv_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize conv session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     InitSessionIo(conv_sess_.get(), &conv_input_names_, &conv_input_names_ptr_,
                   &conv_output_names_, &conv_output_names_ptr_);
 
@@ -243,8 +240,16 @@ class OfflineQwen3ASRModel::Impl {
   }
 
   void InitEncoder(void *model_data, size_t model_data_length) {
-    encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_encoder_);
+    if (model_data) {
+      encoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_encoder_);
+    } else if (!encoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize encoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     InitEncoderSession();
   }
 
@@ -267,8 +272,16 @@ class OfflineQwen3ASRModel::Impl {
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
-    decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_decoder_);
+    if (model_data) {
+      decoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_decoder_);
+    } else if (!decoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass buffer data or initialize decoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     InitDecoderSession();
   }
 
