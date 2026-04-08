@@ -256,8 +256,6 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
           export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
-          echo "Some mistakes in ep graph partition, disable op Gather for spacemit-ep now, will be fixed soon."
-          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
           tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
@@ -280,8 +278,6 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
           export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
-          echo "Some mistakes in ep graph partition, disable op Gather;Cast;ConvTranspose for spacemit-ep now, will be fixed soon."
-          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather;Cast;ConvTranspose"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
           tar xf vits-piper-en_US-lessac-medium.tar.bz2
