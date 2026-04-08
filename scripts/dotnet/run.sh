@@ -34,6 +34,9 @@ linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
 linux_arm64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-manylinux2014_aarch64.whl
 linux_arm64_wheel=$src_dir/$linux_arm64_wheel_filename
 
+android_arm64_tarball_filename=sherpa-onnx-v$SHERPA_ONNX_VERSION-android.tar.bz2
+android_arm64_tarball=$src_dir/$android_arm64_tarball_filename
+
 macos_x64_wheel_filename=sherpa_onnx_core-${SHERPA_ONNX_VERSION}-py3-none-macosx_10_15_x86_64.whl
 macos_x64_wheel=$src_dir/$macos_x64_wheel_filename
 
@@ -88,9 +91,19 @@ fi
 if [ ! -f $src_dir/android-arm64/libsherpa-onnx-c-api.so ]; then
   echo "---android arm64---"
   cd android-arm64
-  # TODO this obviously necessitates a build because we can't get these from the wheels repository
-  # is https://beeware.org/mobile-wheels/ relevant here?
-  cp -v "$SHERPA_ONNX_DIR"/build-android-arm64-v8a/install/lib/*.so* ./
+  mkdir -p tarball
+  cd tarball
+  if [ -f $android_arm64_tarball  ]; then
+    cp -v $android_arm64_tarball .
+  else
+    curl -OL "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$android_arm64_tarball_filename"
+  fi
+  tar xjf $android_arm64_tarball_filename
+  cp -v jniLibs/arm64-v8a/lib{onnxruntime,sherpa-onnx-c-api}.so ../
+
+  cd ..
+
+  rm -rf tarball
   ls -lh
   cd ..
 fi
