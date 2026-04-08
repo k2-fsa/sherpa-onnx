@@ -294,7 +294,7 @@ class OfflineStream::Impl {
       SHERPA_ONNX_LOGE(
           "Only normalize_type=per_feature is implemented. Given: %s",
           config_.nemo_normalize_type.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     NemoNormalizePerFeature(p, num_frames, feature_dim);

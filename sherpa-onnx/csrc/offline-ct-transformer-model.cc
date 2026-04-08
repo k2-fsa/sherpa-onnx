@@ -3,6 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-ct-transformer-model.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
 #include <string>
@@ -32,8 +33,9 @@ class OfflineCtTransformerModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config_.ct_transformer);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.ct_transformer), sess_opts_);
+    Init(nullptr, 0);
   }
 
   template <typename Manager>
@@ -63,8 +65,15 @@ class OfflineCtTransformerModel::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 
@@ -83,7 +92,7 @@ class OfflineCtTransformerModel::Impl {
     if (static_cast<int32_t>(tokens.size()) != vocab_size) {
       SHERPA_ONNX_LOGE("tokens.size() %d != vocab_size %d",
                        static_cast<int32_t>(tokens.size()), vocab_size);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     SHERPA_ONNX_READ_META_DATA_VEC_STRING_SEP(meta_data_.id2punct,

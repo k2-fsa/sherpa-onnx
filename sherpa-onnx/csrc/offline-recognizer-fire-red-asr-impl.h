@@ -14,6 +14,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-decoder.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"

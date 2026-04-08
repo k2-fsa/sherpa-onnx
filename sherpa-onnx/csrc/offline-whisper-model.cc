@@ -379,7 +379,7 @@ class OfflineWhisperModel::Impl {
         SHERPA_ONNX_LOGE("# lang_id: %d != # lang_code: %d",
                          static_cast<int32_t>(all_language_tokens_.size()),
                          static_cast<int32_t>(all_language_codes_.size()));
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       for (int32_t i = 0;

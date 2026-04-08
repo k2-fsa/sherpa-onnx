@@ -99,7 +99,7 @@ class OnlineTransducerDecoder {
                       std::vector<OnlineTransducerDecoderResult> * /*result*/) {
     SHERPA_ONNX_LOGE(
         "This interface is for OnlineTransducerModifiedBeamSearchDecoder.");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   // used for endpointing. We need to keep decoder_out after reset

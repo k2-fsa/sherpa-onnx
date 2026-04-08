@@ -34,10 +34,10 @@ class OfflineTtsKittenModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto model_buf = ReadFile(config.kitten.model);
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.kitten.model), sess_opts_);
     auto voices_buf = ReadFile(config.kitten.voices);
-    Init(model_buf.data(), model_buf.size(), voices_buf.data(),
-         voices_buf.size());
+    Init(nullptr, 0, voices_buf.data(), voices_buf.size());
   }
 
   template <typename Manager>
@@ -98,8 +98,15 @@ class OfflineTtsKittenModel::Impl {
  private:
   void Init(void *model_data, size_t model_data_length, const char *voices_data,
             size_t voices_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
+                                             sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of this "
+          "function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 

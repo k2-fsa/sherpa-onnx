@@ -3,6 +3,7 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-websocket-server-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <iostream>
 #include <memory>
@@ -262,13 +263,13 @@ void OnlineWebsocketServer::Run(uint16_t port) {
     } else {
       SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now.");
       SHERPA_ONNX_LOGE("Given: %s", model_type.c_str());
-      exit(0);
+      SHERPA_ONNX_EXIT(0);
     }
   } else if (warm_up == 0) {
     SHERPA_ONNX_LOGE("Starting without warmup!");
   } else {
     SHERPA_ONNX_LOGE("Invalid Warm up Value!. Expected 0 < warm_up < 100");
-    exit(0);
+    SHERPA_ONNX_EXIT(0);
   }
   decoder_.Run();
 }

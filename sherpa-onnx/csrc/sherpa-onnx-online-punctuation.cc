@@ -9,6 +9,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 int main(int32_t argc, char *argv[]) {
@@ -40,7 +41,7 @@ The output text should look like below:
             "Error: Please provide only 1 positional argument containing the "
             "input text.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());

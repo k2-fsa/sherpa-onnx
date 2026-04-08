@@ -284,7 +284,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     if (!EncodeKeywords(is, sym_, &keywords_id_, &keywords_, &boost_scores_,
                         &thresholds_)) {
       SHERPA_ONNX_LOGE("Encode keywords failed.");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     keywords_graph_ = std::make_shared<ContextGraph>(
         keywords_id_, config_.keywords_score, config_.keywords_threshold,
@@ -309,7 +309,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       SHERPA_ONNX_LOGE("Open keywords file failed: '%s'",
                        config_.keywords_file.c_str());
 #endif
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     InitKeywords(is);
 #endif
@@ -331,7 +331,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       SHERPA_ONNX_LOGE("Open keywords file failed: '%s'",
                        config_.keywords_file.c_str());
 #endif
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     InitKeywords(is);
   }

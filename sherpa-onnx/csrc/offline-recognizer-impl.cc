@@ -320,10 +320,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     SHERPA_ONNX_EXIT(-1);
   }
 
-  auto buf = ReadFile(model_filename);
-
-  auto encoder_sess =
-      std::make_unique<Ort::Session>(env, buf.data(), buf.size(), sess_opts);
+  auto encoder_sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_filename), sess_opts);
 
   Ort::ModelMetadata meta_data = encoder_sess->GetModelMetadata();
 

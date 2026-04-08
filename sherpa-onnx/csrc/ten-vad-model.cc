@@ -41,8 +41,9 @@ class TenVadModel::Impl {
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
-    auto buf = ReadFile(config.ten_vad.model);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.ten_vad.model), sess_opts_);
+    Init(nullptr, 0);
   }
 
   template <typename Manager>
@@ -208,8 +209,15 @@ class TenVadModel::Impl {
 
     min_speech_samples_ = sample_rate_ * config_.ten_vad.min_speech_duration;
 
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);

@@ -3,6 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-source-separation-spleeter-model.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
 #include <string>
@@ -32,15 +33,14 @@ class OfflineSourceSeparationSpleeterModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    {
-      auto buf = ReadFile(config.spleeter.vocals);
-      InitVocals(buf.data(), buf.size());
-    }
+    vocals_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.spleeter.vocals), sess_opts_);
+    InitVocals(nullptr, 0);
 
-    {
-      auto buf = ReadFile(config.spleeter.accompaniment);
-      InitAccompaniment(buf.data(), buf.size());
-    }
+    accompaniment_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.spleeter.accompaniment),
+        sess_opts_);
+    InitAccompaniment(nullptr, 0);
   }
 
   template <typename Manager>
@@ -81,8 +81,15 @@ class OfflineSourceSeparationSpleeterModel::Impl {
 
  private:
   void InitVocals(void *model_data, size_t model_data_length) {
-    vocals_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      vocals_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!vocals_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the vocals session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(vocals_sess_.get(), &vocals_input_names_,
                   &vocals_input_names_ptr_);
@@ -135,8 +142,15 @@ class OfflineSourceSeparationSpleeterModel::Impl {
   }
 
   void InitAccompaniment(void *model_data, size_t model_data_length) {
-    accompaniment_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      accompaniment_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!accompaniment_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the accompaniment session "
+          "outside of this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(accompaniment_sess_.get(), &accompaniment_input_names_,
                   &accompaniment_input_names_ptr_);

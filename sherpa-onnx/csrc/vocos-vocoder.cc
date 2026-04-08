@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -43,16 +44,17 @@ class VocosVocoder::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
-    std::vector<char> buffer;
     if (!config.matcha.vocoder.empty()) {
-      buffer = ReadFile(config.matcha.vocoder);
+      sess_ = std::make_unique<Ort::Session>(
+          env_, SHERPA_ONNX_TO_ORT_PATH(config.matcha.vocoder), sess_opts_);
     } else if (!config.zipvoice.vocoder.empty()) {
-      buffer = ReadFile(config.zipvoice.vocoder);
+      sess_ = std::make_unique<Ort::Session>(
+          env_, SHERPA_ONNX_TO_ORT_PATH(config.zipvoice.vocoder), sess_opts_);
     } else {
       SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
       SHERPA_ONNX_EXIT(-1);
     }
-    Init(buffer.data(), buffer.size());
+    Init(nullptr, 0);
   }
 
   template <typename Manager>
@@ -124,8 +126,15 @@ class VocosVocoder::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
+                                             sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of this "
+          "function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 

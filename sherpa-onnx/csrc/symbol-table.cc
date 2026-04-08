@@ -3,6 +3,7 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <cassert>

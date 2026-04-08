@@ -51,7 +51,7 @@ Ort::Value Stack(OrtAllocator *allocator,
       SHERPA_ONNX_LOGE("Shape for tensor %d: ", i);
       PrintShape(s);
 
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

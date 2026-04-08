@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -33,8 +34,9 @@ class OfflineTtsVitsModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config.vits.model);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.vits.model), sess_opts_);
+    Init(nullptr, 0);
   }
 
   template <typename Manager>
@@ -68,7 +70,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];
@@ -119,8 +121,15 @@ class OfflineTtsVitsModel::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 
@@ -202,7 +211,7 @@ class OfflineTtsVitsModel::Impl {
             "Please download the latest MeloTTS model and retry. Current "
             "version: %d. Expected version: %d",
             meta_data_.version, expected_version);
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       // NOTE(fangjun):
@@ -219,7 +228,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];
@@ -280,7 +289,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];

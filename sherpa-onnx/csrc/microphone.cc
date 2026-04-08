@@ -3,6 +3,7 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/microphone.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +14,7 @@ Microphone::Microphone() {
   PaError err = Pa_Initialize();
   if (err != paNoError) {
     fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 

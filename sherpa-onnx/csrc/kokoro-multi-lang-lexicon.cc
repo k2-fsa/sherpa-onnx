@@ -3,6 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/kokoro-multi-lang-lexicon.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <fstream>
 #include <regex>

@@ -112,7 +112,7 @@ void OnlineTransducerGreedySearchNeMoDecoder::Decode(Ort::Value encoder_out,
   if (batch_size != n) {
     SHERPA_ONNX_LOGE("Size mismatch! encoder_out.size(0) %d, n: %d",
                      static_cast<int32_t>(shape[0]), n);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   int32_t dim1 = static_cast<int32_t>(shape[1]);  // T

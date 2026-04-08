@@ -11,6 +11,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-model.h"
 #include "sherpa-onnx/csrc/transpose.h"
 
@@ -85,7 +86,7 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
         SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
                          meta_data.feature_normalize_type.c_str());
 #endif
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
     }
 

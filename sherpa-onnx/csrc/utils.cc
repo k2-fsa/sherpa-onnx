@@ -177,7 +177,7 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
               "given "
               "%s",
               modeling_unit.c_str());
-          exit(-1);
+          SHERPA_ONNX_EXIT(-1);
         }
         for (const auto &w : SplitUtf8(word)) {
           if (isalpha(w[0])) {

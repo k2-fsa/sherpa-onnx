@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
@@ -52,7 +53,7 @@ for a list of pre-trained models to download.
   if (po.NumArgs() != 1) {
     fprintf(stderr, "Error: Please provide 1 wave file.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());

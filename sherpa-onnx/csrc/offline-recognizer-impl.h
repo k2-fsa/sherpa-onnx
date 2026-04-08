@@ -36,7 +36,7 @@ class OfflineRecognizerImpl {
   virtual std::unique_ptr<OfflineStream> CreateStream(
       const std::string &hotwords) const {
     SHERPA_ONNX_LOGE("Only transducer models support contextual biasing.");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   virtual std::unique_ptr<OfflineStream> CreateStream() const = 0;

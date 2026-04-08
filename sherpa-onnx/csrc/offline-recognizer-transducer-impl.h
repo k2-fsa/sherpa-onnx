@@ -113,7 +113,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -153,7 +153,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -263,7 +263,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
                        config_.hotwords_file.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
@@ -287,7 +287,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
                        config_.hotwords_file.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,

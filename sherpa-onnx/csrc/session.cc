@@ -203,7 +203,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
         SHERPA_ONNX_LOGE(
             "Tensorrt support for Online models only,"
             "Must be extended for offline and others");
-        exit(1);
+        SHERPA_ONNX_EXIT(1);
       }
       auto trt_config = provider_config->trt_config;
       struct TrtPairs {

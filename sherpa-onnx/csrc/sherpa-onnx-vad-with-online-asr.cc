@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -92,7 +93,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Error: Please provide exactly 1 wave file. Given: %d\n\n",
             po.NumArgs());
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", vad_config.ToString().c_str());

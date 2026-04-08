@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/audio-tagging.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
@@ -41,7 +42,7 @@ for more models.
   if (po.NumArgs() != 1) {
     fprintf(stderr, "\nError: Please provide 1 wave file\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());

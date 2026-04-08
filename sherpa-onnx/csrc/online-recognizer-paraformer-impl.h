@@ -113,7 +113,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
           "Unsupported decoding method: %s. Support only greedy_search at "
           "present",
           config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Paraformer models assume input samples are in the range
@@ -136,7 +136,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Paraformer models assume input samples are in the range
