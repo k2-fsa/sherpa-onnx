@@ -139,15 +139,25 @@ bool OnlineRecognizerConfig::Validate() const {
     }
   }
 
+  if (decoding_method == "prefix_beam_search") {
+    if (max_active_paths <= 0) {
+      SHERPA_ONNX_LOGE("max_active_paths must be > 0. Given: %d",
+                       max_active_paths);
+      return false;
+    }
+  }
+
   if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (!lm_config.Validate()) {
       return false;
     }
   }
 
-  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+  if (!hotwords_file.empty() && decoding_method != "modified_beam_search" &&
+      decoding_method != "prefix_beam_search") {
     SHERPA_ONNX_LOGE(
-        "Please use --decoding-method=modified_beam_search if you"
+        "Please use --decoding-method=modified_beam_search or "
+        "--decoding-method=prefix_beam_search if you"
         " provide --hotwords-file. Given --decoding-method=%s",
         decoding_method.c_str());
     return false;
