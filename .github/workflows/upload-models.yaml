@@ -405,7 +405,7 @@ jobs:
           mkdir $d
           pushd $d
 
-          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_int8/llm.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_int8_compat/llm.int8.onnx
           curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/embedding.int8.onnx
           curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/encoder_adaptor.int8.onnx
 
