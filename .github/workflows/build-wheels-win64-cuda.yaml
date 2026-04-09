@@ -22,7 +22,7 @@ jobs:
       matrix:
         os: [windows-2022]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
-        onnxruntime_version: ["1.17.1", "1.23.2"]
+        onnxruntime_version: ["1.17.1", "1.24.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
           export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/lib
           export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-win-x64-gpu-$onnxruntime_version/include
 
-          if [[ $onnxruntime_version == "1.23.2" ]]; then
+          if [[ $onnxruntime_version == "1.24.4" ]]; then
             export SHERPA_ONNX_CUDA_VERSION="12.cudnn9"
           fi
 
