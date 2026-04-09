@@ -73,7 +73,6 @@ jobs:
 
           cmake \
             -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
