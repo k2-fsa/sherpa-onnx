@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/online-ctc-prefix-beam-search-decoder.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-ctc-prefix-beam-search-decoder.h"
 
@@ -34,12 +34,14 @@ static std::vector<Hypothesis> StepWorker(const float *p_log_probs,
         // Prefix does not change, update log_prob of blank
         new_hyp.log_prob_nb = -std::numeric_limits<float>::infinity();
         new_hyp.log_prob_b = hyp.LogProb(true) + log_prob;
+        new_hyp.num_trailing_blanks = hyp.num_trailing_blanks + 1;
         next_hyps.Add(std::move(new_hyp));
       } else if (hyp.ys.size() > 0 && hyp.ys.back() == new_token) {
         // Case 1: *a + a => *a
         // Prefix does not change, update log_prob of non_blank
         new_hyp.log_prob_nb = hyp.log_prob_nb + log_prob;
         new_hyp.log_prob_b = -std::numeric_limits<float>::infinity();
+        new_hyp.num_trailing_blanks = 0;
         next_hyps.Add(std::move(new_hyp));
 
         // Case 2: *aε + a => *aa
@@ -48,6 +50,7 @@ static std::vector<Hypothesis> StepWorker(const float *p_log_probs,
         new_hyp.ys.push_back(new_token);
         new_hyp.log_prob_nb = hyp.log_prob_b + log_prob;
         new_hyp.log_prob_b = -std::numeric_limits<float>::infinity();
+        new_hyp.num_trailing_blanks = 0;
         update_prefix = true;
       } else {
         // Case 3: *a + b => *ab, *aε + b => *ab
@@ -55,6 +58,7 @@ static std::vector<Hypothesis> StepWorker(const float *p_log_probs,
         new_hyp.ys.push_back(new_token);
         new_hyp.log_prob_nb = hyp.LogProb(true) + log_prob;
         new_hyp.log_prob_b = -std::numeric_limits<float>::infinity();
+        new_hyp.num_trailing_blanks = 0;
         update_prefix = true;
       }
 
@@ -133,11 +137,7 @@ void OnlineCtcPrefixBeamSearchDecoder::Decode(
 
     r.tokens = best_hyp.ys;
     r.frame_offset += num_frames;
-
-    // Count trailing blanks for endpointing
-    if (!best_hyp.ys.empty()) {
-      r.num_trailing_blanks = 0;
-    }
+    r.num_trailing_blanks = best_hyp.num_trailing_blanks;
   }
 }
 
