@@ -1,3 +1,11 @@
+## 1.12.37
+
+* Update openfst to v1.8.5 and fix compiler warnings. (#3495)
+* Use onnxruntime 1.24.3 for Android (#3494)
+* Update FunASR Nano int8 models (#3493)
+* Fix incorrect URL in dotnet README (#3491)
+* Fix package name format for ort url (#3489)
+
 ## 1.12.36
 
 * Dotnet Android arm64 targeting (#3485)

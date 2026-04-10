@@ -2,11 +2,11 @@
 
 set -ex
 
-old_version_code=20260403
-new_version_code=20260408
+old_version_code=20260408
+new_version_code=20260411
 
-old_version="1\.12\.35"
-new_version="1\.12\.36"
+old_version="1\.12\.36"
+new_version="1\.12\.37"
 
 replace_str="s/$old_version/$new_version/g"
 
