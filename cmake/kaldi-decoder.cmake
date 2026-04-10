@@ -1,8 +1,8 @@
 function(download_kaldi_decoder)
   include(FetchContent)
 
-  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.11.tar.gz")
-  set(kaldi_decoder_HASH "SHA256=85ca462535592541eb5ba6d21843009cf34738f51b28b71f84882a3694b528bf")
+  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.3.0.tar.gz")
+  set(kaldi_decoder_HASH "SHA256=b9f34cfb4fd3b1344100eead79ef4d37aa15962274b9e3056de345021f76a1b0")
 
   set(KALDI_DECODER_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
   set(KALDI_DECODER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
@@ -11,11 +11,11 @@ function(download_kaldi_decoder)
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldi-decoder-0.2.11.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.11.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.11.tar.gz
-    /tmp/kaldi-decoder-0.2.11.tar.gz
-    /star-fj/fangjun/download/github/kaldi-decoder-0.2.11.tar.gz
+    $ENV{HOME}/Downloads/kaldi-decoder-0.3.0.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.3.0.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.3.0.tar.gz
+    /tmp/kaldi-decoder-0.3.0.tar.gz
+    /star-fj/fangjun/download/github/kaldi-decoder-0.3.0.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -48,6 +48,8 @@ function(download_kaldi_decoder)
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
+  list(APPEND CMAKE_MODULE_PATH ${kaldi_decoder_SOURCE_DIR}/cmake)
+
   add_subdirectory(${kaldi_decoder_SOURCE_DIR} ${kaldi_decoder_BINARY_DIR} EXCLUDE_FROM_ALL)
 
   if(_build_shared_libs_bak)
@@ -67,6 +69,8 @@ function(download_kaldi_decoder)
       /wd4291
     )
   endif()
+
+  set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-kaldifst-core")
 
   target_include_directories(kaldi-decoder-core
     INTERFACE
