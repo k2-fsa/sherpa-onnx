@@ -7,6 +7,15 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 # https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
 cmake_policy(SET CMP0091 NEW)
 
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
+endif()
+
+if(POLICY CMP0177)
+  cmake_policy(SET CMP0177 NEW)
+endif()
+
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
@@ -147,6 +156,8 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "" FORCE)
 
 if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI AND NOT SHERPA_ONNX_ENABLE_C_API)
   message(STATUS "Set SHERPA_ONNX_ENABLE_JNI to ON for Android")
@@ -518,6 +529,10 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   endif()
 endif()
 
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  include(pybind11)
+endif()
+
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)
@@ -529,10 +544,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   # portaudio is used only in building demo binaries and the sherpa-onnx-core
   # library does not depend on it.
   include(portaudio)
-endif()
-
-if(SHERPA_ONNX_ENABLE_PYTHON)
-  include(pybind11)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TESTS)
@@ -624,6 +635,6 @@ install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    ./
+    .
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

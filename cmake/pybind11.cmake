@@ -32,6 +32,8 @@ function(download_pybind11)
     URL_HASH          ${pybind11_HASH}
   )
 
+  set(PYBIND11_FINDPYTHON NEW CACHE STRING "" FORCE)
+
   FetchContent_GetProperties(pybind11)
   if(NOT pybind11_POPULATED)
     message(STATUS "Downloading pybind11 from ${pybind11_URL}")

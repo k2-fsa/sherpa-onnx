@@ -327,6 +327,14 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   )
 endif()
 
+if(APPLE)
+  set_source_files_properties(
+    fast-clustering.cc
+    PROPERTIES
+      COMPILE_OPTIONS "-Wno-unknown-pragmas"
+  )
+endif()
+
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()

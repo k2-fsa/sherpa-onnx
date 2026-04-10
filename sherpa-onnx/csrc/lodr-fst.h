@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "fst/const-fst.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 
 namespace sherpa_onnx {

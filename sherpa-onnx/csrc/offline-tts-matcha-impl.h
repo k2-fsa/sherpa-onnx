@@ -15,6 +15,7 @@
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/character-lexicon.h"
+#include "sherpa-onnx/csrc/fst-utils.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/matcha-tts-lexicon.h"
@@ -172,19 +173,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
         auto buf = ReadFile(mgr, f);
 
-        std::unique_ptr<std::istream> s(
-            new std::istringstream(std::string(buf.data(), buf.size())));
-
-        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
-            fst::FarReader<fst::StdArc>::Open(std::move(s)));
-
-        for (; !reader->Done(); reader->Next()) {
-          std::unique_ptr<fst::StdConstFst> r(
-              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
-
+        auto fsts = ReadFstsFromFar(buf);
+        for (auto &r : fsts) {
           tn_list_.push_back(
               std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
-        }  // for (; !reader->Done(); reader->Next())
+        }
       }  // for (const auto &f : files)
     }  // if (!config.rule_fars.empty())
 
