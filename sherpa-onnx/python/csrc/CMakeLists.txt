@@ -102,7 +102,7 @@ pybind11_add_module(_sherpa_onnx ${srcs})
 if(APPLE)
   if(PYTHON_EXECUTABLE)
     execute_process(
-      COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+      COMMAND "${PYTHON_EXECUTABLE}" -c "import sysconfig; print(sysconfig.get_path('purelib'))"
       OUTPUT_STRIP_TRAILING_WHITESPACE
       OUTPUT_VARIABLE PYTHON_SITE_PACKAGE_DIR
     )
