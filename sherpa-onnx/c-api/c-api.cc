@@ -1568,6 +1568,10 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.supertonic.voice_style, "");
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  tts_config.model.enable_cpu_mem_arena =
+      SherpaOnnxResolveOptionalBool(config->model.enable_cpu_mem_arena, true);
+  tts_config.model.enable_mem_pattern =
+      SherpaOnnxResolveOptionalBool(config->model.enable_mem_pattern, true);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   if (tts_config.model.provider.empty()) {
@@ -2565,6 +2569,10 @@ static sherpa_onnx::OfflinePunctuationConfig GetOfflinePunctuationConfig(
   sherpa_onnx::OfflinePunctuationConfig c;
   c.model.ct_transformer = SHERPA_ONNX_OR(config->model.ct_transformer, "");
   c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.enable_cpu_mem_arena =
+      SherpaOnnxResolveOptionalBool(config->model.enable_cpu_mem_arena, true);
+  c.model.enable_mem_pattern =
+      SherpaOnnxResolveOptionalBool(config->model.enable_mem_pattern, true);
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   if (c.model.provider.empty()) {
@@ -2785,6 +2793,10 @@ static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
   sherpa_onnx::OfflineSpeechDenoiserConfig c;
   c.model.gtcrn.model = SHERPA_ONNX_OR(config->model.gtcrn.model, "");
   c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.enable_cpu_mem_arena =
+      SherpaOnnxResolveOptionalBool(config->model.enable_cpu_mem_arena, true);
+  c.model.enable_mem_pattern =
+      SherpaOnnxResolveOptionalBool(config->model.enable_mem_pattern, true);
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   c.model.dpdfnet.model = SHERPA_ONNX_OR(config->model.dpdfnet.model, "");
