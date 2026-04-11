@@ -110,6 +110,10 @@ void ProviderConfig::Register(ParseOptions *po) {
   po->Register("device", &device, "GPU device index for CUDA and Trt EP");
   po->Register("provider", &provider,
                "Specify a provider to use: cpu, cuda, coreml");
+  po->Register("enable-cpu-mem-arena", &enable_cpu_mem_arena,
+               "Enable ONNX Runtime CPU memory arena.");
+  po->Register("enable-mem-pattern", &enable_mem_pattern,
+               "Enable ONNX Runtime memory pattern optimization.");
 }
 
 bool ProviderConfig::Validate() const {
@@ -135,6 +139,10 @@ std::string ProviderConfig::ToString() const {
   os << "ProviderConfig(";
   os << "device=" << device << ", ";
   os << "provider=\"" << provider << "\", ";
+  os << "enable_cpu_mem_arena=\""
+     << (enable_cpu_mem_arena ? "True" : "False") << "\", ";
+  os << "enable_mem_pattern=\""
+     << (enable_mem_pattern ? "True" : "False") << "\", ";
   os << "cuda_config=" << cuda_config.ToString() << ", ";
   os << "trt_config=" << trt_config.ToString() << ")";
   return os.str();

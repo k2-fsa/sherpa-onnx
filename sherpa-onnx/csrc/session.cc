@@ -146,6 +146,14 @@ Ort::SessionOptions GetSessionOptionsImpl(
 
   sess_opts.SetInterOpNumThreads(num_threads);
 
+  if (provider_config != nullptr && !provider_config->enable_mem_pattern) {
+    sess_opts.DisableMemPattern();
+  }
+
+  if (provider_config != nullptr && !provider_config->enable_cpu_mem_arena) {
+    sess_opts.DisableCpuMemArena();
+  }
+
   std::vector<std::string> available_providers = Ort::GetAvailableProviders();
   std::ostringstream os;
   for (const auto &ep : available_providers) {

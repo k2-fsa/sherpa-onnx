@@ -103,6 +103,9 @@ OnlineRecognizer OnlineRecognizer::Create(
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
   c.model_config.provider = config.model_config.provider.c_str();
+  c.model_config.enable_cpu_mem_arena =
+      config.model_config.enable_cpu_mem_arena;
+  c.model_config.enable_mem_pattern = config.model_config.enable_mem_pattern;
   c.model_config.debug = config.model_config.debug;
   c.model_config.model_type = config.model_config.model_type.c_str();
   c.model_config.modeling_unit = config.model_config.modeling_unit.c_str();
@@ -270,6 +273,9 @@ static SherpaOnnxOfflineRecognizerConfig Convert(
 
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
+  c.model_config.enable_cpu_mem_arena =
+      config.model_config.enable_cpu_mem_arena;
+  c.model_config.enable_mem_pattern = config.model_config.enable_mem_pattern;
   c.model_config.debug = config.model_config.debug;
   c.model_config.provider = config.model_config.provider.c_str();
   c.model_config.model_type = config.model_config.model_type.c_str();
@@ -692,6 +698,9 @@ KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
   c.model_config.tokens = config.model_config.tokens.c_str();
   c.model_config.num_threads = config.model_config.num_threads;
   c.model_config.provider = config.model_config.provider.c_str();
+  c.model_config.enable_cpu_mem_arena =
+      config.model_config.enable_cpu_mem_arena;
+  c.model_config.enable_mem_pattern = config.model_config.enable_mem_pattern;
   c.model_config.debug = config.model_config.debug;
   c.model_config.model_type = config.model_config.model_type.c_str();
   c.model_config.modeling_unit = config.model_config.modeling_unit.c_str();
@@ -937,6 +946,8 @@ VoiceActivityDetector VoiceActivityDetector::Create(
   c.sample_rate = config.sample_rate;
   c.num_threads = config.num_threads;
   c.provider = config.provider.c_str();
+  c.enable_cpu_mem_arena = config.enable_cpu_mem_arena;
+  c.enable_mem_pattern = config.enable_mem_pattern;
   c.debug = config.debug;
 
   auto p = SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);

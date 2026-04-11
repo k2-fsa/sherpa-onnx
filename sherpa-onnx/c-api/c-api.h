@@ -242,6 +242,10 @@ typedef struct SherpaOnnxOnlineModelConfig {
   int32_t num_threads;
   /** Execution provider, for example "cpu", "cuda", or "coreml". */
   const char *provider;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print model debug information. */
   int32_t debug;
   /** Optional explicit model type override. */
@@ -1059,6 +1063,10 @@ typedef struct SherpaOnnxOfflineModelConfig {
   const char *tokens;
   /** Number of backend threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider, for example "cpu" or "cuda". */
@@ -1926,6 +1934,10 @@ typedef struct SherpaOnnxVadModelConfig {
   int32_t num_threads;
   /** Execution provider, for example "cpu" or "cuda". */
   const char *provider;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Ten VAD configuration. */
@@ -2369,6 +2381,10 @@ typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   /** Number of backend threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider, for example "cpu" or "cuda". */
@@ -2926,6 +2942,10 @@ typedef struct SherpaOnnxSpokenLanguageIdentificationConfig {
   SherpaOnnxSpokenLanguageIdentificationWhisperConfig whisper;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -3043,6 +3063,10 @@ typedef struct SherpaOnnxSpeakerEmbeddingExtractorConfig {
   const char *model;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -3391,6 +3415,10 @@ typedef struct SherpaOnnxAudioTaggingModelConfig {
   const char *ced;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -3524,6 +3552,10 @@ typedef struct SherpaOnnxOfflinePunctuationModelConfig {
   const char *ct_transformer;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -3597,6 +3629,10 @@ typedef struct SherpaOnnxOnlinePunctuationModelConfig {
   const char *bpe_vocab;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -3775,6 +3811,10 @@ typedef struct SherpaOnnxOfflineSpeakerSegmentationModelConfig {
   SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig pyannote;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -4035,6 +4075,10 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
   SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   /** Number of inference threads. */
   int32_t num_threads;
+  /** Non-zero to enable the ONNX Runtime CPU memory arena. */
+  int32_t enable_cpu_mem_arena;
+  /** Non-zero to enable the ONNX Runtime memory pattern optimization. */
+  int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
   /** Execution provider such as `"cpu"`. */
@@ -4248,6 +4292,8 @@ typedef struct SherpaOnnxOfflineSourceSeparationModelConfig {
   SherpaOnnxOfflineSourceSeparationSpleeterModelConfig spleeter;
   SherpaOnnxOfflineSourceSeparationUvrModelConfig uvr;
   int32_t num_threads;
+  int32_t enable_cpu_mem_arena;
+  int32_t enable_mem_pattern;
   int32_t debug;
   const char *provider;
 } SherpaOnnxOfflineSourceSeparationModelConfig;

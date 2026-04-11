@@ -69,18 +69,28 @@ struct ProviderConfig {
   CudaConfig cuda_config;
   std::string provider = "cpu";
   int32_t device = 0;
+  bool enable_cpu_mem_arena = true;
+  bool enable_mem_pattern = true;
   // device only used for cuda and trt
 
   ProviderConfig() = default;
-  ProviderConfig(const std::string &provider, int32_t device)
-      : provider(provider), device(device) {}
+  ProviderConfig(const std::string &provider, int32_t device,
+                 bool enable_cpu_mem_arena = true,
+                 bool enable_mem_pattern = true)
+      : provider(provider),
+        device(device),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern) {}
   ProviderConfig(const TensorrtConfig &trt_config,
                  const CudaConfig &cuda_config, const std::string &provider,
-                 int32_t device)
+                 int32_t device, bool enable_cpu_mem_arena = true,
+                 bool enable_mem_pattern = true)
       : trt_config(trt_config),
         cuda_config(cuda_config),
         provider(provider),
-        device(device) {}
+        device(device),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

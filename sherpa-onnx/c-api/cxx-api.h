@@ -134,6 +134,10 @@ struct OnlineModelConfig {
   int32_t num_threads = 1;
   /** Execution provider such as `"cpu"`. */
   std::string provider = "cpu";
+  /** Enable the ONNX Runtime CPU memory arena. */
+  bool enable_cpu_mem_arena = true;
+  /** Enable the ONNX Runtime memory pattern optimization. */
+  bool enable_mem_pattern = true;
   /** Enable verbose debug logging. */
   bool debug = false;
   /** Optional explicit model type hint. */
@@ -1360,10 +1364,14 @@ struct VadModelConfig {
 
   /** Input sample rate in Hz. */
   int32_t sample_rate = 16000;
-  /** Number of inference threads. */
+  /** Number of backend threads. */
   int32_t num_threads = 1;
   /** Execution provider such as `"cpu"`. */
   std::string provider = "cpu";
+  /** Enable the ONNX Runtime CPU memory arena. */
+  bool enable_cpu_mem_arena = true;
+  /** Enable the ONNX Runtime memory pattern optimization. */
+  bool enable_mem_pattern = true;
   /** Enable verbose debug logging. */
   bool debug = false;
 };
