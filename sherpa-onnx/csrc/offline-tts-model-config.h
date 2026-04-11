@@ -28,6 +28,8 @@ struct OfflineTtsModelConfig {
   OfflineTtsSupertonicModelConfig supertonic;
 
   int32_t num_threads = 1;
+  bool enable_cpu_mem_arena = true;
+  bool enable_mem_pattern = true;
   bool debug = false;
   std::string provider = "cpu";
 
@@ -40,7 +42,8 @@ struct OfflineTtsModelConfig {
                         const OfflineTtsKittenModelConfig &kitten,
                         const OfflineTtsPocketModelConfig &pocket,
                         const OfflineTtsSupertonicModelConfig &supertonic,
-                        int32_t num_threads, bool debug,
+                        int32_t num_threads, bool enable_cpu_mem_arena,
+                        bool enable_mem_pattern, bool debug,
                         const std::string &provider)
       : vits(vits),
         matcha(matcha),
@@ -50,6 +53,8 @@ struct OfflineTtsModelConfig {
         pocket(pocket),
         supertonic(supertonic),
         num_threads(num_threads),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern),
         debug(debug),
         provider(provider) {}
 

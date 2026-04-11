@@ -19,14 +19,20 @@ struct SpeakerEmbeddingExtractorConfig {
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
+  bool enable_cpu_mem_arena = true;
+  bool enable_mem_pattern = true;
 
   SpeakerEmbeddingExtractorConfig() = default;
   SpeakerEmbeddingExtractorConfig(const std::string &model, int32_t num_threads,
-                                  bool debug, const std::string &provider)
+                                  bool debug, const std::string &provider,
+                                  bool enable_cpu_mem_arena = true,
+                                  bool enable_mem_pattern = true)
       : model(model),
         num_threads(num_threads),
         debug(debug),
-        provider(provider) {}
+        provider(provider),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

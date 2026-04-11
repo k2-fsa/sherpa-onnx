@@ -644,6 +644,10 @@ struct OfflineModelConfig {
   std::string tokens;
   /** Number of inference threads. */
   int32_t num_threads = 1;
+  /** Enable the ONNX Runtime CPU memory arena. */
+  bool enable_cpu_mem_arena = true;
+  /** Enable the ONNX Runtime memory pattern optimization. */
+  bool enable_mem_pattern = true;
   /** Enable verbose debug logging. */
   bool debug = false;
   /** Execution provider such as `"cpu"`. */

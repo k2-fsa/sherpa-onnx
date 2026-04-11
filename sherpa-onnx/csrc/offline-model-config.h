@@ -52,6 +52,8 @@ struct OfflineModelConfig {
   int32_t num_threads = 2;
   bool debug = false;
   std::string provider = "cpu";
+  bool enable_cpu_mem_arena = true;
+  bool enable_mem_pattern = true;
 
   // With the help of this field, we only need to load the model once
   // instead of twice; and therefore it reduces initialization time.
@@ -88,9 +90,12 @@ struct OfflineModelConfig {
                      const OfflineQwen3ASRModelConfig &qwen3_asr,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
-                     const std::string &provider, const std::string &model_type,
-                     const std::string &modeling_unit,
-                     const std::string &bpe_vocab)
+                     const std::string &provider,
+                     bool enable_cpu_mem_arena = true,
+                     bool enable_mem_pattern = true,
+                     const std::string &model_type = "",
+                     const std::string &modeling_unit = "cjkchar",
+                     const std::string &bpe_vocab = "")
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
@@ -114,6 +119,8 @@ struct OfflineModelConfig {
         num_threads(num_threads),
         debug(debug),
         provider(provider),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern),
         model_type(model_type),
         modeling_unit(modeling_unit),
         bpe_vocab(bpe_vocab) {}

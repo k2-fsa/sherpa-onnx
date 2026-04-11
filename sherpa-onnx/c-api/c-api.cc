@@ -69,6 +69,12 @@ struct SherpaOnnxDisplay {
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
+// -1: use default, 0: false, non-zero: true
+static inline bool SherpaOnnxResolveOptionalBool(int32_t v,
+                                                 bool default_value) {
+  return v < 0 ? default_value : (v != 0);
+}
+
 static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
     const SherpaOnnxOnlineRecognizerConfig *config) {
   sherpa_onnx::OnlineRecognizerConfig recognizer_config;
@@ -112,9 +118,11 @@ static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
   recognizer_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.provider_config.enable_cpu_mem_arena =
-      SHERPA_ONNX_OR(config->model_config.enable_cpu_mem_arena, 1);
+      SherpaOnnxResolveOptionalBool(
+          config->model_config.enable_cpu_mem_arena, true);
   recognizer_config.model_config.provider_config.enable_mem_pattern =
-      SHERPA_ONNX_OR(config->model_config.enable_mem_pattern, 1);
+      SherpaOnnxResolveOptionalBool(config->model_config.enable_mem_pattern,
+                                    true);
 
   if (recognizer_config.model_config.provider_config.provider.empty()) {
     recognizer_config.model_config.provider_config.provider = "cpu";
@@ -477,9 +485,11 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
   recognizer_config.model_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.enable_cpu_mem_arena =
-      SHERPA_ONNX_OR(config->model_config.enable_cpu_mem_arena, 1);
+      SherpaOnnxResolveOptionalBool(
+          config->model_config.enable_cpu_mem_arena, true);
   recognizer_config.model_config.enable_mem_pattern =
-      SHERPA_ONNX_OR(config->model_config.enable_mem_pattern, 1);
+      SherpaOnnxResolveOptionalBool(config->model_config.enable_mem_pattern,
+                                    true);
   if (recognizer_config.model_config.provider.empty()) {
     recognizer_config.model_config.provider = "cpu";
   }
@@ -987,9 +997,11 @@ static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
   spotter_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   spotter_config.model_config.provider_config.enable_cpu_mem_arena =
-      SHERPA_ONNX_OR(config->model_config.enable_cpu_mem_arena, 1);
+      SherpaOnnxResolveOptionalBool(
+          config->model_config.enable_cpu_mem_arena, true);
   spotter_config.model_config.provider_config.enable_mem_pattern =
-      SHERPA_ONNX_OR(config->model_config.enable_mem_pattern, 1);
+      SherpaOnnxResolveOptionalBool(config->model_config.enable_mem_pattern,
+                                    true);
   if (spotter_config.model_config.provider_config.provider.empty()) {
     spotter_config.model_config.provider_config.provider = "cpu";
   }
@@ -1278,8 +1290,9 @@ static sherpa_onnx::VadModelConfig GetVadModelConfig(
   vad_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");
   vad_config.enable_cpu_mem_arena =
-      SHERPA_ONNX_OR(config->enable_cpu_mem_arena, 1);
-  vad_config.enable_mem_pattern = SHERPA_ONNX_OR(config->enable_mem_pattern, 1);
+      SherpaOnnxResolveOptionalBool(config->enable_cpu_mem_arena, true);
+  vad_config.enable_mem_pattern =
+      SherpaOnnxResolveOptionalBool(config->enable_mem_pattern, true);
   if (vad_config.provider.empty()) {
     vad_config.provider = "cpu";
   }
@@ -2121,9 +2134,9 @@ SherpaOnnxCreateSpokenLanguageIdentification(
   slid_config.debug = config->debug;
   slid_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");
   slid_config.enable_cpu_mem_arena =
-      SHERPA_ONNX_OR(config->enable_cpu_mem_arena, 1);
+      SherpaOnnxResolveOptionalBool(config->enable_cpu_mem_arena, true);
   slid_config.enable_mem_pattern =
-      SHERPA_ONNX_OR(config->enable_mem_pattern, 1);
+      SherpaOnnxResolveOptionalBool(config->enable_mem_pattern, true);
   if (slid_config.provider.empty()) {
     slid_config.provider = "cpu";
   }
@@ -2198,8 +2211,10 @@ GetSpeakerEmbeddingExtractorConfig(
   c.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   c.debug = config->debug;
   c.provider = SHERPA_ONNX_OR(config->provider, "cpu");
-  c.enable_cpu_mem_arena = SHERPA_ONNX_OR(config->enable_cpu_mem_arena, 1);
-  c.enable_mem_pattern = SHERPA_ONNX_OR(config->enable_mem_pattern, 1);
+  c.enable_cpu_mem_arena =
+      SherpaOnnxResolveOptionalBool(config->enable_cpu_mem_arena, true);
+  c.enable_mem_pattern =
+      SherpaOnnxResolveOptionalBool(config->enable_mem_pattern, true);
   if (c.provider.empty()) {
     c.provider = "cpu";
   }

@@ -16,6 +16,8 @@ struct AudioTaggingModelConfig {
   std::string ced;
 
   int32_t num_threads = 1;
+  bool enable_cpu_mem_arena = true;
+  bool enable_mem_pattern = true;
   bool debug = false;
   std::string provider = "cpu";
 
@@ -24,10 +26,13 @@ struct AudioTaggingModelConfig {
   AudioTaggingModelConfig(
       const OfflineZipformerAudioTaggingModelConfig &zipformer,
       const std::string &ced, int32_t num_threads, bool debug,
-      const std::string &provider)
+      const std::string &provider, bool enable_cpu_mem_arena = true,
+      bool enable_mem_pattern = true)
       : zipformer(zipformer),
         ced(ced),
         num_threads(num_threads),
+        enable_cpu_mem_arena(enable_cpu_mem_arena),
+        enable_mem_pattern(enable_mem_pattern),
         debug(debug),
         provider(provider) {}
 
