@@ -69,10 +69,10 @@ struct SherpaOnnxDisplay {
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
-// -1: use default, 0: false, non-zero: true
+// 0: use default, negative: false, positive: true
 static inline bool SherpaOnnxResolveOptionalBool(int32_t v,
                                                  bool default_value) {
-  return v < 0 ? default_value : (v != 0);
+  return v == 0 ? default_value : (v > 0);
 }
 
 static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(

@@ -242,9 +242,9 @@ typedef struct SherpaOnnxOnlineModelConfig {
   int32_t num_threads;
   /** Execution provider, for example "cpu", "cuda", or "coreml". */
   const char *provider;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print model debug information. */
   int32_t debug;
@@ -1063,9 +1063,9 @@ typedef struct SherpaOnnxOfflineModelConfig {
   const char *tokens;
   /** Number of backend threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -1934,9 +1934,9 @@ typedef struct SherpaOnnxVadModelConfig {
   int32_t num_threads;
   /** Execution provider, for example "cpu" or "cuda". */
   const char *provider;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -2381,9 +2381,9 @@ typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   /** Number of backend threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -2942,9 +2942,9 @@ typedef struct SherpaOnnxSpokenLanguageIdentificationConfig {
   SherpaOnnxSpokenLanguageIdentificationWhisperConfig whisper;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -3063,9 +3063,9 @@ typedef struct SherpaOnnxSpeakerEmbeddingExtractorConfig {
   const char *model;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -3415,9 +3415,9 @@ typedef struct SherpaOnnxAudioTaggingModelConfig {
   const char *ced;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -3552,9 +3552,9 @@ typedef struct SherpaOnnxOfflinePunctuationModelConfig {
   const char *ct_transformer;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -3629,9 +3629,9 @@ typedef struct SherpaOnnxOnlinePunctuationModelConfig {
   const char *bpe_vocab;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -3811,9 +3811,9 @@ typedef struct SherpaOnnxOfflineSpeakerSegmentationModelConfig {
   SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig pyannote;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -4075,9 +4075,9 @@ typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
   SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
   /** Number of inference threads. */
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   /** Non-zero to print debug information. */
   int32_t debug;
@@ -4292,9 +4292,9 @@ typedef struct SherpaOnnxOfflineSourceSeparationModelConfig {
   SherpaOnnxOfflineSourceSeparationSpleeterModelConfig spleeter;
   SherpaOnnxOfflineSourceSeparationUvrModelConfig uvr;
   int32_t num_threads;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime CPU memory arena. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime CPU memory arena. */
   int32_t enable_cpu_mem_arena;
-  /** -1: use default, 0: false, non-zero: true for the ONNX Runtime memory pattern optimization. */
+  /** 0: use default, negative: false, positive: true for the ONNX Runtime memory pattern optimization. */
   int32_t enable_mem_pattern;
   int32_t debug;
   const char *provider;
