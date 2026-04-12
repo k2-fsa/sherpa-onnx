@@ -176,22 +176,22 @@ Ort::SessionOptions GetSessionOptionsImpl(
     config.erase("ProfilingFilePrefix");
   }
 
-  if (config.find("enable_mem_pattern") != config.end()) {
+  if (config.find("EnableMemPattern") != config.end()) {
     int32_t enable_mem_pattern =
-        ToIntOrDefault(config["enable_mem_pattern"], 1);
+        ToIntOrDefault(config["EnableMemPattern"], 1);
     if (enable_mem_pattern == 0) {
       sess_opts.DisableMemPattern();
     }
-    config.erase("enable_mem_pattern");
+    config.erase("EnableMemPattern");
   }
 
-  if (config.find("enable_cpu_mem_arena") != config.end()) {
+  if (config.find("EnableCpuMemArena") != config.end()) {
     int32_t enable_cpu_mem_arena =
-        ToIntOrDefault(config["enable_cpu_mem_arena"], 1);
+        ToIntOrDefault(config["EnableCpuMemArena"], 1);
     if (enable_cpu_mem_arena == 0) {
       sess_opts.DisableCpuMemArena();
     }
-    config.erase("enable_cpu_mem_arena");
+    config.erase("EnableCpuMemArena");
   }
 
   // If you want to speed up initialization, please uncomment the following line
