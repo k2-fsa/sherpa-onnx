@@ -137,7 +137,7 @@ jobs:
             rm ./lib/*.a
             rm ./lib/libonnxruntime.dylib
             cd lib
-            ln -s libonnxruntime.1.23.2.dylib libonnxruntime.dylib
+            ln -s libonnxruntime.1.24.4.dylib libonnxruntime.dylib
             cd ..
           fi
 

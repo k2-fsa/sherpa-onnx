@@ -36,7 +36,7 @@ jobs:
         os: [ubuntu-latest]
         # build_type: [Release, Debug]
         build_type: [Release]
-        onnxruntime_version: ["1.17.1", "1.23.2"]
+        onnxruntime_version: ["1.17.1", "1.24.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -143,7 +143,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.23.2" ]]; then
+          if [[ $onnxruntime_version == "1.24.4" ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-linux-x64-gpu
           fi
 

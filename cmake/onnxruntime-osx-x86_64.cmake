@@ -12,18 +12,18 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-osx-x86_64-1.23.2.tgz")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.23.2/onnxruntime-osx-x86_64-1.23.2.tgz")
-set(onnxruntime_HASH "SHA256=d10359e16347b57d9959f7e80a225a5b4a66ed7d7e007274a15cae86836485a6")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.24.4/onnxruntime-osx-x86_64-1.24.4.zip")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.24.4/onnxruntime-osx-x86_64-1.24.4.zip")
+set(onnxruntime_HASH "SHA256=433be4f4ba38f9fcc66939f503c310f3e239620643e66f5c4b0b9afb80a662e7")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.23.2.tgz
-  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-x86_64-1.23.2.tgz
-  ${CMAKE_BINARY_DIR}/onnxruntime-osx-x86_64-1.23.2.tgz
-  /tmp/onnxruntime-osx-x86_64-1.23.2.tgz
+  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.24.4.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-x86_64-1.24.4.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-osx-x86_64-1.24.4.zip
+  /tmp/onnxruntime-osx-x86_64-1.24.4.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

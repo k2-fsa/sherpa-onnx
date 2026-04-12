@@ -22,7 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        version: ["1.11.0", "1.11.1", "1.12.0", "1.12.1", "1.13.1", "1.14.0", "1.14.1", "1.15.0", "1.15.1", "1.16.1", "1.16.2", "1.17.0", "1.17.1", "1.17.3", "1.18.0", "1.18.1", "1.19.0", "1.19.2", "1.20.0", "1.20.1", "1.20.2", "1.21.0", "1.21.1", "1.22.0", "1.22.1", "1.22.2", "1.23.0", "1.23.1", "1.23.2"]
+        # version: ["1.11.0", "1.11.1", "1.12.0", "1.12.1", "1.13.1", "1.14.0", "1.14.1", "1.15.0", "1.15.1", "1.16.1", "1.16.2", "1.17.0", "1.17.1", "1.17.3", "1.18.0", "1.18.1", "1.19.0", "1.19.2", "1.20.0", "1.20.1", "1.20.2", "1.21.0", "1.21.1", "1.22.0", "1.22.1", "1.22.2", "1.23.0", "1.23.1", "1.23.2", "1.24.4"]
+        version: ["1.24.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,21 +45,22 @@ jobs:
         shell: bash
         run: |
           version=${{ matrix.version }}
-          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v${version}/onnxruntime-osx-universal2-${version}.tgz
-          tar xvf onnxruntime-osx-universal2-${version}.tgz
-          ls -lh onnxruntime-osx-universal2-${version}
+          curl -SL -O https://github.com/microsoft/onnxruntime/releases/download/v${version}/onnxruntime-osx-arm64-${version}.tgz
 
-          ls -lh onnxruntime-osx-universal2-${version}
+          tar xvf onnxruntime-osx-arm64-${version}.tgz
+          ls -lh onnxruntime-osx-arm64-${version}
+
+          ls -lh onnxruntime-osx-arm64-${version}
           echo "---"
-          ls -lh onnxruntime-osx-universal2-${version}/include
+          ls -lh onnxruntime-osx-arm64-${version}/include
           echo "---"
-          ls -lh onnxruntime-osx-universal2-${version}/lib
+          ls -lh onnxruntime-osx-arm64-${version}/lib
 
       - name: Configure CMake
         shell: bash
         run: |
           version=${{ matrix.version }}
-          onnxruntime_dir=$PWD/onnxruntime-osx-universal2-${version}
+          onnxruntime_dir=$PWD/onnxruntime-osx-arm64-${version}
           export SHERPA_ONNXRUNTIME_LIB_DIR=$onnxruntime_dir/lib/
           export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$onnxruntime_dir/include/
 
@@ -71,7 +73,6 @@ jobs:
 
           cmake \
             -D BUILD_SHARED_LIBS=ON \
-            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
@@ -79,7 +80,7 @@ jobs:
         shell: bash
         run: |
           version=${{ matrix.version }}
-          onnxruntime_dir=$PWD/onnxruntime-osx-universal2-${version}
+          onnxruntime_dir=$PWD/onnxruntime-osx-arm64-${version}
           export SHERPA_ONNXRUNTIME_LIB_DIR=$onnxruntime_dir/lib/
           export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$onnxruntime_dir/include/
 
@@ -112,7 +113,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-onnxruntime-${{ matrix.version }}-osx-universal2-shared
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-onnxruntime-${{ matrix.version }}-osx-arm64-shared
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -131,7 +132,7 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*osx-universal2*.tar.bz2
+          file: sherpa-onnx-*osx-arm64*.tar.bz2
 
       - name: Test offline Cohere Transcribe
         if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
