@@ -1,3 +1,7 @@
+## 1.12.38
+
+* Update onnxruntime to use v1.24.4 (#3501)
+
 ## 1.12.37
 
 * Update openfst to v1.8.5 and fix compiler warnings. (#3495)
