@@ -53,7 +53,7 @@ message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 # for static libraries, we use onnxruntime_lib_files directly below
 include_directories(${onnxruntime_SOURCE_DIR}/include)
 
-file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*.a")
+file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.a")
 
 set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
