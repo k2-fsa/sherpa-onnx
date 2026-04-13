@@ -515,7 +515,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     if (k != cur_row_index) {
       auto seq = Eigen::seqN(0, cur_row_index);
-      ans = ans(seq, Eigen::all);
+      ans = ans(seq, Eigen::placeholders::all);
     }
 
     return ans;
@@ -596,7 +596,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
       auto seq = Eigen::seqN(start, labels[i].rows());
 
-      count(seq, Eigen::all).array() += labels[i].array();
+      count(seq, Eigen::placeholders::all).array() += labels[i].array();
     }
 
     bool has_last_chunk = ((num_samples - window_size) % window_shift) > 0;
@@ -606,7 +606,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     int32_t last_frame = num_samples / receptive_field_shift;
-    return count(Eigen::seq(0, last_frame), Eigen::all);
+    return count(Eigen::seq(0, last_frame), Eigen::placeholders::all);
   }
 
   Matrix2DInt32 FinalizeLabels(const Matrix2DInt32 &count,
@@ -715,7 +715,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     num_frames = (new_num_frames <= num_frames) ? new_num_frames : num_frames;
 
-    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::all));
+    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::placeholders::all));
   }
 
   void MergeSegments(
