@@ -176,6 +176,24 @@ Ort::SessionOptions GetSessionOptionsImpl(
     config.erase("ProfilingFilePrefix");
   }
 
+  if (config.find("EnableMemPattern") != config.end()) {
+    int32_t enable_mem_pattern =
+        ToIntOrDefault(config["EnableMemPattern"], 1);
+    if (enable_mem_pattern == 0) {
+      sess_opts.DisableMemPattern();
+    }
+    config.erase("EnableMemPattern");
+  }
+
+  if (config.find("EnableCpuMemArena") != config.end()) {
+    int32_t enable_cpu_mem_arena =
+        ToIntOrDefault(config["EnableCpuMemArena"], 1);
+    if (enable_cpu_mem_arena == 0) {
+      sess_opts.DisableCpuMemArena();
+    }
+    config.erase("EnableCpuMemArena");
+  }
+
   // If you want to speed up initialization, please uncomment the following line
   // sess_opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
 
