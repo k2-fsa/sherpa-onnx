@@ -149,7 +149,10 @@ fn download_prebuilt_libs(
             let url = format!("{RELEASE_BASE_URL}/v{version}/{archive_name}");
             eprintln!("Downloading sherpa-onnx libs from {url}");
 
-            let response = ureq::get(&url)
+            let response = ureq::builder()
+                .try_proxy_from_env(true)
+                .build()
+                .get(&url)
                 .call()
                 .map_err(|e| format!("Failed to download sherpa-onnx archive from {url}: {e}"))?;
             let mut reader = response.into_reader();
