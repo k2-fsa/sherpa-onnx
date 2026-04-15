@@ -189,6 +189,10 @@ OnlineRecognizerResult OnlineRecognizer::GetResult(
   auto r = SherpaOnnxGetOnlineStreamResult(p_, s->Get());
 
   OnlineRecognizerResult ans;
+  if (!r) {
+    return ans;
+  }
+
   ans.text = r->text;
 
   ans.tokens.resize(r->count);
@@ -753,6 +757,8 @@ KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
   auto r = SherpaOnnxGetKeywordResult(p_, s->Get());
 
   KeywordResult ans;
+  if (!r) return ans;
+
   ans.keyword = r->keyword;
 
   ans.tokens.resize(r->count);
@@ -894,6 +900,8 @@ void CircularBuffer::Push(const float *samples, int32_t n) const {
 
 std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
   const float *samples = SherpaOnnxCircularBufferGet(p_, start_index, n);
+  if (!samples) return {};
+
   std::vector<float> ans(n);
   std::copy(samples, samples + n, ans.begin());
 
@@ -1021,6 +1029,7 @@ std::vector<float> LinearResampler::Resample(const float *input,
                                              int32_t input_dim,
                                              bool flush) const {
   auto out = SherpaOnnxLinearResamplerResample(p_, input, input_dim, flush);
+  if (!out) return {};
 
   std::vector<float> ans{out->samples, out->samples + out->n};
 
