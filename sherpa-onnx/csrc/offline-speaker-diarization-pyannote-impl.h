@@ -528,6 +528,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     int32_t k = 0;
     for (const auto &p : chunk_speaker_pair) {
+      if (k >= static_cast<int32_t>(cluster_labels.size())) {
+        SHERPA_ONNX_LOGE("cluster_labels size mismatch: k=%d, size=%d", k,
+                         static_cast<int32_t>(cluster_labels.size()));
+        break;
+      }
       ans[p] = cluster_labels[k];
       k += 1;
     }
@@ -606,6 +611,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     int32_t last_frame = num_samples / receptive_field_shift;
+    if (last_frame >= count.rows()) {
+      last_frame = count.rows() - 1;
+    }
     return count(Eigen::seq(0, last_frame), Eigen::placeholders::all);
   }
 
@@ -625,7 +633,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
       auto top_k = TopkIndex(&count(i, 0), num_cols, k);
 
       for (int32_t m : top_k) {
-        ans(i, m) = 1;
+        if (m >= 0 && m < num_cols) {
+          ans(i, m) = 1;
+        }
       }
     }
 
@@ -713,9 +723,10 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     int32_t new_num_frames = num_samples / receptive_field_shift;
 
-    num_frames = (new_num_frames <= num_frames) ? new_num_frames : num_frames;
+    num_frames = (new_num_frames < num_frames) ? new_num_frames : num_frames - 1;
 
-    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::placeholders::all));
+    return ComputeResult(
+        final_labels(Eigen::seq(0, num_frames), Eigen::placeholders::all));
   }
 
   void MergeSegments(
