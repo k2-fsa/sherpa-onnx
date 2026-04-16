@@ -14,6 +14,47 @@ echo "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
+GO_PROXY_WAIT_SECS=30
+GO_PROXY_MAX_RETRIES=20
+
+# Wait for Go proxy to index newly published packages.
+# The Go module proxy (proxy.golang.org) needs time to fetch and index
+# new versions after a git push + tag. This function polls until the
+# packages are available or the retry limit is reached.
+wait_for_go_proxy() {
+  local pkg="$1"
+  local version="$2"
+  local i
+  for i in $(seq 1 $GO_PROXY_MAX_RETRIES); do
+    echo "Attempt $i/$GO_PROXY_MAX_RETRIES: checking $pkg@$version ..."
+    if go list -m -versions "$pkg" 2>/dev/null | grep -q "$version"; then
+      echo "  -> $pkg@$version is available on Go proxy"
+      return 0
+    fi
+    echo "  -> not ready yet, sleeping ${GO_PROXY_WAIT_SECS}s ..."
+    sleep $GO_PROXY_WAIT_SECS
+  done
+  echo "ERROR: $pkg@$version not available after $GO_PROXY_MAX_RETRIES attempts"
+  return 1
+}
+
+# Run go mod tidy with retries. Sometimes the proxy has the module metadata
+# but the zip download is still being processed.
+run_go_mod_tidy() {
+  local i
+  for i in $(seq 1 $GO_PROXY_MAX_RETRIES); do
+    echo "Attempt $i/$GO_PROXY_MAX_RETRIES: running go mod tidy ..."
+    if go mod tidy 2>&1; then
+      echo "  -> go mod tidy succeeded"
+      return 0
+    fi
+    echo "  -> go mod tidy failed, sleeping ${GO_PROXY_WAIT_SECS}s ..."
+    sleep $GO_PROXY_WAIT_SECS
+  done
+  echo "ERROR: go mod tidy failed after $GO_PROXY_MAX_RETRIES attempts"
+  return 1
+}
+
 function linux() {
   echo "Process linux"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
@@ -178,6 +219,41 @@ function basic() {
 
   python3 ./generate.py -s ./sherpa_onnx.go -o ./sherpa-onnx-go
 
+  cd sherpa-onnx-go
+
+  # Update go.mod to reference the new platform package versions.
+  # The platform packages (linux/macos/windows) have already been published
+  # and tagged with v$SHERPA_ONNX_VERSION.
+  local ver="v$SHERPA_ONNX_VERSION"
+  sed -i.bak \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-linux .*|github.com/k2-fsa/sherpa-onnx-go-linux $ver|" \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-macos .*|github.com/k2-fsa/sherpa-onnx-go-macos $ver|" \
+    -e "s|github.com/k2-fsa/sherpa-onnx-go-windows .*|github.com/k2-fsa/sherpa-onnx-go-windows $ver|" \
+    go.mod
+  rm -f go.mod.bak
+
+  echo "--- Updated go.mod ---"
+  cat go.mod
+  echo "--- end go.mod ---"
+
+  # Wait for the Go module proxy to index all three platform packages,
+  # then regenerate go.sum. The proxy (proxy.golang.org) may take
+  # several minutes after a git tag push before the module is downloadable.
+  local pkg
+  for pkg in sherpa-onnx-go-linux sherpa-onnx-go-macos sherpa-onnx-go-windows; do
+    wait_for_go_proxy "github.com/k2-fsa/$pkg" "$ver"
+  done
+
+  # go remove stale go.sum entries, then re-resolve with the new versions
+  rm -f go.sum
+  run_go_mod_tidy
+
+  echo "--- Updated go.sum ---"
+  cat go.sum
+  echo "--- end go.sum ---"
+
+  cd ..
+
   echo "------------------------------"
   cd sherpa-onnx-go
   git status
@@ -190,9 +266,13 @@ function basic() {
   rm -rf sherpa-onnx-go
 }
 
-basic
-windows
+# Publishing order matters:
+#   1. Platform packages first (linux, windows, osx) — they have no inter-dependencies
+#   2. Wait for Go proxy to index them
+#   3. sherpa-onnx-go last — it depends on all three platform packages
 linux
+windows
 osx
+basic
 
 rm -fv ~/.ssh/github
