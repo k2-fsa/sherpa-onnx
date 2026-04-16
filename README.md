@@ -355,6 +355,11 @@ See also <https://github.com/t41372/Open-LLM-VTuber/pull/50>
 It shows how to use the ASR and TTS Python APIs with FastAPI.
 </details>
 
+### [OpenInterview](https://github.com/OmnAILab/OpenInterview)
+
+AI 驱动的面试助手：实时将面试官的语音转为文字，由你决定何时将内容发送给 AI，流式生成参考答案，让你在面试中更加从容自信。
+It uses sherpa-onnx for speech recognition.
+
 ### [腾讯会议摸鱼工具 TMSpeech](https://github.com/jxlpzqc/TMSpeech)
 
 Uses streaming ASR in C# with graphical user interface.
