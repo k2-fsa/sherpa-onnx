@@ -38,7 +38,8 @@ struct WaveHeader {
 }  // namespace
 
 int64_t WaveFileSize(int32_t n_samples, int32_t num_channels /*= 1*/) {
-  return sizeof(WaveHeader) + n_samples * sizeof(int16_t) * num_channels;
+  return sizeof(WaveHeader) +
+         static_cast<int64_t>(n_samples) * sizeof(int16_t) * num_channels;
 }
 
 void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
@@ -91,7 +92,8 @@ void WriteWave(char *buffer, int32_t sampling_rate, const float *samples_ch0,
   header.block_align = num_channels * bits_per_sample / 8;
   header.bits_per_sample = bits_per_sample;
   header.subchunk2_id = 0x61746164;  // atad
-  header.subchunk2_size = n * num_channels * bits_per_sample / 8;
+  header.subchunk2_size =
+      static_cast<int64_t>(n) * num_channels * bits_per_sample / 8;
 
   header.chunk_size = 36 + header.subchunk2_size;
 
@@ -166,7 +168,8 @@ void WriteWaveMultiChannel(char *buffer, int32_t sampling_rate,
   header.block_align = num_channels * bits_per_sample / 8;
   header.bits_per_sample = bits_per_sample;
   header.subchunk2_id = 0x61746164;  // atad
-  header.subchunk2_size = n * num_channels * bits_per_sample / 8;
+  header.subchunk2_size =
+      static_cast<int64_t>(n) * num_channels * bits_per_sample / 8;
 
   header.chunk_size = 36 + header.subchunk2_size;
 

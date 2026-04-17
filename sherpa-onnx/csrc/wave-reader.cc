@@ -147,6 +147,13 @@ std::vector<std::vector<float>> ReadWaveImpl(std::istream &is,
   is.read(reinterpret_cast<char *>(&header.num_channels),
           sizeof(header.num_channels));
 
+  if (header.num_channels <= 0) {
+    SHERPA_ONNX_LOGE("Invalid num_channels: %d. Expected > 0",
+                     header.num_channels);
+    *is_ok = false;
+    return {};
+  }
+
   is.read(reinterpret_cast<char *>(&header.sample_rate),
           sizeof(header.sample_rate));
 

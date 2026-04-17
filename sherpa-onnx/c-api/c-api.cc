@@ -212,6 +212,7 @@ void SherpaOnnxDestroyOnlineRecognizer(
 
 const SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer) {
+  if (!recognizer) return nullptr;
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(recognizer->impl->CreateStream());
   return stream;
@@ -219,6 +220,7 @@ const SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
 
 const SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStreamWithHotwords(
     const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords) {
+  if (!recognizer) return nullptr;
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hotwords));
   return stream;
@@ -232,23 +234,27 @@ void SherpaOnnxDestroyOnlineStream(const SherpaOnnxOnlineStream *stream) {
 void SherpaOnnxOnlineStreamAcceptWaveform(const SherpaOnnxOnlineStream *stream,
                                           int32_t sample_rate,
                                           const float *samples, int32_t n) {
+  if (!stream) return;
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
 int32_t SherpaOnnxIsOnlineStreamReady(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
+  if (!recognizer || !stream) return 0;
   return recognizer->impl->IsReady(stream->impl.get());
 }
 
 void SherpaOnnxDecodeOnlineStream(const SherpaOnnxOnlineRecognizer *recognizer,
                                   const SherpaOnnxOnlineStream *stream) {
+  if (!recognizer || !stream) return;
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
 void SherpaOnnxDecodeMultipleOnlineStreams(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream **streams, int32_t n) {
+  if (!recognizer || !streams) return;
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -259,6 +265,7 @@ void SherpaOnnxDecodeMultipleOnlineStreams(
 const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
+  if (!recognizer || !stream) return nullptr;
   sherpa_onnx::OnlineRecognizerResult result =
       recognizer->impl->GetResult(stream->impl.get());
   const auto &text = result.text;
@@ -351,10 +358,12 @@ void SherpaOnnxDestroyOnlineStreamResultJson(const char *s) {
 
 void SherpaOnnxOnlineStreamReset(const SherpaOnnxOnlineRecognizer *recognizer,
                                  const SherpaOnnxOnlineStream *stream) {
+  if (!recognizer || !stream) return;
   recognizer->impl->Reset(stream->impl.get());
 }
 
 void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
+  if (!stream) return;
   stream->impl->InputFinished();
 }
 
@@ -379,6 +388,7 @@ int32_t SherpaOnnxOnlineStreamHasOption(const SherpaOnnxOnlineStream *stream,
 int32_t SherpaOnnxOnlineStreamIsEndpoint(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
+  if (!recognizer || !stream) return 0;
   return recognizer->impl->IsEndpoint(stream->impl.get());
 }
 
@@ -681,6 +691,7 @@ const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
 void SherpaOnnxOfflineRecognizerSetConfig(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineRecognizerConfig *config) {
+  if (!recognizer || !config) return;
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
       GetOfflineRecognizerConfig(config);
   recognizer->impl->SetConfig(recognizer_config);
@@ -694,6 +705,7 @@ void SherpaOnnxDestroyOfflineRecognizer(
 
 const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
     const SherpaOnnxOfflineRecognizer *recognizer) {
+  if (!recognizer) return nullptr;
   SherpaOnnxOfflineStream *stream =
       new SherpaOnnxOfflineStream(recognizer->impl->CreateStream());
   return stream;
@@ -701,6 +713,7 @@ const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
 
 const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStreamWithHotwords(
     const SherpaOnnxOfflineRecognizer *recognizer, const char *hotwords) {
+  if (!recognizer) return nullptr;
   SherpaOnnxOfflineStream *stream =
       new SherpaOnnxOfflineStream(recognizer->impl->CreateStream(hotwords));
   return stream;
@@ -714,6 +727,7 @@ void SherpaOnnxDestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
 void SherpaOnnxAcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
                                      int32_t sample_rate, const float *samples,
                                      int32_t n) {
+  if (!stream) return;
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
@@ -738,12 +752,14 @@ int32_t SherpaOnnxOfflineStreamHasOption(const SherpaOnnxOfflineStream *stream,
 void SherpaOnnxDecodeOfflineStream(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineStream *stream) {
+  if (!recognizer || !stream) return;
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
 void SherpaOnnxDecodeMultipleOfflineStreams(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineStream **streams, int32_t n) {
+  if (!recognizer || !streams) return;
   std::vector<sherpa_onnx::OfflineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -753,6 +769,7 @@ void SherpaOnnxDecodeMultipleOfflineStreams(
 
 const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     const SherpaOnnxOfflineStream *stream) {
+  if (!stream) return nullptr;
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
   const auto &text = result.text;
@@ -1035,6 +1052,7 @@ void SherpaOnnxDestroyKeywordSpotter(const SherpaOnnxKeywordSpotter *spotter) {
 
 const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter) {
+  if (!spotter) return nullptr;
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
   return stream;
@@ -1042,6 +1060,7 @@ const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
 
 const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
     const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
+  if (!spotter) return nullptr;
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
   return stream;
@@ -1049,22 +1068,26 @@ const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
 
 int32_t SherpaOnnxIsKeywordStreamReady(const SherpaOnnxKeywordSpotter *spotter,
                                        const SherpaOnnxOnlineStream *stream) {
+  if (!spotter || !stream) return 0;
   return spotter->impl->IsReady(stream->impl.get());
 }
 
 void SherpaOnnxDecodeKeywordStream(const SherpaOnnxKeywordSpotter *spotter,
                                    const SherpaOnnxOnlineStream *stream) {
+  if (!spotter || !stream) return;
   spotter->impl->DecodeStream(stream->impl.get());
 }
 
 void SherpaOnnxResetKeywordStream(const SherpaOnnxKeywordSpotter *spotter,
                                   const SherpaOnnxOnlineStream *stream) {
+  if (!spotter || !stream) return;
   spotter->impl->Reset(stream->impl.get());
 }
 
 void SherpaOnnxDecodeMultipleKeywordStreams(
     const SherpaOnnxKeywordSpotter *spotter,
     const SherpaOnnxOnlineStream **streams, int32_t n) {
+  if (!spotter || !streams || n <= 0) return;
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -1075,6 +1098,7 @@ void SherpaOnnxDecodeMultipleKeywordStreams(
 const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
     const SherpaOnnxKeywordSpotter *spotter,
     const SherpaOnnxOnlineStream *stream) {
+  if (!spotter || !stream) return nullptr;
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
   const auto &keyword = result.keyword;
@@ -1152,6 +1176,7 @@ void SherpaOnnxDestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
 const char *SherpaOnnxGetKeywordResultAsJson(
     const SherpaOnnxKeywordSpotter *spotter,
     const SherpaOnnxOnlineStream *stream) {
+  if (!spotter || !stream) return nullptr;
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
 
@@ -1189,15 +1214,21 @@ void SherpaOnnxDestroyCircularBuffer(const SherpaOnnxCircularBuffer *buffer) {
 
 void SherpaOnnxCircularBufferPush(const SherpaOnnxCircularBuffer *buffer,
                                   const float *p, int32_t n) {
+  if (!buffer) return;
   buffer->impl->Push(p, n);
 }
 
 const float *SherpaOnnxCircularBufferGet(const SherpaOnnxCircularBuffer *buffer,
                                          int32_t start_index, int32_t n) {
+  if (!buffer) return nullptr;
   std::vector<float> v = buffer->impl->Get(start_index, n);
 
-  float *p = new float[n];
-  std::copy(v.begin(), v.end(), p);
+  float *p = nullptr;
+  if (!v.empty()) {
+    p = new float[v.size()]();
+    std::copy(v.begin(), v.end(), p);
+  }
+
   return p;
 }
 
@@ -1208,18 +1239,22 @@ void SherpaOnnxCircularBufferFree(const float *p) {
 
 void SherpaOnnxCircularBufferPop(const SherpaOnnxCircularBuffer *buffer,
                                  int32_t n) {
+  if (!buffer) return;
   buffer->impl->Pop(n);
 }
 
 int32_t SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer) {
+  if (!buffer) return 0;
   return buffer->impl->Size();
 }
 
 int32_t SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer) {
+  if (!buffer) return 0;
   return buffer->impl->Head();
 }
 
 void SherpaOnnxCircularBufferReset(const SherpaOnnxCircularBuffer *buffer) {
+  if (!buffer) return;
   buffer->impl->Reset();
 }
 
@@ -2686,6 +2721,7 @@ void SherpaOnnxDestroyLinearResampler(const SherpaOnnxLinearResampler *p) {
 const SherpaOnnxResampleOut *SherpaOnnxLinearResamplerResample(
     const SherpaOnnxLinearResampler *p, const float *input, int32_t input_dim,
     int32_t flush) {
+  if (!p) return nullptr;
   std::vector<float> o;
   p->impl->Resample(input, input_dim, flush, &o);
 
@@ -2707,15 +2743,18 @@ void SherpaOnnxLinearResamplerResampleFree(const SherpaOnnxResampleOut *p) {
 
 int32_t SherpaOnnxLinearResamplerResampleGetInputSampleRate(
     const SherpaOnnxLinearResampler *p) {
+  if (!p) return 0;
   return p->impl->GetInputSamplingRate();
 }
 
 int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
     const SherpaOnnxLinearResampler *p) {
+  if (!p) return 0;
   return p->impl->GetOutputSamplingRate();
 }
 
 void SherpaOnnxLinearResamplerReset(const SherpaOnnxLinearResampler *p) {
+  if (!p) return;
   p->impl->Reset();
 }
 
