@@ -15,10 +15,50 @@ const exportSrtBtn = document.querySelector("#export-srt-btn");
 const playerWrapper = document.querySelector("#player-wrapper");
 const player = document.querySelector("#player");
 const subtitleOverlay = document.querySelector("#subtitle-overlay");
+const statsEl = document.querySelector("#stats");
 
 let recognizing = false;
 let pollTimer = null;
 let lastSegments = [];
+let modelsReady = false;
+let modelThreads = 0;
+
+// ---------------------------------------------------------------------------
+// Model initialization polling
+// ---------------------------------------------------------------------------
+
+selectBtn.disabled = true;
+statusEl.textContent = "Loading models...";
+statusEl.className = "status status-working";
+
+function pollInitStatus() {
+  invoke("get_init_status")
+    .then((res) => {
+      if (res.status === 1) {
+        // ready
+        modelsReady = true;
+        modelThreads = res.num_threads;
+        selectBtn.disabled = false;
+        statusEl.textContent = "";
+        statusEl.className = "status";
+      } else if (res.status === 2) {
+        // error
+        selectBtn.disabled = true;
+        statusEl.textContent = `Initialization failed: ${res.error}`;
+        statusEl.className = "status status-error";
+      } else {
+        // still pending, poll again
+        setTimeout(pollInitStatus, 300);
+      }
+    })
+    .catch((err) => {
+      selectBtn.disabled = true;
+      statusEl.textContent = `Init poll error: ${err}`;
+      statusEl.className = "status status-error";
+    });
+}
+
+pollInitStatus();
 
 // ---------------------------------------------------------------------------
 // Copy / Export handlers
@@ -212,7 +252,7 @@ async function saveSegment(idx) {
 // ---------------------------------------------------------------------------
 
 selectBtn.addEventListener("click", async () => {
-  if (recognizing) return;
+  if (recognizing || !modelsReady) return;
 
   const selected = await open({
     multiple: false,
@@ -240,6 +280,7 @@ selectBtn.addEventListener("click", async () => {
   progressLabel.textContent = "0%";
   resultsEl.style.display = "none";
   resultsBody.innerHTML = "";
+  statsEl.style.display = "none";
   playerWrapper.style.display = "none";
   player.src = "";
   lastSegments = [];
@@ -298,6 +339,23 @@ function startPolling() {
         resultsEl.style.display = "block";
       }
 
+      // Update stats during processing
+      if (state.elapsed_secs > 0) {
+        const audioDur = state.audio_duration_secs;
+        const elapsed = state.elapsed_secs;
+        if (audioDur > 0) {
+          const rtf = elapsed / audioDur;
+          statsEl.innerHTML =
+            `Audio duration: ${audioDur.toFixed(3)} s &nbsp;|&nbsp; ` +
+            `Elapsed: ${elapsed.toFixed(3)} s &nbsp;|&nbsp; ` +
+            `RTF: ${rtf.toFixed(3)} (${elapsed.toFixed(3)} / ${audioDur.toFixed(3)})` +
+            (modelThreads > 0 ? ` &nbsp;|&nbsp; Number of threads: ${modelThreads}` : "");
+        } else {
+          statsEl.innerHTML = `Elapsed: ${elapsed.toFixed(3)} s`;
+        }
+        statsEl.style.display = "";
+      }
+
       // Check terminal states
       if (state.status === "done") {
         clearInterval(pollTimer);
@@ -309,6 +367,19 @@ function startPolling() {
         progressLabel.textContent = "100%";
         statusEl.textContent = `Done. Found ${state.segments.length} segment(s).`;
         statusEl.className = "status status-done";
+
+        // Show RTF, elapsed, audio duration
+        const audioDur = state.audio_duration_secs;
+        const elapsed = state.elapsed_secs;
+        if (audioDur > 0 && elapsed > 0) {
+          const rtf = elapsed / audioDur;
+          statsEl.innerHTML =
+            `Audio duration: ${audioDur.toFixed(3)} s &nbsp;|&nbsp; ` +
+            `Recognition time: ${elapsed.toFixed(3)} s &nbsp;|&nbsp; ` +
+            `RTF: ${rtf.toFixed(3)} (${elapsed.toFixed(3)} / ${audioDur.toFixed(3)})` +
+            (modelThreads > 0 ? ` &nbsp;|&nbsp; Number of threads: ${modelThreads}` : "");
+          statsEl.style.display = "";
+        }
       } else if (state.status === "cancelled") {
         clearInterval(pollTimer);
         pollTimer = null;

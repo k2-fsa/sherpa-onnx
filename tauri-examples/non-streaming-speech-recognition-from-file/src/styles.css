@@ -141,6 +141,13 @@ button:disabled {
   margin-bottom: 0.5em;
 }
 
+.stats {
+  font-size: 0.9em;
+  color: #555;
+  margin: 0.3em 0 0.5em;
+  text-align: left;
+}
+
 .result-actions {
   display: flex;
   gap: 0.6em;
