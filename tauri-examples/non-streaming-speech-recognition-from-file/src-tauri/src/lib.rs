@@ -1,17 +1,24 @@
+mod model_registry;
+
+use model_registry::get_model_config;
 use serde::Serialize;
 use sherpa_onnx::{
-    LinearResampler, OfflineRecognizer, OfflineRecognizerConfig, OfflineSenseVoiceModelConfig,
-    SileroVadModelConfig, VadModelConfig, VoiceActivityDetector,
+    LinearResampler, OfflineRecognizer, SileroVadModelConfig, VadModelConfig,
+    VoiceActivityDetector,
 };
 use std::fs::File;
-use std::time::Instant;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use symphonia::core::audio::{AudioBufferRef, SampleBuffer};
 use symphonia::core::codecs::{Decoder, CODEC_TYPE_NULL};
 use symphonia::core::formats::FormatReader;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::probe::Hint;
+
+/// Which ASR model to bundle. Build scripts patch this via sed.
+const MODEL_TYPE: u32 = 15;
 
 #[derive(Serialize, Clone)]
 struct SegmentResult {
@@ -577,29 +584,50 @@ fn get_init_status(state: tauri::State<'_, AppState>) -> InitStatus {
     }
 }
 
+/// Resolve the resource directory where bundled models live.
+/// macOS .app bundle: <App>.app/Contents/Resources/
+/// Linux / Windows: directory alongside the executable.
+fn resource_dir() -> PathBuf {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(app_dir) = exe
+                .parent()
+                .and_then(|p| p.parent())
+                .and_then(|p| p.parent())
+            {
+                let resources = app_dir.join("Resources");
+                if resources.exists() {
+                    return resources;
+                }
+            }
+        }
+    }
+
+    std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
 fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
-    let tokens = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt";
-    let sense_voice_model =
-        "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx";
-    let silero_vad_model = "./silero_vad.onnx";
+    let dir = resource_dir();
 
-    let mut asr_config = OfflineRecognizerConfig::default();
-    asr_config.model_config.sense_voice = OfflineSenseVoiceModelConfig {
-        model: Some(sense_voice_model.to_string()),
-        language: Some("auto".to_string()),
-        use_itn: true,
-        ..Default::default()
-    };
-    asr_config.model_config.tokens = Some(tokens.to_string());
-    asr_config.model_config.num_threads = 2;
+    let asr_config = get_model_config(MODEL_TYPE, &dir)
+        .ok_or_else(|| format!("Unknown MODEL_TYPE: {MODEL_TYPE}"))?;
 
-    let recognizer = OfflineRecognizer::create(&asr_config)
-        .ok_or_else(|| "Failed to create recognizer. Check model paths.".to_string())?;
+    let num_threads = asr_config.model_config.num_threads as u32;
+
+    let silero_vad_path = dir
+        .join("silero_vad.onnx")
+        .to_str()
+        .ok_or_else(|| "Invalid silero_vad path".to_string())?
+        .to_string();
 
     let mut vad_config = VadModelConfig::default();
     vad_config.silero_vad = SileroVadModelConfig {
-        model: Some(silero_vad_model.to_string()),
+        model: Some(silero_vad_path),
         threshold: 0.2,
         min_silence_duration: 0.2,
         min_speech_duration: 0.2,
@@ -610,10 +638,13 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     vad_config.sample_rate = 16000;
     vad_config.num_threads = 1;
 
+    let recognizer = OfflineRecognizer::create(&asr_config)
+        .ok_or_else(|| "Failed to create recognizer. Check model paths.".to_string())?;
+
     let vad = VoiceActivityDetector::create(&vad_config, 120.0)
         .ok_or_else(|| "Failed to create VAD. Check silero_vad model path.".to_string())?;
 
-    Ok((recognizer, vad, asr_config.model_config.num_threads as u32))
+    Ok((recognizer, vad, num_threads))
 }
 
 /// Create AppState with recognizer/VAD set to None.
