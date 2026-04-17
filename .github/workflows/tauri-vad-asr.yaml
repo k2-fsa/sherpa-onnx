@@ -3,7 +3,7 @@ name: tauri-vad-asr
 on:
   push:
     branches:
-      - tauri-2
+      - fix-rust
 
   workflow_dispatch:
 
@@ -30,14 +30,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            python3 -m pip install --upgrade --break-system-packages jinja2
+          else
+            python3 -m pip install --upgrade jinja2
+          fi
+
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Install Tauri CLI
         run: cargo install tauri-cli
-
-      - name: Install Python dependencies
-        run: python3 -m pip install --upgrade pip jinja2
-        shell: bash
 
       - name: Generate build script
         shell: bash
@@ -57,9 +62,9 @@ jobs:
         run: |
           ls -lh tauri-examples/non-streaming-speech-recognition-from-file/dist/
 
-      # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: tauri-${{ matrix.os }}-shard-${{ matrix.index }}
-      #     path: tauri-examples/non-streaming-speech-recognition-from-file/dist/
-      #     retention-days: 7
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-${{ matrix.os }}-shard-${{ matrix.index }}
+          path: tauri-examples/non-streaming-speech-recognition-from-file/dist/
+          retention-days: 7

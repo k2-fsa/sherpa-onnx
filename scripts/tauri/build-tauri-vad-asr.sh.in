@@ -79,6 +79,10 @@ log "============================================================"
 
 model_name={{ model.model_name }}
 type={{ model.idx }}
+short_name={{ model.short_name }}
+lang={{ model.lang }}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" "${SCRIPT_DIR}/CMakeLists.txt" | cut -d " " -f 2 | cut -d '"' -f 2)
 
 # Download model
 if [ ! -d "$model_name" ]; then
@@ -104,7 +108,9 @@ fi
 # Patch MODEL_TYPE and MODEL_NAME in lib.rs
 cd "${SRC_DIR}"
 sed -i.bak "s/const MODEL_TYPE: u32 = [0-9]*;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
-sed -i.bak "s/const MODEL_NAME: &str = \".*\";/const MODEL_NAME: &str = \"${model_name}\";/" src/lib.rs
+sed -i.bak "s/const MODEL_NAME: \&str = \".*\";/const MODEL_NAME: \&str = \"${model_name}\";/" src/lib.rs
+
+git diff .
 
 # Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
 mkdir -p "${SRC_DIR}/resources"
@@ -169,16 +175,54 @@ if [[ "$PLATFORM" == macos-* ]]; then
   fi
 fi
 
-# Collect artifacts
-DIST_DIR="${PROJECT_DIR}/dist/${model_name}/${PLATFORM}"
+# Collect artifacts into dist/<model_name>/ (flat structure)
+DIST_DIR="${PROJECT_DIR}/dist/${model_name}"
 mkdir -p "${DIST_DIR}"
-cp -r target/${RUST_TARGET}/release/bundle/* "${DIST_DIR}/" 2>/dev/null || true
 
-# For macOS universal, also collect the universal binary
+ARTIFACT_PREFIX="vad-asr-${SHERPA_ONNX_VERSION}-${lang}-${short_name}"
+
+# Copy platform-specific bundles (deb, rpm, dmg, msi, nsis, app)
+cp -r target/${RUST_TARGET}/release/bundle/*/* "${DIST_DIR}/" 2>/dev/null || true
+
+# For macOS, also collect the universal binary
 if [[ "$PLATFORM" == macos-* ]]; then
-  UNIVERSAL_DIR="${PROJECT_DIR}/dist/${model_name}/macos-universal"
-  mkdir -p "${UNIVERSAL_DIR}"
-  cp -r target/universal2-apple-darwin/release/bundle/* "${UNIVERSAL_DIR}/" 2>/dev/null || true
+  cp -r target/universal2-apple-darwin/release/bundle/*/* "${DIST_DIR}/" 2>/dev/null || true
+fi
+
+# Rename installer files and tar.bz2 .app bundles
+cd "${DIST_DIR}"
+for f in non-streaming-speech-recognition-from-file*; do
+  [ ! -e "$f" ] && continue
+  suffix="${f#non-streaming-speech-recognition-from-file}"
+  if [ -d "$f" ]; then
+    # .app directory — tar.bz2 it
+    tar cjf "${ARTIFACT_PREFIX}${suffix}.tar.bz2" "$f"
+    rm -rf "$f"
+  else
+    mv "$f" "${ARTIFACT_PREFIX}${suffix}"
+  fi
+done
+cd "${SRC_DIR}"
+
+# Portable archives (no install needed)
+if [[ "$PLATFORM" == windows-* ]]; then
+  PORTABLE_DIR="${DIST_DIR}/_portable"
+  mkdir -p "${PORTABLE_DIR}"
+  cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-file.exe "${PORTABLE_DIR}/"
+  cp -a "${SRC_DIR}/resources" "${PORTABLE_DIR}/"
+  cd "${DIST_DIR}"
+  zip -r "${ARTIFACT_PREFIX}-windows-x64.zip" _portable/
+  rm -rf _portable
+  cd "${SRC_DIR}"
+elif [[ "$PLATFORM" == linux-* ]]; then
+  PORTABLE_DIR="${DIST_DIR}/_portable"
+  mkdir -p "${PORTABLE_DIR}"
+  cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-file "${PORTABLE_DIR}/"
+  cp -a "${SRC_DIR}/resources" "${PORTABLE_DIR}/"
+  cd "${DIST_DIR}"
+  tar czf "${ARTIFACT_PREFIX}-${PLATFORM}.tar.gz" _portable/
+  rm -rf _portable
+  cd "${SRC_DIR}"
 fi
 
 # Restore and clean up

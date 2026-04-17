@@ -1641,17 +1641,17 @@ def get_args():
 def main():
     args = get_args()
     all_models = get_models()
-    all_models = [m for m in all_models if 'sense' in m.model_name]
 
     repo_root = Path(__file__).parent.parent.parent
     tauri_src = repo_root / "tauri-examples" / "non-streaming-speech-recognition-from-file" / "src-tauri"
     scripts_dir = repo_root / "scripts" / "tauri"
     workflows_dir = repo_root / ".github" / "workflows"
 
-    generate_all = not (args.gen_registry or args.gen_workflow)
-
-    if args.gen_registry or generate_all:
+    if args.gen_registry:
         gen_model_registry(all_models, tauri_src / "src" / "model_registry.rs")
+
+    # Filter for testing — only affects build script, not registry
+    all_models = [m for m in all_models if 'sense' in m.model_name and '07' in m.model_name]
 
     if args.gen_workflow:
         gen_workflow(workflows_dir / "tauri-vad-asr.yaml")

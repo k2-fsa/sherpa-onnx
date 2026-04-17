@@ -25,7 +25,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb", "rpm", "dmg", "app", "msi", "nsis"],
+    "icon": ["icons/icon.png"],
     "resources": ["resources/*"]
   }
 }
