@@ -591,35 +591,74 @@ fn get_init_status(state: tauri::State<'_, AppState>) -> InitStatus {
 /// macOS .app bundle: <App>.app/Contents/Resources/
 /// Linux / Windows: directory alongside the executable.
 fn resource_dir() -> PathBuf {
-    #[cfg(target_os = "macos")]
-    {
-        if let Ok(exe) = std::env::current_exe() {
-            if let Some(app_dir) = exe
-                .parent()
-                .and_then(|p| p.parent())
-                .and_then(|p| p.parent())
+    if let Ok(exe) = std::env::current_exe() {
+        // On macOS, walk up ancestors to find the .app bundle,
+        // then return <App>.app/Contents/Resources/
+        for ancestor in exe.ancestors() {
+            if ancestor
+                .extension()
+                .map_or(false, |ext| ext == "app")
             {
-                let resources = app_dir.join("Resources");
+                let resources = ancestor.join("Contents").join("Resources");
                 if resources.exists() {
                     return resources;
                 }
+                break;
             }
         }
-    }
 
-    std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
-        .unwrap_or_else(|| PathBuf::from("."))
+        // Fallback: executable's directory
+        if let Some(parent) = exe.parent() {
+            return parent.to_path_buf();
+        }
+    }
+    PathBuf::from(".")
 }
 
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
 fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
-    let dir = resource_dir();
+    let res_dir = resource_dir();
+    let dir = res_dir.join("resources");
     let model_dir = dir.join(MODEL_NAME);
+
+    eprintln!("[DEBUG] resource_dir() = {:?}", res_dir);
+    eprintln!("[DEBUG] dir (resources) = {:?}", dir);
+    eprintln!("[DEBUG] model_dir = {:?}", model_dir);
+    eprintln!("[DEBUG] model_dir exists = {}", model_dir.exists());
+    if model_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&model_dir) {
+            for entry in entries.flatten() {
+                eprintln!("[DEBUG]   model file: {:?}", entry.file_name());
+            }
+        }
+    } else {
+        eprintln!("[DEBUG] model_dir does NOT exist!");
+        // Try listing parent
+        if dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                for entry in entries.flatten() {
+                    eprintln!("[DEBUG]   dir entry: {:?}", entry.file_name());
+                }
+            }
+        } else {
+            eprintln!("[DEBUG] dir does NOT exist either!");
+            if res_dir.exists() {
+                if let Ok(entries) = std::fs::read_dir(&res_dir) {
+                    for entry in entries.flatten() {
+                        eprintln!("[DEBUG]   res_dir entry: {:?}", entry.file_name());
+                    }
+                }
+            } else {
+                eprintln!("[DEBUG] res_dir does NOT exist either!");
+            }
+        }
+    }
 
     let mut asr_config = get_model_config(MODEL_TYPE, &model_dir)
         .ok_or_else(|| format!("Unknown MODEL_TYPE: {MODEL_TYPE}"))?;
+
+    eprintln!("[DEBUG] tokens = {:?}", asr_config.model_config.tokens);
+    eprintln!("[DEBUG] model_type = {:?}", asr_config.model_config.model_type);
 
     // Optional homophone replacer files live in resource_dir(), not model_dir.
     let hr_lexicon = dir.join("lexicon.txt");

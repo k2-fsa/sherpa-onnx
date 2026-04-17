@@ -110,6 +110,15 @@ cd "${SRC_DIR}"
 sed -i.bak "s/const MODEL_TYPE: u32 = [0-9]*;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
 sed -i.bak "s/const MODEL_NAME: \&str = \".*\";/const MODEL_NAME: \&str = \"${model_name}\";/" src/lib.rs
 
+# Windows needs icon.ico — generate from icon.png if missing
+if [[ "$PLATFORM" == windows-* ]] && [ ! -f icons/icon.ico ]; then
+  python3 -c "
+from PIL import Image
+img = Image.open('icons/icon.png')
+img.save('icons/icon.ico', sizes=[(16,16),(32,32),(48,48),(256,256)])
+"
+fi
+
 git diff .
 
 # Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
@@ -176,7 +185,7 @@ if [[ "$PLATFORM" == macos-* ]]; then
 fi
 
 # Collect artifacts into dist/<model_name>/ (flat structure)
-DIST_DIR="${PROJECT_DIR}/dist/${model_name}"
+DIST_DIR="${PROJECT_DIR}/dist"
 mkdir -p "${DIST_DIR}"
 
 ARTIFACT_PREFIX="vad-asr-${SHERPA_ONNX_VERSION}-${lang}-${short_name}"

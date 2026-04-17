@@ -27,6 +27,6 @@
     "active": true,
     "targets": ["deb", "rpm", "dmg", "app", "msi", "nsis"],
     "icon": ["icons/icon.png"],
-    "resources": ["resources/*"]
+    "resources": ["resources"]
   }
 }

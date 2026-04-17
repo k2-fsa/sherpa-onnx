@@ -1511,6 +1511,7 @@ def gen_model_registry(models: List[Model], output_path: Path):
             lines.append(f'            config.model_config.model_type = Some("{model.model_type}".into());')
 
         lines.append(f'            config.model_config.num_threads = {model.num_threads};')
+        lines.append(f'            config.model_config.debug = true;')
 
         if model.rule_fsts:
             lines.append(f'            config.rule_fsts = p("{model.rule_fsts}");')

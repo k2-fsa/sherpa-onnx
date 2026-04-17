@@ -34,15 +34,17 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ runner.os }}" == "macOS" ]]; then
-            python3 -m pip install --upgrade --break-system-packages jinja2
+            python3 -m pip install --upgrade --break-system-packages jinja2 pillow
           else
-            python3 -m pip install --upgrade jinja2
+            python3 -m pip install --upgrade jinja2 pillow
           fi
 
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Install Tauri CLI
-        run: cargo install tauri-cli
+        shell: bash
+        run: |
+          cargo install tauri-cli
 
       - name: Generate build script
         shell: bash
