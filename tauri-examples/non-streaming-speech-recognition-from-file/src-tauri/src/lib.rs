@@ -263,6 +263,39 @@ fn cancel_recognition(state: tauri::State<'_, AppState>) {
     state.cancelled.store(true, Ordering::Relaxed);
 }
 
+fn format_srt_time(seconds: f32) -> String {
+    let total_ms = (seconds * 1000.0) as u64;
+    let h = total_ms / 3_600_000;
+    let m = (total_ms % 3_600_000) / 60_000;
+    let s = (total_ms % 60_000) / 1000;
+    let ms = total_ms % 1000;
+    format!("{h:02}:{m:02}:{s:02},{ms:03}")
+}
+
+/// Export the current results as an SRT subtitle file.
+#[tauri::command]
+fn export_srt(path: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let segments = state.segments.lock().map_err(|e| e.to_string())?;
+    if segments.is_empty() {
+        return Err("No results to export".to_string());
+    }
+
+    let mut srt = String::new();
+    for (i, seg) in segments.iter().enumerate() {
+        srt.push_str(&format!("{}\n", i + 1));
+        srt.push_str(&format!(
+            "{} --> {}\n",
+            format_srt_time(seg.start),
+            format_srt_time(seg.end)
+        ));
+        srt.push_str(&seg.text);
+        srt.push_str("\n\n");
+    }
+
+    std::fs::write(&path, srt).map_err(|e| format!("Cannot write file: {e}"))?;
+    Ok(())
+}
+
 /// Create the recognizer and VAD once at startup.
 fn build_app_state() -> AppState {
     let tokens = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt";
@@ -320,6 +353,7 @@ pub fn run() {
             recognize_file,
             get_recognition_progress,
             cancel_recognition,
+            export_srt,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

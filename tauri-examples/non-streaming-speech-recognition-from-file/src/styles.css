@@ -141,6 +141,23 @@ button:disabled {
   margin-bottom: 0.5em;
 }
 
+.result-actions {
+  display: flex;
+  gap: 0.6em;
+  margin-top: 1em;
+  justify-content: flex-start;
+}
+
+.result-actions button {
+  font-size: 0.85em;
+  padding: 0.4em 1em;
+  background-color: #475569;
+}
+
+.result-actions button:hover {
+  background-color: #334155;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -215,5 +232,13 @@ th {
   th,
   td {
     border-bottom-color: #444;
+  }
+
+  .result-actions button {
+    background-color: #475569;
+  }
+
+  .result-actions button:hover {
+    background-color: #64748b;
   }
 }
