@@ -9,6 +9,10 @@ pub struct LinearResampler {
     ptr: *const sys::SherpaOnnxLinearResampler,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for LinearResampler {}
+unsafe impl Sync for LinearResampler {}
+
 impl LinearResampler {
     /// Create a new resampler that converts from `samp_rate_in_hz` to
     /// `samp_rate_out_hz`.

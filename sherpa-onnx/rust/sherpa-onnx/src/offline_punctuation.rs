@@ -76,7 +76,9 @@ pub struct OfflinePunctuation {
     ptr: *const sys::OfflinePunctuation,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for OfflinePunctuation {}
+unsafe impl Sync for OfflinePunctuation {}
 
 impl OfflinePunctuation {
     /// Create an offline punctuator from [`OfflinePunctuationConfig`].

@@ -160,6 +160,10 @@ pub struct SpeechSegment {
     ptr: *const sys::SpeechSegment,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for SpeechSegment {}
+unsafe impl Sync for SpeechSegment {}
+
 impl SpeechSegment {
     /// Start index, in samples, relative to the input seen so far.
     pub fn start(&self) -> i32 {

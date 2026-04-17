@@ -352,6 +352,10 @@ pub struct OnlineRecognizer {
     ptr: *const sys::OnlineRecognizer,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OnlineRecognizer {}
+unsafe impl Sync for OnlineRecognizer {}
+
 impl OnlineRecognizer {
     /// Create a recognizer from `config`.
     pub fn create(config: &OnlineRecognizerConfig) -> Option<Self> {
@@ -451,6 +455,10 @@ impl Drop for OnlineRecognizer {
 pub struct OnlineStream {
     pub(crate) ptr: *const sys::OnlineStream,
 }
+
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OnlineStream {}
+unsafe impl Sync for OnlineStream {}
 
 impl OnlineStream {
     /// Append one chunk of waveform samples.

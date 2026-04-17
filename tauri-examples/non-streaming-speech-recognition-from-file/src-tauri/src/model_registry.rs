@@ -16,7 +16,9 @@ use sherpa_onnx::{
 
 pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineRecognizerConfig> {
     let p = |sub: &str| -> Option<String> {
-        Some(model_dir.join(sub).to_str()?.to_string())
+        let path = model_dir.join(sub);
+        if !path.exists() { return None; }
+        Some(path.to_str()?.to_string())
     };
     match model_type {
         0 => {
@@ -222,8 +224,6 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
-            config.hr.lexicon = p("lexicon.txt");
-            config.hr.rule_fsts = p("rule.fst");
             Some(config)
         }
 
@@ -562,8 +562,6 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
-            config.hr.lexicon = p("lexicon.txt");
-            config.hr.rule_fsts = p("rule.fst");
             Some(config)
         }
 

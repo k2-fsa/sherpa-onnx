@@ -1,16 +1,21 @@
-# Non-Streaming Speech Recognition from File (Tauri)
+# Non-Streaming Speech Recognition from File
 
-A Tauri desktop application that performs speech recognition on audio and video
-files using [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
+A Tauri v2 desktop app that transcribes audio and video files using offline ASR
+with Silero VAD.
 
-It uses a VAD (Voice Activity Detector) to split long audio into speech
-segments, then recognizes each segment with an offline ASR model.
+## Features
 
-## Supported Formats
+- **62 ASR models** supported (SenseVoice, Paraformer, Whisper, Transducer, Moonshine, etc.)
+- **Audio/video playback** with waveform display
+- **SRT subtitle export**
+- **Segment WAV export** — save individual speech segments as WAV files
+- **Progress tracking** with cancellation support
+- **Cross-platform** — macOS (universal), Linux (x64/aarch64), Windows (x64)
+- **Pure-Rust audio decoding** via [symphonia](https://github.com/pdeljanov/Symphonia) — no system dependencies
 
-Audio decoding uses [symphonia](https://github.com/pdeljanov/Symphonia) — a
-pure Rust decoder with **no system dependencies** (no ffmpeg needed). Supported
-formats include:
+## Supported Audio Formats
+
+Any format supported by symphonia:
 
 | Type   | Formats                                    |
 |--------|--------------------------------------------|
@@ -19,50 +24,107 @@ formats include:
 
 ## Prerequisites
 
-1. Install [Rust](https://rustup.rs/) and [Node.js](https://nodejs.org/).
-2. Install Tauri prerequisites: https://tauri.app/start/prerequisites/
-3. Download a SenseVoice model and Silero VAD model:
+- [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [Tauri CLI](https://v2.tauri.app/start/prerequisites/):
 
 ```bash
-cd src-tauri
-
-# SenseVoice model (multilingual, zh/en/ja/ko)
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-
-# Silero VAD model
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+cargo install tauri-cli
 ```
 
-4. Update model paths in `src-tauri/src/lib.rs` if you placed models in a
-   different location.
+## Quick Start
 
-5. Generate app icons (optional, for bundling):
+This example bundles the **SenseVoice int8** model (model type 15), which
+supports Chinese, English, Japanese, Korean, and Cantonese.
+
+### 1. Download the model and Silero VAD
 
 ```bash
-npm install
-npm run tauri icon /path/to/icon.png
+cd tauri-examples/non-streaming-speech-recognition-from-file
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 ```
 
-## Run in Development Mode
+### 2. Copy resources into src-tauri
+
+Tauri bundles files from `src-tauri/resources/`. Place the entire model
+directory (keeping its original name) and `silero_vad.onnx` inside it:
 
 ```bash
-cd src-tauri
+mkdir -p src-tauri/resources
+cp -a sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17 src-tauri/resources/
+cp -a silero_vad.onnx src-tauri/resources/
+```
+
+This gives:
+
+```
+src-tauri/resources/
+├── silero_vad.onnx
+└── sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/
+    ├── model.int8.onnx
+    └── tokens.txt
+```
+
+Some models (e.g. SenseVoice) support a homophone replacer. To enable it,
+place `lexicon.txt` and `rule.fst` directly inside `resources/`:
+
+```bash
+# Optional — only if you want homophone replacement
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+cp -a lexicon.txt replace.fst src-tauri/resources/
+```
+
+The app works fine without these files.
+
+### 3. Build and run
+
+```bash
 cargo tauri dev
 ```
 
-Or from the project root:
+This opens the app window. Use the file picker to select an audio or video file
+and click **Recognize**.
+
+### 4. Build a release binary
 
 ```bash
-npm install
-npm run dev
+cargo tauri build
 ```
 
-## Build for Production
+The output is in `src-tauri/target/release/bundle/`.
+
+## Using a Different Model
+
+The app uses `MODEL_TYPE` and `MODEL_NAME` (constants in `src-tauri/src/lib.rs`)
+to select which model to bundle. The defaults are `15` and
+`sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17`.
+
+To switch models:
+
+1. Choose a model type from `src-tauri/src/model_registry.rs` (types 0–61).
+2. Set `MODEL_TYPE` and `MODEL_NAME` in `src-tauri/src/lib.rs`:
+
+```rust
+const MODEL_TYPE: u32 = 42;
+const MODEL_NAME: &str = "your-model-dir-name";
+```
+
+3. Download the corresponding model and place the entire directory into
+   `src-tauri/resources/`, keeping its original name.
+
+You can also use the build script generator to automate this:
 
 ```bash
-cd src-tauri
-cargo tauri build
+# Generate the model registry from model definitions
+python scripts/tauri/generate-vad-asr.py --gen-registry
+
+# Generate a build script for a specific model shard
+python scripts/tauri/generate-vad-asr.py --total 1 --index 0
 ```
 
 ## How It Works
@@ -73,25 +135,3 @@ cargo tauri build
 4. Audio is fed to the VAD in 512-sample (32 ms) chunks.
 5. Each detected speech segment is decoded by the offline recognizer.
 6. Results are displayed in a table with start/end timestamps and text.
-
-The VAD + ASR logic mirrors the C++ example in
-`sherpa-onnx/csrc/sherpa-onnx-vad-with-offline-asr.cc`.
-
-## Using a Different Model
-
-Edit the model configuration section in `src-tauri/src/lib.rs`. For example,
-to use a Whisper model instead:
-
-```rust
-asr_config.model_config.whisper = OfflineWhisperModelConfig {
-    encoder: Some("./whisper-encoder.onnx".into()),
-    decoder: Some("./whisper-decoder.onnx".into()),
-    language: Some("en".into()),
-    task: Some("transcribe".into()),
-    tail_paddings: 200,
-    ..Default::default()
-};
-```
-
-See the [sherpa-onnx documentation](https://k2-fsa.github.io/sherpa/onnx/)
-for all supported model types.

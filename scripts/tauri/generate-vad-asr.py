@@ -1382,7 +1382,9 @@ def gen_model_registry(models: List[Model], output_path: Path):
     lines.append("")
     lines.append("pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineRecognizerConfig> {")
     lines.append("    let p = |sub: &str| -> Option<String> {")
-    lines.append("        Some(model_dir.join(sub).to_str()?.to_string())")
+    lines.append("        let path = model_dir.join(sub);")
+    lines.append("        if !path.exists() { return None; }")
+    lines.append("        Some(path.to_str()?.to_string())")
     lines.append("    };")
     lines.append("    match model_type {")
 
@@ -1513,9 +1515,8 @@ def gen_model_registry(models: List[Model], output_path: Path):
         if model.rule_fsts:
             lines.append(f'            config.rule_fsts = p("{model.rule_fsts}");')
 
-        if model.use_hr:
-            lines.append(f'            config.hr.lexicon = p("lexicon.txt");')
-            lines.append(f'            config.hr.rule_fsts = p("rule.fst");')
+        # HR files (lexicon.txt, rule.fst) are resolved at runtime from
+        # resource_dir(), not from model_dir, so we don't emit them here.
 
         lines.append(f"            Some(config)")
         lines.append(f"        }}")

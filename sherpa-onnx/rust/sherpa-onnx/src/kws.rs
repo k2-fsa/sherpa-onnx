@@ -118,7 +118,9 @@ pub struct KeywordSpotter {
     ptr: *const sys::KeywordSpotter,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for KeywordSpotter {}
+unsafe impl Sync for KeywordSpotter {}
 
 impl KeywordSpotter {
     /// Create a keyword spotter from [`KeywordSpotterConfig`].

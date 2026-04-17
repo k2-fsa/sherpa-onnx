@@ -100,7 +100,9 @@ pub struct SpokenLanguageIdentification {
     ptr: *const sys::SpokenLanguageIdentification,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for SpokenLanguageIdentification {}
+unsafe impl Sync for SpokenLanguageIdentification {}
 
 impl SpokenLanguageIdentification {
     /// Create a language identifier from [`SpokenLanguageIdentificationConfig`].

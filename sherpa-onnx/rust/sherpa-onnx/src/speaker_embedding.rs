@@ -59,7 +59,9 @@ pub struct SpeakerEmbeddingExtractor {
     dim: i32,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for SpeakerEmbeddingExtractor {}
+unsafe impl Sync for SpeakerEmbeddingExtractor {}
 
 impl SpeakerEmbeddingExtractor {
     /// Create an extractor from `config`.
@@ -129,7 +131,9 @@ pub struct SpeakerEmbeddingManager {
     dim: i32,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for SpeakerEmbeddingManager {}
+unsafe impl Sync for SpeakerEmbeddingManager {}
 
 impl SpeakerEmbeddingManager {
     /// Create a manager for embeddings with the given dimension.

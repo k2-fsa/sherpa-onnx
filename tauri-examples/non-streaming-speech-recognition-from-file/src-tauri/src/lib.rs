@@ -17,8 +17,9 @@ use symphonia::core::formats::FormatReader;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::probe::Hint;
 
-/// Which ASR model to bundle. Build scripts patch this via sed.
+/// Which ASR model to bundle. Build scripts patch these via sed.
 const MODEL_TYPE: u32 = 15;
+const MODEL_NAME: &str = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17";
 
 #[derive(Serialize, Clone)]
 struct SegmentResult {
@@ -613,9 +614,20 @@ fn resource_dir() -> PathBuf {
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
 fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
     let dir = resource_dir();
+    let model_dir = dir.join(MODEL_NAME);
 
-    let asr_config = get_model_config(MODEL_TYPE, &dir)
+    let mut asr_config = get_model_config(MODEL_TYPE, &model_dir)
         .ok_or_else(|| format!("Unknown MODEL_TYPE: {MODEL_TYPE}"))?;
+
+    // Optional homophone replacer files live in resource_dir(), not model_dir.
+    let hr_lexicon = dir.join("lexicon.txt");
+    if hr_lexicon.exists() {
+        asr_config.hr.lexicon = hr_lexicon.to_str().map(|s| s.to_string());
+    }
+    let hr_rule_fst = dir.join("replace.fst");
+    if hr_rule_fst.exists() {
+        asr_config.hr.rule_fsts = hr_rule_fst.to_str().map(|s| s.to_string());
+    }
 
     let num_threads = asr_config.model_config.num_threads as u32;
 

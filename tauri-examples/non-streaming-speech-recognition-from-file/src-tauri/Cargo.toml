@@ -16,10 +16,10 @@ tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sherpa-onnx = { version = "1.12.38", default-features = false }
+# sherpa-onnx = { version = "1.12.38", default-features = false }
 # sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false }
 # sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false, features = ["static"] }
-# sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false, features = ["shared"] }
+sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false, features = ["shared"] }
 
 # symphonia: pure Rust audio decoder — no system deps, Tauri-packable.
 # Supports: mp3, flac, aac, ogg/opus, wav, mp4/m4a, mkv/webm, aiff, etc.
