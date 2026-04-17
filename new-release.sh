@@ -52,6 +52,9 @@ find flutter -name "*.podspec" -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 
+find tauri-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
+find tauri-examples -name Cargo.toml -type f -exec sed -i.bak "$replace_str" {} \;
+
 find harmony-os -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find harmony-os -name oh-package.json5 -type f -exec sed -i.bak "$replace_str" {} \;
 find harmony-os -name BuildProfile.ets -type f -exec sed -i.bak "$replace_str" {} \;

@@ -1,7 +1,7 @@
 {
   "name": "non-streaming-speech-recognition-from-file",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.12.38",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
