@@ -2,11 +2,13 @@
 
 set -ex
 
-old_version_code=20260411
-new_version_code=20260412
+cd "$(dirname "$0")"
 
-old_version="1\.12\.37"
-new_version="1\.12\.38"
+old_version_code=20260412
+new_version_code=20260417
+
+old_version="1\.12\.38"
+new_version="1\.12\.39"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -42,6 +44,9 @@ sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/Cargo.toml
 sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/src/lib.rs
 sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/README.md
 
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/package.json
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/Cargo.toml
+
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 
@@ -51,9 +56,6 @@ find flutter-examples -name "*.yaml" -type f -exec sed -i.bak "$replace_str" {} 
 find flutter -name "*.podspec" -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
 find nodejs-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
-
-find tauri-examples -name package.json -type f -exec sed -i.bak "$replace_str" {} \;
-find tauri-examples -name Cargo.toml -type f -exec sed -i.bak "$replace_str" {} \;
 
 find harmony-os -name "README.md" -type f -exec sed -i.bak "$replace_str" {} \;
 find harmony-os -name oh-package.json5 -type f -exec sed -i.bak "$replace_str" {} \;
