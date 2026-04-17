@@ -10,7 +10,7 @@ log() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="${SCRIPT_DIR}/../../tauri-examples/non-streaming-speech-recognition-from-file"
+PROJECT_DIR="${SCRIPT_DIR}/tauri-examples/non-streaming-speech-recognition-from-file"
 SRC_DIR="${PROJECT_DIR}/src-tauri"
 
 # Detect current platform
