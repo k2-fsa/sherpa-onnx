@@ -36,8 +36,13 @@ jobs:
         run: cargo install tauri-cli
 
       - name: Install Python dependencies
-        run: python3 -m pip install --upgrade pip jinja2
         shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            python3 -m pip install --upgrade --break-system-packages pip jinja2 pillow
+          else
+            python3 -m pip install --upgrade pip jinja2 pillow
+          fi
 
       - name: Generate build script
         shell: bash

@@ -79,6 +79,10 @@ log "============================================================"
 
 model_name={{ model.model_name }}
 type={{ model.idx }}
+short_name={{ model.short_name }}
+lang={{ model.lang }}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" "${SCRIPT_DIR}/CMakeLists.txt" | cut -d " " -f 2 | cut -d '"' -f 2)
 
 # Download model
 if [ ! -d "$model_name" ]; then
@@ -104,13 +108,22 @@ fi
 # Patch MODEL_TYPE and MODEL_NAME in lib.rs
 cd "${SRC_DIR}"
 sed -i.bak "s/const MODEL_TYPE: u32 = 15;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
-sed -i.bak "s/const MODEL_NAME: &str = \".*\";/const MODEL_NAME: &str = \"${model_name}\";/" src/lib.rs
+sed -i.bak "s/const MODEL_NAME: \&str = \".*\";/const MODEL_NAME: \&str = \"${model_name}\";/" src/lib.rs
+
+# Windows needs icon.ico — generate from icon.png if missing
+if [[ "$PLATFORM" == windows-* ]] && [ ! -f icons/icon.ico ]; then
+  python3 -c "
+from PIL import Image
+img = Image.open('icons/icon.png')
+img.save('icons/icon.ico', sizes=[(16,16),(32,32),(48,48),(256,256)])
+"
+fi
 
 # Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
 mkdir -p "${SRC_DIR}/resources"
 cd "${PROJECT_DIR}"
-cp -a "$model_name" "${SRC_DIR}/resources/"
-cp -a silero_vad.onnx "${SRC_DIR}/resources/"
+cp -av "$model_name" "${SRC_DIR}/resources/"
+cp -av silero_vad.onnx "${SRC_DIR}/resources/"
 {% if model.rule_fsts %}
 cp -a {{ model.rule_fsts }} "${SRC_DIR}/resources/"
 {% endif %}
@@ -128,18 +141,75 @@ log "Building for $PLATFORM (target: $RUST_TARGET)"
 cd "${SRC_DIR}"
 cargo tauri build --target "$RUST_TARGET"
 
-# On macOS, also build the other arch and create universal binary
+DIST_DIR="${PROJECT_DIR}/dist/${model_name}"
+STAGE_DIR="${PROJECT_DIR}/_stage"
+ARTIFACT_PREFIX="vad-asr-${SHERPA_ONNX_VERSION}-${lang}-${short_name}"
+
+mkdir -p "${DIST_DIR}"
+
+# On macOS: build both arches + universal, collect all 3
 if [[ "$PLATFORM" == macos-* ]]; then
   OTHER_TARGET=""
+  NATIVE_ARCH_SUFFIX=""
+  OTHER_ARCH_SUFFIX=""
   case "$PLATFORM" in
-    macos-x86_64) OTHER_TARGET="aarch64-apple-darwin" ;;
-    macos-arm64)  OTHER_TARGET="x86_64-apple-darwin" ;;
+    macos-x86_64)
+      OTHER_TARGET="aarch64-apple-darwin"
+      NATIVE_ARCH_SUFFIX="x64"
+      OTHER_ARCH_SUFFIX="aarch64"
+      ;;
+    macos-arm64)
+      OTHER_TARGET="x86_64-apple-darwin"
+      NATIVE_ARCH_SUFFIX="aarch64"
+      OTHER_ARCH_SUFFIX="x64"
+      ;;
   esac
 
+  # Save current arch (first build) artifacts to staging
+  rm -rf "${STAGE_DIR}"
+  cp -r target/${RUST_TARGET}/release/bundle/*/* "${STAGE_DIR}/" 2>/dev/null || true
+
+  # Rename and move first arch artifacts to dist
+  cd "${STAGE_DIR}"
+  for f in non-streaming-speech-recognition-from-file*; do
+    [ ! -e "$f" ] && continue
+    suffix="${f#non-streaming-speech-recognition-from-file}"
+    # For .app (directory), insert arch suffix before .app
+    suffix=$(echo "$suffix" | sed "s/\.app$/-${NATIVE_ARCH_SUFFIX}.app/")
+    if [ -d "$f" ]; then
+      tar cjf "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}.tar.bz2" "$f"
+    else
+      mv "$f" "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}"
+    fi
+  done
+  rm -rf "${STAGE_DIR}"
+  cd "${SRC_DIR}"
+
   if [ -n "$OTHER_TARGET" ]; then
+    # Build other arch
     rustup target add "$OTHER_TARGET"
     log "Building for other macOS arch: $OTHER_TARGET"
     cargo tauri build --target "$OTHER_TARGET"
+
+    # Save other arch artifacts to staging
+    mkdir -p "${STAGE_DIR}"
+    cp -r target/${OTHER_TARGET}/release/bundle/*/* "${STAGE_DIR}/" 2>/dev/null || true
+
+    # Rename and move other arch artifacts to dist
+    cd "${STAGE_DIR}"
+    for f in non-streaming-speech-recognition-from-file*; do
+      [ ! -e "$f" ] && continue
+      suffix="${f#non-streaming-speech-recognition-from-file}"
+      # For .app (directory), insert arch suffix before .app
+      suffix=$(echo "$suffix" | sed "s/\.app$/-${OTHER_ARCH_SUFFIX}.app/")
+      if [ -d "$f" ]; then
+        tar cjf "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}.tar.bz2" "$f"
+      else
+        mv "$f" "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}"
+      fi
+    done
+    rm -rf "${STAGE_DIR}"
+    cd "${SRC_DIR}"
 
     # Create universal binary via lipo
     x64_app=$(find target/x86_64-apple-darwin/release/bundle/macos -name "*.app" -maxdepth 1 | head -1)
@@ -166,27 +236,73 @@ if [[ "$PLATFORM" == macos-* ]]; then
         fi
       done
     fi
+
+    # Collect universal artifacts
+    cp -r target/universal2-apple-darwin/release/bundle/*/* "${STAGE_DIR}/" 2>/dev/null || true
+    cd "${STAGE_DIR}"
+    for f in non-streaming-speech-recognition-from-file*; do
+      [ ! -e "$f" ] && continue
+      suffix="${f#non-streaming-speech-recognition-from-file}"
+      # Replace arch-specific suffix in DMG names (e.g., _0.1.0_aarch64.dmg → _0.1.0_universal.dmg)
+      suffix=$(echo "$suffix" | sed 's/_aarch64\./_universal./;s/_x64\./_universal./')
+      # For .app (directory), insert _universal before .app
+      suffix=$(echo "$suffix" | sed 's/\.app$/_universal.app/')
+      if [ -d "$f" ]; then
+        tar cjf "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}.tar.bz2" "$f"
+      else
+        mv "$f" "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}"
+      fi
+    done
+    rm -rf "${STAGE_DIR}"
+    cd "${SRC_DIR}"
   fi
-fi
 
-# Collect artifacts
-DIST_DIR="${PROJECT_DIR}/dist/${model_name}/${PLATFORM}"
-mkdir -p "${DIST_DIR}"
-cp -r target/${RUST_TARGET}/release/bundle/* "${DIST_DIR}/" 2>/dev/null || true
+else
+  # Linux / Windows: copy and rename installer bundles
+  cp -r target/${RUST_TARGET}/release/bundle/*/* "${STAGE_DIR}/" 2>/dev/null || true
+  cd "${STAGE_DIR}"
+  for f in non-streaming-speech-recognition-from-file*; do
+    [ ! -e "$f" ] && continue
+    suffix="${f#non-streaming-speech-recognition-from-file}"
+    if [ -d "$f" ]; then
+      tar cjf "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}.tar.bz2" "$f"
+    else
+      mv "$f" "${DIST_DIR}/${ARTIFACT_PREFIX}${suffix}"
+    fi
+  done
+  rm -rf "${STAGE_DIR}"
+  cd "${SRC_DIR}"
 
-# For macOS universal, also collect the universal binary
-if [[ "$PLATFORM" == macos-* ]]; then
-  UNIVERSAL_DIR="${PROJECT_DIR}/dist/${model_name}/macos-universal"
-  mkdir -p "${UNIVERSAL_DIR}"
-  cp -r target/universal2-apple-darwin/release/bundle/* "${UNIVERSAL_DIR}/" 2>/dev/null || true
+  # Portable archives (no install needed)
+  if [[ "$PLATFORM" == windows-* ]]; then
+    PORTABLE_DIR="${DIST_DIR}/_portable"
+    mkdir -p "${PORTABLE_DIR}"
+    cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-file.exe "${PORTABLE_DIR}/"
+    cp -a "${SRC_DIR}/resources" "${PORTABLE_DIR}/"
+    cd "${DIST_DIR}"
+    zip -r "${ARTIFACT_PREFIX}-windows-x64.zip" _portable/
+    rm -rf _portable
+    cd "${SRC_DIR}"
+  elif [[ "$PLATFORM" == linux-* ]]; then
+    PORTABLE_DIR="${DIST_DIR}/_portable"
+    mkdir -p "${PORTABLE_DIR}"
+    cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-file "${PORTABLE_DIR}/"
+    cp -a "${SRC_DIR}/resources" "${PORTABLE_DIR}/"
+    cd "${DIST_DIR}"
+    tar czf "${ARTIFACT_PREFIX}-${PLATFORM}.tar.gz" _portable/
+    rm -rf _portable
+    cd "${SRC_DIR}"
+  fi
 fi
 
 # Restore and clean up
 cd "${SRC_DIR}"
 git checkout src/lib.rs 2>/dev/null || true
+ls -lh resources
 rm -rf resources
+rm -rf "${STAGE_DIR}"
 
 {% endfor %}
 
 log "Done! Artifacts in ${PROJECT_DIR}/dist/"
-ls -lh "${PROJECT_DIR}/dist/"
+ls -lhR "${PROJECT_DIR}/dist/"
