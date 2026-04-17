@@ -1,0 +1,65 @@
+name: tauri-vad-asr
+
+on:
+  push:
+    branches:
+      - tauri-2
+
+  workflow_dispatch:
+
+concurrency:
+  group: tauri-vad-asr-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  tauri_vad_asr:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.index }}/10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-latest, windows-latest]
+        # index: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        index: ['0']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli
+
+      - name: Install Python dependencies
+        run: python3 -m pip install --upgrade pip jinja2
+        shell: bash
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/tauri
+          # python3 generate-vad-asr.py --total 10 --index ${{ matrix.index }}
+          python3 generate-vad-asr.py --total 1 --index ${{ matrix.index }}
+          chmod +x build-tauri-vad-asr.sh
+          mv build-tauri-vad-asr.sh ../..
+
+      - name: Build
+        shell: bash
+        run: ./build-tauri-vad-asr.sh
+
+      - name: Show
+        shell: bash
+        run: |
+          ls -lh tauri-examples/non-streaming-speech-recognition-from-file/dist/
+
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: tauri-${{ matrix.os }}-shard-${{ matrix.index }}
+      #     path: tauri-examples/non-streaming-speech-recognition-from-file/dist/
+      #     retention-days: 7

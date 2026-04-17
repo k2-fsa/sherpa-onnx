@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+#
+# Auto generated! Please DO NOT EDIT!
+
+set -ex
+
+log() {
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="${SCRIPT_DIR}/tauri-examples/non-streaming-speech-recognition-from-file"
+SRC_DIR="${PROJECT_DIR}/src-tauri"
+
+# Detect current platform
+detect_platform() {
+  local os arch
+  os="$(uname -s)"
+  arch="$(uname -m)"
+  case "$os" in
+    Linux)
+      case "$arch" in
+        x86_64)  echo "linux-x64" ;;
+        aarch64) echo "linux-aarch64" ;;
+        *)       log "Unsupported Linux arch: $arch"; exit 1 ;;
+      esac
+      ;;
+    Darwin)
+      echo "macos-$(uname -m)"
+      ;;
+    MINGW*|MSYS*|CYGWIN*)
+      echo "windows-x64"
+      ;;
+    *)
+      log "Unsupported OS: $os"
+      exit 1
+      ;;
+  esac
+}
+
+PLATFORM="$(detect_platform)"
+log "Detected platform: $PLATFORM"
+
+# Rust targets per platform
+RUST_TARGET=""
+case "$PLATFORM" in
+  linux-x64)       RUST_TARGET="x86_64-unknown-linux-gnu" ;;
+  linux-aarch64)   RUST_TARGET="aarch64-unknown-linux-gnu" ;;
+  macos-x86_64)    RUST_TARGET="x86_64-apple-darwin" ;;
+  macos-arm64)     RUST_TARGET="aarch64-apple-darwin" ;;
+  windows-x64)     RUST_TARGET="x86_64-pc-windows-msvc" ;;
+  *)               log "Unknown platform: $PLATFORM"; exit 1 ;;
+esac
+
+# Install system deps on Linux
+install_deps() {
+  if [[ "$PLATFORM" == linux-* ]]; then
+    sudo apt-get update
+    sudo apt-get install -y \
+      libwebkit2gtk-4.1-dev \
+      libgtk-3-dev \
+      libayatana-appindicator3-dev \
+      librsvg2-dev \
+      patchelf
+  fi
+}
+
+install_deps
+
+rustup target add "$RUST_TARGET"
+
+cd "${PROJECT_DIR}"
+
+{% for model in model_list %}
+log "============================================================"
+log "Building model {{ model.idx }}: {{ model.model_name }}"
+log "============================================================"
+
+model_name={{ model.model_name }}
+type={{ model.idx }}
+
+# Download model
+if [ ! -d "$model_name" ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+  tar xvf ${model_name}.tar.bz2
+  rm -f ${model_name}.tar.bz2
+fi
+
+{{ model.cmd }}
+
+# Download Silero VAD
+if [ ! -f silero_vad.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+fi
+
+{% if model.rule_fsts %}
+rule_fsts={{ model.rule_fsts }}
+if [ ! -f "$rule_fsts" ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${rule_fsts}
+fi
+{% endif %}
+
+# Patch MODEL_TYPE and MODEL_NAME in lib.rs
+cd "${SRC_DIR}"
+sed -i.bak "s/const MODEL_TYPE: u32 = 15;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
+sed -i.bak "s/const MODEL_NAME: &str = \".*\";/const MODEL_NAME: &str = \"${model_name}\";/" src/lib.rs
+
+# Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
+mkdir -p "${SRC_DIR}/resources"
+cd "${PROJECT_DIR}"
+cp -a "$model_name" "${SRC_DIR}/resources/"
+cp -a silero_vad.onnx "${SRC_DIR}/resources/"
+{% if model.rule_fsts %}
+cp -a {{ model.rule_fsts }} "${SRC_DIR}/resources/"
+{% endif %}
+{% if model.use_hr %}
+if [ ! -f "${SRC_DIR}/resources/lexicon.txt" ]; then
+  cd "${SRC_DIR}/resources"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+  cd "${PROJECT_DIR}"
+fi
+{% endif %}
+
+# Build
+log "Building for $PLATFORM (target: $RUST_TARGET)"
+cd "${SRC_DIR}"
+cargo tauri build --target "$RUST_TARGET"
+
+# On macOS, also build the other arch and create universal binary
+if [[ "$PLATFORM" == macos-* ]]; then
+  OTHER_TARGET=""
+  case "$PLATFORM" in
+    macos-x86_64) OTHER_TARGET="aarch64-apple-darwin" ;;
+    macos-arm64)  OTHER_TARGET="x86_64-apple-darwin" ;;
+  esac
+
+  if [ -n "$OTHER_TARGET" ]; then
+    rustup target add "$OTHER_TARGET"
+    log "Building for other macOS arch: $OTHER_TARGET"
+    cargo tauri build --target "$OTHER_TARGET"
+
+    # Create universal binary via lipo
+    x64_app=$(find target/x86_64-apple-darwin/release/bundle/macos -name "*.app" -maxdepth 1 | head -1)
+    arm64_app=$(find target/aarch64-apple-darwin/release/bundle/macos -name "*.app" -maxdepth 1 | head -1)
+    app_name=$(basename "$x64_app")
+    binary_name=$(basename "$x64_app" .app)
+    universal_dir=target/universal2-apple-darwin/release/bundle/macos
+    mkdir -p "$universal_dir"
+    cp -a "$x64_app" "$universal_dir/$app_name"
+    lipo -create \
+      "$x64_app/Contents/MacOS/$binary_name" \
+      "$arm64_app/Contents/MacOS/$binary_name" \
+      -output "$universal_dir/$app_name/Contents/MacOS/$binary_name"
+
+    # Copy universal dylibs if any
+    if [ -d "$x64_app/Contents/Frameworks" ]; then
+      for dylib in "$x64_app/Contents/Frameworks/"*.dylib; do
+        if [ -f "$dylib" ]; then
+          name=$(basename "$dylib")
+          if [ -f "$arm64_app/Contents/Frameworks/$name" ]; then
+            lipo -create "$dylib" "$arm64_app/Contents/Frameworks/$name" \
+              -output "$universal_dir/$app_name/Contents/Frameworks/$name"
+          fi
+        fi
+      done
+    fi
+  fi
+fi
+
+# Collect artifacts
+DIST_DIR="${PROJECT_DIR}/dist/${model_name}/${PLATFORM}"
+mkdir -p "${DIST_DIR}"
+cp -r target/${RUST_TARGET}/release/bundle/* "${DIST_DIR}/" 2>/dev/null || true
+
+# For macOS universal, also collect the universal binary
+if [[ "$PLATFORM" == macos-* ]]; then
+  UNIVERSAL_DIR="${PROJECT_DIR}/dist/${model_name}/macos-universal"
+  mkdir -p "${UNIVERSAL_DIR}"
+  cp -r target/universal2-apple-darwin/release/bundle/* "${UNIVERSAL_DIR}/" 2>/dev/null || true
+fi
+
+# Restore and clean up
+cd "${SRC_DIR}"
+git checkout src/lib.rs 2>/dev/null || true
+rm -rf resources
+
+{% endfor %}
+
+log "Done! Artifacts in ${PROJECT_DIR}/dist/"
+ls -lh "${PROJECT_DIR}/dist/"

@@ -146,6 +146,10 @@ pub struct OfflineSpeechDenoiser {
     ptr: *const sys::OfflineSpeechDenoiser,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OfflineSpeechDenoiser {}
+unsafe impl Sync for OfflineSpeechDenoiser {}
+
 impl OfflineSpeechDenoiser {
     /// Create a denoiser from `config`.
     pub fn create(config: &OfflineSpeechDenoiserConfig) -> Option<Self> {

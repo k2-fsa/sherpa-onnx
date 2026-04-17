@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sherpa-ONNX Speech Recognition</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>Sherpa-ONNX</h1>
+      <h2>Non-Streaming Speech Recognition</h2>
+      <p class="subtitle">
+        Uses VAD to split long audio into speech segments, then recognizes each
+        segment with an offline ASR model.
+      </p>
+
+      <div class="actions">
+        <button id="select-btn">Select Audio/Video File</button>
+        <button id="cancel-btn" style="display: none">Cancel</button>
+      </div>
+
+      <p id="status" class="status"></p>
+
+      <div id="progress-container" class="progress-container" style="display: none">
+        <div class="progress-bar-bg">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="progress-label">0%</span>
+      </div>
+
+      <div id="results" class="results" style="display: none">
+        <h3>Recognition Results</h3>
+        <p id="stats" class="stats" style="display: none"></p>
+        <div class="result-actions">
+          <button id="copy-text-btn">Copy Text</button>
+          <button id="copy-timed-btn">Copy with Time</button>
+          <button id="export-srt-btn">Export SRT</button>
+        </div>
+
+        <div id="player-wrapper" class="player-wrapper" style="display: none">
+          <div class="player-container">
+            <video id="player" controls></video>
+            <div id="subtitle-overlay" class="subtitle-overlay"></div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th>Text</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </body>
+</html>

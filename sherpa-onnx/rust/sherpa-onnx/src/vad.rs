@@ -92,6 +92,10 @@ pub struct CircularBuffer {
     ptr: *const sys::CircularBuffer,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for CircularBuffer {}
+unsafe impl Sync for CircularBuffer {}
+
 impl CircularBuffer {
     /// Create a new buffer with capacity measured in samples.
     pub fn new(capacity: i32) -> Option<Self> {
@@ -156,6 +160,10 @@ pub struct SpeechSegment {
     ptr: *const sys::SpeechSegment,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for SpeechSegment {}
+unsafe impl Sync for SpeechSegment {}
+
 impl SpeechSegment {
     /// Start index, in samples, relative to the input seen so far.
     pub fn start(&self) -> i32 {
@@ -183,6 +191,10 @@ impl Drop for SpeechSegment {
 pub struct VoiceActivityDetector {
     ptr: *const sys::VoiceActivityDetector,
 }
+
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for VoiceActivityDetector {}
+unsafe impl Sync for VoiceActivityDetector {}
 
 impl VoiceActivityDetector {
     /// Create a detector and an internal result buffer.

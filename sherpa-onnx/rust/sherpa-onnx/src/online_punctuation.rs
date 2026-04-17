@@ -83,7 +83,9 @@ pub struct OnlinePunctuation {
     ptr: *const sys::OnlinePunctuation,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for OnlinePunctuation {}
+unsafe impl Sync for OnlinePunctuation {}
 
 impl OnlinePunctuation {
     pub fn create(config: &OnlinePunctuationConfig) -> Option<Self> {

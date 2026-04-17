@@ -652,6 +652,10 @@ pub struct OfflineRecognizer {
     ptr: *const sys::OfflineRecognizer,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OfflineRecognizer {}
+unsafe impl Sync for OfflineRecognizer {}
+
 impl OfflineRecognizer {
     /// Create a recognizer from `config`.
     pub fn create(config: &OfflineRecognizerConfig) -> Option<Self> {
@@ -707,6 +711,10 @@ impl Drop for OfflineRecognizer {
 pub struct OfflineStream {
     pub(crate) ptr: *const sys::OfflineStream,
 }
+
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OfflineStream {}
+unsafe impl Sync for OfflineStream {}
 
 impl OfflineStream {
     /// Append samples to the stream.

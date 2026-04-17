@@ -521,7 +521,9 @@ pub struct OfflineTts {
     ptr: *const sys::SherpaOnnxOfflineTts,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for OfflineTts {}
+unsafe impl Sync for OfflineTts {}
 
 impl OfflineTts {
     /// Create a TTS engine from `config`.

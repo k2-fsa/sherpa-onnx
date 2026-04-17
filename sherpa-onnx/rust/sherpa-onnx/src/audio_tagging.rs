@@ -105,7 +105,9 @@ pub struct AudioTagging {
     ptr: *const sys::AudioTagging,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for AudioTagging {}
+unsafe impl Sync for AudioTagging {}
 
 impl AudioTagging {
     /// Create a tagger from `config`.
@@ -179,6 +181,10 @@ impl Drop for AudioTagging {
 pub struct AudioTaggingOfflineStream {
     ptr: *const sys::OfflineStream,
 }
+
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for AudioTaggingOfflineStream {}
+unsafe impl Sync for AudioTaggingOfflineStream {}
 
 impl AudioTaggingOfflineStream {
     /// Append waveform samples to the clip.

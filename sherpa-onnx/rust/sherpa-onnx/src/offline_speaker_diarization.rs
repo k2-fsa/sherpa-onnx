@@ -136,7 +136,9 @@ pub struct OfflineSpeakerDiarization {
     ptr: *const sys::OfflineSpeakerDiarization,
 }
 
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
 unsafe impl Send for OfflineSpeakerDiarization {}
+unsafe impl Sync for OfflineSpeakerDiarization {}
 
 impl OfflineSpeakerDiarization {
     /// Create a diarizer from `config`.
@@ -197,6 +199,10 @@ impl Drop for OfflineSpeakerDiarization {
 pub struct OfflineSpeakerDiarizationResult {
     ptr: *const sys::OfflineSpeakerDiarizationResult,
 }
+
+// SAFETY: The sherpa-onnx C library is thread-safe for single-object usage.
+unsafe impl Send for OfflineSpeakerDiarizationResult {}
+unsafe impl Sync for OfflineSpeakerDiarizationResult {}
 
 impl OfflineSpeakerDiarizationResult {
     /// Return the number of speakers estimated for the recording.
