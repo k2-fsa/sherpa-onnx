@@ -1,3 +1,16 @@
+## 1.12.39
+
+* Add tauri app example for non-streaming ASR + VAD (#3520)
+* Check for nullptr in c/cxx API (#3515)
+* Update go.mod and go.sum for the sherpa-onnx-go package. (#3516)
+* Fix an offset-by-one error in pyannote speaker diarization. (#3514)
+* Set context for thread in Ascend NPU (#3512)
+* Enable proxy support for downloader via ureq's proxy-from-env feature in rust-binding build.rs (#3507)
+* Add script to download all dependencies for offline use (#3506)
+* Update Eigen to v5.0.1 (#3505)
+* Fix building Python wheels for Windows (#3504)
+* Expose memory-related session options via config (#3503)
+
 ## 1.12.38
 
 * Update onnxruntime to use v1.24.4 (#3501)

@@ -11,8 +11,8 @@ android {
         applicationId = "com.k2fsa.sherpa.onnx.audio.tagging.wear.os"
         minSdk = 26
         targetSdk = 34
-        versionCode = 20260412
-        versionName = "1.12.38"
+        versionCode = 20260417
+        versionName = "1.12.39"
         vectorDrawables {
             useSupportLibrary = true
         }

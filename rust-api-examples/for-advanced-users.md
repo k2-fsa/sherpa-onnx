@@ -22,7 +22,7 @@ Examples:
 
 - source build output: `/path/to/sherpa-onnx/build/install/lib`
 - manually extracted release archive:
-  `/path/to/sherpa-onnx-v1.12.38-linux-x64-static-lib/lib`
+  `/path/to/sherpa-onnx-v1.12.39-linux-x64-static-lib/lib`
 
 If `SHERPA_ONNX_LIB_DIR` is set, the build script uses that directory and does
 not auto-download another archive.
@@ -42,11 +42,11 @@ Most users just get this behavior automatically.
 
 | OS | Architecture | Archive example |
 |----|--------------|-----------------|
-| Linux | x86_64 | `sherpa-onnx-v1.12.38-linux-x64-static-lib.tar.bz2` |
-| Linux | aarch64 | `sherpa-onnx-v1.12.38-linux-aarch64-static-lib.tar.bz2` |
-| macOS | x86_64 | `sherpa-onnx-v1.12.38-osx-x64-static-lib.tar.bz2` |
-| macOS | arm64 | `sherpa-onnx-v1.12.38-osx-arm64-static-lib.tar.bz2` |
-| Windows | x86_64 | `sherpa-onnx-v1.12.38-win-x64-static-MT-Release-lib.tar.bz2` |
+| Linux | x86_64 | `sherpa-onnx-v1.12.39-linux-x64-static-lib.tar.bz2` |
+| Linux | aarch64 | `sherpa-onnx-v1.12.39-linux-aarch64-static-lib.tar.bz2` |
+| macOS | x86_64 | `sherpa-onnx-v1.12.39-osx-x64-static-lib.tar.bz2` |
+| macOS | arm64 | `sherpa-onnx-v1.12.39-osx-arm64-static-lib.tar.bz2` |
+| Windows | x86_64 | `sherpa-onnx-v1.12.39-win-x64-static-MT-Release-lib.tar.bz2` |
 
 ### Shared mode
 
@@ -55,11 +55,11 @@ archives instead:
 
 | OS | Architecture | Archive example |
 |----|--------------|-----------------|
-| Linux | x86_64 | `sherpa-onnx-v1.12.38-linux-x64-shared-lib.tar.bz2` |
-| Linux | aarch64 | `sherpa-onnx-v1.12.38-linux-aarch64-shared-cpu-lib.tar.bz2` |
-| macOS | x86_64 | `sherpa-onnx-v1.12.38-osx-x64-shared-lib.tar.bz2` |
-| macOS | arm64 | `sherpa-onnx-v1.12.38-osx-arm64-shared-lib.tar.bz2` |
-| Windows | x86_64 | `sherpa-onnx-v1.12.38-win-x64-shared-MT-Release-lib.tar.bz2` |
+| Linux | x86_64 | `sherpa-onnx-v1.12.39-linux-x64-shared-lib.tar.bz2` |
+| Linux | aarch64 | `sherpa-onnx-v1.12.39-linux-aarch64-shared-cpu-lib.tar.bz2` |
+| macOS | x86_64 | `sherpa-onnx-v1.12.39-osx-x64-shared-lib.tar.bz2` |
+| macOS | arm64 | `sherpa-onnx-v1.12.39-osx-arm64-shared-lib.tar.bz2` |
+| Windows | x86_64 | `sherpa-onnx-v1.12.39-win-x64-shared-MT-Release-lib.tar.bz2` |
 
 In practice, use the latest release tag instead of the example version above.
 
@@ -71,7 +71,7 @@ This is enough for most users:
 
 ```toml
 [dependencies]
-sherpa-onnx = "1.12.38"
+sherpa-onnx = "1.12.39"
 ```
 
 That uses the crate's default feature set.
@@ -82,7 +82,7 @@ To use shared libraries instead, disable default features and enable `shared`:
 
 ```toml
 [dependencies]
-sherpa-onnx = { version = "1.12.38", default-features = false, features = ["shared"] }
+sherpa-onnx = { version = "1.12.39", default-features = false, features = ["shared"] }
 ```
 
 From the command line, the equivalent example command is:
