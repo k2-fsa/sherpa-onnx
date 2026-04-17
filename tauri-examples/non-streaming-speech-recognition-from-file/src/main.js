@@ -1,4 +1,4 @@
-const { invoke } = window.__TAURI__.core;
+const { invoke, convertFileSrc } = window.__TAURI__.core;
 const { open, save } = window.__TAURI__.dialog;
 
 const selectBtn = document.querySelector("#select-btn");
@@ -12,10 +12,14 @@ const progressLabel = document.querySelector("#progress-label");
 const copyTextBtn = document.querySelector("#copy-text-btn");
 const copyTimedBtn = document.querySelector("#copy-timed-btn");
 const exportSrtBtn = document.querySelector("#export-srt-btn");
+const playerContainer = document.querySelector("#player-container");
+const player = document.querySelector("#player");
+const subtitleOverlay = document.querySelector("#subtitle-overlay");
 
 let recognizing = false;
 let pollTimer = null;
 let lastSegments = [];
+let selectedFilePath = null;
 
 // ---------------------------------------------------------------------------
 // Copy / Export handlers
@@ -52,6 +56,34 @@ exportSrtBtn.addEventListener("click", async () => {
 });
 
 // ---------------------------------------------------------------------------
+// Player / subtitle
+// ---------------------------------------------------------------------------
+
+function setupPlayer(filePath) {
+  selectedFilePath = filePath;
+  const url = convertFileSrc(filePath);
+  player.src = url;
+  playerContainer.style.display = "block";
+  subtitleOverlay.textContent = "";
+}
+
+player.addEventListener("timeupdate", () => {
+  const t = player.currentTime;
+  let activeText = "";
+  for (const seg of lastSegments) {
+    if (t >= seg.start && t < seg.end) {
+      activeText = seg.text;
+      break;
+    }
+  }
+  subtitleOverlay.textContent = activeText;
+});
+
+player.addEventListener("ended", () => {
+  subtitleOverlay.textContent = "";
+});
+
+// ---------------------------------------------------------------------------
 // File selection & recognition
 // ---------------------------------------------------------------------------
 
@@ -84,12 +116,15 @@ selectBtn.addEventListener("click", async () => {
   progressLabel.textContent = "0%";
   resultsEl.style.display = "none";
   resultsBody.innerHTML = "";
+  playerContainer.style.display = "none";
+  player.src = "";
   lastSegments = [];
   statusEl.textContent = "Decoding audio file...";
   statusEl.className = "status status-working";
 
   try {
     await invoke("recognize_file", { path: selected });
+    setupPlayer(selected);
     startPolling();
   } catch (err) {
     recognizing = false;

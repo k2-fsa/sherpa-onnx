@@ -158,6 +158,35 @@ button:disabled {
   background-color: #334155;
 }
 
+.player-container {
+  position: relative;
+  width: 100%;
+  margin: 1em 0;
+}
+
+#player {
+  width: 100%;
+  max-height: 420px;
+  background-color: #000;
+  border-radius: 8px;
+}
+
+.subtitle-overlay {
+  position: absolute;
+  bottom: 2.5em;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 0.3em 0.8em;
+  font-size: 1.1em;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  text-align: center;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
