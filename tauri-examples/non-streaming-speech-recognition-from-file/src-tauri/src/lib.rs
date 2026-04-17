@@ -437,27 +437,29 @@ fn write_wav(path: &str, samples: &[f32]) -> Result<(), String> {
     let data_size = num_samples * 2;
     let file_size = 36 + data_size;
 
-    let mut f = File::create(path).map_err(|e| format!("Cannot create file: {e}"))?;
+    let f = File::create(path).map_err(|e| format!("Cannot create file: {e}"))?;
+    let mut w = std::io::BufWriter::new(f);
 
     use std::io::Write;
-    f.write_all(b"RIFF").map_err(|e| e.to_string())?;
-    f.write_all(&file_size.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(b"WAVE").map_err(|e| e.to_string())?;
-    f.write_all(b"fmt ").map_err(|e| e.to_string())?;
-    f.write_all(&16u32.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&16000u32.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&byte_rate.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&2u16.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(&16u16.to_le_bytes()).map_err(|e| e.to_string())?;
-    f.write_all(b"data").map_err(|e| e.to_string())?;
-    f.write_all(&data_size.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(b"RIFF").map_err(|e| e.to_string())?;
+    w.write_all(&file_size.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(b"WAVE").map_err(|e| e.to_string())?;
+    w.write_all(b"fmt ").map_err(|e| e.to_string())?;
+    w.write_all(&16u32.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&16000u32.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&byte_rate.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&2u16.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(&16u16.to_le_bytes()).map_err(|e| e.to_string())?;
+    w.write_all(b"data").map_err(|e| e.to_string())?;
+    w.write_all(&data_size.to_le_bytes()).map_err(|e| e.to_string())?;
     for &s in samples {
         let clamped = s.max(-1.0).min(1.0);
         let pcm = (clamped * 32767.0) as i16;
-        f.write_all(&pcm.to_le_bytes()).map_err(|e| e.to_string())?;
+        w.write_all(&pcm.to_le_bytes()).map_err(|e| e.to_string())?;
     }
+    w.flush().map_err(|e| e.to_string())?;
 
     Ok(())
 }

@@ -1665,7 +1665,8 @@ def main():
     num_models = len(all_models)
     num_per_runner = num_models // total
     if num_per_runner <= 0:
-        raise ValueError(f"num_models: {num_models}, total: {total}")
+        # Fewer models than shards — some shards get zero models
+        num_per_runner = 0
 
     start = index * num_per_runner
     end = start + num_per_runner

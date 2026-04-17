@@ -103,7 +103,7 @@ fi
 
 # Patch MODEL_TYPE and MODEL_NAME in lib.rs
 cd "${SRC_DIR}"
-sed -i.bak "s/const MODEL_TYPE: u32 = 15;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
+sed -i.bak "s/const MODEL_TYPE: u32 = [0-9]*;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
 sed -i.bak "s/const MODEL_NAME: &str = \".*\";/const MODEL_NAME: &str = \"${model_name}\";/" src/lib.rs
 
 # Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
