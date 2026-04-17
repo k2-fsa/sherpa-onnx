@@ -101,10 +101,18 @@ if [ ! -f "$rule_fsts" ]; then
 fi
 {% endif %}
 
-# Patch source
+# Patch MODEL_TYPE in lib.rs
 cd "${SRC_DIR}"
 sed -i.bak "s/const MODEL_TYPE: u32 = 15;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
-sed -i.bak "s|__MODEL_DIR__|${model_name}|" tauri.conf.json
+
+# Copy model, vad, and rule_fsts into src-tauri/resources/ for Tauri bundling
+mkdir -p "${SRC_DIR}/resources"
+cd "${PROJECT_DIR}"
+cp -a "$model_name" "${SRC_DIR}/resources/"
+cp -a silero_vad.onnx "${SRC_DIR}/resources/"
+{% if model.rule_fsts %}
+cp -a {{ model.rule_fsts }} "${SRC_DIR}/resources/"
+{% endif %}
 
 # Build
 log "Building for $PLATFORM (target: $RUST_TARGET)"
@@ -164,11 +172,10 @@ if [[ "$PLATFORM" == macos-* ]]; then
   cp -r target/universal2-apple-darwin/release/bundle/* "${UNIVERSAL_DIR}/" 2>/dev/null || true
 fi
 
-# Restore
+# Restore and clean up
 cd "${SRC_DIR}"
-git checkout src/lib.rs tauri.conf.json 2>/dev/null || true
-
-# Clean up model
+git checkout src/lib.rs 2>/dev/null || true
+rm -rf resources
 cd "${PROJECT_DIR}"
 rm -rf "$model_name"
 

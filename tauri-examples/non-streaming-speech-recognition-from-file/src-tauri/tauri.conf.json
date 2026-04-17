@@ -26,6 +26,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["__MODEL_DIR__/*", "silero_vad.onnx"]
+    "resources": ["resources/*"]
   }
 }
