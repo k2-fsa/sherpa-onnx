@@ -12,14 +12,13 @@ const progressLabel = document.querySelector("#progress-label");
 const copyTextBtn = document.querySelector("#copy-text-btn");
 const copyTimedBtn = document.querySelector("#copy-timed-btn");
 const exportSrtBtn = document.querySelector("#export-srt-btn");
-const playerContainer = document.querySelector("#player-container");
+const playerWrapper = document.querySelector("#player-wrapper");
 const player = document.querySelector("#player");
 const subtitleOverlay = document.querySelector("#subtitle-overlay");
 
 let recognizing = false;
 let pollTimer = null;
 let lastSegments = [];
-let selectedFilePath = null;
 
 // ---------------------------------------------------------------------------
 // Copy / Export handlers
@@ -56,32 +55,157 @@ exportSrtBtn.addEventListener("click", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Player / subtitle
+// Player / subtitle / row sync
 // ---------------------------------------------------------------------------
 
 function setupPlayer(filePath) {
-  selectedFilePath = filePath;
   const url = convertFileSrc(filePath);
   player.src = url;
-  playerContainer.style.display = "block";
+  playerWrapper.style.display = "block";
   subtitleOverlay.textContent = "";
 }
 
-player.addEventListener("timeupdate", () => {
-  const t = player.currentTime;
-  let activeText = "";
-  for (const seg of lastSegments) {
-    if (t >= seg.start && t < seg.end) {
-      activeText = seg.text;
-      break;
+// Find segment index for a given time using binary search.
+// Segments are sorted by start time.
+function findSegmentIndex(t) {
+  let lo = 0;
+  let hi = lastSegments.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const seg = lastSegments[mid];
+    if (t < seg.start) {
+      hi = mid - 1;
+    } else if (t >= seg.end) {
+      lo = mid + 1;
+    } else {
+      return mid;
     }
   }
-  subtitleOverlay.textContent = activeText;
+  return -1;
+}
+
+// Use rAF for smooth subtitle/row sync (~60fps instead of timeupdate's ~4fps).
+let rafId = null;
+let lastActiveIdx = -1;
+
+function tick() {
+  if (player.paused || player.ended) {
+    rafId = null;
+    return;
+  }
+
+  const t = player.currentTime;
+  const activeIdx = findSegmentIndex(t);
+
+  // Update subtitle
+  subtitleOverlay.textContent =
+    activeIdx >= 0 ? lastSegments[activeIdx].text : "";
+
+  // Update row highlight (only on change to avoid constant reflows)
+  if (activeIdx !== lastActiveIdx) {
+    const rows = resultsBody.querySelectorAll("tr");
+    if (lastActiveIdx >= 0 && lastActiveIdx < rows.length) {
+      rows[lastActiveIdx].classList.remove("active");
+    }
+    if (activeIdx >= 0 && activeIdx < rows.length) {
+      rows[activeIdx].classList.add("active");
+      rows[activeIdx].scrollIntoView({ block: "nearest" });
+    }
+    lastActiveIdx = activeIdx;
+  }
+
+  rafId = requestAnimationFrame(tick);
+}
+
+function startSync() {
+  if (rafId) return;
+  lastActiveIdx = -1;
+  rafId = requestAnimationFrame(tick);
+}
+
+function stopSync() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+}
+
+player.addEventListener("play", startSync);
+player.addEventListener("pause", () => {
+  stopSync();
+  // Still update subtitle on pause so it shows the correct text
+  const t = player.currentTime;
+  const idx = findSegmentIndex(t);
+  subtitleOverlay.textContent = idx >= 0 ? lastSegments[idx].text : "";
 });
 
 player.addEventListener("ended", () => {
+  stopSync();
   subtitleOverlay.textContent = "";
+  lastActiveIdx = -1;
+  resultsBody
+    .querySelectorAll("tr.active")
+    .forEach((tr) => tr.classList.remove("active"));
 });
+
+// Click a table row to seek to that segment
+resultsBody.addEventListener("click", (e) => {
+  // Handle save button click
+  if (e.target.closest(".save-seg-btn")) {
+    e.stopPropagation();
+    const btn = e.target.closest(".save-seg-btn");
+    const idx = parseInt(btn.dataset.idx, 10);
+    if (idx >= 0 && idx < lastSegments.length) {
+      saveSegment(idx);
+    }
+    return;
+  }
+
+  const tr = e.target.closest("tr");
+  if (!tr) return;
+  const idx = parseInt(tr.dataset.idx, 10);
+  if (idx >= 0 && idx < lastSegments.length) {
+    player.pause();
+    // Seek 0.3s before the segment start to avoid missing the beginning
+    const t = Math.max(0, lastSegments[idx].start - 0.3);
+    player.currentTime = t;
+    player.addEventListener(
+      "seeked",
+      () => {
+        player.play().catch(() => {});
+      },
+      { once: true }
+    );
+  }
+});
+
+async function saveSegment(idx) {
+  const seg = lastSegments[idx];
+  const start = seg.start.toFixed(2).replace(".", "_");
+  const end = seg.end.toFixed(2).replace(".", "_");
+  const textPart = seg.text
+    .replace(/[^\w\u4e00-\u9fff]/g, "_")
+    .slice(0, 30);
+  const defaultName = `segment-${idx + 1}-${start}s-${end}s-${textPart}.wav`;
+
+  const filePath = await save({
+    defaultPath: defaultName,
+    filters: [{ name: "WAV Audio", extensions: ["wav"] }],
+  });
+
+  if (filePath === null) return;
+
+  try {
+    await invoke("save_segment_as_wav", {
+      path: filePath,
+      start: seg.start,
+      end: seg.end,
+    });
+    flashStatus(`Saved: ${filePath}`, false, 8000);
+  } catch (err) {
+    flashStatus(`Save error: ${err}`, true);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // File selection & recognition
@@ -116,7 +240,7 @@ selectBtn.addEventListener("click", async () => {
   progressLabel.textContent = "0%";
   resultsEl.style.display = "none";
   resultsBody.innerHTML = "";
-  playerContainer.style.display = "none";
+  playerWrapper.style.display = "none";
   player.src = "";
   lastSegments = [];
   statusEl.textContent = "Decoding audio file...";
@@ -158,12 +282,15 @@ function startPolling() {
       // Update results table
       lastSegments = state.segments;
       resultsBody.innerHTML = "";
-      for (const seg of state.segments) {
+      for (let i = 0; i < state.segments.length; i++) {
+        const seg = state.segments[i];
         const tr = document.createElement("tr");
+        tr.dataset.idx = i;
         tr.innerHTML = `
           <td>${seg.start.toFixed(2)}s</td>
           <td>${seg.end.toFixed(2)}s</td>
           <td>${escapeHtml(seg.text)}</td>
+          <td><button class="save-seg-btn" data-idx="${i}" title="Save as WAV">&#128190;</button></td>
         `;
         resultsBody.appendChild(tr);
       }

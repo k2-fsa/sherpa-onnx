@@ -158,10 +158,17 @@ button:disabled {
   background-color: #334155;
 }
 
+.player-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: inherit;
+  padding: 0.5em 0;
+}
+
 .player-container {
   position: relative;
   width: 100%;
-  margin: 1em 0;
 }
 
 #player {
@@ -185,6 +192,31 @@ button:disabled {
   text-align: center;
   pointer-events: none;
   white-space: pre-wrap;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background-color: #dbeafe;
+}
+
+tbody tr.active {
+  background-color: #bfdbfe;
+  font-weight: 500;
+}
+
+.save-seg-btn {
+  padding: 0.2em 0.5em;
+  font-size: 0.85em;
+  background-color: #475569;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.save-seg-btn:hover {
+  background-color: #334155;
 }
 
 table {
@@ -263,11 +295,31 @@ th {
     border-bottom-color: #444;
   }
 
+  tbody tr:hover {
+    background-color: #1e3a5f;
+  }
+
+  tbody tr.active {
+    background-color: #1e40af;
+  }
+
+  .player-wrapper {
+    background-color: #2f2f2f;
+  }
+
   .result-actions button {
     background-color: #475569;
   }
 
   .result-actions button:hover {
+    background-color: #64748b;
+  }
+
+  .save-seg-btn {
+    background-color: #475569;
+  }
+
+  .save-seg-btn:hover {
     background-color: #64748b;
   }
 }

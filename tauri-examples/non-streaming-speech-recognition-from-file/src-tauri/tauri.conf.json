@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Sherpa-ONNX Speech Recognition",
+        "title": "sherpa-onnx Speech Recognition from files",
         "width": 900,
         "height": 700
       }

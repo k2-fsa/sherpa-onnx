@@ -35,6 +35,7 @@ struct AppState {
     progress: Arc<AtomicU32>,
     status: Arc<Mutex<String>>,
     segments: Arc<Mutex<Vec<SegmentResult>>>,
+    samples: Arc<Mutex<Vec<f32>>>,
 }
 
 /// Decode an audio or video file to mono f32 PCM samples at the native sample
@@ -130,6 +131,7 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     state.progress.store(0, Ordering::Relaxed);
     *state.status.lock().map_err(|e| e.to_string())? = "processing".to_string();
     state.segments.lock().map_err(|e| e.to_string())?.clear();
+    state.samples.lock().map_err(|e| e.to_string())?.clear();
 
     // Clone Arc handles for the worker thread
     let recognizer = Arc::clone(&state.recognizer);
@@ -138,9 +140,18 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     let progress = Arc::clone(&state.progress);
     let status = Arc::clone(&state.status);
     let segments = Arc::clone(&state.segments);
+    let samples = Arc::clone(&state.samples);
 
     std::thread::spawn(move || {
-        let result = run_recognition(&path, &recognizer, &vad, &cancelled, &progress, &segments);
+        let result = run_recognition(
+            &path,
+            &recognizer,
+            &vad,
+            &cancelled,
+            &progress,
+            &segments,
+            &samples,
+        );
 
         let mut s = status.lock().unwrap();
         match result {
@@ -168,20 +179,28 @@ fn run_recognition(
     cancelled: &AtomicBool,
     progress: &AtomicU32,
     segments: &Arc<Mutex<Vec<SegmentResult>>>,
+    samples_store: &Arc<Mutex<Vec<f32>>>,
 ) -> Result<(), String> {
-    let (samples, sample_rate) = decode_audio_file(path)?;
+    let (decoded, sample_rate) = decode_audio_file(path)?;
 
     let resampled;
     let input_samples = if sample_rate != 16000 {
         let resampler = LinearResampler::create(sample_rate, 16000)
             .ok_or_else(|| format!("Failed to create resampler for {sample_rate} Hz"))?;
-        resampled = resampler.resample(&samples, true);
-        resampled.as_slice()
+        resampled = resampler.resample(&decoded, true);
+        resampled
     } else {
-        samples.as_slice()
+        decoded
     };
 
     let total_samples = input_samples.len();
+
+    // Store samples so save_segment_as_wav can access them later
+    {
+        let mut store = samples_store.lock().map_err(|e| e.to_string())?;
+        *store = input_samples;
+    }
+    let input_samples = samples_store.lock().map_err(|e| e.to_string())?;
 
     let recognizer = recognizer.lock().map_err(|e| e.to_string())?;
     let vad = vad.lock().map_err(|e| e.to_string())?;
@@ -296,6 +315,72 @@ fn export_srt(path: String, state: tauri::State<'_, AppState>) -> Result<(), Str
     Ok(())
 }
 
+/// Write mono f32 PCM samples as a 16-bit WAV file at 16 kHz.
+fn write_wav(path: &str, samples: &[f32]) -> Result<(), String> {
+    let num_samples = samples.len() as u32;
+    let byte_rate = 16000u32 * 2; // mono 16-bit
+    let data_size = num_samples * 2;
+    let file_size = 36 + data_size;
+
+    let mut f = File::create(path).map_err(|e| format!("Cannot create file: {e}"))?;
+
+    use std::io::Write;
+    // RIFF header
+    f.write_all(b"RIFF").map_err(|e| e.to_string())?;
+    f.write_all(&file_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    f.write_all(b"WAVE").map_err(|e| e.to_string())?;
+    // fmt chunk
+    f.write_all(b"fmt ").map_err(|e| e.to_string())?;
+    f.write_all(&16u32.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    f.write_all(&1u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // PCM
+    f.write_all(&1u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // mono
+    f.write_all(&16000u32.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    f.write_all(&byte_rate.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    f.write_all(&2u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // block align
+    f.write_all(&16u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // bits per sample
+                                      // data chunk
+    f.write_all(b"data").map_err(|e| e.to_string())?;
+    f.write_all(&data_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    for &s in samples {
+        let clamped = s.max(-1.0).min(1.0);
+        let pcm = (clamped * 32767.0) as i16;
+        f.write_all(&pcm.to_le_bytes()).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+/// Save a single audio segment as a WAV file.
+#[tauri::command]
+fn save_segment_as_wav(
+    path: String,
+    start: f32,
+    end: f32,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    let samples = state.samples.lock().map_err(|e| e.to_string())?;
+    if samples.is_empty() {
+        return Err("No audio data available".to_string());
+    }
+
+    let start_idx = (start * 16000.0) as usize;
+    let end_idx = (end * 16000.0).min(samples.len() as f32) as usize;
+    if start_idx >= end_idx {
+        return Err("Invalid time range".to_string());
+    }
+
+    write_wav(&path, &samples[start_idx..end_idx])
+}
+
 /// Create the recognizer and VAD once at startup.
 fn build_app_state() -> AppState {
     let tokens = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt";
@@ -319,11 +404,11 @@ fn build_app_state() -> AppState {
     let mut vad_config = VadModelConfig::default();
     vad_config.silero_vad = SileroVadModelConfig {
         model: Some(silero_vad_model.to_string()),
-        threshold: 0.5,
-        min_silence_duration: 0.1,
-        min_speech_duration: 0.25,
+        threshold: 0.2,
+        min_silence_duration: 0.2,
+        min_speech_duration: 0.2,
         window_size: 512,
-        max_speech_duration: 8.0,
+        max_speech_duration: 10.0,
         ..Default::default()
     };
     vad_config.sample_rate = 16000;
@@ -339,6 +424,7 @@ fn build_app_state() -> AppState {
         progress: Arc::new(AtomicU32::new(0)),
         status: Arc::new(Mutex::new("idle".to_string())),
         segments: Arc::new(Mutex::new(Vec::new())),
+        samples: Arc::new(Mutex::new(Vec::new())),
     }
 }
 
@@ -354,6 +440,7 @@ pub fn run() {
             get_recognition_progress,
             cancel_recognition,
             export_srt,
+            save_segment_as_wav,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

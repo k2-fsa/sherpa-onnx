@@ -39,9 +39,11 @@
           <button id="export-srt-btn">Export SRT</button>
         </div>
 
-        <div id="player-container" class="player-container" style="display: none">
-          <video id="player" controls></video>
-          <div id="subtitle-overlay" class="subtitle-overlay"></div>
+        <div id="player-wrapper" class="player-wrapper" style="display: none">
+          <div class="player-container">
+            <video id="player" controls></video>
+            <div id="subtitle-overlay" class="subtitle-overlay"></div>
+          </div>
         </div>
 
         <table>
@@ -50,6 +52,7 @@
               <th>Start</th>
               <th>End</th>
               <th>Text</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="results-body"></tbody>
