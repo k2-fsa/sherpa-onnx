@@ -19,9 +19,17 @@
 
       <div class="actions">
         <button id="select-btn">Select Audio File</button>
+        <button id="cancel-btn" style="display: none">Cancel</button>
       </div>
 
       <p id="status" class="status"></p>
+
+      <div id="progress-container" class="progress-container" style="display: none">
+        <div class="progress-bar-bg">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="progress-label">0%</span>
+      </div>
 
       <div id="results" class="results" style="display: none">
         <h3>Recognition Results</h3>

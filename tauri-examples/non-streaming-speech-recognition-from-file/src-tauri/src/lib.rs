@@ -4,25 +4,37 @@ use sherpa_onnx::{
     SileroVadModelConfig, VadModelConfig, VoiceActivityDetector,
 };
 use std::fs::File;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex};
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::CODEC_TYPE_NULL;
 use symphonia::core::errors::Error;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::probe::Hint;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 struct SegmentResult {
     start: f32,
     end: f32,
     text: String,
 }
 
+#[derive(Serialize, Clone, Default)]
+struct ProcessingState {
+    percent: u32,
+    status: String,
+    segments: Vec<SegmentResult>,
+}
+
 /// Shared application state, created once at startup.
-/// Mutex ensures exclusive access to VAD/recognizer during a command.
+/// Uses Arc so processing thread can hold references.
 struct AppState {
-    recognizer: Mutex<OfflineRecognizer>,
-    vad: Mutex<VoiceActivityDetector>,
+    recognizer: Arc<Mutex<OfflineRecognizer>>,
+    vad: Arc<Mutex<VoiceActivityDetector>>,
+    cancelled: Arc<AtomicBool>,
+    progress: Arc<AtomicU32>,
+    status: Arc<Mutex<String>>,
+    segments: Arc<Mutex<Vec<SegmentResult>>>,
 }
 
 /// Decode an audio or video file to mono f32 PCM samples at the native sample
@@ -109,20 +121,56 @@ fn decode_audio_file(path: &str) -> Result<(Vec<f32>, i32), String> {
     Ok((mono, sample_rate))
 }
 
-/// Recognize speech from an audio/video file using VAD + offline ASR.
+/// Start recognition in a background thread. Returns immediately.
+/// The frontend should poll `get_recognition_progress` to track progress.
 #[tauri::command]
-fn recognize_file(
-    path: String,
-    state: tauri::State<'_, AppState>,
-) -> Result<Vec<SegmentResult>, String> {
-    // ------------------------------------------------------------------
-    // 1. Decode audio file (MP3, FLAC, AAC, WAV, MP4, MKV, etc.)
-    // ------------------------------------------------------------------
-    let (samples, sample_rate) = decode_audio_file(&path)?;
+fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    // Reset state
+    state.cancelled.store(false, Ordering::Relaxed);
+    state.progress.store(0, Ordering::Relaxed);
+    *state.status.lock().map_err(|e| e.to_string())? = "processing".to_string();
+    state.segments.lock().map_err(|e| e.to_string())?.clear();
 
-    // ------------------------------------------------------------------
-    // 2. Resample to 16 kHz if needed (VAD requires 16 kHz)
-    // ------------------------------------------------------------------
+    // Clone Arc handles for the worker thread
+    let recognizer = Arc::clone(&state.recognizer);
+    let vad = Arc::clone(&state.vad);
+    let cancelled = Arc::clone(&state.cancelled);
+    let progress = Arc::clone(&state.progress);
+    let status = Arc::clone(&state.status);
+    let segments = Arc::clone(&state.segments);
+
+    std::thread::spawn(move || {
+        let result = run_recognition(&path, &recognizer, &vad, &cancelled, &progress, &segments);
+
+        let mut s = status.lock().unwrap();
+        match result {
+            Ok(()) => {
+                if cancelled.load(Ordering::Relaxed) {
+                    *s = "cancelled".to_string();
+                } else {
+                    progress.store(100, Ordering::Relaxed);
+                    *s = "done".to_string();
+                }
+            }
+            Err(e) => {
+                *s = format!("error: {e}");
+            }
+        }
+    });
+
+    Ok(())
+}
+
+fn run_recognition(
+    path: &str,
+    recognizer: &Arc<Mutex<OfflineRecognizer>>,
+    vad: &Arc<Mutex<VoiceActivityDetector>>,
+    cancelled: &AtomicBool,
+    progress: &AtomicU32,
+    segments: &Arc<Mutex<Vec<SegmentResult>>>,
+) -> Result<(), String> {
+    let (samples, sample_rate) = decode_audio_file(path)?;
+
     let resampled;
     let input_samples = if sample_rate != 16000 {
         let resampler = LinearResampler::create(sample_rate, 16000)
@@ -133,19 +181,23 @@ fn recognize_file(
         samples.as_slice()
     };
 
-    // ------------------------------------------------------------------
-    // 3. Run VAD + ASR (reuses the shared recognizer and VAD)
-    // ------------------------------------------------------------------
-    let recognizer = state.recognizer.lock().map_err(|e| e.to_string())?;
-    let vad = state.vad.lock().map_err(|e| e.to_string())?;
+    let total_samples = input_samples.len();
+
+    let recognizer = recognizer.lock().map_err(|e| e.to_string())?;
+    let vad = vad.lock().map_err(|e| e.to_string())?;
     vad.reset();
 
     let window_size: usize = 512;
-    let mut results = Vec::new();
+    let mut last_progress: u32 = 0;
 
     let mut i = 0;
-    while i < input_samples.len() {
-        let end = (i + window_size).min(input_samples.len());
+    while i < total_samples {
+        if cancelled.load(Ordering::Relaxed) {
+            vad.clear();
+            break;
+        }
+
+        let end = (i + window_size).min(total_samples);
         if end - i == window_size {
             vad.accept_waveform(&input_samples[i..end]);
         } else {
@@ -164,11 +216,13 @@ fn recognize_file(
                 recognizer.decode(&stream);
                 if let Some(r) = stream.get_result() {
                     if !r.text.is_empty() {
-                        results.push(SegmentResult {
-                            start: start_time,
-                            end: end_time,
-                            text: r.text,
-                        });
+                        if let Ok(mut segs) = segments.lock() {
+                            segs.push(SegmentResult {
+                                start: start_time,
+                                end: end_time,
+                                text: r.text,
+                            });
+                        }
                     }
                 }
             }
@@ -176,16 +230,41 @@ fn recognize_file(
         }
 
         i += window_size;
+
+        if i % 20480 < window_size || i >= total_samples {
+            let percent = ((i as f32 / total_samples as f32) * 100.0) as u32;
+            let percent = percent.min(100);
+            if percent != last_progress {
+                last_progress = percent;
+                progress.store(percent, Ordering::Relaxed);
+            }
+        }
     }
 
-    Ok(results)
+    Ok(())
+}
+
+/// Poll this from the frontend to get current progress and results.
+#[tauri::command]
+fn get_recognition_progress(state: tauri::State<'_, AppState>) -> Result<ProcessingState, String> {
+    let percent = state.progress.load(Ordering::Relaxed);
+    let status = state.status.lock().map_err(|e| e.to_string())?.clone();
+    let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
+    Ok(ProcessingState {
+        percent,
+        status,
+        segments,
+    })
+}
+
+/// Cancel the current recognition.
+#[tauri::command]
+fn cancel_recognition(state: tauri::State<'_, AppState>) {
+    state.cancelled.store(true, Ordering::Relaxed);
 }
 
 /// Create the recognizer and VAD once at startup.
 fn build_app_state() -> AppState {
-    // ------------------------------------------------------------------
-    // Model configuration — edit these paths to match your setup
-    // ------------------------------------------------------------------
     let tokens = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt";
     let sense_voice_model =
         "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx";
@@ -221,8 +300,12 @@ fn build_app_state() -> AppState {
         .expect("Failed to create VAD. Check silero_vad model path.");
 
     AppState {
-        recognizer: Mutex::new(recognizer),
-        vad: Mutex::new(vad),
+        recognizer: Arc::new(Mutex::new(recognizer)),
+        vad: Arc::new(Mutex::new(vad)),
+        cancelled: Arc::new(AtomicBool::new(false)),
+        progress: Arc::new(AtomicU32::new(0)),
+        status: Arc::new(Mutex::new("idle".to_string())),
+        segments: Arc::new(Mutex::new(Vec::new())),
     }
 }
 
@@ -233,7 +316,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(state)
-        .invoke_handler(tauri::generate_handler![recognize_file])
+        .invoke_handler(tauri::generate_handler![
+            recognize_file,
+            get_recognition_progress,
+            cancel_recognition,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

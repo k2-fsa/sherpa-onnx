@@ -86,6 +86,50 @@ button:disabled {
   color: #dc2626;
 }
 
+.status-cancelled {
+  color: #999;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  width: 90%;
+  max-width: 600px;
+  margin: 0.5em 0;
+}
+
+.progress-bar-bg {
+  flex: 1;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background-color: #396cd8;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+#progress-label {
+  min-width: 3em;
+  text-align: right;
+  font-size: 0.9em;
+  color: #666;
+}
+
+#cancel-btn {
+  background-color: #dc2626;
+}
+
+#cancel-btn:hover {
+  background-color: #b91c1c;
+}
+
 .results {
   margin-top: 1em;
   width: 90%;
@@ -142,6 +186,26 @@ th {
 
   button:active {
     background-color: #2a5bbf;
+  }
+
+  #cancel-btn {
+    background-color: #dc2626;
+  }
+
+  #cancel-btn:hover {
+    background-color: #ef4444;
+  }
+
+  .progress-bar-bg {
+    background-color: #444;
+  }
+
+  .status-cancelled {
+    color: #888;
+  }
+
+  #progress-label {
+    color: #999;
   }
 
   thead {
