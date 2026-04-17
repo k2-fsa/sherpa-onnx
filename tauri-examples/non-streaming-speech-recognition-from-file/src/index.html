@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sherpa-ONNX Speech Recognition</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>Sherpa-ONNX</h1>
+      <h2>Non-Streaming Speech Recognition</h2>
+      <p class="subtitle">
+        Uses VAD to split long audio into speech segments, then recognizes each
+        segment with an offline ASR model.
+      </p>
+
+      <div class="actions">
+        <button id="select-btn">Select Audio File</button>
+      </div>
+
+      <p id="status" class="status"></p>
+
+      <div id="results" class="results" style="display: none">
+        <h3>Recognition Results</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th>Text</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </body>
+</html>
