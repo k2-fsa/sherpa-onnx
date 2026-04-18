@@ -1987,7 +1987,7 @@ checksum = "72ef4a56884ca558e5ddb05a1d1e7e1bfd9a68d9ed024c21704cc98872dae1bb"
 
 [[package]]
 name = "non-streaming-speech-recognition-from-file"
-version = "0.1.0"
+version = "1.12.39"
 dependencies = [
  "serde",
  "serde_json",
@@ -3193,7 +3193,9 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx"
-version = "1.12.38"
+version = "1.12.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a96f6c644f26121dc79820712a1b6a2c975631a4baf8f82d3452a779fa2f45b1"
 dependencies = [
  "serde",
  "serde_json",
@@ -3202,7 +3204,9 @@ dependencies = [
 
 [[package]]
 name = "sherpa-onnx-sys"
-version = "1.12.38"
+version = "1.12.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f1bb46c350789f54aed657204bf0185e57d5ccf552ba1d67e5d23fbf19bb2f6"
 dependencies = [
  "bzip2",
  "tar",

@@ -48,21 +48,21 @@ rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 ```
 
-### 2. Copy resources into src-tauri
+### 2. Copy assets into src-tauri
 
-Tauri bundles files from `src-tauri/resources/`. Place the entire model
+Tauri bundles files from `src-tauri/assets/`. Place the entire model
 directory (keeping its original name) and `silero_vad.onnx` inside it:
 
 ```bash
-mkdir -p src-tauri/resources
-cp -a sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17 src-tauri/resources/
-cp -a silero_vad.onnx src-tauri/resources/
+mkdir -p src-tauri/assets
+cp -a sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17 src-tauri/assets/
+cp -a silero_vad.onnx src-tauri/assets/
 ```
 
 This gives:
 
 ```
-src-tauri/resources/
+src-tauri/assets/
 ├── silero_vad.onnx
 └── sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/
     ├── model.int8.onnx
@@ -70,13 +70,13 @@ src-tauri/resources/
 ```
 
 Some models (e.g. SenseVoice) support a homophone replacer. To enable it,
-place `lexicon.txt` and `rule.fst` directly inside `resources/`:
+place `lexicon.txt` and `rule.fst` directly inside `assets/`:
 
 ```bash
 # Optional — only if you want homophone replacement
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
-cp -a lexicon.txt replace.fst src-tauri/resources/
+cp -a lexicon.txt replace.fst src-tauri/assets/
 ```
 
 The app works fine without these files.
@@ -115,7 +115,7 @@ const MODEL_NAME: &str = "your-model-dir-name";
 ```
 
 3. Download the corresponding model and place the entire directory into
-   `src-tauri/resources/`, keeping its original name.
+   `src-tauri/assets/`, keeping its original name.
 
 You can also use the build script generator to automate this:
 

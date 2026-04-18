@@ -10,7 +10,6 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 use symphonia::core::audio::{AudioBufferRef, SampleBuffer};
 use symphonia::core::codecs::{Decoder, CODEC_TYPE_NULL};
 use symphonia::core::formats::FormatReader;
@@ -33,8 +32,6 @@ struct ProcessingState {
     percent: u32,
     status: String,
     segments: Vec<SegmentResult>,
-    elapsed_secs: f64,
-    audio_duration_secs: f64,
 }
 
 /// Shared application state, created once at startup.
@@ -51,8 +48,6 @@ struct AppState {
     audio_path: Arc<Mutex<String>>,
     init_status: Arc<AtomicU8>,
     init_error: Arc<Mutex<String>>,
-    elapsed_ms: Arc<AtomicU32>,
-    audio_duration_ms: Arc<AtomicU32>,
     num_threads: Arc<AtomicU32>,
 }
 
@@ -138,11 +133,11 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
         return Err(format!("Initialization failed: {err}"));
     }
 
+    eprintln!("[recognize_file] starting recognition for: {path}");
+
     // Reset state
     state.cancelled.store(false, Ordering::Relaxed);
     state.progress.store(0, Ordering::Relaxed);
-    state.elapsed_ms.store(0, Ordering::Relaxed);
-    state.audio_duration_ms.store(0, Ordering::Relaxed);
     *state.status.lock().map_err(|e| e.to_string())? = "processing".to_string();
     state.segments.lock().map_err(|e| e.to_string())?.clear();
     *state.audio_path.lock().map_err(|e| e.to_string())? = path.clone();
@@ -150,15 +145,12 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     // Clone Arc handles for the worker thread
     let recognizer = Arc::clone(&state.recognizer);
     let vad = Arc::clone(&state.vad);
-    let elapsed_ms = Arc::clone(&state.elapsed_ms);
-    let audio_duration_ms = Arc::clone(&state.audio_duration_ms);
     let cancelled = Arc::clone(&state.cancelled);
     let progress = Arc::clone(&state.progress);
     let status = Arc::clone(&state.status);
     let segments = Arc::clone(&state.segments);
 
     std::thread::spawn(move || {
-        let start = Instant::now();
         let result = run_recognition(
             &path,
             &recognizer,
@@ -166,9 +158,6 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
             &cancelled,
             &progress,
             &segments,
-            &audio_duration_ms,
-            &elapsed_ms,
-            &start,
         );
 
         let mut s = status.lock().unwrap();
@@ -198,12 +187,11 @@ fn run_recognition(
     cancelled: &AtomicBool,
     progress: &Arc<AtomicU32>,
     segments: &Arc<Mutex<Vec<SegmentResult>>>,
-    audio_duration_ms: &Arc<AtomicU32>,
-    elapsed_ms: &Arc<AtomicU32>,
-    start: &Instant,
 ) -> Result<(), String> {
     let (mut format_reader, mut decoder, track_id, num_channels, native_rate) =
         open_audio_file(path)?;
+
+    eprintln!("[run_recognition] file: {path}, native_rate={native_rate}, channels={num_channels}");
 
     let resampler = if native_rate != 16000 {
         Some(
@@ -221,18 +209,6 @@ fn run_recognition(
         .and_then(|t| t.codec_params.n_frames)
         .map(|n| n as usize);
 
-    // Compute audio duration for RTF display
-    if let Some(total) = total_samples {
-        let sr = format_reader
-            .default_track()
-            .and_then(|t| t.codec_params.sample_rate)
-            .unwrap_or(16000) as usize;
-        if sr > 0 {
-            let dur_ms = ((total as f64 / sr as f64) * 1000.0) as u32;
-            audio_duration_ms.store(dur_ms, Ordering::Relaxed);
-        }
-    }
-
     let mut recognizer_guard = recognizer.lock().map_err(|e| e.to_string())?;
     let recognizer = recognizer_guard.as_mut().ok_or("Recognizer not initialized")?;
     let mut vad_guard = vad.lock().map_err(|e| e.to_string())?;
@@ -243,7 +219,6 @@ fn run_recognition(
     let mut vad_buf: Vec<f32> = Vec::new();
     let mut decoded_count: usize = 0;
     let mut last_progress: u32 = 0;
-    let mut last_elapsed_update = Instant::now();
 
     loop {
         if cancelled.load(Ordering::Relaxed) {
@@ -306,12 +281,17 @@ fn run_recognition(
                     stream.accept_waveform(16000, seg_samples);
                     recognizer.decode(&stream);
                     if let Some(r) = stream.get_result() {
-                        if !r.text.is_empty() {
+                        let text = r.text.trim().to_string();
+                        if !text.is_empty()
+                            && !text
+                                .chars()
+                                .all(|c| c.is_ascii_punctuation() || c.is_ascii_whitespace())
+                        {
                             if let Ok(mut segs) = segments.lock() {
                                 segs.push(SegmentResult {
                                     start: start_time,
                                     end: end_time,
-                                    text: r.text,
+                                    text,
                                 });
                             }
                         }
@@ -331,12 +311,6 @@ fn run_recognition(
                     progress.store(percent, Ordering::Relaxed);
                 }
             }
-        }
-
-        // Update elapsed time periodically (at least every 500ms)
-        if last_elapsed_update.elapsed().as_millis() >= 500 {
-            elapsed_ms.store(start.elapsed().as_millis() as u32, Ordering::Relaxed);
-            last_elapsed_update = Instant::now();
         }
     }
 
@@ -369,6 +343,9 @@ fn run_recognition(
         }
     }
 
+    let final_count = segments.lock().map(|s| s.len()).unwrap_or(0);
+    eprintln!("[run_recognition] done, total segments: {final_count}");
+
     Ok(())
 }
 
@@ -378,16 +355,10 @@ fn get_recognition_progress(state: tauri::State<'_, AppState>) -> Result<Process
     let percent = state.progress.load(Ordering::Relaxed);
     let status = state.status.lock().map_err(|e| e.to_string())?.clone();
     let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
-    let elapsed_ms = state.elapsed_ms.load(Ordering::Relaxed);
-    let audio_dur_ms = state.audio_duration_ms.load(Ordering::Relaxed);
-    let elapsed_secs = elapsed_ms as f64 / 1000.0;
-    let audio_duration_secs = audio_dur_ms as f64 / 1000.0;
     Ok(ProcessingState {
         percent,
         status,
         segments,
-        elapsed_secs,
-        audio_duration_secs,
     })
 }
 
@@ -592,95 +563,113 @@ fn get_init_status(state: tauri::State<'_, AppState>) -> InitStatus {
 /// Linux / Windows: directory alongside the executable.
 fn resource_dir() -> PathBuf {
     if let Ok(exe) = std::env::current_exe() {
-        // On macOS, walk up ancestors to find the .app bundle,
-        // then return <App>.app/Contents/Resources/
+        eprintln!("[resource_dir] current_exe: {exe:?}");
+
+        // On macOS, walk up ancestors to find the .app bundle
         for ancestor in exe.ancestors() {
             if ancestor
                 .extension()
                 .map_or(false, |ext| ext == "app")
             {
                 let resources = ancestor.join("Contents").join("Resources");
+                eprintln!("[resource_dir] found .app bundle: {ancestor:?}");
                 if resources.exists() {
+                    // Tauri v2 copies the assets/ dir into Contents/Resources/
+                    let assets = resources.join("assets");
+                    if assets.exists() {
+                        eprintln!("[resource_dir] using assets inside Resources: {assets:?}");
+                        return assets;
+                    }
+                    eprintln!("[resource_dir] using Resources directly: {resources:?}");
                     return resources;
                 }
                 break;
             }
         }
 
-        // Fallback: executable's directory
-        if let Some(parent) = exe.parent() {
-            return parent.to_path_buf();
+        // On Windows/Linux, check for assets/ subdirectory next to the exe
+        if let Some(exe_dir) = exe.parent() {
+            let assets_dir = exe_dir.join("assets");
+            if assets_dir.exists() {
+                eprintln!("[resource_dir] using assets dir: {assets_dir:?}");
+                return assets_dir;
+            }
+            eprintln!("[resource_dir] using exe dir: {exe_dir:?}");
+            return exe_dir.to_path_buf();
         }
     }
+    eprintln!("[resource_dir] fallback to current directory");
     PathBuf::from(".")
 }
 
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
 fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
-    let res_dir = resource_dir();
-    let dir = res_dir.join("resources");
+    let dir = resource_dir();
     let model_dir = dir.join(MODEL_NAME);
+    let silero_vad_path = dir.join("silero_vad.onnx");
 
-    eprintln!("[DEBUG] resource_dir() = {:?}", res_dir);
-    eprintln!("[DEBUG] dir (resources) = {:?}", dir);
-    eprintln!("[DEBUG] model_dir = {:?}", model_dir);
-    eprintln!("[DEBUG] model_dir exists = {}", model_dir.exists());
+    eprintln!("[build_models] MODEL_TYPE={MODEL_TYPE}, MODEL_NAME={MODEL_NAME}");
+    eprintln!("[build_models] resource_dir: {dir:?}");
+    eprintln!(
+        "[build_models] model_dir: {model_dir:?}, exists={}",
+        model_dir.exists()
+    );
     if model_dir.exists() {
         if let Ok(entries) = std::fs::read_dir(&model_dir) {
             for entry in entries.flatten() {
-                eprintln!("[DEBUG]   model file: {:?}", entry.file_name());
+                eprintln!("[build_models]   model_dir entry: {:?}", entry.path());
             }
         }
     } else {
-        eprintln!("[DEBUG] model_dir does NOT exist!");
-        // Try listing parent
-        if dir.exists() {
-            if let Ok(entries) = std::fs::read_dir(&dir) {
-                for entry in entries.flatten() {
-                    eprintln!("[DEBUG]   dir entry: {:?}", entry.file_name());
-                }
+        eprintln!("[build_models] ERROR: model_dir does not exist!");
+        eprintln!("[build_models] dir contents:");
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                eprintln!("[build_models]   {:?}", entry.path());
             }
         } else {
-            eprintln!("[DEBUG] dir does NOT exist either!");
-            if res_dir.exists() {
-                if let Ok(entries) = std::fs::read_dir(&res_dir) {
-                    for entry in entries.flatten() {
-                        eprintln!("[DEBUG]   res_dir entry: {:?}", entry.file_name());
-                    }
-                }
-            } else {
-                eprintln!("[DEBUG] res_dir does NOT exist either!");
-            }
+            eprintln!("[build_models]   (cannot read dir)");
         }
     }
+    eprintln!(
+        "[build_models] silero_vad: {silero_vad_path:?}, exists={}",
+        silero_vad_path.exists()
+    );
 
-    let mut asr_config = get_model_config(MODEL_TYPE, &model_dir)
-        .ok_or_else(|| format!("Unknown MODEL_TYPE: {MODEL_TYPE}"))?;
+    let mut asr_config = get_model_config(MODEL_TYPE, &model_dir).ok_or_else(|| {
+        format!(
+            "Unknown MODEL_TYPE: {MODEL_TYPE}. model_dir={model_dir:?}, exists={}",
+            model_dir.exists()
+        )
+    })?;
 
-    eprintln!("[DEBUG] tokens = {:?}", asr_config.model_config.tokens);
-    eprintln!("[DEBUG] model_type = {:?}", asr_config.model_config.model_type);
+    eprintln!(
+        "[build_models] got ASR config, num_threads={}",
+        asr_config.model_config.num_threads
+    );
 
     // Optional homophone replacer files live in resource_dir(), not model_dir.
     let hr_lexicon = dir.join("lexicon.txt");
     if hr_lexicon.exists() {
+        eprintln!("[build_models] using homophone replacer lexicon: {hr_lexicon:?}");
         asr_config.hr.lexicon = hr_lexicon.to_str().map(|s| s.to_string());
     }
     let hr_rule_fst = dir.join("replace.fst");
     if hr_rule_fst.exists() {
+        eprintln!("[build_models] using homophone replacer rule_fst: {hr_rule_fst:?}");
         asr_config.hr.rule_fsts = hr_rule_fst.to_str().map(|s| s.to_string());
     }
 
     let num_threads = asr_config.model_config.num_threads as u32;
 
-    let silero_vad_path = dir
-        .join("silero_vad.onnx")
+    let silero_vad_str = silero_vad_path
         .to_str()
-        .ok_or_else(|| "Invalid silero_vad path".to_string())?
+        .ok_or_else(|| format!("Invalid silero_vad path: {silero_vad_path:?}"))?
         .to_string();
 
     let mut vad_config = VadModelConfig::default();
     vad_config.silero_vad = SileroVadModelConfig {
-        model: Some(silero_vad_path),
+        model: Some(silero_vad_str),
         threshold: 0.2,
         min_silence_duration: 0.2,
         min_speech_duration: 0.2,
@@ -691,11 +680,29 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     vad_config.sample_rate = 16000;
     vad_config.num_threads = 1;
 
-    let recognizer = OfflineRecognizer::create(&asr_config)
-        .ok_or_else(|| "Failed to create recognizer. Check model paths.".to_string())?;
+    eprintln!("[build_models] creating recognizer...");
+    let recognizer = OfflineRecognizer::create(&asr_config).ok_or_else(|| {
+        format!(
+            "Failed to create recognizer. MODEL_TYPE={MODEL_TYPE}, model_dir={model_dir:?}, \
+             dir contents: {:?}",
+            std::fs::read_dir(&dir)
+                .map(|entries| entries
+                    .flatten()
+                    .map(|e| e.file_name().to_string_lossy().into_owned())
+                    .collect::<Vec<_>>())
+                .unwrap_or_default()
+        )
+    })?;
+    eprintln!("[build_models] recognizer created");
 
-    let vad = VoiceActivityDetector::create(&vad_config, 120.0)
-        .ok_or_else(|| "Failed to create VAD. Check silero_vad model path.".to_string())?;
+    eprintln!("[build_models] creating VAD...");
+    let vad = VoiceActivityDetector::create(&vad_config, 120.0).ok_or_else(|| {
+        format!(
+            "Failed to create VAD. silero_vad={silero_vad_path:?}, exists={}",
+            silero_vad_path.exists()
+        )
+    })?;
+    eprintln!("[build_models] VAD created");
 
     Ok((recognizer, vad, num_threads))
 }
@@ -713,8 +720,6 @@ fn build_app_state() -> AppState {
         audio_path: Arc::new(Mutex::new(String::new())),
         init_status: Arc::new(AtomicU8::new(0)), // 0 = pending
         init_error: Arc::new(Mutex::new(String::new())),
-        elapsed_ms: Arc::new(AtomicU32::new(0)),
-        audio_duration_ms: Arc::new(AtomicU32::new(0)),
         num_threads: Arc::new(AtomicU32::new(0)),
     }
 }
@@ -731,14 +736,17 @@ pub fn run() {
     let init_num_threads = Arc::clone(&state.num_threads);
 
     std::thread::spawn(move || {
+        eprintln!("[init] starting model initialization...");
         match build_models() {
             Ok((rec, vad, threads)) => {
+                eprintln!("[init] models ready, num_threads={threads}");
                 *init_recognizer.lock().unwrap() = Some(rec);
                 *init_vad.lock().unwrap() = Some(vad);
                 init_num_threads.store(threads, Ordering::Relaxed);
                 init_status.store(1, Ordering::Relaxed); // ready
             }
             Err(e) => {
+                eprintln!("[init] model initialization failed: {e}");
                 *init_error.lock().unwrap() = e;
                 init_status.store(2, Ordering::Relaxed); // error
             }

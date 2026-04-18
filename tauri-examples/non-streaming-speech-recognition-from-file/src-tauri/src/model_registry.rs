@@ -30,8 +30,8 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("paraformer".into());
             config.model_config.num_threads = 2;
-            config.rule_fsts = p("itn_zh_number.fst");
             config.model_config.debug = true;
+            config.rule_fsts = p("itn_zh_number.fst");
             Some(config)
         }
 
@@ -224,8 +224,8 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("paraformer".into());
             config.model_config.num_threads = 2;
-            config.rule_fsts = p("itn_zh_number.fst");
             config.model_config.debug = true;
+            config.rule_fsts = p("itn_zh_number.fst");
             Some(config)
         }
 
