@@ -40,6 +40,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            python3 -m pip install --upgrade --break-system-packages pip jinja2 pillow
+          else
+            python3 -m pip install --upgrade pip jinja2 pillow
+          fi
+
       - name: Install Tauri CLI
         shell: bash
         run: |

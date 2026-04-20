@@ -1,7 +1,8 @@
-name: sherpa_onnx_linux
+name: sherpa_onnx_android_armeabi
+
 description: >
   Speech recognition, speech synthesis, and speaker recognition using next-gen Kaldi
-  with onnxruntime without Internet connection.
+  with onnxruntime without Internet connection. Android armeabi-v7a native libraries.
 
 version: 1.12.39
 
@@ -30,5 +31,5 @@ dependencies:
 flutter:
   plugin:
     platforms:
-      linux:
+      android:
         ffiPlugin: true
