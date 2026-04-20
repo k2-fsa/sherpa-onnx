@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 if [ ! -d vits-ljs ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
   tar xvf vits-ljs.tar.bz2

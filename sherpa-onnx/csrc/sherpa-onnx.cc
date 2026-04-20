@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -87,7 +88,7 @@ for a list of pre-trained models to download.
   if (po.NumArgs() < 1) {
     po.PrintUsage();
     fprintf(stderr, "Error! Please provide at lease 1 wav file\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -124,9 +125,9 @@ for a list of pre-trained models to download.
 
     auto s = recognizer.CreateStream();
 
-    std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
-    s->AcceptWaveform(sampling_rate, left_paddings.data(),
-                      left_paddings.size());
+    // std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
+    // s->AcceptWaveform(sampling_rate, left_paddings.data(),
+    //                   left_paddings.size());
 
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 

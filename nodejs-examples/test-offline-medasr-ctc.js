@@ -2,7 +2,6 @@
 //
 const fs = require('fs');
 const {Readable} = require('stream');
-const wav = require('wav');
 
 const sherpa_onnx = require('sherpa-onnx');
 

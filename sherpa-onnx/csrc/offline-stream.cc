@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -20,6 +21,7 @@
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -222,6 +224,39 @@ class OfflineStream::Impl {
 
   const ContextGraphPtr &GetContextGraph() const { return context_graph_; }
 
+  void SetOption(const std::string &key, const std::string &value) {
+    options_[key] = value;
+  }
+
+  bool HasOption(const std::string &key) const {
+    return options_.count(key) != 0;
+  }
+
+  const std::string &GetOption(const std::string &key) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return it->second;
+    }
+    static const std::string kEmpty;
+    return kEmpty;
+  }
+
+  int32_t GetOptionInt(const std::string &key, int32_t default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return ToIntOrDefault(it->second, default_value);
+    }
+    return default_value;
+  }
+
+  float GetOptionFloat(const std::string &key, float default_value) const {
+    auto it = options_.find(key);
+    if (it != options_.end()) {
+      return ToFloatOrDefault(it->second, default_value);
+    }
+    return default_value;
+  }
+
  private:
   // see
   // https://github.com/pytorch/audio/blob/main/src/torchaudio/functional/functional.py#L359
@@ -259,7 +294,7 @@ class OfflineStream::Impl {
       SHERPA_ONNX_LOGE(
           "Only normalize_type=per_feature is implemented. Given: %s",
           config_.nemo_normalize_type.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     NemoNormalizePerFeature(p, num_frames, feature_dim);
@@ -298,6 +333,8 @@ class OfflineStream::Impl {
 
   // used only when (is_moonshine_ || is_omnilingual_asr_) == true
   std::vector<float> samples_;
+
+  std::unordered_map<std::string, std::string> options_;
 };
 
 OfflineStream::OfflineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -339,6 +376,30 @@ const ContextGraphPtr &OfflineStream::GetContextGraph() const {
 const OfflineRecognitionResult &OfflineStream::GetResult() const {
   return impl_->GetResult();
 }
+
+void OfflineStream::SetOption(const std::string &key,
+                              const std::string &value) {
+  impl_->SetOption(key, value);
+}
+
+bool OfflineStream::HasOption(const std::string &key) const {
+  return impl_->HasOption(key);
+}
+
+const std::string &OfflineStream::GetOption(const std::string &key) const {
+  return impl_->GetOption(key);
+}
+
+int32_t OfflineStream::GetOptionInt(const std::string &key,
+                                    int32_t default_value) const {
+  return impl_->GetOptionInt(key, default_value);
+}
+
+float OfflineStream::GetOptionFloat(const std::string &key,
+                                    float default_value) const {
+  return impl_->GetOptionFloat(key, default_value);
+}
+
 std::string OfflineRecognitionResult::AsJsonString() const {
   std::ostringstream os;
   os << "{";
@@ -430,8 +491,37 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     os << sep << w;
     sep = ", ";
   }
-
   os << "]";
+
+  // Add segment-level data if present (from Whisper timestamp token mode)
+  if (!segment_timestamps.empty()) {
+    os << ", ";
+
+    os << "\"segment_timestamps\": [";
+    sep = "";
+    for (auto t : segment_timestamps) {
+      os << sep << std::fixed << std::setprecision(2) << t;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"segment_durations\": [";
+    sep = "";
+    for (auto d : segment_durations) {
+      os << sep << std::fixed << std::setprecision(2) << d;
+      sep = ", ";
+    }
+    os << "], ";
+
+    os << "\"segment_texts\": [";
+    sep = "";
+    for (const auto &t : segment_texts) {
+      os << sep << std::quoted(t);
+      sep = ", ";
+    }
+    os << "]";
+  }
+
   os << "}";
 
   return os.str();

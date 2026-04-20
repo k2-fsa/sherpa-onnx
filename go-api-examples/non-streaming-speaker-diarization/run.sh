@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -ex
+
+export CGO_ENABLED=1
 
 if [ ! -f ./sherpa-onnx-pyannote-segmentation-3-0/model.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2

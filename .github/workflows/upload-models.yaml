@@ -3,7 +3,7 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models
+      - upload-models-2
   workflow_dispatch:
 
 concurrency:
@@ -24,15 +24,702 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download cohere-transcribe
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+          mkdir -p $d
+          pushd $d
+
+          mkdir ./test_wavs
+          cd ./test_wavs
+          for w in ar de en es fr ja ko vi zh; do
+            curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/test_wavs/$w.wav
+          done
+          ls -lh
+          cd ..
+
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/README.md
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/tokens.txt
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/decoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx.data
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/resolve/master/encoder.int8.onnx
+
+          ls -lh
+          popd
+
+          tar cjvf $d.tar.bz2 $d
+          ls -lh $d $d.tar.bz2
+
+      - name: Collect Qwen3-ASR with LLM int8
+        if: false
+        shell: bash
+        run: |
+          git clone https://www.modelscope.cn/csukuangfj/Qwen3-ASR-test-data.git
+          mv Qwen3-ASR-test-data test_wavs
+          rm -rf test_wavs/.git*
+          rm -fv test_wavs/*.json
+
+          d=sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+          mkdir $d
+
+          cp -av test_wavs $d
+
+          pushd $d
+
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/conv_frontend.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/decoder.int8.onnx
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/model_0.6B/encoder.int8.onnx
+
+          mkdir tokenizer
+          cd tokenizer
+
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/merges.txt
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/tokenizer_config.json
+          curl -SL -O https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/resolve/master/tokenizer/vocab.json
+
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://modelscope.cn/models/zengshuishui/Qwen3-ASR-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/Qwen3-ASR-onnx
+
+          The author is https://github.com/Wasser1462
+
+          See also https://qwen.ai/blog?id=qwen3asr
+          and
+          https://github.com/QwenLM/Qwen3-ASR
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+          ls -lh $d.tar.bz2
+
+      - name: Upload DPDFNet
+        if: false
+        shell: bash
+        run: |
+
+          models=(
+            baseline.onnx
+            dpdfnet2.onnx
+            dpdfnet2_48khz_hr.onnx
+            dpdfnet4.onnx
+            dpdfnet8.onnx
+          )
+          for m in ${models[@]}; do
+            wget https://huggingface.co/Ceva-IP/DPDFNet/resolve/main/onnx/$m
+          done
+
+          mv baseline.onnx dpdfnet_baseline.onnx
+
+      - name: Install ffmpeg
+        if: false
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Verify ffmpeg
+        if: false
+        shell: bash
+        run: |
+          ffmpeg -version
+
       - name: git config
         shell: bash
         run: |
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
+      - name: FireRedASR2 CTC (int8)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+
+          We export only the encoder and the CTC branch. The attention decoder
+          is not used.
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 CTC (fp32)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+
+          We export only the encoder and the CTC branch. The attention decoder
+          is not used.
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/model.weights
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/ctc/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 AED (int8)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/decoder.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: FireRedASR2 AED (fp32)
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
+          mkdir $d
+
+          pushd $d
+
+          cat >README.md <<EOF
+          # Introduction
+          Model files are converted from
+          https://www.modelscope.cn/models/FireRedTeam/FireRedASR2-AED
+          EOF
+
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/encoder.weights
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/decoder.onnx
+          curl -SL -O https://www.modelscope.cn/models/csukuangfj/FireRedASR2-AED-onnx/resolve/master/aed/tokens.txt
+          mkdir test_wavs
+          cd test_wavs
+          for w in 0.wav 1.wav 2.wav 3-sichuan.wav 3.wav 4-tianjin.wav 5-henan.wav 8k.wav; do
+            curl -SL -O https://huggingface.co/csukuangfj/sherpa-onnx-fire-red-asr-large-zh_en-fp16-2025-02-16/resolve/main/test_wavs/$w
+          done
+
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+
+          ls -lh *.tar.bz2
+
+      - name: Zipformer-30M-RNNT-6000h
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          repo=Zipformer-30M-RNNT-6000h
+          git clone https://huggingface.co/hynt/$repo
+          pushd $repo
+          mkdir test_wavs
+          cd test_wavs
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/0.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/1.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/2.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-vi-2025-04-20/resolve/main/test_wavs/README.md
+          popd
+
+          d=sherpa-onnx-zipformer-vi-30M-2026-02-09
+          mkdir -p $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/hynt/Zipformer-30M-RNNT-6000h
+          EOF
+
+          cp -v $repo/encoder-epoch-20-avg-10.onnx $d/encoder.onnx
+          cp -v $repo/decoder-epoch-20-avg-10.onnx $d/decoder.onnx
+          cp -v $repo/joiner-epoch-20-avg-10.onnx $d/joiner.onnx
+          cp -v $repo/bpe.model $d/
+          cp -v $repo/config.json $d/tokens.txt
+          cp -av $repo/test_wavs $d/
+
+          tar cjfv $d.tar.bz2 $d
+
+          d=sherpa-onnx-zipformer-vi-30M-int8-2026-02-09
+          mkdir -p $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/hynt/Zipformer-30M-RNNT-6000h
+          EOF
+
+          cp -v $repo/encoder-epoch-20-avg-10.int8.onnx $d/encoder.int8.onnx
+          cp -v $repo/decoder-epoch-20-avg-10.onnx $d/decoder.onnx
+          cp -v $repo/joiner-epoch-20-avg-10.int8.onnx $d/joiner.int8.onnx
+          cp -v $repo/bpe.model $d/
+          cp -v $repo/config.json $d/tokens.txt
+          cp -av $repo/test_wavs $d/
+
+          tar cjfv $d.tar.bz2 $d
+
+      - name: vosk-model-small-streaming-bn
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          repo=vosk-model-small-streaming-bn
+          git clone https://huggingface.co/alphacep/$repo
+          cd $repo
+          mv test.wav 0.wav
+          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/bn.wav
+          mv bn.wav 1.wav
+          cd ..
+
+          d=sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
+          mkdir $d
+          cat >$d/README.md <<EOF
+          # Introduction
+          Model files are from
+          https://huggingface.co/alphacep/vosk-model-small-streaming-bn
+          EOF
+
+          mv $repo/am-onnx/*.onnx $d/
+          mv $repo/lang/* $d/
+          mkdir $d/test_wavs
+          mv $repo/*.wav $d/test_wavs
+
+          tar cfjv $d.tar.bz2 $d
+
+      - name: WenetSpeech Wu
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          git clone https://huggingface.co/csukuangfj2/sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03
+          git clone https://huggingface.co/csukuangfj2/sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03
+
+          d=sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03
+          rm -rf $d/.git*
+
+          tar cjfv $d.tar.bz2 $d
+
+          rm -rf $d
+
+          d=sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03
+          rm -rf $d/.git*
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -lh *.tar.bz2
+
       - name: Setup tmate session
         if: false
         uses: mxschmitt/action-tmate@v3
+
+      - name: Collect funasr-nano with LLM
+        if: false
+        shell: bash
+        run: |
+          git lfs install
+          models=(
+            sherpa-onnx-funasr-nano-int8-2025-12-30
+            sherpa-onnx-funasr-nano-fp16-2025-12-30
+            sherpa-onnx-funasr-nano-2025-12-30
+          )
+          for d in ${models[@]}; do
+            git clone https://huggingface.co/csukuangfj/$d
+            rm -rf $d/.git
+            tar cjfv $d.tar.bz2 $d
+            ls -lh $d.tar.bz2
+            ls -lh $d
+            rm -rf $d
+          done
+
+      - name: Collect funasr-nano with LLM int8
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-funasr-nano-int8-2025-12-30
+          mkdir $d
+          pushd $d
+
+          curl -SL -O https://modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_int8_compat/llm.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/embedding.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/encoder_adaptor.int8.onnx
+
+          mkdir Qwen3-0.6B
+          cd Qwen3-0.6B
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/merges.txt
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/tokenizer.json
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/vocab.json
+
+          ls -lh
+          cd ..
+          mkdir test_wavs
+          cd test_wavs
+
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_hunan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_minnan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_sh.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_yue.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_4.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_5.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja_en_codeswitch.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_history.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_math.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_medical.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_physics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/yuenan.wav
+
+          mv yuenan.wav vietnamese.wav
+
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
+
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
+          cat >README.md <<EOF
+          Audio files in this directory are downloaded from
+          https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
+
+          | Filename| Trascript|
+          |---------|----------|
+          |湖南方言[dia_hunan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/dia_hunan.wav)|但总来讲孙膑对兵法的理解运用比庞涓略胜一筹。|
+          |闽南语[dia_minnan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/dia_minnan.wav)|嗯，下摆若有机会吧，因为即久吼开了吼卷啊遮厉害，会倒贴钱啊。|
+          |上海话[dia_sh.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/dia_sh.wav)|人跟狗，包括人跟动物接触长了，全有感情。葛末随了阿拉社会个富裕。|
+          |粤语[dia_yue.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/dia_yue.wav)|啲身体好劲啊，跟住咧佢哋有一个人咧就突然可能就有高原反应啦，突然间就啊窒息咗，即系晕晕咗。|
+          |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
+          |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
+          |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
+          |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
+          |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
+          |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
+          |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
+          |[far_4.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_4.wav)|<music>唯一的遗憾就是他那个八宝鸭还有烤鸭都没吃上 估计得提前预定吧 <impact_sounds></impact_sounds>只能怪我自己没有做好功课</music>|
+          |[far_5.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/far_5.wav)|别紧张<breathing></breathing>我只是我是在这边逛街 然后看到你们在这边拍照 想跟你交个朋友<impact_sounds> 认识</impact_sounds>一下|
+          |日语[ja.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/ja.wav)|人民たちは、金欲しさに王をのけ者にしてしまって、何でもすべて商人のところへ持って行ってしまいました。|
+          |日英混合[ja_en_codeswitch.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/ja_en_codeswitch.wav)|このカフェのwi-fiがアン ステーブル 過ぎて、google meetでディスコネクトされて クライエントに悪い印象を与えてしまった。|
+          |越南语[vietnamese.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/vietnamese.wav)|Đi cùng với tiếp tục kêu gọi người dân đã qua lại các ổ dịch này, khai báo y tế và yêu cầu liên hệ để được xét nghiệm.|
+          |[rag_biochemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_biochemistry.wav)|利用三磷酸腺苷的水解所产生的能量来驱动其他化学反应|
+          |[rag_chemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_chemistry.wav)|比如说酯在当时被认为是一种含氧酸盐|
+          |[rag_history.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_history.wav)|由罗马皇帝钦点的犹地亚王大希律王统治期间|
+          |[rag_math.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_math.wav)|对微分形式的积分是微分几何中的基本概念|
+          |[rag_medical.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_medical.wav)|肾脏中肾小球囊上的细胞膜孔隙很小|
+          |[rag_physics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/rag_physics.wav)|根据碰撞理论月面样本缺少挥发性物质|
+          EOF
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/FunASR-nano-onnx
+
+          The author is https://github.com/Wasser1462
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+
+      - name: Collect funasr-nano with LLM float32
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-funasr-nano-2025-12-30
+          mkdir $d
+          pushd $d
+
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_fp32/llm.fp32.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_fp32/llm.fp32.data
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/embedding.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/encoder_adaptor.onnx
+
+          mkdir Qwen3-0.6B
+          cd Qwen3-0.6B
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/merges.txt
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/tokenizer.json
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/vocab.json
+
+          ls -lh
+          cd ..
+          mkdir test_wavs
+          cd test_wavs
+
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_hunan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_minnan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_sh.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_yue.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_4.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_5.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja_en_codeswitch.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_history.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_math.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_medical.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_physics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/yuenan.wav
+
+          mv yuenan.wav vietnamese.wav
+
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
+
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
+          cat >README.md <<EOF
+          Audio files in this directory are downloaded from
+          https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
+
+          | Filename| Trascript|
+          |---------|----------|
+          |湖南方言[dia_hunan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/dia_hunan.wav)|但总来讲孙膑对兵法的理解运用比庞涓略胜一筹。|
+          |闽南语[dia_minnan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/dia_minnan.wav)|嗯，下摆若有机会吧，因为即久吼开了吼卷啊遮厉害，会倒贴钱啊。|
+          |上海话[dia_sh.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/dia_sh.wav)|人跟狗，包括人跟动物接触长了，全有感情。葛末随了阿拉社会个富裕。|
+          |粤语[dia_yue.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/dia_yue.wav)|啲身体好劲啊，跟住咧佢哋有一个人咧就突然可能就有高原反应啦，突然间就啊窒息咗，即系晕晕咗。|
+          |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
+          |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
+          |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
+          |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
+          |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
+          |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
+          |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
+          |[far_4.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_4.wav)|<music>唯一的遗憾就是他那个八宝鸭还有烤鸭都没吃上 估计得提前预定吧 <impact_sounds></impact_sounds>只能怪我自己没有做好功课</music>|
+          |[far_5.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/far_5.wav)|别紧张<breathing></breathing>我只是我是在这边逛街 然后看到你们在这边拍照 想跟你交个朋友<impact_sounds> 认识</impact_sounds>一下|
+          |日语[ja.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/ja.wav)|人民たちは、金欲しさに王をのけ者にしてしまって、何でもすべて商人のところへ持って行ってしまいました。|
+          |日英混合[ja_en_codeswitch.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/ja_en_codeswitch.wav)|このカフェのwi-fiがアン ステーブル 過ぎて、google meetでディスコネクトされて クライエントに悪い印象を与えてしまった。|
+          |越南语[vietnamese.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/vietnamese.wav)|Đi cùng với tiếp tục kêu gọi người dân đã qua lại các ổ dịch này, khai báo y tế và yêu cầu liên hệ để được xét nghiệm.|
+          |[rag_biochemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_biochemistry.wav)|利用三磷酸腺苷的水解所产生的能量来驱动其他化学反应|
+          |[rag_chemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_chemistry.wav)|比如说酯在当时被认为是一种含氧酸盐|
+          |[rag_history.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_history.wav)|由罗马皇帝钦点的犹地亚王大希律王统治期间|
+          |[rag_math.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_math.wav)|对微分形式的积分是微分几何中的基本概念|
+          |[rag_medical.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_medical.wav)|肾脏中肾小球囊上的细胞膜孔隙很小|
+          |[rag_physics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-2025-12-30/resolve/main/test_wavs/rag_physics.wav)|根据碰撞理论月面样本缺少挥发性物质|
+          EOF
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/FunASR-nano-onnx
+
+          The author is https://github.com/Wasser1462
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+
+      - name: Collect funasr-nano with LLM fp16
+        if: false
+        shell: bash
+        run: |
+          d=sherpa-onnx-funasr-nano-fp16-2025-12-30
+          mkdir $d
+          pushd $d
+
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/llm_fp16/llm.fp16.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/embedding.int8.onnx
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/encoder_adaptor.int8.onnx
+
+          mkdir Qwen3-0.6B
+          cd Qwen3-0.6B
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/merges.txt
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/tokenizer.json
+          curl -SL -O https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/resolve/master/Qwen3-0.6B/vocab.json
+
+          ls -lh
+          cd ..
+          mkdir test_wavs
+          cd test_wavs
+
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_hunan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_minnan.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_sh.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/dia_yue.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_4.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/far_5.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/ja_en_codeswitch.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_3.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/lyrics_en_2.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/noise_en.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_biochemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_chemistry.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_history.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_math.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_medical.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/rag_physics.wav
+          curl -SL -O https://github.com/FunAudioLLM/FunAudioLLM.github.io/raw/refs/heads/master/funasr/static/audios/yuenan.wav
+
+          mv yuenan.wav vietnamese.wav
+
+          for f in *.wav; do
+            ffmpeg -y -loglevel error -i "$f" \
+              -ac 1 -ar 16000 -sample_fmt s16 \
+              "${f}.tmp.wav" \
+            && mv "${f}.tmp.wav" "$f"
+          done
+
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_1.wav
+          curl -SL -O https://modelscope.cn/models/csukuangfj/sherpa-doc-files/resolve/master/source/_static/fun-asr-nano-2025-12-30/lyrics_en_3.wav
+
+          cat >README.md <<EOF
+          Audio files in this directory are downloaded from
+          https://github.com/FunAudioLLM/FunAudioLLM.github.io/tree/master/funasr/static/audios
+
+          | Filename| Trascript|
+          |---------|----------|
+          |湖南方言[dia_hunan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/dia_hunan.wav)|但总来讲孙膑对兵法的理解运用比庞涓略胜一筹。|
+          |闽南语[dia_minnan.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/dia_minnan.wav)|嗯，下摆若有机会吧，因为即久吼开了吼卷啊遮厉害，会倒贴钱啊。|
+          |上海话[dia_sh.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/dia_sh.wav)|人跟狗，包括人跟动物接触长了，全有感情。葛末随了阿拉社会个富裕。|
+          |粤语[dia_yue.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/dia_yue.wav)|啲身体好劲啊，跟住咧佢哋有一个人咧就突然可能就有高原反应啦，突然间就啊窒息咗，即系晕晕咗。|
+          |中文歌曲[lyrics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics.wav)|我看到我的身后盯着我的人群，喜欢或恨不一样的神情，我知道这可能就是所谓的成名，我知道必须往前一步也不能停。|
+          |中文歌曲[lyrics_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_2.wav)|明明那么远，为何却感觉离他那么近？闭上眼，你甚至能背出他所有押韵。虽然不听说唱了，但你已学会自信。我代表所有中文说唱歌手向你致敬。如今面对困难的你，早已不再抱怨。|
+          |中文歌曲[lyrics_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_3.wav)|你听啊秋末的落叶，你听它叹息着离别，只剩我独自领略海与山风和月，你听啊。|
+          |英文歌曲[lyrics_en_1.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_1.wav)|When I was young I'd listen to the radio. Waiting for my favorite songs. When they played I'd sing along. It made me smile.|
+          |英文歌曲[lyrics_en_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/lyrics_en_2.wav)|I see your monsters. I see your pain. Tell me your problems; I'll chase them away. I'll be your lighthouse. I'll make it okay. When I see your monsters, I'll stand there so brave and chase them all away.|
+          |英文歌曲[lyrics_en_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-int8-2025-12-30/resolve/main/test_wavs/lyrics_en_3.wav)|An empty street, an empty house, a hole inside my heart. I'm all alone and the rooms are getting smaller. I wonder how, I wonder why, I wonder where they are. The days we had, the songs we sang together.|
+          |英文[noise_en.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/noise_en.wav)|So what's interesting here is I feel that you know brands knowing this when people sort of speak to the voice assistance at home and if you want to be the brand.|
+          |[far_2.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_2.wav)|然后被冠以了渣男线的称号，好了，不管这个，那么前方即将到达沈杜公路站，左边是8号线。|
+          |[far_3.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_3.wav)|周末要不要去露营，最近天气超舒服，露营？我怕虫子咬，而且晚上睡帐篷会不会很冷啊？放心，我借了专业装备还有暖宝宝，再带点火锅食材，边吃边看星星超惬意。|
+          |[far_4.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_4.wav)|<music>唯一的遗憾就是他那个八宝鸭还有烤鸭都没吃上 估计得提前预定吧 <impact_sounds></impact_sounds>只能怪我自己没有做好功课</music>|
+          |[far_5.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/far_5.wav)|别紧张<breathing></breathing>我只是我是在这边逛街 然后看到你们在这边拍照 想跟你交个朋友<impact_sounds> 认识</impact_sounds>一下|
+          |日语[ja.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/ja.wav)|人民たちは、金欲しさに王をのけ者にしてしまって、何でもすべて商人のところへ持って行ってしまいました。|
+          |日英混合[ja_en_codeswitch.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/ja_en_codeswitch.wav)|このカフェのwi-fiがアン ステーブル 過ぎて、google meetでディスコネクトされて クライエントに悪い印象を与えてしまった。|
+          |越南语[vietnamese.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/vietnamese.wav)|Đi cùng với tiếp tục kêu gọi người dân đã qua lại các ổ dịch này, khai báo y tế và yêu cầu liên hệ để được xét nghiệm.|
+          |[rag_biochemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_biochemistry.wav)|利用三磷酸腺苷的水解所产生的能量来驱动其他化学反应|
+          |[rag_chemistry.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_chemistry.wav)|比如说酯在当时被认为是一种含氧酸盐|
+          |[rag_history.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_history.wav)|由罗马皇帝钦点的犹地亚王大希律王统治期间|
+          |[rag_math.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_math.wav)|对微分形式的积分是微分几何中的基本概念|
+          |[rag_medical.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_medical.wav)|肾脏中肾小球囊上的细胞膜孔隙很小|
+          |[rag_physics.wav](https://huggingface.co/csukuangfj/sherpa-onnx-funasr-nano-fp16-2025-12-30/resolve/main/test_wavs/rag_physics.wav)|根据碰撞理论月面样本缺少挥发性物质|
+          EOF
+          cd ..
+
+          cat >README.md <<EOF
+
+          # Introduction
+          Models in this directory are downloaded from
+          https://www.modelscope.cn/models/zengshuishui/FunASR-nano-onnx/files
+
+          Export script can be found at
+          https://github.com/Wasser1462/FunASR-nano-onnx
+
+          The author is https://github.com/Wasser1462
+          EOF
+
+          popd
+          ls -lh $d
+          tar cjvf $d.tar.bz2 $d
+          ls -lh *.tar.bz2
 
       - name: Streaming zipformer from Banafo/Kroko-ASR
         if: false
@@ -449,8 +1136,19 @@ jobs:
 
           mv models/* .
 
-      - name: Publish to huggingface (Russian zipformer)
-        if: false
+      - name: Release
+        if: true
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -464,40 +1162,88 @@ jobs:
             models=(
               sherpa-onnx-zipformer-ru-2025-04-20
               sherpa-onnx-zipformer-ru-int8-2025-04-20
+              sherpa-onnx-funasr-nano-int8-2025-12-30
+              sherpa-onnx-funasr-nano-fp16-2025-12-30
+              sherpa-onnx-funasr-nano-2025-12-30
+              sherpa-onnx-streaming-zipformer-bn-vosk-2026-02-09
+              sherpa-onnx-zipformer-vi-30M-int8-2026-02-09
+              sherpa-onnx-zipformer-vi-30M-2026-02-09
+              sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+              sherpa-onnx-fire-red-asr2-ctc-zh_en-2026-02-25
+              sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26
+              sherpa-onnx-fire-red-asr2-zh_en-2026-02-26
+              sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+              sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
             )
             for d in ${models[@]}; do
+              if [ ! -d $d ]; then
+                continue;
+              fi
+
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
               rm -rf huggingface
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
+
+              rm -rf huggingface/*.onnx
+              rm -rf huggingface/*/*.wav
+
               cp -av $d/* huggingface
 
               pushd huggingface
               git lfs track "*.onnx"
+              git lfs track "*.data"
+              git lfs track "*.weights"
               git lfs track "bpe.model"
               git lfs track "*.wav"
+              git lfs track "*.json"
               git status
               git add .
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main
 
               popd
             done
 
-      - uses: actions/upload-artifact@v4
+            rm -rf huggingface
+
+      - name: Publish to modelscope
         if: false
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
         with:
-          name: here
-          path: ./*.tar.bz2
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+            cp -av *.tar.bz2 ms/
+
+            pushd ms
+            git lfs track "*.tar.bz2"
+            git status
+            ls -lh
+            git add .
+
+            git commit -m "add models"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
 
       - name: Release
         if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./*.onnx
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models
+          tag: speech-enhancement-models

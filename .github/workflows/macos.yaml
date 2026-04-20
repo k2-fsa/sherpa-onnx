@@ -12,6 +12,7 @@ on:
       - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
@@ -34,6 +35,7 @@ on:
       - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
@@ -57,7 +59,7 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }}
+    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }} ${{ matrix.os }} ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
@@ -65,6 +67,7 @@ jobs:
         build_type: [Release, Debug]
         lib_type: [static, shared]
         with_tts: [ON, OFF]
+        arch: ["arm64;x86_64"]
 
     steps:
       - uses: actions/checkout@v4
@@ -98,11 +101,13 @@ jobs:
             BUILD_SHARED_LIBS=ON
           fi
 
+          arch="${{ matrix.arch }}"
+
           cmake \
             -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
             -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_OSX_ARCHITECTURES="$arch" \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 
@@ -137,6 +142,20 @@ jobs:
         if: matrix.build_type == 'Release'
         shell: bash
         run: |
+          thin_macos_tree() {
+            src_dir="$1"
+            dst_dir="$2"
+            arch="$3"
+
+            cp -a "$src_dir" "$dst_dir"
+
+            while IFS= read -r -d '' f; do
+              tmp="${f}.thin"
+              lipo -thin "$arch" "$f" -output "$tmp"
+              mv "$tmp" "$f"
+            done < <(find "$dst_dir" -type f \( -path "$dst_dir/bin/*" -o -path "$dst_dir/lib/*.dylib*" -o -path "$dst_dir/lib/*.a" \) -print0)
+          }
+
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           if [[ ${{ matrix.with_tts }} == ON ]]; then
@@ -160,15 +179,75 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          if [[ ${{ matrix.lib_type }} == shared ]]; then
+            cp -av build/install/lib/lib*.dylib* ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.dylib ${lib_dst}/lib/libcargs*.dylib
+          else
+            cp -av build/install/lib/lib*.a ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/libcargs.a
+          fi
+          tree ${lib_dst}
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
+
+          for arch in x86_64 arm64; do
+            if [[ "$arch" == "x86_64" ]]; then
+              arch_name=x64
+            else
+              arch_name=arm64
+            fi
+
+            arch_dst=${dst/osx-universal2/osx-${arch_name}}
+            thin_macos_tree "$dst" "$arch_dst" "$arch"
+            tree "$arch_dst"
+            tar cjvf ${arch_dst}.tar.bz2 ${arch_dst}
+
+            arch_lib_dst=${lib_dst/osx-universal2/osx-${arch_name}}
+            thin_macos_tree "$lib_dst" "$arch_lib_dst" "$arch"
+            tree "$arch_lib_dst"
+            tar cjvf ${arch_lib_dst}.tar.bz2 ${arch_lib_dst}
+          done
+
       - name: Release pre-compiled binaries and libs for macOS
-        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*osx-universal2*.tar.bz2
+          file: sherpa-onnx-*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.31
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
+
+      - name: Test offline Cohere Transcribe
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
+      - name: Test offline FireRedASR
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-fire-red-asr.sh
 
       - name: Test offline CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -177,6 +256,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline speech denoiser
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -186,7 +266,7 @@ jobs:
           .github/scripts/test-offline-speech-denoiser.sh
 
       - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
+        if: matrix.with_tts == 'ON' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -195,7 +275,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -204,6 +284,7 @@ jobs:
           .github/scripts/test-offline-moonshine.sh
 
       - name: Test C++ API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -216,6 +297,7 @@ jobs:
           du -h -d1 .
 
       - name: Test offline speaker diarization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           du -h -d1 .
@@ -225,6 +307,7 @@ jobs:
           .github/scripts/test-speaker-diarization.sh
 
       - name: Test offline transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -233,6 +316,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -241,6 +325,7 @@ jobs:
           .github/scripts/test-online-punctuation.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -249,6 +334,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline punctuation
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -257,6 +343,7 @@ jobs:
           .github/scripts/test-offline-punctuation.sh
 
       - name: Test C API
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -268,6 +355,7 @@ jobs:
           .github/scripts/test-c-api.sh
 
       - name: Test Audio tagging
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -276,6 +364,7 @@ jobs:
           .github/scripts/test-audio-tagging.sh
 
       - name: Test spoken language identification (C++ API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -284,6 +373,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test transducer kws
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -292,6 +382,7 @@ jobs:
           .github/scripts/test-kws.sh
 
       - name: Test online paraformer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -300,7 +391,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -309,6 +400,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test online transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -317,11 +409,10 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
-
-

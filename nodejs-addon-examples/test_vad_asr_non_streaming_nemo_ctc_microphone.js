@@ -109,4 +109,4 @@ ai.on('data', data => {
 });
 
 ai.start();
-console.log('Started! Please speak')
+console.log('Started! Please speak');

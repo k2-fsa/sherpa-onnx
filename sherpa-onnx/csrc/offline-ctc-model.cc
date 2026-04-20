@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-dolphin-model.h"
+#include "sherpa-onnx/csrc/offline-fire-red-asr-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-medasr-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-omnilingual-asr-ctc-model.h"
@@ -29,6 +30,8 @@
 #include "sherpa-onnx/csrc/offline-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace {
 
@@ -46,6 +49,69 @@ enum class ModelType : std::uint8_t {
 }  // namespace
 
 namespace sherpa_onnx {
+
+static ModelType GetModelType(const std::string &model_path, bool debug) {
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
+  auto sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
+
+  Ort::ModelMetadata meta_data = sess->GetModelMetadata();
+  if (debug) {
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
+  }
+
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
+    SHERPA_ONNX_LOGE(
+        "No model_type in the metadata!\n"
+        "If you are using models from NeMo, please refer to\n"
+        "https://huggingface.co/csukuangfj/"
+        "sherpa-onnx-nemo-ctc-en-citrinet-512/blob/main/add-model-metadata.py\n"
+        "or "
+        "https://github.com/k2-fsa/sherpa-onnx/tree/master/scripts/nemo/"
+        "fast-conformer-hybrid-transducer-ctc\n"
+        "If you are using models from WeNet, please refer to\n"
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/"
+        "run.sh\n"
+        "If you are using models from TeleSpeech, please refer to\n"
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/tele-speech/"
+        "add-metadata.py"
+        "\n"
+        "for how to add metadata to model.onnx\n");
+    return ModelType::kUnknown;
+  }
+
+  if (model_type == "EncDecCTCModelBPE") {
+    return ModelType::kEncDecCTCModelBPE;
+  } else if (model_type == "EncDecCTCModel") {
+    return ModelType::kEncDecCTCModel;
+  } else if (model_type == "EncDecHybridRNNTCTCBPEModel") {
+    return ModelType::kEncDecHybridRNNTCTCBPEModel;
+  } else if (model_type == "tdnn") {
+    return ModelType::kTdnn;
+  } else if (model_type == "zipformer2_ctc") {
+    return ModelType::kZipformerCtc;
+  } else if (model_type == "wenet_ctc") {
+    return ModelType::kWenetCtc;
+  } else if (model_type == "telespeech_ctc") {
+    return ModelType::kTeleSpeechCtc;
+  } else {
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+    return ModelType::kUnknown;
+  }
+}
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
@@ -87,7 +153,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/tele-speech/"
         "add-metadata.py"
         "\n"
-        "for how to add metadta to model.onnx\n");
+        "for how to add metadata to model.onnx\n");
     return ModelType::kUnknown;
   }
 
@@ -129,6 +195,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineOmnilingualAsrCtcModel>(config);
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(config);
+  } else if (!config.fire_red_asr_ctc.model.empty()) {
+    return std::make_unique<OfflineFireRedAsrCtcModel>(config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here
@@ -147,14 +215,10 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     filename = config.telespeech_ctc;
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
-  {
-    auto buffer = ReadFile(filename);
-
-    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
-  }
+  model_type = GetModelType(filename, config.debug);
 
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
@@ -197,6 +261,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     return std::make_unique<OfflineOmnilingualAsrCtcModel>(mgr, config);
   } else if (!config.medasr.model.empty()) {
     return std::make_unique<OfflineMedAsrCtcModel>(mgr, config);
+  } else if (!config.fire_red_asr_ctc.model.empty()) {
+    return std::make_unique<OfflineFireRedAsrCtcModel>(mgr, config);
   }
 
   // TODO(fangjun): Refactor it. We don't need to use model_type here
@@ -215,7 +281,7 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     filename = config.telespeech_ctc;
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   {

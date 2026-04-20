@@ -74,10 +74,10 @@ ai.on('data', data => {
       lastText = text;
       segmentIndex += 1;
     }
-    recognizer.reset(stream)
+    recognizer.reset(stream);
   }
 });
 
 
 ai.start();
-console.log('Started! Please speak')
+console.log('Started! Please speak');

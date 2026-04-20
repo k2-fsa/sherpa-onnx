@@ -3,25 +3,23 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-19.tar.gz")
-  set(openfst_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/openfst-sherpa-onnx-2024-06-19.tar.gz")
-  set(openfst_HASH "SHA256=5c98e82cc509c5618502dde4860b8ea04d843850ed57e6d6b590b644b268853d")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/v1.8.5-2026-04-11.tar.gz")
+  set(openfst_HASH "SHA256=57fbc4b950ae81b1a0e1e298af15652da968a6723a592b7874e9b4027a80a5b4")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-sherpa-onnx-2024-06-19.tar.gz
-    ${CMAKE_SOURCE_DIR}/openfst-sherpa-onnx-2024-06-19.tar.gz
-    ${CMAKE_BINARY_DIR}/openfst-sherpa-onnx-2024-06-19.tar.gz
-    /tmp/openfst-sherpa-onnx-2024-06-19.tar.gz
-    /star-fj/fangjun/download/github/openfst-sherpa-onnx-2024-06-19.tar.gz
+    $ENV{HOME}/Downloads/openfst-1.8.5-2026-04-11.tar.gz
+    ${CMAKE_SOURCE_DIR}/openfst-1.8.5-2026-04-11.tar.gz
+    ${CMAKE_BINARY_DIR}/openfst-1.8.5-2026-04-11.tar.gz
+    /tmp/openfst-1.8.5-2026-04-11.tar.gz
+    /star-fj/fangjun/download/github/openfst-1.8.5-2026-04-11.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
       set(openfst_URL  "${f}")
       file(TO_CMAKE_PATH "${openfst_URL}" openfst_URL)
-      set(openfst_URL2)
       break()
     endif()
   endforeach()
@@ -41,25 +39,10 @@ function(download_openfst)
   set(HAVE_PYTHON OFF CACHE BOOL "" FORCE)
   set(HAVE_SPECIAL OFF CACHE BOOL "" FORCE)
 
-  if(NOT WIN32)
-    FetchContent_Declare(openfst
-      URL
-        ${openfst_URL}
-        ${openfst_URL2}
-      URL_HASH          ${openfst_HASH}
-      PATCH_COMMAND
-        sed -i.bak s/enable_testing\(\)//g "src/CMakeLists.txt" &&
-        sed -i.bak s/add_subdirectory\(test\)//g "src/CMakeLists.txt" &&
-        sed -i.bak /message/d "src/script/CMakeLists.txt"
-        # sed -i.bak s/add_subdirectory\(script\)//g "src/CMakeLists.txt" &&
-        # sed -i.bak s/add_subdirectory\(extensions\)//g "src/CMakeLists.txt"
-    )
-  else()
-    FetchContent_Declare(openfst
-      URL               ${openfst_URL}
-      URL_HASH          ${openfst_HASH}
-    )
-  endif()
+  FetchContent_Declare(openfst
+    URL               ${openfst_URL}
+    URL_HASH          ${openfst_HASH}
+  )
 
   FetchContent_GetProperties(openfst)
   if(NOT openfst_POPULATED)
@@ -68,10 +51,8 @@ function(download_openfst)
   endif()
   message(STATUS "openfst is downloaded to ${openfst_SOURCE_DIR}")
 
-  if(_build_shared_libs_bak)
-    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
-    set(BUILD_SHARED_LIBS OFF)
-  endif()
+  set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+  set(BUILD_SHARED_LIBS OFF)
 
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
@@ -89,21 +70,6 @@ function(download_openfst)
 
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
-
-  if(LINUX)
-    target_compile_options(fst PUBLIC -Wno-missing-template-keyword)
-  endif()
-
-  target_include_directories(fst
-    PUBLIC
-      ${openfst_SOURCE_DIR}/src/include
-  )
-
-  target_include_directories(fstfar
-    PUBLIC
-      ${openfst_SOURCE_DIR}/src/include
-  )
-  # installed in ./kaldi-decoder.cmake
 endfunction()
 
 download_openfst()

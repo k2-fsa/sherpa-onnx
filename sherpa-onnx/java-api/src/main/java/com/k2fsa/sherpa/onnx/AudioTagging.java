@@ -8,6 +8,9 @@ public class AudioTagging {
     public AudioTagging(AudioTaggingConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid AudioTaggingConfig: failed to create native AudioTagging");
+        }
     }
 
     public OfflineStream createStream() {
@@ -21,17 +24,7 @@ public class AudioTagging {
     }
 
     public AudioEvent[] compute(OfflineStream stream, int topK) {
-        Object[] arr = compute(ptr, stream.getPtr(), topK);
-
-        AudioEvent[] events = new AudioEvent[arr.length];
-        for (int i = 0; i < arr.length; ++i) {
-            Object[] obj = (Object[]) arr[i];
-            String name = (String) obj[0];
-            int index = (int) obj[1];
-            float prob = (float) obj[2];
-            events[i] = new AudioEvent(name, index, prob);
-        }
-        return events;
+        return compute(ptr, stream.getPtr(), topK);
     }
 
 
@@ -55,5 +48,5 @@ public class AudioTagging {
 
     private native long createStream(long ptr);
 
-    private native Object[] compute(long ptr, long streamPtr, int topK);
+    private native AudioEvent[] compute(long ptr, long streamPtr, int topK);
 }

@@ -44,12 +44,16 @@ class KittenTtsDemo
     // 6->expr-voice-5-m, 7->expr-voice-5-f
     var sid = 0;
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+
+    var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       float[] data = new float[n];
       Marshal.Copy(samples, data, 0, n);
       // You can process samples here, e.g., play them.
-      // See ../kitten-tts-playback for how to play them
+      // See ../kitten-tts-play for how to play them
       Console.WriteLine($"Progress {progress*100}%");
 
       // 1 means to keep generating
@@ -57,9 +61,9 @@ class KittenTtsDemo
       return 1;
     };
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
     var outputFilename = "./generated-kitten-en.wav";
     var ok = audio.SaveToWaveFile(outputFilename);

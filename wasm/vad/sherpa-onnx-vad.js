@@ -28,7 +28,7 @@ function initSherpaOnnxSileroVadModelConfig(config, Module) {
 
   Module.stringToUTF8(config.model || '', buffer, modelLen);
 
-  offset = 0;
+  let offset = 0;
   Module.setValue(ptr, buffer, 'i8*');
   offset += 4;
 
@@ -48,8 +48,10 @@ function initSherpaOnnxSileroVadModelConfig(config, Module) {
   offset += 4;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxTenVadModelConfig(config, Module) {
@@ -64,7 +66,7 @@ function initSherpaOnnxTenVadModelConfig(config, Module) {
 
   Module.stringToUTF8(config.model || '', buffer, modelLen);
 
-  offset = 0;
+  let offset = 0;
   Module.setValue(ptr, buffer, 'i8*');
   offset += 4;
 
@@ -84,8 +86,10 @@ function initSherpaOnnxTenVadModelConfig(config, Module) {
   offset += 4;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+  };
 }
 
 function initSherpaOnnxVadModelConfig(config, Module) {
@@ -143,8 +147,12 @@ function initSherpaOnnxVadModelConfig(config, Module) {
   offset += tenVad.len;
 
   return {
-    buffer: buffer, ptr: ptr, len: len, sileroVad: sileroVad, tenVad: tenVad
-  }
+    buffer: buffer,
+    ptr: ptr,
+    len: len,
+    sileroVad: sileroVad,
+    tenVad: tenVad
+  };
 }
 
 function createVad(Module, myConfig) {

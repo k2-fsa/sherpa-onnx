@@ -45,7 +45,15 @@ struct OfflineRecognitionResult {
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
 
+  // Word IDs from FST decoding (CTC models with FST decoder only).
   std::vector<int32_t> words;
+
+  // Segment-level data (from Whisper with segment timestamps enabled).
+  // These are parallel vectors: segment_timestamps.size() ==
+  // segment_durations.size() == segment_texts.size()
+  std::vector<float> segment_timestamps;   // start time of each segment
+  std::vector<float> segment_durations;    // duration of each segment
+  std::vector<std::string> segment_texts;  // text of each segment
 
   std::string AsJsonString() const;
 };
@@ -106,6 +114,17 @@ class OfflineStream {
 
   /** Get the ContextGraph of this stream */
   const ContextGraphPtr &GetContextGraph() const;
+
+  // Generic per-stream option mechanism (key-value string pairs).
+  void SetOption(const std::string &key, const std::string &value);
+  bool HasOption(const std::string &key) const;
+
+  // Returns the value for the given key, or an empty string if the key
+  // does not exist. No exception is thrown for missing keys.
+  const std::string &GetOption(const std::string &key) const;
+  int32_t GetOptionInt(const std::string &key, int32_t default_value = 0) const;
+  float GetOptionFloat(const std::string &key,
+                       float default_value = 0.0f) const;
 
  private:
   class Impl;

@@ -47,7 +47,13 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
       .def_property_readonly("durations",
         [](const PyClass &self) { return self.durations; })
       .def_property_readonly("ys_log_probs",
-        [](const PyClass &self) { return self.ys_log_probs; });
+        [](const PyClass &self) { return self.ys_log_probs; })
+      .def_property_readonly("segment_timestamps",
+        [](const PyClass &self) { return self.segment_timestamps; })
+      .def_property_readonly("segment_durations",
+        [](const PyClass &self) { return self.segment_durations; })
+      .def_property_readonly("segment_texts",
+        [](const PyClass &self) { return self.segment_texts; });
 }
 
 void PybindOfflineStream(py::module *m) {
@@ -63,6 +69,12 @@ void PybindOfflineStream(py::module *m) {
           },
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
           py::call_guard<py::gil_scoped_release>())
+      .def("set_option", &PyClass::SetOption, py::arg("key"),
+           py::arg("value"), py::call_guard<py::gil_scoped_release>())
+      .def("has_option", &PyClass::HasOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("get_option", &PyClass::GetOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("result", &PyClass::GetResult);
 }
 

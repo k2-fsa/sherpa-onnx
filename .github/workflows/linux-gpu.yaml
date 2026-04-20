@@ -10,6 +10,7 @@ on:
       - '.github/workflows/linux-gpu.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-online-ctc.sh'
@@ -35,7 +36,7 @@ jobs:
         os: [ubuntu-latest]
         # build_type: [Release, Debug]
         build_type: [Release]
-        onnxruntime_version: ["1.17.1", "1.22.0"]
+        onnxruntime_version: ["1.17.1", "1.24.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -49,13 +50,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux_2_28_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+              quay.io/pypa/manylinux_2_28_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -66,15 +66,13 @@ jobs:
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
               onnxruntime_version=${{ matrix.onnxruntime_version }}
-              if [[ $onnxruntime_version == "1.22.0" ]]; then
-                curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0-patched.zip
-                unzip  onnxruntime-linux-x64-gpu-1.22.0-patched.zip
+              curl -SL -O https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$onnxruntime_version/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
+              unzip  onnxruntime-linux-x64-gpu-$onnxruntime_version-patched.zip
 
-                export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/lib
-                export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-1.22.0-patched/include
+              export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib
+              export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/include
 
-                ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-1.22.0-patched/lib/libonnxruntime.so
-              fi
+              ls -lh /home/runner/work/sherpa-onnx/sherpa-onnx/onnxruntime-linux-x64-gpu-$onnxruntime_version-patched/lib/libonnxruntime.so
 
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
@@ -110,6 +108,7 @@ jobs:
 
               echo "----"
               ls -lh install/bin
+            '
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
@@ -144,7 +143,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-gpu
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.22.0" ]]; then
+          if [[ $onnxruntime_version == "1.24.4" ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-linux-x64-gpu
           fi
 
@@ -183,7 +182,17 @@ jobs:
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+      - name: Test offline Cohere Transcribe
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
       - name: Test spoken language identification
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -192,6 +201,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -200,6 +210,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -208,6 +219,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -215,8 +227,8 @@ jobs:
 
           .github/scripts/test-online-paraformer.sh
 
-
       - name: Test offline Whisper
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -225,6 +237,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test offline CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -233,6 +246,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -241,6 +255,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -249,13 +264,13 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
-
 
 
 

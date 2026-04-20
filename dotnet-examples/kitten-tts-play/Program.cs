@@ -39,6 +39,9 @@ class KittenTtsPlayDemo
     // 3->expr-voice-3-f, 4->expr-voice-4-m, 5->expr-voice-4-f
     // 6->expr-voice-5-m, 7->expr-voice-5-f
     var sid = 0;
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
 
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
@@ -74,7 +77,7 @@ class KittenTtsPlayDemo
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    var myCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       Console.WriteLine($"Progress {progress*100}%");
 
@@ -166,9 +169,9 @@ class KittenTtsPlayDemo
 
     stream.Start();
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
     var outputFilename = "./generated-kitten-0.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 

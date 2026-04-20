@@ -38,7 +38,7 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
   }
   size_t read_bytes = fread((void *)*buffer_out, 1, size, file);
   if (read_bytes != size) {
-    printf("Errors occured in reading the file %s\n", filename);
+    printf("Errors occurred in reading the file %s\n", filename);
     free((void *)*buffer_out);
     *buffer_out = NULL;
     fclose(file);

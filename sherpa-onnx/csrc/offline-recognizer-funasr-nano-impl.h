@@ -39,33 +39,32 @@ class OfflineRecognizerFunASRNanoImpl : public OfflineRecognizerImpl {
  private:
   void InitFeatConfig();
   std::vector<float> ApplyLFR(const std::vector<float> &in) const;
-  std::vector<int64_t> BuildSourceIds(
-      const std::string &system_prompt, const std::string &user_prompt,
-      int32_t audio_token_len, int32_t &fbank_beg_idx,
-      int32_t &fake_token_len) const;
-  int64_t SampleToken(const float *logits, int32_t vocab_size, int32_t step,
-                     int64_t eos_token_id, int64_t im_end_token_id) const;
-  int64_t SampleTokenFromLogitsFp16OrFp32(const void *logits, bool is_fp16,
-                                          int32_t vocab_size) const;
-  OfflineRecognitionResult GenerateText(
-      Ort::Value encoder_out, const std::string &system_prompt,
-      const std::string &user_prompt) const;
+
+  std::vector<int64_t> BuildSourceIds(const std::string &system_prompt,
+                                      const std::string &user_prompt,
+                                      int32_t audio_token_len,
+                                      int32_t &fbank_beg_idx,
+                                      int32_t &fake_token_len) const;
+
+  int64_t SampleTokenFromLogitsFp16OrFp32(const void *logits,
+                                         bool is_fp16,
+                                         int32_t vocab_size) const;
+
+  int64_t SampleTokenWithTemperatureAndTopP(const void *logits,
+                                            bool is_fp16,
+                                            int32_t vocab_size,
+                                            float temperature,
+                                            float top_p) const;
+
+  OfflineRecognitionResult GenerateText(Ort::Value encoder_out,
+                                       const std::string &system_prompt,
+                                       const std::string &user_prompt) const;
 
   OfflineRecognizerConfig config_;
   std::unique_ptr<OfflineFunASRNanoModel> model_;
   std::unique_ptr<FunASRNanoTokenizer> tokenizer_;
   mutable std::mt19937 rng_;
 };
-
-#if __ANDROID_API__ >= 9
-template OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
-    AAssetManager *mgr, const OfflineRecognizerConfig &config);
-#endif
-
-#if __OHOS__
-template OfflineRecognizerFunASRNanoImpl::OfflineRecognizerFunASRNanoImpl(
-    NativeResourceManager *mgr, const OfflineRecognizerConfig &config);
-#endif
 
 }  // namespace sherpa_onnx
 

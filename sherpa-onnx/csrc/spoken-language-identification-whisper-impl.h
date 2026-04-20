@@ -17,6 +17,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
 #include "sherpa-onnx/csrc/transpose.h"
 
@@ -119,7 +120,7 @@ class SpokenLanguageIdentificationWhisperImpl
           "Only whisper multilingual models can be used for spoken language "
           "identification. Given: %s,%s",
           config_.whisper.encoder.c_str(), config_.whisper.decoder.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

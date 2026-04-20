@@ -15,8 +15,7 @@ void PybindOfflineFunASRNanoModelConfig(py::module *m) {
   py::class_<PyClass>(*m, "OfflineFunASRNanoModelConfig")
       .def(py::init<>())
       .def_readwrite("encoder_adaptor", &PyClass::encoder_adaptor)
-      .def_readwrite("llm_prefill", &PyClass::llm_prefill)
-      .def_readwrite("llm_decode", &PyClass::llm_decode)
+      .def_readwrite("llm", &PyClass::llm)
       .def_readwrite("embedding", &PyClass::embedding)
       .def_readwrite("tokenizer", &PyClass::tokenizer)
       .def_readwrite("system_prompt", &PyClass::system_prompt)
@@ -25,6 +24,9 @@ void PybindOfflineFunASRNanoModelConfig(py::module *m) {
       .def_readwrite("temperature", &PyClass::temperature)
       .def_readwrite("top_p", &PyClass::top_p)
       .def_readwrite("seed", &PyClass::seed)
+      .def_readwrite("language", &PyClass::language)
+      .def_readwrite("itn", &PyClass::itn)
+      .def_readwrite("hotwords", &PyClass::hotwords)
       .def("__str__", &PyClass::ToString);
 }
 

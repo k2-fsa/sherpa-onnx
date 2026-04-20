@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+      - pascal-api
+      - pascal
     paths:
       - '.github/workflows/pascal.yaml'
       - 'cmake/**'
@@ -59,18 +61,16 @@ jobs:
           brew install fpc
           # brew install --cask lazarus
           #
-      - name: Install Free pascal compiler (windows)
+      # See https://github.com/gcarreno/setup-lazarus
+      - uses: gcarreno/setup-lazarus@v3.3.1
         if: matrix.os == 'windows-2022'
-        shell: bash
-        run: |
-          choco install lazarus
-
-          ls -lh /c/lazarus/fpc/3.2.2/bin/x86_64-win64/
+        with:
+          lazarus-version: "stable"
+          with-cache: false
 
       - name: FPC info
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
           which fpc
           fpc -i
 
@@ -111,7 +111,10 @@ jobs:
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
             cp -v install/lib/*.dll ../pascal-api-examples/speaker-diarization
             cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-gtcrn
+            cp -v install/lib/*.dll ../pascal-api-examples/speech-enhancement-dpdfnet
             cp -v install/lib/*.dll ../pascal-api-examples/streaming-asr
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-gtcrn
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-speech-enhancement-dpdfnet
             cp -v install/lib/*.dll ../pascal-api-examples/tts
             cp -v install/lib/*.dll ../pascal-api-examples/vad
             cp -v install/lib/*.dll ../pascal-api-examples/vad-with-non-streaming-asr
@@ -120,20 +123,126 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/read-wav
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speaker-diarization
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-gtcrn
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/speech-enhancement-dpdfnet
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-asr
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-gtcrn
+            cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/streaming-speech-enhancement-dpdfnet
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/tts
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
 
-      - name:  Run Pascal test (Non Streaming ASR)
+      - name:  Run Pascal test (Cohere Transcribe)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd non-streaming-asr
+          ./run-cohere-transcribe.sh
+          rm -rf sherpa-onnx-cohere-transcribe-*
+          echo "---"
+          popd
+
+      - name:  Run Speech Enhancement test
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd speech-enhancement-gtcrn
+          ./run-gtcrn.sh
+          ls -lh
+          popd
+
+          pushd speech-enhancement-dpdfnet
+          ./run-dpdfnet.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-gtcrn
+          ./run-gtcrn.sh
+          ls -lh
+          popd
+
+          pushd streaming-speech-enhancement-dpdfnet
+          ./run-dpdfnet.sh
+          ls -lh
+          popd
+
+      - name:  Run Pascal test (TTS)
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+          pushd tts
+
+          ./run-pocket-en.sh
+          rm -rf sherpa-onnx-pocket-*
+
+          ./run-piper.sh
+          rm -rf vits-piper-*
+          rm piper
+          ls -lh
+          echo "---"
+
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
+          rm kokoro-zh-en
+          ls -lh
+          echo "---"
+
+          ./run-kokoro-en.sh
+          rm -rf kokoro-en-*
+          rm kokoro-en
+          ls -lh
+          echo "---"
+
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+          rm matcha-zh
+          ls -lh
+          echo "---"
+
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          rm matcha-en
+          ls -lh
+          echo "---"
+
+          ./run-supertonic-en.sh
+          rm -rf sherpa-onnx-supertonic-*
+          rm supertonic-en
+          ls -lh
+          echo "---"
+
+          ./run-zipvoice-zh-en.sh
+          rm -rf sherpa-onnx-zipvoice-*
+          rm -f vocos_24khz.onnx
+          rm zipvoice-zh-en
+          ls -lh
+          echo "---"
+
+          popd
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-${{ matrix.os }}
+          path: ./pascal-api-examples/tts/*.wav
+
+      - name:  Run Pascal test (Non Streaming ASR)
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd non-streaming-asr
+
+          if [[ ${{ matrix.os }} != ubuntu-latest ]]; then
+            ./run-qwen3-asr.sh
+            rm -rf sherpa-onnx-*
+          fi
+          echo "---"
+
+          ./run-funasr-nano.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
 
           ./run-wenet-ctc.sh
           rm -rf sherpa-onnx-*
@@ -163,8 +272,14 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-moonshine-v2.sh
+
           ./run-moonshine.sh
           rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-fire-red-asr-ctc.sh
+          rm -rf sherpa-onnx-fire-red-asr*
           echo "---"
 
           ./run-fire-red-asr.sh
@@ -204,8 +319,6 @@ jobs:
       - name:  Run Pascal test (Streaming ASR)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd streaming-asr
@@ -241,8 +354,6 @@ jobs:
       - name:  Run Pascal test (VAD test)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd vad
@@ -259,22 +370,9 @@ jobs:
 
           popd
 
-      - name:  Run Speech Enhancement test (GTCRN)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-
-          pushd speech-enhancement-gtcrn
-          ./run-gtcrn.sh
-          ls -lh
-
       - name:  Run Pascal test (Speaker diarization)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
           pushd speaker-diarization
 
@@ -285,51 +383,9 @@ jobs:
 
           popd
 
-      - name:  Run Pascal test (TTS)
-        shell: bash
-        run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
-          cd ./pascal-api-examples
-          pushd tts
-
-          ./run-piper.sh
-          rm -rf vits-piper-*
-          rm piper
-          ls -lh
-          echo "---"
-
-          ./run-kokoro-zh-en.sh
-          rm -rf kokoro-multi-*
-          rm kokoro-zh-en
-          ls -lh
-          echo "---"
-
-          ./run-kokoro-en.sh
-          rm -rf kokoro-en-*
-          rm kokoro-en
-          ls -lh
-          echo "---"
-
-          ./run-matcha-zh.sh
-          rm -rf matcha-icefall-*
-          rm matcha-zh
-          ls -lh
-          echo "---"
-
-          ./run-matcha-en.sh
-          rm -rf matcha-icefall-*
-          rm matcha-en
-          ls -lh
-          echo "---"
-
-          popd
-
       - name:  Run Pascal test (VAD + non-streaming ASR)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd vad-with-non-streaming-asr
@@ -361,8 +417,6 @@ jobs:
       - name:  Run Pascal test (Read wav test)
         shell: bash
         run: |
-          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
-
           cd ./pascal-api-examples
 
           pushd read-wav

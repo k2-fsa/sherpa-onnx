@@ -13,6 +13,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/fast-clustering.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
@@ -514,7 +515,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     if (k != cur_row_index) {
       auto seq = Eigen::seqN(0, cur_row_index);
-      ans = ans(seq, Eigen::all);
+      ans = ans(seq, Eigen::placeholders::all);
     }
 
     return ans;
@@ -527,6 +528,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     int32_t k = 0;
     for (const auto &p : chunk_speaker_pair) {
+      if (k >= static_cast<int32_t>(cluster_labels.size())) {
+        SHERPA_ONNX_LOGE("cluster_labels size mismatch: k=%d, size=%d", k,
+                         static_cast<int32_t>(cluster_labels.size()));
+        break;
+      }
       ans[p] = cluster_labels[k];
       k += 1;
     }
@@ -595,7 +601,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
       auto seq = Eigen::seqN(start, labels[i].rows());
 
-      count(seq, Eigen::all).array() += labels[i].array();
+      count(seq, Eigen::placeholders::all).array() += labels[i].array();
     }
 
     bool has_last_chunk = ((num_samples - window_size) % window_shift) > 0;
@@ -605,7 +611,10 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     int32_t last_frame = num_samples / receptive_field_shift;
-    return count(Eigen::seq(0, last_frame), Eigen::all);
+    if (last_frame >= count.rows()) {
+      last_frame = count.rows() - 1;
+    }
+    return count(Eigen::seqN(0, last_frame + 1), Eigen::placeholders::all);
   }
 
   Matrix2DInt32 FinalizeLabels(const Matrix2DInt32 &count,
@@ -624,7 +633,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
       auto top_k = TopkIndex(&count(i, 0), num_cols, k);
 
       for (int32_t m : top_k) {
-        ans(i, m) = 1;
+        if (m >= 0 && m < num_cols) {
+          ans(i, m) = 1;
+        }
       }
     }
 
@@ -712,9 +723,10 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     int32_t new_num_frames = num_samples / receptive_field_shift;
 
-    num_frames = (new_num_frames <= num_frames) ? new_num_frames : num_frames;
+    int32_t num_frames_to_keep = std::min(new_num_frames, num_frames);
 
-    return ComputeResult(final_labels(Eigen::seq(0, num_frames), Eigen::all));
+    return ComputeResult(
+        final_labels(Eigen::seqN(0, num_frames_to_keep), Eigen::placeholders::all));
   }
 
   void MergeSegments(

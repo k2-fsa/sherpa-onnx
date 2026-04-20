@@ -2,6 +2,8 @@
 
 const sherpa_onnx = require('sherpa-onnx');
 
+const silenceScale = 0.2;
+
 function createOfflineTts() {
   let offlineTtsMatchaModelConfig = {
     acousticModel: './matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
@@ -22,18 +24,23 @@ function createOfflineTts() {
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     maxNumSentences: 1,
+    silenceScale: silenceScale,
   };
 
   return sherpa_onnx.createOfflineTts(offlineTtsConfig);
 }
 
 const tts = createOfflineTts();
-const speakerId = 0;
-const speed = 1.0;
 const text =
-    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.'
+    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
 
-const audio = tts.generate({text: text, sid: speakerId, speed: speed});
+const generationConfig = {
+  sid: 0,
+  speed: 1.0,
+  silenceScale: silenceScale,
+};
+
+const audio = tts.generateWithConfig(text, generationConfig);
 tts.save('./test-matcha-en.wav', audio);
 console.log('Saved to test-matcha-en.wav successfully.');
 tts.free();

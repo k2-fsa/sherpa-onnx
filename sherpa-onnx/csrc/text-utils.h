@@ -61,6 +61,14 @@ void SplitStringToVector(const std::string &full, const char *delim,
                          bool omit_empty_strings,
                          std::vector<std::string> *out);
 
+/// Trim leading and trailing whitespace from a string.
+std::string Trim(const std::string &str);
+
+/// Split a string by a single character delimiter, trim whitespace from each
+/// part, and remove empty strings. This is a convenience wrapper around
+/// SplitStringToVector with trimming and filtering.
+std::vector<std::string> SplitStringAndTrim(const std::string &str, char delim);
+
 /**
   \brief Split a string (e.g. 1:2:3) into a vector of integers.
 
@@ -160,6 +168,9 @@ std::u32string Utf8ToUtf32(const std::string &str);
 // Converts a UTF-32 std::u32string to a UTF-8 std::string
 std::string Utf32ToUtf8(const std::u32string &str);
 
+// Converts a single UTF-32 codepoint to a UTF-8 std::string
+std::string Utf32ToUtf8(char32_t cp);
+
 // Helper: Convert ASCII chars in a std::string to uppercase (leaves non-ASCII
 // unchanged)
 std::string ToUpperAscii(const std::string &str);
@@ -190,6 +201,25 @@ bool IsPunct(const std::string &s);
 #else
 #define SHERPA_ONNX_TO_ORT_PATH(s) ((s).c_str())
 #endif
+
+int32_t ToIntOrDefault(const std::string &s, int32_t default_value);
+
+float ToFloatOrDefault(const std::string &s, float default_value);
+
+// Convert lengths to flat mask + shape. Outputs [batch, 1, max_len] format
+// where mask[b][0][i] = 1.0 if i < lengths[b], else 0.0.
+void LengthsToMask(const std::vector<int64_t> &lengths,
+                   std::vector<float> *mask_flat,
+                   std::vector<int64_t> *mask_shape);
+
+// TTS text chunking helpers.
+std::vector<std::string> SplitByBlankLines(const std::string &text);
+std::vector<std::string> SplitByPunctuation(const std::string &text);
+std::vector<std::string> MergeShortSentences(
+    const std::vector<std::string> &sentences, size_t min_chars);
+std::vector<std::string> SplitLongSentence(const std::string &sentence,
+                                           size_t max_chars);
+std::vector<std::string> ChunkText(const std::string &text, size_t max_len);
 
 }  // namespace sherpa_onnx
 

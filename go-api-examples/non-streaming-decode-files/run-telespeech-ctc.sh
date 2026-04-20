@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 if [ ! -d sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
   tar xvf sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2

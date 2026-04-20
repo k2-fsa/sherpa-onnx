@@ -5,6 +5,7 @@
 #ifdef SHERPA_ONNX_ENABLE_ALSA
 
 #include "sherpa-onnx/csrc/alsa.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -49,7 +50,7 @@ and if you want to select card 3 and device 0 on that card, please use:
   if (err) {
     fprintf(stderr, "Unable to open: %s. %s\n", device_name, snd_strerror(err));
     fprintf(stderr, "%s\n", kDeviceHelp);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   snd_pcm_hw_params_t *hw_params;
@@ -58,21 +59,21 @@ and if you want to select card 3 and device 0 on that card, please use:
   err = snd_pcm_hw_params_any(capture_handle_, hw_params);
   if (err) {
     fprintf(stderr, "Failed to initialize hw_params: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   err = snd_pcm_hw_params_set_access(capture_handle_, hw_params,
                                      SND_PCM_ACCESS_RW_INTERLEAVED);
   if (err) {
     fprintf(stderr, "Failed to set access type: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   err = snd_pcm_hw_params_set_format(capture_handle_, hw_params,
                                      SND_PCM_FORMAT_S16_LE);
   if (err) {
     fprintf(stderr, "Failed to set format: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   // mono
@@ -86,7 +87,7 @@ and if you want to select card 3 and device 0 on that card, please use:
       fprintf(stderr, "Failed to set number of channels to 2. %s\n",
               snd_strerror(err));
 
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     actual_channel_count_ = 2;
     fprintf(stderr,
@@ -101,7 +102,7 @@ and if you want to select card 3 and device 0 on that card, please use:
   if (err) {
     fprintf(stderr, "Failed to set sample rate to, %d: %s\n",
             expected_sample_rate_, snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
   actual_sample_rate_ = actual_sample_rate;
 
@@ -128,13 +129,13 @@ and if you want to select card 3 and device 0 on that card, please use:
   err = snd_pcm_hw_params(capture_handle_, hw_params);
   if (err) {
     fprintf(stderr, "Failed to set hw params: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   err = snd_pcm_prepare(capture_handle_);
   if (err) {
     fprintf(stderr, "Failed to prepare for recording: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   fprintf(stderr, "Recording started!\n");
@@ -154,7 +155,7 @@ const std::vector<float> &Alsa::Read(int32_t num_samples) {
           stderr,
           "Too many overruns. It is very likely that the RTF on your board is "
           "larger than 1. Please use ./bin/sherpa-onnx to compute the RTF.\n");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     fprintf(stderr, "XRUN.\n");
     snd_pcm_prepare(capture_handle_);
@@ -163,7 +164,7 @@ const std::vector<float> &Alsa::Read(int32_t num_samples) {
     return tmp;
   } else if (count < 0) {
     fprintf(stderr, "Can't read PCM device: %s\n", snd_strerror(count));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   samples_.resize(count * actual_channel_count_);

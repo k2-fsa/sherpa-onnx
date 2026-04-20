@@ -1,6 +1,6 @@
 // Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-// Please download ./gtcrn_simple.onnx and ./inp_16k.wav used in this file
+// Please download a speech enhancement model and ./inp_16k.wav used in this file
 // from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 //
@@ -8,9 +8,10 @@
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineSpeechDenoiser() {
+  const model = './gtcrn_simple.onnx';
   let config = {
     model: {
-      gtcrn: {model: './gtcrn_simple.onnx'},
+      gtcrn: {model},
       debug: 1,
     },
   };
@@ -18,13 +19,14 @@ function createOfflineSpeechDenoiser() {
   return sherpa_onnx.createOfflineSpeechDenoiser(config);
 }
 
-speech_denoiser = createOfflineSpeechDenoiser();
+const speech_denoiser = createOfflineSpeechDenoiser();
 
 const waveFilename = './inp_16k.wav';
 const wave = sherpa_onnx.readWave(waveFilename);
 
 const denoised = speech_denoiser.run(wave.samples, wave.sampleRate);
-sherpa_onnx.writeWave('./enhanced-16k.wav', denoised);
-console.log('Saved to ./enhanced-16k.wav');
+const outputFilename = './enhanced.wav';
+sherpa_onnx.writeWave(outputFilename, denoised);
+console.log(`Saved to ${outputFilename}`);
 
 speech_denoiser.free();

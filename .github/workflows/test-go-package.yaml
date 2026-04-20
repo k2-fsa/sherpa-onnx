@@ -76,6 +76,25 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test source separation (Spleeter & UVR)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/source-separation
+          ./run-spleeter.sh
+          rm -rf sherpa-onnx-spleeter-*
+
+          ./run-uvr.sh
+          rm -rf UVR-MDX-NET-*
+
+      - name: Test Qwen3 ASR
+        if: matrix.os != 'windows-2022' && matrix.os != 'ubuntu-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-qwen3-asr-decode-files
+          ./run.sh
+          rm -rf sherpa-onnx-qwen3-*
+
       - name: Test NeMo Canary ASR
         if: matrix.os != 'windows-2022'
         shell: bash
@@ -89,6 +108,27 @@ jobs:
         shell: bash
         run: |
           cd go-api-examples/speech-enhancement-gtcrn/
+          ./run.sh
+
+      - name: Test speech enhancement (DPDFNet)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/speech-enhancement-dpdfnet/
+          ./run.sh
+
+      - name: Test streaming speech enhancement (GTCRN)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-speech-enhancement-gtcrn/
+          ./run.sh
+
+      - name: Test streaming speech enhancement (DPDFNet)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-speech-enhancement-dpdfnet/
           ./run.sh
 
       - name: Test Keyword spotting
@@ -270,6 +310,24 @@ jobs:
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 
+      - name: Test zero-shot ZipVoice TTS (Linux/macOS)
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        run: |
+          mkdir -p tts-waves
+          cd go-api-examples/zero-shot-zipvoice-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
+          ls -lh *.wav
+          cp *.wav ../../tts-waves/
+
       - name: Test non-streaming TTS (Win64)
         if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
         shell: bash
@@ -313,6 +371,28 @@ jobs:
           ./run-vits-piper-en_US-lessac-medium.sh
           rm -rf vits-piper-en_US-lessac-medium
 
+          ls -lh *.wav
+          cp *.wav ../../tts-waves/
+
+      - name: Test zero-shot ZipVoice TTS (Win64)
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          mkdir -p tts-waves
+          cd go-api-examples/zero-shot-zipvoice-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo $PWD
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 
@@ -367,6 +447,31 @@ jobs:
           ./run-vits-piper-en_US-lessac-medium.sh
           rm -rf vits-piper-en_US-lessac-medium
 
+          ls -lh *.wav
+          cp *.wav ../../tts-waves/
+
+      - name: Test zero-shot ZipVoice TTS (Win32)
+        if: matrix.os == 'windows-2022' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          mkdir -p tts-waves
+          cd go-api-examples/zero-shot-zipvoice-tts
+          ls -lh
+          go mod tidy
+          cat go.mod
+          ls -lh
+
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+          go clean
+          go build
+
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
+          ls -lh
+
+          ./run.sh
+          rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+          rm -f vocos_24khz.onnx
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 

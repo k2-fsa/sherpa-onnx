@@ -10,10 +10,13 @@ set(srcs
   homophone-replacer.cc
   keyword-spotter.cc
   offline-canary-model-config.cc
+  offline-cohere-transcribe-model-config.cc
   offline-ctc-fst-decoder-config.cc
   offline-dolphin-model-config.cc
+  offline-fire-red-asr-ctc-model-config.cc
   offline-fire-red-asr-model-config.cc
   offline-funasr-nano-model-config.cc
+  offline-qwen3-asr-model-config.cc
   offline-lm-config.cc
   offline-medasr-ctc-model-config.cc
   offline-model-config.cc
@@ -28,6 +31,7 @@ set(srcs
   offline-source-separation-spleeter-model-config.cc
   offline-source-separation-uvr-model-config.cc
   offline-source-separation.cc
+  offline-speech-denoiser-dpdfnet-model-config.cc
   offline-speech-denoiser-gtcrn-model-config.cc
   offline-speech-denoiser-model-config.cc
   offline-speech-denoiser.cc
@@ -44,6 +48,7 @@ set(srcs
   online-paraformer-model-config.cc
   online-punctuation.cc
   online-recognizer.cc
+  online-speech-denoiser.cc
   online-stream.cc
   online-t-one-ctc-model-config.cc
   online-transducer-model-config.cc
@@ -75,9 +80,12 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-kokoro-model-config.cc
     offline-tts-matcha-model-config.cc
     offline-tts-model-config.cc
+    offline-tts-pocket-model-config.cc
+    offline-tts-supertonic-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts-zipvoice-model-config.cc
     offline-tts.cc
+    sentence-piece-tokenizer.cc
   )
 endif()
 
@@ -92,21 +100,31 @@ endif()
 pybind11_add_module(_sherpa_onnx ${srcs})
 
 if(APPLE)
-  execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGE_DIR
-  )
-  message(STATUS "PYTHON_SITE_PACKAGE_DIR: ${PYTHON_SITE_PACKAGE_DIR}")
-  if(PYTHON_SITE_PACKAGE_DIR STREQUAL "")
-    message(WARNING "PYTHON_SITE_PACKAGE_DIR is empty!")
+  if(PYTHON_EXECUTABLE)
+    execute_process(
+      COMMAND "${PYTHON_EXECUTABLE}" -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      OUTPUT_VARIABLE PYTHON_SITE_PACKAGE_DIR
+    )
+    message(STATUS "PYTHON_SITE_PACKAGE_DIR: ${PYTHON_SITE_PACKAGE_DIR}")
   else()
-    target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${PYTHON_SITE_PACKAGE_DIR}")
+    message(STATUS "PYTHON_EXECUTABLE is empty; skip probing PYTHON_SITE_PACKAGE_DIR")
+  endif()
+  if(PYTHON_SITE_PACKAGE_DIR STREQUAL "")
+    message(STATUS "Skip adding Python site-packages rpath because PYTHON_SITE_PACKAGE_DIR is empty")
+  else()
+    set_property(TARGET _sherpa_onnx APPEND PROPERTY
+      BUILD_RPATH "${PYTHON_SITE_PACKAGE_DIR}")
+    set_property(TARGET _sherpa_onnx APPEND PROPERTY
+      INSTALL_RPATH "${PYTHON_SITE_PACKAGE_DIR}")
   endif()
 endif()
 
-if(NOT WIN32)
-  target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/sherpa_onnx/lib")
+if(UNIX)
+  set_property(TARGET _sherpa_onnx APPEND PROPERTY
+    BUILD_RPATH "${SHERPA_ONNX_RPATH_ORIGIN}/sherpa_onnx/lib")
+  set_property(TARGET _sherpa_onnx APPEND PROPERTY
+    INSTALL_RPATH "${SHERPA_ONNX_RPATH_ORIGIN}/sherpa_onnx/lib")
 endif()
 
 target_link_libraries(_sherpa_onnx PRIVATE sherpa-onnx-core)

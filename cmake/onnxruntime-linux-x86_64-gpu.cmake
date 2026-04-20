@@ -19,19 +19,20 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
 endif()
 
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-gpu-1.17.1-patched.zip")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-gpu-1.17.1-patched.zip")
-set(onnxruntime_HASH "SHA256=1261de176e8d9d4d2019f8fa8c732c6d11494f3c6e73168ab6d2cc0903f22551")
+# Requires CUDA 12, cudnn 9
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.24.4/onnxruntime-linux-x64-gpu-1.24.4.tgz")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.24.4/onnxruntime-linux-x64-gpu-1.24.4.tgz")
+set(onnxruntime_HASH "SHA256=c5f804ff5d239b436fa59e9f2fb288a39f7eb9552f6a636c8b71e792e91a8808")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.17.1-patched.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.17.1-patched.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.17.1-patched.zip
-  /tmp/onnxruntime-linux-x64-gpu-1.17.1-patched.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.17.1-patched.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.24.4.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.24.4.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.24.4.tgz
+  /tmp/onnxruntime-linux-x64-gpu-1.24.4.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.24.4.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)

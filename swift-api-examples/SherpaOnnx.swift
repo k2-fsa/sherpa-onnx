@@ -384,6 +384,14 @@ func sherpaOnnxOfflineMedAsrCtcModelConfig(
   )
 }
 
+func sherpaOnnxOfflineFireRedAsrCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineFireRedAsrCtcModelConfig {
+  return SherpaOnnxOfflineFireRedAsrCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
@@ -405,14 +413,18 @@ func sherpaOnnxOfflineWhisperModelConfig(
   decoder: String = "",
   language: String = "",
   task: String = "transcribe",
-  tailPaddings: Int = -1
+  tailPaddings: Int = -1,
+  enableTokenTimestamps: Bool = false,
+  enableSegmentTimestamps: Bool = false
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
     language: toCPointer(language),
     task: toCPointer(task),
-    tail_paddings: Int32(tailPaddings)
+    tail_paddings: Int32(tailPaddings),
+    enable_token_timestamps: enableTokenTimestamps ? 1 : 0,
+    enable_segment_timestamps: enableSegmentTimestamps ? 1 : 0
   )
 }
 
@@ -432,6 +444,22 @@ func sherpaOnnxOfflineCanaryModelConfig(
   )
 }
 
+func sherpaOnnxOfflineCohereTranscribeModelConfig(
+  encoder: String = "",
+  decoder: String = "",
+  language: String = "",
+  usePunct: Bool = true,
+  useInverseTextNormalization: Bool = true
+) -> SherpaOnnxOfflineCohereTranscribeModelConfig {
+  return SherpaOnnxOfflineCohereTranscribeModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    language: toCPointer(language),
+    use_punct: usePunct ? 1 : 0,
+    use_itn: useInverseTextNormalization ? 1 : 0
+  )
+}
+
 func sherpaOnnxOfflineFireRedAsrModelConfig(
   encoder: String = "",
   decoder: String = ""
@@ -442,17 +470,48 @@ func sherpaOnnxOfflineFireRedAsrModelConfig(
   )
 }
 
+// there are two versions of Moonshine
+// For v1, you need four models: preprocessor, encoder, uncachedDecoder, cachedDecoder
+// For v2, you need two models: encoder, mergedDecoder
 func sherpaOnnxOfflineMoonshineModelConfig(
   preprocessor: String = "",
   encoder: String = "",
   uncachedDecoder: String = "",
-  cachedDecoder: String = ""
+  cachedDecoder: String = "",
+  mergedDecoder: String = ""
 ) -> SherpaOnnxOfflineMoonshineModelConfig {
   return SherpaOnnxOfflineMoonshineModelConfig(
     preprocessor: toCPointer(preprocessor),
     encoder: toCPointer(encoder),
     uncached_decoder: toCPointer(uncachedDecoder),
-    cached_decoder: toCPointer(cachedDecoder)
+    cached_decoder: toCPointer(cachedDecoder),
+    merged_decoder: toCPointer(mergedDecoder)
+  )
+}
+
+func sherpaOnnxOfflineQwen3ASRModelConfig(
+  convFrontend: String = "",
+  encoder: String = "",
+  decoder: String = "",
+  tokenizer: String = "",
+  maxTotalLen: Int = 512,
+  maxNewTokens: Int = 128,
+  temperature: Float = 1e-6,
+  topP: Float = 0.8,
+  seed: Int = 42,
+  hotwords: String = ""
+) -> SherpaOnnxOfflineQwen3ASRModelConfig {
+  return SherpaOnnxOfflineQwen3ASRModelConfig(
+    conv_frontend: toCPointer(convFrontend),
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    tokenizer: toCPointer(tokenizer),
+    max_total_len: Int32(maxTotalLen),
+    max_new_tokens: Int32(maxNewTokens),
+    temperature: temperature,
+    top_p: topP,
+    seed: Int32(seed),
+    hotwords: toCPointer(hotwords)
   )
 }
 
@@ -486,6 +545,38 @@ func sherpaOnnxOfflineLMConfig(
   )
 }
 
+func sherpaOnnxOfflineFunASRNanoModelConfig(
+  encoderAdaptor: String = "",
+  llm: String = "",
+  embedding: String = "",
+  tokenizer: String = "",
+  systemPrompt: String = "You are a helpful assistant.",
+  userPrompt: String = "语音转写：",
+  maxNewTokens: Int = 512,
+  temperature: Float = 1e-6,
+  topP: Float = 0.8,
+  seed: Int = 42,
+  language: String = "",
+  itn: Bool = true,
+  hotwords: String = ""
+) -> SherpaOnnxOfflineFunASRNanoModelConfig {
+  return SherpaOnnxOfflineFunASRNanoModelConfig(
+    encoder_adaptor: toCPointer(encoderAdaptor),
+    llm: toCPointer(llm),
+    embedding: toCPointer(embedding),
+    tokenizer: toCPointer(tokenizer),
+    system_prompt: toCPointer(systemPrompt),
+    user_prompt: toCPointer(userPrompt),
+    max_new_tokens: Int32(maxNewTokens),
+    temperature: temperature,
+    top_p: topP,
+    seed: Int32(seed),
+    language: toCPointer(language),
+    itn: itn ? 1 : 0,
+    hotwords: toCPointer(hotwords)
+  )
+}
+
 func sherpaOnnxOfflineModelConfig(
   tokens: String,
   transducer: SherpaOnnxOfflineTransducerModelConfig = sherpaOnnxOfflineTransducerModelConfig(),
@@ -512,7 +603,15 @@ func sherpaOnnxOfflineModelConfig(
   omnilingual: SherpaOnnxOfflineOmnilingualAsrCtcModelConfig =
     sherpaOnnxOfflineOmnilingualAsrCtcModelConfig(),
   medasr: SherpaOnnxOfflineMedAsrCtcModelConfig =
-    sherpaOnnxOfflineMedAsrCtcModelConfig()
+    sherpaOnnxOfflineMedAsrCtcModelConfig(),
+  funasrNano: SherpaOnnxOfflineFunASRNanoModelConfig =
+    sherpaOnnxOfflineFunASRNanoModelConfig(),
+  fireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig =
+    sherpaOnnxOfflineFireRedAsrCtcModelConfig(),
+  qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig =
+    sherpaOnnxOfflineQwen3ASRModelConfig(),
+  cohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig =
+    sherpaOnnxOfflineCohereTranscribeModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -536,7 +635,11 @@ func sherpaOnnxOfflineModelConfig(
     canary: canary,
     wenet_ctc: wenetCtc,
     omnilingual: omnilingual,
-    medasr: medasr
+    medasr: medasr,
+    funasr_nano: funasrNano,
+    fire_red_asr_ctc: fireRedAsrCtc,
+    qwen3_asr: qwen3Asr,
+    cohere_transcribe: cohereTranscribe
   )
 }
 
@@ -602,6 +705,24 @@ class SherpaOnnxOfflineRecongitionResult {
     return String(cString: cstr)
   }()
 
+  private lazy var _segmentTimestamps: [Float] = {
+    guard let p = result.pointee.segment_timestamps else { return [] }
+    return (0..<result.pointee.segment_count).map { p[Int($0)] }
+  }()
+
+  private lazy var _segmentDurations: [Float] = {
+    guard let p = result.pointee.segment_durations else { return [] }
+    return (0..<result.pointee.segment_count).map { p[Int($0)] }
+  }()
+
+  private lazy var _segmentTexts: [String] = {
+    guard let arr = result.pointee.segment_texts_arr else { return [] }
+    return (0..<result.pointee.segment_count).compactMap { idx -> String? in
+      guard let ptr = arr[Int(idx)] else { return nil }
+      return String(cString: ptr)
+    }
+  }()
+
   /// Return the actual recognition result.
   /// For English models, it contains words separated by spaces.
   /// For Chinese models, it contains Chinese words.
@@ -625,6 +746,12 @@ class SherpaOnnxOfflineRecongitionResult {
 
   // for SenseVoice models
   var event: String { _event }
+
+  // Segment-level timestamps (for Whisper with segment timestamps enabled)
+  var segmentCount: Int { Int(result.pointee.segment_count) }
+  var segmentTimestamps: [Float] { _segmentTimestamps }
+  var segmentDurations: [Float] { _segmentDurations }
+  var segmentTexts: [String] { _segmentTexts }
 
   init(result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>) {
     self.result = result
@@ -659,25 +786,54 @@ class SherpaOnnxOfflineRecognizer {
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model.
   func decode(samples: [Float], sampleRate: Int = 16_000) -> SherpaOnnxOfflineRecongitionResult {
+    let stream = createStream()
+    stream.acceptWaveform(samples: samples, sampleRate: sampleRate)
+    decode(stream: stream)
+    return getResult(stream: stream)
+  }
+
+  func setConfig(config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>) {
+    SherpaOnnxOfflineRecognizerSetConfig(recognizer, config)
+  }
+
+  func createStream() -> SherpaOnnxOfflineStreamWrapper {
     guard let stream = SherpaOnnxCreateOfflineStream(recognizer) else {
       fatalError("Failed to create offline stream")
     }
 
-    defer { SherpaOnnxDestroyOfflineStream(stream) }
+    return SherpaOnnxOfflineStreamWrapper(stream: stream)
+  }
 
-    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
+  func decode(stream: SherpaOnnxOfflineStreamWrapper) {
+    SherpaOnnxDecodeOfflineStream(recognizer, stream.stream)
+  }
 
-    SherpaOnnxDecodeOfflineStream(recognizer, stream)
-
-    guard let resultPtr = SherpaOnnxGetOfflineStreamResult(stream) else {
+  func getResult(stream: SherpaOnnxOfflineStreamWrapper) -> SherpaOnnxOfflineRecongitionResult {
+    guard let resultPtr = SherpaOnnxGetOfflineStreamResult(stream.stream) else {
       fatalError("Failed to get offline recognition result")
     }
 
     return SherpaOnnxOfflineRecongitionResult(result: resultPtr)
   }
+}
 
-  func setConfig(config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>) {
-    SherpaOnnxOfflineRecognizerSetConfig(recognizer, config)
+class SherpaOnnxOfflineStreamWrapper {
+  let stream: OpaquePointer
+
+  init(stream: OpaquePointer) {
+    self.stream = stream
+  }
+
+  deinit {
+    SherpaOnnxDestroyOfflineStream(stream)
+  }
+
+  func setOption(key: String, value: String) {
+    SherpaOnnxOfflineStreamSetOption(stream, toCPointer(key), toCPointer(value))
+  }
+
+  func acceptWaveform(samples: [Float], sampleRate: Int = 16_000) {
+    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
 }
 
@@ -964,6 +1120,48 @@ func sherpaOnnxOfflineTtsZipvoiceModelConfig(
   )
 }
 
+func sherpaOnnxOfflineTtsPocketModelConfig(
+  lmFlow: String = "",
+  lmMain: String = "",
+  encoder: String = "",
+  decoder: String = "",
+  textConditioner: String = "",
+  vocabJson: String = "",
+  tokenScoresJson: String = "",
+  voiceEmbeddingCacheCapacity: Int = 50
+) -> SherpaOnnxOfflineTtsPocketModelConfig {
+  return SherpaOnnxOfflineTtsPocketModelConfig(
+    lm_flow: toCPointer(lmFlow),
+    lm_main: toCPointer(lmMain),
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    text_conditioner: toCPointer(textConditioner),
+    vocab_json: toCPointer(vocabJson),
+    token_scores_json: toCPointer(tokenScoresJson),
+    voice_embedding_cache_capacity: Int32(voiceEmbeddingCacheCapacity)
+  )
+}
+
+func sherpaOnnxOfflineTtsSupertonicModelConfig(
+  durationPredictor: String = "",
+  textEncoder: String = "",
+  vectorEstimator: String = "",
+  vocoder: String = "",
+  ttsJson: String = "",
+  unicodeIndexer: String = "",
+  voiceStyle: String = ""
+) -> SherpaOnnxOfflineTtsSupertonicModelConfig {
+  return SherpaOnnxOfflineTtsSupertonicModelConfig(
+    duration_predictor: toCPointer(durationPredictor),
+    text_encoder: toCPointer(textEncoder),
+    vector_estimator: toCPointer(vectorEstimator),
+    vocoder: toCPointer(vocoder),
+    tts_json: toCPointer(ttsJson),
+    unicode_indexer: toCPointer(unicodeIndexer),
+    voice_style: toCPointer(voiceStyle)
+  )
+}
+
 func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
@@ -972,7 +1170,10 @@ func sherpaOnnxOfflineTtsModelConfig(
   debug: Int = 0,
   provider: String = "cpu",
   kitten: SherpaOnnxOfflineTtsKittenModelConfig = sherpaOnnxOfflineTtsKittenModelConfig(),
-  zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig()
+  zipvoice: SherpaOnnxOfflineTtsZipvoiceModelConfig = sherpaOnnxOfflineTtsZipvoiceModelConfig(),
+  pocket: SherpaOnnxOfflineTtsPocketModelConfig = sherpaOnnxOfflineTtsPocketModelConfig(),
+  supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig =
+    sherpaOnnxOfflineTtsSupertonicModelConfig()
 ) -> SherpaOnnxOfflineTtsModelConfig {
   return SherpaOnnxOfflineTtsModelConfig(
     vits: vits,
@@ -982,7 +1183,9 @@ func sherpaOnnxOfflineTtsModelConfig(
     matcha: matcha,
     kokoro: kokoro,
     kitten: kitten,
-    zipvoice: zipvoice
+    zipvoice: zipvoice,
+    pocket: pocket,
+    supertonic: supertonic
   )
 }
 
@@ -1080,6 +1283,93 @@ typealias TtsCallbackWithArg = (
   ) -> Int32
 )?
 
+class SherpaOnnxCallbackPair {
+  var cb: TtsCallbackWithArg
+  var arg: UnsafeMutableRawPointer?
+  init(cb: TtsCallbackWithArg, arg: UnsafeMutableRawPointer?) {
+    self.cb = cb
+    self.arg = arg
+  }
+}
+
+typealias TtsProgressCallbackWithArg =
+  @convention(c) (
+    UnsafePointer<Float>?, Int32, Float, UnsafeMutableRawPointer?
+  ) -> Int32
+
+struct SherpaOnnxGenerationConfigSwift {
+  var silenceScale: Float = 0.2
+  var speed: Float = 1.0
+  var sid: Int = 0
+  var referenceAudio: [Float] = []
+  var referenceSampleRate: Int = 16000
+  var referenceText: String = ""
+  var numSteps: Int = 1
+  var extra: [String: Any] = [:]  // Any can be String, Int, Float, Double
+
+  /// Convert the extra dictionary into a JSON string
+  func extraJsonString() -> String {
+    var jsonCompatible: [String: Any] = [:]
+
+    for (key, value) in extra {
+      switch value {
+      case let v as String:
+        jsonCompatible[key] = v
+      case let v as Int:
+        jsonCompatible[key] = v
+      case let v as Float:
+        jsonCompatible[key] = v
+      case let v as Double:
+        jsonCompatible[key] = v
+      default:
+        // ignore unsupported types
+        print("Warning: unsupported type for key '\(key)' in extra")
+      }
+    }
+
+    guard let data = try? JSONSerialization.data(withJSONObject: jsonCompatible, options: []),
+      let json = String(data: data, encoding: .utf8)
+    else {
+      return "{}"
+    }
+
+    return json
+  }
+}
+final class SherpaOnnxGenerationConfigC {
+  /// The underlying C struct
+  var cConfig: SherpaOnnxGenerationConfig
+
+  /// Storage for reference audio so the pointer stays valid during the C call
+  private let referenceAudioStorage: [Float]
+
+  /// Extra JSON string for C API
+  let extraJson: String
+
+  init(_ swiftConfig: SherpaOnnxGenerationConfigSwift) {
+    let referenceAudio = swiftConfig.referenceAudio
+
+    let extraJson = swiftConfig.extraJsonString()
+    self.extraJson = extraJson
+
+    self.referenceAudioStorage = referenceAudio
+
+    self.cConfig = self.referenceAudioStorage.withUnsafeBufferPointer { buffer in
+      SherpaOnnxGenerationConfig(
+        silence_scale: swiftConfig.silenceScale,
+        speed: swiftConfig.speed,
+        sid: Int32(swiftConfig.sid),
+        reference_audio: buffer.count > 0 ? buffer.baseAddress : nil,
+        reference_audio_len: Int32(buffer.count),
+        reference_sample_rate: Int32(swiftConfig.referenceSampleRate),
+        reference_text: toCPointer(swiftConfig.referenceText),
+        num_steps: Int32(swiftConfig.numSteps),
+        extra: toCPointer(extraJson)
+      )
+    }
+  }
+}
+
 class SherpaOnnxOfflineTtsWrapper {
   /// A pointer to the underlying counterpart in C
   let tts: OpaquePointer!
@@ -1098,22 +1388,50 @@ class SherpaOnnxOfflineTtsWrapper {
   }
 
   func generate(text: String, sid: Int = 0, speed: Float = 1.0) -> SherpaOnnxGeneratedAudioWrapper {
-    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? = SherpaOnnxOfflineTtsGenerate(
-      tts, toCPointer(text), Int32(sid), speed)
-
-    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+    let config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
+    return generateWithConfig(text: text, config: config, callback: nil, arg: nil)
   }
 
   func generateWithCallbackWithArg(
     text: String, callback: TtsCallbackWithArg, arg: UnsafeMutableRawPointer, sid: Int = 0,
     speed: Float = 1.0
   ) -> SherpaOnnxGeneratedAudioWrapper {
+    let config = SherpaOnnxGenerationConfigSwift(speed: speed, sid: sid)
+
+    let pair = SherpaOnnxCallbackPair(cb: callback, arg: arg)
+    let unmanaged = Unmanaged.passRetained(pair)
+    let wrapper: TtsProgressCallbackWithArg = { samples, n, progress, rawArg in
+      let p = Unmanaged<SherpaOnnxCallbackPair>.fromOpaque(rawArg!).takeUnretainedValue()
+      return p.cb!(samples, n, p.arg)
+    }
+    let result = generateWithConfig(
+      text: text, config: config, callback: wrapper, arg: unmanaged.toOpaque())
+    unmanaged.release()
+    return result
+  }
+
+  func generateWithConfig(
+    text: String,
+    config: SherpaOnnxGenerationConfigSwift,
+    callback: TtsProgressCallbackWithArg?,
+    arg: UnsafeMutableRawPointer?
+  ) -> SherpaOnnxGeneratedAudioWrapper {
+    let bridge = SherpaOnnxGenerationConfigC(config)
+
     let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? =
-      SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
-        tts, toCPointer(text), Int32(sid), speed, callback, arg)
+      withUnsafePointer(to: &bridge.cConfig) { configPtr in
+        SherpaOnnxOfflineTtsGenerateWithConfig(
+          tts,
+          toCPointer(text),
+          configPtr,
+          callback,
+          arg
+        )
+      }
 
     return SherpaOnnxGeneratedAudioWrapper(audio: audio)
   }
+
 }
 
 // spoken language identification
@@ -1600,9 +1918,17 @@ func sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: String = "")
   return SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(model: toCPointer(model))
 }
 
+func sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: String = "")
+  -> SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig
+{
+  return SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(model: toCPointer(model))
+}
+
 func sherpaOnnxOfflineSpeechDenoiserModelConfig(
   gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig =
     sherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig(),
+  dpdfnet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig =
+    sherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(),
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0
@@ -1611,7 +1937,8 @@ func sherpaOnnxOfflineSpeechDenoiserModelConfig(
     gtcrn: gtcrn,
     num_threads: Int32(numThreads),
     debug: Int32(debug),
-    provider: toCPointer(provider)
+    provider: toCPointer(provider),
+    dpdfnet: dpdfnet
   )
 }
 
@@ -1638,14 +1965,24 @@ class SherpaOnnxDenoisedAudioWrapper {
   }
 
   var n: Int32 {
+    guard let audio else {
+      return 0
+    }
     return audio.pointee.n
   }
 
   var sampleRate: Int32 {
+    guard let audio else {
+      return 0
+    }
     return audio.pointee.sample_rate
   }
 
   var samples: [Float] {
+    guard let audio else {
+      return []
+    }
+
     if let p = audio.pointee.samples {
       var samples: [Float] = []
       for index in 0..<n {
@@ -1659,6 +1996,9 @@ class SherpaOnnxDenoisedAudioWrapper {
   }
 
   func save(filename: String) -> Int32 {
+    guard let audio else {
+      return 0
+    }
     return SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
   }
 }
@@ -1692,6 +2032,52 @@ class SherpaOnnxOfflineSpeechDenoiserWrapper {
   }
 }
 
+func sherpaOnnxOnlineSpeechDenoiserConfig(
+  model: SherpaOnnxOfflineSpeechDenoiserModelConfig =
+    sherpaOnnxOfflineSpeechDenoiserModelConfig()
+) -> SherpaOnnxOnlineSpeechDenoiserConfig {
+  return SherpaOnnxOnlineSpeechDenoiserConfig(model: model)
+}
+
+class SherpaOnnxOnlineSpeechDenoiserWrapper {
+  let impl: OpaquePointer!
+
+  init(
+    config: UnsafePointer<SherpaOnnxOnlineSpeechDenoiserConfig>!
+  ) {
+    impl = SherpaOnnxCreateOnlineSpeechDenoiser(config)
+  }
+
+  deinit {
+    if let impl {
+      SherpaOnnxDestroyOnlineSpeechDenoiser(impl)
+    }
+  }
+
+  func run(samples: [Float], sampleRate: Int) -> SherpaOnnxDenoisedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxDenoisedAudio>? = SherpaOnnxOnlineSpeechDenoiserRun(
+      impl, samples, Int32(samples.count), Int32(sampleRate))
+    return SherpaOnnxDenoisedAudioWrapper(audio: audio)
+  }
+
+  func flush() -> SherpaOnnxDenoisedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxDenoisedAudio>? = SherpaOnnxOnlineSpeechDenoiserFlush(impl)
+    return SherpaOnnxDenoisedAudioWrapper(audio: audio)
+  }
+
+  func reset() {
+    SherpaOnnxOnlineSpeechDenoiserReset(impl)
+  }
+
+  var sampleRate: Int {
+    return Int(SherpaOnnxOnlineSpeechDenoiserGetSampleRate(impl))
+  }
+
+  var frameShiftInSamples: Int {
+    return Int(SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(impl))
+  }
+}
+
 func getSherpaOnnxVersion() -> String {
   return String(cString: SherpaOnnxGetVersionStr())
 }
@@ -1702,4 +2088,162 @@ func getSherpaOnnxGitSha1() -> String {
 
 func getSherpaOnnxGitDate() -> String {
   return String(cString: SherpaOnnxGetGitDate())
+}
+//---------------------------
+// Source separation
+//---------------------------
+
+struct AudioData {
+  private enum Storage {
+    case owned([Float])
+    case wrapped(ManagedWave)
+  }
+
+  private class ManagedWave {
+    let pointer: UnsafePointer<SherpaOnnxMultiChannelWave>
+    init(_ p: UnsafePointer<SherpaOnnxMultiChannelWave>) { self.pointer = p }
+    deinit { SherpaOnnxFreeMultiChannelWave(pointer) }
+  }
+
+  private let storage: Storage
+  let channelCount: Int
+  let samplesPerChannel: Int
+  let sampleRate: Int
+
+  init(samples: [Float], channelCount: Int, sampleRate: Int) {
+    self.storage = .owned(samples)
+    self.channelCount = channelCount
+    self.sampleRate = sampleRate
+    self.samplesPerChannel = channelCount > 0 ? samples.count / channelCount : 0
+  }
+
+  init?(filename: String) {
+    guard let ptr = SherpaOnnxReadWaveMultiChannel(filename) else { return nil }
+    self.storage = .wrapped(ManagedWave(ptr))
+    self.channelCount = Int(ptr.pointee.num_channels)
+    self.samplesPerChannel = Int(ptr.pointee.num_samples)
+    self.sampleRate = Int(ptr.pointee.sample_rate)
+  }
+
+  func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<Float>) -> R) -> R {
+    switch storage {
+    case .owned(let array):
+      return array.withUnsafeBufferPointer(body)
+    case .wrapped(let managed):
+      let total = Int(managed.pointer.pointee.num_channels * managed.pointer.pointee.num_samples)
+      // Ensure we start from the first channel's pointer
+      return body(UnsafeBufferPointer(start: managed.pointer.pointee.samples[0], count: total))
+    }
+  }
+
+  @discardableResult
+  func save(to filename: String) -> Bool {
+    return withUnsafeBufferPointer { buf in
+      guard let base = buf.baseAddress else { return false }
+      // FIX: Explicitly type the array as Optional pointers to match C 'float* const*'
+      var ptrs: [UnsafePointer<Float>?] = (0..<channelCount).map { base + ($0 * samplesPerChannel) }
+
+      return SherpaOnnxWriteWaveMultiChannel(
+        &ptrs,
+        Int32(samplesPerChannel),
+        Int32(sampleRate),
+        Int32(channelCount),
+        filename
+      ) == 1
+    }
+  }
+}
+
+struct SourceSeparationConfig {
+  struct Spleeter {
+    var vocals: String
+    var accompaniment: String
+  }
+  struct Uvr { var model: String }
+
+  var spleeter: Spleeter?
+  var uvr: Uvr?
+  var numThreads: Int = 1
+  var debug: Bool = false
+  var provider: String = "cpu"
+
+  func withCConfig<R>(_ body: (UnsafePointer<SherpaOnnxOfflineSourceSeparationConfig>) -> R) -> R {
+    var cConfig = SherpaOnnxOfflineSourceSeparationConfig()
+    cConfig.model.num_threads = Int32(self.numThreads)
+    cConfig.model.debug = self.debug ? 1 : 0
+
+    var s: [String: [Int8]] = [:]
+    func b(_ k: String, _ v: String?) -> UnsafePointer<Int8>? {
+      guard let v = v else { return nil }
+      s[k] = Array(v.utf8CString)
+      return s[k]!.withUnsafeBufferPointer { $0.baseAddress }
+    }
+
+    cConfig.model.provider = b("provider", self.provider)
+    cConfig.model.spleeter.vocals = b("spleeter.vocals", self.spleeter?.vocals)
+    cConfig.model.spleeter.accompaniment = b("spleeter.accompaniment", self.spleeter?.accompaniment)
+    cConfig.model.uvr.model = b("uvr.model", self.uvr?.model)
+
+    return body(&cConfig)
+  }
+}
+
+class SourceSeparator {
+  private var engine: OpaquePointer?
+
+  init?(config: SourceSeparationConfig) {
+    self.engine = config.withCConfig { SherpaOnnxCreateOfflineSourceSeparation($0) }
+
+    if self.engine == nil { return nil }
+  }
+
+  deinit {
+    if let e = engine {
+      SherpaOnnxDestroyOfflineSourceSeparation(e)
+    }
+  }
+
+  func process(buffer: AudioData) -> [AudioData]? {
+    guard let engine = engine else { return nil }
+
+    return buffer.withUnsafeBufferPointer { flatBuf in
+      guard let base = flatBuf.baseAddress else { return nil }
+      var ptrs: [UnsafePointer<Float>?] = (0..<buffer.channelCount).map {
+        base + ($0 * buffer.samplesPerChannel)
+      }
+
+      guard
+        let raw = SherpaOnnxOfflineSourceSeparationProcess(
+          engine,
+          &ptrs,
+          Int32(buffer.channelCount),
+          Int32(buffer.samplesPerChannel),
+          Int32(buffer.sampleRate)
+        )
+      else { return nil }
+
+      let stemCount = Int(raw.pointee.num_stems)
+      let result = (0..<stemCount).map { i in
+        let stem = raw.pointee.stems[i]
+        let chs = Int(stem.num_channels)
+        let n = Int(stem.n)
+        var flat = [Float](repeating: 0, count: chs * n)
+
+        for c in 0..<chs {
+          if let src = stem.samples[c] {
+            let offset = c * n
+            flat.withUnsafeMutableBufferPointer { dest in
+              let destPtr = dest.baseAddress!.advanced(by: offset)
+              destPtr.initialize(from: src, count: n)
+            }
+          }
+        }
+        return AudioData(
+          samples: flat, channelCount: chs, sampleRate: Int(raw.pointee.sample_rate))
+      }
+
+      SherpaOnnxDestroySourceSeparationOutput(raw)
+      return result
+    }
+  }
 }

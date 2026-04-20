@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - python
     paths:
       - '.github/workflows/run-python-test-macos.yaml'
       - '.github/scripts/test-python.sh'

@@ -37,6 +37,70 @@ function testVersion() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testPocketTts() {
+  if [ ! -f ./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+    tar xvf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+    rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+  fi
+
+  out_filename=test_pocket_tts.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_pocket_tts.kt \
+    Tts.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testZipVoiceTts() {
+  if [ ! -f ./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+    tar xvf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+    rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+  fi
+
+  if [ ! -f ./vocos_24khz.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+  fi
+
+  out_filename=test_zipvoice_tts.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_zipvoice_tts.kt \
+    Tts.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testSupertonicTts() {
+  if [ ! -f ./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+    tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+    rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+  fi
+
+  out_filename=test_supertonic_tts.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_supertonic_tts.kt \
+    Tts.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
@@ -419,14 +483,62 @@ function testOfflineSpeechDenoiser() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
   fi
 
+  if [ ! -f ./dpdfnet_baseline.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+  fi
+
   if [ ! -f ./inp_16k.wav ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
   fi
 
-  out_filename=test_offline_speech_denoiser.jar
+  out_filename=test_offline_speech_denoiser_gtcrn.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_speech_denoiser.kt \
     OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  out_filename=test_offline_speech_denoiser_dpdfnet.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speech_denoiser_dpdfnet.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  ls -lh *.wav
+}
+
+function testOnlineSpeechDenoiser() {
+  if [ ! -f ./gtcrn_simple.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+  fi
+
+  if [ ! -f ./dpdfnet_baseline.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
+  fi
+
+  if [ ! -f ./inp_16k.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+  fi
+
+  out_filename=test_online_speech_denoiser.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_online_speech_denoiser.kt \
+    OnlineSpeechDenoiser.kt \
+    OfflineSpeechDenoiser.kt \
+    DenoisedAudio.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -537,6 +649,116 @@ function testOfflineMedAsrCtc() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineMoonshineAsrV2() {
+  if [ ! -f ./sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27/encoder_model.ort ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+    tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+    rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+  fi
+
+  out_filename=test_offline_moonshine_asr_v2.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_moonshine_asr_v2.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testOfflineFireRedAsrCtc() {
+  if [ ! -f ./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+    tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+    rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+  fi
+
+  out_filename=test_offline_fire_red_asr_ctc.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_fire_red_asr_ctc.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testOfflineFunAsrNano() {
+  if [ ! -f ./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+    tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+    rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+  fi
+
+  out_filename=test_offline_funasr_nano.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_funasr_nano.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testOfflineQwen3Asr() {
+  if [ ! -f ./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+    tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+    rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+  fi
+
+  out_filename=test_offline_qwen3_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_qwen3_asr.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testOfflineCohereTranscribe() {
+  if [ ! -f ./sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+    tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+    rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+  fi
+
+  out_filename=test_offline_cohere_transcribe.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_cohere_transcribe.kt \
+    FeatureConfig.kt \
+    QnnConfig.kt \
+    HomophoneReplacerConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testOfflineWenetCtc() {
   if [ ! -f sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/model.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10.tar.bz2
@@ -560,13 +782,21 @@ function testOfflineWenetCtc() {
 }
 
 testVersion
-
+testOfflineCohereTranscribe
+testOfflineQwen3Asr
+testOfflineMoonshineAsrV2
+testOfflineFireRedAsrCtc
+testPocketTts
+testZipVoiceTts
+testSupertonicTts
+testOfflineFunAsrNano
 testOfflineMedAsrCtc
 testOfflineOmnilingualAsrCtc
 testOfflineWenetCtc
 testOfflineNeMoCanary
 testOfflineSenseVoiceWithHr
 testOfflineSpeechDenoiser
+testOnlineSpeechDenoiser
 testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
 testOnlineAsr

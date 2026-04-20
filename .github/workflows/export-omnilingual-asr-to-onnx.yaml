@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.10"]
-        model_card: ["omniASR_CTC_300M", "omniASR_CTC_1B"]
+        model_card: ["omniASR_CTC_300M", "omniASR_CTC_300M_v2", "omniASR_CTC_1B", "omniASR_CTC_1B_v2"]
 
     steps:
       - uses: actions/checkout@v4
@@ -80,9 +80,17 @@ jobs:
 
           echo "---collect files----"
 
-          d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
-          if [[ $model_card == omniASR_CTC_1B ]]; then
+          if [[ $model_card == omniASR_CTC_300M ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
+          elif [[ $model_card == omniASR_CTC_300M_v2 ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-v2-2026-02-05
+          elif [[ $model_card == omniASR_CTC_1B ]]; then
             d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-2025-11-12
+          elif [[ $model_card == omniASR_CTC_1B_v2 ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-2026-02-05
+          else
+            echo "Unknown model: $model_card"
+            exit 1
           fi
 
           mkdir -p $d
@@ -100,9 +108,17 @@ jobs:
           tar cjfv $d.tar.bz2 $d
           mv $d ../..
 
-          d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
-          if [[ $model_card == omniASR_CTC_1B ]]; then
+          if [[ $model_card == omniASR_CTC_300M ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+          elif [[ $model_card == omniASR_CTC_300M_v2 ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-v2-int8-2026-02-05
+          elif [[ $model_card == omniASR_CTC_1B ]]; then
             d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-int8-2025-11-12
+          elif [[ $model_card == omniASR_CTC_1B_v2 ]]; then
+            d=sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-int8-2026-02-05
+          else
+            echo "Unknown model: $model_card"
+            exit 1
           fi
 
           mkdir -p $d
@@ -155,17 +171,20 @@ jobs:
             dirs=(
               sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-2025-11-12
               sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12
+              sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-v2-2026-02-05
+              sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-v2-int8-2026-02-05
+              sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-2025-11-12
+              sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-int8-2025-11-12
+              sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-2026-02-05
+              sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-int8-2026-02-05
             )
-            if [[ $model_card == omniASR_CTC_1B ]]; then
-              dirs=(
-                sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-2025-11-12
-                sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-int8-2025-11-12
-              )
-            fi
 
             for d in ${dirs[@]}; do
+              if [[ ! -d $d ]]; then
+                continue;
+              fi
               rm -rf huggingface
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
               pushd huggingface
 
               git fetch
@@ -185,7 +204,40 @@ jobs:
               git status
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main || true
+              popd
+            done
+
+      - name: Publish to modelscope
+        if: true
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in *.tar.bz2; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git ms
+
+              cp -av $m ms/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh
+              git add .
+
+              git commit -m "add models"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/asr-models.git
+
               popd
             done
 

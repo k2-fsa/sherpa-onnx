@@ -11,6 +11,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-model.h"
 #include "sherpa-onnx/csrc/transpose.h"
 
@@ -85,7 +86,7 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
         SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
                          meta_data.feature_normalize_type.c_str());
 #endif
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
     }
 
@@ -130,11 +131,11 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
 
     auto EX = m.colwise().mean();
     auto EX2 = m.array().pow(2).colwise().sum() / num_frames;
-    auto variance = (EX2 - EX.array().pow(2)).max(1e-5);
+    auto variance = (EX2 - EX.array().pow(2)).max(1e-5f);
 
     auto stddev = variance.array().sqrt();
 
-    m = (m.rowwise() - EX).array().rowwise() / (stddev.array() + 1e-5);
+    m = (m.rowwise() - EX).array().rowwise() / (stddev.array() + 1e-5f);
   }
 
  private:

@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <cmath>
 #include <numeric>
 #include <vector>
@@ -139,6 +140,8 @@ void ScaleAdd(const float *src, float scale, int32_t n, float *in_out);
 // out[i] = src[i] * scale
 void Scale(const float *src, float scale, int32_t n, float *out);
 
+std::vector<float> MakeVorbisWindow(int32_t window_length);
+
 // For Paraformer
 std::vector<float> ComputeAcousticEmbedding(
     const std::vector<float> &encoder_out, const std::vector<float> &alphas,
@@ -160,6 +163,11 @@ std::vector<float> Transpose(const float *input, int32_t rows, int32_t cols);
 void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
                           std::vector<float> *mean,
                           std::vector<float> *inv_stddev);
+
+void NormalizeWhisperFeatures(float *features, int32_t num_frames,
+                              int32_t feat_dim);
+
+int32_t MaxElementIndex(const float *v, int32_t n);
 
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

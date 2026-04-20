@@ -3,11 +3,21 @@
 // Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
 
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -23,12 +33,13 @@ class OnlineCNNBiLSTMModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config_.cnn_bilstm);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.cnn_bilstm), sess_opts_);
+    Init(nullptr, 0);
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OnlinePunctuationModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlinePunctuationModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -36,7 +47,6 @@ class OnlineCNNBiLSTMModel::Impl {
     auto buf = ReadFile(mgr, config_.cnn_bilstm);
     Init(buf.data(), buf.size());
   }
-#endif
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids,
                                             Ort::Value valid_ids,
@@ -58,8 +68,15 @@ class OnlineCNNBiLSTMModel::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 
@@ -115,11 +132,10 @@ OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
     const OnlinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
-    AAssetManager *mgr, const OnlinePunctuationModelConfig &config)
+    Manager *mgr, const OnlinePunctuationModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OnlineCNNBiLSTMModel::~OnlineCNNBiLSTMModel() = default;
 
@@ -137,5 +153,15 @@ const OnlineCNNBiLSTMModelMetaData &OnlineCNNBiLSTMModel::GetModelMetadata()
     const {
   return impl_->GetModelMetadata();
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
+    AAssetManager *mgr, const OnlinePunctuationModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
+    NativeResourceManager *mgr, const OnlinePunctuationModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

@@ -12,7 +12,6 @@
 #include <regex>  // NOLINT
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -56,28 +55,6 @@ static const std::vector<std::pair<std::string, std::string>> kReplacements = {
 
     {"e", "ɛ"},
 };
-
-std::string Utf32ToUtf8(char32_t cp) {
-  std::string out;
-
-  if (cp <= 0x7F) {
-    out.push_back(static_cast<char>(cp));
-  } else if (cp <= 0x7FF) {
-    out.push_back(static_cast<char>(0xC0 | (cp >> 6)));
-    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
-  } else if (cp <= 0xFFFF) {
-    out.push_back(static_cast<char>(0xE0 | (cp >> 12)));
-    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
-    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
-  } else {
-    out.push_back(static_cast<char>(0xF0 | (cp >> 18)));
-    out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
-    out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
-    out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
-  }
-
-  return out;
-}
 
 std::vector<std::string> ConvertPhonemesToUTF8(
     const std::vector<std::vector<char32_t>> &phonemes) {
@@ -174,7 +151,7 @@ class MatchaTtsLexicon::Impl {
 
     {
       auto buf = ReadFile(mgr, tokens);
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
 
       InitTokens(is);
     }
@@ -184,7 +161,7 @@ class MatchaTtsLexicon::Impl {
     for (const auto &f : files) {
       auto buf = ReadFile(mgr, f);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitLexicon(is);
     }
 
@@ -489,7 +466,7 @@ MatchaTtsLexicon::MatchaTtsLexicon(const std::string &lexicon,
                                    const std::string &data_dir, bool debug,
                                    bool skip_replacement)
     : impl_(std::make_unique<Impl>(lexicon, tokens, data_dir, debug,
-                                   skip_replacement)) {}
+                                   skip_replacement)) {}  // NOLINT
 
 template <typename Manager>
 MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
@@ -497,7 +474,7 @@ MatchaTtsLexicon::MatchaTtsLexicon(Manager *mgr, const std::string &lexicon,
                                    const std::string &data_dir, bool debug,
                                    bool skip_replacement)
     : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, data_dir, debug,
-                                   skip_replacement)) {}
+                                   skip_replacement)) {}  // NOLINT
 
 std::vector<TokenIDs> MatchaTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {

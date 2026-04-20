@@ -181,7 +181,7 @@ jobs:
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=riscv64-spacemit/$SHERPA_ONNX_VERSION
@@ -196,7 +196,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-riscv64-spacemit-shared.tar.bz2"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - uses: actions/upload-artifact@v4
         if: matrix.lib_type == 'static'
@@ -224,6 +224,7 @@ jobs:
           file: sherpa-onnx-*linux-riscv64*.tar.bz2
 
       - name: Test sherpa-onnx
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
@@ -247,6 +248,7 @@ jobs:
           readelf -d ./build-riscv64-linux-gnu-spacemit/bin/sherpa-onnx-offline-tts
 
       - name: Test streaming speech recognition
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
@@ -254,8 +256,6 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
           export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
-          echo "Some mistakes in ep graph partition, disable op Gather for spacemit-ep now, will be fixed soon."
-          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
           tar xvf sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23.tar.bz2
@@ -270,6 +270,7 @@ jobs:
             ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/test_wavs/0.wav
 
       - name: Test offline tts
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
@@ -277,8 +278,6 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
           export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/toolchain/sysroot/lib
           export QEMU_ARGS="-cpu max,vlen=256,elen=64,vext_spec=v1.0"
-          echo "Some mistakes in ep graph partition, disable op Gather;Cast;ConvTranspose for spacemit-ep now, will be fixed soon."
-          export SPACEMIT_EP_DISABLE_OP_TYPE_FILTER="Gather;Cast;ConvTranspose"
 
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
           tar xf vits-piper-en_US-lessac-medium.tar.bz2

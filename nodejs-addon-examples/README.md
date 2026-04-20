@@ -47,7 +47,10 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
-|[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement.|
+|[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with GTCRN.|
+|[./test_offline_speech_enhancement_dpdfnet.js](./test_offline_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement with DPDFNet.|
+|[./test_online_speech_enhancement_gtcrn.js](./test_online_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with GTCRN.|
+|[./test_online_speech_enhancement_dpdfnet.js](./test_online_speech_enhancement_dpdfnet.js)| It demonstrates how to use sherpa-onnx JavaScript API for online speech enhancement with DPDFNet.|
 
 ## Speaker diarization
 
@@ -59,7 +62,8 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
-|[./test_punctuation.js](./test_punctuation.js)| Add punctuations to input text using [CT transformer](https://modelscope.cn/models/iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch/summary). It supports both Chinese and English.|
+|[./test_offline_punctuation.js](./test_offline_punctuation.js)| Add punctuations to input text using [CT transformer](https://modelscope.cn/models/iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch/summary). It supports both Chinese and English.|
+|[./test_online_punctuation.js](./test_online_punctuation.js)| Add punctuations to input text using an online/streaming punctuation model.|
 
 ## Voice activity detection (VAD)
 
@@ -71,12 +75,13 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
-|[ ./test_speaker_identification.js]( ./test_speaker_identification.js)| Speaker identification from a file|
+|[./test_speaker_identification.js](./test_speaker_identification.js)| Speaker identification from a file|
 
 ## Spoken language identification
 
 |File| Description|
 |---|---|
+|[./test_spoken_language_identification.js](./test_spoken_language_identification.js)|Spoken language identification from a file using a multi-lingual [Whisper](https://github.com/openai/whisper) model|
 |[./test_vad_spoken_language_identification_microphone.js](./test_vad_spoken_language_identification_microphone.js)|Spoken language identification from a microphone using a multi-lingual [Whisper](https://github.com/openai/whisper) model|
 
 ## Audio tagging
@@ -99,6 +104,7 @@ The following tables list the examples in this folder.
 |---|---|
 |[./test_asr_streaming_t_one_ctc.js](./test_asr_streaming_t_one_ctc.js)| Streaming speech recognition from a file using a T-one CTC model|
 |[./test_asr_streaming_transducer.js](./test_asr_streaming_transducer.js)| Streaming speech recognition from a file using a Zipformer transducer model|
+|[./test_asr_streaming_transducer_itn.js](./test_asr_streaming_transducer_itn.js)| Streaming speech recognition from a file using a Zipformer transducer model with ITN|
 |[./test_asr_streaming_transducer_with_hr.js](./test_asr_streaming_transducer_with_hr.js)| Streaming speech recognition from a file using a Zipformer transducer model with homophone replacer|
 |[./test_asr_streaming_ctc.js](./test_asr_streaming_ctc.js)| Streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_streaming_ctc_hlg.js](./test_asr_streaming_ctc_hlg.js)| Streaming speech recognition from a file using a Zipformer CTC model with HLG decoding|
@@ -109,6 +115,7 @@ The following tables list the examples in this folder.
 |File| Description|
 |---|---|
 |[./test_asr_streaming_transducer_microphone.js](./test_asr_streaming_transducer_microphone.js)| Streaming speech recognition from a microphone using a Zipformer transducer model|
+|[./test_asr_streaming_transducer_microphone_itn.js](./test_asr_streaming_transducer_microphone_itn.js)| Streaming speech recognition from a microphone using a Zipformer transducer model with ITN|
 |[./test_asr_streaming_ctc_microphone.js](./test_asr_streaming_ctc_microphone.js)| Streaming speech recognition from a microphone using a Zipformer CTC model with greedy search|
 |[./test_asr_streaming_ctc_hlg_microphone.js](./test_asr_streaming_ctc_hlg_microphone.js)|Streaming speech recognition from a microphone using a Zipformer CTC model with HLG decoding|
 |[./test_asr_streaming_paraformer_microphone.js](./test_asr_streaming_paraformer_microphone.js)| Streaming speech recognition from a microphone using a [Paraformer](https://github.com/alibaba-damo-academy/FunASR) model|
@@ -119,19 +126,29 @@ The following tables list the examples in this folder.
 |---|---|
 |[./test_asr_non_streaming_transducer.js](./test_asr_non_streaming_transducer.js)|Non-streaming speech recognition from a file with a Zipformer transducer model|
 |[./test_asr_non_streaming_fire_red_asr.js](./test_asr_non_streaming_fire_red_asr.js)| Non-streaming speech recognition from a file using [FireRedAsr](https://github.com/FireRedTeam/FireRedASR)|
+|[./test_asr_non_streaming_fire_red_asr_ctc.js](./test_asr_non_streaming_fire_red_asr_ctc.js)| Non-streaming speech recognition from a file using [FireRedAsr](https://github.com/FireRedTeam/FireRedASR) CTC model|
+|[./test_asr_non_streaming_fire_red_asr_ctc_async.js](./test_asr_non_streaming_fire_red_asr_ctc_async.js)| Async non-streaming speech recognition from a file using [FireRedAsr](https://github.com/FireRedTeam/FireRedASR) CTC model|
 |[./test_asr_non_streaming_whisper.js](./test_asr_non_streaming_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper)|
 |[./test_vad_with_non_streaming_asr_whisper.js](./test_vad_with_non_streaming_asr_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_moonshine.js](./test_asr_non_streaming_moonshine.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine)|
+|[./test_asr_non_streaming_moonshine_v2.js](./test_asr_non_streaming_moonshine_v2.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine) v2|
 |[./test_vad_with_non_streaming_asr_moonshine.js](./test_vad_with_non_streaming_asr_moonshine.js)| Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_nemo_ctc.js](./test_asr_non_streaming_nemo_ctc.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) CTC model with greedy search|
 |[./test_asr_non_streaming_wenet_ctc.js](./test_asr_non_streaming_wenet_ctc.js)|Non-streaming speech recognition from a file using a [u2pp_conformer_yue](https://huggingface.co/ASLP-lab/WSYue-ASR/tree/main/u2pp_conformer_yue) CTC model with greedy search|
 |[./test_asr_non_streaming_omnilingual_asr_ctc.js](./test_asr_non_streaming_omnilingual_asr_ctc.js)|Non-streaming speech recognition from a file using a [Omnilingual-ASR](https://github.com/facebookresearch/omnilingual-asr) CTC model with greedy search|
 |[./test_asr_non_streaming_medasr_ctc.js](./test_asr_non_streaming_medasr_ctc.js)|Non-streaming speech recognition from a file using a [Google MedASR](https://github.com/google-health/medasr) CTC model with greedy search|
+|[./test_asr_non_streaming_funasr_nano.js](./test_asr_non_streaming_funasr_nano.js)|Non-streaming speech recognition from a file using a [FunASR Nano](https://modelscope.cn/models/FunAudioLLM/Fun-ASR-Nano-2512) model|
+|[./test_asr_non_streaming_funasr_nano_async.js](./test_asr_non_streaming_funasr_nano_async.js)|Async non-streaming speech recognition from multiple files using a [FunASR Nano](https://modelscope.cn/models/FunAudioLLM/Fun-ASR-Nano-2512) model|
+|[./test_asr_non_streaming_cohere_transcribe.js](./test_asr_non_streaming_cohere_transcribe.js)|Non-streaming speech recognition from a file using a [Cohere Transcribe](https://cohere.com/research/papers/cohere-labs-aya-expanse-open-weights-and-multilingual-api-2025) model|
+|[./test_asr_non_streaming_cohere_transcribe_async.js](./test_asr_non_streaming_cohere_transcribe_async.js)|Async non-streaming speech recognition from multiple files using a Cohere Transcribe model|
+|[./test_asr_non_streaming_qwen3_asr.js](./test_asr_non_streaming_qwen3_asr.js)|Non-streaming speech recognition from a file using a [Qwen3 ASR](https://github.com/QwenLM/Qwen3-ASR) model|
+|[./test_asr_non_streaming_qwen3_asr_async.js](./test_asr_non_streaming_qwen3_asr_async.js)|Async non-streaming speech recognition from multiple files using a [Qwen3 ASR](https://github.com/QwenLM/Qwen3-ASR) model|
 |[./test_asr_non_streaming_nemo_canary.js](./test_asr_non_streaming_nemo_canary.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [Canary](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french) model|
 |[./test_asr_non_streaming_zipformer_ctc.js](./test_asr_non_streaming_zipformer_ctc.js)|Non-streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_parakeet_tdt_v2.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with greedy search|
 |[./test_asr_non_streaming_dolphin_ctc.js](./test_asr_non_streaming_dolphin_ctc.js)|Non-streaming speech recognition from a file using a [Dolphinhttps://github.com/DataoceanAI/Dolphin]) CTC model with greedy search|
 |[./test_asr_non_streaming_paraformer.js](./test_asr_non_streaming_paraformer.js)|Non-streaming speech recognition from a file using [Paraformer](https://github.com/alibaba-damo-academy/FunASR)|
+|[./test_asr_non_streaming_paraformer_itn.js](./test_asr_non_streaming_paraformer_itn.js)|Non-streaming speech recognition from a file using [Paraformer](https://github.com/alibaba-damo-academy/FunASR) with ITN|
 |[./test_asr_non_streaming_sense_voice.js](./test_asr_non_streaming_sense_voice.js)|Non-streaming speech recognition from a file using [SenseVoice](https://github.com/FunAudioLLM/SenseVoice)|
 |[./test_asr_non_streaming_sense_voice_with_hr.js](./test_asr_non_streaming_sense_voice_with_hr.js)|Non-streaming speech recognition from a file using [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) with homophone replacer|
 
@@ -151,11 +168,20 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
+|[./test_tts_non_streaming_pocket_en.js](./test_tts_non_streaming_pocket_en.js)| Zero-shot text-to-speech with a PocketTTS English Model|
+|[./test_tts_non_streaming_pocket_en_async.js](./test_tts_non_streaming_pocket_en_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API|
+|[./test_tts_non_streaming_pocket_en_play_async.js](./test_tts_non_streaming_pocket_en_play_async.js)| Zero-shot text-to-speech with a PocketTTS English Model using async JS API and live audio playback|
+|[./test_tts_non_streaming_zipvoice_zh_en.js](./test_tts_non_streaming_zipvoice_zh_en.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model|
+|[./test_tts_non_streaming_zipvoice_zh_en_async.js](./test_tts_non_streaming_zipvoice_zh_en_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API|
+|[./test_tts_non_streaming_zipvoice_zh_en_play_async.js](./test_tts_non_streaming_zipvoice_zh_en_play_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API and live audio playback|
 |[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
 |[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
 |[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
 |[./test_tts_non_streaming_matcha_icefall_en.js](./test_tts_non_streaming_matcha_icefall_en.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)|
-|[./test_tts_non_streaming_matcha_icefall_zhjs](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)|
+|[./test_tts_non_streaming_matcha_icefall_zh.js](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)|
+|[./test_tts_non_streaming_supertonic_en.js](./test_tts_non_streaming_supertonic_en.js)| Text-to-speech with a Supertonic English Model|
+|[./test_tts_non_streaming_supertonic_en_async.js](./test_tts_non_streaming_supertonic_en_async.js)| Text-to-speech with a Supertonic English Model using async JS API|
+|[./test_tts_non_streaming_supertonic_en_play_async.js](./test_tts_non_streaming_supertonic_en_play_async.js)| Text-to-speech with a Supertonic English Model using async JS API and live audio playback|
 |[./test_tts_non_streaming_vits_piper_en.js](./test_tts_non_streaming_vits_piper_en.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model|
 |[./test_tts_non_streaming_vits_coqui_de.js](./test_tts_non_streaming_vits_coqui_de.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model|
 |[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba)|
@@ -316,6 +342,16 @@ rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
 node ./test_asr_non_streaming_fire_red_asr.js
 ```
 
+### Non-streaming speech recognition with FireRedAsr CTC
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test_asr_non_streaming_fire_red_asr_ctc.js
+node ./test_asr_non_streaming_fire_red_asr_ctc_async.js
+```
+
 ### Non-streaming speech recognition with Whisper
 
 ```bash
@@ -328,6 +364,16 @@ node ./test_asr_non_streaming_whisper.js
 # To run VAD + non-streaming ASR with Whisper using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_whisper_microphone.js
+```
+
+### Non-streaming speech recognition with Moonshine v2
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test_asr_non_streaming_moonshine_v2.js
 ```
 
 ### Non-streaming speech recognition with Moonshine
@@ -429,6 +475,66 @@ npm install naudiodon2
 node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
 ```
 
+### Asynchronous non-streaming speech recognition with FunASR Nano models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+node ./test_asr_non_streaming_funasr_nano_async.js
+```
+
+### Non-streaming speech recognition with FunASR Nano models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+node ./test_asr_non_streaming_funasr_nano.js
+```
+
+### Asynchronous non-streaming speech recognition with Cohere Transcribe models
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe_async.js
+```
+
+### Non-streaming speech recognition with Cohere Transcribe models
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe.js
+```
+
+### Asynchronous non-streaming speech recognition with Qwen3 ASR models
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test_asr_non_streaming_qwen3_asr_async.js
+```
+
+### Non-streaming speech recognition with Qwen3 ASR models
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test_asr_non_streaming_qwen3_asr.js
+```
+
 ### Non-streaming speech recognition with Google MedASR CTC models
 
 ```bash
@@ -503,6 +609,80 @@ npm install naudiodon2
 node ./test_vad_asr_non_streaming_sense_voice_microphone.js
 ```
 
+### Zero-shot text-to-speech with PocketTTS models (English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test_tts_non_streaming_pocket_en_async.js
+```
+
+### Zero-shot text-to-speech with PocketTTS models (English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+npm install speaker
+
+node ./test_tts_non_streaming_pocket_en_play_async.js
+```
+
+### Zero-shot text-to-speech with PocketTTS models (English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test_tts_non_streaming_pocket_en.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# Install the playback package once.
+npm install speaker
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en_play_async.js
+```
+
+### Zero-shot text-to-speech with ZipVoice models (Chinese/English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+# The reference text must match the reference audio transcript.
+node ./test_tts_non_streaming_zipvoice_zh_en.js
+```
+
 ### Text-to-speech with KittenTTS models (English TTS)
 
 ```bash
@@ -511,6 +691,38 @@ tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
 node ./test_tts_non_streaming_kitten_en.js
+```
+
+### Text-to-speech with Supertonic TTS models (English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+node ./test_tts_non_streaming_supertonic_en.js
+```
+
+### Text-to-speech with Supertonic TTS models (English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+node ./test_tts_non_streaming_supertonic_en_async.js
+```
+
+### Text-to-speech with Supertonic TTS models (English TTS, async API + playback)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+npm install speaker
+
+node ./test_tts_non_streaming_supertonic_en_play_async.js
 ```
 
 ### Text-to-speech with Kokoro TTS models (Chinese + English TTS)
@@ -633,7 +845,17 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/
 tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
-node ./test_punctuation.js
+node ./test_offline_punctuation.js
+```
+
+### Online punctuation
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+
+node ./test_online_punctuation.js
 ```
 
 ## Keyword spotting

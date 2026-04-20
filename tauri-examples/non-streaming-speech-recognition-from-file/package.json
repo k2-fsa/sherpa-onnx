@@ -1,0 +1,13 @@
+{
+  "name": "non-streaming-speech-recognition-from-file",
+  "private": true,
+  "version": "1.12.39",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

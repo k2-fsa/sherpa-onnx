@@ -1,0 +1,287 @@
+name: export-pocket-to-onnx
+
+on:
+  push:
+    branches:
+      - export-pocket-tts-2
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-pocket-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-pocket-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export PocketTTS ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        shell: bash
+        run: brew install ffmpeg
+
+      - name: Verify ffmpeg
+        shell: bash
+        run: ffmpeg -version
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" onnx==1.17.0 onnxruntime==1.17.1 librosa soundfile \
+            torch==2.8.0
+
+      - name: Run
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          git clone https://github.com/csukuangfj/pocket-tts-onnx-export
+          cd pocket-tts-onnx-export
+          pip install -r requirements.txt
+          pip install onnx==1.17.0 torch==2.8.0
+          pip list
+
+          git grep 'opset_version'
+          echo "---"
+          sed -i '' 's/opset_version=17/opset_version=14/g' scripts/*.py
+          echo "---"
+          git grep 'opset_version'
+
+          python export.py
+          python export.py --quantize
+
+          ls -lh onnx/
+
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/flow_lm_flow.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/flow_lm_main.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/mimi_encoder.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/mimi_decoder.onnx
+          python3 ../scripts/pyannote//segmentation/show-onnx.py --filename ./onnx/text_conditioner.onnx
+
+          cd onnx
+          mv flow_lm_flow_int8.onnx lm_flow.int8.onnx
+          mv flow_lm_flow.onnx lm_flow.onnx
+
+          mv flow_lm_main_int8.onnx lm_main.int8.onnx
+          mv flow_lm_main.onnx lm_main.onnx
+
+          mv mimi_encoder_int8.onnx encoder.int8.onnx
+          mv mimi_encoder.onnx encoder.onnx
+
+          mv mimi_decoder_int8.onnx decoder.int8.onnx
+          mv mimi_decoder.onnx decoder.onnx
+
+          mv text_conditioner_int8.onnx text_conditioner.int8.onnx
+          cd ..
+
+          mv onnx ..
+
+          # bash-3.2$ ls -lh onnx/
+          # total 1318368
+          # -rw-r--r--  1 runner  staff   9.5M Feb 10 09:29 flow_lm_flow_int8.onnx
+          # -rw-r--r--  1 runner  staff    37M Feb 10 09:29 flow_lm_flow.onnx
+          # -rw-r--r--  1 runner  staff    73M Feb 10 09:29 flow_lm_main_int8.onnx
+          # -rw-r--r--  1 runner  staff   289M Feb 10 09:29 flow_lm_main.onnx
+          # -rw-r--r--  1 runner  staff    22M Feb 10 09:29 mimi_decoder_int8.onnx
+          # -rw-r--r--  1 runner  staff    40M Feb 10 09:29 mimi_decoder.onnx
+          # -rw-r--r--  1 runner  staff    71M Feb 10 09:29 mimi_encoder_int8.onnx
+          # -rw-r--r--  1 runner  staff    71M Feb 10 09:29 mimi_encoder.onnx
+          # -rw-r--r--  1 runner  staff    16M Feb 10 09:29 text_conditioner_int8.onnx
+          # -rw-r--r--  1 runner  staff    16M Feb 10 09:29 text_conditioner.onnx
+
+      - name: Setup tmate session
+        # if: true
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Generate json files
+        if: true
+        shell: bash
+        run: |
+          cp -v onnx/*.onnx scripts/pocket-tts
+
+          pushd scripts/pocket-tts
+          curl -SsL -O https://huggingface.co/KevinAHM/pocket-tts-onnx/resolve/main/onnx/LICENSE
+          curl -SsL -O https://huggingface.co/KevinAHM/pocket-tts-onnx/resolve/main/tokenizer.model
+
+          wget https://github.com/kyutai-labs/delayed-streams-modeling/raw/refs/heads/main/audio/bria.mp3
+          wget https://github.com/kyutai-labs/delayed-streams-modeling/raw/refs/heads/main/audio/loona.mp3
+          wget https://github.com/kyutai-labs/delayed-streams-modeling/raw/refs/heads/main/audio/sample_fr_hibiki_crepes.mp3
+          for f in *.mp3; do
+            ffmpeg -y -i "$f" -ac 1 -ar 24000 "${f%.mp3}.wav"
+          done
+          rm -v *.mp3
+
+          ls -lh
+
+          ./convert_tokenizer.py
+
+          ls -lh
+          rm README.md
+          cat >README.md <<EOF
+          # Introduction
+          See also https://github.com/kyutai-labs/pocket-tts
+          Onnx files are exported using https://github.com/KevinAHM/pocket-tts-onnx-export
+          Files in test_wav are from https://github.com/kyutai-labs/delayed-streams-modeling/tree/main/audio
+          Before you use it, please read its [LICENSE](https://huggingface.co/KevinAHM/pocket-tts-onnx/blob/main/onnx/LICENSE)
+          It is for non-commercial.
+          EOF
+
+      - name: Collect results
+        if: true
+        shell: bash
+        run: |
+          d=sherpa-onnx-pocket-tts-2026-01-26
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          src=scripts/pocket-tts
+          cp -v $src/*.onnx $d
+          rm $d/*int8.onnx
+          cp -v $src/README.md $d
+          cp -v $src/LICENSE $d
+          cp -v $src/*.json $d
+          cp -v $src/*.wav $d/test_wavs
+          ls -lh $d/
+          tar cjfv $d.tar.bz2 $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect results (int8)
+        if: true
+        shell: bash
+        run: |
+          d=sherpa-onnx-pocket-tts-int8-2026-01-26
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          src=scripts/pocket-tts
+          cp -v $src/*.onnx $d
+          rm $d/lm_flow.onnx
+          rm $d/lm_main.onnx
+          rm $d/decoder.onnx
+          rm $d/encoder.int8.onnx
+          rm $d/text_conditioner.int8.onnx
+          cp -v $src/README.md $d
+          cp -v $src/LICENSE $d
+          cp -v $src/*.json $d
+          cp -v $src/*.wav $d/test_wavs
+          ls -lh $d/
+          tar cjfv $d.tar.bz2 $d
+          ls -lh $d.tar.bz2
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: tts-models
+
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            dirs=(
+              sherpa-onnx-pocket-tts-2026-01-26
+              sherpa-onnx-pocket-tts-int8-2026-01-26
+            )
+
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            for d in ${dirs[@]}; do
+              echo "d $d"
+              if [[ ! -d $d ]]; then
+                echo "$d does not exist"
+                continue
+              fi
+
+              echo "$d exists"
+              rm -rf huggingface
+
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
+              cd huggingface
+              rm -rf ./*
+
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+
+              cp -a ../$d/* ./
+
+              git add .
+
+              ls -lh
+
+              git status
+
+              git commit -m "add models"
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main || true
+              cd ..
+            done
+
+      - name: Publish to modelscope
+        if: true
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            for m in *.tar.bz2; do
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              rm -rf ms
+              git clone https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/tts-models.git ms
+
+              cp -av $m ms/
+
+              pushd ms
+              git lfs track "*.tar.bz2"
+              git status
+              ls -lh
+              git add .
+
+              git commit -m "add models"
+              git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/csukuangfj/tts-models.git
+
+              popd
+            done

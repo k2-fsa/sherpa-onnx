@@ -9,6 +9,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 int main(int32_t argc, char *argv[]) {
@@ -40,7 +41,7 @@ The output text should look like below:
             "Error: Please provide only 1 positional argument containing the "
             "input text.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -70,5 +71,6 @@ The output text should look like below:
   fprintf(stderr, "Num threads: %d\n", config.model.num_threads);
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   fprintf(stderr, "Input text: %s\n", text.c_str());
-  fprintf(stderr, "Output text: %s\n", text_with_punct_case.c_str());
+  fprintf(stderr, "Output text: ");
+  fprintf(stdout, "%s\n", text_with_punct_case.c_str());
 }

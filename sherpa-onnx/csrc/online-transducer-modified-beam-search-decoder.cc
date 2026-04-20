@@ -4,6 +4,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <utility>
@@ -86,7 +87,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         "Size mismatch! encoder_out.size(0) %d, result.size(0): %d\n",
         static_cast<int32_t>(encoder_out_shape[0]),
         static_cast<int32_t>(result->size()));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   int32_t batch_size = static_cast<int32_t>(encoder_out_shape[0]);

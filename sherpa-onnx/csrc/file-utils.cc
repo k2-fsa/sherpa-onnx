@@ -10,6 +10,13 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <limits.h>
+#include <stdlib.h>
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -21,7 +28,7 @@ bool FileExists(const std::string &filename) {
 void AssertFileExists(const std::string &filename) {
   if (!FileExists(filename)) {
     SHERPA_ONNX_LOGE("filename '%s' does not exist", filename.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 
@@ -62,7 +69,7 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
   if (!asset) {
     __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",
                         "Read binary file: Load '%s' failed", filename.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset));
@@ -106,5 +113,39 @@ std::vector<char> ReadFile(NativeResourceManager *mgr,
   return buffer;
 }
 #endif
+
+std::string ResolveAbsolutePath(const std::string &path) {
+  if (path.empty()) {
+    return path;
+  }
+
+#ifdef _WIN32
+  // Check if path is already absolute (drive letter or UNC path)
+  if ((path.size() > 1 && path[1] == ':') ||
+      (path.size() > 1 && path[0] == '\\' && path[1] == '\\')) {
+    return path;
+  }
+
+  char buffer[MAX_PATH];
+  if (GetFullPathNameA(path.c_str(), MAX_PATH, buffer, nullptr)) {
+    return std::string(buffer);
+  }
+
+  return path;  // fallback on failure
+
+#else
+  // POSIX: absolute paths start with '/'
+  if (path[0] == '/') {
+    return path;
+  }
+
+  char buffer[PATH_MAX];
+  if (realpath(path.c_str(), buffer)) {
+    return std::string(buffer);
+  }
+
+  return path;  // fallback on failure
+#endif
+}
 
 }  // namespace sherpa_onnx

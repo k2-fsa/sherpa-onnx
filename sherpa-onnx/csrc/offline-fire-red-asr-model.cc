@@ -30,22 +30,35 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
+static inline bool IsCudaProvider(const std::string &provider) {
+  return provider == "cuda";
+}
+
+}  // namespace
+
 class OfflineFireRedAsrModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
-        allocator_{} {
-    {
-      auto buf = ReadFile(config.fire_red_asr.encoder);
-      InitEncoder(buf.data(), buf.size());
-    }
+        allocator_{},
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
+        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
+    encoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.fire_red_asr.encoder),
+        sess_opts_);
+    InitEncoder(nullptr, 0);
 
-    {
-      auto buf = ReadFile(config.fire_red_asr.decoder);
-      InitDecoder(buf.data(), buf.size());
-    }
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.fire_red_asr.decoder),
+        sess_opts_);
+    InitDecoder(nullptr, 0);
+
+    InitCudaIOBinding();
   }
 
   template <typename Manager>
@@ -53,7 +66,10 @@ class OfflineFireRedAsrModel::Impl {
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
-        allocator_{} {
+        allocator_{},
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
+        is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(mgr, config.fire_red_asr.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -63,6 +79,8 @@ class OfflineFireRedAsrModel::Impl {
       auto buf = ReadFile(mgr, config.fire_red_asr.decoder);
       InitDecoder(buf.data(), buf.size());
     }
+
+    InitCudaIOBinding();
   }
 
   std::pair<Ort::Value, Ort::Value> ForwardEncoder(Ort::Value features,
@@ -70,9 +88,27 @@ class OfflineFireRedAsrModel::Impl {
     std::array<Ort::Value, 2> inputs{std::move(features),
                                      std::move(features_length)};
 
-    auto encoder_out = encoder_sess_->Run(
-        {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
-        encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
+    std::vector<Ort::Value> encoder_out;
+
+    if (use_cuda_iobinding_) {
+      // Encoder outputs (cross_k, cross_v) are used multiple times in decoder
+      // steps, so keep them on GPU to avoid device<->host copies.
+      Ort::IoBinding binding(*encoder_sess_);
+      binding.BindInput(encoder_input_names_ptr_[0], inputs[0]);
+      binding.BindInput(encoder_input_names_ptr_[1], inputs[1]);
+
+      binding.BindOutput(encoder_output_names_ptr_[0], *cuda_mem_info_);
+      binding.BindOutput(encoder_output_names_ptr_[1], *cuda_mem_info_);
+
+      binding.SynchronizeInputs();
+      encoder_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      encoder_out = binding.GetOutputValues();
+    } else {
+      encoder_out = encoder_sess_->Run(
+          {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
+          encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
+    }
 
     return {std::move(encoder_out[0]), std::move(encoder_out[1])};
   }
@@ -89,10 +125,30 @@ class OfflineFireRedAsrModel::Impl {
                                                std::move(n_layer_cross_v),
                                                std::move(offset)};
 
-    auto decoder_out = decoder_sess_->Run(
-        {}, decoder_input_names_ptr_.data(), decoder_input.data(),
-        decoder_input.size(), decoder_output_names_ptr_.data(),
-        decoder_output_names_ptr_.size());
+    std::vector<Ort::Value> decoder_out;
+
+    if (use_cuda_iobinding_) {
+      // CPU-side sampling needs logits on CPU, while self KV cache should
+      // remain on GPU to avoid large device<->host copies between decode steps.
+      Ort::IoBinding binding(*decoder_sess_);
+      for (size_t i = 0; i < decoder_input.size(); ++i) {
+        binding.BindInput(decoder_input_names_ptr_[i], decoder_input[i]);
+      }
+
+      binding.BindOutput(decoder_output_names_ptr_[0], cpu_mem_info_);
+      binding.BindOutput(decoder_output_names_ptr_[1], *cuda_mem_info_);
+      binding.BindOutput(decoder_output_names_ptr_[2], *cuda_mem_info_);
+
+      binding.SynchronizeInputs();
+      decoder_sess_->Run(Ort::RunOptions{nullptr}, binding);
+      binding.SynchronizeOutputs();
+      decoder_out = binding.GetOutputValues();
+    } else {
+      decoder_out = decoder_sess_->Run(
+          {}, decoder_input_names_ptr_.data(), decoder_input.data(),
+          decoder_input.size(), decoder_output_names_ptr_.data(),
+          decoder_output_names_ptr_.size());
+    }
 
     return std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value,
                       Ort::Value, Ort::Value>{
@@ -132,8 +188,15 @@ class OfflineFireRedAsrModel::Impl {
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
-    encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      encoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!encoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the encoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                   &encoder_input_names_ptr_);
@@ -169,8 +232,15 @@ class OfflineFireRedAsrModel::Impl {
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
-    decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      decoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!decoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the decoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(decoder_sess_.get(), &decoder_input_names_,
                   &decoder_input_names_ptr_);
@@ -179,11 +249,27 @@ class OfflineFireRedAsrModel::Impl {
                    &decoder_output_names_ptr_);
   }
 
+  void InitCudaIOBinding() {
+    use_cuda_iobinding_ =
+        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    if (use_cuda_iobinding_) {
+      // Use device 0 by default. SessionOptions() in sherpa-onnx usually
+      // configures the CUDA EP device; binding here only affects output memory.
+      cuda_mem_info_ = std::make_unique<Ort::MemoryInfo>(
+          "Cuda", OrtDeviceAllocator, 0, OrtMemTypeDefault);
+    }
+  }
+
  private:
   OfflineModelConfig config_;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
+
+  Ort::MemoryInfo cpu_mem_info_;
+  std::unique_ptr<Ort::MemoryInfo> cuda_mem_info_;
+  bool use_cuda_iobinding_ = false;
+  bool is_cpu_provider_ = false;
 
   std::unique_ptr<Ort::Session> encoder_sess_;
   std::unique_ptr<Ort::Session> decoder_sess_;

@@ -30,6 +30,7 @@ function(download_portaudio)
   set(PA_BUILD_SHARED OFF CACHE BOOL "" FORCE)
   set(PA_BUILD_STATIC ON CACHE BOOL "" FORCE)
   set(PA_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
+  set(PA_USE_WDMKS OFF CACHE BOOL "" FORCE)
 
   FetchContent_Declare(portaudio
     URL

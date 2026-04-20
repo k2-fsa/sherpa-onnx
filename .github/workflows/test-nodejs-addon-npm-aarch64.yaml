@@ -6,12 +6,13 @@ on:
       - master
     paths:
       - '.github/workflows/test-nodejs-addon-npm-aarch64.yaml'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
       - 'scripts/node-addon-api/*.js'
-      - 'nodejs-addon-examples/package.json'
+      - 'nodejs-addon-examples/**'
 
   workflow_dispatch:
 
@@ -48,14 +49,13 @@ jobs:
           platforms: arm64
 
       - name: Test sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --platform linux/arm64
-              --volume ${{ github.workspace }}/:/shared/
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --platform linux/arm64 \
+              --volume ${{ github.workspace }}/:/shared/ \
+              quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               git config --global --add safe.directory /shared
 
               echo $HOME
@@ -86,3 +86,4 @@ jobs:
               cd ../
 
               .github/scripts/test-nodejs-addon-npm.sh
+            '

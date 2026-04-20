@@ -9,8 +9,6 @@
 #include <string>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
@@ -30,7 +28,7 @@ AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
 AudioTaggingLabels::AudioTaggingLabels(AAssetManager *mgr,
                                        const std::string &filename) {
   auto buf = ReadFile(mgr, filename);
-  std::istrstream is(buf.data(), buf.size());
+  std::istringstream is(std::string(buf.data(), buf.size()));
   Init(is);
 }
 #endif
@@ -62,7 +60,7 @@ void AudioTaggingLabels::Init(std::istream &is) {
     int32_t i = std::stoi(index, &pos);
     if (index.empty() || pos != index.size()) {
       SHERPA_ONNX_LOGE("Invalid line: %s", line.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (i != static_cast<int32_t>(names_.size())) {
@@ -73,7 +71,7 @@ void AudioTaggingLabels::Init(std::istream &is) {
     }
     if (name.empty() || name.front() != '"' || name.back() != '"') {
       SHERPA_ONNX_LOGE("Invalid line: %s", line.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     names_.emplace_back(name.begin() + 1, name.end() - 1);

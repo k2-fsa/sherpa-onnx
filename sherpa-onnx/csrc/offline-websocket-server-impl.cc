@@ -30,19 +30,19 @@ void OfflineWebsocketDecoderConfig::Register(ParseOptions *po) {
 
 void OfflineWebsocketDecoderConfig::Validate() const {
   if (!recognizer_config.Validate()) {
-    SHERPA_ONNX_LOGE("Error in recongizer config");
-    exit(-1);
+    SHERPA_ONNX_LOGE("Error in recognizer config");
+    SHERPA_ONNX_EXIT(-1);
   }
 
   if (max_batch_size <= 0) {
     SHERPA_ONNX_LOGE("Expect --max-batch-size > 0. Given: %d", max_batch_size);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   if (max_utterance_length <= 0) {
     SHERPA_ONNX_LOGE("Expect --max-utterance-length > 0. Given: %f",
                      max_utterance_length);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 }
 

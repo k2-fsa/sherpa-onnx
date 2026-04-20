@@ -93,6 +93,9 @@ class OfflineDecodeFiles
     [Option("medasr", Required = false, HelpText = "Path to model.onnx. Used only for Google MedASR CTC models")]
     public string MedAsr { get; set; } = string.Empty;
 
+    [Option("fire-red-asr-ctc", Required = false, HelpText = "Path to model.onnx. Used only for FireRedASR CTC models")]
+    public string FireRedAsrCtc { get; set; } = string.Empty;
+
     [Option("sense-voice-model", Required = false, HelpText = "Path to model.onnx. Used only for SenseVoice CTC models")]
     public string SenseVoiceModel { get; set; } = string.Empty;
 
@@ -299,6 +302,10 @@ to download pre-trained Tdnn models.
     {
       config.ModelConfig.FireRedAsr.Encoder = options.FireRedAsrEncoder;
       config.ModelConfig.FireRedAsr.Decoder = options.FireRedAsrDecoder;
+    }
+    else if (!string.IsNullOrEmpty(options.FireRedAsrCtc))
+    {
+      config.ModelConfig.FireRedAsrCtc.Model = options.FireRedAsrCtc;
     }
     else
     {

@@ -99,6 +99,8 @@ class OnlineTransducerNeMoModel {
 
   int32_t VocabSize() const;
 
+  int32_t FeatureDim() const;
+
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;

@@ -248,9 +248,15 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
     return 0;
   }
 
-  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
-  for (const auto &s : str_vec) {
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  if (config.model_config.debug) {
+#if __ANDROID_API__
+    auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+    for (const auto &s : str_vec) {
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   auto recognizer = new sherpa_onnx::OnlineRecognizer(
@@ -273,9 +279,15 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
     return 0;
   }
 
-  auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
-  for (const auto &s : str_vec) {
-    SHERPA_ONNX_LOGE("%s", s.c_str());
+  if (config.model_config.debug) {
+#if __ANDROID_API__
+    auto str_vec = sherpa_onnx::SplitString(config.ToString(), 128);
+    for (const auto &s : str_vec) {
+      SHERPA_ONNX_LOGE("%s", s.c_str());
+    }
+#else
+    SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+#endif
   }
 
   if (!config.Validate()) {
@@ -303,7 +315,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_reset(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
@@ -312,8 +324,11 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
-    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
+JNIEXPORT jboolean JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(JNIEnv * /*env*/,
+                                                       jobject /*obj*/,
+                                                       jlong ptr,
+                                                       jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
 
@@ -373,48 +388,57 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_createStream(JNIEnv *env,
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
-Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(JNIEnv *env,
-                                                      jobject /*obj*/,
-                                                      jlong ptr,
-                                                      jlong stream_ptr) {
+JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
 
   sherpa_onnx::OnlineRecognizerResult result = recognizer->GetResult(stream);
 
-  // [0]: text, jstring
-  // [1]: tokens, array of jstring
-  // [2]: timestamps, array of float
-  // [3]: ys_probs, array of float
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      4, env->FindClass("java/lang/Object"), nullptr);
-
-  jstring text = env->NewStringUTF(result.text.c_str());
-  env->SetObjectArrayElement(obj_arr, 0, text);
-
-  jobjectArray tokens_arr = (jobjectArray)env->NewObjectArray(
-      result.tokens.size(), env->FindClass("java/lang/String"), nullptr);
-
-  int32_t i = 0;
-  for (const auto &t : result.tokens) {
-    jstring jtext = env->NewStringUTF(t.c_str());
-    env->SetObjectArrayElement(tokens_arr, i, jtext);
-    i += 1;
+  // Find the OnlineRecognizerResult class
+  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/OnlineRecognizerResult");
+  if (cls == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to find class OnlineRecognizerResult");
+    return nullptr;
   }
 
-  env->SetObjectArrayElement(obj_arr, 1, tokens_arr);
+  // Find the constructor: (String, String[], float[], float[])V
+  jmethodID ctor = env->GetMethodID(
+      cls, "<init>", "(Ljava/lang/String;[Ljava/lang/String;[F[F)V");
 
-  jfloatArray timestamps_arr = env->NewFloatArray(result.timestamps.size());
-  env->SetFloatArrayRegion(timestamps_arr, 0, result.timestamps.size(),
+  // text
+  jstring text = SafeNewStringUTF(env, result.text);
+
+  // tokens
+  jclass string_cls = env->FindClass("java/lang/String");
+  jobjectArray tokens =
+      env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
+  env->DeleteLocalRef(string_cls);
+  for (size_t i = 0; i < result.tokens.size(); ++i) {
+    jstring token_str = SafeNewStringUTF(env, result.tokens[i]);
+    env->SetObjectArrayElement(tokens, i, token_str);
+    env->DeleteLocalRef(token_str);
+  }
+
+  // timestamps
+  jfloatArray timestamps = env->NewFloatArray(result.timestamps.size());
+  env->SetFloatArrayRegion(timestamps, 0, result.timestamps.size(),
                            result.timestamps.data());
 
-  env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
-
-  jfloatArray ys_probs_arr = env->NewFloatArray(result.ys_probs.size());
-  env->SetFloatArrayRegion(ys_probs_arr, 0, result.ys_probs.size(),
+  // ys_probs
+  jfloatArray ys_probs = env->NewFloatArray(result.ys_probs.size());
+  env->SetFloatArrayRegion(ys_probs, 0, result.ys_probs.size(),
                            result.ys_probs.data());
-  env->SetObjectArrayElement(obj_arr, 3, ys_probs_arr);
 
-  return obj_arr;
+  // Construct and return OnlineRecognizerResult
+  jobject obj = env->NewObject(cls, ctor, text, tokens, timestamps, ys_probs);
+
+  // Delete local references
+  env->DeleteLocalRef(text);
+  env->DeleteLocalRef(tokens);
+  env->DeleteLocalRef(timestamps);
+  env->DeleteLocalRef(ys_probs);
+  env->DeleteLocalRef(cls);
+
+  return obj;
 }

@@ -49,25 +49,12 @@ jobs:
         run: |
           python3 -m pip install wheel twine==5.0.0 setuptools
 
-      - name: Install sccache
-        run: choco install sccache -y
-
-      - name: Cache sccache
-        uses: actions/cache@v3
-        with:
-          path: C:\Users\runneradmin\AppData\Local\Mozilla\sccache
-          key: ${{ matrix.os }}-sccache-core-win32
-          restore-keys: |
-            ${{ matrix.os }}-sccache-core-win32
-
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
           cd build
           cmake \
-            -D CMAKE_C_COMPILER_LAUNCHER=sccache \
-            -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
             -A Win32 \
             -D CMAKE_BUILD_TYPE=Release \
             -D BUILD_SHARED_LIBS=ON \
@@ -84,8 +71,6 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
-      - name: Show sccache stats
-        run: sccache --show-stats
 
       - name: Show
         shell: bash
@@ -229,7 +214,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -242,7 +227,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
         if: ${{ (github.event.inputs.publish_sherpa_onnx_bin || 'true') == 'true' }}
@@ -320,7 +305,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -333,7 +318,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI
         env:

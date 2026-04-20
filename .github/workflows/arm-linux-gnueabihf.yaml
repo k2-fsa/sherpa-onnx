@@ -51,19 +51,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: toolchain
-          key: gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf
+          key: gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          git lfs install
-          export GIT_CLONE_PROTECTION_ACTIVE=false
-          git clone https://huggingface.co/csukuangfj/arm-linux-gcc
-          ls -lh arm-linux-gcc
-
+          curl -SL -O https://huggingface.co/csukuangfj/arm-linux-gcc/resolve/main/gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf.tar.xz
           mkdir $GITHUB_WORKSPACE/toolchain
-          tar xvf ./arm-linux-gcc/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xvf ./gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          rm -v gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf.tar.xz
 
       - name: Display toolchain info
         shell: bash
@@ -95,6 +92,8 @@ jobs:
           ls -lh build-arm-linux-gnueabihf/lib
 
           file build-arm-linux-gnueabihf/bin/sherpa-onnx
+
+          strings build-arm-linux-gnueabihf/bin/sherpa-onnx | grep ^GLIBC
 
       - name: Copy files
         shell: bash
@@ -152,7 +151,7 @@ jobs:
             git config --global user.name "Fangjun Kuang"
 
             rm -rf huggingface
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=arm32/$SHERPA_ONNX_VERSION
@@ -167,7 +166,7 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf ${{ matrix.lib_type }}
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

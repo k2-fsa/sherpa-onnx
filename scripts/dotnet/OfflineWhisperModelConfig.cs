@@ -14,6 +14,8 @@ namespace SherpaOnnx
             Language = "";
             Task = "transcribe";
             TailPaddings = -1;
+            EnableTokenTimestamps = 0;
+            EnableSegmentTimestamps = 0;
         }
         [MarshalAs(UnmanagedType.LPStr)]
         public string Encoder;
@@ -28,6 +30,8 @@ namespace SherpaOnnx
         public string Task;
 
         public int TailPaddings;
+        public int EnableTokenTimestamps;
+        public int EnableSegmentTimestamps;
     }
 
 }

@@ -8,7 +8,6 @@
 #include <regex>  // NOLINT
 #include <sstream>
 #include <string>
-#include <strstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -53,14 +52,14 @@ class MeloTtsLexicon::Impl {
     {
       auto buf = ReadFile(mgr, tokens);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitTokens(is);
     }
 
     {
       auto buf = ReadFile(mgr, lexicon);
 
-      std::istrstream is(buf.data(), buf.size());
+      std::istringstream is(std::string(buf.data(), buf.size()));
       InitLexicon(is);
     }
   }
@@ -228,6 +227,12 @@ class MeloTtsLexicon::Impl {
     if (!token2id_.count("、") && token2id_.count("，")) {
       token2id_["、"] = token2id_["，"];
     }
+
+    // Map 'v' to 'V' token (same as post_replace_ph in MeloTTS)
+    // Only for English models
+    if (meta_data_.language == "en" && token2id_.count("V")) {
+      token2id_["v"] = token2id_["V"];
+    }
   }
 
   void InitLexicon(std::istream &is) {
@@ -265,7 +270,7 @@ class MeloTtsLexicon::Impl {
 
       if ((token_list.size() & 1) != 0) {
         SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       int32_t num_phones = token_list.size() / 2;
@@ -277,7 +282,7 @@ class MeloTtsLexicon::Impl {
         tone_list.push_back(std::stoi(token_list[i + num_phones], nullptr));
         if (tone_list.back() < 0 || tone_list.back() > 50) {
           SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
-          exit(-1);
+          SHERPA_ONNX_EXIT(-1);
         }
       }
 
@@ -288,7 +293,7 @@ class MeloTtsLexicon::Impl {
 
       if (ids.size() != num_phones) {
         SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       std::vector<int64_t> ids64{ids.begin(), ids.end()};

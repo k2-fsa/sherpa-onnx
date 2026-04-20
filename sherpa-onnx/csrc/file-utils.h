@@ -44,6 +44,8 @@ std::vector<char> ReadFile(NativeResourceManager *mgr,
                            const std::string &filename);
 #endif
 
+std::string ResolveAbsolutePath(const std::string &path);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_FILE_UTILS_H_

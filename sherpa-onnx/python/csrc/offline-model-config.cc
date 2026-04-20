@@ -9,10 +9,13 @@
 
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-canary-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-cohere-transcribe-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-dolphin-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-fire-red-asr-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-funasr-nano-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-medasr-ctc-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-qwen3-asr-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-omnilingual-asr-ctc-model-config.h"
@@ -39,9 +42,12 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineMoonshineModelConfig(m);
   PybindOfflineDolphinModelConfig(m);
   PybindOfflineCanaryModelConfig(m);
+  PybindOfflineCohereTranscribeModelConfig(m);
   PybindOfflineOmnilingualAsrCtcModelConfig(m);
   PybindOfflineFunASRNanoModelConfig(m);
   PybindOfflineMedAsrCtcModelConfig(m);
+  PybindOfflineFireRedAsrCtcModelConfig(m);
+  PybindOfflineQwen3ASRModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
@@ -57,12 +63,15 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineMoonshineModelConfig &,
                     const OfflineDolphinModelConfig &,
                     const OfflineCanaryModelConfig &,
+                    const OfflineCohereTranscribeModelConfig &,
                     const OfflineOmnilingualAsrCtcModelConfig &,
                     const OfflineFunASRNanoModelConfig &,
-                    const OfflineMedAsrCtcModelConfig &, const std::string &,
-                    const std::string &, int32_t, bool, const std::string &,
-                    const std::string &, const std::string &,
-                    const std::string &>(),
+                    const OfflineMedAsrCtcModelConfig &,
+                    const OfflineFireRedAsrCtcModelConfig &,
+                    const OfflineQwen3ASRModelConfig &, 
+                    const std::string &,const std::string &, int32_t, bool,
+                    const std::string &,const std::string &, 
+                    const std::string &,const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -75,9 +84,13 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("moonshine") = OfflineMoonshineModelConfig(),
            py::arg("dolphin") = OfflineDolphinModelConfig(),
            py::arg("canary") = OfflineCanaryModelConfig(),
+           py::arg("cohere_transcribe") =
+               OfflineCohereTranscribeModelConfig(),
            py::arg("omnilingual") = OfflineOmnilingualAsrCtcModelConfig(),
            py::arg("funasr_nano") = OfflineFunASRNanoModelConfig(),
            py::arg("medasr") = OfflineMedAsrCtcModelConfig(),
+           py::arg("fire_red_asr_ctc") = OfflineFireRedAsrCtcModelConfig(),
+           py::arg("qwen3_asr") = OfflineQwen3ASRModelConfig(),
            py::arg("telespeech_ctc") = "", py::arg("tokens") = "",
            py::arg("num_threads") = 1, py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "",
@@ -94,9 +107,12 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("moonshine", &PyClass::moonshine)
       .def_readwrite("dolphin", &PyClass::dolphin)
       .def_readwrite("canary", &PyClass::canary)
+      .def_readwrite("cohere_transcribe", &PyClass::cohere_transcribe)
       .def_readwrite("omnilingual", &PyClass::omnilingual)
       .def_readwrite("funasr_nano", &PyClass::funasr_nano)
       .def_readwrite("medasr", &PyClass::medasr)
+      .def_readwrite("fire_red_asr_ctc", &PyClass::fire_red_asr_ctc)
+      .def_readwrite("qwen3_asr", &PyClass::qwen3_asr)
       .def_readwrite("telespeech_ctc", &PyClass::telespeech_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)

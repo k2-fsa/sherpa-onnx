@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - swift
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:

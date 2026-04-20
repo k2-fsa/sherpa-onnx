@@ -113,7 +113,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
           "Unsupported decoding method: %s. Support only greedy_search at "
           "present",
           config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Paraformer models assume input samples are in the range
@@ -127,12 +127,16 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         model_(mgr, config.model_config),
-        sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      sym_ = SymbolTable(mgr, config.model_config.tokens);
+    }
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     // Paraformer models assume input samples are in the range
@@ -156,7 +160,16 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   }
 
   bool IsReady(OnlineStream *s) const override {
-    return s->GetNumProcessedFrames() + chunk_size_ < s->NumFramesReady();
+    if (s->GetNumProcessedFrames() + chunk_size_ < s->NumFramesReady()) {
+      return true;
+    }
+    // is_final: accept short chunks (less than chunk_size_ frames)
+    // Users should call SetOption("is_final", "1") before the last decode.
+    if (s->GetOptionInt("is_final", 0) &&
+        s->GetNumProcessedFrames() < s->NumFramesReady()) {
+      return true;
+    }
+    return false;
   }
 
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
@@ -195,8 +208,14 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   }
 
   void Reset(OnlineStream *s) const override {
-    OnlineParaformerDecoderResult r;
-    s->SetParaformerResult(r);
+    // segment is incremented only when the last result is not empty
+    const auto &r = s->GetParaformerResult();
+    if (!r.tokens.empty()) {
+      s->GetCurrentSegment() += 1;
+    }
+
+    OnlineParaformerDecoderResult empty;
+    s->SetParaformerResult(empty);
 
     s->GetStates().clear();
     s->GetParaformerEncoderOutCache().clear();
@@ -212,8 +231,26 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
  private:
   void DecodeStream(OnlineStream *s) const {
     const auto num_processed_frames = s->GetNumProcessedFrames();
-    std::vector<float> frames = s->GetFrames(num_processed_frames, chunk_size_);
-    s->GetNumProcessedFrames() += chunk_size_ - 1;
+    int32_t available_frames = s->NumFramesReady() - num_processed_frames;
+    bool is_final = s->GetOptionInt("is_final", 0);
+
+    // For the final short chunk (fewer frames than chunk_size_):
+    // read the remaining frames and pad with zeros to chunk_size_.
+    bool is_short_final = is_final && available_frames < chunk_size_;
+
+    std::vector<float> frames =
+        s->GetFrames(num_processed_frames,
+                     is_short_final ? available_frames : chunk_size_);
+
+    if (is_short_final) {
+      int32_t feat_dim_raw = config_.feat_config.feature_dim;
+      frames.resize(chunk_size_ * feat_dim_raw, 0.0f);
+      // Consume all remaining frames (no overlap needed).
+      s->GetNumProcessedFrames() += available_frames;
+    } else {
+      // Normal: advance by chunk_size_ - 1 to keep 1-frame overlap.
+      s->GetNumProcessedFrames() += chunk_size_ - 1;
+    }
 
     frames = ApplyLFR(frames);
     ApplyCMVN(&frames);

@@ -63,8 +63,10 @@ Module.setStatus = function(status) {
     const total = BigInt(downloadMatch[2]);
     const percent =
         total === 0 ? 0.00 : Number((downloaded * 10000n) / total) / 100;
-    status = `Downloading data... ${percent.toFixed(2)}% (${downloadMatch[1]}/${
-        downloadMatch[2]})`;
+    const downloadedMB = Number(downloaded) / (1024 * 1024);
+    const totalMB = Number(total) / (1024 * 1024);
+    status = `Downloading data... ${percent.toFixed(2)}% (${downloadedMB.toFixed(2)} MB/${
+        totalMB.toFixed(2)} MB)`;
     console.log(`here ${status}`)
   }
 
@@ -310,7 +312,7 @@ if (navigator.mediaDevices.getUserMedia) {
   };
 
   let onError = function(err) {
-    console.log('The following error occured: ' + err);
+    console.log('The following error occurred: ' + err);
   };
 
   navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);

@@ -15,10 +15,7 @@ func main() {
 	sid := 0
 	filename := "./generated.wav"
 
-	var zipvoiceNumSteps int
 	var speed float32
-	var promptText string
-	var promptAudio string
 
 	flag.StringVar(&config.Model.Vits.Model, "vits-model", "", "Path to the vits ONNX model")
 	flag.StringVar(&config.Model.Vits.Lexicon, "vits-lexicon", "", "Path to lexicon.txt")
@@ -49,22 +46,7 @@ func main() {
 	flag.StringVar(&config.Model.Kitten.DataDir, "kitten-data-dir", "", "Path to espeak-ng-data for kitten")
 	flag.Float32Var(&config.Model.Kitten.LengthScale, "kitten-length-scale", 1.0, "length_scale for kitten. small -> faster; large -> slower")
 
-	flag.StringVar(&config.Model.Zipvoice.Tokens, "zipvoice-tokens", "", "Path to tokens.txt for ZipVoice")
-	flag.StringVar(&config.Model.Zipvoice.Encoder, "zipvoice-encoder", "", "Path to ZipVoice text encoder model")
-	flag.StringVar(&config.Model.Zipvoice.Decoder, "zipvoice-decoder", "", "Path to ZipVoice flow-matching decoder")
-	flag.StringVar(&config.Model.Zipvoice.DataDir, "zipvoice-data-dir", "", "Path to espeak-ng-data")
-	flag.StringVar(&config.Model.Zipvoice.Lexicon, "zipvoice-lexicon", "", "Path to lexicon.txt (for zh)")
-	flag.StringVar(&config.Model.Zipvoice.Vocoder, "zipvoice-vocoder", "", "Path to vocoder (e.g., vocos_24khz.onnx)")
-
-	flag.Float32Var(&config.Model.Zipvoice.FeatScale, "zipvoice-feat-scale", 0.1, "Feature scale for ZipVoice")
-	flag.Float32Var(&config.Model.Zipvoice.TShift, "zipvoice-t-shift", 0.5, "t-shift for ZipVoice (smaller -> earlier t)")
-	flag.Float32Var(&config.Model.Zipvoice.TargetRms, "zipvoice-target-rms", 0.1, "Target RMS for speech normalization (ZipVoice)")
-	flag.Float32Var(&config.Model.Zipvoice.GuidanceScale, "zipvoice-guidance-scale", 1.0, "Classifier-free guidance scale (ZipVoice)")
-
-	flag.IntVar(&zipvoiceNumSteps, "zipvoice-num-steps", 4, "Number of steps for ZipVoice inference")
 	flag.Float32Var(&speed, "speed", 1.0, "Speech speed. larger->faster; smaller->slower")
-	flag.StringVar(&promptText, "prompt-text", "", "Transcription of the prompt audio (ZipVoice)")
-	flag.StringVar(&promptAudio, "prompt-audio", "", "Path to prompt audio wav (ZipVoice)")
 
 	flag.IntVar(&config.Model.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.Model.Debug, "debug", 0, "Whether to show debug message")
@@ -73,8 +55,8 @@ func main() {
 	flag.StringVar(&config.RuleFars, "tts-rule-fars", "", "Path to rule.far")
 	flag.IntVar(&config.MaxNumSentences, "tts-max-num-sentences", 1, "Batch size (split long text to avoid OOM)")
 
-	flag.IntVar(&sid, "sid", 0, "Speaker ID (multi-speaker models only)")
-	flag.StringVar(&filename, "output-filename", "./generated.wav", "Output wav filename")
+	flag.IntVar(&sid, "sid", sid, "Speaker ID (multi-speaker models only)")
+	flag.StringVar(&filename, "output-filename", filename, "Output wav filename")
 
 	flag.Parse()
 
@@ -93,25 +75,12 @@ func main() {
 	log.Println("Model created!")
 
 	log.Println("Start generating!")
-	var audio *sherpa.GeneratedAudio
-
-	if promptAudio != "" {
-		if promptText == "" {
-			log.Fatal("For ZipVoice zero-shot TTS, --prompt-text is required when --prompt-audio is provided")
-		}
-		wave := sherpa.ReadWave(promptAudio)
-		audio = tts.GenerateWithZipvoice(
-			text,
-			promptText,
-			wave.Samples,
-			wave.SampleRate,
-			speed,
-			zipvoiceNumSteps,
-		)
-
-	} else {
-		audio = tts.Generate(text, sid, float32(math.Max(float64(speed), 1e-6)))
+	cfg := sherpa.GenerationConfig{
+		SilenceScale: 0.2,
+		Speed:        float32(math.Max(float64(speed), 1e-6)),
+		Sid:          sid,
 	}
+	audio := tts.GenerateWithConfig(text, &cfg, nil)
 
 	log.Println("Done!")
 	if ok := audio.Save(filename); !ok {

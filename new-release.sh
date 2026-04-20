@@ -2,11 +2,13 @@
 
 set -ex
 
-old_version_code=20251205
-new_version_code=20251217
+cd "$(dirname "$0")"
 
-old_version="1\.12\.19"
-new_version="1\.12\.20"
+old_version_code=20260412
+new_version_code=20260417
+
+old_version="1\.12\.38"
+new_version="1\.12\.39"
 
 replace_str="s/$old_version/$new_version/g"
 
@@ -33,6 +35,18 @@ sed -i.bak "$replace_str" ./build-ios-shared.sh
 sed -i.bak "$replace_str" ./pom.xml
 sed -i.bak "$replace_str" ./jitpack.yml
 sed -i.bak "$replace_str" ./android/SherpaOnnxAar/README.md
+
+sed -i.bak "$replace_str" ./rust-api-examples/Cargo.toml
+sed -i.bak "$replace_str" ./rust-api-examples/for-advanced-users.md
+sed -i.bak "$replace_str" ./rust-api-examples/README.md
+sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx-sys/Cargo.toml
+sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/Cargo.toml
+sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/src/lib.rs
+sed -i.bak "$replace_str" ./sherpa-onnx/rust/sherpa-onnx/README.md
+
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/package.json
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/Cargo.toml
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/tauri.conf.json
 
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;

@@ -21,13 +21,17 @@ void InitSpeakerID(Napi::Env env, Napi::Object exports);
 
 void InitAudioTagging(Napi::Env env, Napi::Object exports);
 
-void InitPunctuation(Napi::Env env, Napi::Object exports);
+void InitOfflinePunctuation(Napi::Env env, Napi::Object exports);
+
+void InitOnlinePunctuation(Napi::Env env, Napi::Object exports);
 
 void InitKeywordSpotting(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingSpeechDenoiser(Napi::Env env, Napi::Object exports);
+
+void InitOnlineSpeechDenoiser(Napi::Env env, Napi::Object exports);
 
 void InitVersion(Napi::Env env, Napi::Object exports);
 
@@ -45,10 +49,12 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitSpokenLanguageID(env, exports);
   InitSpeakerID(env, exports);
   InitAudioTagging(env, exports);
-  InitPunctuation(env, exports);
+  InitOfflinePunctuation(env, exports);
+  InitOnlinePunctuation(env, exports);
   InitKeywordSpotting(env, exports);
   InitNonStreamingSpeakerDiarization(env, exports);
   InitNonStreamingSpeechDenoiser(env, exports);
+  InitOnlineSpeechDenoiser(env, exports);
   InitVersion(env, exports);
 
 #if __OHOS__

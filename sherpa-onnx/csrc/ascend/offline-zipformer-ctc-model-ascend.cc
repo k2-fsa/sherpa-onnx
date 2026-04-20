@@ -51,6 +51,9 @@ class OfflineZipformerCtcModelAscend::Impl {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
 
+    aclError ret_set_ctx = aclrtSetCurrentContext(*context_);
+    SHERPA_ONNX_ASCEND_CHECK(ret_set_ctx, "Failed to call aclrtSetCurrentContext");
+
     int32_t num_frames = features.size() / feat_dim_;
 
     if (num_frames != max_num_frames_) {
@@ -64,7 +67,7 @@ class OfflineZipformerCtcModelAscend::Impl {
             "model accepting longer audios.");
       }
 
-      features.resize(max_num_frames_ * feat_dim_);
+      features.resize(max_num_frames_ * feat_dim_, 0);
 
       num_frames = max_num_frames_;
     }

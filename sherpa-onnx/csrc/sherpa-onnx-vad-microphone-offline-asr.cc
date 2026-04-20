@@ -14,6 +14,7 @@
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/circular-buffer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -94,7 +95,7 @@ to download models for offline ASR.
   po.Read(argc, argv);
   if (po.NumArgs() != 0) {
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", vad_config.ToString().c_str());
@@ -122,7 +123,7 @@ to download models for offline ASR.
     fprintf(stderr,
             "  If you are using Linux, please try "
             "./build/bin/sherpa-onnx-vad-alsa-offline-asr\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   const char *pDeviceIndex = std::getenv("SHERPA_ONNX_MIC_DEVICE");
@@ -135,14 +136,14 @@ to download models for offline ASR.
   float mic_sample_rate = 16000;
   const char *pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (pSampleRateStr) {
-    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);
+    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
   }
 
   if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
                       nullptr)) {
     fprintf(stderr, "Failed to open device %d\n", device_index);
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   float sample_rate = 16000;

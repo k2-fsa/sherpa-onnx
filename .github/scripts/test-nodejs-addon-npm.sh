@@ -10,9 +10,84 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Cohere Transcribe----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe.js
+node ./test_asr_non_streaming_cohere_transcribe_async.js
+
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
+echo "----------Qwen3 ASR----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test_asr_non_streaming_qwen3_asr.js
+node ./test_asr_non_streaming_qwen3_asr_async.js
+
+rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+
+echo "----------Moonshine v2----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
+
+node ./test_asr_non_streaming_moonshine_v2.js
+
+rm -rf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27
+
+echo "----------FireRedAsr CTC----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+rm sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25.tar.bz2
+
+node ./test_asr_non_streaming_fire_red_asr_ctc.js
+node ./test_asr_non_streaming_fire_red_asr_ctc_async.js
+
+rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
+
+echo "----------PocketTTS----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+rm sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+
+node ./test_tts_non_streaming_pocket_en.js
+node ./test_tts_non_streaming_pocket_en_async.js
+
+rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+
+echo "----------ZipVoice----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+node ./test_tts_non_streaming_zipvoice_zh_en.js
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+rm -f vocos_24khz.onnx
+
+echo "----------non-streaming ASR FunASR Nano----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+
+node ./test_asr_non_streaming_funasr_nano.js
+node ./test_asr_non_streaming_funasr_nano_async.js
+
+rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
+
 echo "----------non-streaming ASR Google MedASR CTC----------"
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 rm sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 
@@ -58,6 +133,17 @@ node ./test_tts_non_streaming_kitten_en.js
 
 rm -rf kitten-nano-en-v0_1-fp16
 
+echo "----------SupertonicTTS----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+
+node ./test_tts_non_streaming_supertonic_en.js
+node ./test_tts_non_streaming_supertonic_en_async.js
+
+rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+
 echo "----------non-streaming ASR NeMo Canary----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2
@@ -98,10 +184,15 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 echo "----------non-streaming speech denoiser----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
 node ./test_offline_speech_enhancement_gtcrn.js
+node ./test_offline_speech_enhancement_dpdfnet.js
+node ./test_online_speech_enhancement_gtcrn.js
+node ./test_online_speech_enhancement_dpdfnet.js
 rm gtcrn_simple.onnx
+rm dpdfnet_baseline.onnx
 ls -lh *.wav
 
 echo "----------non-streaming asr FireRedAsr----------"

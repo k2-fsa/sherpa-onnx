@@ -18,16 +18,23 @@ static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsKittenModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) == 10 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsPocketModelConfig) == 8 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsSupertonicModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4 +
                       sizeof(SherpaOnnxOfflineTtsKittenModelConfig) +
-                      sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig),
+                      sizeof(SherpaOnnxOfflineTtsZipvoiceModelConfig) +
+                      sizeof(SherpaOnnxOfflineTtsPocketModelConfig) +
+                      sizeof(SherpaOnnxOfflineTtsSupertonicModelConfig),
               "");
+
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
                   sizeof(SherpaOnnxOfflineTtsModelConfig) + 4 * 4,
               "");
+
+static_assert(sizeof(SherpaOnnxGenerationConfig) == 9 * 4, "");
 
 void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto tts_model_config = &tts_config->model;
@@ -36,6 +43,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto kokoro = &tts_model_config->kokoro;
   auto kitten = &tts_model_config->kitten;
   auto zipvoice = &tts_model_config->zipvoice;
+  auto pocket = &tts_model_config->pocket;
   fprintf(stdout, "----------vits model config----------\n");
   fprintf(stdout, "model: %s\n", vits_model_config->model);
   fprintf(stdout, "lexicon: %s\n", vits_model_config->lexicon);
@@ -84,6 +92,27 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "t_shift: %.3f\n", zipvoice->t_shift);
   fprintf(stdout, "target_rms: %.3f\n", zipvoice->target_rms);
   fprintf(stdout, "guidance_scale: %.3f\n", zipvoice->guidance_scale);
+
+  fprintf(stdout, "----------pocketTTS model config----------\n");
+  fprintf(stdout, "lm_flow: %s\n", pocket->lm_flow);
+  fprintf(stdout, "lm_main: %s\n", pocket->lm_main);
+  fprintf(stdout, "encoder: %s\n", pocket->encoder);
+  fprintf(stdout, "decoder: %s\n", pocket->decoder);
+  fprintf(stdout, "text_conditioner: %s\n", pocket->text_conditioner);
+  fprintf(stdout, "vocab_json: %s\n", pocket->vocab_json);
+  fprintf(stdout, "token_scores_json: %s\n", pocket->token_scores_json);
+  fprintf(stdout, "voice_embedding_cache_capacity: %d\n",
+          pocket->voice_embedding_cache_capacity);
+
+  auto supertonic = &tts_model_config->supertonic;
+  fprintf(stdout, "----------supertonic model config----------\n");
+  fprintf(stdout, "duration_predictor: %s\n", supertonic->duration_predictor);
+  fprintf(stdout, "text_encoder: %s\n", supertonic->text_encoder);
+  fprintf(stdout, "vector_estimator: %s\n", supertonic->vector_estimator);
+  fprintf(stdout, "vocoder: %s\n", supertonic->vocoder);
+  fprintf(stdout, "tts_json: %s\n", supertonic->tts_json);
+  fprintf(stdout, "unicode_indexer: %s\n", supertonic->unicode_indexer);
+  fprintf(stdout, "voice_style: %s\n", supertonic->voice_style);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);

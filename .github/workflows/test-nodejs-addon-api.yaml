@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - master
+      - test-node-addon
     paths:
       - '.github/workflows/test-nodejs-addon-api.yaml'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
+      - 'nodejs-addon-examples/**'
 
   workflow_dispatch:
 

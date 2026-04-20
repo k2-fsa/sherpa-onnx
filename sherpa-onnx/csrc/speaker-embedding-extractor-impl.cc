@@ -17,8 +17,10 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-impl.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -32,6 +34,57 @@ enum class ModelType : std::uint8_t {
 };
 
 }  // namespace
+
+static ModelType GetModelType(const std::string &model_path, bool debug) {
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
+  auto sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
+
+
+  Ort::ModelMetadata meta_data = sess->GetModelMetadata();
+  if (debug) {
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+  }
+
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "framework", allocator);
+  if (model_type.empty()) {
+    SHERPA_ONNX_LOGE(
+        "No model_type in the metadata!\n"
+        "Please make sure you have added metadata to the model.\n\n"
+        "For instance, you can use\n"
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wespeaker/"
+        "add_meta_data.py"
+        "to add metadata to models from WeSpeaker\n");
+    return ModelType::kUnknown;
+  }
+
+  if (model_type == "wespeaker") {
+    return ModelType::kWeSpeaker;
+  } else if (model_type == "3d-speaker") {
+    return ModelType::k3dSpeaker;
+  } else if (model_type == "nemo") {
+    return ModelType::kNeMo;
+  } else {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("Unsupported model_type: %{public}s", model_type.c_str());
+#else
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+#endif
+    return ModelType::kUnknown;
+  }
+}
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
@@ -90,9 +143,7 @@ SpeakerEmbeddingExtractorImpl::Create(
   ModelType model_type = ModelType::kUnknown;
 
   {
-    auto buffer = ReadFile(config.model);
-
-    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+    model_type = GetModelType(config.model, config.debug);
   }
 
   switch (model_type) {

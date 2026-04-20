@@ -55,7 +55,12 @@
 #endif
 #endif
 
-#define SHERPA_ONNX_EXIT(code) exit(code)
+#define SHERPA_ONNX_EXIT(code) \
+  do {                         \
+    fflush(stdout);            \
+    fflush(stderr);            \
+    _Exit(code);               \
+  } while (0)
 
 // Read an integer
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                           \

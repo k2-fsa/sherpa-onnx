@@ -25,19 +25,25 @@ function createOfflineTts() {
 const tts = createOfflineTts();
 
 const text =
-    '当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月13号，拨打110或者18920240513。123456块钱。'
+    '当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月13号，拨打110或者18920240513。123456块钱。';
+
+const generationConfig = new sherpa_onnx.GenerationConfig({
+  sid: 2,
+  speed: 1.0,
+  silenceScale: 0.2,
+});
 
 let start = Date.now();
-const audio = tts.generate({text: text, sid: 2, speed: 1.0});
+const audio = tts.generate({text: text, generationConfig});
 let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
+    real_time_factor.toFixed(3));
 
 const filename = 'test-zh-ll.wav';
 sherpa_onnx.writeWave(

@@ -13,5 +13,5 @@ See the documentation https://k2-fsa.github.io/sherpa/onnx/index.html
 for details.
 
 Please see
-https://github.com/k2-fsa/sherpa-onnx/tree/dot-net/dotnet-examples
+https://github.com/k2-fsa/sherpa-onnx/tree/master/dotnet-examples
 for how to use C# APIs of this package.

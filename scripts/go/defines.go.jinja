@@ -1,0 +1,21 @@
+{{ golang_header }}
+package sherpa_onnx
+
+// ============================================================
+// Code Generated Automatically for {{ platform }} platform, DO NOT EDIT MANUALLY!!
+// ============================================================
+
+import (
+	sherpa "github.com/k2-fsa/sherpa-onnx-go-{{ platform }}"
+)
+
+// ============================================================
+// Struct/Function Defines
+// ============================================================
+{% for define in defines -%}
+{%- if define.type == 'function' %}
+var {{ define.name }} = sherpa.{{ define.name }}
+{%- else %}
+type {{ define.name }} = sherpa.{{ define.name }}
+{%- endif %}
+{%- endfor %}

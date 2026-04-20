@@ -38,7 +38,7 @@ class OnlineRecognizerImpl {
   virtual std::unique_ptr<OnlineStream> CreateStream(
       const std::string &hotwords) const {
     SHERPA_ONNX_LOGE("Only transducer models support contextual biasing.");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   virtual bool IsReady(OnlineStream *s) const = 0;
@@ -46,7 +46,7 @@ class OnlineRecognizerImpl {
   virtual void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const {
     // ToDo extending to other  models
     SHERPA_ONNX_LOGE("Only zipformer2 model supports Warm up for now.");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   virtual void DecodeStreams(OnlineStream **ss, int32_t n) const = 0;

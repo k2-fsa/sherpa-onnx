@@ -2,6 +2,8 @@
 
 set -ex
 
+export CGO_ENABLED=1
+
 if [ ! -d sherpa-onnx-nemo-ctc-en-conformer-medium ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
   tar xvf sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2

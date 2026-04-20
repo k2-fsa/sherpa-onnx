@@ -41,19 +41,33 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+            docker run --rm \
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx \
+              ghcr.io/csukuangfj/manylinux2014-aarch64-gcc11:latest \
+            bash -c '
               echo "config: ${{ matrix.config }}"
               uname -a
               which gcc
 
               gcc --version
               g++ --version
+
+              ldd --version
+
+              export GCC_ROOT=/opt/gcc-11.4.0
+              export CC=$GCC_ROOT/bin/gcc
+              export CXX=$GCC_ROOT/bin/g++
+              export PATH=$GCC_ROOT/bin:$PATH
+
+              gcc --version
+              which gcc
+
+              g++ --version
+              which g++
+
+              ldd --version
 
               echo "pwd"
 
@@ -92,6 +106,7 @@ jobs:
 
               rm -rf install/lib/pkgconfig
               rm -fv install/lib/cargs.h
+            '
 
       - name: Copy files
         shell: bash
@@ -113,10 +128,36 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          cp -av build/install/lib/lib*.a ${lib_dst}/lib/
+          rm -f ${lib_dst}/lib/libcargs.a
+          tree ${lib_dst}
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
+
       - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-linux-aarch64-static
-          path: sherpa-onnx-*linux-aarch64-static.tar.bz2
+          path: sherpa-onnx-*.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.12.32
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -135,7 +176,7 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs huggingface
 
             cd huggingface
             dst=aarch64/$SHERPA_ONNX_VERSION
@@ -150,35 +191,20 @@ jobs:
 
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-static.tar.bz2"
 
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
-
-      - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*linux-aarch64*.tar.bz2
-
-      - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*linux-aarch64*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.11.5
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-libs main
 
       - name: Test offline Moonshine
-        if: matrix.build_type != 'Debug'
+        if: matrix.build_type != 'Debug' && !startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline
 
+          ls -lh build/bin/sherpa-onnx-offline
+
           readelf -d build/bin/sherpa-onnx-offline
+
+          strings build/bin/sherpa-onnx-offline | grep ^GLIBC
 
           .github/scripts/test-offline-moonshine.sh

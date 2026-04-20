@@ -62,6 +62,7 @@ int32_t main() {
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = online_model_config;
+  recognizer_config.enable_endpoint = 1;
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);

@@ -1,0 +1,51 @@
+# Note
+
+## Encoder
+```
+=========./tiny.en-encoder.onnx==========
+NodeArg(name='tiny.en-mel', type='tensor(float)', shape=[1, 80, 3000])
+-----
+NodeArg(name='cross_k_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_k_3', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='cross_v_3', type='tensor(float)', shape=[1, 1500, 384])
+```
+
+## Decoder
+
+```
+=========./tiny.en-decoder.onnx==========
+NodeArg(name='tiny.en-tokens', type='tensor(int32)', shape=[1, 1])
+NodeArg(name='tiny.en-self_k_0', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_v_0', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_k_1', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_v_1', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_k_2', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_v_2', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_k_3', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-self_v_3', type='tensor(float)', shape=[1, 448, 384])
+NodeArg(name='tiny.en-cross_k_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_v_0', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_k_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_v_1', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_k_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_v_2', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_k_3', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-cross_v_3', type='tensor(float)', shape=[1, 1500, 384])
+NodeArg(name='tiny.en-offset', type='tensor(int64)', shape=[1])
+NodeArg(name='tiny.en-mask', type='tensor(float)', shape=[448])
+-----
+NodeArg(name='tiny.en-logits', type='tensor(float)', shape=['Casttiny.en-logits_dim_0', 'Casttiny.en-logits_dim_1', 51864])
+NodeArg(name='tiny.en-this_self_k_0', type='tensor(float)', shape=[1, 'MatMultiny.en-this_self_k_0_dim_1', 384])
+NodeArg(name='tiny.en-this_self_v_0', type='tensor(float)', shape=[1, 'MatMultiny.en-this_self_k_0_dim_1', 384])
+NodeArg(name='tiny.en-this_self_k_1', type='tensor(float)', shape=['MatMultiny.en-this_self_k_1_dim_0', 'MatMultiny.en-this_self_k_1_dim_1', 384])
+NodeArg(name='tiny.en-this_self_v_1', type='tensor(float)', shape=['MatMultiny.en-this_self_k_1_dim_0', 'MatMultiny.en-this_self_k_1_dim_1', 384])
+NodeArg(name='tiny.en-this_self_k_2', type='tensor(float)', shape=['MatMultiny.en-this_self_k_2_dim_0', 'MatMultiny.en-this_self_k_2_dim_1', 384])
+NodeArg(name='tiny.en-this_self_v_2', type='tensor(float)', shape=['MatMultiny.en-this_self_k_2_dim_0', 'MatMultiny.en-this_self_k_2_dim_1', 384])
+NodeArg(name='tiny.en-this_self_k_3', type='tensor(float)', shape=['MatMultiny.en-this_self_k_3_dim_0', 'MatMultiny.en-this_self_k_3_dim_1', 384])
+NodeArg(name='tiny.en-this_self_v_3', type='tensor(float)', shape=['MatMultiny.en-this_self_k_3_dim_0', 'MatMultiny.en-this_self_k_3_dim_1', 384])
+```

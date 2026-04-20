@@ -43,14 +43,11 @@ fun testSpeakerRecognition() {
 }
 
 fun computeEmbedding(extractor: SpeakerEmbeddingExtractor, filename: String): FloatArray {
-    var objArray = WaveReader.readWaveFromFile(
+    val waveData = WaveReader.readWaveFromFile(
         filename = filename,
     )
-    var samples: FloatArray = objArray[0] as FloatArray
-    var sampleRate: Int = objArray[1] as Int
-
     val stream = extractor.createStream()
-    stream.acceptWaveform(sampleRate = sampleRate, samples=samples)
+    stream.acceptWaveform(sampleRate = waveData.sampleRate, samples=waveData.samples)
     stream.inputFinished()
     check(extractor.isReady(stream))
 

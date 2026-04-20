@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
@@ -124,13 +125,12 @@ See https://github.com/FunAudioLLM/Fun-ASR-Nano-2512
   ./bin/sherpa-onnx-vad-with-offline-asr \
     --silero-vad-model=/path/to/silero_vad.onnx \
     --funasr-nano-encoder-adaptor=/path/to/encoder_adaptor.onnx \
-    --funasr-nano-llm-prefill=/path/to/llm_prefill.onnx \
-    --funasr-nano-llm-decode=/path/to/llm_decode.onnx \
+    --funasr-nano-llm=/path/to/llm.onnx \
     --funasr-nano-tokenizer=/path/to/Qwen3-0.6B \
     --funasr-nano-embedding=/path/to/embedding.onnx \
     [--funasr-nano-user-prompt="Transcription:"] \
     [--funasr-nano-max-new-tokens=512] \
-    [--funasr-nano-temperature=0.3] \
+    [--funasr-nano-temperature=1e-6] \
     [--funasr-nano-top-p=0.8] \
     --num-threads=4 \
     /path/to/foo.wav
@@ -155,7 +155,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Error: Please provide at only 1 wave file. Given: %d\n\n",
             po.NumArgs());
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", vad_config.ToString().c_str());
@@ -231,8 +231,8 @@ for a list of pre-trained models to download.
       recognizer.DecodeStream(s.get());
       const auto &result = s->GetResult();
       if (!result.text.empty()) {
-        fprintf(stderr, "%.3f -- %.3f: %s\n", start_time, end_time,
-                result.text.c_str());
+        fprintf(stdout, "%.3f -- %.3f: ", start_time, end_time);
+        fprintf(stdout, "%s\n", result.text.c_str());
       }
       vad->Pop();
     }

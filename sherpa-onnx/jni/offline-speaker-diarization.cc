@@ -173,19 +173,32 @@ static jobjectArray ProcessImpl(
         &segments) {
   jclass cls =
       env->FindClass("com/k2fsa/sherpa/onnx/OfflineSpeakerDiarizationSegment");
+  if (cls == nullptr) {
+    SHERPA_ONNX_LOGE(
+        "Failed to find class OfflineSpeakerDiarizationSegment");
+    return nullptr;
+  }
 
   jobjectArray obj_arr =
       (jobjectArray)env->NewObjectArray(segments.size(), cls, nullptr);
 
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(FFI)V");
+  if (constructor == nullptr) {
+    SHERPA_ONNX_LOGE(
+        "Failed to get OfflineSpeakerDiarizationSegment constructor");
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
 
-  for (int32_t i = 0; i != segments.size(); ++i) {
+  for (int32_t i = 0; i != static_cast<int32_t>(segments.size()); ++i) {
     const auto &s = segments[i];
     jobject segment =
         env->NewObject(cls, constructor, s.Start(), s.End(), s.Speaker());
     env->SetObjectArrayElement(obj_arr, i, segment);
+    env->DeleteLocalRef(segment);
   }
 
+  env->DeleteLocalRef(cls);
   return obj_arr;
 }
 
@@ -216,14 +229,23 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_processWithCallback(
     jmethodID mid = env->GetMethodID(cls, "invoke", "(IIJ)Ljava/lang/Integer;");
     if (mid == nullptr) {
       SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
+      env->DeleteLocalRef(cls);
       return 0;
     }
+    env->DeleteLocalRef(cls);
 
     jobject ret = env->CallObjectMethod(callback, mid, num_processed_chunks,
                                         num_total_chunks, (jlong)data);
+    if (ret == nullptr) {
+      return 0;
+    }
+
     jclass jklass = env->GetObjectClass(ret);
     jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
-    return env->CallIntMethod(ret, int_value_mid);
+    int32_t result = env->CallIntMethod(ret, int_value_mid);
+    env->DeleteLocalRef(jklass);
+    env->DeleteLocalRef(ret);
+    return result;
   };
 
   auto sd = reinterpret_cast<sherpa_onnx::OfflineSpeakerDiarization *>(ptr);

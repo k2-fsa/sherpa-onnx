@@ -1,8 +1,22 @@
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.0.0")
-  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 endif()
 
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+
+# https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+cmake_policy(SET CMP0091 NEW)
+
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
+endif()
+
+if(POLICY CMP0177)
+  cmake_policy(SET CMP0177 NEW)
+endif()
+
+message(STATUS "CMake version: ${CMAKE_VERSION}")
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
 
@@ -14,7 +28,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.12.20")
+set(SHERPA_ONNX_VERSION "1.12.39")
 
 # Disable warning about
 #
@@ -65,15 +79,63 @@ option(SHERPA_ONNX_ENABLE_AXCL "Whether to build for Axcl NPU " OFF)
 option(SHERPA_ONNX_ENABLE_ASCEND_NPU "Whether to build for Ascend NPU " OFF)
 option(SHERPA_ONNX_ENABLE_QNN "Whether to build for Qualcomm NPU" OFF)
 option(SHERPA_ONNX_ENABLE_SPACEMIT "Whether to build for SpacemiT CPUs " OFF)
-
 set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. Set to 1.11.0 if you use CUDA 10.2 and cudnn8. Set it to 1.16.0 if you use CUDA 11.4 and cudnn8. Set it to 1.18.0 if you use CUDA 12.2 and cudnn8. Set it to 1.18.1 if you use CUDA 12.6 and cudnn9")
 
+# SHERPA_ONNX_USE_STATIC_CRT controls whether we use:
+#   - Static CRT:   /MT  (Release), /MTd (Debug)
+#   - Dynamic CRT:  /MD  (Release), /MDd (Debug)
+option(SHERPA_ONNX_USE_STATIC_CRT "For Windows only. ON to use static CRT (/MT /MTd); OFF to use dynamic (/MD /MDd)" ON)
+
+
+# On Windows with MSVC, explicitly control which C runtime (CRT) to use.
+#
+# We rely on CMAKE_MSVC_RUNTIME_LIBRARY (CMake >= 3.15) instead of manually
+# appending /MT, /MTd, /MD, or /MDd to compiler flags.
+#
+# Benefits:
+#   - Correct behavior for multi-config generators (Visual Studio, Ninja Multi-Config)
+#   - No reliance on CMAKE_BUILD_TYPE (which is empty for multi-config generators)
+#   - Cleaner interaction with subprojects and FetchContent dependencies
+#
+# The generator expression automatically selects:
+#   - Debug   -> /MTd or /MDd
+#   - Release -> /MT  or /MD
+#   - RelWithDebInfo / MinSizeRel -> /MT or /MD
+if (MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+  if(DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE STREQUAL "")
+    if (SHERPA_ONNX_USE_STATIC_CRT)
+      # Use static CRT: /MT (Release) and /MTd (Debug)
+      if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug")
+      else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+      endif()
+    else()
+      # Use dynamic CRT: /MD (Release) and /MDd (Debug)
+      if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
+      else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+      endif()
+    endif()
+  else()
+    if (SHERPA_ONNX_USE_STATIC_CRT)
+      # Use static CRT: /MT (Release) and /MTd (Debug)
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    else()
+      # Use dynamic CRT: /MD (Release) and /MDd (Debug)
+      set(CMAKE_MSVC_RUNTIME_LIBRARY
+          "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    endif()
+  endif()
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_SKIP_BUILD_RPATH FALSE)
   set(BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -85,7 +147,7 @@ else()
   set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
 endif()
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
   set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
 endif()
@@ -94,6 +156,8 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "")
 
 if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI AND NOT SHERPA_ONNX_ENABLE_C_API)
   message(STATUS "Set SHERPA_ONNX_ENABLE_JNI to ON for Android")
@@ -129,18 +193,6 @@ to install Windows 10 SDK if you have not installed it.")
     message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_DIRECTML is ON")
     set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
   endif()
-endif()
-
-# see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
-# https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
-if(MSVC)
-  add_compile_options(
-      $<$<CONFIG:>:/MT> #---------|
-      $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-      $<$<CONFIG:Release>:/MT> #--|
-      $<$<CONFIG:RelWithDebInfo>:/MT>
-      $<$<CONFIG:MinSizeRel>:/MT>
-  )
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL OHOS)
@@ -188,10 +240,19 @@ message(STATUS "SHERPA_ONNX_ENABLE_ASCEND_NPU: ${SHERPA_ONNX_ENABLE_ASCEND_NPU}"
 message(STATUS "SHERPA_ONNX_ENABLE_QNN: ${SHERPA_ONNX_ENABLE_QNN}")
 message(STATUS "SHERPA_ONNX_ENABLE_SPACEMIT: ${SHERPA_ONNX_ENABLE_SPACEMIT}")
 message(STATUS "SHERPA_ONNX_LINK_D3D: ${SHERPA_ONNX_LINK_D3D}")
+message(STATUS "SHERPA_ONNX_USE_STATIC_CRT: ${SHERPA_ONNX_USE_STATIC_CRT}")
+if(MSVC)
+  message(STATUS "CMAKE_MSVC_RUNTIME_LIBRARY ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+endif()
 
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
+
+# Rust on Linux links static sherpa-onnx archives into PIE executables by
+# default, so static objects need PIC as well.
+if(NOT WIN32)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
@@ -216,7 +277,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
   message(STATUS "TTS is enabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_TTS=1)
 else()
-  message(WARNING "TTS is disabled")
+  message(STATUS "TTS is disabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_TTS=0)
 endif()
 
@@ -224,7 +285,7 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   message(STATUS "speaker diarization is enabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=1)
 else()
-  message(WARNING "speaker diarization is disabled")
+  message(STATUS "speaker diarization is disabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0)
 endif()
 
@@ -468,6 +529,10 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   endif()
 endif()
 
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  include(pybind11)
+endif()
+
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)
@@ -481,10 +546,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   include(portaudio)
 endif()
 
-if(SHERPA_ONNX_ENABLE_PYTHON)
-  include(pybind11)
-endif()
-
 if(SHERPA_ONNX_ENABLE_TESTS)
   enable_testing()
   include(googletest)
@@ -494,6 +555,8 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(websocketpp)
   include(asio)
 endif()
+
+include(json)
 
 if(SHERPA_ONNX_ENABLE_TTS)
   include(espeak-ng-for-piper)
@@ -572,6 +635,6 @@ install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    ./
+    .
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

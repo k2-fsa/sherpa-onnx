@@ -20,6 +20,8 @@
 #include "sherpa-onnx/csrc/hifigan-vocoder.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/vocos-vocoder.h"
 
 namespace sherpa_onnx {
@@ -33,6 +35,48 @@ enum class ModelType : std::uint8_t {
 };
 
 }  // namespace
+
+static ModelType GetModelType(const std::string &model_path, bool debug) {
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
+  auto sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
+
+
+  Ort::ModelMetadata meta_data = sess->GetModelMetadata();
+  if (debug) {
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
+  }
+
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
+    SHERPA_ONNX_LOGE(
+        "No model_type in the metadata!\n"
+        "Please make sure you are using the vocoder from "
+        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/vocoder-models");
+    return ModelType::kUnknown;
+  }
+
+  if (model_type == "hifigan") {
+    return ModelType::kHifigan;
+  } else if (model_type == "vocos" || model_type == "matcha-tts vocos") {
+    return ModelType::kVocoos;
+  } else {
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+    return ModelType::kUnknown;
+  }
+}
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
@@ -77,16 +121,15 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 }
 
 std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
-  std::vector<char> buffer;
+  auto model_type = ModelType::kUnknown;
   if (!config.matcha.vocoder.empty()) {
-    buffer = ReadFile(config.matcha.vocoder);
+    model_type = GetModelType(config.matcha.vocoder, config.debug);
   } else if (!config.zipvoice.vocoder.empty()) {
-    buffer = ReadFile(config.zipvoice.vocoder);
+    model_type = GetModelType(config.zipvoice.vocoder, config.debug);
   } else {
     SHERPA_ONNX_LOGE("No vocoder model provided in the config!");
     SHERPA_ONNX_EXIT(-1);
   }
-  auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {
     case ModelType::kHifigan:

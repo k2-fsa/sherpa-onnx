@@ -106,9 +106,9 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
 #if __OHOS__
-  if (info.Length() != 2) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
+    os << "Expect 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -132,6 +132,18 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
+#if __OHOS__
+  bool use_resource_manager =
+      info.Length() == 2 && !info[1].IsUndefined() && !info[1].IsNull();
+  if (use_resource_manager && !info[1].IsObject()) {
+    Napi::TypeError::New(
+        env, "You should pass a resource manager as the second argument.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+#endif
+
   Napi::Object o = info[0].As<Napi::Object>();
 
   SherpaOnnxOfflineSpeakerDiarizationConfig c;
@@ -145,13 +157,18 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_duration_off, minDurationOff);
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager,
-                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
-      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
-          &OH_ResourceManager_ReleaseNativeResourceManager);
+  const SherpaOnnxOfflineSpeakerDiarization *sd = nullptr;
 
-  const SherpaOnnxOfflineSpeakerDiarization *sd =
-      SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(&c, mgr.get());
+  if (use_resource_manager) {
+    std::unique_ptr<NativeResourceManager,
+                    decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+        mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+            &OH_ResourceManager_ReleaseNativeResourceManager);
+
+    sd = SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(&c, mgr.get());
+  } else {
+    sd = SherpaOnnxCreateOfflineSpeakerDiarization(&c);
+  }
 #else
   const SherpaOnnxOfflineSpeakerDiarization *sd =
       SherpaOnnxCreateOfflineSpeakerDiarization(&c);

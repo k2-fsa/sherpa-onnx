@@ -4,14 +4,15 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 #include <fstream>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/jni/common.h"
 
-static jobjectArray ReadWaveImpl(JNIEnv *env, std::istream &is,
-                                 const char *p_filename) {
+static jobject ReadWaveImpl(JNIEnv *env, std::istream &is,
+                            const char *p_filename) {
   bool is_ok = false;
   int32_t sampling_rate = -1;
   std::vector<float> samples =
@@ -21,37 +22,67 @@ static jobjectArray ReadWaveImpl(JNIEnv *env, std::istream &is,
     SHERPA_ONNX_LOGE("Failed to read '%s'", p_filename);
     jclass exception_class = env->FindClass("java/lang/Exception");
     env->ThrowNew(exception_class, "Failed to read wave file.");
+    env->DeleteLocalRef(exception_class);
     return nullptr;
   }
 
   jfloatArray samples_arr = env->NewFloatArray(samples.size());
+  if (samples_arr == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to allocate samples array");
+    return nullptr;
+  }
+
   env->SetFloatArrayRegion(samples_arr, 0, samples.size(), samples.data());
 
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      2, env->FindClass("java/lang/Object"), nullptr);
+  // Find WaveData class
+  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/WaveData");
+  if (cls == nullptr) {
+    env->DeleteLocalRef(samples_arr);
+    SHERPA_ONNX_LOGE("Failed to find class com/k2fsa/sherpa/onnx/WaveData");
+    return nullptr;
+  }
 
-  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
-  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, sampling_rate));
+  // Get constructor: WaveData(float[] samples, int sampleRate)
+  jmethodID ctor = env->GetMethodID(cls, "<init>", "([FI)V");
+  if (ctor == nullptr) {
+    SHERPA_ONNX_LOGE("Failed to get WaveData constructor");
 
-  return obj_arr;
+    env->DeleteLocalRef(samples_arr);
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
+
+  // Create WaveData object
+  jobject obj = env->NewObject(cls, ctor, samples_arr, sampling_rate);
+  if (obj == nullptr) {
+    env->DeleteLocalRef(samples_arr);
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
+
+  // Clean up local refs
+  env->DeleteLocalRef(samples_arr);
+  env->DeleteLocalRef(cls);
+
+  return obj;
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromFile(
     JNIEnv *env, jclass /*cls*/, jstring filename) {
   const char *p_filename = env->GetStringUTFChars(filename, nullptr);
   std::ifstream is(p_filename, std::ios::binary);
 
-  auto obj_arr = ReadWaveImpl(env, is, p_filename);
+  auto obj = ReadWaveImpl(env, is, p_filename);
 
   env->ReleaseStringUTFChars(filename, p_filename);
 
-  return obj_arr;
+  return obj;
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_WaveReader_readWaveFromFile(JNIEnv *env,
                                                        jclass /*obj*/,
                                                        jstring filename) {
@@ -60,7 +91,7 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_readWaveFromFile(JNIEnv *env,
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT jobjectArray JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
     JNIEnv *env, jclass /*cls*/, jobject asset_manager, jstring filename) {
   const char *p_filename = env->GetStringUTFChars(filename, nullptr);
@@ -68,18 +99,22 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
-    exit(-1);
+    env->ReleaseStringUTFChars(filename, p_filename);
+    jclass re = env->FindClass("java/lang/RuntimeException");
+    env->ThrowNew(re, "Failed to get asset manager");
+    env->DeleteLocalRef(re);
+    return nullptr;
   }
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
-  std::istrstream is(buffer.data(), buffer.size());
+  std::istringstream is(std::string(buffer.data(), buffer.size()));
 #else
   std::ifstream is(p_filename, std::ios::binary);
 #endif
 
-  auto obj_arr = ReadWaveImpl(env, is, p_filename);
+  auto obj = ReadWaveImpl(env, is, p_filename);
 
   env->ReleaseStringUTFChars(filename, p_filename);
 
-  return obj_arr;
+  return obj;
 }

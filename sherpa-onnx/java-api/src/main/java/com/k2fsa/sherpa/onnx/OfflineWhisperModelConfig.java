@@ -8,6 +8,8 @@ public class OfflineWhisperModelConfig {
     private final String language;
     private final String task;
     private final int tailPaddings;
+    private final boolean enableTokenTimestamps;
+    private final boolean enableSegmentTimestamps;
 
     private OfflineWhisperModelConfig(Builder builder) {
         this.encoder = builder.encoder;
@@ -15,6 +17,8 @@ public class OfflineWhisperModelConfig {
         this.language = builder.language;
         this.task = builder.task;
         this.tailPaddings = builder.tailPaddings;
+        this.enableTokenTimestamps = builder.enableTokenTimestamps;
+        this.enableSegmentTimestamps = builder.enableSegmentTimestamps;
     }
 
     public static Builder builder() {
@@ -41,6 +45,14 @@ public class OfflineWhisperModelConfig {
         return tailPaddings;
     }
 
+    public boolean getEnableTokenTimestamps() {
+        return enableTokenTimestamps;
+    }
+
+    public boolean getEnableSegmentTimestamps() {
+        return enableSegmentTimestamps;
+    }
+
     public static class Builder {
         private String encoder = "";
         private String decoder = "";
@@ -48,6 +60,8 @@ public class OfflineWhisperModelConfig {
         private String task = "transcribe"; // used only with multilingual models
 
         private int tailPaddings = 1000; // number of frames to pad
+        private boolean enableTokenTimestamps = false;
+        private boolean enableSegmentTimestamps = false;
 
         public OfflineWhisperModelConfig build() {
             return new OfflineWhisperModelConfig(this);
@@ -75,6 +89,16 @@ public class OfflineWhisperModelConfig {
 
         public Builder setTailPaddings(int tailPaddings) {
             this.tailPaddings = tailPaddings;
+            return this;
+        }
+
+        public Builder setEnableTokenTimestamps(boolean enableTokenTimestamps) {
+            this.enableTokenTimestamps = enableTokenTimestamps;
+            return this;
+        }
+
+        public Builder setEnableSegmentTimestamps(boolean enableSegmentTimestamps) {
+            this.enableSegmentTimestamps = enableSegmentTimestamps;
             return this;
         }
     }

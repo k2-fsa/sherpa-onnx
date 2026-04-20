@@ -1,1 +1,1 @@
-../../../../go-api-examples/non-streaming-tts/run-matcha-en.sh
+../../../../go-api-examples/offline-tts-play/run-matcha-en.sh

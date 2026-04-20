@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <sstream>
 #include <string>
-#include <strstream>
 #include <utility>
 #include <vector>
 
@@ -23,6 +23,7 @@
 #include "sherpa-onnx/csrc/offline-tts-zipvoice-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/resample.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/vocoder.h"
 
 namespace sherpa_onnx {
@@ -53,44 +54,97 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
   }
 
   GeneratedAudio Generate(
-      const std::string &text, const std::string &prompt_text,
-      const std::vector<float> &prompt_samples, int32_t sample_rate,
-      float speed, int32_t num_steps,
+      const std::string &text, const GenerationConfig &config,
       GeneratedAudioCallback callback = nullptr) const override {
-    std::vector<TokenIDs> text_token_ids =
-        frontend_->ConvertTextToTokenIds(text);
+    // Supported extra options in config.extra:
+    //   - "speed" (float): Speech speed factor (default: 1.0)
+    //   - "num_steps" (int): Number of flow-matching steps (default: 4)
+    //   - "max_char_in_sentence" (int): Max characters per chunk (default: 200)
+    //   - "min_char_in_sentence" (int): Merge shorter chunks until this size
+    //     (default: 30)
+    //   - "feat_scale" (float): Prompt mel log scaling factor (default:
+    //     config.model.zipvoice.feat_scale)
+    //   - "t_shift" (float): Timestep shift used by the decoder schedule
+    //     (default: config.model.zipvoice.t_shift)
+    //   - "target_rms" (float): Prompt RMS normalization target (default:
+    //     config.model.zipvoice.target_rms)
+    //   - "guidance_scale" (float): Classifier-free guidance scale for the
+    //     decoder (default: config.model.zipvoice.guidance_scale)
+    if (config_.model.debug) {
+      SHERPA_ONNX_LOGE("%s", config.ToString().c_str());
+    }
 
-    std::vector<TokenIDs> prompt_token_ids =
-        frontend_->ConvertTextToTokenIds(prompt_text);
-
-    if (text_token_ids.empty() ||
-        (text_token_ids.size() == 1 && text_token_ids[0].tokens.empty())) {
-#if __OHOS__
-      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
-                       text.c_str());
-#else
-      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
-#endif
+    if (config.reference_sample_rate <= 0) {
+      SHERPA_ONNX_LOGE("reference_sample_rate %d is invalid.",
+                       config.reference_sample_rate);
       return {};
     }
 
+    if (config.reference_audio.empty()) {
+      SHERPA_ONNX_LOGE("reference_audio is empty.");
+      return {};
+    }
+
+    if (config.reference_text.empty()) {
+      SHERPA_ONNX_LOGE("reference_text is empty.");
+      return {};
+    }
+
+    float speed =
+        config.GetExtraFloat("speed", config.speed > 0 ? config.speed : 1.0f);
+    if (speed <= 0) {
+      SHERPA_ONNX_LOGE("Speed must be > 0. Given: %f", speed);
+      return {};
+    }
+
+    int32_t num_steps = config.GetExtraInt(
+        "num_steps", config.num_steps > 0 ? config.num_steps : 4);
+    if (num_steps <= 0) {
+      SHERPA_ONNX_LOGE("Num steps must be > 0. Given: %d", num_steps);
+      return {};
+    }
+
+    float feat_scale =
+        config.GetExtraFloat("feat_scale", config_.model.zipvoice.feat_scale);
+    if (feat_scale <= 0) {
+      SHERPA_ONNX_LOGE("feat_scale must be > 0. Given: %f", feat_scale);
+      return {};
+    }
+
+    float t_shift =
+        config.GetExtraFloat("t_shift", config_.model.zipvoice.t_shift);
+    if (t_shift < 0) {
+      SHERPA_ONNX_LOGE("t_shift must be >= 0. Given: %f", t_shift);
+      return {};
+    }
+
+    float target_rms =
+        config.GetExtraFloat("target_rms", config_.model.zipvoice.target_rms);
+    if (target_rms <= 0) {
+      SHERPA_ONNX_LOGE("target_rms must be > 0. Given: %f", target_rms);
+      return {};
+    }
+
+    float guidance_scale = config.GetExtraFloat(
+        "guidance_scale", config_.model.zipvoice.guidance_scale);
+    if (guidance_scale <= 0) {
+      SHERPA_ONNX_LOGE("guidance_scale must be > 0. Given: %f", guidance_scale);
+      return {};
+    }
+
+    std::vector<TokenIDs> prompt_token_ids =
+        frontend_->ConvertTextToTokenIds(config.reference_text);
     if (prompt_token_ids.empty() ||
         (prompt_token_ids.size() == 1 && prompt_token_ids[0].tokens.empty())) {
 #if __OHOS__
       SHERPA_ONNX_LOGE(
           "Failed to convert prompt text '%{public}s' to token IDs",
-          prompt_text.c_str());
+          config.reference_text.c_str());
 #else
       SHERPA_ONNX_LOGE("Failed to convert prompt text '%s' to token IDs",
-                       prompt_text.c_str());
+                       config.reference_text.c_str());
 #endif
       return {};
-    }
-
-    // we assume batch size is 1
-    std::vector<int64_t> tokens;
-    for (const auto &t : text_token_ids) {
-      tokens.insert(tokens.end(), t.tokens.begin(), t.tokens.end());
     }
 
     std::vector<int64_t> prompt_tokens;
@@ -99,8 +153,104 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
                            t.tokens.end());
     }
 
-    return Process(tokens, prompt_tokens, prompt_samples, sample_rate, speed,
-                   num_steps);
+    std::vector<float> prompt_features = ComputePromptFeatures(
+        config.reference_audio, config.reference_sample_rate, feat_scale,
+        target_rms);
+    if (prompt_features.empty()) {
+      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
+      return {};
+    }
+
+    auto sentences = SplitByPunctuation(text);
+    if (sentences.empty()) {
+      return {};
+    }
+
+    int32_t max_char_in_sentence =
+        config.GetExtraInt("max_char_in_sentence", 200);
+    int32_t min_char_in_sentence =
+        config.GetExtraInt("min_char_in_sentence", 30);
+
+    if (max_char_in_sentence <= 0) {
+      SHERPA_ONNX_LOGE("max_char_in_sentence must be > 0. Given: %d",
+                       max_char_in_sentence);
+      return {};
+    }
+
+    if (min_char_in_sentence <= 0) {
+      SHERPA_ONNX_LOGE("min_char_in_sentence must be > 0. Given: %d",
+                       min_char_in_sentence);
+      return {};
+    }
+
+    sentences = MergeShortSentences(sentences, min_char_in_sentence);
+
+    std::vector<std::string> final_chunks;
+    for (const auto &s : sentences) {
+      auto pieces = SplitLongSentence(s, max_char_in_sentence);
+      final_chunks.insert(final_chunks.end(), pieces.begin(), pieces.end());
+    }
+
+    sentences = std::move(final_chunks);
+    if (sentences.empty()) {
+      return {};
+    }
+
+    GeneratedAudio result;
+    result.sample_rate = SampleRate();
+
+    const int32_t total = static_cast<int32_t>(sentences.size());
+
+    for (int32_t i = 0; i < total; ++i) {
+      if (config_.model.debug) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Processing %{public}d/%{public}d: %{public}s", i + 1,
+                         total, sentences[i].c_str());
+#else
+        SHERPA_ONNX_LOGE("Processing %d/%d: %s", i + 1, total,
+                         sentences[i].c_str());
+#endif
+      }
+
+      GeneratedAudio cur = GenerateChunk(
+          sentences[i], prompt_tokens, prompt_features, speed, num_steps,
+          feat_scale, t_shift, guidance_scale);
+
+      if (cur.samples.empty()) {
+        continue;
+      }
+
+      result.samples.insert(result.samples.end(), cur.samples.begin(),
+                            cur.samples.end());
+
+      if (callback) {
+        if (!callback(cur.samples.data(),
+                      static_cast<int32_t>(cur.samples.size()),
+                      (i + 1) * 1.0f / total)) {
+          break;
+        }
+      }
+    }
+
+    if (config.silence_scale != 1) {
+      result = result.ScaleSilence(config.silence_scale);
+    }
+
+    return result;
+  }
+
+  GeneratedAudio Generate(
+      const std::string &text, const std::string &prompt_text,
+      const std::vector<float> &prompt_samples, int32_t sample_rate,
+      float speed, int32_t num_steps,
+      GeneratedAudioCallback callback = nullptr) const override {
+    GenerationConfig config;
+    config.speed = speed;
+    config.num_steps = num_steps;
+    config.reference_text = prompt_text;
+    config.reference_audio = prompt_samples;
+    config.reference_sample_rate = sample_rate;
+    return Generate(text, config, std::move(callback));
   }
 
  private:
@@ -212,11 +362,63 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     }
   }
 
+  GeneratedAudio GenerateChunk(const std::string &text,
+                               const std::vector<int64_t> &prompt_tokens,
+                               const std::vector<float> &prompt_features,
+                               float speed, int32_t num_steps, float feat_scale,
+                               float t_shift, float guidance_scale) const {
+    std::vector<TokenIDs> text_token_ids =
+        frontend_->ConvertTextToTokenIds(text);
+
+    if (text_token_ids.empty() ||
+        (text_token_ids.size() == 1 && text_token_ids[0].tokens.empty())) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
+                       text.c_str());
+#else
+      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
+#endif
+      return {};
+    }
+
+    std::vector<int64_t> tokens;
+    for (const auto &t : text_token_ids) {
+      tokens.insert(tokens.end(), t.tokens.begin(), t.tokens.end());
+    }
+
+    return Process(tokens, prompt_tokens, prompt_features, speed, num_steps,
+                   feat_scale, t_shift, guidance_scale);
+  }
+
+  std::vector<float> ComputePromptFeatures(
+      const std::vector<float> &prompt_samples, int32_t sample_rate,
+      float feat_scale, float target_rms) const {
+    std::vector<float> prompt_samples_scaled = prompt_samples;
+    double prompt_rms = 0.0;
+    double sum_sq = 0.0;
+    for (float s : prompt_samples_scaled) {
+      sum_sq += s * s;
+    }
+    prompt_rms = std::sqrt(sum_sq / prompt_samples_scaled.size());
+    if (prompt_rms < target_rms && prompt_rms > 0.0f) {
+      float scale = target_rms / prompt_rms;
+      for (auto &s : prompt_samples_scaled) {
+        s *= scale;
+      }
+    }
+
+    std::vector<float> prompt_features;
+    ComputeMelSpectrogram(prompt_samples_scaled, sample_rate, feat_scale,
+                          &prompt_features);
+
+    return prompt_features;
+  }
+
   GeneratedAudio Process(const std::vector<int64_t> &tokens,
                          const std::vector<int64_t> &prompt_tokens,
-                         const std::vector<float> &prompt_samples,
-                         int32_t sample_rate, float speed,
-                         int num_steps) const {
+                         const std::vector<float> &prompt_features, float speed,
+                         int32_t num_steps, float feat_scale, float t_shift,
+                         float guidance_scale) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -235,47 +437,19 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
         prompt_tokens.size(), prompt_tokens_shape.data(),
         prompt_tokens_shape.size());
 
-    float target_rms = config_.model.zipvoice.target_rms;
-    float feat_scale = config_.model.zipvoice.feat_scale;
-
-    // Scale prompt_samples
-    std::vector<float> prompt_samples_scaled = prompt_samples;
-    double prompt_rms = 0.0;
-    double sum_sq = 0.0;
-    // Compute RMS of prompt_samples
-    for (float s : prompt_samples_scaled) {
-      sum_sq += s * s;
-    }
-    prompt_rms = std::sqrt(sum_sq / prompt_samples_scaled.size());
-    if (prompt_rms < target_rms && prompt_rms > 0.0f) {
-      float scale = target_rms / prompt_rms;
-      for (auto &s : prompt_samples_scaled) {
-        s *= scale;
-      }
-    }
-
-    std::vector<float> prompt_features;
-
     int32_t mel_dim = model_->GetMetaData().num_mels;
-
-    ComputeMelSpectrogram(prompt_samples_scaled, sample_rate, feat_scale,
-                          &prompt_features);
 
     int32_t num_frames = prompt_features.size() / mel_dim;
 
-    if (num_frames == 0) {
-      SHERPA_ONNX_LOGE("No frames extracted from the prompt audio");
-      return {};
-    }
-
     std::array<int64_t, 3> shape = {1, num_frames, mel_dim};
     auto prompt_features_tensor = Ort::Value::CreateTensor(
-        memory_info, prompt_features.data(), prompt_features.size(),
-        shape.data(), shape.size());
+        memory_info, const_cast<float *>(prompt_features.data()),
+        prompt_features.size(), shape.data(), shape.size());
 
     Ort::Value mel =
         model_->Run(std::move(tokens_tensor), std::move(prompt_tokens_tensor),
-                    std::move(prompt_features_tensor), speed, num_steps);
+                    std::move(prompt_features_tensor), speed, num_steps,
+                    t_shift, guidance_scale);
 
     // Assume mel_shape = {1, T, C}
     std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
@@ -300,13 +474,6 @@ class OfflineTtsZipvoiceImpl : public OfflineTtsImpl {
     GeneratedAudio ans;
     ans.samples = vocoder_->Run(std::move(mel_new));
     ans.sample_rate = model_->GetMetaData().sample_rate;
-
-    if (prompt_rms < target_rms && target_rms > 0.0f) {
-      float scale = prompt_rms / target_rms;
-      for (auto &s : ans.samples) {
-        s *= scale;
-      }
-    }
     return ans;
   }
 

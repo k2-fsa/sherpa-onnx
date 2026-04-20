@@ -41,7 +41,6 @@
 |-------|----------|----------|------------|
 | ✔️     |  ✔️       |   ✔️      |    ✔️       |
 
-For Rust support, please see [sherpa-rs][sherpa-rs]
 
 It also supports WebAssembly.
 
@@ -70,7 +69,7 @@ This repository supports running the following functions **locally**
   - Spoken language identification
   - Audio tagging
   - VAD (e.g., [silero-vad][silero-vad])
-  - Speech enhancement (e.g., [gtcrn][gtcrn])
+  - Speech enhancement (e.g., [gtcrn][gtcrn], [DPDFNet](https://github.com/ceva-ip/DPDFNet))
   - Keyword spotting
   - Source separation (e.g., [spleeter][spleeter], [UVR][UVR])
 
@@ -92,6 +91,8 @@ on the following platforms and operating systems:
   - [旭日X3派][旭日X3派]
   - [爱芯派][爱芯派]
   - [RK3588][RK3588]
+  - [SpacemiT-K1][SpacemiT-K1]
+  - [SpacemiT-K3][SpacemiT-K3]
   - etc
 
 with the following APIs
@@ -145,6 +146,8 @@ We also have spaces built using WebAssembly. They are listed below:
 |Speech synthesis (Matcha, English)                                                                  |[Click me][wasm-hf-tts-matcha-en]| [地址][wasm-ms-tts-matcha-en]|
 |Speech synthesis (Matcha, Chinese+English)                                                          |[Click me][wasm-hf-tts-matcha-zh-en]| [地址][wasm-ms-tts-matcha-zh-en]|
 |Speaker diarization                                                                         |[Click me][wasm-hf-speaker-diarization]|[地址][wasm-ms-speaker-diarization]|
+|Voice cloning with ZipVoice (Chinese+English)                                               |[Click me][wasm-hf-voice-cloning-zipvoice]|[地址][wasm-ms-voice-cloning-zipvoice]|
+|Voice cloning with Pocket TTS (English)                                               |[Click me][wasm-hf-voice-cloning-pocket]|[地址][wasm-ms-voice-cloning-pocket]|
 
 </details>
 
@@ -297,6 +300,31 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [Speed of Sound](https://github.com/zugaldia/speedofsound)
+
+> A voice-typing application for the Linux desktop (GTK4/Adwaita).
+> It captures microphone audio, transcribes it offline using Sherpa ONNX ASR models,
+> optionally polishes the text with an LLM, and types the result into the active window
+> via XDG Remote Desktop Portal keyboard simulation.
+
+### [VoxSherpa TTS](https://github.com/CodeBySonu95/VoxSherpa-TTS)
+
+> VoxSherpa TTS is a 100% offline Android Text-to-Speech app powered by Sherpa-ONNX.
+> It supports Kokoro-82M, Piper, and VITS engines with multilingual support including
+> Hindi, English, British English, Japanese, Chinese and 50+ more languages.
+
+- [Download APK v1.0-beta](https://huggingface.co/CodeBySonu95/Sherpa-onnx-models/resolve/main/VoxSherpa-TTS_test.apk)
+- Android 11+ · 100% offline · No telemetry
+
+<div align="center">
+
+| Generate | Models | Library | Settings |
+|:---:|:---:|:---:|:---:|
+| <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="180"/> | <img src="https://raw.githubusercontent.com/CodeBySonu95/VoxSherpa-TTS/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="180"/> |
+
+</div>
+
+---
 ### [BreezeApp](https://github.com/mtkresearch/BreezeApp) from [MediaTek Research](https://github.com/mtkresearch)
 
 > BreezeAPP is a mobile AI application developed for both Android and iOS platforms.
@@ -424,15 +452,29 @@ It uses Swift for iOS and Java for Android.
 Flet ASR/STT component based on sherpa-onnx.
 Example [a chat box agent](https://github.com/SamYuan1990/i18n-agent-action)
 
-### [elderly-companion](https://github.com/SearocIsMe/elderly-companion)
-
-It uses sherpa-onnx's Python API for real-time speech recognition in ROS2 with RK NPU.
-
 ### [achatbot-go](https://github.com/ai-bot-pro/achatbot-go)
 
 a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 
-[sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
+### [fcitx5-vinput](https://github.com/xifan2333/fcitx5-vinput)
+
+Local offline voice input plugin for [Fcitx5](https://github.com/fcitx/fcitx5) (Linux input method framework).
+It uses C++ with offline ASR for speech recognition, supporting push-to-talk,
+command mode, and optional LLM post-processing.
+
+Video demo in Chinese: [fcitx5-vinput](https://www.bilibili.com/video/BV1a6cUzVE6F)
+
+### [Wake Word](https://github.com/analyticsinmotion/wake-word)
+
+A VS Code extension for hands-free voice-activated coding. It uses sherpa-onnx for real-time
+keyword spotting (KWS) to detect custom wake phrases and trigger VS Code commands by voice.
+Audio capture is handled by [decibri](https://github.com/analyticsinmotion/decibri), a
+cross-platform Node.js microphone streaming library with prebuilt native binaries.
+
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=analytics-in-motion.wake-word)
+- [Open VSX](https://open-vsx.org/extension/analytics-in-motion/wake-word)
+- [decibri integration guides for sherpa-onnx](https://decibri.dev/docs/node/integrations/sherpa-onnx-stt.html)
+
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
 [RV1126]: https://www.rock-chips.com/uploads/pdf/2022.8.26/191/RV1126%20Brief%20Datasheet.pdf
@@ -510,6 +552,10 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [wasm-ms-tts-piper-de]: https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-de
 [wasm-hf-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/web-assembly-speaker-diarization-sherpa-onnx
 [wasm-ms-speaker-diarization]: https://www.modelscope.cn/studios/csukuangfj/web-assembly-speaker-diarization-sherpa-onnx
+[wasm-hf-voice-cloning-zipvoice]: https://huggingface.co/spaces/k2-fsa/web-assembly-zh-en-tts-zipvoice
+[wasm-ms-voice-cloning-zipvoice]: https://modelscope.cn/studios/csukuangfj/web-assembly-zh-en-tts-zipvoice
+[wasm-hf-voice-cloning-pocket]: https://huggingface.co/spaces/k2-fsa/web-assembly-en-tts-pocket
+[wasm-ms-voice-cloning-pocket]: https://modelscope.cn/studios/csukuangfj/web-assembly-en-tts-pocket
 [apk-speaker-diarization]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/apk.html
 [apk-speaker-diarization-cn]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/apk-cn.html
 [apk-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/android/apk.html
@@ -534,8 +580,8 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [apk-slid-cn]: https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html
 [apk-kws]: https://k2-fsa.github.io/sherpa/onnx/kws/apk.html
 [apk-kws-cn]: https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html
-[apk-flutter-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app.html
-[apk-flutter-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app-cn.html
+[apk-flutter-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
+[apk-flutter-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr
 [flutter-tts-android]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android.html
 [flutter-tts-android-cn]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android-cn.html
 [flutter-tts-linux]: https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux.html
@@ -596,3 +642,5 @@ a multimodal chatbot based on go with sherpa-onnx's speech lib api.
 [qnn-doc]: https://k2-fsa.github.io/sherpa/onnx/qnn/index.html
 [ascend-doc]: https://k2-fsa.github.io/sherpa/onnx/ascend/index.html
 [axera-npu]: https://axera-tech.com/Skill/166.html
+[SpacemiT-K1]: https://cdn-resource.spacemit.com/file/chip/K1/K1_brief_zh.pdf
+[SpacemiT-K3]: https://cdn-resource.spacemit.com/file/chip/K3/K3_brief_zh.pdf

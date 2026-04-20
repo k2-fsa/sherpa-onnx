@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - master
+      - nodejs-api
     paths:
       - '.github/workflows/test-nodejs.yaml'
+      - 'build-wasm-simd-nodejs.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
+      - 'wasm/nodejs/**'
       - 'scripts/nodejs/**'
       - 'nodejs-examples/**'
 

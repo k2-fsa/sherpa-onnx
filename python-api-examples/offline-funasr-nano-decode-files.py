@@ -10,8 +10,7 @@ This script demonstrates how to use FunASR-nano models for offline speech recogn
 Usage:
     python offline-funasr-nano-decode-files.py \
         --encoder-adaptor=/path/to/encoder_adaptor.onnx \
-        --llm-prefill=/path/to/llm_prefill.onnx \
-        --llm-decode=/path/to/llm_decode.onnx \
+        --llm=/path/to/llm.onnx \
         --tokenizer=/path/to/Qwen3-0.6B \
         --embedding=/path/to/embedding.onnx \
         [--num-threads=4] \
@@ -46,17 +45,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--llm-prefill",
+        "--llm",
         type=str,
         required=True,
-        help="Path to llm_prefill.onnx (KV cache mode)",
-    )
-
-    parser.add_argument(
-        "--llm-decode",
-        type=str,
-        required=True,
-        help="Path to llm_decode.onnx (KV cache mode)",
+        help="Path to llm.onnx (unified KV cache model)",
     )
 
     parser.add_argument(
@@ -83,7 +75,7 @@ def get_args():
     parser.add_argument(
         "--user-prompt",
         type=str,
-        default="Transcription:",
+        default="语音转写:",
         help="User prompt template for FunASR-nano",
     )
 
@@ -97,7 +89,7 @@ def get_args():
     parser.add_argument(
         "--temperature",
         type=float,
-        default=0.3,
+        default=1e-6,
         help="Sampling temperature",
     )
 
@@ -113,6 +105,34 @@ def get_args():
         type=int,
         default=42,
         help="Random seed",
+    )
+
+    parser.add_argument(
+        "--language",
+        type=str,
+        default="",
+        help="Language for transcription (empty string means None)",
+    )
+
+    parser.add_argument(
+        "--itn",
+        action="store_true",
+        default=True,
+        help="Whether to apply inverse text normalization (default: True)",
+    )
+
+    parser.add_argument(
+        "--no-itn",
+        dest="itn",
+        action="store_false",
+        help="Disable inverse text normalization",
+    )
+
+    parser.add_argument(
+        "--hotwords",
+        type=str,
+        default="",
+        help="Hotwords (comma-separated, e.g., 'Sherpa,FunASR')",
     )
 
     parser.add_argument(
@@ -151,8 +171,7 @@ def get_args():
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     return sherpa_onnx.OfflineRecognizer.from_funasr_nano(
         encoder_adaptor=args.encoder_adaptor,
-        llm_prefill=args.llm_prefill,
-        llm_decode=args.llm_decode,
+        llm=args.llm,
         embedding=args.embedding,
         tokenizer=args.tokenizer,
         num_threads=args.num_threads,
@@ -164,6 +183,9 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         temperature=args.temperature,
         top_p=args.top_p,
         seed=args.seed,
+        language=args.language,
+        itn=args.itn,
+        hotwords=args.hotwords,
     )
 
 

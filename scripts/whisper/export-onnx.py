@@ -32,9 +32,6 @@ from whisper.model import (
     TextDecoder,
 )
 
-torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
-
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -314,15 +311,24 @@ def convert_tokens(name, model):
             f.write(f"{t} {i}\n")
 
 
-@torch.no_grad()
-def main():
-    args = get_args()
-    name = args.model
-    print(args)
-    print(name)
+def load_model(name: str):
+    """Load a Whisper model by name.
 
-    opset_version = 13
+    For standard OpenAI models (tiny, base, small, medium, large, etc.),
+    this uses whisper.load_model() directly.
 
+    For distil-whisper and fine-tuned models, this expects the checkpoint
+    file to be pre-downloaded to the current directory with a specific name.
+
+    Args:
+        name: Model name (e.g., "tiny", "distil-small.en", "medium-aishell")
+
+    Returns:
+        The loaded whisper model.
+
+    Raises:
+        ValueError: If a required checkpoint file is not found.
+    """
     if name == "distil-medium.en":
         filename = "./distil-medium-en-original-model.bin"
         if not Path(filename).is_file():
@@ -335,7 +341,7 @@ def main():
                 wget -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     elif name == "distil-large-v2":
         filename = "./distil-large-v2-original-model.bin"
         if not Path(filename).is_file():
@@ -348,7 +354,7 @@ def main():
                 wget -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     elif name == "distil-large-v3":
         filename = "./distil-large-v3-original-model.bin"
         if not Path(filename).is_file():
@@ -361,7 +367,7 @@ def main():
                 wget -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     elif name == "distil-large-v3.5":
         filename = "./distil-large-v3.5-original-model.bin"
         if not Path(filename).is_file():
@@ -374,7 +380,7 @@ def main():
                 wget -O distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     elif name == "distil-small.en":
         filename = "./distil-small-en-original-model.bin"
         if not Path(filename).is_file():
@@ -387,7 +393,7 @@ def main():
                 wget -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     elif name == "medium-aishell":
         filename = "./medium-aishell.pt"
         if not Path(filename).is_file():
@@ -400,9 +406,21 @@ def main():
                 wget -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
             """
             )
-        model = whisper.load_model(filename)
+        return whisper.load_model(filename)
     else:
-        model = whisper.load_model(name)
+        return whisper.load_model(name)
+
+
+@torch.no_grad()
+def main():
+    args = get_args()
+    name = args.model
+    print(args)
+    print(name)
+
+    opset_version = 17
+
+    model = load_model(name)
     print(model.dims)
 
     print(
@@ -640,4 +658,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+    # To fix
+    # TypeError: scaled_dot_product_attention(): argument 'is_causal' must be bool, not Tensor
+    # See also https://github.com/k2-fsa/sherpa-onnx/issues/1764
+    from whisper.model import disable_sdpa
+
+    with disable_sdpa():
+        main()

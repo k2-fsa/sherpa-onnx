@@ -6,7 +6,10 @@ public class OfflineTtsModelConfig {
     private final OfflineTtsVitsModelConfig vits;
     private final OfflineTtsMatchaModelConfig matcha;
     private final OfflineTtsKokoroModelConfig kokoro;
+    private final OfflineTtsZipVoiceModelConfig zipvoice;
     private final OfflineTtsKittenModelConfig kitten;
+    private final OfflineTtsPocketModelConfig pocket;
+    private final OfflineTtsSupertonicModelConfig supertonic;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
@@ -15,7 +18,10 @@ public class OfflineTtsModelConfig {
         this.vits = builder.vits;
         this.matcha = builder.matcha;
         this.kokoro = builder.kokoro;
+        this.zipvoice = builder.zipvoice;
         this.kitten = builder.kitten;
+        this.pocket = builder.pocket;
+        this.supertonic = builder.supertonic;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -37,15 +43,30 @@ public class OfflineTtsModelConfig {
         return kokoro;
     }
 
+    public OfflineTtsZipVoiceModelConfig getZipvoice() {
+        return zipvoice;
+    }
+
     public OfflineTtsKittenModelConfig getKitten() {
         return kitten;
+    }
+
+    public OfflineTtsPocketModelConfig getPocket() {
+        return pocket;
+    }
+
+    public OfflineTtsSupertonicModelConfig getSupertonic() {
+        return supertonic;
     }
 
     public static class Builder {
         private OfflineTtsVitsModelConfig vits = OfflineTtsVitsModelConfig.builder().build();
         private OfflineTtsMatchaModelConfig matcha = OfflineTtsMatchaModelConfig.builder().build();
         private OfflineTtsKokoroModelConfig kokoro = OfflineTtsKokoroModelConfig.builder().build();
+        private OfflineTtsZipVoiceModelConfig zipvoice = OfflineTtsZipVoiceModelConfig.builder().build();
         private OfflineTtsKittenModelConfig kitten = OfflineTtsKittenModelConfig.builder().build();
+        private OfflineTtsPocketModelConfig pocket = OfflineTtsPocketModelConfig.builder().build();
+        private OfflineTtsSupertonicModelConfig supertonic = OfflineTtsSupertonicModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -69,8 +90,23 @@ public class OfflineTtsModelConfig {
             return this;
         }
 
+        public Builder setZipvoice(OfflineTtsZipVoiceModelConfig zipvoice) {
+            this.zipvoice = zipvoice;
+            return this;
+        }
+
         public Builder setKitten(OfflineTtsKittenModelConfig kitten) {
             this.kitten = kitten;
+            return this;
+        }
+
+        public Builder setPocket(OfflineTtsPocketModelConfig pocket) {
+            this.pocket = pocket;
+            return this;
+        }
+
+        public Builder setSupertonic(OfflineTtsSupertonicModelConfig supertonic) {
+            this.supertonic = supertonic;
             return this;
         }
 

@@ -2,6 +2,7 @@
 # Copyright      2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 import os
+import sys
 from pathlib import Path
 from typing import Dict
 
@@ -9,6 +10,10 @@ import nemo.collections.asr as nemo_asr
 import onnx
 import torch
 from onnxruntime.quantization import QuantType, quantize_dynamic
+
+# Add parent directory to path to import generate_bpe_vocab
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from generate_bpe_vocab import generate_bpe_vocab_from_model
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, str]):
@@ -60,6 +65,13 @@ def main():
             f.write(f"{s} {i}\n")
         f.write(f"<blk> {i+1}\n")
         print("Saved to tokens.txt")
+
+    # Generate bpe.vocab for hotword support
+    print("Generating bpe.vocab for hotword support...")
+    generate_bpe_vocab_from_model(
+        asr_model=asr_model,
+        output_path="./bpe.vocab",
+    )
 
     asr_model.encoder.export("encoder.onnx")
     asr_model.decoder.export("decoder.onnx")

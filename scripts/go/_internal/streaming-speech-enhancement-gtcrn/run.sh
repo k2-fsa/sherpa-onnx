@@ -1,0 +1,1 @@
+../../../../go-api-examples/streaming-speech-enhancement-gtcrn/run.sh

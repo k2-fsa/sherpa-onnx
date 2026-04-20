@@ -222,7 +222,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -235,7 +235,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI ${{ github.event.inputs.publish_sherpa_onnx_bin }}
         if: ${{ (github.event.inputs.publish_sherpa_onnx_bin || 'true') == 'true' }}
@@ -246,7 +246,6 @@ jobs:
         run: |
           opts='--break-system-packages'
 
-          python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload /tmp/wheels/*.whl
@@ -271,7 +270,7 @@ jobs:
           git diff .
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.4
+        uses: pypa/cibuildwheel@v3.3.1
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: >
@@ -315,7 +314,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -328,7 +327,7 @@ jobs:
             git status
             git add .
             git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-wheels main
 
       - name: Publish wheels to PyPI
         env:
@@ -337,7 +336,6 @@ jobs:
         run: |
           opts='--break-system-packages'
 
-          python3 -m pip install $opts --upgrade pip
           python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

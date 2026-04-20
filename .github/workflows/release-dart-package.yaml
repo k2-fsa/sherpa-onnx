@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   build_linux_libs_x64:
+    # if: false
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -32,13 +33,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux2014_x86_64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -65,6 +65,7 @@ jobs:
               make install
 
               ls -lh ./install/lib
+            '
 
       - name: Create tar file
         shell: bash
@@ -81,6 +82,7 @@ jobs:
           path: ./*.tar.bz2
 
   build_linux_libs_aarch64:
+    # if: false
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -98,13 +100,12 @@ jobs:
           git diff .
 
       - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
+            quay.io/pypa/manylinux2014_aarch64 \
+            bash -c '
               uname -a
               gcc --version
               cmake --version
@@ -131,6 +132,7 @@ jobs:
               make install
 
               ls -lh ./install/lib
+            '
 
       - name: Create tar file
         shell: bash
@@ -438,11 +440,11 @@ jobs:
           flutter pub publish --dry-run
           flutter pub publish --force
 
-  sherpa_onnx_android:
+  sherpa_onnx_android_arm64:
     # if: false
     permissions:
       id-token: write # Required for authentication using OIDC
-    name: sherpa_onnx_android
+    name: sherpa_onnx_android_arm64
     runs-on: ubuntu-latest
 
     steps:
@@ -457,14 +459,14 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-flutter-release-package-android
+          key: flutter-release-package-android-arm64
 
       - name: Fix version
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          src_dir=$PWD/flutter/sherpa_onnx_android
+          src_dir=$PWD/flutter/sherpa_onnx_android_arm64
           pushd $src_dir
           v="version: $SHERPA_ONNX_VERSION"
           echo "v: $v"
@@ -476,7 +478,7 @@ jobs:
       - name: Copy extra files
         shell: bash
         run: |
-          dst=flutter/sherpa_onnx_android
+          dst=flutter/sherpa_onnx_android_arm64
 
           mkdir $dst/example
 
@@ -499,6 +501,91 @@ jobs:
 
           ./build-android-arm64-v8a.sh
 
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          echo "----arm64-v8a----"
+          cp -v build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android_arm64/android/src/main/jniLibs/arm64-v8a/
+
+          mv -v flutter/sherpa_onnx_android_arm64 /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published
+
+          cd /tmp
+          tar cjfv android_arm64.tar.bz2 ./to_be_published
+          ls -lh android_arm64.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-arm64
+          path: /tmp/android_arm64.tar.bz2
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx_android_armeabi:
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_android_armeabi
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: flutter-release-package-android-armeabi
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_android_armeabi
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_android_armeabi
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
       - name: Build android-armv7-eabi
         shell: bash
         run: |
@@ -512,6 +599,91 @@ jobs:
 
           ./build-android-armv7-eabi.sh
 
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          echo "----armv7-eabi----"
+          cp -v build-android-armv7-eabi/install/lib/lib*.so flutter/sherpa_onnx_android_armeabi/android/src/main/jniLibs/armeabi-v7a/
+
+          mv -v flutter/sherpa_onnx_android_armeabi /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published
+
+          cd /tmp
+          tar cjfv android_armeabi.tar.bz2 ./to_be_published
+          ls -lh android_armeabi.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-armeabi
+          path: /tmp/android_armeabi.tar.bz2
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx_android_x86:
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_android_x86
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: flutter-release-package-android-x86
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_android_x86
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_android_x86
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
       - name: Build android-x86
         shell: bash
         run: |
@@ -524,6 +696,91 @@ jobs:
           export SHERPA_ONNX_ENABLE_BINARY=OFF
 
           ./build-android-x86.sh
+
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          echo "----x86----"
+          cp -v build-android-x86/install/lib/lib*.so flutter/sherpa_onnx_android_x86/android/src/main/jniLibs/x86/
+
+          mv -v flutter/sherpa_onnx_android_x86 /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published
+
+          cd /tmp
+          tar cjfv android_x86.tar.bz2 ./to_be_published
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-x86
+          path: /tmp/android_x86.tar.bz2
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx_android_x86_64:
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_android_x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version
+        shell: bash
+        run: |
+          ./new-release.sh
+          git diff .
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: flutter-release-package-android-x86_64
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_android_x86_64
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_android_x86_64
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
 
       - name: Build android-x86-64
         shell: bash
@@ -541,21 +798,21 @@ jobs:
       - name: Copy pre-built libs
         shell: bash
         run: |
-          echo "----arm64-v8a----"
-          cp -v build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/arm64-v8a/
-
-          echo "----armv7-eabi----"
-          cp -v build-android-armv7-eabi/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/armeabi-v7a
-
-          echo "----x86----"
-          cp -v build-android-x86/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/x86
-
           echo "----x86_64----"
-          cp -v build-android-x86-64/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/x86_64
+          cp -v build-android-x86-64/install/lib/lib*.so flutter/sherpa_onnx_android_x86_64/android/src/main/jniLibs/x86_64/
 
-          mv -v flutter/sherpa_onnx_android /tmp/to_be_published
+          mv -v flutter/sherpa_onnx_android_x86_64 /tmp/to_be_published
 
           ls -lh /tmp/to_be_published
+
+          cd /tmp
+          tar cjfv android_x64.tar.bz2 ./to_be_published
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-x64
+          path: /tmp/android_x64.tar.bz2
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -660,7 +917,7 @@ jobs:
           flutter pub publish --force
 
   sherpa_onnx:
-    needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android, sherpa_onnx_ios]
+    needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android_arm64, sherpa_onnx_android_armeabi, sherpa_onnx_android_x86, sherpa_onnx_android_x86_64, sherpa_onnx_ios]
     # if: false
     permissions:
       id-token: write # Required for authentication using OIDC
@@ -687,6 +944,7 @@ jobs:
       - name: Fix version
         shell: bash
         run: |
+          sleep 60  # Wait for pub.dev to index
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           src_dir=$PWD/flutter/sherpa_onnx

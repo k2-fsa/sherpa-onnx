@@ -4,6 +4,17 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 # Usage
 
+## Non-streaming speech enhancement
+
+```bash
+./run-non-streaming-speech-enhancement-gtcrn.sh
+./run-non-streaming-speech-enhancement-dpdfnet.sh
+```
+
+Use 16 kHz DPDFNet models such as
+`dpdfnet_baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for
+downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
+
 ## Non-streaming speaker diarization
 
 ```bash
@@ -12,11 +23,12 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ## Streaming Speech recognition
 
-```
+```bash
 ./run-streaming-asr-from-mic-transducer.sh
-./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-ctc-hlg.sh
+./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-paraformer.sh
+./run-streaming-decode-file-tone-ctc.sh
 ./run-streaming-decode-file-transducer.sh
 ```
 
@@ -24,15 +36,22 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-decode-file-dolphin-ctc.sh
+./run-non-streaming-decode-file-fire-red-asr-ctc.sh
 ./run-non-streaming-decode-file-fire-red-asr.sh
+./run-non-streaming-decode-file-funasr-nano.sh
+./run-non-streaming-decode-file-medasr-ctc.sh
 ./run-non-streaming-decode-file-moonshine.sh
+./run-non-streaming-decode-file-moonshine-v2.sh
 ./run-non-streaming-decode-file-nemo-canary.sh
 ./run-non-streaming-decode-file-nemo.sh
+./run-non-streaming-decode-file-omnilingual-asr-ctc.sh
 ./run-non-streaming-decode-file-paraformer.sh
+./run-non-streaming-decode-file-sense-voice-with-hr.sh
 ./run-non-streaming-decode-file-sense-voice.sh
 ./run-non-streaming-decode-file-tele-speech-ctc.sh
 ./run-non-streaming-decode-file-transducer-hotwords.sh
 ./run-non-streaming-decode-file-transducer.sh
+./run-non-streaming-decode-file-wenet-ctc.sh
 ./run-non-streaming-decode-file-whisper-multiple.sh
 ./run-non-streaming-decode-file-whisper.sh
 ./run-non-streaming-decode-file-zipformer-ctc.sh
@@ -47,12 +66,20 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ## Non-Streaming text-to-speech
 
 ```bash
-./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-coqui-de.sh
+./run-non-streaming-tts-kitten-en.sh
+./run-non-streaming-tts-kokoro-en.sh
+./run-non-streaming-tts-kokoro-zh-en.sh
+./run-non-streaming-tts-matcha-en.sh
+./run-non-streaming-tts-matcha-zh.sh
+./run-non-streaming-tts-piper-en-with-callback.sh
+./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-vits-zh.sh
+./run-pocket-tts.sh
+./run-zipvoice-tts.sh
 ```
 
-## Non-Streaming text-to-speech (Play as it is generating)
+## Non-Streaming text-to-speech (Playback the audio as it is being generated)
 
 ```bash
 ./run-non-streaming-tts-piper-en-with-callback.sh
@@ -69,7 +96,8 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 The punctuation model supports both English and Chinese.
 
 ```bash
-./run-add-punctuation-zh-en.sh
+./run-offline-add-punctuation-zh-en.sh
+./run-online-add-punctuation-zh-en.sh
 ```
 
 ## Audio tagging

@@ -8,6 +8,9 @@ public class SpeakerEmbeddingExtractor {
     public SpeakerEmbeddingExtractor(SpeakerEmbeddingExtractorConfig config) {
         LibraryLoader.maybeLoad();
         ptr = newFromFile(config);
+        if (ptr == 0) {
+            throw new IllegalArgumentException("Invalid SpeakerEmbeddingExtractorConfig: failed to create native SpeakerEmbeddingExtractor");
+        }
     }
 
     @Override

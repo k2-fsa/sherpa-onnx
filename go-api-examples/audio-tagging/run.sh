@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -ex
+
+export CGO_ENABLED=1
+
 if [ ! -f ./sherpa-onnx-zipformer-small-audio-tagging-2024-04-15/model.int8.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2
 

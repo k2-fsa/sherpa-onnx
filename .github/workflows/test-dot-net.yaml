@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - master
+      - dot-net
     paths:
       - '.github/workflows/test-dot-net.yaml'
+      - '.github/scripts/test-dot-net.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'
@@ -163,7 +165,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: Check dotnet
         run: dotnet --info
