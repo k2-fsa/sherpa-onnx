@@ -407,7 +407,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
       cls, "<init>", "(Ljava/lang/String;[Ljava/lang/String;[F[F)V");
 
   // text
-  jstring text = env->NewStringUTF(result.text.c_str());
+  jstring text = SafeNewStringUTF(env, result.text);
 
   // tokens
   jclass string_cls = env->FindClass("java/lang/String");
@@ -415,7 +415,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
       env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
   env->DeleteLocalRef(string_cls);
   for (size_t i = 0; i < result.tokens.size(); ++i) {
-    jstring token_str = env->NewStringUTF(result.tokens[i].c_str());
+    jstring token_str = SafeNewStringUTF(env, result.tokens[i]);
     env->SetObjectArrayElement(tokens, i, token_str);
     env->DeleteLocalRef(token_str);
   }

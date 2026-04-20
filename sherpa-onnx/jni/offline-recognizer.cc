@@ -645,7 +645,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
       env->GetMethodID(cls, "<init>",
                        "(Ljava/lang/String;[Ljava/lang/String;[FLjava/lang/"
                        "String;Ljava/lang/String;Ljava/lang/String;[F)V");
-  jstring jtext = env->NewStringUTF(result.text.c_str());
+  jstring jtext = SafeNewStringUTF(env, result.text);
 
   jclass string_cls = env->FindClass("java/lang/String");
   jobjectArray jtokens =
@@ -653,7 +653,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->DeleteLocalRef(string_cls);
 
   for (size_t i = 0; i < result.tokens.size(); ++i) {
-    jstring token_str = env->NewStringUTF(result.tokens[i].c_str());
+    jstring token_str = SafeNewStringUTF(env, result.tokens[i]);
     env->SetObjectArrayElement(jtokens, i, token_str);
     env->DeleteLocalRef(token_str);
   }
@@ -662,9 +662,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   env->SetFloatArrayRegion(jtimestamps, 0, result.timestamps.size(),
                            result.timestamps.data());
 
-  jstring jlang = env->NewStringUTF(result.lang.c_str());
-  jstring jemotion = env->NewStringUTF(result.emotion.c_str());
-  jstring jevent = env->NewStringUTF(result.event.c_str());
+  jstring jlang = SafeNewStringUTF(env, result.lang);
+  jstring jemotion = SafeNewStringUTF(env, result.emotion);
+  jstring jevent = SafeNewStringUTF(env, result.event);
 
   jfloatArray jdurations = env->NewFloatArray(result.durations.size());
   env->SetFloatArrayRegion(jdurations, 0, result.durations.size(),
