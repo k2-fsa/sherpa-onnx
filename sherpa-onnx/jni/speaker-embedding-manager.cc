@@ -139,14 +139,14 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_search(JNIEnv *env,
     jclass iae = env->FindClass("java/lang/IllegalArgumentException");
     env->ThrowNew(iae, "Embedding dimension mismatch");
     env->DeleteLocalRef(iae);
-    return env->NewStringUTF("");
+    return SafeNewStringUTF(env, "");
   }
 
   std::string name = manager->Search(p, threshold);
 
   env->ReleaseFloatArrayElements(embedding, p, JNI_ABORT);
 
-  return env->NewStringUTF(name.c_str());
+  return SafeNewStringUTF(env, name);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -220,7 +220,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_allSpeakerNames(
 
   int32_t i = 0;
   for (auto &s : all_speakers) {
-    jstring js = env->NewStringUTF(s.c_str());
+    jstring js = SafeNewStringUTF(env, s);
     env->SetObjectArrayElement(obj_arr, i, js);
     env->DeleteLocalRef(js);
     ++i;
