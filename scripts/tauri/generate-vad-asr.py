@@ -56,18 +56,14 @@ def get_models() -> List[Model]:
             family="paraformer",
             model_type="paraformer",
             files={"model": "model.int8.onnx"},
-            rule_fsts="itn_zh_number.fst",
-            cmd="""
+            rule_fsts="itn_zh_number.fst",cmd="""
             if [ ! -f itn_zh_number.fst ]; then
-              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+              curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
             fi
-            pushd $model_name
-            rm -fv README.md
-            rm -rfv test_wavs
-            rm -fv model.onnx
-            ls -lh
-            popd
-            """,
+            rm -fv $model_name/README.md
+            rm -rfv $model_name/test_wavs
+            rm -fv $model_name/model.onnx
+            rm -fv $model_name/am.mvn $model_name/config.yaml $model_name/*.json $model_name/*.py""",
         ),
         Model(
             model_name="icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04",
@@ -81,18 +77,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-30-avg-4.int8.onnx",
                 "decoder": "decoder-epoch-30-avg-4.onnx",
                 "joiner": "joiner-epoch-30-avg-4.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-30-avg-4.onnx
-            rm -fv decoder-epoch-30-avg-4.int8.onnx
-            rm -fv joiner-epoch-30-avg-4.int8.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-30-avg-4.onnx
+            rm -fv $model_name/decoder-epoch-30-avg-4.int8.onnx
+            rm -fv $model_name/joiner-epoch-30-avg-4.int8.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-whisper-tiny.en",
@@ -107,19 +98,14 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "tiny.en-encoder.int8.onnx",
                 "decoder": "tiny.en-decoder.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv tiny.en-encoder.onnx
-            rm -fv tiny.en-decoder.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv requirements.txt
-            rm -fv .gitignore
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/tiny.en-encoder.onnx
+            rm -fv $model_name/tiny.en-decoder.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/requirements.txt
+            rm -fv $model_name/.gitignore
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-whisper-base.en",
@@ -134,19 +120,14 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "base.en-encoder.int8.onnx",
                 "decoder": "base.en-decoder.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv base.en-encoder.onnx
-            rm -fv base.en-decoder.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv requirements.txt
-            rm -fv .gitignore
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/base.en-encoder.onnx
+            rm -fv $model_name/base.en-decoder.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/requirements.txt
+            rm -fv $model_name/.gitignore
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="icefall-asr-zipformer-wenetspeech-20230615",
@@ -160,18 +141,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-12-avg-4.int8.onnx",
                 "decoder": "decoder-epoch-12-avg-4.onnx",
                 "joiner": "joiner-epoch-12-avg-4.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-12-avg-4.onnx
-            rm -fv decoder-epoch-12-avg-4.int8.onnx
-            rm -fv joiner-epoch-12-avg-4.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-12-avg-4.onnx
+            rm -fv $model_name/decoder-epoch-12-avg-4.int8.onnx
+            rm -fv $model_name/joiner-epoch-12-avg-4.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-multi-zh-hans-2023-9-2",
@@ -185,18 +161,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-20-avg-1.int8.onnx",
                 "decoder": "decoder-epoch-20-avg-1.onnx",
                 "joiner": "joiner-epoch-20-avg-1.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-20-avg-1.onnx
-            rm -fv decoder-epoch-20-avg-1.int8.onnx
-            rm -fv joiner-epoch-20-avg-1.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-20-avg-1.onnx
+            rm -fv $model_name/decoder-epoch-20-avg-1.int8.onnx
+            rm -fv $model_name/joiner-epoch-20-avg-1.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-ctc-en-citrinet-512",
@@ -205,15 +176,10 @@ def get_models() -> List[Model]:
             lang2="English",
             short_name="nemo_ctc",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k",
@@ -222,14 +188,9 @@ def get_models() -> List[Model]:
             lang2="Multi-language",
             short_name="nemo_conformer",
             family="nemo_ctc",
-            files={"model": "model.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.onnx"},cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-fast-conformer-ctc-en-24500",
@@ -238,14 +199,9 @@ def get_models() -> List[Model]:
             lang2="English",
             short_name="nemo_conformer",
             family="nemo_ctc",
-            files={"model": "model.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.onnx"},cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288",
@@ -254,14 +210,9 @@ def get_models() -> List[Model]:
             lang2="English,German,Spanish,French",
             short_name="nemo_conformer",
             family="nemo_ctc",
-            files={"model": "model.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.onnx"},cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-fast-conformer-ctc-es-1424",
@@ -270,14 +221,9 @@ def get_models() -> List[Model]:
             lang2="Spanish",
             short_name="nemo_conformer",
             family="nemo_ctc",
-            files={"model": "model.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.onnx"},cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04",
@@ -287,15 +233,10 @@ def get_models() -> List[Model]:
             short_name="telespeech",
             family="telespeech_ctc",
             model_type="telespeech_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-thai-2024-06-20",
@@ -309,18 +250,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-12-avg-5.int8.onnx",
                 "decoder": "decoder-epoch-12-avg-5.onnx",
                 "joiner": "joiner-epoch-12-avg-5.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-12-avg-5.onnx
-            rm -fv decoder-epoch-12-avg-5.int8.onnx
-            rm -fv joiner-epoch-12-avg-5.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-12-avg-5.onnx
+            rm -fv $model_name/decoder-epoch-12-avg-5.int8.onnx
+            rm -fv $model_name/joiner-epoch-12-avg-5.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-korean-2024-06-24",
@@ -334,18 +270,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-99-avg-1.int8.onnx",
                 "decoder": "decoder-epoch-99-avg-1.onnx",
                 "joiner": "joiner-epoch-99-avg-1.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-99-avg-1.onnx
-            rm -fv decoder-epoch-99-avg-1.int8.onnx
-            rm -fv joiner-epoch-99-avg-1.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-99-avg-1.onnx
+            rm -fv $model_name/decoder-epoch-99-avg-1.int8.onnx
+            rm -fv $model_name/joiner-epoch-99-avg-1.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-paraformer-zh-small-2024-03-09",
@@ -356,18 +287,13 @@ def get_models() -> List[Model]:
             family="paraformer",
             model_type="paraformer",
             files={"model": "model.int8.onnx"},
-            rule_fsts="itn_zh_number.fst",
-            cmd="""
+            rule_fsts="itn_zh_number.fst",cmd="""
             if [ ! -f itn_zh_number.fst ]; then
-              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+              curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
             fi
-            pushd $model_name
-            rm -fv model.onnx
-            rm -fv README.md
-            rm -rfv test_wavs
-            ls -lh
-            popd
-            """,
+            rm -fv $model_name/model.onnx
+            rm -fv $model_name/README.md
+            rm -rfv $model_name/test_wavs""",
         ),
         Model(
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17",
@@ -378,14 +304,9 @@ def get_models() -> List[Model]:
             family="sense_voice",
             use_itn=True,
             files={"model": "model.int8.onnx"},
-            use_hr=True,
-            cmd="""
-            pushd $model_name
-            rm -rfv test_wavs
-            rm -fv *.py
-            ls -lh
-            popd
-            """,
+            use_hr=True,cmd="""
+            rm -rfv $model_name/test_wavs
+            rm -fv $model_name/*.py""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01",
@@ -399,18 +320,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-99-avg-1.int8.onnx",
                 "decoder": "decoder-epoch-99-avg-1.onnx",
                 "joiner": "joiner-epoch-99-avg-1.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-99-avg-1.onnx
-            rm -fv decoder-epoch-99-avg-1.int8.onnx
-            rm -fv joiner-epoch-99-avg-1.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-99-avg-1.onnx
+            rm -fv $model_name/decoder-epoch-99-avg-1.int8.onnx
+            rm -fv $model_name/joiner-epoch-99-avg-1.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-ru-2024-09-18",
@@ -424,17 +340,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-small-zipformer-ru-2024-09-18",
@@ -448,17 +359,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24",
@@ -467,15 +373,10 @@ def get_models() -> List[Model]:
             lang2="Russian",
             short_name="nemo_ctc",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24",
@@ -489,17 +390,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.int8.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.int8.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-tiny-en-int8",
@@ -513,19 +409,14 @@ def get_models() -> List[Model]:
                 "encoder": "encode.int8.onnx",
                 "uncached_decoder": "uncached_decode.int8.onnx",
                 "cached_decoder": "cached_decode.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv preprocess.onnx
-            rm -fv encode.onnx
-            rm -fv uncached_decode.onnx
-            rm -fv cached_decode.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/preprocess.onnx
+            rm -fv $model_name/encode.onnx
+            rm -fv $model_name/uncached_decode.onnx
+            rm -fv $model_name/cached_decode.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-en-int8",
@@ -539,19 +430,14 @@ def get_models() -> List[Model]:
                 "encoder": "encode.int8.onnx",
                 "uncached_decoder": "uncached_decode.int8.onnx",
                 "cached_decoder": "cached_decode.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv preprocess.onnx
-            rm -fv encode.onnx
-            rm -fv uncached_decode.onnx
-            rm -fv cached_decode.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/preprocess.onnx
+            rm -fv $model_name/encode.onnx
+            rm -fv $model_name/uncached_decode.onnx
+            rm -fv $model_name/cached_decode.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-zh-en-2023-11-22",
@@ -565,18 +451,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-34-avg-19.int8.onnx",
                 "decoder": "decoder-epoch-34-avg-19.onnx",
                 "joiner": "joiner-epoch-34-avg-19.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-34-avg-19.onnx
-            rm -fv decoder-epoch-34-avg-19.int8.onnx
-            rm -fv joiner-epoch-34-avg-19.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-34-avg-19.onnx
+            rm -fv $model_name/decoder-epoch-34-avg-19.int8.onnx
+            rm -fv $model_name/joiner-epoch-34-avg-19.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16",
@@ -588,17 +469,12 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02",
@@ -607,16 +483,11 @@ def get_models() -> List[Model]:
             lang2="Multi-language",
             short_name="dolphin",
             family="dolphin",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-vi-int8-2025-04-20",
@@ -630,18 +501,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder-epoch-12-avg-8.int8.onnx",
                 "decoder": "decoder-epoch-12-avg-8.onnx",
                 "joiner": "joiner-epoch-12-avg-8.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder-epoch-12-avg-8.onnx
-            rm -fv decoder-epoch-12-avg-8.int8.onnx
-            rm -fv joiner-epoch-12-avg-8.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder-epoch-12-avg-8.onnx
+            rm -fv $model_name/decoder-epoch-12-avg-8.int8.onnx
+            rm -fv $model_name/joiner-epoch-12-avg-8.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19",
@@ -650,15 +516,10 @@ def get_models() -> List[Model]:
             lang2="Russian",
             short_name="nemo_ctc_v2",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19",
@@ -672,17 +533,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.int8.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.int8.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-ru-int8-2025-04-20",
@@ -696,17 +552,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8",
@@ -720,18 +571,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03",
@@ -740,15 +586,10 @@ def get_models() -> List[Model]:
             lang2="Chinese",
             short_name="zipformer_ctc",
             family="zipformer_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8",
@@ -763,17 +604,12 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8",
@@ -782,16 +618,11 @@ def get_models() -> List[Model]:
             lang2="English",
             short_name="parakeet_tdt_ctc",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-parakeet-tdt_ctc-0.6b-ja-35000-int8",
@@ -800,16 +631,11 @@ def get_models() -> List[Model]:
             lang2="Japanese",
             short_name="parakeet_ja",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-transducer-stt_pt_fastconformer_hybrid_large_pc-int8",
@@ -823,18 +649,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-stt_pt_fastconformer_hybrid_large_pc-int8",
@@ -843,16 +664,11 @@ def get_models() -> List[Model]:
             lang2="Portuguese",
             short_name="nemo_ctc_pt",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-transducer-stt_de_fastconformer_hybrid_large_pc-int8",
@@ -866,18 +682,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-stt_de_fastconformer_hybrid_large_pc-int8",
@@ -886,16 +697,11 @@ def get_models() -> List[Model]:
             lang2="German",
             short_name="nemo_ctc_de",
             family="nemo_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-ctc-small-zh-int8-2025-07-16",
@@ -904,15 +710,10 @@ def get_models() -> List[Model]:
             lang2="Chinese",
             short_name="zipformer_ctc_small",
             family="zipformer_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
@@ -926,18 +727,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09",
@@ -948,14 +744,9 @@ def get_models() -> List[Model]:
             family="sense_voice",
             use_itn=True,
             files={"model": "model.int8.onnx"},
-            use_hr=True,
-            cmd="""
-            pushd $model_name
-            rm -rfv test_wavs
-            rm -fv *.py
-            ls -lh
-            popd
-            """,
+            use_hr=True,cmd="""
+            rm -rfv $model_name/test_wavs
+            rm -fv $model_name/*.py""",
         ),
         Model(
             model_name="sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10",
@@ -964,15 +755,10 @@ def get_models() -> List[Model]:
             lang2="Chinese,English,Cantonese",
             short_name="wenet_yue",
             family="wenet_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-paraformer-zh-int8-2025-10-07",
@@ -982,15 +768,10 @@ def get_models() -> List[Model]:
             short_name="paraformer_v2",
             family="paraformer",
             model_type="paraformer",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -fv README.md
-            rm -rfv test_wavs
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -fv $model_name/README.md
+            rm -rfv $model_name/test_wavs""",
         ),
         Model(
             model_name="sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12",
@@ -999,16 +780,11 @@ def get_models() -> List[Model]:
             lang2="1600 languages",
             short_name="omnilingual",
             family="omnilingual",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-medasr-ctc-en-int8-2025-12-25",
@@ -1017,15 +793,10 @@ def get_models() -> List[Model]:
             lang2="English",
             short_name="medasr",
             family="medasr",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-funasr-nano-int8-2025-12-30",
@@ -1041,18 +812,13 @@ def get_models() -> List[Model]:
                 "llm": "llm.int8.onnx",
                 "embedding": "embedding.int8.onnx",
                 "tokenizer": "Qwen3-0.6B",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder_adaptor.onnx
-            rm -fv llm.onnx
-            rm -fv embedding.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder_adaptor.onnx
+            rm -fv $model_name/llm.onnx
+            rm -fv $model_name/embedding.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-int8-2026-02-03",
@@ -1061,15 +827,10 @@ def get_models() -> List[Model]:
             lang2="Chinese (Wu dialect)",
             short_name="wenet_wu",
             family="wenet_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-wenetspeech-wu-u2pp-conformer-ctc-zh-2026-02-03",
@@ -1078,14 +839,9 @@ def get_models() -> List[Model]:
             lang2="Chinese (Wu dialect)",
             short_name="wenet_wu_fp32",
             family="wenet_ctc",
-            files={"model": "model.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.onnx"},cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-zipformer-vi-30M-int8-2026-02-09",
@@ -1099,17 +855,12 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.onnx",
                 "joiner": "joiner.int8.onnx",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv encoder.onnx
-            rm -fv joiner.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25",
@@ -1118,16 +869,11 @@ def get_models() -> List[Model]:
             lang2="Chinese,English",
             short_name="fire_red_asr2_ctc",
             family="fire_red_asr_ctc",
-            files={"model": "model.int8.onnx"},
-            cmd="""
-            pushd $model_name
-            rm -fv model.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            files={"model": "model.int8.onnx"},cmd="""
+            rm -fv $model_name/model.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         # Moonshine v2 models (51-60)
         Model(
@@ -1140,15 +886,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-tiny-ja-quantized-2026-02-27",
@@ -1160,15 +901,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27",
@@ -1180,15 +916,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-zh-quantized-2026-02-27",
@@ -1200,15 +931,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-vi-quantized-2026-02-27",
@@ -1220,15 +946,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-uk-quantized-2026-02-27",
@@ -1240,15 +961,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-ja-quantized-2026-02-27",
@@ -1260,15 +976,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-es-quantized-2026-02-27",
@@ -1280,15 +991,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-en-quantized-2026-02-27",
@@ -1300,15 +1006,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-moonshine-base-ar-quantized-2026-02-27",
@@ -1320,15 +1021,10 @@ def get_models() -> List[Model]:
             files={
                 "encoder": "encoder_model.ort",
                 "merged_decoder": "decoder_model_merged.ort",
-            },
-            cmd="""
-            pushd $model_name
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
         Model(
             model_name="sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25",
@@ -1344,18 +1040,13 @@ def get_models() -> List[Model]:
                 "encoder": "encoder.int8.onnx",
                 "decoder": "decoder.int8.onnx",
                 "tokenizer": "tokenizer",
-            },
-            cmd="""
-            pushd $model_name
-            rm -fv conv_frontend.onnx
-            rm -fv encoder.onnx
-            rm -fv decoder.onnx
-            rm -rf test_wavs
-            rm -fv *.py
-            rm -fv README.md
-            ls -lh
-            popd
-            """,
+            },cmd="""
+            rm -fv $model_name/conv_frontend.onnx
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
         ),
     ]
 
@@ -1511,6 +1202,7 @@ def gen_model_registry(models: List[Model], output_path: Path):
             lines.append(f'            config.model_config.model_type = Some("{model.model_type}".into());')
 
         lines.append(f'            config.model_config.num_threads = {model.num_threads};')
+        lines.append(f'            config.model_config.debug = true;')
 
         if model.rule_fsts:
             lines.append(f'            config.rule_fsts = p("{model.rule_fsts}");')
@@ -1641,16 +1333,13 @@ def get_args():
 def main():
     args = get_args()
     all_models = get_models()
-    all_models = [m for m in all_models if 'sense' in m.model_name]
 
     repo_root = Path(__file__).parent.parent.parent
     tauri_src = repo_root / "tauri-examples" / "non-streaming-speech-recognition-from-file" / "src-tauri"
     scripts_dir = repo_root / "scripts" / "tauri"
     workflows_dir = repo_root / ".github" / "workflows"
 
-    generate_all = not (args.gen_registry or args.gen_workflow)
-
-    if args.gen_registry or generate_all:
+    if args.gen_registry:
         gen_model_registry(all_models, tauri_src / "src" / "model_registry.rs")
 
     if args.gen_workflow:
@@ -1665,7 +1354,8 @@ def main():
     num_models = len(all_models)
     num_per_runner = num_models // total
     if num_per_runner <= 0:
-        raise ValueError(f"num_models: {num_models}, total: {total}")
+        # Fewer models than shards — some shards get zero models
+        num_per_runner = 0
 
     start = index * num_per_runner
     end = start + num_per_runner

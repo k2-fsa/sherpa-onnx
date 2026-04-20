@@ -30,6 +30,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("paraformer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             config.rule_fsts = p("itn_zh_number.fst");
             Some(config)
         }
@@ -45,6 +46,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -61,6 +63,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("whisper".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -77,6 +80,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("whisper".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -91,6 +95,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -105,6 +110,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -116,6 +122,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -127,6 +134,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -138,6 +146,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -149,6 +158,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -160,6 +170,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -170,6 +181,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("telespeech_ctc".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -184,6 +196,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -198,6 +211,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -210,6 +224,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("paraformer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             config.rule_fsts = p("itn_zh_number.fst");
             Some(config)
         }
@@ -224,6 +239,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -238,6 +254,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -252,6 +269,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -266,6 +284,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -277,6 +296,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -291,6 +311,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -306,6 +327,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -321,6 +343,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -335,6 +358,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -347,6 +371,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -358,6 +383,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -372,6 +398,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -383,6 +410,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -397,6 +425,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -411,6 +440,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -425,6 +455,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -436,6 +467,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -452,6 +484,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -463,6 +496,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -474,6 +508,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -488,6 +523,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -499,6 +535,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -513,6 +550,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -524,6 +562,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -535,6 +574,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -549,6 +589,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("nemo_transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -562,6 +603,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -573,6 +615,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -585,6 +628,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("paraformer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -596,6 +640,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -607,6 +652,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -622,6 +668,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 3;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -633,6 +680,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -644,6 +692,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -658,6 +707,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             config.model_config.tokens = p("tokens.txt");
             config.model_config.model_type = Some("transducer".into());
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -669,6 +719,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -682,6 +733,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -695,6 +747,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -708,6 +761,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -721,6 +775,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -734,6 +789,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -747,6 +803,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -760,6 +817,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -773,6 +831,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -786,6 +845,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -799,6 +859,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 2;
+            config.model_config.debug = true;
             Some(config)
         }
 
@@ -814,6 +875,7 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             };
             config.model_config.tokens = p("tokens.txt");
             config.model_config.num_threads = 3;
+            config.model_config.debug = true;
             Some(config)
         }
 

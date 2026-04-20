@@ -1,5 +1,6 @@
 const { invoke, convertFileSrc } = window.__TAURI__.core;
 const { open, save } = window.__TAURI__.dialog;
+const { open: openUrl } = window.__TAURI__.shell;
 
 const selectBtn = document.querySelector("#select-btn");
 const cancelBtn = document.querySelector("#cancel-btn");
@@ -59,6 +60,17 @@ function pollInitStatus() {
 }
 
 pollInitStatus();
+
+// ---------------------------------------------------------------------------
+// External links
+// ---------------------------------------------------------------------------
+
+document.querySelectorAll("a[href]").forEach((a) => {
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    openUrl(e.currentTarget.href);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Copy / Export handlers
@@ -339,23 +351,6 @@ function startPolling() {
         resultsEl.style.display = "block";
       }
 
-      // Update stats during processing
-      if (state.elapsed_secs > 0) {
-        const audioDur = state.audio_duration_secs;
-        const elapsed = state.elapsed_secs;
-        if (audioDur > 0) {
-          const rtf = elapsed / audioDur;
-          statsEl.innerHTML =
-            `Audio duration: ${audioDur.toFixed(3)} s &nbsp;|&nbsp; ` +
-            `Elapsed: ${elapsed.toFixed(3)} s &nbsp;|&nbsp; ` +
-            `RTF: ${rtf.toFixed(3)} (${elapsed.toFixed(3)} / ${audioDur.toFixed(3)})` +
-            (modelThreads > 0 ? ` &nbsp;|&nbsp; Number of threads: ${modelThreads}` : "");
-        } else {
-          statsEl.innerHTML = `Elapsed: ${elapsed.toFixed(3)} s`;
-        }
-        statsEl.style.display = "";
-      }
-
       // Check terminal states
       if (state.status === "done") {
         clearInterval(pollTimer);
@@ -367,19 +362,6 @@ function startPolling() {
         progressLabel.textContent = "100%";
         statusEl.textContent = `Done. Found ${state.segments.length} segment(s).`;
         statusEl.className = "status status-done";
-
-        // Show RTF, elapsed, audio duration
-        const audioDur = state.audio_duration_secs;
-        const elapsed = state.elapsed_secs;
-        if (audioDur > 0 && elapsed > 0) {
-          const rtf = elapsed / audioDur;
-          statsEl.innerHTML =
-            `Audio duration: ${audioDur.toFixed(3)} s &nbsp;|&nbsp; ` +
-            `Recognition time: ${elapsed.toFixed(3)} s &nbsp;|&nbsp; ` +
-            `RTF: ${rtf.toFixed(3)} (${elapsed.toFixed(3)} / ${audioDur.toFixed(3)})` +
-            (modelThreads > 0 ? ` &nbsp;|&nbsp; Number of threads: ${modelThreads}` : "");
-          statsEl.style.display = "";
-        }
       } else if (state.status === "cancelled") {
         clearInterval(pollTimer);
         pollTimer = null;

@@ -189,7 +189,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
 
   sherpa_onnx::KeywordResult result = kws->GetResult(stream);
 
-  jstring j_keyword = env->NewStringUTF(result.keyword.c_str());
+  jstring j_keyword = SafeNewStringUTF(env, result.keyword);
 
   // Convert tokens (std::vector<std::string> -> String[])
   jclass string_cls = env->FindClass("java/lang/String");
@@ -203,7 +203,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
       env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
 
   for (size_t i = 0; i < result.tokens.size(); ++i) {
-    jstring t = env->NewStringUTF(result.tokens[i].c_str());
+    jstring t = SafeNewStringUTF(env, result.tokens[i]);
     env->SetObjectArrayElement(j_tokens, i, t);
     env->DeleteLocalRef(t);
   }

@@ -42,7 +42,7 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_OfflineStream_getOption(
   const char *p_key = env->GetStringUTFChars(key, nullptr);
   const std::string &value = stream->GetOption(p_key);
   env->ReleaseStringUTFChars(key, p_key);
-  return env->NewStringUTF(value.c_str());
+  return SafeNewStringUTF(env, value);
 }
 
 SHERPA_ONNX_EXTERN_C
