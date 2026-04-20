@@ -27,6 +27,15 @@ h1 {
   margin-bottom: 0;
 }
 
+h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1 a:hover {
+  text-decoration: underline;
+}
+
 h2 {
   margin-top: 0.2em;
   font-weight: 400;
@@ -36,6 +45,20 @@ h2 {
 .subtitle {
   color: #666;
   max-width: 600px;
+}
+
+.source-link {
+  font-size: 0.85em;
+  margin-top: 0;
+}
+
+.source-link a {
+  color: #396cd8;
+  text-decoration: none;
+}
+
+.source-link a:hover {
+  text-decoration: underline;
 }
 
 .actions {
@@ -258,6 +281,10 @@ th {
 
   .subtitle {
     color: #999;
+  }
+
+  .source-link a {
+    color: #6ea8fe;
   }
 
   button {
