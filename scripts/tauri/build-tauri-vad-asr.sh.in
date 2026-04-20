@@ -78,6 +78,8 @@ install_deps
 log "Adding Rust target: $RUST_TARGET"
 rustup target add "$RUST_TARGET"
 
+mkdir -p "${PROJECT_DIR}/dist-2"
+
 {% for model in model_list %}
 
 cd "${PROJECT_DIR}"
@@ -372,9 +374,19 @@ rm -f icons/icon.ico
 rm -rf assets
 
 log "Final dist/ contents for model $model_name:"
-ls -lh "${PROJECT_DIR}/dist/"
+
+ls -lh ${PROJECT_DIR}/dist/
+
+cp -v ${PROJECT_DIR}/dist/* ${PROJECT_DIR}/dist-2/
+
+ls -lh "${PROJECT_DIR}/dist-2/"
 
 {% endfor %}
 
+rm  -rf "${PROJECT_DIR}/dist"
+
+mv "${PROJECT_DIR}/dist-2" "${PROJECT_DIR}/dist"
+
 log "Done! Artifacts in ${PROJECT_DIR}/dist/"
+
 ls -lh "${PROJECT_DIR}/dist/"

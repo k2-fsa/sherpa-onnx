@@ -3,9 +3,13 @@
 A Tauri v2 desktop app that transcribes audio and video files using offline ASR
 with Silero VAD.
 
+You can download pre-built APPs for this folder at
+
+    <https://k2-fsa.github.io/sherpa/onnx/tauri/pre-built-app.html#non-streaming-speech-recognition-from-file>
+
 ## Features
 
-- **62 ASR models** supported (SenseVoice, Paraformer, Whisper, Transducer, Moonshine, etc.)
+- **62+ ASR models** supported (SenseVoice, Paraformer, Whisper, Transducer, Moonshine, etc.)
 - **Audio/video playback** with waveform display
 - **SRT subtitle export**
 - **Segment WAV export** — save individual speech segments as WAV files
@@ -25,10 +29,13 @@ Any format supported by symphonia:
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
-- [Tauri CLI](https://v2.tauri.app/start/prerequisites/):
+- [Node.js](https://nodejs.org/) (for the Tauri CLI)
+- [Tauri CLI prerequisites](https://v2.tauri.app/start/prerequisites/)
+
+Install npm dependencies:
 
 ```bash
-cargo install tauri-cli
+npm install
 ```
 
 ## Quick Start
@@ -84,7 +91,7 @@ The app works fine without these files.
 ### 3. Build and run
 
 ```bash
-cargo tauri dev
+npm run dev
 ```
 
 This opens the app window. Use the file picker to select an audio or video file
@@ -93,7 +100,7 @@ and click **Recognize**.
 ### 4. Build a release binary
 
 ```bash
-cargo tauri build
+npm run build
 ```
 
 The output is in `src-tauri/target/release/bundle/`.

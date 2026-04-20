@@ -1,5 +1,6 @@
 const { invoke, convertFileSrc } = window.__TAURI__.core;
 const { open, save } = window.__TAURI__.dialog;
+const { open: openUrl } = window.__TAURI__.shell;
 
 const selectBtn = document.querySelector("#select-btn");
 const cancelBtn = document.querySelector("#cancel-btn");
@@ -59,6 +60,17 @@ function pollInitStatus() {
 }
 
 pollInitStatus();
+
+// ---------------------------------------------------------------------------
+// External links
+// ---------------------------------------------------------------------------
+
+document.querySelectorAll("a[href]").forEach((a) => {
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    openUrl(e.currentTarget.href);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Copy / Export handlers

@@ -60,7 +60,18 @@ jobs:
       - name: Show
         shell: bash
         run: |
-          ls -lh tauri-examples/non-streaming-speech-recognition-from-file/dist/
+          dist=tauri-examples/non-streaming-speech-recognition-from-file/dist/
+          ls -lh "$dist"
+          for f in "$dist"*.tar.gz "$dist"*.tar.bz2 "$dist"*.zip; do
+            [ -f "$f" ] || continue
+            echo "========== Contents of $(basename "$f") =========="
+            case "$f" in
+              *.tar.gz)  tar tzf "$f" ;;
+              *.tar.bz2) tar tjf "$f" ;;
+              *.zip)     unzip -l "$f" ;;
+            esac
+            echo ""
+          done
 
       # - name: Upload artifacts
       #   uses: actions/upload-artifact@v4
