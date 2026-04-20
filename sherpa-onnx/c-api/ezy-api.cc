@@ -1,4 +1,4 @@
-// sherpa-onnx/c-api/c-api.cc
+// sherpa-onnx/c-api/ezy-api.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
