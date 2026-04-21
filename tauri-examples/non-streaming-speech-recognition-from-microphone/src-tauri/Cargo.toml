@@ -1,0 +1,26 @@
+[package]
+name = "non-streaming-speech-recognition-from-microphone"
+version = "1.12.39"
+description = "Non-streaming speech recognition from microphone with VAD"
+edition = "2021"
+
+[lib]
+name = "non_streaming_speech_recognition_from_microphone_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+sherpa-onnx = { version = "1.12.39", default-features = false }
+# sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false }
+
+# cpal: cross-platform audio I/O — works on Linux (ALSA/PulseAudio), macOS (CoreAudio), Windows (WASAPI).
+cpal = "0.16"
+
+# chrono: wall-clock timestamps for segment results.
+chrono = "0.4"

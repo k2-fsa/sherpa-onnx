@@ -1,21 +1,21 @@
-name: tauri-vad-asr
+name: tauri-vad-asr-mic
 
 on:
   push:
     branches:
-      - fix-tauri
+      - tauri-vad-asr-mic
 
   workflow_dispatch:
 
 concurrency:
-  group: tauri-vad-asr-${{ github.ref }}
+  group: tauri-vad-asr-mic-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  tauri_vad_asr:
+  tauri_vad_asr_mic:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} ${{ matrix.index }}/10
     strategy:
@@ -58,18 +58,18 @@ jobs:
         shell: bash
         run: |
           cd scripts/tauri
-          python3 generate-vad-asr.py --total 10 --index ${{ matrix.index }}
-          chmod +x build-tauri-vad-asr.sh
-          mv build-tauri-vad-asr.sh ../..
+          python3 generate-vad-asr.py --target mic --total 10 --index ${{ matrix.index }}
+          chmod +x build-tauri-vad-asr-mic.sh
+          mv build-tauri-vad-asr-mic.sh ../..
 
       - name: Build
         shell: bash
-        run: ./build-tauri-vad-asr.sh
+        run: ./build-tauri-vad-asr-mic.sh
 
       - name: Show
         shell: bash
         run: |
-          dist=tauri-examples/non-streaming-speech-recognition-from-file/dist/
+          dist=tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
           ls -lh "$dist"
           for f in "$dist"*.tar.gz "$dist"*.tar.bz2 "$dist"*.zip; do
             [ -f "$f" ] || continue
@@ -85,8 +85,8 @@ jobs:
       # - name: Upload artifacts
       #   uses: actions/upload-artifact@v4
       #   with:
-      #     name: tauri-${{ matrix.os }}-shard-${{ matrix.index }}
-      #     path: tauri-examples/non-streaming-speech-recognition-from-file/dist/
+      #     name: tauri-mic-${{ matrix.os }}-shard-${{ matrix.index }}
+      #     path: tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
       #     retention-days: 7
 
       - name: Publish to huggingface
@@ -101,7 +101,7 @@ jobs:
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
-            src=tauri-examples/non-streaming-speech-recognition-from-file/dist/
+            src=tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
 
             rm -rf huggingface
             export GIT_LFS_SKIP_SMUDGE=1
@@ -116,7 +116,7 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            d=vad-asr-file/$SHERPA_ONNX_VERSION
+            d=vad-asr-mic/$SHERPA_ONNX_VERSION
             mkdir -p $d
 
             cp -v ../$src/* $d/
