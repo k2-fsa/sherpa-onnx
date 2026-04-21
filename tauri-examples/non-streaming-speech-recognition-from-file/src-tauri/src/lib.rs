@@ -1,7 +1,7 @@
 mod model_registry;
 
 use model_registry::get_model_config;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx::{
     LinearResampler, OfflineRecognizer, SileroVadModelConfig, VadModelConfig,
     VoiceActivityDetector,
@@ -20,6 +20,27 @@ use symphonia::core::probe::Hint;
 const MODEL_TYPE: u32 = 15;
 const MODEL_NAME: &str = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17";
 
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+struct VadSettings {
+    threshold: f32,
+    min_silence_duration: f32,
+    min_speech_duration: f32,
+    max_speech_duration: f32,
+    num_threads: i32,
+}
+
+impl Default for VadSettings {
+    fn default() -> Self {
+        Self {
+            threshold: 0.2,
+            min_silence_duration: 0.2,
+            min_speech_duration: 0.2,
+            max_speech_duration: 10.0,
+            num_threads: 2,
+        }
+    }
+}
+
 #[derive(Serialize, Clone)]
 struct SegmentResult {
     start: f32,
@@ -32,6 +53,8 @@ struct ProcessingState {
     percent: u32,
     status: String,
     segments: Vec<SegmentResult>,
+    elapsed_secs: f32,
+    audio_duration_secs: f32,
 }
 
 /// Shared application state, created once at startup.
@@ -41,6 +64,7 @@ struct ProcessingState {
 struct AppState {
     recognizer: Arc<Mutex<Option<OfflineRecognizer>>>,
     vad: Arc<Mutex<Option<VoiceActivityDetector>>>,
+    running: Arc<AtomicBool>,
     cancelled: Arc<AtomicBool>,
     progress: Arc<AtomicU32>,
     status: Arc<Mutex<String>>,
@@ -49,6 +73,9 @@ struct AppState {
     init_status: Arc<AtomicU8>,
     init_error: Arc<Mutex<String>>,
     num_threads: Arc<AtomicU32>,
+    settings: Arc<Mutex<VadSettings>>,
+    elapsed_secs: Arc<Mutex<f32>>,
+    audio_duration_secs: Arc<Mutex<f32>>,
 }
 
 /// Open an audio/video file and return the format reader, decoder, and track info.
@@ -94,6 +121,43 @@ fn open_audio_file(
     Ok((format, decoder, track_id, num_channels, sample_rate))
 }
 
+/// Recognize a single VAD speech segment: skip if too short or punctuation-only.
+fn recognize_segment(
+    recognizer: &OfflineRecognizer,
+    segment: &sherpa_onnx::SpeechSegment,
+    segments: &Arc<Mutex<Vec<SegmentResult>>>,
+) {
+    let samples = segment.samples();
+    let duration = samples.len() as f32 / 16000.0;
+    if duration < 0.1 {
+        return;
+    }
+
+    let start_time = segment.start() as f32 / 16000.0;
+    let end_time = start_time + duration;
+
+    let stream = recognizer.create_stream();
+    stream.accept_waveform(16000, samples);
+    recognizer.decode(&stream);
+
+    if let Some(r) = stream.get_result() {
+        let text = r.text.trim().to_string();
+        if !text.is_empty()
+            && !text
+                .chars()
+                .all(|c| c.is_ascii_punctuation() || c.is_ascii_whitespace())
+        {
+            if let Ok(mut segs) = segments.lock() {
+                segs.push(SegmentResult {
+                    start: start_time,
+                    end: end_time,
+                    text,
+                });
+            }
+        }
+    }
+}
+
 /// Decode interleaved AudioBufferRef to mono f32 samples.
 fn decode_to_mono_f32(decoded: &AudioBufferRef, num_channels: usize) -> Vec<f32> {
     let mut buf =
@@ -123,12 +187,18 @@ fn decode_to_mono_f32(decoded: &AudioBufferRef, num_channels: usize) -> Vec<f32>
 /// Streams audio packet-by-packet to avoid loading the entire file into memory.
 #[tauri::command]
 fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    if state.running.swap(true, Ordering::SeqCst) {
+        return Err("Recognition is already running".to_string());
+    }
+
     // Check initialization
     let init = state.init_status.load(Ordering::Relaxed);
     if init == 0 {
+        state.running.store(false, Ordering::SeqCst);
         return Err("Models are still loading, please wait".to_string());
     }
     if init == 2 {
+        state.running.store(false, Ordering::SeqCst);
         let err = state.init_error.lock().map_err(|e| e.to_string())?.clone();
         return Err(format!("Initialization failed: {err}"));
     }
@@ -141,16 +211,22 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     *state.status.lock().map_err(|e| e.to_string())? = "processing".to_string();
     state.segments.lock().map_err(|e| e.to_string())?.clear();
     *state.audio_path.lock().map_err(|e| e.to_string())? = path.clone();
+    *state.elapsed_secs.lock().map_err(|e| e.to_string())? = 0.0;
+    *state.audio_duration_secs.lock().map_err(|e| e.to_string())? = 0.0;
 
     // Clone Arc handles for the worker thread
     let recognizer = Arc::clone(&state.recognizer);
     let vad = Arc::clone(&state.vad);
+    let running = Arc::clone(&state.running);
     let cancelled = Arc::clone(&state.cancelled);
     let progress = Arc::clone(&state.progress);
     let status = Arc::clone(&state.status);
     let segments = Arc::clone(&state.segments);
+    let elapsed_secs = Arc::clone(&state.elapsed_secs);
+    let audio_duration_secs = Arc::clone(&state.audio_duration_secs);
 
     std::thread::spawn(move || {
+        let start_time = std::time::Instant::now();
         let result = run_recognition(
             &path,
             &recognizer,
@@ -159,10 +235,21 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
             &progress,
             &segments,
         );
+        let elapsed = start_time.elapsed().as_secs_f32();
 
-        let mut s = status.lock().unwrap();
+        if let Ok(mut e) = elapsed_secs.lock() {
+            *e = elapsed;
+        }
+
+        let Ok(mut s) = status.lock() else {
+            running.store(false, Ordering::SeqCst);
+            return;
+        };
         match result {
-            Ok(()) => {
+            Ok(audio_dur) => {
+                if let Ok(mut d) = audio_duration_secs.lock() {
+                    *d = audio_dur;
+                }
                 if cancelled.load(Ordering::Relaxed) {
                     *s = "cancelled".to_string();
                 } else {
@@ -174,12 +261,14 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
                 *s = format!("error: {e}");
             }
         }
+        running.store(false, Ordering::SeqCst);
     });
 
     Ok(())
 }
 
 /// Stream audio through VAD + ASR without buffering the entire file.
+/// Returns the audio duration in seconds on success.
 fn run_recognition(
     path: &str,
     recognizer: &Arc<Mutex<Option<OfflineRecognizer>>>,
@@ -187,7 +276,7 @@ fn run_recognition(
     cancelled: &AtomicBool,
     progress: &Arc<AtomicU32>,
     segments: &Arc<Mutex<Vec<SegmentResult>>>,
-) -> Result<(), String> {
+) -> Result<f32, String> {
     let (mut format_reader, mut decoder, track_id, num_channels, native_rate) =
         open_audio_file(path)?;
 
@@ -264,39 +353,14 @@ fn run_recognition(
         while vad_buf.len() >= window_size {
             if cancelled.load(Ordering::Relaxed) {
                 vad.clear();
-                return Ok(());
+                return Ok(decoded_count as f32 / native_rate as f32);
             }
 
             vad.accept_waveform(&vad_buf[..window_size]);
             vad_buf.drain(..window_size);
 
             while let Some(segment) = vad.front() {
-                let seg_samples = segment.samples();
-                let duration = seg_samples.len() as f32 / 16000.0;
-                let start_time = segment.start() as f32 / 16000.0;
-                let end_time = start_time + duration;
-
-                if duration >= 0.1 {
-                    let stream = recognizer.create_stream();
-                    stream.accept_waveform(16000, seg_samples);
-                    recognizer.decode(&stream);
-                    if let Some(r) = stream.get_result() {
-                        let text = r.text.trim().to_string();
-                        if !text.is_empty()
-                            && !text
-                                .chars()
-                                .all(|c| c.is_ascii_punctuation() || c.is_ascii_whitespace())
-                        {
-                            if let Ok(mut segs) = segments.lock() {
-                                segs.push(SegmentResult {
-                                    start: start_time,
-                                    end: end_time,
-                                    text,
-                                });
-                            }
-                        }
-                    }
-                }
+                recognize_segment(recognizer, &segment, segments);
                 vad.pop();
             }
         }
@@ -318,35 +382,16 @@ fn run_recognition(
     if !cancelled.load(Ordering::Relaxed) && !vad_buf.is_empty() {
         vad.flush();
         while let Some(segment) = vad.front() {
-            let seg_samples = segment.samples();
-            let duration = seg_samples.len() as f32 / 16000.0;
-            let start_time = segment.start() as f32 / 16000.0;
-            let end_time = start_time + duration;
-
-            if duration >= 0.1 {
-                let stream = recognizer.create_stream();
-                stream.accept_waveform(16000, seg_samples);
-                recognizer.decode(&stream);
-                if let Some(r) = stream.get_result() {
-                    if !r.text.is_empty() {
-                        if let Ok(mut segs) = segments.lock() {
-                            segs.push(SegmentResult {
-                                start: start_time,
-                                end: end_time,
-                                text: r.text,
-                            });
-                        }
-                    }
-                }
-            }
+            recognize_segment(recognizer, &segment, segments);
             vad.pop();
         }
     }
 
+    let audio_duration = decoded_count as f32 / native_rate as f32;
     let final_count = segments.lock().map(|s| s.len()).unwrap_or(0);
-    eprintln!("[run_recognition] done, total segments: {final_count}");
+    eprintln!("[run_recognition] done, total segments: {final_count}, audio_duration: {audio_duration:.2}s");
 
-    Ok(())
+    Ok(audio_duration)
 }
 
 /// Poll this from the frontend to get current progress and results.
@@ -355,10 +400,14 @@ fn get_recognition_progress(state: tauri::State<'_, AppState>) -> Result<Process
     let percent = state.progress.load(Ordering::Relaxed);
     let status = state.status.lock().map_err(|e| e.to_string())?.clone();
     let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
+    let elapsed_secs = *state.elapsed_secs.lock().map_err(|e| e.to_string())?;
+    let audio_duration_secs = *state.audio_duration_secs.lock().map_err(|e| e.to_string())?;
     Ok(ProcessingState {
         percent,
         status,
         segments,
+        elapsed_secs,
+        audio_duration_secs,
     })
 }
 
@@ -549,7 +598,11 @@ struct InitStatus {
 #[tauri::command]
 fn get_init_status(state: tauri::State<'_, AppState>) -> InitStatus {
     let status = state.init_status.load(Ordering::Relaxed);
-    let error = state.init_error.lock().unwrap().clone();
+    let error = state
+        .init_error
+        .lock()
+        .map(|e| e.clone())
+        .unwrap_or_default();
     let num_threads = state.num_threads.load(Ordering::Relaxed);
     InitStatus {
         status,
@@ -603,7 +656,7 @@ fn resource_dir() -> PathBuf {
 }
 
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
-fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
+fn build_models(settings: &VadSettings) -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
     let dir = resource_dir();
     let model_dir = dir.join(MODEL_NAME);
     let silero_vad_path = dir.join("silero_vad.onnx");
@@ -660,7 +713,8 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
         asr_config.hr.rule_fsts = hr_rule_fst.to_str().map(|s| s.to_string());
     }
 
-    let num_threads = asr_config.model_config.num_threads as u32;
+    asr_config.model_config.num_threads = settings.num_threads;
+    let num_threads = settings.num_threads as u32;
 
     let silero_vad_str = silero_vad_path
         .to_str()
@@ -670,11 +724,11 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     let mut vad_config = VadModelConfig::default();
     vad_config.silero_vad = SileroVadModelConfig {
         model: Some(silero_vad_str),
-        threshold: 0.2,
-        min_silence_duration: 0.2,
-        min_speech_duration: 0.2,
+        threshold: settings.threshold,
+        min_silence_duration: settings.min_silence_duration,
+        min_speech_duration: settings.min_speech_duration,
         window_size: 512,
-        max_speech_duration: 10.0,
+        max_speech_duration: settings.max_speech_duration,
         ..Default::default()
     };
     vad_config.sample_rate = 16000;
@@ -707,12 +761,77 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     Ok((recognizer, vad, num_threads))
 }
 
+#[tauri::command]
+fn get_settings(state: tauri::State<'_, AppState>) -> Result<VadSettings, String> {
+    state.settings.lock().map(|s| s.clone()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn apply_settings(
+    new_settings: VadSettings,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    if state.running.load(Ordering::SeqCst) {
+        return Err("Cannot change settings while recognition is running".to_string());
+    }
+    let init = state.init_status.load(Ordering::Relaxed);
+    if init == 0 {
+        return Err("Models are still loading, please wait".to_string());
+    }
+
+    {
+        let current = state.settings.lock().map_err(|e| e.to_string())?;
+        if *current == new_settings {
+            return Ok(());
+        }
+    }
+
+    // Set init_status to 0 so the frontend shows "Loading models..."
+    state.init_status.store(0, Ordering::Relaxed);
+
+    // Store the new settings
+    *state.settings.lock().map_err(|e| e.to_string())? = new_settings.clone();
+
+    let recognizer_arc = Arc::clone(&state.recognizer);
+    let vad_arc = Arc::clone(&state.vad);
+    let init_status = Arc::clone(&state.init_status);
+    let init_error = Arc::clone(&state.init_error);
+    let init_num_threads = Arc::clone(&state.num_threads);
+
+    std::thread::spawn(move || {
+        eprintln!("[apply_settings] rebuilding models with new settings...");
+        match build_models(&new_settings) {
+            Ok((rec, vad, threads)) => {
+                eprintln!("[apply_settings] models rebuilt, num_threads={threads}");
+                if let Ok(mut r) = recognizer_arc.lock() {
+                    *r = Some(rec);
+                }
+                if let Ok(mut v) = vad_arc.lock() {
+                    *v = Some(vad);
+                }
+                init_num_threads.store(threads, Ordering::Relaxed);
+                init_status.store(1, Ordering::Relaxed);
+            }
+            Err(e) => {
+                eprintln!("[apply_settings] rebuild failed: {e}");
+                if let Ok(mut err) = init_error.lock() {
+                    *err = e;
+                }
+                init_status.store(2, Ordering::Relaxed);
+            }
+        }
+    });
+
+    Ok(())
+}
+
 /// Create AppState with recognizer/VAD set to None.
 /// Models are loaded in a background thread after startup.
 fn build_app_state() -> AppState {
     AppState {
         recognizer: Arc::new(Mutex::new(None)),
         vad: Arc::new(Mutex::new(None)),
+        running: Arc::new(AtomicBool::new(false)),
         cancelled: Arc::new(AtomicBool::new(false)),
         progress: Arc::new(AtomicU32::new(0)),
         status: Arc::new(Mutex::new("idle".to_string())),
@@ -721,6 +840,9 @@ fn build_app_state() -> AppState {
         init_status: Arc::new(AtomicU8::new(0)), // 0 = pending
         init_error: Arc::new(Mutex::new(String::new())),
         num_threads: Arc::new(AtomicU32::new(0)),
+        settings: Arc::new(Mutex::new(VadSettings::default())),
+        elapsed_secs: Arc::new(Mutex::new(0.0)),
+        audio_duration_secs: Arc::new(Mutex::new(0.0)),
     }
 }
 
@@ -734,20 +856,31 @@ pub fn run() {
     let init_status = Arc::clone(&state.init_status);
     let init_error = Arc::clone(&state.init_error);
     let init_num_threads = Arc::clone(&state.num_threads);
+    let init_settings = Arc::clone(&state.settings);
 
     std::thread::spawn(move || {
         eprintln!("[init] starting model initialization...");
-        match build_models() {
+        let settings = init_settings.lock().map(|s| s.clone()).unwrap_or_default();
+        match build_models(&settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[init] models ready, num_threads={threads}");
-                *init_recognizer.lock().unwrap() = Some(rec);
-                *init_vad.lock().unwrap() = Some(vad);
+                if let Ok(mut r) = init_recognizer.lock() {
+                    *r = Some(rec);
+                }
+                if let Ok(mut v) = init_vad.lock() {
+                    *v = Some(vad);
+                }
                 init_num_threads.store(threads, Ordering::Relaxed);
+                if let Ok(mut s) = init_settings.lock() {
+                    s.num_threads = threads as i32;
+                }
                 init_status.store(1, Ordering::Relaxed); // ready
             }
             Err(e) => {
                 eprintln!("[init] model initialization failed: {e}");
-                *init_error.lock().unwrap() = e;
+                if let Ok(mut err) = init_error.lock() {
+                    *err = e;
+                }
                 init_status.store(2, Ordering::Relaxed); // error
             }
         }
@@ -764,6 +897,8 @@ pub fn run() {
             export_srt,
             save_segment_as_wav,
             get_init_status,
+            get_settings,
+            apply_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -3,7 +3,7 @@ name: tauri-vad-asr
 on:
   push:
     branches:
-      - fix-rust
+      - fix-tauri
 
   workflow_dispatch:
 

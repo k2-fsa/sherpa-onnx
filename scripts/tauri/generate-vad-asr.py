@@ -813,9 +813,6 @@ def get_models() -> List[Model]:
                 "embedding": "embedding.int8.onnx",
                 "tokenizer": "Qwen3-0.6B",
             },cmd="""
-            rm -fv $model_name/encoder_adaptor.onnx
-            rm -fv $model_name/llm.onnx
-            rm -fv $model_name/embedding.onnx
             rm -rf $model_name/test_wavs
             rm -fv $model_name/*.py
             rm -fv $model_name/README.md""",
@@ -1041,11 +1038,7 @@ def get_models() -> List[Model]:
                 "decoder": "decoder.int8.onnx",
                 "tokenizer": "tokenizer",
             },cmd="""
-            rm -fv $model_name/conv_frontend.onnx
-            rm -fv $model_name/encoder.onnx
-            rm -fv $model_name/decoder.onnx
             rm -rf $model_name/test_wavs
-            rm -fv $model_name/*.py
             rm -fv $model_name/README.md""",
         ),
     ]

@@ -34,4 +34,6 @@ symphonia = { version = "0.5.5", features = [
     "mkv",
     "pcm",
     "adpcm",
+    "aiff",
+    "caf",
 ] }

@@ -17,6 +17,15 @@ const playerWrapper = document.querySelector("#player-wrapper");
 const player = document.querySelector("#player");
 const subtitleOverlay = document.querySelector("#subtitle-overlay");
 const statsEl = document.querySelector("#stats");
+const settingsBtn = document.querySelector("#settings-btn");
+const settingsModal = document.querySelector("#settings-modal");
+const setThreshold = document.querySelector("#set-threshold");
+const setMinSilence = document.querySelector("#set-min-silence");
+const setMinSpeech = document.querySelector("#set-min-speech");
+const setMaxSpeech = document.querySelector("#set-max-speech");
+const setNumThreads = document.querySelector("#set-num-threads");
+const settingsApplyBtn = document.querySelector("#settings-apply");
+const settingsCancelBtn = document.querySelector("#settings-cancel");
 
 let recognizing = false;
 let pollTimer = null;
@@ -40,11 +49,13 @@ function pollInitStatus() {
         modelsReady = true;
         modelThreads = res.num_threads;
         selectBtn.disabled = false;
+        settingsBtn.disabled = false;
         statusEl.textContent = "";
         statusEl.className = "status";
       } else if (res.status === 2) {
         // error
         selectBtn.disabled = true;
+        settingsBtn.disabled = true;
         statusEl.textContent = `Initialization failed: ${res.error}`;
         statusEl.className = "status status-error";
       } else {
@@ -285,6 +296,7 @@ selectBtn.addEventListener("click", async () => {
   // Reset UI
   recognizing = true;
   selectBtn.disabled = true;
+  settingsBtn.disabled = true;
   cancelBtn.style.display = "";
   cancelBtn.disabled = false;
   progressContainer.style.display = "flex";
@@ -306,6 +318,7 @@ selectBtn.addEventListener("click", async () => {
   } catch (err) {
     recognizing = false;
     selectBtn.disabled = false;
+    settingsBtn.disabled = false;
     cancelBtn.style.display = "none";
     progressContainer.style.display = "none";
     statusEl.textContent = `Error: ${err}`;
@@ -332,10 +345,10 @@ function startPolling() {
       progressBar.style.width = state.percent + "%";
       progressLabel.textContent = state.percent + "%";
 
-      // Update results table
+      // Append only new rows instead of rebuilding the entire table
+      const prevLen = lastSegments.length;
       lastSegments = state.segments;
-      resultsBody.innerHTML = "";
-      for (let i = 0; i < state.segments.length; i++) {
+      for (let i = prevLen; i < state.segments.length; i++) {
         const seg = state.segments[i];
         const tr = document.createElement("tr");
         tr.dataset.idx = i;
@@ -357,16 +370,26 @@ function startPolling() {
         pollTimer = null;
         recognizing = false;
         selectBtn.disabled = false;
+        settingsBtn.disabled = false;
         cancelBtn.style.display = "none";
         progressBar.style.width = "100%";
         progressLabel.textContent = "100%";
-        statusEl.textContent = `Done. Found ${state.segments.length} segment(s).`;
+
+        const elapsed = state.elapsed_secs;
+        const audioDur = state.audio_duration_secs;
+        const rtf = audioDur > 0 ? (elapsed / audioDur).toFixed(3) : "N/A";
+        statusEl.textContent =
+          `Done. ${state.segments.length} segment(s). ` +
+          `Audio: ${audioDur.toFixed(1)}s, Elapsed: ${elapsed.toFixed(1)}s, ` +
+          `RTF: ${rtf} (=${elapsed.toFixed(1)}/${audioDur.toFixed(1)})`;
         statusEl.className = "status status-done";
+        statsEl.style.display = "none";
       } else if (state.status === "cancelled") {
         clearInterval(pollTimer);
         pollTimer = null;
         recognizing = false;
         selectBtn.disabled = false;
+        settingsBtn.disabled = false;
         cancelBtn.style.display = "none";
         progressContainer.style.display = "none";
         statusEl.textContent = "Cancelled.";
@@ -376,6 +399,7 @@ function startPolling() {
         pollTimer = null;
         recognizing = false;
         selectBtn.disabled = false;
+        settingsBtn.disabled = false;
         cancelBtn.style.display = "none";
         progressContainer.style.display = "none";
         statusEl.textContent = state.status;
@@ -386,6 +410,7 @@ function startPolling() {
       pollTimer = null;
       recognizing = false;
       selectBtn.disabled = false;
+      settingsBtn.disabled = false;
       cancelBtn.style.display = "none";
       progressContainer.style.display = "none";
       statusEl.textContent = `Poll error: ${err}`;
@@ -393,6 +418,72 @@ function startPolling() {
     }
   }, 200);
 }
+
+// ---------------------------------------------------------------------------
+// Settings modal
+// ---------------------------------------------------------------------------
+
+settingsBtn.addEventListener("click", async () => {
+  if (!modelsReady || recognizing) return;
+
+  try {
+    const s = await invoke("get_settings");
+    setThreshold.value = s.threshold;
+    setMinSilence.value = s.min_silence_duration;
+    setMinSpeech.value = s.min_speech_duration;
+    setMaxSpeech.value = s.max_speech_duration;
+    setNumThreads.value = s.num_threads;
+    settingsModal.style.display = "flex";
+  } catch (err) {
+    flashStatus(`Settings error: ${err}`, true);
+  }
+});
+
+settingsCancelBtn.addEventListener("click", () => {
+  settingsModal.style.display = "none";
+});
+
+settingsModal.addEventListener("click", (e) => {
+  if (e.target === settingsModal) {
+    settingsModal.style.display = "none";
+  }
+});
+
+settingsApplyBtn.addEventListener("click", async () => {
+  const newSettings = {
+    threshold: parseFloat(setThreshold.value),
+    min_silence_duration: parseFloat(setMinSilence.value),
+    min_speech_duration: parseFloat(setMinSpeech.value),
+    max_speech_duration: parseFloat(setMaxSpeech.value),
+    num_threads: parseInt(setNumThreads.value, 10),
+  };
+
+  if (isNaN(newSettings.threshold) || newSettings.threshold < 0 || newSettings.threshold > 1) {
+    flashStatus("Threshold must be between 0.0 and 1.0", true);
+    return;
+  }
+  if (isNaN(newSettings.num_threads) || newSettings.num_threads < 1 || newSettings.num_threads > 16) {
+    flashStatus("Threads must be between 1 and 16", true);
+    return;
+  }
+
+  settingsApplyBtn.disabled = true;
+  try {
+    await invoke("apply_settings", { newSettings });
+    settingsModal.style.display = "none";
+
+    modelsReady = false;
+    selectBtn.disabled = true;
+    settingsBtn.disabled = true;
+    statusEl.textContent = "Reloading models...";
+    statusEl.className = "status status-working";
+    pollInitStatus();
+  } catch (err) {
+    flashStatus(`Apply error: ${err}`, true);
+  } finally {
+    settingsApplyBtn.disabled = false;
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
