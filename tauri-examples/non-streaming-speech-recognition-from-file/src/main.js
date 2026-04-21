@@ -374,8 +374,16 @@ function startPolling() {
         cancelBtn.style.display = "none";
         progressBar.style.width = "100%";
         progressLabel.textContent = "100%";
-        statusEl.textContent = `Done. Found ${state.segments.length} segment(s).`;
+
+        const elapsed = state.elapsed_secs;
+        const audioDur = state.audio_duration_secs;
+        const rtf = audioDur > 0 ? (elapsed / audioDur).toFixed(3) : "N/A";
+        statusEl.textContent =
+          `Done. ${state.segments.length} segment(s). ` +
+          `Audio: ${audioDur.toFixed(1)}s, Elapsed: ${elapsed.toFixed(1)}s, ` +
+          `RTF: ${rtf} (=${elapsed.toFixed(1)}/${audioDur.toFixed(1)})`;
         statusEl.className = "status status-done";
+        statsEl.style.display = "none";
       } else if (state.status === "cancelled") {
         clearInterval(pollTimer);
         pollTimer = null;

@@ -53,6 +53,8 @@ struct ProcessingState {
     percent: u32,
     status: String,
     segments: Vec<SegmentResult>,
+    elapsed_secs: f32,
+    audio_duration_secs: f32,
 }
 
 /// Shared application state, created once at startup.
@@ -72,6 +74,8 @@ struct AppState {
     init_error: Arc<Mutex<String>>,
     num_threads: Arc<AtomicU32>,
     settings: Arc<Mutex<VadSettings>>,
+    elapsed_secs: Arc<Mutex<f32>>,
+    audio_duration_secs: Arc<Mutex<f32>>,
 }
 
 /// Open an audio/video file and return the format reader, decoder, and track info.
@@ -207,6 +211,8 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     *state.status.lock().map_err(|e| e.to_string())? = "processing".to_string();
     state.segments.lock().map_err(|e| e.to_string())?.clear();
     *state.audio_path.lock().map_err(|e| e.to_string())? = path.clone();
+    *state.elapsed_secs.lock().map_err(|e| e.to_string())? = 0.0;
+    *state.audio_duration_secs.lock().map_err(|e| e.to_string())? = 0.0;
 
     // Clone Arc handles for the worker thread
     let recognizer = Arc::clone(&state.recognizer);
@@ -216,8 +222,11 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     let progress = Arc::clone(&state.progress);
     let status = Arc::clone(&state.status);
     let segments = Arc::clone(&state.segments);
+    let elapsed_secs = Arc::clone(&state.elapsed_secs);
+    let audio_duration_secs = Arc::clone(&state.audio_duration_secs);
 
     std::thread::spawn(move || {
+        let start_time = std::time::Instant::now();
         let result = run_recognition(
             &path,
             &recognizer,
@@ -226,13 +235,21 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
             &progress,
             &segments,
         );
+        let elapsed = start_time.elapsed().as_secs_f32();
+
+        if let Ok(mut e) = elapsed_secs.lock() {
+            *e = elapsed;
+        }
 
         let Ok(mut s) = status.lock() else {
             running.store(false, Ordering::SeqCst);
             return;
         };
         match result {
-            Ok(()) => {
+            Ok(audio_dur) => {
+                if let Ok(mut d) = audio_duration_secs.lock() {
+                    *d = audio_dur;
+                }
                 if cancelled.load(Ordering::Relaxed) {
                     *s = "cancelled".to_string();
                 } else {
@@ -251,6 +268,7 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
 }
 
 /// Stream audio through VAD + ASR without buffering the entire file.
+/// Returns the audio duration in seconds on success.
 fn run_recognition(
     path: &str,
     recognizer: &Arc<Mutex<Option<OfflineRecognizer>>>,
@@ -258,7 +276,7 @@ fn run_recognition(
     cancelled: &AtomicBool,
     progress: &Arc<AtomicU32>,
     segments: &Arc<Mutex<Vec<SegmentResult>>>,
-) -> Result<(), String> {
+) -> Result<f32, String> {
     let (mut format_reader, mut decoder, track_id, num_channels, native_rate) =
         open_audio_file(path)?;
 
@@ -335,7 +353,7 @@ fn run_recognition(
         while vad_buf.len() >= window_size {
             if cancelled.load(Ordering::Relaxed) {
                 vad.clear();
-                return Ok(());
+                return Ok(decoded_count as f32 / native_rate as f32);
             }
 
             vad.accept_waveform(&vad_buf[..window_size]);
@@ -369,10 +387,11 @@ fn run_recognition(
         }
     }
 
+    let audio_duration = decoded_count as f32 / native_rate as f32;
     let final_count = segments.lock().map(|s| s.len()).unwrap_or(0);
-    eprintln!("[run_recognition] done, total segments: {final_count}");
+    eprintln!("[run_recognition] done, total segments: {final_count}, audio_duration: {audio_duration:.2}s");
 
-    Ok(())
+    Ok(audio_duration)
 }
 
 /// Poll this from the frontend to get current progress and results.
@@ -381,10 +400,14 @@ fn get_recognition_progress(state: tauri::State<'_, AppState>) -> Result<Process
     let percent = state.progress.load(Ordering::Relaxed);
     let status = state.status.lock().map_err(|e| e.to_string())?.clone();
     let segments = state.segments.lock().map_err(|e| e.to_string())?.clone();
+    let elapsed_secs = *state.elapsed_secs.lock().map_err(|e| e.to_string())?;
+    let audio_duration_secs = *state.audio_duration_secs.lock().map_err(|e| e.to_string())?;
     Ok(ProcessingState {
         percent,
         status,
         segments,
+        elapsed_secs,
+        audio_duration_secs,
     })
 }
 
@@ -818,6 +841,8 @@ fn build_app_state() -> AppState {
         init_error: Arc::new(Mutex::new(String::new())),
         num_threads: Arc::new(AtomicU32::new(0)),
         settings: Arc::new(Mutex::new(VadSettings::default())),
+        elapsed_secs: Arc::new(Mutex::new(0.0)),
+        audio_duration_secs: Arc::new(Mutex::new(0.0)),
     }
 }
 

@@ -7,6 +7,16 @@ Pre-built apps (macOS, Linux, Windows) are available at:
 
 > <https://k2-fsa.github.io/sherpa/onnx/tauri/pre-built-app.html#non-streaming-speech-recognition-from-file>
 
+## Screenshots
+
+|1|2|3|
+|---|---|---|
+|<img width="1800" height="1392" alt="Screenshot 2026-04-20 at 14 59 39" src="https://github.com/user-attachments/assets/81369094-0e8a-4be5-b15e-f83d16821be0" />|<img width="1768" height="1388" alt="Screenshot 2026-04-20 at 14 59 49" src="https://github.com/user-attachments/assets/62923691-9446-476b-838b-df3b5565d1a2" />|<img width="1798" height="1398" alt="Screenshot 2026-04-20 at 15 00 00" src="https://github.com/user-attachments/assets/a199c25e-1d1a-4907-9971-a779a0919c44" />|
+
+## Video Demo
+
+<https://www.bilibili.com/video/BV1cXoKBhEdz>
+
 ## Features
 
 - **62+ ASR models** — SenseVoice, Paraformer, Whisper, Transducer, Moonshine, and more
@@ -112,7 +122,7 @@ The output is in `src-tauri/target/release/bundle/`.
 
 ## Using a Different Model
 
-The app uses two constants in `src-tauri/src/lib.rs` to select which model
+The app uses two constants in [`src-tauri/src/lib.rs`](src-tauri/src/lib.rs) to select which model
 to bundle:
 
 ```rust
@@ -122,8 +132,8 @@ const MODEL_NAME: &str = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-1
 
 To switch models:
 
-1. Pick a model type from `src-tauri/src/model_registry.rs` (types 0--61).
-2. Update `MODEL_TYPE` and `MODEL_NAME` in `src-tauri/src/lib.rs`.
+1. Pick a model type from [`src-tauri/src/model_registry.rs`](src-tauri/src/model_registry.rs) (types 0--61).
+2. Update `MODEL_TYPE` and `MODEL_NAME` in [`src-tauri/src/lib.rs`](src-tauri/src/lib.rs).
 3. Download the corresponding model and place its directory into
    `src-tauri/assets/`, keeping the original directory name.
 4. Run `npm run dev` to test.
