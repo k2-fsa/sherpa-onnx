@@ -332,10 +332,10 @@ function startPolling() {
       progressBar.style.width = state.percent + "%";
       progressLabel.textContent = state.percent + "%";
 
-      // Update results table
+      // Append only new rows instead of rebuilding the entire table
+      const prevLen = lastSegments.length;
       lastSegments = state.segments;
-      resultsBody.innerHTML = "";
-      for (let i = 0; i < state.segments.length; i++) {
+      for (let i = prevLen; i < state.segments.length; i++) {
         const seg = state.segments[i];
         const tr = document.createElement("tr");
         tr.dataset.idx = i;

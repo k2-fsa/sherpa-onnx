@@ -41,6 +41,7 @@ struct ProcessingState {
 struct AppState {
     recognizer: Arc<Mutex<Option<OfflineRecognizer>>>,
     vad: Arc<Mutex<Option<VoiceActivityDetector>>>,
+    running: Arc<AtomicBool>,
     cancelled: Arc<AtomicBool>,
     progress: Arc<AtomicU32>,
     status: Arc<Mutex<String>>,
@@ -94,6 +95,43 @@ fn open_audio_file(
     Ok((format, decoder, track_id, num_channels, sample_rate))
 }
 
+/// Recognize a single VAD speech segment: skip if too short or punctuation-only.
+fn recognize_segment(
+    recognizer: &OfflineRecognizer,
+    segment: &sherpa_onnx::SpeechSegment,
+    segments: &Arc<Mutex<Vec<SegmentResult>>>,
+) {
+    let samples = segment.samples();
+    let duration = samples.len() as f32 / 16000.0;
+    if duration < 0.1 {
+        return;
+    }
+
+    let start_time = segment.start() as f32 / 16000.0;
+    let end_time = start_time + duration;
+
+    let stream = recognizer.create_stream();
+    stream.accept_waveform(16000, samples);
+    recognizer.decode(&stream);
+
+    if let Some(r) = stream.get_result() {
+        let text = r.text.trim().to_string();
+        if !text.is_empty()
+            && !text
+                .chars()
+                .all(|c| c.is_ascii_punctuation() || c.is_ascii_whitespace())
+        {
+            if let Ok(mut segs) = segments.lock() {
+                segs.push(SegmentResult {
+                    start: start_time,
+                    end: end_time,
+                    text,
+                });
+            }
+        }
+    }
+}
+
 /// Decode interleaved AudioBufferRef to mono f32 samples.
 fn decode_to_mono_f32(decoded: &AudioBufferRef, num_channels: usize) -> Vec<f32> {
     let mut buf =
@@ -123,12 +161,18 @@ fn decode_to_mono_f32(decoded: &AudioBufferRef, num_channels: usize) -> Vec<f32>
 /// Streams audio packet-by-packet to avoid loading the entire file into memory.
 #[tauri::command]
 fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    if state.running.swap(true, Ordering::SeqCst) {
+        return Err("Recognition is already running".to_string());
+    }
+
     // Check initialization
     let init = state.init_status.load(Ordering::Relaxed);
     if init == 0 {
+        state.running.store(false, Ordering::SeqCst);
         return Err("Models are still loading, please wait".to_string());
     }
     if init == 2 {
+        state.running.store(false, Ordering::SeqCst);
         let err = state.init_error.lock().map_err(|e| e.to_string())?.clone();
         return Err(format!("Initialization failed: {err}"));
     }
@@ -145,6 +189,7 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
     // Clone Arc handles for the worker thread
     let recognizer = Arc::clone(&state.recognizer);
     let vad = Arc::clone(&state.vad);
+    let running = Arc::clone(&state.running);
     let cancelled = Arc::clone(&state.cancelled);
     let progress = Arc::clone(&state.progress);
     let status = Arc::clone(&state.status);
@@ -160,7 +205,10 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
             &segments,
         );
 
-        let mut s = status.lock().unwrap();
+        let Ok(mut s) = status.lock() else {
+            running.store(false, Ordering::SeqCst);
+            return;
+        };
         match result {
             Ok(()) => {
                 if cancelled.load(Ordering::Relaxed) {
@@ -174,6 +222,7 @@ fn recognize_file(path: String, state: tauri::State<'_, AppState>) -> Result<(),
                 *s = format!("error: {e}");
             }
         }
+        running.store(false, Ordering::SeqCst);
     });
 
     Ok(())
@@ -271,32 +320,7 @@ fn run_recognition(
             vad_buf.drain(..window_size);
 
             while let Some(segment) = vad.front() {
-                let seg_samples = segment.samples();
-                let duration = seg_samples.len() as f32 / 16000.0;
-                let start_time = segment.start() as f32 / 16000.0;
-                let end_time = start_time + duration;
-
-                if duration >= 0.1 {
-                    let stream = recognizer.create_stream();
-                    stream.accept_waveform(16000, seg_samples);
-                    recognizer.decode(&stream);
-                    if let Some(r) = stream.get_result() {
-                        let text = r.text.trim().to_string();
-                        if !text.is_empty()
-                            && !text
-                                .chars()
-                                .all(|c| c.is_ascii_punctuation() || c.is_ascii_whitespace())
-                        {
-                            if let Ok(mut segs) = segments.lock() {
-                                segs.push(SegmentResult {
-                                    start: start_time,
-                                    end: end_time,
-                                    text,
-                                });
-                            }
-                        }
-                    }
-                }
+                recognize_segment(recognizer, &segment, segments);
                 vad.pop();
             }
         }
@@ -318,27 +342,7 @@ fn run_recognition(
     if !cancelled.load(Ordering::Relaxed) && !vad_buf.is_empty() {
         vad.flush();
         while let Some(segment) = vad.front() {
-            let seg_samples = segment.samples();
-            let duration = seg_samples.len() as f32 / 16000.0;
-            let start_time = segment.start() as f32 / 16000.0;
-            let end_time = start_time + duration;
-
-            if duration >= 0.1 {
-                let stream = recognizer.create_stream();
-                stream.accept_waveform(16000, seg_samples);
-                recognizer.decode(&stream);
-                if let Some(r) = stream.get_result() {
-                    if !r.text.is_empty() {
-                        if let Ok(mut segs) = segments.lock() {
-                            segs.push(SegmentResult {
-                                start: start_time,
-                                end: end_time,
-                                text: r.text,
-                            });
-                        }
-                    }
-                }
-            }
+            recognize_segment(recognizer, &segment, segments);
             vad.pop();
         }
     }
@@ -549,7 +553,11 @@ struct InitStatus {
 #[tauri::command]
 fn get_init_status(state: tauri::State<'_, AppState>) -> InitStatus {
     let status = state.init_status.load(Ordering::Relaxed);
-    let error = state.init_error.lock().unwrap().clone();
+    let error = state
+        .init_error
+        .lock()
+        .map(|e| e.clone())
+        .unwrap_or_default();
     let num_threads = state.num_threads.load(Ordering::Relaxed);
     InitStatus {
         status,
@@ -713,6 +721,7 @@ fn build_app_state() -> AppState {
     AppState {
         recognizer: Arc::new(Mutex::new(None)),
         vad: Arc::new(Mutex::new(None)),
+        running: Arc::new(AtomicBool::new(false)),
         cancelled: Arc::new(AtomicBool::new(false)),
         progress: Arc::new(AtomicU32::new(0)),
         status: Arc::new(Mutex::new("idle".to_string())),
@@ -740,14 +749,20 @@ pub fn run() {
         match build_models() {
             Ok((rec, vad, threads)) => {
                 eprintln!("[init] models ready, num_threads={threads}");
-                *init_recognizer.lock().unwrap() = Some(rec);
-                *init_vad.lock().unwrap() = Some(vad);
+                if let Ok(mut r) = init_recognizer.lock() {
+                    *r = Some(rec);
+                }
+                if let Ok(mut v) = init_vad.lock() {
+                    *v = Some(vad);
+                }
                 init_num_threads.store(threads, Ordering::Relaxed);
                 init_status.store(1, Ordering::Relaxed); // ready
             }
             Err(e) => {
                 eprintln!("[init] model initialization failed: {e}");
-                *init_error.lock().unwrap() = e;
+                if let Ok(mut err) = init_error.lock() {
+                    *err = e;
+                }
                 init_status.store(2, Ordering::Relaxed); // error
             }
         }
