@@ -1,7 +1,7 @@
 mod model_registry;
 
 use model_registry::get_model_config;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sherpa_onnx::{
     LinearResampler, OfflineRecognizer, SileroVadModelConfig, VadModelConfig,
     VoiceActivityDetector,
@@ -19,6 +19,27 @@ use symphonia::core::probe::Hint;
 /// Which ASR model to bundle. Build scripts patch these via sed.
 const MODEL_TYPE: u32 = 15;
 const MODEL_NAME: &str = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17";
+
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+struct VadSettings {
+    threshold: f32,
+    min_silence_duration: f32,
+    min_speech_duration: f32,
+    max_speech_duration: f32,
+    num_threads: i32,
+}
+
+impl Default for VadSettings {
+    fn default() -> Self {
+        Self {
+            threshold: 0.2,
+            min_silence_duration: 0.2,
+            min_speech_duration: 0.2,
+            max_speech_duration: 10.0,
+            num_threads: 2,
+        }
+    }
+}
 
 #[derive(Serialize, Clone)]
 struct SegmentResult {
@@ -50,6 +71,7 @@ struct AppState {
     init_status: Arc<AtomicU8>,
     init_error: Arc<Mutex<String>>,
     num_threads: Arc<AtomicU32>,
+    settings: Arc<Mutex<VadSettings>>,
 }
 
 /// Open an audio/video file and return the format reader, decoder, and track info.
@@ -611,7 +633,7 @@ fn resource_dir() -> PathBuf {
 }
 
 /// Initialize recognizer and VAD. Returns (recognizer, vad, num_threads) or error string.
-fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
+fn build_models(settings: &VadSettings) -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), String> {
     let dir = resource_dir();
     let model_dir = dir.join(MODEL_NAME);
     let silero_vad_path = dir.join("silero_vad.onnx");
@@ -668,7 +690,8 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
         asr_config.hr.rule_fsts = hr_rule_fst.to_str().map(|s| s.to_string());
     }
 
-    let num_threads = asr_config.model_config.num_threads as u32;
+    asr_config.model_config.num_threads = settings.num_threads;
+    let num_threads = settings.num_threads as u32;
 
     let silero_vad_str = silero_vad_path
         .to_str()
@@ -678,11 +701,11 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     let mut vad_config = VadModelConfig::default();
     vad_config.silero_vad = SileroVadModelConfig {
         model: Some(silero_vad_str),
-        threshold: 0.2,
-        min_silence_duration: 0.2,
-        min_speech_duration: 0.2,
+        threshold: settings.threshold,
+        min_silence_duration: settings.min_silence_duration,
+        min_speech_duration: settings.min_speech_duration,
         window_size: 512,
-        max_speech_duration: 10.0,
+        max_speech_duration: settings.max_speech_duration,
         ..Default::default()
     };
     vad_config.sample_rate = 16000;
@@ -715,6 +738,70 @@ fn build_models() -> Result<(OfflineRecognizer, VoiceActivityDetector, u32), Str
     Ok((recognizer, vad, num_threads))
 }
 
+#[tauri::command]
+fn get_settings(state: tauri::State<'_, AppState>) -> Result<VadSettings, String> {
+    state.settings.lock().map(|s| s.clone()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn apply_settings(
+    new_settings: VadSettings,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    if state.running.load(Ordering::SeqCst) {
+        return Err("Cannot change settings while recognition is running".to_string());
+    }
+    let init = state.init_status.load(Ordering::Relaxed);
+    if init == 0 {
+        return Err("Models are still loading, please wait".to_string());
+    }
+
+    {
+        let current = state.settings.lock().map_err(|e| e.to_string())?;
+        if *current == new_settings {
+            return Ok(());
+        }
+    }
+
+    // Set init_status to 0 so the frontend shows "Loading models..."
+    state.init_status.store(0, Ordering::Relaxed);
+
+    // Store the new settings
+    *state.settings.lock().map_err(|e| e.to_string())? = new_settings.clone();
+
+    let recognizer_arc = Arc::clone(&state.recognizer);
+    let vad_arc = Arc::clone(&state.vad);
+    let init_status = Arc::clone(&state.init_status);
+    let init_error = Arc::clone(&state.init_error);
+    let init_num_threads = Arc::clone(&state.num_threads);
+
+    std::thread::spawn(move || {
+        eprintln!("[apply_settings] rebuilding models with new settings...");
+        match build_models(&new_settings) {
+            Ok((rec, vad, threads)) => {
+                eprintln!("[apply_settings] models rebuilt, num_threads={threads}");
+                if let Ok(mut r) = recognizer_arc.lock() {
+                    *r = Some(rec);
+                }
+                if let Ok(mut v) = vad_arc.lock() {
+                    *v = Some(vad);
+                }
+                init_num_threads.store(threads, Ordering::Relaxed);
+                init_status.store(1, Ordering::Relaxed);
+            }
+            Err(e) => {
+                eprintln!("[apply_settings] rebuild failed: {e}");
+                if let Ok(mut err) = init_error.lock() {
+                    *err = e;
+                }
+                init_status.store(2, Ordering::Relaxed);
+            }
+        }
+    });
+
+    Ok(())
+}
+
 /// Create AppState with recognizer/VAD set to None.
 /// Models are loaded in a background thread after startup.
 fn build_app_state() -> AppState {
@@ -730,6 +817,7 @@ fn build_app_state() -> AppState {
         init_status: Arc::new(AtomicU8::new(0)), // 0 = pending
         init_error: Arc::new(Mutex::new(String::new())),
         num_threads: Arc::new(AtomicU32::new(0)),
+        settings: Arc::new(Mutex::new(VadSettings::default())),
     }
 }
 
@@ -743,10 +831,12 @@ pub fn run() {
     let init_status = Arc::clone(&state.init_status);
     let init_error = Arc::clone(&state.init_error);
     let init_num_threads = Arc::clone(&state.num_threads);
+    let init_settings = Arc::clone(&state.settings);
 
     std::thread::spawn(move || {
         eprintln!("[init] starting model initialization...");
-        match build_models() {
+        let settings = init_settings.lock().map(|s| s.clone()).unwrap_or_default();
+        match build_models(&settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[init] models ready, num_threads={threads}");
                 if let Ok(mut r) = init_recognizer.lock() {
@@ -756,6 +846,9 @@ pub fn run() {
                     *v = Some(vad);
                 }
                 init_num_threads.store(threads, Ordering::Relaxed);
+                if let Ok(mut s) = init_settings.lock() {
+                    s.num_threads = threads as i32;
+                }
                 init_status.store(1, Ordering::Relaxed); // ready
             }
             Err(e) => {
@@ -779,6 +872,8 @@ pub fn run() {
             export_srt,
             save_segment_as_wav,
             get_init_status,
+            get_settings,
+            apply_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

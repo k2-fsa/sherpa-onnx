@@ -269,6 +269,81 @@ th {
   font-weight: 600;
 }
 
+#settings-btn {
+  background-color: #475569;
+  padding: 0.6em 0.8em;
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+#settings-btn:hover {
+  background-color: #334155;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5em 2em;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.modal h3 {
+  margin-top: 0;
+  text-align: left;
+}
+
+.modal label {
+  display: block;
+  text-align: left;
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 0.8em;
+}
+
+.modal input[type="number"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.3em;
+  padding: 0.4em 0.6em;
+  font-size: 1em;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.6em;
+  justify-content: flex-end;
+  margin-top: 1.2em;
+}
+
+.modal-actions button {
+  font-size: 0.9em;
+  padding: 0.5em 1.2em;
+}
+
+#settings-cancel {
+  background-color: #475569;
+}
+
+#settings-cancel:hover {
+  background-color: #334155;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -354,6 +429,36 @@ th {
   }
 
   .save-seg-btn:hover {
+    background-color: #64748b;
+  }
+
+  #settings-btn {
+    background-color: #475569;
+  }
+
+  #settings-btn:hover {
+    background-color: #64748b;
+  }
+
+  .modal {
+    background-color: #3a3a3a;
+  }
+
+  .modal label {
+    color: #bbb;
+  }
+
+  .modal input[type="number"] {
+    background-color: #2f2f2f;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+
+  #settings-cancel {
+    background-color: #475569;
+  }
+
+  #settings-cancel:hover {
     background-color: #64748b;
   }
 }
