@@ -1431,6 +1431,36 @@ def get_sl_models():
     return ans
 
 
+# Albanian
+def get_sq_models():
+    sq_AL = [
+        PiperModel(name="edon", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in sq_AL:
+        m.lang = "sq_AL"
+
+    ans = sq_AL
+
+    for m in ans:
+        m.text = "Çdo fillim është i vështirë, por çdo fund është i bukur."
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # Serbian
 def get_sr_models():
     sr_RS = [
@@ -2077,6 +2107,7 @@ def get_all_models():
     ans += get_ru_models()
     ans += get_sk_models()
     ans += get_sl_models()
+    ans += get_sq_models()
     ans += get_sr_models()
     ans += get_sv_models()
     ans += get_sw_models()
