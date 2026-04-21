@@ -15,19 +15,31 @@ SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
 GO_PROXY_WAIT_SECS=30
-GO_PROXY_MAX_RETRIES=20
+GO_PROXY_MAX_RETRIES=40
+
+# Proactively tell the Go module proxy to fetch a specific version.
+# Requesting the .info endpoint forces proxy.golang.org to fetch and cache
+# the module rather than waiting for its periodic indexing crawl.
+kick_go_proxy() {
+  local pkg="$1"
+  local version="$2"
+  echo "Kicking Go proxy to fetch $pkg@$version ..."
+  curl -sS "https://proxy.golang.org/${pkg}/@v/${version}.info" || true
+  echo ""
+}
 
 # Wait for Go proxy to index newly published packages.
-# The Go module proxy (proxy.golang.org) needs time to fetch and index
-# new versions after a git push + tag. This function polls until the
-# packages are available or the retry limit is reached.
+# Uses the .info endpoint which is a direct, reliable check.
 wait_for_go_proxy() {
   local pkg="$1"
   local version="$2"
   local i
+
+  kick_go_proxy "$pkg" "$version"
+
   for i in $(seq 1 $GO_PROXY_MAX_RETRIES); do
     echo "Attempt $i/$GO_PROXY_MAX_RETRIES: checking $pkg@$version ..."
-    if go list -m -versions "$pkg" 2>/dev/null | grep -q "$version"; then
+    if curl -sS -o /dev/null -w "%{http_code}" "https://proxy.golang.org/${pkg}/@v/${version}.info" | grep -q "200"; then
       echo "  -> $pkg@$version is available on Go proxy"
       return 0
     fi
@@ -113,6 +125,7 @@ function linux() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-linux" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-linux
 }
 
@@ -167,6 +180,7 @@ function osx() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-macos" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-macos
 }
 
@@ -210,6 +224,7 @@ function windows() {
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
+  kick_go_proxy "github.com/k2-fsa/sherpa-onnx-go-windows" "v$SHERPA_ONNX_VERSION"
   rm -rf sherpa-onnx-go-windows
 }
 
