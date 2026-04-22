@@ -62,7 +62,7 @@ jobs:
           export GIT_LFS_SKIP_SMUDGE=1
           export GIT_CLONE_PROTECTION_ACTIVE=false
 
-          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
 
           python3 ./generate.py --total $total --index $index
           chmod +x ./generate.sh
@@ -103,7 +103,7 @@ jobs:
             git status .
             git add .
             git commit -m 'Add mp3 files'
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
 
       - name: Show generated model files
         shell: bash
@@ -176,6 +176,8 @@ jobs:
               vits-piper-ar_JO-SA_miro_V2-high-int8
               vits-piper-ar_JO-SA_miro_V2-high-fp16
               vits-piper-ar_JO-SA_miro_V2-high
+              vits-piper-ar_JO-SA_miro_V2-high
+              vits-piper-sq_AL-edon-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
@@ -184,7 +186,7 @@ jobs:
               fi
 
               rm -rf huggingface
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
               cp -a $src/* ./huggingface
               pushd huggingface
               git lfs track "*.onnx"
@@ -198,7 +200,7 @@ jobs:
               git add .
               git status
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main
               popd
 
             done

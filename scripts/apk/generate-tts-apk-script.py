@@ -263,6 +263,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-ru_RU-ruslan-medium"),
         TtsModel(model_dir="vits-piper-sk_SK-lili-medium"),
         TtsModel(model_dir="vits-piper-sl_SI-artur-medium"),
+        TtsModel(model_dir="vits-piper-sq_AL-edon-medium"),
         TtsModel(model_dir="vits-piper-sr_RS-serbski_institut-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-lisa-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-nst-medium"),
