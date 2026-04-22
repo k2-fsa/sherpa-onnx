@@ -730,14 +730,18 @@ fn apply_settings(
         match build_models(&new_settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[apply_settings] models rebuilt, num_threads={threads}");
-                if let Ok(mut r) = recognizer_arc.lock() {
-                    *r = Some(rec);
+                let r_ok = recognizer_arc.lock().map(|mut r| { *r = Some(rec); }).is_ok();
+                let v_ok = vad_arc.lock().map(|mut v| { *v = Some(vad); }).is_ok();
+                if r_ok && v_ok {
+                    init_num_threads.store(threads, Ordering::Relaxed);
+                    init_status.store(1, Ordering::Relaxed);
+                } else {
+                    eprintln!("[apply_settings] mutex poisoned, marking as error");
+                    if let Ok(mut err) = init_error.lock() {
+                        *err = "Internal error: mutex poisoned".to_string();
+                    }
+                    init_status.store(2, Ordering::Relaxed);
                 }
-                if let Ok(mut v) = vad_arc.lock() {
-                    *v = Some(vad);
-                }
-                init_num_threads.store(threads, Ordering::Relaxed);
-                init_status.store(1, Ordering::Relaxed);
             }
             Err(e) => {
                 eprintln!("[apply_settings] rebuild failed: {e}");
@@ -939,17 +943,21 @@ pub fn run() {
         match build_models(&settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[init] models ready, num_threads={threads}");
-                if let Ok(mut r) = init_recognizer.lock() {
-                    *r = Some(rec);
+                let r_ok = init_recognizer.lock().map(|mut r| { *r = Some(rec); }).is_ok();
+                let v_ok = init_vad.lock().map(|mut v| { *v = Some(vad); }).is_ok();
+                if r_ok && v_ok {
+                    init_num_threads.store(threads, Ordering::Relaxed);
+                    if let Ok(mut s) = init_settings.lock() {
+                        s.num_threads = threads as i32;
+                    }
+                    init_status.store(1, Ordering::Relaxed);
+                } else {
+                    eprintln!("[init] mutex poisoned, marking as error");
+                    if let Ok(mut err) = init_error.lock() {
+                        *err = "Internal error: mutex poisoned".to_string();
+                    }
+                    init_status.store(2, Ordering::Relaxed);
                 }
-                if let Ok(mut v) = init_vad.lock() {
-                    *v = Some(vad);
-                }
-                init_num_threads.store(threads, Ordering::Relaxed);
-                if let Ok(mut s) = init_settings.lock() {
-                    s.num_threads = threads as i32;
-                }
-                init_status.store(1, Ordering::Relaxed);
             }
             Err(e) => {
                 eprintln!("[init] model initialization failed: {e}");

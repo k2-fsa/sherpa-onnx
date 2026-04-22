@@ -491,6 +491,18 @@ settingsApplyBtn.addEventListener("click", async () => {
     flashStatus("Threshold must be between 0.0 and 1.0", true);
     return;
   }
+  if (isNaN(newSettings.min_silence_duration) || newSettings.min_silence_duration < 0) {
+    flashStatus("Min silence duration must be >= 0", true);
+    return;
+  }
+  if (isNaN(newSettings.min_speech_duration) || newSettings.min_speech_duration < 0) {
+    flashStatus("Min speech duration must be >= 0", true);
+    return;
+  }
+  if (isNaN(newSettings.max_speech_duration) || newSettings.max_speech_duration <= 0) {
+    flashStatus("Max speech duration must be > 0", true);
+    return;
+  }
   if (
     isNaN(newSettings.num_threads) ||
     newSettings.num_threads < 1 ||
