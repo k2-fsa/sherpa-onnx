@@ -50,7 +50,9 @@ mv -v README $dst/ || true
 mv -v README.md $dst/ || true
 mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
-cp -a ./espeak-ng-data $dst/
+if [[ $model_name != *zh_CN-xiao_ya-medium* ]]; then
+  cp -a ./espeak-ng-data $dst/
+fi
 
 cp -a $dst $dst_int8
 cp -a $dst $dst_fp16

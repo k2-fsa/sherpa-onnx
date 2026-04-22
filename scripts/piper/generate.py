@@ -1647,6 +1647,36 @@ def get_vi_models():
     return ans
 
 
+# Chinese
+def get_zh_models():
+    zh_CN = [
+        PiperModel(name="xiao_ya", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in vi_VN:
+        m.lang = "vi_VN"
+
+    ans = vi_VN
+
+    for m in ans:
+        m.text = "中国工商银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。"
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # Indonesian
 def get_id_models():
     id_ID = [
@@ -2115,7 +2145,7 @@ def get_all_models():
     ans += get_uk_models()
     ans += get_vi_models()
 
-    ans = get_sq_models()
+    ans = get_zh_models()
 
     for i, m in enumerate(ans):
         m.index = i
