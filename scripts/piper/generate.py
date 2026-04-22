@@ -1653,10 +1653,10 @@ def get_zh_models():
         PiperModel(name="xiao_ya", kind="medium", sr=22050, ns=1),
     ]
 
-    for m in vi_VN:
-        m.lang = "vi_VN"
+    for m in zh_CN:
+        m.lang = "zh_CN"
 
-    ans = vi_VN
+    ans = zh_CN
 
     for m in ans:
         m.text = "中国工商银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。"
