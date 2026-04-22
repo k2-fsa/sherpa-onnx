@@ -1,22 +1,21 @@
 const { invoke, convertFileSrc } = window.__TAURI__.core;
-const { open, save } = window.__TAURI__.dialog;
+const { save, ask } = window.__TAURI__.dialog;
 const { open: openUrl } = window.__TAURI__.shell;
 
-const selectBtn = document.querySelector("#select-btn");
-const cancelBtn = document.querySelector("#cancel-btn");
+const startBtn = document.querySelector("#start-btn");
+const stopBtn = document.querySelector("#stop-btn");
+const clearBtn = document.querySelector("#clear-btn");
 const statusEl = document.querySelector("#status");
+const recordingIndicator = document.querySelector("#recording-indicator");
+const elapsedTimer = document.querySelector("#elapsed-timer");
 const resultsEl = document.querySelector("#results");
 const resultsBody = document.querySelector("#results-body");
-const progressContainer = document.querySelector("#progress-container");
-const progressBar = document.querySelector("#progress-bar");
-const progressLabel = document.querySelector("#progress-label");
 const copyTextBtn = document.querySelector("#copy-text-btn");
 const copyTimedBtn = document.querySelector("#copy-timed-btn");
 const exportSrtBtn = document.querySelector("#export-srt-btn");
+const saveAllBtn = document.querySelector("#save-all-btn");
 const playerWrapper = document.querySelector("#player-wrapper");
 const player = document.querySelector("#player");
-const subtitleOverlay = document.querySelector("#subtitle-overlay");
-const statsEl = document.querySelector("#stats");
 const settingsBtn = document.querySelector("#settings-btn");
 const settingsModal = document.querySelector("#settings-modal");
 const setThreshold = document.querySelector("#set-threshold");
@@ -26,45 +25,97 @@ const setMaxSpeech = document.querySelector("#set-max-speech");
 const setNumThreads = document.querySelector("#set-num-threads");
 const settingsApplyBtn = document.querySelector("#settings-apply");
 const settingsCancelBtn = document.querySelector("#settings-cancel");
+const deviceSelect = document.querySelector("#device-select");
 
-let recognizing = false;
+let recording = false;
 let pollTimer = null;
+let elapsedInterval = null;
 let lastSegments = [];
 let modelsReady = false;
-let modelThreads = 0;
+let recordingStartTime = null;
+let hasDevices = false;
 
 // ---------------------------------------------------------------------------
 // Model initialization polling
 // ---------------------------------------------------------------------------
 
-selectBtn.disabled = true;
+startBtn.disabled = true;
 statusEl.textContent = "Loading models...";
 statusEl.className = "status status-working";
+
+async function loadDevices() {
+  try {
+    const devices = await invoke("list_input_devices");
+    deviceSelect.innerHTML = "";
+    if (devices.length === 0) {
+      hasDevices = false;
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No microphone found";
+      deviceSelect.appendChild(opt);
+      deviceSelect.disabled = true;
+      startBtn.disabled = true;
+      statusEl.textContent = "No microphone detected. Please connect a microphone and restart.";
+      statusEl.className = "status status-error";
+      return;
+    }
+    hasDevices = true;
+    const selected = await invoke("get_selected_device");
+    devices.forEach((d) => {
+      const opt = document.createElement("option");
+      opt.value = d.name;
+      opt.textContent = d.is_default ? `${d.name} (default)` : d.name;
+      if (selected ? d.name === selected : d.is_default) {
+        opt.selected = true;
+      }
+      deviceSelect.appendChild(opt);
+    });
+    deviceSelect.disabled = false;
+    if (modelsReady) {
+      startBtn.disabled = false;
+      statusEl.textContent = "";
+      statusEl.className = "status";
+    }
+  } catch (err) {
+    deviceSelect.innerHTML = "<option>Error loading devices</option>";
+    deviceSelect.disabled = true;
+  }
+}
+
+deviceSelect.addEventListener("change", async () => {
+  const name = deviceSelect.value || null;
+  try {
+    await invoke("set_input_device", { deviceName: name });
+  } catch (err) {
+    flashStatus(`Device error: ${err}`, true);
+  }
+});
+
+loadDevices();
 
 function pollInitStatus() {
   invoke("get_init_status")
     .then((res) => {
       if (res.status === 1) {
-        // ready
         modelsReady = true;
-        modelThreads = res.num_threads;
-        selectBtn.disabled = false;
+        startBtn.disabled = !hasDevices;
         settingsBtn.disabled = false;
-        statusEl.textContent = "";
-        statusEl.className = "status";
+        clearBtn.disabled = false;
+        if (hasDevices) {
+          statusEl.textContent = "";
+          statusEl.className = "status";
+        }
       } else if (res.status === 2) {
-        // error
-        selectBtn.disabled = true;
+        startBtn.disabled = true;
         settingsBtn.disabled = true;
         statusEl.textContent = `Initialization failed: ${res.error}`;
         statusEl.className = "status status-error";
       } else {
-        // still pending, poll again
         setTimeout(pollInitStatus, 300);
       }
     })
     .catch((err) => {
-      selectBtn.disabled = true;
+      startBtn.disabled = true;
       statusEl.textContent = `Init poll error: ${err}`;
       statusEl.className = "status status-error";
     });
@@ -88,14 +139,14 @@ document.querySelectorAll("a[href]").forEach((a) => {
 // ---------------------------------------------------------------------------
 
 copyTextBtn.addEventListener("click", async () => {
-  const text = lastSegments.map((s) => s.text).join("");
+  const text = lastSegments.map((s) => s.text).join("\n");
   await navigator.clipboard.writeText(text);
   flashStatus("Text copied.");
 });
 
 copyTimedBtn.addEventListener("click", async () => {
   const lines = lastSegments.map(
-    (s) => `[${formatTime(s.start)} --> ${formatTime(s.end)}] ${s.text}`
+    (s) => `[${s.wall_start} --> ${s.wall_end}] ${s.text}`
   );
   await navigator.clipboard.writeText(lines.join("\n"));
   flashStatus("Text with time copied.");
@@ -117,19 +168,52 @@ exportSrtBtn.addEventListener("click", async () => {
   }
 });
 
+saveAllBtn.addEventListener("click", async () => {
+  const filePath = await save({
+    defaultPath: "recording.wav",
+    filters: [{ name: "WAV Audio", extensions: ["wav"] }],
+  });
+
+  if (filePath === null) return;
+
+  try {
+    await invoke("save_all_audio", { path: filePath });
+    flashStatus(`Audio saved to: ${filePath}`, false, 8000);
+  } catch (err) {
+    flashStatus(`Save error: ${err}`, true);
+  }
+});
+
 // ---------------------------------------------------------------------------
-// Player / subtitle / row sync
+// Audio player & row sync
 // ---------------------------------------------------------------------------
 
-function setupPlayer(filePath) {
-  const url = convertFileSrc(filePath);
-  player.src = url;
-  playerWrapper.style.display = "block";
-  subtitleOverlay.textContent = "";
-}
+let lastActiveIdx = -1;
 
-// Find segment index for a given time using binary search.
-// Segments are sorted by start time.
+player.addEventListener("timeupdate", () => {
+  const t = player.currentTime;
+  const activeIdx = findSegmentIndex(t);
+
+  if (activeIdx !== lastActiveIdx) {
+    const rows = resultsBody.querySelectorAll("tr");
+    if (lastActiveIdx >= 0 && lastActiveIdx < rows.length) {
+      rows[lastActiveIdx].classList.remove("active");
+    }
+    if (activeIdx >= 0 && activeIdx < rows.length) {
+      rows[activeIdx].classList.add("active");
+      rows[activeIdx].scrollIntoView({ block: "nearest" });
+    }
+    lastActiveIdx = activeIdx;
+  }
+});
+
+player.addEventListener("ended", () => {
+  lastActiveIdx = -1;
+  resultsBody
+    .querySelectorAll("tr.active")
+    .forEach((tr) => tr.classList.remove("active"));
+});
+
 function findSegmentIndex(t) {
   let lo = 0;
   let hi = lastSegments.length - 1;
@@ -147,73 +231,8 @@ function findSegmentIndex(t) {
   return -1;
 }
 
-// Use rAF for smooth subtitle/row sync (~60fps instead of timeupdate's ~4fps).
-let rafId = null;
-let lastActiveIdx = -1;
-
-function tick() {
-  if (player.paused || player.ended) {
-    rafId = null;
-    return;
-  }
-
-  const t = player.currentTime;
-  const activeIdx = findSegmentIndex(t);
-
-  // Update subtitle
-  subtitleOverlay.textContent =
-    activeIdx >= 0 ? lastSegments[activeIdx].text : "";
-
-  // Update row highlight (only on change to avoid constant reflows)
-  if (activeIdx !== lastActiveIdx) {
-    const rows = resultsBody.querySelectorAll("tr");
-    if (lastActiveIdx >= 0 && lastActiveIdx < rows.length) {
-      rows[lastActiveIdx].classList.remove("active");
-    }
-    if (activeIdx >= 0 && activeIdx < rows.length) {
-      rows[activeIdx].classList.add("active");
-      rows[activeIdx].scrollIntoView({ block: "nearest" });
-    }
-    lastActiveIdx = activeIdx;
-  }
-
-  rafId = requestAnimationFrame(tick);
-}
-
-function startSync() {
-  if (rafId) return;
-  lastActiveIdx = -1;
-  rafId = requestAnimationFrame(tick);
-}
-
-function stopSync() {
-  if (rafId) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-}
-
-player.addEventListener("play", startSync);
-player.addEventListener("pause", () => {
-  stopSync();
-  // Still update subtitle on pause so it shows the correct text
-  const t = player.currentTime;
-  const idx = findSegmentIndex(t);
-  subtitleOverlay.textContent = idx >= 0 ? lastSegments[idx].text : "";
-});
-
-player.addEventListener("ended", () => {
-  stopSync();
-  subtitleOverlay.textContent = "";
-  lastActiveIdx = -1;
-  resultsBody
-    .querySelectorAll("tr.active")
-    .forEach((tr) => tr.classList.remove("active"));
-});
-
 // Click a table row to seek to that segment
 resultsBody.addEventListener("click", (e) => {
-  // Handle save button click
   if (e.target.closest(".save-seg-btn")) {
     e.stopPropagation();
     const btn = e.target.closest(".save-seg-btn");
@@ -229,7 +248,6 @@ resultsBody.addEventListener("click", (e) => {
   const idx = parseInt(tr.dataset.idx, 10);
   if (idx >= 0 && idx < lastSegments.length) {
     player.pause();
-    // Seek 0.3s before the segment start to avoid missing the beginning
     const t = Math.max(0, lastSegments[idx].start - 0.3);
     player.currentTime = t;
     player.addEventListener(
@@ -244,12 +262,11 @@ resultsBody.addEventListener("click", (e) => {
 
 async function saveSegment(idx) {
   const seg = lastSegments[idx];
-  const start = seg.start.toFixed(2).replace(".", "_");
-  const end = seg.end.toFixed(2).replace(".", "_");
+  const wallPart = seg.wall_start.replace(/[:\s]/g, "-");
   const textPart = seg.text
-    .replace(/[^\w\u4e00-\u9fff]/g, "_")
+    .replace(/[^\w一-鿿]/g, "_")
     .slice(0, 30);
-  const defaultName = `segment-${idx + 1}-${start}s-${end}s-${textPart}.wav`;
+  const defaultName = `segment-${idx + 1}-${wallPart}-${textPart}.wav`;
 
   const filePath = await save({
     defaultPath: defaultName,
@@ -271,148 +288,156 @@ async function saveSegment(idx) {
 }
 
 // ---------------------------------------------------------------------------
-// File selection & recognition
+// Start / Stop recording
 // ---------------------------------------------------------------------------
 
-selectBtn.addEventListener("click", async () => {
-  if (recognizing || !modelsReady) return;
-
-  const selected = await open({
-    multiple: false,
-    filters: [
-      {
-        name: "Audio",
-        extensions: ["wav", "mp3", "flac", "ogg", "aac", "m4a", "aiff", "caf"],
-      },
-      {
-        name: "Video",
-        extensions: ["mp4", "mkv", "webm", "avi", "mov"],
-      },
-    ],
-  });
-
-  if (selected === null) return;
-
-  // Reset UI
-  recognizing = true;
-  selectBtn.disabled = true;
-  settingsBtn.disabled = true;
-  cancelBtn.style.display = "";
-  cancelBtn.disabled = false;
-  progressContainer.style.display = "flex";
-  progressBar.style.width = "0%";
-  progressLabel.textContent = "0%";
-  resultsEl.style.display = "none";
-  resultsBody.innerHTML = "";
-  statsEl.style.display = "none";
-  playerWrapper.style.display = "none";
-  player.src = "";
-  lastSegments = [];
-  statusEl.textContent = "Decoding audio file...";
-  statusEl.className = "status status-working";
+startBtn.addEventListener("click", async () => {
+  if (recording || !modelsReady) return;
 
   try {
-    await invoke("recognize_file", { path: selected });
-    setupPlayer(selected);
-    startPolling();
+    await invoke("start_recording");
   } catch (err) {
-    recognizing = false;
-    selectBtn.disabled = false;
-    settingsBtn.disabled = false;
-    cancelBtn.style.display = "none";
-    progressContainer.style.display = "none";
-    statusEl.textContent = `Error: ${err}`;
-    statusEl.className = "status status-error";
+    flashStatus(`Start error: ${err}`, true);
+    return;
+  }
+
+  recording = true;
+  startBtn.style.display = "none";
+  stopBtn.style.display = "";
+  settingsBtn.disabled = true;
+  clearBtn.disabled = true;
+  deviceSelect.disabled = true;
+  recordingIndicator.style.display = "flex";
+  playerWrapper.style.display = "none";
+  player.src = "";
+  lastActiveIdx = -1;
+  statusEl.textContent = "";
+  statusEl.className = "status";
+
+  recordingStartTime = Date.now();
+  elapsedInterval = setInterval(updateElapsedTimer, 1000);
+  startPolling();
+});
+
+stopBtn.addEventListener("click", async () => {
+  stopBtn.disabled = true;
+  await invoke("stop_recording");
+});
+
+clearBtn.addEventListener("click", async () => {
+  if (recording) return;
+
+  const confirmed = await ask(
+    "This will clear all recognition results and recorded audio. Continue?",
+    { title: "Clear All", kind: "warning" }
+  );
+  if (!confirmed) return;
+
+  try {
+    await invoke("clear_results");
+    lastSegments = [];
+    resultsBody.innerHTML = "";
+    resultsEl.style.display = "none";
+    playerWrapper.style.display = "none";
+    player.src = "";
+    lastActiveIdx = -1;
+    statusEl.textContent = "";
+    statusEl.className = "status";
+    flashStatus("Cleared.");
+  } catch (err) {
+    flashStatus(`Clear error: ${err}`, true);
   }
 });
 
-cancelBtn.addEventListener("click", async () => {
-  await invoke("cancel_recognition");
-  cancelBtn.disabled = true;
-});
+function updateElapsedTimer() {
+  if (!recordingStartTime) return;
+  const secs = Math.floor((Date.now() - recordingStartTime) / 1000);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  elapsedTimer.textContent =
+    String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
 
 // ---------------------------------------------------------------------------
-// Progress polling
+// Polling
 // ---------------------------------------------------------------------------
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(async () => {
     try {
-      const state = await invoke("get_recognition_progress");
+      const state = await invoke("get_recording_state");
 
-      // Update progress bar
-      progressBar.style.width = state.percent + "%";
-      progressLabel.textContent = state.percent + "%";
-
-      // Append only new rows instead of rebuilding the entire table
+      // Append new rows
       const prevLen = lastSegments.length;
       lastSegments = state.segments;
       for (let i = prevLen; i < state.segments.length; i++) {
         const seg = state.segments[i];
+        const duration = (seg.end - seg.start).toFixed(2);
         const tr = document.createElement("tr");
         tr.dataset.idx = i;
         tr.innerHTML = `
-          <td>${seg.start.toFixed(2)}s</td>
-          <td>${seg.end.toFixed(2)}s</td>
+          <td>${escapeHtml(stripYear(seg.wall_start))}</td>
+          <td>${escapeHtml(stripYear(seg.wall_end))}</td>
+          <td>${duration}s</td>
           <td>${escapeHtml(seg.text)}</td>
           <td><button class="save-seg-btn" data-idx="${i}" title="Save as WAV">&#128190;</button></td>
         `;
         resultsBody.appendChild(tr);
       }
-      if (state.segments.length > 0) {
+      if (state.segments.length > prevLen) {
         resultsEl.style.display = "block";
+        const lastRow = resultsBody.lastElementChild;
+        if (lastRow) lastRow.scrollIntoView({ behavior: "smooth", block: "end" });
       }
 
-      // Check terminal states
-      if (state.status === "done") {
+      // Check if recording stopped
+      if (!state.recording && recording) {
         clearInterval(pollTimer);
         pollTimer = null;
-        recognizing = false;
-        selectBtn.disabled = false;
+        if (elapsedInterval) {
+          clearInterval(elapsedInterval);
+          elapsedInterval = null;
+        }
+        recording = false;
+        startBtn.style.display = "";
+        stopBtn.style.display = "none";
+        stopBtn.disabled = false;
         settingsBtn.disabled = false;
-        cancelBtn.style.display = "none";
-        progressBar.style.width = "100%";
-        progressLabel.textContent = "100%";
+        clearBtn.disabled = false;
+        deviceSelect.disabled = false;
+        recordingIndicator.style.display = "none";
 
-        const elapsed = state.elapsed_secs;
-        const audioDur = state.audio_duration_secs;
-        const rtf = audioDur > 0 ? (elapsed / audioDur).toFixed(3) : "N/A";
-        statusEl.textContent =
-          `Done. ${state.segments.length} segment(s). ` +
-          `Audio: ${audioDur.toFixed(1)}s, Elapsed: ${elapsed.toFixed(1)}s, ` +
-          `RTF: ${rtf} (=${elapsed.toFixed(1)}/${audioDur.toFixed(1)})`;
+        const totalSecs = state.elapsed_secs;
+        statusEl.textContent = `Done. ${state.segments.length} segment(s) in ${totalSecs.toFixed(1)}s.`;
         statusEl.className = "status status-done";
-        statsEl.style.display = "none";
-      } else if (state.status === "cancelled") {
-        clearInterval(pollTimer);
-        pollTimer = null;
-        recognizing = false;
-        selectBtn.disabled = false;
-        settingsBtn.disabled = false;
-        cancelBtn.style.display = "none";
-        progressContainer.style.display = "none";
-        statusEl.textContent = "Cancelled.";
-        statusEl.className = "status status-cancelled";
-      } else if (state.status.startsWith("error:")) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-        recognizing = false;
-        selectBtn.disabled = false;
-        settingsBtn.disabled = false;
-        cancelBtn.style.display = "none";
-        progressContainer.style.display = "none";
-        statusEl.textContent = state.status;
-        statusEl.className = "status status-error";
+
+        // Load recorded audio for playback
+        try {
+          const audioPath = await invoke("get_recorded_audio_path");
+          player.src = convertFileSrc(audioPath);
+          playerWrapper.style.display = "block";
+        } catch (err) {
+          if (state.segments.length > 0) {
+            flashStatus(`Could not load playback: ${err}`, true);
+          }
+        }
       }
     } catch (err) {
       clearInterval(pollTimer);
       pollTimer = null;
-      recognizing = false;
-      selectBtn.disabled = false;
+      if (elapsedInterval) {
+        clearInterval(elapsedInterval);
+        elapsedInterval = null;
+      }
+      recording = false;
+      startBtn.style.display = "";
+      stopBtn.style.display = "none";
+      stopBtn.disabled = false;
       settingsBtn.disabled = false;
-      cancelBtn.style.display = "none";
-      progressContainer.style.display = "none";
+      clearBtn.disabled = false;
+      deviceSelect.disabled = false;
+      recordingIndicator.style.display = "none";
       statusEl.textContent = `Poll error: ${err}`;
       statusEl.className = "status status-error";
     }
@@ -424,7 +449,7 @@ function startPolling() {
 // ---------------------------------------------------------------------------
 
 settingsBtn.addEventListener("click", async () => {
-  if (!modelsReady || recognizing) return;
+  if (!modelsReady || recording) return;
 
   try {
     const s = await invoke("get_settings");
@@ -458,7 +483,11 @@ settingsApplyBtn.addEventListener("click", async () => {
     num_threads: parseInt(setNumThreads.value, 10),
   };
 
-  if (isNaN(newSettings.threshold) || newSettings.threshold < 0 || newSettings.threshold > 1) {
+  if (
+    isNaN(newSettings.threshold) ||
+    newSettings.threshold < 0 ||
+    newSettings.threshold > 1
+  ) {
     flashStatus("Threshold must be between 0.0 and 1.0", true);
     return;
   }
@@ -474,7 +503,11 @@ settingsApplyBtn.addEventListener("click", async () => {
     flashStatus("Max speech duration must be > 0", true);
     return;
   }
-  if (isNaN(newSettings.num_threads) || newSettings.num_threads < 1 || newSettings.num_threads > 16) {
+  if (
+    isNaN(newSettings.num_threads) ||
+    newSettings.num_threads < 1 ||
+    newSettings.num_threads > 16
+  ) {
     flashStatus("Threads must be between 1 and 16", true);
     return;
   }
@@ -485,7 +518,7 @@ settingsApplyBtn.addEventListener("click", async () => {
     settingsModal.style.display = "none";
 
     modelsReady = false;
-    selectBtn.disabled = true;
+    startBtn.disabled = true;
     settingsBtn.disabled = true;
     statusEl.textContent = "Reloading models...";
     statusEl.className = "status status-working";
@@ -501,26 +534,16 @@ settingsApplyBtn.addEventListener("click", async () => {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatTime(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  const ms = Math.round((seconds % 1) * 1000);
-  return (
-    String(h).padStart(2, "0") +
-    ":" +
-    String(m).padStart(2, "0") +
-    ":" +
-    String(s).padStart(2, "0") +
-    "," +
-    String(ms).padStart(3, "0")
-  );
-}
-
 function escapeHtml(text) {
   const el = document.createElement("span");
   el.textContent = text;
   return el.innerHTML;
+}
+
+// "2026-04-21 18:52:28" -> "18:52:28" (time only for display)
+function stripYear(wall) {
+  const parts = wall.split(" ");
+  return parts.length >= 2 ? parts[parts.length - 1] : wall;
 }
 
 let flashTimer = null;

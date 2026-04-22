@@ -48,6 +48,10 @@ sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from
 sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/Cargo.toml
 sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-file/src-tauri/tauri.conf.json
 
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/package.json
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/src-tauri/Cargo.toml
+sed -i.bak "$replace_str" ./tauri-examples/non-streaming-speech-recognition-from-microphone/src-tauri/tauri.conf.json
+
 find android -name build.gradle -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 find android -name build.gradle.kts -type f -exec sed -i.bak "s/sherpa-onnx:v$old_version/sherpa-onnx:v$new_version/g" {} \;
 

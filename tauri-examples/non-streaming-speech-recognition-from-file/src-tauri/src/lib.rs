@@ -379,7 +379,11 @@ fn run_recognition(
     }
 
     // Flush remaining samples through VAD
-    if !cancelled.load(Ordering::Relaxed) && !vad_buf.is_empty() {
+    if !cancelled.load(Ordering::Relaxed) {
+        if !vad_buf.is_empty() {
+            vad_buf.resize(window_size, 0.0);
+            vad.accept_waveform(&vad_buf[..window_size]);
+        }
         vad.flush();
         while let Some(segment) = vad.front() {
             recognize_segment(recognizer, &segment, segments);
@@ -761,6 +765,25 @@ fn build_models(settings: &VadSettings) -> Result<(OfflineRecognizer, VoiceActiv
     Ok((recognizer, vad, num_threads))
 }
 
+fn validate_settings(s: &VadSettings) -> Result<(), String> {
+    if s.threshold <= 0.0 || s.threshold >= 1.0 {
+        return Err("threshold must be between 0.0 and 1.0 (exclusive)".to_string());
+    }
+    if s.min_silence_duration < 0.0 {
+        return Err("min_silence_duration must be >= 0".to_string());
+    }
+    if s.min_speech_duration < 0.0 {
+        return Err("min_speech_duration must be >= 0".to_string());
+    }
+    if s.max_speech_duration <= 0.0 {
+        return Err("max_speech_duration must be > 0".to_string());
+    }
+    if s.num_threads < 1 || s.num_threads > 16 {
+        return Err("num_threads must be between 1 and 16".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn get_settings(state: tauri::State<'_, AppState>) -> Result<VadSettings, String> {
     state.settings.lock().map(|s| s.clone()).map_err(|e| e.to_string())
@@ -778,6 +801,8 @@ fn apply_settings(
     if init == 0 {
         return Err("Models are still loading, please wait".to_string());
     }
+
+    validate_settings(&new_settings)?;
 
     {
         let current = state.settings.lock().map_err(|e| e.to_string())?;
@@ -803,14 +828,18 @@ fn apply_settings(
         match build_models(&new_settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[apply_settings] models rebuilt, num_threads={threads}");
-                if let Ok(mut r) = recognizer_arc.lock() {
-                    *r = Some(rec);
+                let r_ok = recognizer_arc.lock().map(|mut r| { *r = Some(rec); }).is_ok();
+                let v_ok = vad_arc.lock().map(|mut v| { *v = Some(vad); }).is_ok();
+                if r_ok && v_ok {
+                    init_num_threads.store(threads, Ordering::Relaxed);
+                    init_status.store(1, Ordering::Relaxed);
+                } else {
+                    eprintln!("[apply_settings] mutex poisoned, marking as error");
+                    if let Ok(mut err) = init_error.lock() {
+                        *err = "Internal error: mutex poisoned".to_string();
+                    }
+                    init_status.store(2, Ordering::Relaxed);
                 }
-                if let Ok(mut v) = vad_arc.lock() {
-                    *v = Some(vad);
-                }
-                init_num_threads.store(threads, Ordering::Relaxed);
-                init_status.store(1, Ordering::Relaxed);
             }
             Err(e) => {
                 eprintln!("[apply_settings] rebuild failed: {e}");
@@ -864,24 +893,28 @@ pub fn run() {
         match build_models(&settings) {
             Ok((rec, vad, threads)) => {
                 eprintln!("[init] models ready, num_threads={threads}");
-                if let Ok(mut r) = init_recognizer.lock() {
-                    *r = Some(rec);
+                let r_ok = init_recognizer.lock().map(|mut r| { *r = Some(rec); }).is_ok();
+                let v_ok = init_vad.lock().map(|mut v| { *v = Some(vad); }).is_ok();
+                if r_ok && v_ok {
+                    init_num_threads.store(threads, Ordering::Relaxed);
+                    if let Ok(mut s) = init_settings.lock() {
+                        s.num_threads = threads as i32;
+                    }
+                    init_status.store(1, Ordering::Relaxed);
+                } else {
+                    eprintln!("[init] mutex poisoned, marking as error");
+                    if let Ok(mut err) = init_error.lock() {
+                        *err = "Internal error: mutex poisoned".to_string();
+                    }
+                    init_status.store(2, Ordering::Relaxed);
                 }
-                if let Ok(mut v) = init_vad.lock() {
-                    *v = Some(vad);
-                }
-                init_num_threads.store(threads, Ordering::Relaxed);
-                if let Ok(mut s) = init_settings.lock() {
-                    s.num_threads = threads as i32;
-                }
-                init_status.store(1, Ordering::Relaxed); // ready
             }
             Err(e) => {
                 eprintln!("[init] model initialization failed: {e}");
                 if let Ok(mut err) = init_error.lock() {
                     *err = e;
                 }
-                init_status.store(2, Ordering::Relaxed); // error
+                init_status.store(2, Ordering::Relaxed);
             }
         }
     });
