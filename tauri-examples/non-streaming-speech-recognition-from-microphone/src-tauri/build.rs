@@ -1,4 +1,4 @@
 fn main() {
-    let _ = std::fs::create_dir_all("assets");
+    std::fs::create_dir_all("assets").expect("failed to create assets directory");
     tauri_build::build()
 }

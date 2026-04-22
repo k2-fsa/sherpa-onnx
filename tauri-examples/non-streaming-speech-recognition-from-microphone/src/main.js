@@ -71,6 +71,11 @@ async function loadDevices() {
       deviceSelect.appendChild(opt);
     });
     deviceSelect.disabled = false;
+    if (modelsReady) {
+      startBtn.disabled = false;
+      statusEl.textContent = "";
+      statusEl.className = "status";
+    }
   } catch (err) {
     deviceSelect.innerHTML = "<option>Error loading devices</option>";
     deviceSelect.disabled = true;
@@ -134,7 +139,7 @@ document.querySelectorAll("a[href]").forEach((a) => {
 // ---------------------------------------------------------------------------
 
 copyTextBtn.addEventListener("click", async () => {
-  const text = lastSegments.map((s) => s.text).join("");
+  const text = lastSegments.map((s) => s.text).join("\n");
   await navigator.clipboard.writeText(text);
   flashStatus("Text copied.");
 });

@@ -88,6 +88,9 @@ fn build_input_stream(
     let config = supported.config();
     let sample_format = supported.sample_format();
     let channels = config.channels as usize;
+    if channels == 0 {
+        return Err("Device reports 0 channels".to_string());
+    }
 
     eprintln!(
         "[mic] format: {:?}, channels: {}, sample_rate: {}",
@@ -344,17 +347,17 @@ fn start_recording(state: tauri::State<'_, AppState>) -> Result<(), String> {
             selected_device.as_deref(),
         );
 
-        if let Err(e) = &result {
-            eprintln!("[recording thread] error: {e}");
-        }
-
-        // Put recognizer and VAD back
-        if let Ok((rec, v)) = result {
-            if let Ok(mut r) = recognizer_arc.lock() {
-                *r = Some(rec);
+        match result {
+            Ok((rec, v)) => {
+                if let Ok(mut r) = recognizer_arc.lock() {
+                    *r = Some(rec);
+                }
+                if let Ok(mut va) = vad_arc.lock() {
+                    *va = Some(v);
+                }
             }
-            if let Ok(mut va) = vad_arc.lock() {
-                *va = Some(v);
+            Err(e) => {
+                eprintln!("[recording thread] error: {e}");
             }
         }
 
@@ -450,13 +453,17 @@ fn run_recording(
     // Drop the stream to stop capture before flushing
     drop(stream);
 
-    // Flush remaining VAD buffer
+    // Feed any remaining samples (zero-pad to window size)
     if !vad_buf.is_empty() {
-        vad.flush();
-        while let Some(segment) = vad.front() {
-            recognize_segment(&recognizer, &segment, segments, base_wall, audio_offset);
-            vad.pop();
-        }
+        vad_buf.resize(window_size, 0.0);
+        vad.accept_waveform(&vad_buf[..window_size]);
+    }
+
+    // Flush VAD unconditionally — it may have buffered speech internally
+    vad.flush();
+    while let Some(segment) = vad.front() {
+        recognize_segment(&recognizer, &segment, segments, base_wall, audio_offset);
+        vad.pop();
     }
 
     let seg_count = segments.lock().map(|s| s.len()).unwrap_or(0);
@@ -542,7 +549,7 @@ fn get_recorded_audio_path(state: tauri::State<'_, AppState>) -> Result<String, 
         return Err("No recorded audio".to_string());
     }
 
-    let tmp = std::env::temp_dir().join("sherpa-onnx-mic-recording.wav");
+    let tmp = std::env::temp_dir().join(format!("sherpa-onnx-mic-{}.wav", std::process::id()));
     let tmp_str = tmp
         .to_str()
         .ok_or("Invalid temp path")?
@@ -668,6 +675,25 @@ fn get_settings(state: tauri::State<'_, AppState>) -> Result<VadSettings, String
         .map_err(|e| e.to_string())
 }
 
+fn validate_settings(s: &VadSettings) -> Result<(), String> {
+    if s.threshold <= 0.0 || s.threshold >= 1.0 {
+        return Err("threshold must be between 0.0 and 1.0 (exclusive)".to_string());
+    }
+    if s.min_silence_duration < 0.0 {
+        return Err("min_silence_duration must be >= 0".to_string());
+    }
+    if s.min_speech_duration < 0.0 {
+        return Err("min_speech_duration must be >= 0".to_string());
+    }
+    if s.max_speech_duration <= 0.0 {
+        return Err("max_speech_duration must be > 0".to_string());
+    }
+    if s.num_threads < 1 || s.num_threads > 16 {
+        return Err("num_threads must be between 1 and 16".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn apply_settings(
     new_settings: VadSettings,
@@ -680,6 +706,8 @@ fn apply_settings(
     if init == 0 {
         return Err("Models are still loading, please wait".to_string());
     }
+
+    validate_settings(&new_settings)?;
 
     {
         let current = state.settings.lock().map_err(|e| e.to_string())?;
