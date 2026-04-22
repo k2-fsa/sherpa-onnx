@@ -71,6 +71,7 @@ struct AppState {
     init_error: Arc<Mutex<String>>,
     num_threads: Arc<AtomicU32>,
     settings: Arc<Mutex<VadSettings>>,
+    selected_device: Arc<Mutex<Option<String>>>,
 }
 
 // ---------------------------------------------------------------------------
@@ -221,6 +222,60 @@ fn recognize_segment(
 }
 
 // ---------------------------------------------------------------------------
+// Device enumeration
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize, Clone)]
+struct InputDevice {
+    name: String,
+    is_default: bool,
+}
+
+#[tauri::command]
+fn list_input_devices() -> Result<Vec<InputDevice>, String> {
+    let host = cpal::default_host();
+    let default_name = host
+        .default_input_device()
+        .and_then(|d| d.name().ok())
+        .unwrap_or_default();
+
+    let devices: Vec<InputDevice> = host
+        .input_devices()
+        .map_err(|e| format!("Cannot enumerate devices: {e}"))?
+        .filter_map(|d| {
+            let name = d.name().ok()?;
+            Some(InputDevice {
+                is_default: name == default_name,
+                name,
+            })
+        })
+        .collect();
+
+    Ok(devices)
+}
+
+#[tauri::command]
+fn set_input_device(
+    device_name: Option<String>,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    if state.recording.load(Ordering::SeqCst) {
+        return Err("Cannot change device while recording".to_string());
+    }
+    *state.selected_device.lock().map_err(|e| e.to_string())? = device_name;
+    Ok(())
+}
+
+#[tauri::command]
+fn get_selected_device(state: tauri::State<'_, AppState>) -> Result<Option<String>, String> {
+    state
+        .selected_device
+        .lock()
+        .map(|d| d.clone())
+        .map_err(|e| e.to_string())
+}
+
+// ---------------------------------------------------------------------------
 // Tauri commands
 // ---------------------------------------------------------------------------
 
@@ -271,6 +326,11 @@ fn start_recording(state: tauri::State<'_, AppState>) -> Result<(), String> {
     let recognizer_arc = Arc::clone(&state.recognizer);
     let vad_arc = Arc::clone(&state.vad);
     let base_wall = now;
+    let selected_device = state
+        .selected_device
+        .lock()
+        .map_err(|e| e.to_string())?
+        .clone();
 
     std::thread::spawn(move || {
         let result = run_recording(
@@ -281,6 +341,7 @@ fn start_recording(state: tauri::State<'_, AppState>) -> Result<(), String> {
             &recorded_audio,
             &base_wall,
             audio_offset,
+            selected_device.as_deref(),
         );
 
         if let Err(e) = &result {
@@ -312,11 +373,18 @@ fn run_recording(
     recorded_audio: &Arc<Mutex<Vec<f32>>>,
     base_wall: &chrono::DateTime<Local>,
     audio_offset: usize,
+    selected_device: Option<&str>,
 ) -> Result<(OfflineRecognizer, VoiceActivityDetector), String> {
     let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .ok_or("No default input device")?;
+    let device = if let Some(name) = selected_device {
+        host.input_devices()
+            .map_err(|e| format!("Cannot enumerate devices: {e}"))?
+            .find(|d| d.name().ok().as_deref() == Some(name))
+            .ok_or_else(|| format!("Device not found: {name}"))?
+    } else {
+        host.default_input_device()
+            .ok_or("No default input device")?
+    };
 
     eprintln!("[recording] device: {:?}", device.name().unwrap_or_default());
 
@@ -822,6 +890,7 @@ fn build_app_state() -> AppState {
         init_error: Arc::new(Mutex::new(String::new())),
         num_threads: Arc::new(AtomicU32::new(0)),
         settings: Arc::new(Mutex::new(VadSettings::default())),
+        selected_device: Arc::new(Mutex::new(None)),
     }
 }
 
@@ -869,6 +938,9 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
+            list_input_devices,
+            set_input_device,
+            get_selected_device,
             start_recording,
             stop_recording,
             clear_results,

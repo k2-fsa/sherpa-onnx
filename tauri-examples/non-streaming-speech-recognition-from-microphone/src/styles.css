@@ -63,6 +63,28 @@ h2 {
 
 .actions {
   margin: 1.5em 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#device-select {
+  padding: 0.6em 0.8em;
+  font-size: 0.9em;
+  font-family: inherit;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #0f0f0f;
+  max-width: 250px;
+  cursor: pointer;
+}
+
+#device-select:disabled {
+  background-color: #eee;
+  cursor: not-allowed;
 }
 
 button {
@@ -426,5 +448,15 @@ th {
 
   #settings-cancel:hover {
     background-color: #64748b;
+  }
+
+  #device-select {
+    background-color: #2f2f2f;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+
+  #device-select:disabled {
+    background-color: #3a3a3a;
   }
 }

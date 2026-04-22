@@ -25,6 +25,7 @@ const setMaxSpeech = document.querySelector("#set-max-speech");
 const setNumThreads = document.querySelector("#set-num-threads");
 const settingsApplyBtn = document.querySelector("#settings-apply");
 const settingsCancelBtn = document.querySelector("#settings-cancel");
+const deviceSelect = document.querySelector("#device-select");
 
 let recording = false;
 let pollTimer = null;
@@ -32,6 +33,7 @@ let elapsedInterval = null;
 let lastSegments = [];
 let modelsReady = false;
 let recordingStartTime = null;
+let hasDevices = false;
 
 // ---------------------------------------------------------------------------
 // Model initialization polling
@@ -41,16 +43,63 @@ startBtn.disabled = true;
 statusEl.textContent = "Loading models...";
 statusEl.className = "status status-working";
 
+async function loadDevices() {
+  try {
+    const devices = await invoke("list_input_devices");
+    deviceSelect.innerHTML = "";
+    if (devices.length === 0) {
+      hasDevices = false;
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No microphone found";
+      deviceSelect.appendChild(opt);
+      deviceSelect.disabled = true;
+      startBtn.disabled = true;
+      statusEl.textContent = "No microphone detected. Please connect a microphone and restart.";
+      statusEl.className = "status status-error";
+      return;
+    }
+    hasDevices = true;
+    const selected = await invoke("get_selected_device");
+    devices.forEach((d) => {
+      const opt = document.createElement("option");
+      opt.value = d.name;
+      opt.textContent = d.is_default ? `${d.name} (default)` : d.name;
+      if (selected ? d.name === selected : d.is_default) {
+        opt.selected = true;
+      }
+      deviceSelect.appendChild(opt);
+    });
+    deviceSelect.disabled = false;
+  } catch (err) {
+    deviceSelect.innerHTML = "<option>Error loading devices</option>";
+    deviceSelect.disabled = true;
+  }
+}
+
+deviceSelect.addEventListener("change", async () => {
+  const name = deviceSelect.value || null;
+  try {
+    await invoke("set_input_device", { deviceName: name });
+  } catch (err) {
+    flashStatus(`Device error: ${err}`, true);
+  }
+});
+
+loadDevices();
+
 function pollInitStatus() {
   invoke("get_init_status")
     .then((res) => {
       if (res.status === 1) {
         modelsReady = true;
-        startBtn.disabled = false;
+        startBtn.disabled = !hasDevices;
         settingsBtn.disabled = false;
         clearBtn.disabled = false;
-        statusEl.textContent = "";
-        statusEl.className = "status";
+        if (hasDevices) {
+          statusEl.textContent = "";
+          statusEl.className = "status";
+        }
       } else if (res.status === 2) {
         startBtn.disabled = true;
         settingsBtn.disabled = true;
@@ -252,6 +301,7 @@ startBtn.addEventListener("click", async () => {
   stopBtn.style.display = "";
   settingsBtn.disabled = true;
   clearBtn.disabled = true;
+  deviceSelect.disabled = true;
   recordingIndicator.style.display = "flex";
   playerWrapper.style.display = "none";
   player.src = "";
@@ -350,6 +400,7 @@ function startPolling() {
         stopBtn.disabled = false;
         settingsBtn.disabled = false;
         clearBtn.disabled = false;
+        deviceSelect.disabled = false;
         recordingIndicator.style.display = "none";
 
         const totalSecs = state.elapsed_secs;
@@ -380,6 +431,7 @@ function startPolling() {
       stopBtn.disabled = false;
       settingsBtn.disabled = false;
       clearBtn.disabled = false;
+      deviceSelect.disabled = false;
       recordingIndicator.style.display = "none";
       statusEl.textContent = `Poll error: ${err}`;
       statusEl.className = "status status-error";

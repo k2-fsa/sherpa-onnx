@@ -1,8 +1,12 @@
 # Non-Streaming Speech Recognition from Microphone
 
 A [Tauri v2](https://v2.tauri.app/) desktop app that captures microphone audio
-and transcribes it in real time using offline ASR with
+and transcribes it in using offline ASR with
 [Silero VAD](https://github.com/snakers4/silero-vad).
+
+Pre-built apps (macOS, Linux, Windows) are available at:
+
+> <https://k2-fsa.github.io/sherpa/onnx/tauri/pre-built-app.html#non-streaming-speech-recognition-from-microphone>
 
 ## Features
 
@@ -78,7 +82,7 @@ npm run dev
 ```
 
 This opens the app window. Click **Start Recording**, speak into your
-microphone, and recognized segments appear in real time. Click
+microphone, and recognized segments appear after you stop speaking. Click
 **Stop Recording** to finish — you can then play back the recording and
 export results.
 
