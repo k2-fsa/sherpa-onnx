@@ -1651,6 +1651,7 @@ def get_vi_models():
 def get_zh_models():
     zh_CN = [
         PiperModel(name="xiao_ya", kind="medium", sr=22050, ns=1),
+        PiperModel(name="chaowen", kind="medium", sr=22050, ns=1),
     ]
 
     for m in zh_CN:
@@ -2144,8 +2145,7 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
-
-    ans = get_zh_models()
+    ans += get_zh_models()
 
     for i, m in enumerate(ans):
         m.index = i
@@ -2219,7 +2219,7 @@ def main():
                 "rule_fsts": "",
             }
 
-            if m.lang == "zh_CN" and m.name == "xiao_ya":
+            if m.lang == "zh_CN" and m.name in ("xiao_ya", "chaowen"):
                 d = {
                     "model": f"{model_dir}/{m.model_name}",
                     "data_dir": "",

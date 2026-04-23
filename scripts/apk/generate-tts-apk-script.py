@@ -278,10 +278,13 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-vi_VN-vivos-x_low"),
         TtsModel(model_dir="vits-piper-zh_CN-huayan-medium"),
         TtsModel(model_dir="vits-piper-zh_CN-xiao_ya-medium"),
+        TtsModel(model_dir="vits-piper-zh_CN-chaowen-medium"),
     ]
 
     for m in models:
-        if "zh_CN-xiao_ya" in m.model_dir:
+        if "zh_CN" in m.model_dir and (
+            "xiao_ya" in m.model_dir or "chaowen" in m.model_dir
+        ):
             m.lexion = f"{m.model_dir}/lexicon.txt"
             m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
         else:

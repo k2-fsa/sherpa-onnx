@@ -57,7 +57,7 @@ mv -v README $dst/ || true
 mv -v README.md $dst/ || true
 mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
-if [[ $model_name != *zh_CN-xiao_ya-medium* ]]; then
+if [[ ! $model_name =~ zh_CN-(xiao_ya|chaowen)-medium ]]; then
   cp -a ./espeak-ng-data $dst/
 else
   cp lexicon-zh-g2pw.txt $dst/lexicon.txt
