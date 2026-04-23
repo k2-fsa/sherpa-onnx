@@ -12,8 +12,10 @@ log() {
 }
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-zh-g2pw.txt
 tar xf espeak-ng-data.tar.bz2
 rm espeak-ng-data.tar.bz2
+ls -lh lexicon-zh-g2pw.txt
 
 mkdir -p release
 
@@ -52,6 +54,8 @@ mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
 if [[ $model_name != *zh_CN-xiao_ya-medium* ]]; then
   cp -a ./espeak-ng-data $dst/
+else
+  cp lexicon-zh-g2pw.txt $dst/lexicon.txt
 fi
 
 cp -a $dst $dst_int8
@@ -77,14 +81,14 @@ tar cjf ${dst}.tar.bz2 $dst
 tar cjf ${dst_int8}.tar.bz2 $dst_int8
 tar cjf ${dst_fp16}.tar.bz2 $dst_fp16
 
-if [ -d hf ]; then
-  mkdir -p hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
-  for i in $(seq $num_speakers); do
-    i=$((i-1))
-    python3 ./generate_samples-$dst-$i.py
-  done
-  ls -lh hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
-fi
+# if [ -d hf ]; then
+#   mkdir -p hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
+#   for i in $(seq $num_speakers); do
+#     i=$((i-1))
+#     python3 ./generate_samples-$dst-$i.py
+#   done
+#   ls -lh hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
+# fi
 
 mv $dst release
 mv $dst_int8 release

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # Copyright    2026  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+# It may take 100 minutes to generate the lexicon.
+#
+# You can download a pre-generated one from
+# https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+
 from typing import List, Tuple
 
 from pypinyin import load_phrases_dict, phrases_dict, pinyin_dict
@@ -52,7 +57,7 @@ def save(filename: str, lexicon: List[Tuple[str, str]]):
 def main():
     zh = generate_chinese_lexicon()
 
-    save("lexicon-zh.txt", zh)
+    save("lexicon-zh-g2pw.txt", zh)
 
 
 if __name__ == "__main__":

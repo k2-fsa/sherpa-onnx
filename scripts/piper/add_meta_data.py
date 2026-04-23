@@ -127,6 +127,7 @@ def main():
         "comment": "piper",  # must be piper for models from piper
         "language": lang_iso.name,
         "voice": voice,  # e.g., en-us
+        "version": 1,
         "has_espeak": has_espeak,
         "has_g2pw": has_g2pw,
         "n_speakers": config["num_speakers"],
