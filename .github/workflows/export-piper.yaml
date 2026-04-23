@@ -181,8 +181,10 @@ jobs:
               vits-piper-ar_JO-SA_miro_V2-high-int8
               vits-piper-ar_JO-SA_miro_V2-high-fp16
               vits-piper-ar_JO-SA_miro_V2-high
-              vits-piper-ar_JO-SA_miro_V2-high
               vits-piper-sq_AL-edon-medium
+              vits-piper-zh_CN-xiao_ya-medium
+              vits-piper-zh_CN-xiao_ya-medium-int8
+              vits-piper-zh_CN-xiao_ya-medium-fp16
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

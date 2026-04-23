@@ -2218,12 +2218,13 @@ def main():
                 "text": m.text,
                 "rule_fsts": "",
             }
+
             if m.lang == "zh_CN" and m.name == "xiao_ya":
                 d = {
                     "model": f"{model_dir}/{m.model_name}",
                     "data_dir": "",
                     "tokens": f"{model_dir}/tokens.txt",
-                    "lexion": f"{model_dir}/lexicon.txt",
+                    "lexicon": f"{model_dir}/lexicon.txt",
                     "text": m.text,
                     "rule_fsts": f"{model_dir}/phone.fst,{model_dir}/date.fst,{model_dir}/number.fst",
                 }

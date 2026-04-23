@@ -11,7 +11,7 @@ config = sherpa_onnx.OfflineTtsConfig(
         ),
         num_threads=1,
     ),
-    rule_fsts="./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst",
+    rule_fsts="{{ rule_fsts }}",
 )
 
 if not config.validate():

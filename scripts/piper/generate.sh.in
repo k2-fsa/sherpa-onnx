@@ -95,6 +95,7 @@ if [ -d hf ]; then
   mkdir -p hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
   for i in $(seq $num_speakers); do
     i=$((i-1))
+    cat ./generate_samples-$dst-$i.py
     python3 ./generate_samples-$dst-$i.py
   done
   ls -lh hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind

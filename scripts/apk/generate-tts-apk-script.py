@@ -277,10 +277,16 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-vi_VN-vais1000-medium"),
         TtsModel(model_dir="vits-piper-vi_VN-vivos-x_low"),
         TtsModel(model_dir="vits-piper-zh_CN-huayan-medium"),
+        TtsModel(model_dir="vits-piper-zh_CN-xiao_ya-medium"),
     ]
 
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        if "zh_CN-xiao_ya" in m.model_dir:
+            m.lexion = f"{m.model_dir}/lexicon.txt"
+            m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
+        else:
+            m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
