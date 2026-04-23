@@ -53,7 +53,7 @@ jobs:
 
       - name: Generate script
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
         run: |
           cd scripts/piper
@@ -67,7 +67,7 @@ jobs:
           export GIT_LFS_SKIP_SMUDGE=1
           export GIT_CLONE_PROTECTION_ACTIVE=false
 
-          git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples hf
+          git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
 
           python3 ./generate.py --total $total --index $index
           chmod +x ./generate.sh
@@ -95,7 +95,7 @@ jobs:
 
       - name: Push generated mp3 files
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -108,7 +108,7 @@ jobs:
             git status .
             git add .
             git commit -m 'Add mp3 files'
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-tts-samples main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
 
       - name: Show generated model files
         shell: bash
