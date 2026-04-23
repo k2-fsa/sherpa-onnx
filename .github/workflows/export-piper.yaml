@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         python-version: ["3.10"]
         # total: ["20"]
         # index: [
@@ -46,8 +46,10 @@ jobs:
           python3 -m pip install --upgrade \
             pip jinja2 iso639-lang \
             onnx==1.17.0 onnxruntime==1.17.1 \
-            sherpa-onnx onnxmltools==1.13.0 \
+            onnxmltools==1.13.0 \
             "numpy<2" soundfile requests
+
+          python3 -m pip install --verbose sherpa_onnx_bin sherpa_onnx_core sherpa_onnx --no-index -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 
       - name: Generate script
         env:

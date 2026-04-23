@@ -19,11 +19,12 @@ class CharacterLexicon : public OfflineTtsFrontend {
   ~CharacterLexicon() override;
 
   CharacterLexicon(const std::string &lexicon, const std::string &tokens,
-                   bool debug);
+                   bool debug, bool use_g2pw = false);
 
   template <typename Manager>
   CharacterLexicon(Manager *mgr, const std::string &lexicon,
-                   const std::string &tokens, bool debug);
+                   const std::string &tokens, bool debug,
+                   bool use_g2pw = false);
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text,
