@@ -1626,15 +1626,15 @@ def get_tr_models():
 
     for m in tr_TR:
         m.lang = "tr_TR"
+        m.text = "Bir evin duvarları, bir adamın sözü, bir kadının gülü kırılmaz"
 
     for m in ku_TR:
         m.lang = "ku_TR"
+        m.text = "Ev motorê nivîsandinê bi dengî ye ku Kaldiya serî de bi kar tîne"
 
     ans = tr_TR + ku_TR
 
     for m in ans:
-        m.text = "Bir evin duvarları, bir adamın sözü, bir kadının gülü kırılmaz"
-
         if m.model_name == "":
             m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
 
