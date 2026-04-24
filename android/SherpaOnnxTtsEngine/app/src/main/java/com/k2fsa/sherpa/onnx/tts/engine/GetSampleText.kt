@@ -16,6 +16,10 @@ fun getSampleText(lang: String): String {
             text = "এটি একটি টেক্সট-টু-স্পীচ ইঞ্জিন যা পরবর্তী প্রজন্মের কালডি ব্যবহার করে"
         }
 
+        "eus" -> {
+            text = "Aberats izatea baino, izen ona hobe."
+        }
+
         "bul" -> {
             text =
                 "Това е машина за преобразуване на текст в реч, използваща Kaldi от следващо поколение"
@@ -89,6 +93,10 @@ fun getSampleText(lang: String): String {
 
         "kaz" -> {
             text = "Бұл келесі буын kaldi көмегімен мәтіннен сөйлеуге арналған қозғалтқыш"
+        }
+
+        "kur" -> {
+            text = "Ev motorê nivîsandinê bi dengî ye ku Kaldiya serî de bi kar tîne"
         }
 
         "mlt" -> {
@@ -171,6 +179,10 @@ fun getSampleText(lang: String): String {
         "ukr" -> {
             text =
                 "Це механізм перетворення тексту на мовлення, який використовує kaldi нового покоління"
+        }
+
+        "urd" -> {
+            text = "قوس قزح، جسے قوس قزح یا رنگوں کی قوس قزح بھی کہا جاتا ہے، ایک قدرتی طبعی رجحان ہے جو بارش کے قطرے کے ذریعے سورج کی روشنی کے اضطراب اور پھیلاؤ کے نتیجے میں ہوتا ہے۔"
         }
 
         "vie" -> {

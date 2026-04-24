@@ -162,6 +162,7 @@ jobs:
               vits-piper-it_IT-dii-high
               vits-piper-nl_NL-miro-high
               vits-piper-nl_NL-dii-high
+              vits-piper-nl_NL-alex-medium
               vits-piper-de_DE-miro-high
               vits-piper-de_DE-dii-high
               vits-piper-fr_FR-miro-high
@@ -170,6 +171,7 @@ jobs:
               vits-piper-pl_PL-justyna_wg_glos-medium
               vits-piper-pl_PL-meski_wg_glos-medium
               vits-piper-pl_PL-zenski_wg_glos-medium
+              vits-piper-pl_PL-bass-high
               vits-piper-id_ID-news_tts-medium
               vits-piper-hi_IN-rohan-medium
               vits-piper-ar_JO-SA_miro-high-int8
@@ -188,6 +190,11 @@ jobs:
               vits-piper-zh_CN-chaowen-medium
               vits-piper-zh_CN-chaowen-medium-int8
               vits-piper-zh_CN-chaowen-medium-fp16
+              vits-piper-sv_SE-alma-medium
+              vits-piper-ku_TR-berfin_renas-medium
+              vits-piper-eu_ES-maider-medium
+              vits-piper-eu_ES-antton-medium
+              vits-piper-ur_PK-fasih-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d

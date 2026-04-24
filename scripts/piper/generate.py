@@ -440,6 +440,63 @@ def get_fa_models():
     return ans
 
 
+# Basque
+def get_eu_models():
+    eu_ES = [
+        PiperModel(name="antton", kind="medium", sr=22050, ns=1),
+        PiperModel(name="maider", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in eu_ES:
+        m.lang = "eu_ES"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = eu_ES
+
+    for m in ans:
+        m.text = "Aberats izatea baino, izen ona hobe."
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
+# Urdu
+def get_ur_models():
+    ur_PK = [
+        PiperModel(name="fasih", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in ur_PK:
+        m.lang = "ur_PK"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = ur_PK
+
+    for m in ans:
+        m.text = "قوس قزح، جسے قوس قزح یا رنگوں کی قوس قزح بھی کہا جاتا ہے، ایک قدرتی طبعی رجحان ہے جو بارش کے قطرے کے ذریعے سورج کی روشنی کے اضطراب اور پھیلاؤ کے نتیجے میں ہوتا ہے۔"
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # finnish
 def get_fi_models():
     fi_FI = [
@@ -921,6 +978,7 @@ def get_nl_models():
     nl_NL = [
         PiperModel(name="pim", kind="medium", sr=22050, ns=1),
         PiperModel(name="ronnie", kind="medium", sr=22050, ns=1),
+        PiperModel(name="alex", kind="medium", sr=22050, ns=1),
     ]
 
     nl_NL += [
@@ -1049,6 +1107,7 @@ def get_pl_models():
         PiperModel(name="darkman", kind="medium", sr=22050, ns=1),
         PiperModel(name="gosia", kind="medium", sr=22050, ns=1),
         PiperModel(name="mc_speech", kind="medium", sr=22050, ns=1),
+        PiperModel(name="bass", kind="high", sr=22050, ns=1),
     ]
 
     pl_PL.extend(
@@ -1496,6 +1555,7 @@ def get_sv_models():
     sv_SE = [
         PiperModel(name="lisa", kind="medium", sr=22050, ns=1),
         PiperModel(name="nst", kind="medium", sr=22050, ns=1),
+        PiperModel(name="alma", kind="medium", sr=22050, ns=1),
     ]
 
     for m in sv_SE:
@@ -1556,18 +1616,25 @@ def get_sw_models():
 def get_tr_models():
     tr_TR = [
         PiperModel(name="dfki", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fettah", kind="medium", sr=22050, ns=1),
+        #  PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1), # removed
+        #  PiperModel(name="fettah", kind="medium", sr=22050, ns=1), # removed
+    ]
+
+    ku_TR = [
+        PiperModel(name="berfin_renas", kind="medium", sr=22050, ns=1),
     ]
 
     for m in tr_TR:
         m.lang = "tr_TR"
-
-    ans = tr_TR
-
-    for m in ans:
         m.text = "Bir evin duvarları, bir adamın sözü, bir kadının gülü kırılmaz"
 
+    for m in ku_TR:
+        m.lang = "ku_TR"
+        m.text = "Ev motorê nivîsandinê bi dengî ye ku Kaldiya serî de bi kar tîne"
+
+    ans = tr_TR + ku_TR
+
+    for m in ans:
         if m.model_name == "":
             m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
 
@@ -2116,6 +2183,7 @@ def get_all_models():
     ans += get_el_models()
     ans += get_en_models()
     ans += get_es_models()
+    ans += get_eu_models()
     ans += get_fa_models()
     ans += get_fi_models()
     ans += get_fr_models()
@@ -2144,6 +2212,7 @@ def get_all_models():
     ans += get_sw_models()
     ans += get_tr_models()
     ans += get_uk_models()
+    ans += get_ur_models()
     ans += get_vi_models()
     ans += get_zh_models()
 
