@@ -1616,8 +1616,8 @@ def get_sw_models():
 def get_tr_models():
     tr_TR = [
         PiperModel(name="dfki", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fettah", kind="medium", sr=22050, ns=1),
+        #  PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1), # removed
+        #  PiperModel(name="fettah", kind="medium", sr=22050, ns=1), # removed
     ]
 
     ku_TR = [
@@ -2215,13 +2215,6 @@ def get_all_models():
     ans += get_ur_models()
     ans += get_vi_models()
     ans += get_zh_models()
-
-    ans = get_nl_models()
-    ans += get_pl_models()
-    ans += get_sv_models()
-    ans += get_tr_models()
-    ans += get_eu_models()
-    ans += get_ur_models()
 
     for i, m in enumerate(ans):
         m.index = i
