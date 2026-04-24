@@ -1647,6 +1647,37 @@ def get_vi_models():
     return ans
 
 
+# Chinese
+def get_zh_models():
+    zh_CN = [
+        PiperModel(name="xiao_ya", kind="medium", sr=22050, ns=1),
+        PiperModel(name="chaowen", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in zh_CN:
+        m.lang = "zh_CN"
+
+    ans = zh_CN
+
+    for m in ans:
+        m.text = "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔."
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # Indonesian
 def get_id_models():
     id_ID = [
@@ -2114,6 +2145,7 @@ def get_all_models():
     ans += get_tr_models()
     ans += get_uk_models()
     ans += get_vi_models()
+    ans += get_zh_models()
 
     for i, m in enumerate(ans):
         m.index = i
@@ -2182,8 +2214,21 @@ def main():
                 "model": f"{model_dir}/{m.model_name}",
                 "data_dir": f"{model_dir}/espeak-ng-data",
                 "tokens": f"{model_dir}/tokens.txt",
+                "lexicon": "",
                 "text": m.text,
+                "rule_fsts": "",
             }
+
+            if m.lang == "zh_CN" and m.name in ("xiao_ya", "chaowen"):
+                d = {
+                    "model": f"{model_dir}/{m.model_name}",
+                    "data_dir": "",
+                    "tokens": f"{model_dir}/tokens.txt",
+                    "lexicon": f"{model_dir}/lexicon.txt",
+                    "text": m.text,
+                    "rule_fsts": f"{model_dir}/phone.fst,{model_dir}/date.fst,{model_dir}/number.fst",
+                }
+
             for i in range(m.ns):
                 s = template.render(
                     **d,
