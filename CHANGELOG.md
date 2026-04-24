@@ -1,3 +1,16 @@
+## 1.12.40
+
+* Add more Piper TTS models (#3547)
+* Add two Piper Chinese TTS models (#3546)
+* Upload the piper sq_AL model (#3541)
+* Add Albanian (sq_AL) Piper TTS voice by LanguageWeaver (#3539)
+* Add Tauri APP demo for VAD+ASR from a microphone (#3540)
+* Improve Tauri VAD+ASR example: settings UI, bug fixes, and RTF display (#3538)
+* Fix releasing go packages (#3537)
+* Fix publishing dart packages for Android (#3522)
+* Avoid passing invalid utf8 str to JNI (#3527)
+* Build Tauri desktop APPs for VAD+ASR (#3530)
+
 ## 1.12.39
 
 * Add tauri app example for non-streaming ASR + VAD (#3520)
