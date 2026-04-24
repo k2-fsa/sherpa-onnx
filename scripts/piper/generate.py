@@ -471,7 +471,7 @@ def get_eu_models():
 
 # Urdu
 def get_ur_models():
-    ur_pK = [
+    ur_PK = [
         PiperModel(name="fasih", kind="medium", sr=22050, ns=1),
     ]
 
