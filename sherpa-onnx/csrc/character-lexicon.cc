@@ -186,14 +186,22 @@ class CharacterLexicon::Impl {
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
 
       if (IsPunct(w)) {
-        this_sentence.push_back(eos_id_);
+        if (use_g2pw_) {
+          this_sentence.push_back(eos_id_);
+        }
         ans.emplace_back(std::move(this_sentence));
-        this_sentence = {bos_id_};
+        if (use_g2pw_) {
+          this_sentence = {bos_id_};
+        } else {
+          this_sentence.clear();
+        }
       }
     }  // for (const std::string &w : matcher)
 
     if (!this_sentence.empty()) {
-      this_sentence.push_back(eos_id_);
+      if (use_g2pw_) {
+        this_sentence.push_back(eos_id_);
+      }
       ans.emplace_back(std::move(this_sentence));
     }
 

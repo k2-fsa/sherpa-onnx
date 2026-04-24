@@ -8,7 +8,7 @@
 
 from typing import List, Tuple
 
-from pypinyin import load_phrases_dict, phrases_dict, pinyin_dict
+from pypinyin import phrases_dict, pinyin_dict
 
 from piper.phonemize_chinese import ChinesePhonemizer
 
@@ -29,7 +29,7 @@ def generate_chinese_lexicon():
         tokens = []
         for p in phonemes:
             tokens.append(p)
-            if p in "12345":
+            if p in {"1", "2", "3", "4", "5"}:
                 tokens.append("_")
 
         lexicon.append((w, tokens))
@@ -39,7 +39,7 @@ def generate_chinese_lexicon():
         tokens = []
         for p in phonemes:
             tokens.append(p)
-            if p in "12345":
+            if p in {"1", "2", "3", "4", "5"}:
                 tokens.append("_")
 
         lexicon.append((key, tokens))
@@ -47,10 +47,10 @@ def generate_chinese_lexicon():
     return lexicon
 
 
-def save(filename: str, lexicon: List[Tuple[str, str]]):
+def save(filename: str, lexicon: List[Tuple[str, List[str]]]):
     with open(filename, "w", encoding="utf-8") as f:
         for word, phones in lexicon:
-            tokens = " ".join(list(phones))
+            tokens = " ".join(phones)
             f.write(f"{word} {tokens}\n")
 
 

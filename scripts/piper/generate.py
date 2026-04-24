@@ -2214,7 +2214,7 @@ def main():
                 "model": f"{model_dir}/{m.model_name}",
                 "data_dir": f"{model_dir}/espeak-ng-data",
                 "tokens": f"{model_dir}/tokens.txt",
-                "lexion": "",
+                "lexicon": "",
                 "text": m.text,
                 "rule_fsts": "",
             }

@@ -116,6 +116,7 @@ def main():
         voice = config["espeak"]["voice"]
 
     has_g2pw = 0
+    has_espeak = 1
 
     if config["phoneme_type"] == "pinyin" and voice == "zh":
         has_espeak = 0

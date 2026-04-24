@@ -285,7 +285,7 @@ def get_piper_models() -> List[TtsModel]:
         if "zh_CN" in m.model_dir and (
             "xiao_ya" in m.model_dir or "chaowen" in m.model_dir
         ):
-            m.lexion = f"{m.model_dir}/lexicon.txt"
+            m.lexicon = f"{m.model_dir}/lexicon.txt"
             m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
         else:
             m.data_dir = m.model_dir + "/" + "espeak-ng-data"
