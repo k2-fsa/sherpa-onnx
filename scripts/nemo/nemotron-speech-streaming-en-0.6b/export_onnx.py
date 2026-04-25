@@ -88,6 +88,11 @@ def main():
                 asr_model.encoder.streaming_cfg.pre_encode_cache_size
             )
 
+        if isinstance(asr_model.encoder.streaming_cfg.chunk_size, list):
+            chunk_size = asr_model.encoder.streaming_cfg.chunk_size[1]
+        else:
+            chunk_size = asr_model.encoder.streaming_cfg.chunk_size
+
         window_size = chunk_size + pre_encode_cache_size
 
         print("chunk_size", chunk_size)
