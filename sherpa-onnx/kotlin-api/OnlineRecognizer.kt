@@ -553,6 +553,54 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
             )
         }
 
+        30 -> {
+            val modelDir = "sherpa-onnx-nemotron-speech-streaming-en-0.6b-80ms-int8-2026-04-25"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        31 -> {
+            val modelDir = "sherpa-onnx-nemotron-speech-streaming-en-0.6b-160ms-int8-2026-04-25"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        32 -> {
+            val modelDir = "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        33 -> {
+            val modelDir = "sherpa-onnx-nemotron-speech-streaming-en-0.6b-1120ms-int8-2026-04-25"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                    joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
         1000 -> {
             val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
             return OnlineModelConfig(
