@@ -644,6 +644,7 @@ type OfflineRecognizerResult struct {
 	Tokens     []string
 	Timestamps []float32
 	Durations  []float32
+	YsLogProbs []float32
 	Lang       string
 	Emotion    string
 	Event      string
@@ -963,6 +964,13 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 		durations := unsafe.Slice(p.durations, n)
 		for i := 0; i < n; i++ {
 			result.Durations[i] = float32(durations[i])
+		}
+	}
+	if p.ys_log_probs != nil {
+		result.YsLogProbs = make([]float32, n)
+		ys_log_probs := unsafe.Slice(p.ys_log_probs, n)
+		for i := 0; i < n; i++ {
+			result.YsLogProbs[i] = float32(ys_log_probs[i])
 		}
 	}
 	return result
