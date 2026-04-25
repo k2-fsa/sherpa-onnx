@@ -65,6 +65,7 @@ def main():
     asr_model.eval()
 
     assert asr_model.encoder.streaming_cfg is not None
+    print("streaming_cfg", asr_model.encoder.streaming_cfg)
 
     chunk_size_ms_list = [80, 160, 560, 1120]
     for ms in chunk_size_ms_list:
