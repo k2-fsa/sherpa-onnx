@@ -1044,6 +1044,26 @@ def get_models() -> List[Model]:
             rm -rf $model_name/test_wavs
             rm -fv $model_name/README.md""",
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-non-streaming",
+            idx=62,
+            lang="en",
+            lang2="English",
+            short_name="parakeet_unified_en_0.6b_int8",
+            family="transducer",
+            model_type="nemo_transducer",
+            files={
+                "encoder": "encoder.int8.onnx",
+                "decoder": "decoder.int8.onnx",
+                "joiner": "joiner.int8.onnx",
+            },cmd="""
+            rm -fv $model_name/encoder.onnx
+            rm -fv $model_name/decoder.onnx
+            rm -fv $model_name/joiner.onnx
+            rm -rf $model_name/test_wavs
+            rm -fv $model_name/*.py
+            rm -fv $model_name/README.md""",
+        ),
     ]
 
 

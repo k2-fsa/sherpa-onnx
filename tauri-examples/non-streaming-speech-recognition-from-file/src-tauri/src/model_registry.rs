@@ -879,6 +879,21 @@ pub fn get_model_config(model_type: u32, model_dir: &Path) -> Option<OfflineReco
             Some(config)
         }
 
+        62 => {
+            // sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-non-streaming
+            let mut config = OfflineRecognizerConfig::default();
+            config.model_config.transducer = OfflineTransducerModelConfig {
+                encoder: p("encoder.int8.onnx"),
+                decoder: p("decoder.int8.onnx"),
+                joiner: p("joiner.int8.onnx"),
+            };
+            config.model_config.tokens = p("tokens.txt");
+            config.model_config.model_type = Some("nemo_transducer".into());
+            config.model_config.num_threads = 2;
+            config.model_config.debug = true;
+            Some(config)
+        }
+
         _ => None,
     }
 }
