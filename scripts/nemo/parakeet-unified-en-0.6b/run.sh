@@ -18,8 +18,10 @@ curl -SL -O https://huggingface.co/nvidia/parakeet-unified-en-0.6b/resolve/main/
 curl -SL -O https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
 
 
+
+
 pip install \
-  "git+https://github.com/NVIDIA/NeMo.git@main#egg=nemo_toolkit[asr]" \
+  "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git" \
   "numpy<2" \
   ipython \
   kaldi-native-fbank \
