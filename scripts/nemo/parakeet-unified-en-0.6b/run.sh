@@ -26,25 +26,25 @@ pip install \
   ipython \
   kaldi-native-fbank \
   librosa \
-  onnx==1.17.0 \
-  onnxruntime==1.17.1 \
+  onnx \
+  onnxruntime \
   soundfile
 
 python3 ./export_onnx.py
 ls -lh *.onnx
-
-echo "---fp32----"
-python3 ./test_onnx.py \
-  --encoder ./encoder.int8.onnx \
-  --decoder ./decoder.onnx \
-  --joiner ./joiner.onnx \
-  --tokens ./tokens.txt \
-  --wav 2086-149220-0033.wav
 
 echo "---int8----"
 python3 ./test_onnx.py \
   --encoder ./encoder.int8.onnx \
   --decoder ./decoder.int8.onnx \
   --joiner ./joiner.int8.onnx \
+  --tokens ./tokens.txt \
+  --wav 2086-149220-0033.wav
+
+echo "---fp32----"
+python3 ./test_onnx.py \
+  --encoder ./encoder.int8.onnx \
+  --decoder ./decoder.onnx \
+  --joiner ./joiner.onnx \
   --tokens ./tokens.txt \
   --wav 2086-149220-0033.wav
