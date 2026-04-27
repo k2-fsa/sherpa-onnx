@@ -252,14 +252,16 @@ def main():
     max_token_per_frame = 10
     t = 0
     while t < encoder_out.shape[2]:
+        print("t", t)
         encoder_out_t = encoder_out[:, :, t : t + 1]
         for k in range(max_token_per_frame):
+            print("t", k)
             logits = model.run_joiner(encoder_out_t, decoder_out)
             logits = torch.from_numpy(logits)
             logits = logits.squeeze()
 
-            token_logits = logits[:vocab_size]
-            idx = torch.argmax(token_logits, dim=-1).item()
+            idx = torch.argmax(logits, dim=-1).item()
+            print("idx", idx)
 
             if idx != blank:
                 ans.append(idx)
