@@ -3,7 +3,7 @@ name: export-nemo-parakeet-unified-en-0.6b
 on:
   push:
     branches:
-      - export-nemo-parakeet-unified-en-0.6b
+      - export-nemo-parakeet-unified-en-0.6b-2
   workflow_dispatch:
 
 concurrency:
@@ -74,9 +74,17 @@ jobs:
           cp -v joiner.onnx $d
           cp -v tokens.txt $d
 
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/bias.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/explainability.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/privacy.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/safety.md $d
+
+          ls -lh $d
+
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs
 
+          # The fp32 model is larger than 2GB
           # tar cjfv $d.tar.bz2 $d
 
           # ls -lh *.tar.bz2
@@ -91,6 +99,13 @@ jobs:
           cp -v decoder.int8.onnx $d
           cp -v joiner.int8.onnx $d
           cp -v tokens.txt $d
+
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/bias.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/explainability.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/privacy.md $d
+          cp -v scripts/nemo/parakeet-unified-en-0.6b/safety.md $d
+
+          ls -lh $d
 
           mkdir $d/test_wavs
           cp -v *.wav $d/test_wavs

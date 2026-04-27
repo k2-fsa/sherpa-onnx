@@ -360,7 +360,7 @@ def get_models():
             idx=19,
             lang="ru",
             lang2="Russian",
-            short_name="nemo_ctc_giga_am",
+            short_name="nemo_ctc_giga_am_2024_10_24",
             cmd="""
             pushd $model_name
 
@@ -379,7 +379,7 @@ def get_models():
             idx=20,
             lang="ru",
             lang2="Russian",
-            short_name="nemo_transducer_giga_am",
+            short_name="nemo_transducer_giga_am_2024_10_24",
             cmd="""
             pushd $model_name
 
@@ -483,7 +483,7 @@ def get_models():
             idx=27,
             lang="ru",
             lang2="Russian",
-            short_name="nemo_ctc_giga_am_v2",
+            short_name="nemo_ctc_giga_am_v2_2025_04_19",
             cmd="""
             pushd $model_name
 
@@ -502,7 +502,7 @@ def get_models():
             idx=28,
             lang="ru",
             lang2="Russian",
-            short_name="nemo_transducer_giga_am",
+            short_name="nemo_transducer_giga_am_v2_2025_04_19",
             cmd="""
             pushd $model_name
 
@@ -1023,6 +1023,22 @@ def get_models():
             lang="52_lang",
             lang2="52_lang",
             short_name="qwen3_asr_0.6B_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-non-streaming",
+            idx=62,
+            lang="en",
+            lang2="English",
+            short_name="parakeet_unified_en_non_streaming_0.6b_int8",
             cmd="""
             pushd $model_name
 
