@@ -149,6 +149,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
       chunk_speaker_pair.reserve(valid_indexes.size());
       sample_indexes.reserve(valid_indexes.size());
       for (auto i : valid_indexes) {
+        if (i < 0 ||
+            i >= static_cast<int32_t>(
+                     chunk_speaker_samples_list_pair.first.size())) {
+          SHERPA_ONNX_LOGE("valid_indexes: index %d out of range [0, %d)",
+                           i,
+                           static_cast<int32_t>(
+                               chunk_speaker_samples_list_pair.first.size()));
+          continue;
+        }
         chunk_speaker_pair.push_back(chunk_speaker_samples_list_pair.first[i]);
         sample_indexes.push_back(
             std::move(chunk_speaker_samples_list_pair.second[i]));
@@ -563,6 +572,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
         int32_t new_speaker_index =
             chunk_speaker_to_cluster.at({chunk_index, speaker_index});
+
+        if (new_speaker_index < 0 ||
+            new_speaker_index >= new_label.cols()) {
+          SHERPA_ONNX_LOGE(
+              "ReLabel: new_speaker_index %d out of range [0, %d), skipping",
+              new_speaker_index,
+              static_cast<int32_t>(new_label.cols()));
+          continue;
+        }
 
         for (int32_t k = 0; k != t.cols(); ++k) {
           if (t(speaker_index, k) == 1) {
