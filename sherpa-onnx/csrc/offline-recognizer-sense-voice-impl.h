@@ -191,11 +191,15 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     std::vector<int32_t> language_array(n);
     std::fill(language_array.begin(), language_array.end(), language);
 
+    // Per-stream use_itn override via OfflineStream::SetOption("use_itn", "1"|"0").
+    // Falls back to model_config.sense_voice.use_itn when the option is absent.
+    int32_t default_use_itn = config_.model_config.sense_voice.use_itn;
     std::vector<int32_t> text_norm_array(n);
-    std::fill(text_norm_array.begin(), text_norm_array.end(),
-              config_.model_config.sense_voice.use_itn
-                  ? meta_data.with_itn_id
-                  : meta_data.without_itn_id);
+    for (int32_t i = 0; i != n; ++i) {
+      int32_t use_itn = ss[i]->GetOptionInt("use_itn", default_use_itn);
+      text_norm_array[i] =
+          use_itn ? meta_data.with_itn_id : meta_data.without_itn_id;
+    }
 
     Ort::Value language_tensor = Ort::Value::CreateTensor(
         memory_info, language_array.data(), n, features_length_shape.data(),
@@ -318,9 +322,12 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
                        config_.model_config.sense_voice.language.c_str());
     }
 
-    int32_t text_norm = config_.model_config.sense_voice.use_itn
-                            ? meta_data.with_itn_id
-                            : meta_data.without_itn_id;
+    // Per-stream use_itn override via OfflineStream::SetOption("use_itn", "1"|"0").
+    // Falls back to model_config.sense_voice.use_itn when the option is absent.
+    int32_t use_itn =
+        s->GetOptionInt("use_itn", config_.model_config.sense_voice.use_itn);
+    int32_t text_norm =
+        use_itn ? meta_data.with_itn_id : meta_data.without_itn_id;
 
     Ort::Value language_tensor =
         Ort::Value::CreateTensor(memory_info, &language, 1, &scale_shape, 1);
