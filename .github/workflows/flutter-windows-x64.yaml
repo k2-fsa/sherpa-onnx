@@ -38,7 +38,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2
+          python3 -m pip install --upgrade jinja2
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -143,7 +143,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2 iso639-lang
+          python3 -m pip install --upgrade jinja2 iso639-lang
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
