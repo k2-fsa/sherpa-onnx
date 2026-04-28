@@ -1,3 +1,11 @@
+## 1.13.0
+
+* Fix Flutter CI (#3560)
+* Fix building Flutter Android APPs (#3559)
+* Export nvidia/parakeet-unified-en-0.6b to sherpa-onnx (#3556)
+* Update nemotron-speech-streaming-en-0.6b (#3555)
+* Expose log probabilities in OfflineRecognizerResult for Go binding (#3553)
+
 ## 1.12.40
 
 * Add more Piper TTS models (#3547)
