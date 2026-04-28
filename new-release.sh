@@ -4,11 +4,11 @@ set -ex
 
 cd "$(dirname "$0")"
 
-old_version_code=20260417
-new_version_code=20260424
+old_version_code=20260424
+new_version_code=20260428
 
-old_version="1\.12\.39"
-new_version="1\.12\.40"
+old_version="1\.12\.40"
+new_version="1\.13\.0"
 
 replace_str="s/$old_version/$new_version/g"
 
