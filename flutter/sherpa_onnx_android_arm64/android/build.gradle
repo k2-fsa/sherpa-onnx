@@ -25,7 +25,7 @@ rootProject.allprojects {
 apply plugin: "com.android.library"
 
 android {
-    namespace 'com.k2fsa.sherpa.onnx'
+    namespace 'com.k2fsa.sherpa.onnx.arm64'
 
     // Bumping the plugin compileSdk version requires all clients of this plugin
     // to bump the version in their app.
