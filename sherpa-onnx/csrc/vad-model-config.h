@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/fire-red-vad-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/silero-vad-model-config.h"
 #include "sherpa-onnx/csrc/ten-vad-model-config.h"
@@ -15,6 +16,7 @@ namespace sherpa_onnx {
 struct VadModelConfig {
   SileroVadModelConfig silero_vad;
   TenVadModelConfig ten_vad;
+  FireRedVadModelConfig fire_red_vad;
 
   int32_t sample_rate = 16000;
   int32_t num_threads = 1;
@@ -26,10 +28,12 @@ struct VadModelConfig {
   VadModelConfig() = default;
 
   VadModelConfig(const SileroVadModelConfig &silero_vad,
-                 const TenVadModelConfig &ten_vad, int32_t sample_rate,
+                 const TenVadModelConfig &ten_vad,
+                 const FireRedVadModelConfig &fire_red_vad, int32_t sample_rate,
                  int32_t num_threads, const std::string &provider, bool debug)
       : silero_vad(silero_vad),
         ten_vad(ten_vad),
+        fire_red_vad(fire_red_vad),
         sample_rate(sample_rate),
         num_threads(num_threads),
         provider(provider),
