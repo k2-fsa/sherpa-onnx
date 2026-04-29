@@ -14,13 +14,13 @@ namespace sherpa_onnx {
 
 void OfflineQwen3ASRModelConfig::Register(ParseOptions *po) {
   po->Register("qwen3-asr-conv-frontend", &conv_frontend,
-               "Path to conv_frontend.onnx for Qwen3-ASR");
+               "Path to conv_frontend model (.onnx or .ort) for Qwen3-ASR");
 
   po->Register("qwen3-asr-encoder", &encoder,
-               "Path to encoder.onnx for Qwen3-ASR");
+               "Path to encoder model (.onnx or .ort) for Qwen3-ASR");
 
   po->Register("qwen3-asr-decoder", &decoder,
-               "Path to decoder.onnx for Qwen3-ASR (KV cache mode)");
+               "Path to decoder model (.onnx or .ort) for Qwen3-ASR (KV cache mode)");
 
   po->Register(
       "qwen3-asr-tokenizer", &tokenizer,
