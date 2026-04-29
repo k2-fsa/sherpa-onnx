@@ -208,6 +208,31 @@ class AxclModel::Impl {
     return {};
   }
 
+  std::vector<uint8_t> GetOutputTensorDataRaw(const std::string &name) const {
+    for (size_t i = 0; i < output_tensor_names_.size(); ++i) {
+      if (output_tensor_names_[i] == name) {
+        size_t bytes = output_tensors_[i].Size();
+        std::vector<uint8_t> out(bytes);
+
+        auto ret = axclrtMemcpy(out.data(), output_tensors_[i].Get(), bytes,
+                                AXCL_MEMCPY_DEVICE_TO_HOST);
+        if (ret != 0) {
+          SHERPA_ONNX_LOGE(
+              "Failed to call axclrtMemcpy(). tensor name: '%s', return code: "
+              "%d",
+              name.c_str(), static_cast<int32_t>(ret));
+          return {};
+        }
+
+        return out;
+      }
+    }
+
+    SHERPA_ONNX_LOGE("Found no tensor with name: '%s'", name.c_str());
+
+    return {};
+  }
+
   bool Run() const {
     uint32_t group = 0;
     auto ret =
@@ -432,6 +457,11 @@ bool AxclModel::SetInputTensorData(const std::string &name, const int32_t *p,
 std::vector<float> AxclModel::GetOutputTensorData(
     const std::string &name) const {
   return impl_->GetOutputTensorData(name);
+}
+
+std::vector<uint8_t> AxclModel::GetOutputTensorDataRaw(
+    const std::string &name) const {
+  return impl_->GetOutputTensorDataRaw(name);
 }
 
 bool AxclModel::Run() const { return impl_->Run(); }
