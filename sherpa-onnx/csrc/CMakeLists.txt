@@ -226,6 +226,11 @@ if(SHERPA_ONNX_ENABLE_AXCL)
     ./axcl/offline-sense-voice-model-axcl.cc
     ./axcl/utils.cc
   )
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND sources
+      ./axcl/offline-tts-kokoro-model-axcl.cc
+    )
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_RKNN OR SHERPA_ONNX_ENABLE_ASCEND_NPU OR SHERPA_ONNX_ENABLE_QNN OR SHERPA_ONNX_ENABLE_AXERA OR SHERPA_ONNX_ENABLE_AXCL)
