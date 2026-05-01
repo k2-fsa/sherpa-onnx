@@ -10,6 +10,7 @@
 
 #include "kaldi-decoder/csrc/faster-decoder.h"
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/hypothesis.h"
 
 namespace sherpa_onnx {
 
@@ -35,6 +36,9 @@ struct OnlineCtcDecoderResult {
   std::vector<int32_t> timestamps;
 
   int32_t num_trailing_blanks = 0;
+
+  // used only in prefix beam search
+  Hypotheses hyps;
 };
 
 class OnlineCtcDecoder {

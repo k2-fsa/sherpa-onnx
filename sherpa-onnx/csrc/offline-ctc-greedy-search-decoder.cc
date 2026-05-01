@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h
+// sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
@@ -13,7 +13,8 @@
 namespace sherpa_onnx {
 
 std::vector<OfflineCtcDecoderResult> OfflineCtcGreedySearchDecoder::Decode(
-    Ort::Value log_probs, Ort::Value log_probs_length) {
+    Ort::Value log_probs, Ort::Value log_probs_length,
+    OfflineStream **ss /*= nullptr*/, int32_t n /*= 0*/) {
   std::vector<int64_t> shape = log_probs.GetTensorTypeAndShapeInfo().GetShape();
   int32_t batch_size = static_cast<int32_t>(shape[0]);
   int32_t num_frames = static_cast<int32_t>(shape[1]);
