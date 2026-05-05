@@ -27,6 +27,7 @@
 #include "sherpa-onnx/csrc/online-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-nemo-impl.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -62,7 +63,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   }
 
   if (!config.model_config.transducer.encoder.empty()) {
-    Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+    Ort::Env &env = GetGlobalOrtEnv();
 
     Ort::SessionOptions sess_opts;
     sess_opts.SetIntraOpNumThreads(1);
@@ -123,7 +124,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   }
 
   if (!config.model_config.transducer.encoder.empty()) {
-    Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+    Ort::Env &env = GetGlobalOrtEnv();
 
     Ort::SessionOptions sess_opts;
     sess_opts.SetIntraOpNumThreads(1);

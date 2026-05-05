@@ -21,6 +21,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -31,7 +32,7 @@ class OfflineRnnLM::Impl {
  public:
   explicit Impl(const OfflineLMConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.lm_num_threads)),
         sess_opts_{GetSessionOptions(config)},
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +43,7 @@ class OfflineRnnLM::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineLMConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.lm_num_threads)),
         sess_opts_{GetSessionOptions(config)},
         allocator_{} {
     auto buf = ReadFile(mgr, config_.model);
@@ -78,7 +79,7 @@ class OfflineRnnLM::Impl {
 
  private:
   OfflineLMConfig config_;
-  Ort::Env env_;
+  Ort::Env &env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

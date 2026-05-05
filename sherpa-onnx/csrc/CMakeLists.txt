@@ -125,6 +125,7 @@ set(sources
   online-zipformer2-ctc-model-config.cc
   online-zipformer2-ctc-model.cc
   online-zipformer2-transducer-model.cc
+  onnx-env.cc
   onnx-utils.cc
   packed-sequence.cc
   pad-sequence.cc

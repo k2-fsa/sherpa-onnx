@@ -28,6 +28,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -37,7 +38,7 @@ namespace sherpa_onnx {
 
 OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(GetGlobalOrtEnv(config.num_threads)),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),
       joiner_sess_opts_(GetSessionOptions(config, "joiner")),
@@ -59,7 +60,7 @@ OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
 template <typename Manager>
 OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(GetGlobalOrtEnv(config.num_threads)),
       config_(config),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),

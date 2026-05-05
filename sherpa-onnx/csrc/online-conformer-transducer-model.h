@@ -13,6 +13,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 
 namespace sherpa_onnx {
 
@@ -54,7 +55,7 @@ class OnlineConformerTransducerModel : public OnlineTransducerModel {
   void InitJoiner(void *model_data, size_t model_data_length);
 
  private:
-  Ort::Env env_;
+  Ort::Env &env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

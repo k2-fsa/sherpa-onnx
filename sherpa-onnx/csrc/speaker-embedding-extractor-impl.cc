@@ -16,6 +16,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h"
@@ -36,7 +37,7 @@ enum class ModelType : std::uint8_t {
 }  // namespace
 
 static ModelType GetModelType(const std::string &model_path, bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env &env = GetGlobalOrtEnv();
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);
@@ -88,7 +89,7 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env &env = GetGlobalOrtEnv();
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);

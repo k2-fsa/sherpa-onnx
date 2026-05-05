@@ -21,6 +21,7 @@
 #include "kaldi-native-fbank/csrc/istft.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -41,7 +42,7 @@ class VocosVocoder::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
     if (!config.matcha.vocoder.empty()) {
@@ -60,7 +61,7 @@ class VocosVocoder::Impl {
   template <typename Manager>
   explicit Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config.num_threads, config.provider)),
         allocator_{} {
     std::vector<char> buffer;
@@ -185,7 +186,7 @@ class VocosVocoder::Impl {
   OfflineTtsModelConfig config_;
   VocosModelMetaData meta_;
 
-  Ort::Env env_;
+  Ort::Env &env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

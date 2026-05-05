@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -21,7 +22,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
  public:
   explicit Impl(const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -32,7 +33,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.zipformer.model);
@@ -86,7 +87,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
 
  private:
   AudioTaggingModelConfig config_;
-  Ort::Env env_;
+  Ort::Env &env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

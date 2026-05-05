@@ -42,6 +42,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-tpl-impl.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
@@ -293,7 +294,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env &env = GetGlobalOrtEnv();
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
@@ -642,7 +643,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env &env = GetGlobalOrtEnv();
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);

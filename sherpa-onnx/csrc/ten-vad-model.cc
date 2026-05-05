@@ -26,6 +26,7 @@
 #include "kaldi-native-fbank/csrc/rfft.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -37,7 +38,7 @@ class TenVadModel::Impl {
   explicit Impl(const VadModelConfig &config)
       : config_(config),
         rfft_(1024),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
@@ -50,7 +51,7 @@ class TenVadModel::Impl {
   Impl(Manager *mgr, const VadModelConfig &config)
       : config_(config),
         rfft_(1024),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(GetGlobalOrtEnv(config.num_threads)),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
@@ -416,7 +417,7 @@ class TenVadModel::Impl {
   knf::Rfft rfft_;
   std::unique_ptr<knf::MelBanks> mel_banks_;
 
-  Ort::Env env_;
+  Ort::Env &env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
