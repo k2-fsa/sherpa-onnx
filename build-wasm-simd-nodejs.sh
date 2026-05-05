@@ -16,8 +16,8 @@ if [ x"$EMSCRIPTEN" == x"" ]; then
     echo "git clone https://github.com/emscripten-core/emsdk.git"
     echo "cd emsdk"
     echo "git pull"
-    echo "./emsdk install 3.1.53"
-    echo "./emsdk activate 3.1.53"
+    echo "./emsdk install 4.0.23"
+    echo "./emsdk activate 4.0.23"
     echo "source ./emsdk_env.sh"
     exit 1
   else
@@ -31,7 +31,7 @@ echo "EMSCRIPTEN: $EMSCRIPTEN"
 if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   echo "Cannot find $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake"
   echo "Please make sure you have installed emsdk correctly"
-  echo "Hint: emsdk 3.1.53 is known to work. Other versions may not work"
+  echo "Hint: emsdk 4.0.23 is known to work. Other versions may not work"
   exit 1
 fi
 

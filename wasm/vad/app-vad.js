@@ -133,7 +133,7 @@ function initVad() {
     sileroVad: sileroVad,
     tenVad: tenVad,
     sampleRate: 16000,
-    numThreads: 1,
+    numThreads: Math.min(Math.max(navigator.hardwareConcurrency || 1, 1), 4),
     provider: 'cpu',
     debug: 1,
     bufferSizeInSeconds: 30,
