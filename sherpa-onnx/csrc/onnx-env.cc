@@ -22,7 +22,10 @@ Ort::Env &GetGlobalOrtEnv(int32_t num_threads) {
     }
     Ort::ThreadingOptions threading_options;
     threading_options.SetGlobalIntraOpNumThreads(n);
-    threading_options.SetGlobalInterOpNumThreads(n);
+    // Keep inter-op at 1: virtually all ORT models in this repo are dominated
+    // by intra-op parallelism, and inter_op > 1 just steals workers from the
+    // pthread pool, hurting throughput at higher num_threads.
+    threading_options.SetGlobalInterOpNumThreads(1);
     env = std::make_unique<Ort::Env>(threading_options, ORT_LOGGING_LEVEL_ERROR,
                                      "sherpa-onnx");
   });
