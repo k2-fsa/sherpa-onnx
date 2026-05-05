@@ -152,7 +152,7 @@ install(TARGETS sherpa-onnx-wasm-nodejs DESTINATION bin/wasm/nodejs)
 install(
   FILES
   ${CMAKE_SOURCE_DIR}/wasm/asr/sherpa-onnx-asr.js
-  ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
+  ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.node.js
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
   ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
   ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-punctuation.js

@@ -30,6 +30,10 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(MY_FLAGS " -s FORCE_FILESYSTEM=1 -s INITIAL_MEMORY=512MB -s ALLOW_MEMORY_GROWTH=1")
 string(APPEND MY_FLAGS " -sSTACK_SIZE=10485760 ") # 10MB
 string(APPEND MY_FLAGS " -pthread -sPTHREAD_POOL_SIZE=4 ")
+# EXPORT_ES6 lets the wasm glue load as an ES module from a type:'module'
+# Web Worker. A classic worker calling importScripts() on a pthread-enabled
+# wasm hangs during nested pthread bootstrap.
+string(APPEND MY_FLAGS " -sEXPORT_ES6=1 ")
 string(APPEND MY_FLAGS " -sALLOW_TABLE_GROWTH ")
 string(APPEND MY_FLAGS " -sEXPORTED_FUNCTIONS=[_CopyHeap,_malloc,_free,${all_exported_functions}] ")
 string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@. ")

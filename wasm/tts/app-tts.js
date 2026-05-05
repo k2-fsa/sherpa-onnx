@@ -18,7 +18,7 @@ speedValue.innerHTML = speedInput.value;
 let index = 0;
 
 let audioCtx = null;
-const worker = new Worker("sherpa-onnx-tts.worker.js");
+const worker = new Worker("sherpa-onnx-tts.worker.js", { type: "module" });
 let ttsInstanceInfo = {
   modelType: null,
   numSpeakers: 0,
