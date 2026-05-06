@@ -22,7 +22,7 @@ endif()
 # Requires CUDA 12, cudnn 9
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.24.4/onnxruntime-linux-x64-gpu-1.24.4-patched.zip")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.24.4/onnxruntime-linux-x64-gpu-1.24.4.tgz")
-set(onnxruntime_HASH "SHA256=c5f804ff5d239b436fa59e9f2fb288a39f7eb9552f6a636c8b71e792e91a8808")
+set(onnxruntime_HASH "SHA256=f832c427bed33510dfd40de28094b64de4dc0c11559f4547feeb81cf267b9da3")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
