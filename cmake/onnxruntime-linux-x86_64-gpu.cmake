@@ -20,19 +20,19 @@ endif()
 
 
 # Requires CUDA 12, cudnn 9
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.24.4/onnxruntime-linux-x64-gpu-1.24.4.tgz")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.24.4/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.24.4/onnxruntime-linux-x64-gpu-1.24.4.tgz")
-set(onnxruntime_HASH "SHA256=c5f804ff5d239b436fa59e9f2fb288a39f7eb9552f6a636c8b71e792e91a8808")
+set(onnxruntime_HASH "SHA256=fdc6eb18317b4eaeda8b3b86595e5da7e853f72bac67ccac9b04ffc20c9f7fe0")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.24.4.tgz
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.24.4.tgz
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.24.4.tgz
-  /tmp/onnxruntime-linux-x64-gpu-1.24.4.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.24.4.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz
+  /tmp/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu_cuda13-1.24.4.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
