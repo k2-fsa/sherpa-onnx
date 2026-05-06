@@ -332,12 +332,17 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_WASM)
   add_definitions(-DSHERPA_ONNX_ENABLE_WASM=1)
-  # Build every wasm artifact with pthread/atomics support so the .a files
+  # Build browser wasm artifacts with pthread/atomics support so the .a files
   # can be linked with the threaded ONNX Runtime prebuild and a wasm module
   # that pre-spawns a worker pool. Browsers require COOP/COEP headers to
   # expose SharedArrayBuffer; wasm/serve.py is provided for that.
-  string(APPEND CMAKE_C_FLAGS " -pthread")
-  string(APPEND CMAKE_CXX_FLAGS " -pthread")
+  # The Node.js build keeps a synchronous MODULARIZE factory (see
+  # scripts/nodejs/index.js, which calls into the module at require time);
+  # enabling pthreads forces Emscripten to return a Promise, breaking that.
+  if(NOT SHERPA_ONNX_ENABLE_WASM_NODEJS)
+    string(APPEND CMAKE_C_FLAGS " -pthread")
+    string(APPEND CMAKE_CXX_FLAGS " -pthread")
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_WASM_KWS)
