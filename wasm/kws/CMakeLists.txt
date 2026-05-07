@@ -13,6 +13,7 @@ set(exported_functions
   SherpaOnnxDecodeKeywordStream
   SherpaOnnxDestroyKeywordResult
   SherpaOnnxDestroyKeywordSpotter
+  SherpaOnnxDestroyOnlineStream
   SherpaOnnxGetKeywordResult
   SherpaOnnxIsKeywordStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
