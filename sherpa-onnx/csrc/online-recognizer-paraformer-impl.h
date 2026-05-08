@@ -147,7 +147,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   OnlineRecognizerParaformerImpl(const OnlineRecognizerParaformerImpl &) =
       delete;
 
-  OnlineRecognizerParaformerImpl operator=(
+  OnlineRecognizerParaformerImpl &operator=(
       const OnlineRecognizerParaformerImpl &) = delete;
 
   std::unique_ptr<OnlineStream> CreateStream() const override {

@@ -29,12 +29,14 @@ struct NeMoHypothesis {
   const ContextState *context_state;       // context graph state
   OrtAllocator *allocator;                 // allocator for cloning states
   int32_t frame_offset;  // current frame position for this hypothesis
+  int32_t num_symbols;  // number of non-blank symbols emitted at current frame
 
   NeMoHypothesis()
       : log_prob(0.0f),
         context_state(nullptr),
         allocator(nullptr),
-        frame_offset(0) {}
+        frame_offset(0),
+        num_symbols(0) {}
 
   // Copy constructor - needed for hypothesis expansion
   NeMoHypothesis(const NeMoHypothesis &other)
@@ -45,7 +47,8 @@ struct NeMoHypothesis {
         log_prob(other.log_prob),
         context_state(other.context_state),
         allocator(other.allocator),
-        frame_offset(other.frame_offset) {
+        frame_offset(other.frame_offset),
+        num_symbols(other.num_symbols) {
     // Deep copy of decoder states
     decoder_states.reserve(other.decoder_states.size());
     for (const auto &state : other.decoder_states) {
@@ -63,6 +66,7 @@ struct NeMoHypothesis {
       context_state = other.context_state;
       allocator = other.allocator;
       frame_offset = other.frame_offset;
+      num_symbols = other.num_symbols;
 
       decoder_states.clear();
       decoder_states.reserve(other.decoder_states.size());
@@ -90,6 +94,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
   int32_t vocab_size = model_->VocabSize();
   int32_t blank_id = vocab_size - 1;  // NeMo models have blank at the end
+  int32_t max_symbols_per_frame = 10;
 
   // For TDT models, we need to know the number of duration bins
   // We'll detect this from the joiner output size on first run
@@ -165,6 +170,26 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
         if (hyp.frame_offset > min_frame) {
           // This hypothesis is ahead, keep it as-is
           all_candidates.emplace_back(hyp.log_prob, std::move(hyp));
+          continue;
+        }
+
+        if (hyp.num_symbols >= max_symbols_per_frame) {
+          // Reached the per-frame symbol limit, force blank to advance frame
+          NeMoHypothesis new_hyp;
+          new_hyp.ys = hyp.ys;
+          new_hyp.timestamps = hyp.timestamps;
+          new_hyp.durations = hyp.durations;
+          new_hyp.ys_probs = hyp.ys_probs;
+          new_hyp.context_state = hyp.context_state;
+          new_hyp.allocator = allocator;
+          new_hyp.log_prob = hyp.log_prob;
+          new_hyp.num_symbols = 0;
+          new_hyp.decoder_states.reserve(hyp.decoder_states.size());
+          for (const auto &state : hyp.decoder_states) {
+            new_hyp.decoder_states.push_back(Clone(allocator, &state));
+          }
+          new_hyp.frame_offset = hyp.frame_offset + 1;
+          all_candidates.emplace_back(new_hyp.log_prob, std::move(new_hyp));
           continue;
         }
 
@@ -295,6 +320,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
             // For blank/unk in TDT, always advance by at least 1
             new_hyp.frame_offset =
                 hyp.frame_offset + std::max(1, predicted_skip);
+            new_hyp.num_symbols = 0;
           } else {
             // Non-blank: add token, use new decoder state
             new_hyp.ys.push_back(token);
@@ -314,8 +340,11 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
             // tokens
             if (is_tdt_) {
               new_hyp.frame_offset = hyp.frame_offset + predicted_skip;
+              new_hyp.num_symbols =
+                  predicted_skip > 0 ? 0 : hyp.num_symbols + 1;
             } else {
               new_hyp.frame_offset = hyp.frame_offset;
+              new_hyp.num_symbols = hyp.num_symbols + 1;
             }
 
             // Update context graph
