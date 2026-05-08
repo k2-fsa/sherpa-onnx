@@ -144,7 +144,13 @@ Ort::SessionOptions GetSessionOptionsImpl(
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(num_threads);
 
+#if SHERPA_ONNX_ENABLE_WASM
+  // ORT's wasm-with-pthreads prebuild shares one libc pthread pool between
+  // intra-op and inter-op threads; inter_op > 1 starves the intra-op pool.
+  sess_opts.SetInterOpNumThreads(1);
+#else
   sess_opts.SetInterOpNumThreads(num_threads);
+#endif
 
   std::vector<std::string> available_providers = Ort::GetAvailableProviders();
   std::ostringstream os;

@@ -29,7 +29,6 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -39,7 +38,7 @@ namespace sherpa_onnx {
 
 OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(GetGlobalOrtEnv(config.num_threads)),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),
       joiner_sess_opts_(GetSessionOptions(config, "joiner")),
@@ -61,7 +60,7 @@ OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
 template <typename Manager>
 OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(GetGlobalOrtEnv(config.num_threads)),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),

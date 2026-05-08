@@ -27,7 +27,6 @@
 #include "onnxruntime_cxx_api.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -123,7 +122,7 @@ class OfflineQwen3ASRModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR, "qwen3-asr"),
         sess_opts_conv_(GetSessionOptions(config)),
         sess_opts_encoder_(GetSessionOptions(config)),
         sess_opts_decoder_(GetSessionOptions(config)),
@@ -154,7 +153,7 @@ class OfflineQwen3ASRModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR, "qwen3-asr"),
         sess_opts_conv_(GetSessionOptions(config)),
         sess_opts_encoder_(GetSessionOptions(config)),
         sess_opts_decoder_(GetSessionOptions(config)),
@@ -755,7 +754,7 @@ class OfflineQwen3ASRModel::Impl {
  private:
   OfflineModelConfig config_;
 
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_conv_;
   Ort::SessionOptions sess_opts_encoder_;
   Ort::SessionOptions sess_opts_decoder_;

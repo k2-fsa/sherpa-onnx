@@ -25,7 +25,6 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/normal-data-generator.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -36,7 +35,7 @@ class OfflineTtsZipvoiceModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     encoder_sess_ = std::make_unique<Ort::Session>(
@@ -51,7 +50,7 @@ class OfflineTtsZipvoiceModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.zipvoice.encoder);
@@ -337,7 +336,7 @@ class OfflineTtsZipvoiceModel::Impl {
 
  private:
   OfflineTtsModelConfig config_;
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

@@ -12,7 +12,6 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-whisper-impl.h"
@@ -30,7 +29,7 @@ enum class ModelType : std::uint8_t {
 }
 
 static ModelType GetModelType(const std::string &model_path, bool debug) {
-  Ort::Env &env = GetGlobalOrtEnv();
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
   Ort::SessionOptions sess_opts;
 
   auto sess = std::make_unique<Ort::Session>(
@@ -68,7 +67,7 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env &env = GetGlobalOrtEnv();
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
   Ort::SessionOptions sess_opts;
 
   auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,

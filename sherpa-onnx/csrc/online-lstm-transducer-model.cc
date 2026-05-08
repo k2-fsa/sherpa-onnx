@@ -25,7 +25,6 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -35,7 +34,7 @@ namespace sherpa_onnx {
 
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     const OnlineModelConfig &config)
-    : env_(GetGlobalOrtEnv(config.num_threads)),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -55,7 +54,7 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
 template <typename Manager>
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(GetGlobalOrtEnv(config.num_threads)),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

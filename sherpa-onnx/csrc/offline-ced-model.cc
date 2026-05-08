@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -23,7 +22,7 @@ class OfflineCEDModel::Impl {
  public:
   explicit Impl(const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -34,7 +33,7 @@ class OfflineCEDModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.ced);
@@ -86,7 +85,7 @@ class OfflineCEDModel::Impl {
 
  private:
   AudioTaggingModelConfig config_;
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

@@ -20,7 +20,6 @@
 #endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -31,7 +30,7 @@ class OfflineSourceSeparationUvrModel::Impl {
  public:
   explicit Impl(const OfflineSourceSeparationModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +41,7 @@ class OfflineSourceSeparationUvrModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineSourceSeparationModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.uvr.model);
@@ -135,7 +134,7 @@ class OfflineSourceSeparationUvrModel::Impl {
   OfflineSourceSeparationModelConfig config_;
   OfflineSourceSeparationUvrModelMetaData meta_;
 
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

@@ -22,7 +22,6 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -33,7 +32,7 @@ class OnlineWenetCtcModel::Impl {
  public:
   explicit Impl(const OnlineModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -44,7 +43,7 @@ class OnlineWenetCtcModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OnlineModelConfig &config)
       : config_(config),
-        env_(GetGlobalOrtEnv(config.num_threads)),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
@@ -200,7 +199,7 @@ class OnlineWenetCtcModel::Impl {
 
  private:
   OnlineModelConfig config_;
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 

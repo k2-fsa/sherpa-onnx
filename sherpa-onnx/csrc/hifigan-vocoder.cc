@@ -20,7 +20,6 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-env.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -31,7 +30,7 @@ class HifiganVocoder::Impl {
  public:
   explicit Impl(int32_t num_threads, const std::string &provider,
                 const std::string &model)
-      : env_(GetGlobalOrtEnv(num_threads)),
+      : env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(num_threads, provider)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -42,7 +41,7 @@ class HifiganVocoder::Impl {
   template <typename Manager>
   explicit Impl(Manager *mgr, int32_t num_threads, const std::string &provider,
                 const std::string &model)
-      : env_(GetGlobalOrtEnv(num_threads)),
+      : env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(num_threads, provider)),
         allocator_{} {
     auto buf = ReadFile(mgr, model);
@@ -84,7 +83,7 @@ class HifiganVocoder::Impl {
   }
 
  private:
-  Ort::Env &env_;
+  Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
