@@ -1,3 +1,11 @@
+## 1.13.1
+
+* Fix bugs in NeMo transducer modified beam search (#3589)
+* Add bounds checks to prevent SIGSEGV in speaker diarization (#3563)
+* Replace dead link with archived link (#3576)
+* Fix x64 gpu onnxruntime url (#3578)
+* Per-stream use_itn override via Stream::GetOptionInt for SenseVoice (#3565)
+
 ## 1.13.0
 
 * Fix Flutter CI (#3560)

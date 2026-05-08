@@ -1,7 +1,7 @@
 {
   "name": "non-streaming-speech-recognition-from-microphone",
   "private": true,
-  "version": "1.13.0",
+  "version": "1.13.1",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
