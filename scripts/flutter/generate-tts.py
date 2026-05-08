@@ -34,6 +34,7 @@ class TtsModel:
     data_dir: Optional[str] = None
     dict_dir: Optional[str] = None
     is_char: bool = False
+    is_kitten: bool = False
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -364,6 +365,37 @@ def get_vits_models() -> List[TtsModel]:
     return all_models
 
 
+def get_kitten_models() -> List[TtsModel]:
+    models = [
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-fp32",
+            model_name="model.fp32.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-int8",
+            model_name="model.int8.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-micro-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-mini-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
+    ]
+
+    for m in models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.is_kitten = True
+
+    return models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -375,6 +407,7 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
+    all_model_list += get_kitten_models()
 
     num_models = len(all_model_list)
 

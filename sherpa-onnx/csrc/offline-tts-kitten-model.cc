@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kitten-model.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -67,10 +68,13 @@ class OfflineTtsKittenModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    int32_t num_speakers = meta_data_.num_speakers;
+    int32_t sid_int = static_cast<int32_t>(sid);
     int32_t dim1 = style_dim_[1];
+    int32_t style_rows = style_dim_[0];
+    int32_t row = SelectStyleRow(x, style_rows);
 
-    /*const*/ float *p = styles_.data() + sid * dim1;
+    /*const*/ float *p =
+        styles_.data() + (sid_int * style_rows + row) * dim1;
 
     std::array<int64_t, 2> style_embedding_shape = {1, dim1};
     Ort::Value style_embedding = Ort::Value::CreateTensor(
@@ -80,6 +84,10 @@ class OfflineTtsKittenModel::Impl {
     int64_t speed_shape = 1;
     if (config_.kitten.length_scale != 1 && speed == 1) {
       speed = 1. / config_.kitten.length_scale;
+    }
+
+    if (!meta_data_.speaker_speed_priors.empty()) {
+      speed *= meta_data_.speaker_speed_priors[sid_int];
     }
 
     Ort::Value speed_tensor =
@@ -154,6 +162,13 @@ class OfflineTtsKittenModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
                                                 "en-us");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.max_token_len,
+                                            "max_token_len", 256);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.start_id, "start_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.end_id, "end_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_pad_after_end,
+                                            "add_pad_after_end", 0);
     if (meta_data_.has_espeak != 1) {
       SHERPA_ONNX_LOGE("It should require espeak-ng");
       SHERPA_ONNX_EXIT(-1);
@@ -183,9 +198,25 @@ class OfflineTtsKittenModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    if (style_dim_[0] != 1) {
-      SHERPA_ONNX_LOGE("style_dim[0] should be 1, given: %d", style_dim_[0]);
+    if (style_dim_[0] <= 0) {
+      SHERPA_ONNX_LOGE("style_dim[0] should be > 0, given: %d", style_dim_[0]);
       SHERPA_ONNX_EXIT(-1);
+    }
+
+    auto speaker_speed_priors = LookupCustomModelMetaData(
+        meta_data, "speaker_speed_priors", allocator);
+    if (!speaker_speed_priors.empty()) {
+      bool ret =
+          SplitStringToFloats(speaker_speed_priors.c_str(), ",", true,
+                              &meta_data_.speaker_speed_priors);
+      if (!ret || static_cast<int32_t>(meta_data_.speaker_speed_priors.size()) !=
+                      meta_data_.num_speakers) {
+        SHERPA_ONNX_LOGE(
+            "Invalid value '%s' for 'speaker_speed_priors'. Expected %d "
+            "floats.",
+            speaker_speed_priors.c_str(), meta_data_.num_speakers);
+        SHERPA_ONNX_EXIT(-1);
+      }
     }
 
     int32_t actual_num_floats = voices_data_length / sizeof(float);
@@ -214,6 +245,33 @@ class OfflineTtsKittenModel::Impl {
         reinterpret_cast<const float *>(voices_data) + expected_num_floats);
   }
 
+  int32_t SelectStyleRow(const Ort::Value &x, int32_t style_rows) const {
+    if (style_rows == 1) {
+      return 0;
+    }
+
+    std::vector<int64_t> x_shape = x.GetTensorTypeAndShapeInfo().GetShape();
+    int32_t num_tokens = static_cast<int32_t>(x_shape[1]);
+    int32_t num_content_tokens = num_tokens;
+    const int64_t *p = x.GetTensorData<int64_t>();
+
+    if (num_content_tokens > 0 && p[0] == meta_data_.start_id) {
+      --num_content_tokens;
+    }
+
+    if (num_content_tokens > 0 && p[num_tokens - 1] == meta_data_.pad_id) {
+      --num_content_tokens;
+    }
+
+    if (meta_data_.add_pad_after_end && num_tokens > 1 &&
+        p[num_tokens - 2] == meta_data_.end_id) {
+      --num_content_tokens;
+    }
+
+    num_content_tokens = std::max(num_content_tokens, 0);
+    return std::min(num_content_tokens, style_rows - 1);
+  }
+
  private:
   OfflineTtsModelConfig config_;
   Ort::Env env_;
@@ -231,7 +289,7 @@ class OfflineTtsKittenModel::Impl {
   OfflineTtsKittenModelMetaData meta_data_;
   std::vector<int32_t> style_dim_;
 
-  // (num_speakers, style_dim_[1])
+  // (num_speakers, style_dim_[0], style_dim_[1])
   std::vector<float> styles_;
 };
 

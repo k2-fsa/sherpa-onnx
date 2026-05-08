@@ -562,6 +562,26 @@ def get_kitten_models() -> List[TtsModel]:
             model_name="model.fp16.onnx",
             lang="en",
         ),
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-fp32",
+            model_name="model.fp32.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-int8",
+            model_name="model.int8.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-micro-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-mini-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
     ]
     for m in english_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"

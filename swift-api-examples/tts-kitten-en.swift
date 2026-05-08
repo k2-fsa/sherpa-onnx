@@ -5,10 +5,10 @@ class MyClass {
 }
 
 func run() {
-  let model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx"
-  let voices = "./kitten-nano-en-v0_1-fp16/voices.bin"
-  let tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt"
-  let dataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data"
+  let model = "./kitten-mini-en-v0_8/model.onnx"
+  let voices = "./kitten-mini-en-v0_8/voices.bin"
+  let tokens = "./kitten-mini-en-v0_8/tokens.txt"
+  let dataDir = "./kitten-mini-en-v0_8/espeak-ng-data"
   let kitten = sherpaOnnxOfflineTtsKittenModelConfig(
     model: model,
     voices: voices,

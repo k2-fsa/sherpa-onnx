@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace sherpa_onnx {
 
@@ -19,8 +20,13 @@ struct OfflineTtsKittenModelMetaData {
   int32_t has_espeak = 1;
 
   int32_t max_token_len = 256;
+  int32_t start_id = 0;
+  int32_t end_id = 0;
+  int32_t pad_id = 0;
+  int32_t add_pad_after_end = 0;
 
   std::string voice;
+  std::vector<float> speaker_speed_priors;
 };
 
 }  // namespace sherpa_onnx

@@ -24,7 +24,8 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
 
   String modelDir = '';
   String modelName = '';
-  String voices = ''; // for Kokoro only
+  String voices = ''; // for Kokoro or Kitten
+  bool isKitten = false;
   String ruleFsts = '';
   String ruleFars = '';
   String lexicon = '';
@@ -97,6 +98,14 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
   // lexicon = 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt';
 
+  // Example 10
+  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+  // modelDir = 'kitten-nano-en-v0_8-fp32';
+  // modelName = 'model.fp32.onnx';
+  // voices = 'voices.bin';
+  // dataDir = 'kitten-nano-en-v0_8-fp32/espeak-ng-data';
+  // isKitten = true;
+
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
@@ -148,9 +157,20 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
 
   late final sherpa_onnx.OfflineTtsVitsModelConfig vits;
   late final sherpa_onnx.OfflineTtsKokoroModelConfig kokoro;
+  late final sherpa_onnx.OfflineTtsKittenModelConfig kitten;
 
-  if (voices != '') {
+  if (isKitten) {
     vits = sherpa_onnx.OfflineTtsVitsModelConfig();
+    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
+    kitten = sherpa_onnx.OfflineTtsKittenModelConfig(
+      model: modelName,
+      voices: voices,
+      tokens: tokens,
+      dataDir: dataDir,
+    );
+  } else if (voices != '') {
+    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
+    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
     kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
       model: modelName,
       voices: voices,
@@ -167,11 +187,13 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
     );
 
     kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
+    kitten = sherpa_onnx.OfflineTtsKittenModelConfig();
   }
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
     vits: vits,
     kokoro: kokoro,
+    kitten: kitten,
     numThreads: 2,
     debug: true,
     provider: 'cpu',
