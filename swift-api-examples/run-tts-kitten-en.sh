@@ -10,13 +10,15 @@ fi
 # please visit
 # https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html
 # to download more models
-if [ ! -f ./kitten-mini-en-v0_8/model.onnx ]; then
+if [ ! -f ./kitten-mini-en-v0_8/model.onnx ] || \
+   [ ! -f ./kitten-mini-en-v0_8/voices.bin ] || \
+   [ ! -f ./kitten-mini-en-v0_8/tokens.txt ]; then
   echo "Please generate or copy kitten-mini-en-v0_8 first."
   echo "For example:"
   echo "  cd ../scripts/kitten-tts/v0_8"
   echo "  ./run.sh KittenML/kitten-tts-mini-0.8"
   echo "  cd ../../../swift-api-examples"
-  echo "  cp -R ../scripts/kitten-tts/v0_8 ./kitten-mini-en-v0_8"
+  echo "  cp -R ../scripts/kitten-tts/v0_8/kitten-mini-en-v0_8 ."
   exit 1
 fi
 

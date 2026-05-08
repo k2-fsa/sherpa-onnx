@@ -9,7 +9,7 @@ def get_vocab():
     _letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     _letters_ipa = "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ"
 
-    symbols = [_pad] + list(_punctuation) + list(_letters) + list(_letters_ipa)
+    symbols = [_pad, *_punctuation, *_letters, *_letters_ipa]
     return {symbols[i]: i for i in range(len(symbols))}
 
 

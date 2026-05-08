@@ -86,8 +86,7 @@ def main():
 
     print(model.metadata_props)
 
-    while len(model.metadata_props):
-        model.metadata_props.pop()
+    del model.metadata_props[:]
 
     for key, value in meta_data.items():
         meta = model.metadata_props.add()

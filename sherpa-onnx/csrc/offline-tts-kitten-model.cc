@@ -68,9 +68,17 @@ class OfflineTtsKittenModel::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    int32_t sid_int = static_cast<int32_t>(sid);
     int32_t dim1 = style_dim_[1];
     int32_t style_rows = style_dim_[0];
+    int32_t num_speakers =
+        static_cast<int32_t>(styles_.size() / (style_rows * dim1));
+    if (sid < 0 || sid >= num_speakers) {
+      SHERPA_ONNX_LOGE("Invalid speaker id: %d. Valid range: [0, %d)", sid,
+                       num_speakers);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    int32_t sid_int = static_cast<int32_t>(sid);
     int32_t row = SelectStyleRow(x, style_rows);
 
     /*const*/ float *p =
@@ -87,6 +95,15 @@ class OfflineTtsKittenModel::Impl {
     }
 
     if (!meta_data_.speaker_speed_priors.empty()) {
+      if (sid_int >=
+          static_cast<int32_t>(meta_data_.speaker_speed_priors.size())) {
+        SHERPA_ONNX_LOGE(
+            "Missing speaker speed prior for speaker id: %d. Number of priors: "
+            "%d",
+            sid_int,
+            static_cast<int32_t>(meta_data_.speaker_speed_priors.size()));
+        SHERPA_ONNX_EXIT(-1);
+      }
       speed *= meta_data_.speaker_speed_priors[sid_int];
     }
 
@@ -259,12 +276,13 @@ class OfflineTtsKittenModel::Impl {
       --num_content_tokens;
     }
 
-    if (num_content_tokens > 0 && p[num_tokens - 1] == meta_data_.pad_id) {
+    int32_t last = num_tokens - 1;
+    if (num_content_tokens > 0 && p[last] == meta_data_.pad_id) {
       --num_content_tokens;
+      --last;
     }
 
-    if (meta_data_.add_pad_after_end && num_tokens > 1 &&
-        p[num_tokens - 2] == meta_data_.end_id) {
+    if (num_content_tokens > 0 && last >= 0 && p[last] == meta_data_.end_id) {
       --num_content_tokens;
     }
 

@@ -53,17 +53,17 @@ esac
 
 base_url=https://huggingface.co/${model_name}/resolve/main
 
-if [ ! -f ${onnx_name} ]; then
-  curl -SL -O ${base_url}/${onnx_name}
+if [ ! -f "${onnx_name}" ]; then
+  curl -SL -O "${base_url}/${onnx_name}"
 fi
 
 if [ ! -f voices.npz ]; then
-  curl -SL -O ${base_url}/voices.npz
+  curl -SL -O "${base_url}/voices.npz"
 fi
 
-cp ${onnx_name} ${output_name}
+cp "${onnx_name}" "${output_name}"
 ./generate_voices_bin.py
 ./generate_tokens.py
-./add_meta_data.py --model ./${output_name} --model-name ${model_name}
+./add_meta_data.py --model "./${output_name}" --model-name "${model_name}"
 
 ls -lh

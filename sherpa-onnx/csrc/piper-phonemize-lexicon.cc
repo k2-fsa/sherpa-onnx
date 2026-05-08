@@ -249,13 +249,12 @@ static std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
 
   current.push_back(meta_data.start_id);
 
-  int32_t max_current_size_before_token =
-      meta_data.add_pad_after_end ? meta_data.max_token_len - 3
-                                  : meta_data.max_token_len - 1;
+  int32_t suffix_size = meta_data.add_pad_after_end ? 2 : 1;
   for (auto p : phonemes) {
     if (token2id.count(p)) {
-      if (current.size() >
-          static_cast<size_t>(max_current_size_before_token)) {
+      int32_t emitted_tokens = p == '.' ? 2 : 1;
+      if (static_cast<int32_t>(current.size()) + emitted_tokens + suffix_size >
+          meta_data.max_token_len) {
         current.push_back(meta_data.end_id);
         if (meta_data.add_pad_after_end) {
           current.push_back(meta_data.pad_id);
