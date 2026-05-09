@@ -340,7 +340,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
           # https://quay.io/repository/pypa/manylinux2014_aarch64?tab=tags
-          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
+          CIBW_MANYLINUX_AARCH64_IMAGE: "${{ matrix.python-version == 'cp38' && format('quay.io/pypa/{0}_aarch64:2025.11.29-1', matrix.manylinux) || format('quay.io/pypa/{0}_aarch64', matrix.manylinux) }}"
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
           CIBW_REPAIR_WHEEL_COMMAND: >

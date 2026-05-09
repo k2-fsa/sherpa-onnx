@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   test-dot-net-nuget:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

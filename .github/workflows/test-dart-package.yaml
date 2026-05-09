@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   test_dart_package:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

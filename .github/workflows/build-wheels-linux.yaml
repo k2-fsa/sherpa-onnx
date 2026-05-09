@@ -346,8 +346,8 @@ jobs:
 
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_MANYLINUX_X86_64_IMAGE: "${{ matrix.python-version == 'cp38' && 'quay.io/pypa/manylinux2014_x86_64:2025.11.29-1' || format('quay.io/pypa/{0}_x86_64', matrix.manylinux) }}"
           CIBW_BUILD_VERBOSITY: 3
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_x86_64
           CIBW_REPAIR_WHEEL_COMMAND: >
             auditwheel repair -w {dest_dir}
             --exclude libonnxruntime.so

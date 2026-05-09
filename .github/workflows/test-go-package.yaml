@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   test-go-package:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     name: ${{ matrix.os }} ${{matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:

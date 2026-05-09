@@ -23,6 +23,7 @@ permissions:
 
 jobs:
   test_pip_install:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} ${{ matrix.python-version }}
     strategy:
