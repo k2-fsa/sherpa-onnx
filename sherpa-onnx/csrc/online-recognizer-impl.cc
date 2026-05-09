@@ -26,6 +26,7 @@
 #include "sherpa-onnx/csrc/online-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-impl.h"
+#include "sherpa-onnx/csrc/online-recognizer-transducer-nemo-buffered-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -37,6 +38,13 @@
 #endif
 
 namespace sherpa_onnx {
+
+static bool IsBufferedNeMoRnnt(const Ort::Session &encoder_sess) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  Ort::ModelMetadata meta_data = encoder_sess.GetModelMetadata();
+  return LookupCustomModelMetaData(meta_data, "streaming_model_type",
+                                   allocator) == "buffered_nemo_rnnt";
+}
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
@@ -67,6 +75,15 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     Ort::SessionOptions sess_opts;
     sess_opts.SetIntraOpNumThreads(1);
     sess_opts.SetInterOpNumThreads(1);
+
+    auto encoder_sess = std::make_unique<Ort::Session>(
+        env, SHERPA_ONNX_TO_ORT_PATH(config.model_config.transducer.encoder),
+        sess_opts);
+
+    if (IsBufferedNeMoRnnt(*encoder_sess)) {
+      return std::make_unique<OnlineRecognizerTransducerNeMoBufferedImpl>(
+          config);
+    }
 
     auto sess = std::make_unique<Ort::Session>(
         env, SHERPA_ONNX_TO_ORT_PATH(config.model_config.transducer.decoder),
@@ -128,6 +145,15 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     Ort::SessionOptions sess_opts;
     sess_opts.SetIntraOpNumThreads(1);
     sess_opts.SetInterOpNumThreads(1);
+
+    auto encoder_model = ReadFile(mgr, config.model_config.transducer.encoder);
+    auto encoder_sess = std::make_unique<Ort::Session>(
+        env, encoder_model.data(), encoder_model.size(), sess_opts);
+
+    if (IsBufferedNeMoRnnt(*encoder_sess)) {
+      return std::make_unique<OnlineRecognizerTransducerNeMoBufferedImpl>(
+          mgr, config);
+    }
 
     auto decoder_model = ReadFile(mgr, config.model_config.transducer.decoder);
     auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(),

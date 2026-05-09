@@ -114,10 +114,12 @@ set(sources
   online-t-one-ctc-model.cc
   online-transducer-decoder.cc
   online-transducer-greedy-search-decoder.cc
+  online-transducer-greedy-search-nemo-buffered-decoder.cc
   online-transducer-greedy-search-nemo-decoder.cc
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-transducer-nemo-buffered-model.cc
   online-transducer-nemo-model.cc
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
