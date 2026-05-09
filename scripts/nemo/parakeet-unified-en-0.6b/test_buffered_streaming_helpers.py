@@ -1,25 +1,16 @@
 #!/usr/bin/env python3
-import importlib.util
 import unittest
-from pathlib import Path
 
 import numpy as np
 
-
-def load_streaming_module():
-    path = Path(__file__).with_name("test_onnx_streaming.py")
-    spec = importlib.util.spec_from_file_location("parakeet_streaming_test", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+from buffered_streaming_helpers import normalize_per_feature, slice_feature_buffer
 
 
 class TestBufferedStreamingHelpers(unittest.TestCase):
     def test_slice_feature_buffer_zero_pads_left_and_right_context(self):
-        module = load_streaming_module()
         features = np.arange(6 * 2, dtype=np.float32).reshape(6, 2)
 
-        window, valid_center_frames = module.slice_feature_buffer(
+        window, valid_center_frames = slice_feature_buffer(
             features,
             center_start=0,
             left=4,
@@ -33,10 +24,9 @@ class TestBufferedStreamingHelpers(unittest.TestCase):
         self.assertEqual(valid_center_frames, 3)
 
     def test_slice_feature_buffer_reports_short_final_center_chunk(self):
-        module = load_streaming_module()
         features = np.arange(5 * 2, dtype=np.float32).reshape(5, 2)
 
-        window, valid_center_frames = module.slice_feature_buffer(
+        window, valid_center_frames = slice_feature_buffer(
             features,
             center_start=4,
             left=2,
@@ -50,7 +40,6 @@ class TestBufferedStreamingHelpers(unittest.TestCase):
         self.assertEqual(valid_center_frames, 1)
 
     def test_normalize_per_feature_normalizes_each_column(self):
-        module = load_streaming_module()
         features = np.array(
             [
                 [1.0, 10.0],
@@ -60,7 +49,7 @@ class TestBufferedStreamingHelpers(unittest.TestCase):
             dtype=np.float32,
         )
 
-        normalized = module.normalize_per_feature(features)
+        normalized = normalize_per_feature(features)
 
         np.testing.assert_allclose(normalized.mean(axis=0), [0.0, 0.0], atol=1e-6)
         np.testing.assert_allclose(normalized.std(axis=0), [1.0, 1.0], atol=2e-5)

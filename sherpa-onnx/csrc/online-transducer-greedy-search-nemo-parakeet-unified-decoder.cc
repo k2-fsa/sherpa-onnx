@@ -1,10 +1,11 @@
-// sherpa-onnx/csrc/online-transducer-greedy-search-nemo-buffered-decoder.cc
+// sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.cc
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Milan Leonard
 
-#include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-buffered-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.h"
 
 #include <algorithm>
+#include <array>
 #include <utility>
 #include <vector>
 
@@ -27,7 +28,7 @@ static Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
 
 static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols,
-                      OnlineTransducerNeMoBufferedModel *model,
+                      OnlineTransducerNeMoParakeetUnifiedModel *model,
                       float blank_penalty, OnlineStream *s) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -55,6 +56,7 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
   bool emitted = false;
   int32_t max_symbols_per_frame = 10;
+  std::vector<Ort::Value> last_token_decoder_states;
 
   for (int32_t t = 0; t != num_rows; ++t) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
@@ -79,8 +81,17 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
         r.num_trailing_blanks = 0;
 
         decoder_input = BuildDecoderInput(y, model->Allocator());
-        decoder_output_pair = model->RunDecoder(
-            std::move(decoder_input), std::move(decoder_output_pair.second));
+
+        std::vector<Ort::Value> decoder_state_views;
+        decoder_state_views.reserve(decoder_output_pair.second.size());
+        for (auto &v : decoder_output_pair.second) {
+          decoder_state_views.push_back(View(&v));
+        }
+
+        auto next_decoder_output_pair = model->RunDecoder(
+            std::move(decoder_input), std::move(decoder_state_views));
+        last_token_decoder_states = std::move(decoder_output_pair.second);
+        decoder_output_pair = std::move(next_decoder_output_pair);
       } else {
         ++r.num_trailing_blanks;
         break;
@@ -89,13 +100,13 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
   }
 
   if (emitted) {
-    s->SetNeMoDecoderStates(std::move(decoder_output_pair.second));
+    s->SetNeMoDecoderStates(std::move(last_token_decoder_states));
   }
 
   r.frame_offset += num_rows;
 }
 
-void OnlineTransducerGreedySearchNeMoBufferedDecoder::Decode(
+void OnlineTransducerGreedySearchNeMoParakeetUnifiedDecoder::Decode(
     Ort::Value encoder_out, OnlineStream **ss, int32_t n) const {
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
   int32_t batch_size = static_cast<int32_t>(shape[0]);

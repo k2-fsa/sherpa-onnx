@@ -13,6 +13,8 @@ import onnxruntime as ort
 import soundfile as sf
 import torch
 
+from buffered_streaming_helpers import normalize_per_feature, slice_feature_buffer
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -45,37 +47,6 @@ def compute_features(audio, fbank):
     return np.stack(ans).astype(np.float32)
 
 
-def normalize_per_feature(features: np.ndarray) -> np.ndarray:
-    mean = features.mean(axis=0, keepdims=True)
-    std = features.std(axis=0, keepdims=True) + 1e-5
-    return ((features - mean) / std).astype(np.float32)
-
-
-def slice_feature_buffer(
-    features: np.ndarray,
-    center_start: int,
-    left: int,
-    chunk: int,
-    right: int,
-):
-    total = left + chunk + right
-    left_start = center_start - left
-    right_end = center_start + chunk + right
-    pad_left = max(0, -left_start)
-    pad_right = max(0, right_end - features.shape[0])
-    start = max(0, left_start)
-    end = min(features.shape[0], right_end)
-
-    window = features[start:end]
-    if pad_left or pad_right:
-        window = np.pad(window, ((pad_left, pad_right), (0, 0)), mode="constant")
-    if window.shape[0] != total:
-        raise ValueError(f"Expected {total} frames, got {window.shape[0]}")
-
-    valid_center = max(0, min(chunk, features.shape[0] - center_start))
-    return window.astype(np.float32), valid_center
-
-
 class OnnxModel:
     def __init__(self, encoder, decoder, joiner):
         opts = ort.SessionOptions()
@@ -90,18 +61,19 @@ class OnnxModel:
         meta = self.encoder.get_modelmeta().custom_metadata_map
         print("encoder meta:", meta)
 
-        if meta.get("streaming_model_type") != "buffered_nemo_rnnt":
+        if meta.get("streaming_model_type") != "nemo_parakeet_unified_streaming":
             raise ValueError(
-                "Expected streaming_model_type=buffered_nemo_rnnt in encoder metadata"
+                "Expected streaming_model_type=nemo_parakeet_unified_streaming "
+                "in encoder metadata"
             )
 
         self.feat_dim = int(meta.get("feat_dim", 128))
         self.subsampling_factor = int(meta.get("subsampling_factor", 8))
-        self.left_feature_frames = int(meta["buffer_left_feature_frames"])
-        self.chunk_feature_frames = int(meta["buffer_chunk_feature_frames"])
-        self.right_feature_frames = int(meta["buffer_right_feature_frames"])
-        self.left_encoder_frames = int(meta["buffer_left_encoder_frames"])
-        self.chunk_encoder_frames = int(meta["buffer_chunk_encoder_frames"])
+        self.left_feature_frames = int(meta["left_feature_frames"])
+        self.chunk_feature_frames = int(meta["chunk_feature_frames"])
+        self.right_feature_frames = int(meta["right_feature_frames"])
+        self.left_encoder_frames = int(meta["left_encoder_frames"])
+        self.chunk_encoder_frames = int(meta["chunk_encoder_frames"])
         self.pred_rnn_layers = int(meta["pred_rnn_layers"])
         self.pred_hidden = int(meta["pred_hidden"])
         self.normalize_type = meta.get("normalize_type", "per_feature")

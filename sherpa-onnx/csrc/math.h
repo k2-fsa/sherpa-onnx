@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
@@ -166,6 +166,8 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
 
 void NormalizeWhisperFeatures(float *features, int32_t num_frames,
                               int32_t feat_dim);
+
+void NemoNormalizePerFeature(float *p, int32_t num_frames, int32_t feature_dim);
 
 int32_t MaxElementIndex(const float *v, int32_t n);
 

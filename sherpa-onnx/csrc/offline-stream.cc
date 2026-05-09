@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "Eigen/Core"
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
@@ -298,24 +297,6 @@ class OfflineStream::Impl {
     }
 
     NemoNormalizePerFeature(p, num_frames, feature_dim);
-  }
-
-  static void NemoNormalizePerFeature(float *p, int32_t num_frames,
-                                      int32_t feature_dim) {
-    using RowMajorMat =
-        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-
-    Eigen::Map<RowMajorMat> x(p, num_frames, feature_dim);
-
-    Eigen::RowVectorXf mean = x.colwise().mean();
-    Eigen::RowVectorXf var =
-        (x.array().square().colwise().mean() - mean.array().square())
-            .max(0.0f);  // avoid negative due to FP error
-
-    Eigen::RowVectorXf inv_std = (var.array().sqrt() + 1e-5f).inverse();
-
-    x.array() =
-        (x.array().rowwise() - mean.array()).rowwise() * inv_std.array();
   }
 
  private:

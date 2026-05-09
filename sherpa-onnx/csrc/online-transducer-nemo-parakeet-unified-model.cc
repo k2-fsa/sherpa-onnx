@@ -1,10 +1,11 @@
-// sherpa-onnx/csrc/online-transducer-nemo-buffered-model.cc
+// sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.cc
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Milan Leonard
 
-#include "sherpa-onnx/csrc/online-transducer-nemo-buffered-model.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -29,7 +30,10 @@
 
 namespace sherpa_onnx {
 
-class OnlineTransducerNeMoBufferedModel::Impl {
+static constexpr const char *kStreamingModelType =
+    "nemo_parakeet_unified_streaming";
+
+class OnlineTransducerNeMoParakeetUnifiedModel::Impl {
  public:
   explicit Impl(const OnlineModelConfig &config)
       : config_(config),
@@ -116,7 +120,7 @@ class OnlineTransducerNeMoBufferedModel::Impl {
     std::vector<Ort::Value> states_next;
     states_next.reserve(states.size());
 
-    for (int32_t i = 0; i != states.size(); ++i) {
+    for (size_t i = 0; i != states.size(); ++i) {
       states_next.push_back(std::move(decoder_out[i + 2]));
     }
 
@@ -182,7 +186,7 @@ class OnlineTransducerNeMoBufferedModel::Impl {
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
     if (config_.debug) {
       std::ostringstream os;
-      os << "---buffered nemo encoder---\n";
+      os << "---nemo parakeet unified encoder---\n";
       PrintModelMetadata(os, meta_data);
 #if __OHOS__
       SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
@@ -196,10 +200,9 @@ class OnlineTransducerNeMoBufferedModel::Impl {
     std::string streaming_model_type;
     SHERPA_ONNX_READ_META_DATA_STR(streaming_model_type,
                                    "streaming_model_type");
-    if (streaming_model_type != "buffered_nemo_rnnt") {
-      SHERPA_ONNX_LOGE(
-          "Expected streaming_model_type=buffered_nemo_rnnt, got: %s",
-          streaming_model_type.c_str());
+    if (streaming_model_type != kStreamingModelType) {
+      SHERPA_ONNX_LOGE("Expected streaming_model_type=%s, got: %s",
+                       kStreamingModelType, streaming_model_type.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -213,18 +216,12 @@ class OnlineTransducerNeMoBufferedModel::Impl {
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(feat_dim_, "feat_dim", -1);
 
-    SHERPA_ONNX_READ_META_DATA(left_feature_frames_,
-                               "buffer_left_feature_frames");
-    SHERPA_ONNX_READ_META_DATA(chunk_feature_frames_,
-                               "buffer_chunk_feature_frames");
-    SHERPA_ONNX_READ_META_DATA(right_feature_frames_,
-                               "buffer_right_feature_frames");
-    SHERPA_ONNX_READ_META_DATA(left_encoder_frames_,
-                               "buffer_left_encoder_frames");
-    SHERPA_ONNX_READ_META_DATA(chunk_encoder_frames_,
-                               "buffer_chunk_encoder_frames");
-    SHERPA_ONNX_READ_META_DATA(right_encoder_frames_,
-                               "buffer_right_encoder_frames");
+    SHERPA_ONNX_READ_META_DATA(left_feature_frames_, "left_feature_frames");
+    SHERPA_ONNX_READ_META_DATA(chunk_feature_frames_, "chunk_feature_frames");
+    SHERPA_ONNX_READ_META_DATA(right_feature_frames_, "right_feature_frames");
+    SHERPA_ONNX_READ_META_DATA(left_encoder_frames_, "left_encoder_frames");
+    SHERPA_ONNX_READ_META_DATA(chunk_encoder_frames_, "chunk_encoder_frames");
+    SHERPA_ONNX_READ_META_DATA(right_encoder_frames_, "right_encoder_frames");
 
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
@@ -234,6 +231,45 @@ class OnlineTransducerNeMoBufferedModel::Impl {
       feat_dim_ = encoder_sess_->GetInputTypeInfo(0)
                       .GetTensorTypeAndShapeInfo()
                       .GetShape()[1];
+    }
+
+    ValidateMetadata();
+  }
+
+  void ValidateMetadata() const {
+    if (vocab_size_ <= 1) {
+      SHERPA_ONNX_LOGE("Invalid vocab_size: %d", vocab_size_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (subsampling_factor_ <= 0) {
+      SHERPA_ONNX_LOGE("Invalid subsampling_factor: %d", subsampling_factor_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (feat_dim_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Could not determine feat_dim from metadata or encoder input shape "
+          "(got %d). Set feat_dim in the encoder ONNX metadata.",
+          feat_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (pred_rnn_layers_ <= 0 || pred_hidden_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Invalid decoder state metadata: pred_rnn_layers=%d, "
+          "pred_hidden=%d",
+          pred_rnn_layers_, pred_hidden_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (left_feature_frames_ < 0 || right_feature_frames_ < 0 ||
+        left_encoder_frames_ < 0 || right_encoder_frames_ < 0) {
+      SHERPA_ONNX_LOGE("Left/right context frame counts must be nonnegative");
+      SHERPA_ONNX_EXIT(-1);
+    }
+    if (chunk_feature_frames_ <= 0 || chunk_encoder_frames_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Chunk frame counts must be positive: feature=%d, "
+          "encoder=%d",
+          chunk_feature_frames_, chunk_encoder_frames_);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -328,98 +364,99 @@ class OnlineTransducerNeMoBufferedModel::Impl {
   Ort::Value lstm1_{nullptr};
 };
 
-OnlineTransducerNeMoBufferedModel::OnlineTransducerNeMoBufferedModel(
-    const OnlineModelConfig &config)
+OnlineTransducerNeMoParakeetUnifiedModel::
+    OnlineTransducerNeMoParakeetUnifiedModel(const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 template <typename Manager>
-OnlineTransducerNeMoBufferedModel::OnlineTransducerNeMoBufferedModel(
-    Manager *mgr, const OnlineModelConfig &config)
+OnlineTransducerNeMoParakeetUnifiedModel::
+    OnlineTransducerNeMoParakeetUnifiedModel(Manager *mgr,
+                                             const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
-OnlineTransducerNeMoBufferedModel::~OnlineTransducerNeMoBufferedModel() =
-    default;
+OnlineTransducerNeMoParakeetUnifiedModel::
+    ~OnlineTransducerNeMoParakeetUnifiedModel() = default;
 
-std::vector<Ort::Value> OnlineTransducerNeMoBufferedModel::RunEncoder(
+std::vector<Ort::Value> OnlineTransducerNeMoParakeetUnifiedModel::RunEncoder(
     Ort::Value features, Ort::Value features_length) const {
   return impl_->RunEncoder(std::move(features), std::move(features_length));
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
-OnlineTransducerNeMoBufferedModel::RunDecoder(
+OnlineTransducerNeMoParakeetUnifiedModel::RunDecoder(
     Ort::Value targets, std::vector<Ort::Value> states) const {
   return impl_->RunDecoder(std::move(targets), std::move(states));
 }
 
 std::vector<Ort::Value>
-OnlineTransducerNeMoBufferedModel::GetDecoderInitStates() const {
+OnlineTransducerNeMoParakeetUnifiedModel::GetDecoderInitStates() const {
   return impl_->GetDecoderInitStates();
 }
 
-Ort::Value OnlineTransducerNeMoBufferedModel::RunJoiner(
+Ort::Value OnlineTransducerNeMoParakeetUnifiedModel::RunJoiner(
     Ort::Value encoder_out, Ort::Value decoder_out) const {
   return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::LeftFeatureFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::LeftFeatureFrames() const {
   return impl_->LeftFeatureFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::ChunkFeatureFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::ChunkFeatureFrames() const {
   return impl_->ChunkFeatureFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::RightFeatureFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::RightFeatureFrames() const {
   return impl_->RightFeatureFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::TotalFeatureFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::TotalFeatureFrames() const {
   return impl_->TotalFeatureFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::LeftEncoderFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::LeftEncoderFrames() const {
   return impl_->LeftEncoderFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::ChunkEncoderFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::ChunkEncoderFrames() const {
   return impl_->ChunkEncoderFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::RightEncoderFrames() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::RightEncoderFrames() const {
   return impl_->RightEncoderFrames();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::SubsamplingFactor() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::SubsamplingFactor() const {
   return impl_->SubsamplingFactor();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::VocabSize() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::VocabSize() const {
   return impl_->VocabSize();
 }
 
-int32_t OnlineTransducerNeMoBufferedModel::FeatureDim() const {
+int32_t OnlineTransducerNeMoParakeetUnifiedModel::FeatureDim() const {
   return impl_->FeatureDim();
 }
 
-OrtAllocator *OnlineTransducerNeMoBufferedModel::Allocator() const {
+OrtAllocator *OnlineTransducerNeMoParakeetUnifiedModel::Allocator() const {
   return impl_->Allocator();
 }
 
-std::string OnlineTransducerNeMoBufferedModel::FeatureNormalizationMethod()
-    const {
+std::string
+OnlineTransducerNeMoParakeetUnifiedModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
 
 #if __ANDROID_API__ >= 9
-template OnlineTransducerNeMoBufferedModel::
-    OnlineTransducerNeMoBufferedModel(AAssetManager *mgr,
-                                      const OnlineModelConfig &config);
+template OnlineTransducerNeMoParakeetUnifiedModel::
+    OnlineTransducerNeMoParakeetUnifiedModel(AAssetManager *mgr,
+                                             const OnlineModelConfig &config);
 #endif
 
 #if __OHOS__
-template OnlineTransducerNeMoBufferedModel::
-    OnlineTransducerNeMoBufferedModel(NativeResourceManager *mgr,
-                                      const OnlineModelConfig &config);
+template OnlineTransducerNeMoParakeetUnifiedModel::
+    OnlineTransducerNeMoParakeetUnifiedModel(NativeResourceManager *mgr,
+                                             const OnlineModelConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

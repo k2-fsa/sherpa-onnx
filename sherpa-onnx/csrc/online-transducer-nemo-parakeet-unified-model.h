@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/online-transducer-nemo-buffered-model.h
+// sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Milan Leonard
 
-#ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_BUFFERED_MODEL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_BUFFERED_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_PARAKEET_UNIFIED_MODEL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_PARAKEET_UNIFIED_MODEL_H_
 
 #include <memory>
 #include <string>
@@ -15,15 +15,16 @@
 
 namespace sherpa_onnx {
 
-class OnlineTransducerNeMoBufferedModel {
+class OnlineTransducerNeMoParakeetUnifiedModel {
  public:
-  explicit OnlineTransducerNeMoBufferedModel(const OnlineModelConfig &config);
+  explicit OnlineTransducerNeMoParakeetUnifiedModel(
+      const OnlineModelConfig &config);
 
   template <typename Manager>
-  OnlineTransducerNeMoBufferedModel(Manager *mgr,
-                                    const OnlineModelConfig &config);
+  OnlineTransducerNeMoParakeetUnifiedModel(Manager *mgr,
+                                           const OnlineModelConfig &config);
 
-  ~OnlineTransducerNeMoBufferedModel();
+  ~OnlineTransducerNeMoParakeetUnifiedModel();
 
   /** Run the encoder.
    *
@@ -67,4 +68,4 @@ class OnlineTransducerNeMoBufferedModel {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_BUFFERED_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_PARAKEET_UNIFIED_MODEL_H_

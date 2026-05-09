@@ -1,23 +1,24 @@
-// sherpa-onnx/csrc/online-recognizer-transducer-nemo-buffered-impl.h
+// sherpa-onnx/csrc/online-recognizer-transducer-nemo-parakeet-unified-impl.h
 //
-// Copyright (c)  2026  Xiaomi Corporation
+// Copyright (c)  2026  Milan Leonard
 
-#ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_BUFFERED_IMPL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_BUFFERED_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_PARAKEET_UNIFIED_IMPL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_PARAKEET_UNIFIED_IMPL_H_
 
 #include <algorithm>
-#include <cmath>
+#include <array>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
-#include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-buffered-decoder.h"
-#include "sherpa-onnx/csrc/online-transducer-nemo-buffered-model.h"
+#include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-parakeet-unified-decoder.h"
+#include "sherpa-onnx/csrc/online-transducer-nemo-parakeet-unified-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
 #include "sherpa-onnx/csrc/utils.h"
@@ -29,59 +30,41 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                float frame_shift_ms, int32_t subsampling_factor,
                                int32_t segment, int32_t frames_since_start);
 
-class OnlineRecognizerTransducerNeMoBufferedImpl
+class OnlineRecognizerTransducerNeMoParakeetUnifiedImpl
     : public OnlineRecognizerImpl {
  public:
-  explicit OnlineRecognizerTransducerNeMoBufferedImpl(
+  explicit OnlineRecognizerTransducerNeMoParakeetUnifiedImpl(
       const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(config),
         config_(config),
-        endpoint_(config_.endpoint_config),
-        model_(std::make_unique<OnlineTransducerNeMoBufferedModel>(
-            config.model_config)) {
+        model_(std::make_unique<OnlineTransducerNeMoParakeetUnifiedModel>(
+            config.model_config)),
+        endpoint_(config_.endpoint_config) {
     if (!config.model_config.tokens_buf.empty()) {
       symbol_table_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
       symbol_table_ = SymbolTable(config.model_config.tokens, true);
     }
 
-    if (config.decoding_method == "greedy_search") {
-      decoder_ =
-          std::make_unique<OnlineTransducerGreedySearchNeMoBufferedDecoder>(
-              model_.get(), config_.blank_penalty);
-    } else {
-      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                       config.decoding_method.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-
+    BuildDecoder();
     PostInit();
   }
 
   template <typename Manager>
-  explicit OnlineRecognizerTransducerNeMoBufferedImpl(
+  explicit OnlineRecognizerTransducerNeMoParakeetUnifiedImpl(
       Manager *mgr, const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
-        endpoint_(config_.endpoint_config),
-        model_(std::make_unique<OnlineTransducerNeMoBufferedModel>(
-            mgr, config.model_config)) {
+        model_(std::make_unique<OnlineTransducerNeMoParakeetUnifiedModel>(
+            mgr, config.model_config)),
+        endpoint_(config_.endpoint_config) {
     if (!config.model_config.tokens_buf.empty()) {
       symbol_table_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
       symbol_table_ = SymbolTable(mgr, config.model_config.tokens);
     }
 
-    if (config.decoding_method == "greedy_search") {
-      decoder_ =
-          std::make_unique<OnlineTransducerGreedySearchNeMoBufferedDecoder>(
-              model_.get(), config_.blank_penalty);
-    } else {
-      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                       config.decoding_method.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-
+    BuildDecoder();
     PostInit();
   }
 
@@ -95,8 +78,9 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
     int32_t processed = s->GetNumProcessedFrames();
     int32_t ready = s->NumFramesReady();
 
-    if (processed + model_->ChunkFeatureFrames() + model_->RightFeatureFrames()
-        <= ready) {
+    if (processed + model_->ChunkFeatureFrames() +
+            model_->RightFeatureFrames() <=
+        ready) {
       return true;
     }
 
@@ -154,6 +138,18 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
   }
 
  private:
+  void BuildDecoder() {
+    if (config_.decoding_method == "greedy_search") {
+      decoder_ = std::make_unique<
+          OnlineTransducerGreedySearchNeMoParakeetUnifiedDecoder>(
+          model_.get(), config_.blank_penalty);
+    } else {
+      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
+                       config_.decoding_method.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+  }
+
   void PostInit() {
     config_.feat_config.feature_dim = model_->FeatureDim();
     config_.feat_config.low_freq = 0;
@@ -183,39 +179,16 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
 
     if (model_->FeatureNormalizationMethod() != "per_feature" &&
         !model_->FeatureNormalizationMethod().empty()) {
-      SHERPA_ONNX_LOGE("Unsupported NeMo buffered normalization: %s",
+      SHERPA_ONNX_LOGE("Unsupported NeMo Parakeet Unified normalization: %s",
                        model_->FeatureNormalizationMethod().c_str());
       SHERPA_ONNX_EXIT(-1);
     }
   }
 
-  static void NormalizePerFeature(float *features, int32_t num_frames,
-                                  int32_t feature_dim) {
-    for (int32_t c = 0; c != feature_dim; ++c) {
-      float sum = 0;
-      for (int32_t r = 0; r != num_frames; ++r) {
-        sum += features[r * feature_dim + c];
-      }
-
-      float mean = sum / num_frames;
-      float var = 0;
-      for (int32_t r = 0; r != num_frames; ++r) {
-        float d = features[r * feature_dim + c] - mean;
-        var += d * d;
-      }
-
-      float inv_std = 1.0f / std::sqrt(var / num_frames + 1e-5f);
-      for (int32_t r = 0; r != num_frames; ++r) {
-        float &v = features[r * feature_dim + c];
-        v = (v - mean) * inv_std;
-      }
-    }
-  }
-
-  void CopyWindowWithPadding(OnlineStream *s, float *dst) const {
+  std::vector<float> CopyWindowWithPadding(OnlineStream *s) const {
     int32_t feature_dim = model_->FeatureDim();
     int32_t total = model_->TotalFeatureFrames();
-    std::fill(dst, dst + total * feature_dim, 0);
+    std::vector<float> features(total * feature_dim);
 
     int32_t processed = s->GetNumProcessedFrames();
     int32_t window_start = processed - model_->LeftFeatureFrames();
@@ -224,12 +197,14 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
     int32_t read_end = std::min(window_end, s->NumFramesReady());
 
     if (read_end <= read_start) {
-      return;
+      return features;
     }
 
     std::vector<float> frames = s->GetFrames(read_start, read_end - read_start);
-    float *copy_dst = dst + (read_start - window_start) * feature_dim;
+    float *copy_dst =
+        features.data() + (read_start - window_start) * feature_dim;
     std::copy(frames.begin(), frames.end(), copy_dst);
+    return features;
   }
 
   Ort::Value SliceCenterEncoderOut(Ort::Value *encoder_out,
@@ -241,23 +216,20 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
     int32_t end = std::min(start + center_frames, num_rows);
 
     if (start >= end) {
-      SHERPA_ONNX_LOGE("Invalid buffered encoder slice: start %d, end %d",
-                       start, end);
+      SHERPA_ONNX_LOGE(
+          "Invalid Parakeet Unified encoder slice: start %d, end %d", start,
+          end);
       SHERPA_ONNX_EXIT(-1);
     }
 
     const float *src = encoder_out->GetTensorData<float>();
-    std::vector<float> center((end - start) * num_cols);
-    std::copy(src + start * num_cols, src + end * num_cols, center.begin());
-
     std::array<int64_t, 3> center_shape{1, end - start, num_cols};
-    Ort::Value ans = Ort::Value::CreateTensor<float>(
-        model_->Allocator(), center_shape.data(), center_shape.size());
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    float *dst = ans.GetTensorMutableData<float>();
-    std::copy(center.begin(), center.end(), dst);
-
-    return ans;
+    return Ort::Value::CreateTensor(
+        memory_info, const_cast<float *>(src) + start * num_cols,
+        (end - start) * num_cols, center_shape.data(), center_shape.size());
   }
 
   void DecodeOneStream(OnlineStream *s) const {
@@ -272,11 +244,11 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
 
     int32_t feature_dim = model_->FeatureDim();
     int32_t total_feature_frames = model_->TotalFeatureFrames();
-    std::vector<float> features(total_feature_frames * feature_dim);
-    CopyWindowWithPadding(s, features.data());
+    std::vector<float> features = CopyWindowWithPadding(s);
 
     if (model_->FeatureNormalizationMethod() == "per_feature") {
-      NormalizePerFeature(features.data(), total_feature_frames, feature_dim);
+      NemoNormalizePerFeature(features.data(), total_feature_frames,
+                              feature_dim);
     }
 
     int32_t valid_center_encoder_frames =
@@ -289,9 +261,9 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
     std::array<int64_t, 3> x_shape{1, total_feature_frames, feature_dim};
-    Ort::Value x = Ort::Value::CreateTensor(
-        memory_info, features.data(), features.size(), x_shape.data(),
-        x_shape.size());
+    Ort::Value x =
+        Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
+                                 x_shape.data(), x_shape.size());
 
     std::array<int64_t, 1> length_shape{1};
     Ort::Value length = Ort::Value::CreateTensor<int64_t>(
@@ -312,11 +284,12 @@ class OnlineRecognizerTransducerNeMoBufferedImpl
  private:
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OnlineTransducerNeMoBufferedModel> model_;
-  std::unique_ptr<OnlineTransducerGreedySearchNeMoBufferedDecoder> decoder_;
+  std::unique_ptr<OnlineTransducerNeMoParakeetUnifiedModel> model_;
+  std::unique_ptr<OnlineTransducerGreedySearchNeMoParakeetUnifiedDecoder>
+      decoder_;
   Endpoint endpoint_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_BUFFERED_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_PARAKEET_UNIFIED_IMPL_H_

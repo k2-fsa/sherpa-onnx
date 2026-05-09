@@ -78,7 +78,7 @@ def main():
         "normalize_type": normalize_type,
         "pred_rnn_layers": asr_model.decoder.pred_rnn_layers,
         "pred_hidden": asr_model.decoder.pred_hidden,
-        "subsampling_factor": 8,
+        "subsampling_factor": asr_model.encoder.subsampling_factor,
         "model_type": "EncDecRNNTBPEModel",
         "version": "2",
         "model_author": "NeMo",
