@@ -32,18 +32,22 @@ case ${model_name} in
   *kitten-tts-mini-0.8*)
     onnx_name=kitten_tts_mini_v0_8.onnx
     output_name=model.onnx
+    package_dir=kitten-mini-en-v0_8
     ;;
   *kitten-tts-micro-0.8*)
     onnx_name=kitten_tts_micro_v0_8.onnx
     output_name=model.onnx
+    package_dir=kitten-micro-en-v0_8
     ;;
   *kitten-tts-nano-0.8-int8*)
     onnx_name=kitten_tts_nano_v0_8.onnx
     output_name=model.int8.onnx
+    package_dir=kitten-nano-en-v0_8-int8
     ;;
   *kitten-tts-nano-0.8*)
     onnx_name=kitten_tts_nano_v0_8.onnx
     output_name=model.fp32.onnx
+    package_dir=kitten-nano-en-v0_8-fp32
     ;;
   *)
     echo "Unsupported KittenTTS v0.8 model: ${model_name}"
@@ -66,4 +70,9 @@ cp "${onnx_name}" "${output_name}"
 ./generate_tokens.py
 ./add_meta_data.py --model "./${output_name}" --model-name "${model_name}"
 
+mkdir -p "${package_dir}"
+cp "${output_name}" "${package_dir}/"
+cp voices.bin tokens.txt "${package_dir}/"
+
 ls -lh
+ls -lh "${package_dir}"
