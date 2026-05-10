@@ -340,10 +340,11 @@ typedef struct SherpaOnnxOnlineRecognizerConfig {
   /** Streaming model configuration. */
   SherpaOnnxOnlineModelConfig model_config;
 
-  /** Decoding method, for example "greedy_search" or "modified_beam_search". */
+  /** Decoding method: "greedy_search", "modified_beam_search" (transducer),
+   *  or "prefix_beam_search" (CTC). */
   const char *decoding_method;
 
-  /** Number of active paths for modified beam search. */
+  /** Number of active paths for modified_beam_search / prefix_beam_search. */
   int32_t max_active_paths;
 
   /** Set to non-zero to enable endpoint detection. */
@@ -358,7 +359,8 @@ typedef struct SherpaOnnxOnlineRecognizerConfig {
   /** Endpoint rule 3 utterance-length threshold in seconds. */
   float rule3_min_utterance_length;
 
-  /** Path to a hotwords file. */
+  /** Path to a hotwords file. Used with modified_beam_search or
+   *  prefix_beam_search. */
   const char *hotwords_file;
 
   /** Bonus score added to each hotword token during decoding. */
@@ -1160,12 +1162,14 @@ typedef struct SherpaOnnxOfflineRecognizerConfig {
   /** Optional language model configuration. */
   SherpaOnnxOfflineLMConfig lm_config;
 
-  /** Decoding method, for example "greedy_search" or "modified_beam_search". */
+  /** Decoding method: "greedy_search", "modified_beam_search" (transducer),
+   *  or "prefix_beam_search" (CTC). */
   const char *decoding_method;
-  /** Number of active paths for modified beam search. */
+  /** Number of active paths for modified_beam_search / prefix_beam_search. */
   int32_t max_active_paths;
 
-  /** Path to a hotwords file. */
+  /** Path to a hotwords file. Used with modified_beam_search or
+   *  prefix_beam_search. */
   const char *hotwords_file;
 
   /** Bonus score added to each hotword token. */
