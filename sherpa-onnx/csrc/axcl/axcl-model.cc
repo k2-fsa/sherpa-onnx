@@ -429,6 +429,11 @@ bool AxclModel::SetInputTensorData(const std::string &name, const int32_t *p,
   return impl_->SetInputTensorData(name, p, n);
 }
 
+bool AxclModel::SetInputTensorData(const std::string &name, const uint8_t *p,
+                                   int32_t n) const {
+  return impl_->SetInputTensorData(name, p, n);
+}
+
 std::vector<float> AxclModel::GetOutputTensorData(
     const std::string &name) const {
   return impl_->GetOutputTensorData(name);
