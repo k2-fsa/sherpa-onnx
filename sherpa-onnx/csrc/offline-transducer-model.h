@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TRANSDUCER_MODEL_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -93,6 +94,19 @@ class OfflineTransducerModel {
 
   Ort::Value BuildDecoderInput(const std::vector<Hypothesis> &results,
                                int32_t end_index) const;
+
+  /** Inject an Ort::RunOptions config entry to be applied to every
+   *  subsequent Session::Run call of encoder/decoder/joiner.
+   *
+   *  Example:
+   *    model.SetRunOptionsConfigEntry(
+   *        "memory.enable_memory_arena_shrinkage", "cpu:0");
+   *
+   *  Not thread-safe with respect to concurrent Run* calls. Intended to
+   *  be called once after construction.
+   */
+  void SetRunOptionsConfigEntry(const std::string &key,
+                                const std::string &value);
 
  private:
   class Impl;

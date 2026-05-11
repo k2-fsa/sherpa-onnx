@@ -79,7 +79,7 @@ class OfflineTransducerModel::Impl {
                                                 std::move(features_length)};
 
     auto encoder_out = encoder_sess_->Run(
-        {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
+        run_options_, encoder_input_names_ptr_.data(), encoder_inputs.data(),
         encoder_inputs.size(), encoder_output_names_ptr_.data(),
         encoder_output_names_ptr_.size());
 
@@ -88,7 +88,7 @@ class OfflineTransducerModel::Impl {
 
   Ort::Value RunDecoder(Ort::Value decoder_input) {
     auto decoder_out = decoder_sess_->Run(
-        {}, decoder_input_names_ptr_.data(), &decoder_input, 1,
+        run_options_, decoder_input_names_ptr_.data(), &decoder_input, 1,
         decoder_output_names_ptr_.data(), decoder_output_names_ptr_.size());
     return std::move(decoder_out[0]);
   }
@@ -96,12 +96,17 @@ class OfflineTransducerModel::Impl {
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) {
     std::array<Ort::Value, 2> joiner_input = {std::move(encoder_out),
                                               std::move(decoder_out)};
-    auto logit = joiner_sess_->Run({}, joiner_input_names_ptr_.data(),
+    auto logit = joiner_sess_->Run(run_options_, joiner_input_names_ptr_.data(),
                                    joiner_input.data(), joiner_input.size(),
                                    joiner_output_names_ptr_.data(),
                                    joiner_output_names_ptr_.size());
 
     return std::move(logit[0]);
+  }
+
+  void SetRunOptionsConfigEntry(const std::string &key,
+                                const std::string &value) {
+    run_options_.AddConfigEntry(key.c_str(), value.c_str());
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -256,6 +261,11 @@ class OfflineTransducerModel::Impl {
   std::unique_ptr<Ort::Session> decoder_sess_;
   std::unique_ptr<Ort::Session> joiner_sess_;
 
+  // Optional Ort::RunOptions config entries injected via
+  // SetRunOptionsConfigEntry. Default-constructed = empty (no entries),
+  // behaves identically to passing {} to Session::Run.
+  Ort::RunOptions run_options_;
+
   std::vector<std::string> encoder_input_names_;
   std::vector<const char *> encoder_input_names_ptr_;
 
@@ -325,6 +335,11 @@ Ort::Value OfflineTransducerModel::BuildDecoderInput(
 Ort::Value OfflineTransducerModel::BuildDecoderInput(
     const std::vector<Hypothesis> &results, int32_t end_index) const {
   return impl_->BuildDecoderInput(results, end_index);
+}
+
+void OfflineTransducerModel::SetRunOptionsConfigEntry(
+    const std::string &key, const std::string &value) {
+  impl_->SetRunOptionsConfigEntry(key, value);
 }
 
 #if __ANDROID_API__ >= 9

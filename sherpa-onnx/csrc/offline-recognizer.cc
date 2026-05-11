@@ -182,6 +182,11 @@ OfflineRecognizerConfig OfflineRecognizer::GetConfig() const {
   return impl_->GetConfig();
 }
 
+void OfflineRecognizer::SetRunOptionsConfigEntry(const std::string &key,
+                                                 const std::string &value) {
+  impl_->SetRunOptionsConfigEntry(key, value);
+}
+
 #if __ANDROID_API__ >= 9
 template OfflineRecognizer::OfflineRecognizer(
     AAssetManager *mgr, const OfflineRecognizerConfig &config);
