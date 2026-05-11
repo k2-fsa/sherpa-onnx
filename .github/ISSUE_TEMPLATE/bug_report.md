@@ -15,7 +15,7 @@ Before submitting this issue, please **read carefully** and confirm the followin
 - [ ] I have verified that the error is reproducible using **only `sherpa-onnx`**, not code from my own project.
 - [ ] I will provide **detailed steps** to reproduce the issue.
 - [ ] I will provide **complete logs** and error messages.
-- [ ] I understand that **issues not following these instructions** may be closed or receive no response.
+- [ ] I understand that **issues not following these instructions** may be closed or receive no response (如果直接删掉这个issue template 里的步骤，我们很有可能**不会回复**您的issue).
 
 ---
 
