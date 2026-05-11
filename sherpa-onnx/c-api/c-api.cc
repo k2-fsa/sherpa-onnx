@@ -1606,17 +1606,11 @@ const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
     return nullptr;
   }
 
-  try {
-    SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
-    tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(tts_config);
-    return tts;
-  } catch (const std::exception &e) {
-    SHERPA_ONNX_LOGE("Exception: %s", e.what());
-    return nullptr;
-  } catch (...) {
-    SHERPA_ONNX_LOGE("Unknown exception");
-    return nullptr;
-  }
+  SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
+
+  tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(tts_config);
+
+  return tts;
 }
 
 void SherpaOnnxDestroyOfflineTts(const SherpaOnnxOfflineTts *tts) {

@@ -16,15 +16,13 @@ namespace sherpa_onnx {
 // configured separately via session.cc SetIntraOpNumThreads.
 inline Ort::Env CreateOrtEnv() {
 #if SHERPA_ONNX_ENABLE_WASM
-  const OrtApi *api = OrtGetApiBase()->GetApi(ORT_API_VERSION);
-  OrtThreadingOptions *tp = nullptr;
-  (void)api->CreateThreadingOptions(&tp);
-  (void)api->SetGlobalIntraOpNumThreads(tp, 1);
-  (void)api->SetGlobalInterOpNumThreads(tp, 1);
+  Ort::ThreadingOptions tp;
+  auto &api = Ort::GetApi();
+  Ort::ThrowOnError(api.SetGlobalIntraOpNumThreads(tp, 1));
+  Ort::ThrowOnError(api.SetGlobalInterOpNumThreads(tp, 1));
   OrtEnv *env = nullptr;
-  (void)api->CreateEnvWithGlobalThreadPools(ORT_LOGGING_LEVEL_ERROR,
-                                            "sherpa-onnx", tp, &env);
-  (void)api->ReleaseThreadingOptions(tp);
+  Ort::ThrowOnError(api.CreateEnvWithGlobalThreadPools(
+      ORT_LOGGING_LEVEL_ERROR, "sherpa-onnx", tp, &env));
   return Ort::Env(env);
 #else
   return Ort::Env(ORT_LOGGING_LEVEL_ERROR);

@@ -41,7 +41,8 @@
   do {                                                                 \
     char _buf[4096];                                                   \
     snprintf(_buf, sizeof(_buf), ##__VA_ARGS__);                       \
-    emscripten_log(EM_LOG_NO_PATHS | EM_LOG_ERROR, "%s:%s:%d %s",     \
+    emscripten_log(EM_LOG_CONSOLE | EM_LOG_NO_PATHS | EM_LOG_ERROR,   \
+                   "%s:%s:%d %s",                                      \
                    __FILE__, __func__, static_cast<int>(__LINE__),     \
                    _buf);                                              \
   } while (0)
