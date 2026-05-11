@@ -8,6 +8,9 @@
 #include <stdlib.h>
 
 #include <utility>
+#if SHERPA_ONNX_ENABLE_WASM
+#include <emscripten.h>
+#endif
 #if __OHOS__
 #include "hilog/log.h"
 
@@ -34,7 +37,6 @@
 #elif defined(__OHOS__)
 #define SHERPA_ONNX_LOGE(...) OH_LOG_INFO(LOG_APP, ##__VA_ARGS__)
 #elif SHERPA_ONNX_ENABLE_WASM
-#include <emscripten.h>
 #define SHERPA_ONNX_LOGE(...)                                          \
   do {                                                                 \
     char _buf[4096];                                                   \
