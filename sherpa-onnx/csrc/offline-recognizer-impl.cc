@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <sstream>
@@ -293,7 +294,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
@@ -642,7 +643,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     }
   }
 
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);

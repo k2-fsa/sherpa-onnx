@@ -3,6 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-ced-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 #include <memory>
@@ -22,7 +23,7 @@ class OfflineCEDModel::Impl {
  public:
   explicit Impl(const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     sess_ = std::make_unique<Ort::Session>(
@@ -33,7 +34,7 @@ class OfflineCEDModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config_.ced);

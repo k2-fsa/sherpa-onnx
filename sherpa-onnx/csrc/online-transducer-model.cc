@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 // Copyright (c)  2023  Pingfeng Luo
 #include "sherpa-onnx/csrc/online-transducer-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -46,7 +47,7 @@ enum class ModelType : std::uint8_t {
 namespace sherpa_onnx {
 
 static ModelType GetModelType(const std::string &model_path, bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);
@@ -95,7 +96,7 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);

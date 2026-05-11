@@ -4,6 +4,7 @@
 //                2025  Brno University of Technology (author: Karel Vesely)
 
 #include "sherpa-onnx/csrc/online-ebranchformer-transducer-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cassert>
@@ -38,7 +39,7 @@ namespace sherpa_onnx {
 
 OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(CreateOrtEnv()),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),
       joiner_sess_opts_(GetSessionOptions(config, "joiner")),
@@ -60,7 +61,7 @@ OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
 template <typename Manager>
 OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(CreateOrtEnv()),
       config_(config),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),

@@ -3,6 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/ten-vad-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -37,7 +38,7 @@ class TenVadModel::Impl {
   explicit Impl(const VadModelConfig &config)
       : config_(config),
         rfft_(1024),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
@@ -50,7 +51,7 @@ class TenVadModel::Impl {
   Impl(Manager *mgr, const VadModelConfig &config)
       : config_(config),
         rfft_(1024),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {

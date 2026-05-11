@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/silero-vad-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <memory>
@@ -31,7 +32,7 @@ class SileroVadModel::Impl {
  public:
   explicit Impl(const VadModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {
@@ -54,7 +55,7 @@ class SileroVadModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const VadModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         sample_rate_(config.sample_rate) {

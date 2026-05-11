@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 
@@ -29,7 +30,7 @@ enum class ModelType : std::uint8_t {
 }
 
 static ModelType GetModelType(const std::string &model_path, bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
   Ort::SessionOptions sess_opts;
 
   auto sess = std::make_unique<Ort::Session>(
@@ -67,7 +68,7 @@ static ModelType GetModelType(const std::string &model_path, bool debug) {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
   Ort::SessionOptions sess_opts;
 
   auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,
