@@ -3,7 +3,7 @@ name: export-kitten-to-onnx
 on:
   push:
     branches:
-      - kitten-0.2
+      - update-kitten
 
   workflow_dispatch:
 
@@ -174,7 +174,7 @@ jobs:
               echo "$d exists"
               rm -rf huggingface
 
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
               cd huggingface
               rm -rf ./*
 
@@ -194,5 +194,5 @@ jobs:
               git status
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main || true
             done
