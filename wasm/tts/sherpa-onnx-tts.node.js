@@ -1060,6 +1060,13 @@ function createOfflineTts(Module, myConfig) {
       offlineTtsPocketModelConfig.vocabJson = './vocab.json';
       offlineTtsPocketModelConfig.tokenScoresJson = './token_scores.json';
       break;
+    case 6:
+      // KittenTTS
+      offlineTtsKittenModelConfig.model = './model.onnx';
+      offlineTtsKittenModelConfig.voices = './voices.bin';
+      offlineTtsKittenModelConfig.tokens = './tokens.txt';
+      offlineTtsKittenModelConfig.dataDir = './espeak-ng-data';
+      break;
   }
 
   const offlineTtsModelConfig = {
