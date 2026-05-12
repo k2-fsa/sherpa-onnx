@@ -11,7 +11,7 @@ public class SupertonicTts {
     // please visit
     // https://k2-fsa.github.io/sherpa/onnx/tts/supertonic.html
     // to download model files
-    String modelDir = "./sherpa-onnx-supertonic-tts-int8-2026-03-06";
+    String modelDir = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11";
     String durationPredictor = modelDir + "/duration_predictor.int8.onnx";
     String textEncoder = modelDir + "/text_encoder.int8.onnx";
     String vectorEstimator = modelDir + "/vector_estimator.int8.onnx";
@@ -49,7 +49,7 @@ public class SupertonicTts {
     GenerationConfig genConfig = new GenerationConfig();
     genConfig.setSid(6);
     genConfig.setSpeed(1.25f);
-    genConfig.setNumSteps(5);
+    genConfig.setNumSteps(8);
 
     Map<String, String> extra = new HashMap<>();
     extra.put("lang", "en");

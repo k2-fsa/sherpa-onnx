@@ -696,9 +696,9 @@ node ./test_tts_non_streaming_kitten_en.js
 ### Text-to-speech with Supertonic TTS models (English TTS, sync API)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 node ./test_tts_non_streaming_supertonic_en.js
 ```
@@ -706,9 +706,9 @@ node ./test_tts_non_streaming_supertonic_en.js
 ### Text-to-speech with Supertonic TTS models (English TTS, async API)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 node ./test_tts_non_streaming_supertonic_en_async.js
 ```
@@ -716,9 +716,9 @@ node ./test_tts_non_streaming_supertonic_en_async.js
 ### Text-to-speech with Supertonic TTS models (English TTS, async API + playback)
 
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 npm install speaker
 

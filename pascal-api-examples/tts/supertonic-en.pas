@@ -21,13 +21,13 @@ function GetOfflineTts: TSherpaOnnxOfflineTts;
 var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
-  Config.Model.Supertonic.DurationPredictor := './sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx';
-  Config.Model.Supertonic.TextEncoder := './sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx';
-  Config.Model.Supertonic.VectorEstimator := './sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx';
-  Config.Model.Supertonic.Vocoder := './sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx';
-  Config.Model.Supertonic.TtsJson := './sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json';
-  Config.Model.Supertonic.UnicodeIndexer := './sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin';
-  Config.Model.Supertonic.VoiceStyle := './sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin';
+  Config.Model.Supertonic.DurationPredictor := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx';
+  Config.Model.Supertonic.TextEncoder := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx';
+  Config.Model.Supertonic.VectorEstimator := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx';
+  Config.Model.Supertonic.Vocoder := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx';
+  Config.Model.Supertonic.TtsJson := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json';
+  Config.Model.Supertonic.UnicodeIndexer := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin';
+  Config.Model.Supertonic.VoiceStyle := './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin';
   Config.Model.NumThreads := 2;
   Config.Model.Debug := True;
   Config.MaxNumSentences := 1;
@@ -51,7 +51,7 @@ begin
     'he may be: a statesman, a businessman, an official, or a scholar.';
 
   GenerationConfig.Sid := 6;
-  GenerationConfig.NumSteps := 5;
+  GenerationConfig.NumSteps := 8;
   GenerationConfig.Speed := 1.25;
   GenerationConfig.Extra := '{"lang": "en"}';
 

@@ -8,13 +8,13 @@ class SupertonicTtsProgressHandler {
 
 func runSupertonicTtsDemo() {
   let supertonic = sherpaOnnxOfflineTtsSupertonicModelConfig(
-    durationPredictor: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx",
-    textEncoder: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx",
-    vectorEstimator: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx",
-    vocoder: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx",
-    ttsJson: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json",
-    unicodeIndexer: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin",
-    voiceStyle: "./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin"
+    durationPredictor: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx",
+    textEncoder: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx",
+    vectorEstimator: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx",
+    vocoder: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx",
+    ttsJson: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json",
+    unicodeIndexer: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin",
+    voiceStyle: "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin"
   )
 
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(numThreads: 2, supertonic: supertonic)
@@ -25,7 +25,7 @@ func runSupertonicTtsDemo() {
 
   var genConfig = SherpaOnnxGenerationConfigSwift()
   genConfig.sid = 6
-  genConfig.numSteps = 5
+  genConfig.numSteps = 8
   genConfig.speed = 1.25
   genConfig.extra = ["lang": "en"]
 

@@ -47,8 +47,10 @@ constexpr float kMinDuration = 0.1f;
 // Maximum latent length to prevent excessive memory allocation and OOM.
 constexpr int32_t kMaxLatentLen = 10000;
 
-constexpr std::array<std::string_view, 5> kSupertonicAvailableLangs = {
-    "en", "ko", "es", "pt", "fr",
+constexpr std::array<std::string_view, 31> kSupertonicAvailableLangs = {
+    "en", "ko", "ja", "ar", "bg", "cs", "da", "de", "el", "es", "et",
+    "fi", "fr", "hi", "hr", "hu", "id", "it", "lt", "lv", "nl", "pl",
+    "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi",
 };
 
 void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
@@ -63,6 +65,16 @@ void GetLatentMaskFlat(const std::vector<int64_t> &wav_lengths,
     latent_lengths.push_back((len + wav_chunk_size - 1) / wav_chunk_size);
   }
   LengthsToMask(latent_lengths, mask_flat, mask_shape);
+}
+
+std::string GetSupertonicAvailableLangsString() {
+  std::ostringstream os;
+  const char *sep = "";
+  for (auto lang : kSupertonicAvailableLangs) {
+    os << sep << lang;
+    sep = ", ";
+  }
+  return os.str();
 }
 
 SupertonicStyle ParseVoiceStyleFromBinary(const std::vector<char> &buf) {
@@ -202,10 +214,11 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
     GeneratedAudioCallback callback) const {
   // Supported extra options in config.extra:
   //   - "speed" (float): Speech speed factor (default: 1.05)
-  //   - "num_steps" (int): Number of denoising steps (default: 5)
-  //   - "lang" (string): Language code, e.g. "en", "ko" (default: "en")
+  //   - "num_steps" (int): Number of denoising steps.
+  //   - "lang" (string): Language code (default: "en"), e.g. "en", "ko",
+  //     "ja".
   //   - sid selects speaker from voice.bin (0 .. NumSpeakers()-1).
-  //   - "max_len" (int): Max chunk length. Default: 300 (non-Korean), 120 (ko).
+  //   - "max_len" (int): Max chunk length. Default: 300, or 120 for ko/ja.
   //   - "silence_duration" (float): Silence in seconds between chunks (default:
   //   0.3)
   //   - "seed" (int): RNG seed for reproducibility. -1 = random (default).
@@ -245,15 +258,17 @@ GeneratedAudio OfflineTtsSupertonicImpl::Generate(
                              kSupertonicAvailableLangs.end(),
                              [&](std::string_view s) { return s == lang; });
   if (!lang_ok) {
-    SHERPA_ONNX_LOGE("Invalid language: %s. Available: en, ko, es, pt, fr",
-                     lang.c_str());
+    auto available_langs = GetSupertonicAvailableLangsString();
+    SHERPA_ONNX_LOGE("Invalid language: %s. Available: %s", lang.c_str(),
+                     available_langs.c_str());
     return {};
   }
 
   float silence_duration = config.GetExtraFloat("silence_duration", 0.3f);
   size_t max_len =
-      (lang == "ko") ? static_cast<size_t>(config.GetExtraInt("max_len", 120))
-                     : static_cast<size_t>(config.GetExtraInt("max_len", 300));
+      (lang == "ko" || lang == "ja")
+          ? static_cast<size_t>(config.GetExtraInt("max_len", 120))
+          : static_cast<size_t>(config.GetExtraInt("max_len", 300));
   if (max_len == 0) {
     SHERPA_ONNX_LOGE("Max length must be > 0. Given: %zu", max_len);
     return {};

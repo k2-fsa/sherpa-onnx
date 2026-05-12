@@ -135,18 +135,19 @@ tar xf sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
 
 Supertonic TTS:
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 ./bin/sherpa-onnx-offline-tts-play-alsa \
- --supertonic-duration-predictor=./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx \
- --supertonic-text-encoder=./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx \
- --supertonic-vector-estimator=./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx \
- --supertonic-vocoder=./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx \
- --supertonic-tts-json=./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json \
- --supertonic-unicode-indexer=./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin \
- --supertonic-voice-style=./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin \
+ --supertonic-duration-predictor=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx \
+ --supertonic-text-encoder=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx \
+ --supertonic-vector-estimator=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx \
+ --supertonic-vocoder=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx \
+ --supertonic-tts-json=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json \
+ --supertonic-unicode-indexer=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin \
+ --supertonic-voice-style=./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin \
  --lang=en \
+ --num-steps=8 \
  "Hello from Supertonic TTS"
 
 ZipVoice TTS:
@@ -198,17 +199,18 @@ or details.
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
 
-  po.Register(
-      "num-steps", &gen_config.num_steps,
-      "Used by some models, e.g., Pocket TTS and ZipVoice. Number of flow "
-      "matching steps.");
+  po.Register("num-steps", &gen_config.num_steps,
+              "Used by some models, e.g., Supertonic, Pocket TTS and ZipVoice. "
+              "Number of flow matching steps.");
 
   po.Register("device-name", &device_name,
               "Name of the device to play the generated audio");
 
-  po.Register("lang", &lang,
-              "Language for text: en, ko, es, pt, fr. Used only by "
-              "Supertonic TTS.");
+  po.Register(
+      "lang", &lang,
+      "Language code for Supertonic TTS. Supported values: en, ko, ja, ar, "
+      "bg, cs, da, de, el, es, et, fi, fr, hi, hr, hu, id, it, lt, lv, nl, "
+      "pl, pt, ro, ru, sk, sl, sv, tr, uk, vi.");
 
   po.Register("sid", &sid,
               "Speaker ID. Used only for multi-speaker models, e.g., models "

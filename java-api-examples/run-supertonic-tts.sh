@@ -29,10 +29,10 @@ fi
 # https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 # to download more models
 
-if [ ! -f ./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-  tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-  rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+if [ ! -f ./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+  tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+  rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 fi
 
 java \

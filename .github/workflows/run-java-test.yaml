@@ -370,7 +370,7 @@ jobs:
 
            rm -rf sherpa-onnx-pocket-tts-*
            rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
-           rm -rf sherpa-onnx-supertonic-tts-*
+           rm -rf sherpa-onnx-supertonic-*
            rm -rf kitten-nano-en-*
            rm -rf kokoro-multi-*
            rm -rf kokoro-en-*

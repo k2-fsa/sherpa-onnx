@@ -10,17 +10,17 @@ async function createOfflineTts() {
     model: {
       supertonic: {
         durationPredictor:
-            './sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx',
+            './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx',
         textEncoder:
-            './sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx',
+            './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx',
         vectorEstimator:
-            './sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx',
+            './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx',
         vocoder:
-            './sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx',
-        ttsJson: './sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json',
+            './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx',
+        ttsJson: './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json',
         unicodeIndexer:
-            './sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin',
-        voiceStyle: './sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin',
+            './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin',
+        voiceStyle: './sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin',
       },
       debug: false,  // set to true to see verbose logs
       numThreads: 2,
@@ -68,7 +68,7 @@ async function generateAudioAsync(tts, text) {
   const generationConfig = new sherpa_onnx.GenerationConfig({
     sid: 6,
     speed: 1.25,
-    numSteps: 5,
+    numSteps: 8,
     extra: {lang: 'en'},
   });
 

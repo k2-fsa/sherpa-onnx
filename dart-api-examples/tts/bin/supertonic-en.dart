@@ -22,7 +22,7 @@ void main(List<String> arguments) async {
     ..addOption('sid', help: 'Speaker ID (default: 6)', defaultsTo: '6')
     ..addOption('speed', help: 'Speed (default: 1.25)', defaultsTo: '1.25')
     ..addOption('num-steps',
-        help: 'Number of steps (default: 5)', defaultsTo: '5')
+        help: 'Number of steps (default: 8)', defaultsTo: '8')
     ..addOption('text', help: 'Text to generate TTS for')
     ..addOption('output-wav', help: 'Filename to save the generated audio');
 

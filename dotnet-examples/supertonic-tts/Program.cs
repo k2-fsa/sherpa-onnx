@@ -20,13 +20,13 @@ class SupertonicTtsDemo
   static void TestEn()
   {
     var config = new OfflineTtsConfig();
-    config.Model.Supertonic.DurationPredictor = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx";
-    config.Model.Supertonic.TextEncoder = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx";
-    config.Model.Supertonic.VectorEstimator = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx";
-    config.Model.Supertonic.Vocoder = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx";
-    config.Model.Supertonic.TtsJson = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json";
-    config.Model.Supertonic.UnicodeIndexer = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin";
-    config.Model.Supertonic.VoiceStyle = "./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin";
+    config.Model.Supertonic.DurationPredictor = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx";
+    config.Model.Supertonic.TextEncoder = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx";
+    config.Model.Supertonic.VectorEstimator = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx";
+    config.Model.Supertonic.Vocoder = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx";
+    config.Model.Supertonic.TtsJson = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json";
+    config.Model.Supertonic.UnicodeIndexer = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin";
+    config.Model.Supertonic.VoiceStyle = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin";
 
     config.Model.NumThreads = 2;
     config.Model.Debug = 1;
@@ -34,7 +34,7 @@ class SupertonicTtsDemo
 
     OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
     genConfig.Sid = 6;
-    genConfig.NumSteps = 5;
+    genConfig.NumSteps = 8;
     genConfig.Speed = 1.25f;  // larger -> faster
     genConfig.Extra["lang"] = "en";
 

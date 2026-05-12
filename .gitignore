@@ -177,6 +177,10 @@ sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 non-streaming-fire-red-asr-ctc-decode-files
 sherpa-onnx-moonshine-*-quantized-2026-02-27
 sherpa-onnx-supertonic-tts-int8-2026-03-06
+sherpa-onnx-supertonic-3-tts-int8-2026-05-11
+scripts/supertonic/assets/
+scripts/supertonic/calib_configs.json
+scripts/supertonic/helper.py
 token_scores.json
 sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
 sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile

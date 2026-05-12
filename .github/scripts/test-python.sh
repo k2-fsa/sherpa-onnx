@@ -35,13 +35,13 @@ rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
 
 log "test Supertonic TTS"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 python3 python-api-examples/supertonic-tts.py
 
-rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+rm -rf sherpa-onnx-supertonic-3-tts-int8-2026-05-11
 
 mkdir -p tts
 cp supertonic-en.wav tts/

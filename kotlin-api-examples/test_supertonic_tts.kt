@@ -6,7 +6,7 @@ fun main() {
 
 fun testSupertonicTts() {
   // see https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
-  val modelDir = "./sherpa-onnx-supertonic-tts-int8-2026-03-06"
+  val modelDir = "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11"
   val config = OfflineTtsConfig(
     model=OfflineTtsModelConfig(
       supertonic=OfflineTtsSupertonicModelConfig(
@@ -27,7 +27,7 @@ fun testSupertonicTts() {
   val genConfig = GenerationConfig(
     sid = 6,
     speed = 1.25f,
-    numSteps = 5,
+    numSteps = 8,
     extra = mapOf(
         "lang" to "en",
     )

@@ -51,7 +51,7 @@ STAGE=${1:-0}
 STOP_STAGE=${2:-4}
 
 echo "========================================"
-echo "  SuperTonic INT8 Quantization Pipeline"
+echo "  Supertonic 3 INT8 Quantization Pipeline"
 echo "========================================"
 echo "Stage: $STAGE -> $STOP_STAGE"
 echo ""
@@ -61,9 +61,12 @@ if [ ${STAGE} -le 0 ] && [ ${STOP_STAGE} -ge 0 ]; then
     echo ""
     echo "Stage 0: Check/Download ONNX Models"
 
+    MODEL_REPO="https://huggingface.co/Supertone/supertonic-3"
+    MODEL_DIR="supertonic-3"
+
     if [ ! -d assets/onnx/ ]; then
-        git clone https://huggingface.co/Supertone/supertonic-2
-        mv supertonic-2 assets
+        git clone "$MODEL_REPO" "$MODEL_DIR"
+        mv "$MODEL_DIR" assets
 
         ls -lh assets/onnx/
 

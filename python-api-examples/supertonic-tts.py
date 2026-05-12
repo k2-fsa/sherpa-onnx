@@ -9,9 +9,9 @@ for SupertonicTTS.
 
 Usage:
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xvf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 python3 ./supertonic-tts.py
 
@@ -34,13 +34,13 @@ def create_tts():
     tts_config = sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
             supertonic=sherpa_onnx.OfflineTtsSupertonicModelConfig(
-                duration_predictor="./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx",
-                text_encoder="./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx",
-                vector_estimator="./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx",
-                vocoder="./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx",
-                tts_json="./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json",
-                unicode_indexer="./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin",
-                voice_style="./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin",
+                duration_predictor="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx",
+                text_encoder="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx",
+                vector_estimator="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx",
+                vocoder="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx",
+                tts_json="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json",
+                unicode_indexer="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin",
+                voice_style="./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin",
             ),
             debug=False,
             num_threads=2,
@@ -64,12 +64,11 @@ def main():
 
     # This model has 10 speakers. Valid sid: 0-9
     gen_config.sid = 6
-    gen_config.num_steps = 5
+    gen_config.num_steps = 8
     gen_config.speed = 1.25  # larger -> faster
 
     # We use en for English.
-    # You can also use es, pt, fr, ko.
-    # This single model supports 5 languages.
+    # This single model supports 31 languages, e.g., en, ko, ja, es, fr, de.
     gen_config.extra["lang"] = "en"
 
     start = time.time()

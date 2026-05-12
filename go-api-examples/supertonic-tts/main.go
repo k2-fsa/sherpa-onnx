@@ -14,19 +14,19 @@ func main() {
 	var config sherpa.OfflineTtsConfig
 
 	config.Model.Supertonic.DurationPredictor =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/duration_predictor.int8.onnx"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx"
 	config.Model.Supertonic.TextEncoder =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx"
 	config.Model.Supertonic.VectorEstimator =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx"
 	config.Model.Supertonic.Vocoder =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx"
 	config.Model.Supertonic.TtsJson =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json"
 	config.Model.Supertonic.UnicodeIndexer =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin"
 	config.Model.Supertonic.VoiceStyle =
-		"./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin"
+		"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin"
 
 	config.Model.NumThreads = 2
 	config.Model.Debug = 1
@@ -44,7 +44,7 @@ func main() {
 
 	var cfg sherpa.GenerationConfig
 	cfg.Sid = 6
-	cfg.NumSteps = 5
+	cfg.NumSteps = 8
 	cfg.Speed = 1.25 // larger -> faster
 
 	extraMap := map[string]interface{}{

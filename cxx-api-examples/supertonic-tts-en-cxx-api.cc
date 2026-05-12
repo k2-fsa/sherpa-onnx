@@ -9,9 +9,9 @@
 /*
 Usage
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
 ./supertonic-tts-en-cxx-api
 
@@ -37,20 +37,21 @@ int32_t main(int32_t argc, char *argv[]) {
   OfflineTtsConfig config;
 
   config.model.supertonic.duration_predictor =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/"
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/"
       "duration_predictor.int8.onnx";
   config.model.supertonic.text_encoder =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/text_encoder.int8.onnx";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx";
   config.model.supertonic.vector_estimator =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vector_estimator.int8.onnx";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/"
+      "vector_estimator.int8.onnx";
   config.model.supertonic.vocoder =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/vocoder.int8.onnx";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx";
   config.model.supertonic.tts_json =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/tts.json";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json";
   config.model.supertonic.unicode_indexer =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/unicode_indexer.bin";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin";
   config.model.supertonic.voice_style =
-      "./sherpa-onnx-supertonic-tts-int8-2026-03-06/voice.bin";
+      "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin";
 
   config.model.num_threads = 2;
 
@@ -67,7 +68,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   GenerationConfig gen_config;
   gen_config.sid = 6;
-  gen_config.num_steps = 5;
+  gen_config.num_steps = 8;
   gen_config.speed = 1.25;  // larger -> faster
   gen_config.extra["lang"] = "en";
 

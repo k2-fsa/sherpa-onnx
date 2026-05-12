@@ -351,9 +351,9 @@ jobs:
             readelf -d ./$name
           fi
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-          tar xf sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
-          rm sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+          tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+          rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 
           echo "---"
 
@@ -362,7 +362,7 @@ jobs:
 
           ./$name
 
-          rm -rf sherpa-onnx-supertonic-tts-int8-2026-03-06
+          rm -rf sherpa-onnx-supertonic-3-tts-int8-2026-05-11
           rm -v ./$name
 
           ls -lh ./generated-supertonic-en-cxx.wav

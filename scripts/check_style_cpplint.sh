@@ -53,7 +53,8 @@ if [ ! -d "$build_dir/cpplint-${cpplint_version}" ]; then
   #     Extra space before ( in function call  [whitespace/parens] [4]
   #
   # the following patch disables the above error
-  sed -i "3490i\        not Search(r'__host__ __device__\\\s+\\\(', fncall) and" $cpplint_src
+  sed -i '/and not re.search(r"\\bcase\\s+\\(", fncall)/a\
+            and not re.search(r"__host__ __device__\\s+\\(", fncall)' $cpplint_src
   popd
 fi
 

@@ -1,4 +1,4 @@
-name: export-supertonic-to-int8-onnx
+name: export-supertonic-3-to-int8-onnx
 
 on:
   push:
@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: export-supertonic-to-int8-onnx-${{ github.ref }}
+  group: export-supertonic-3-to-int8-onnx-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   export-supertonic-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export supertonic int8
+    name: export supertonic 3 int8
     runs-on: macos-latest
 
     steps:
@@ -47,7 +47,7 @@ jobs:
         shell: bash
         run: |
           src=scripts/supertonic
-          d=sherpa-onnx-supertonic-tts-int8-2026-03-06
+          d=sherpa-onnx-supertonic-3-tts-int8-2026-05-11
 
           mkdir $d
           cp -a $src/LICENSE $d/
@@ -94,7 +94,7 @@ jobs:
             git config --global user.name "Fangjun Kuang"
 
             dirs=(
-              sherpa-onnx-supertonic-tts-int8-2026-03-06
+              sherpa-onnx-supertonic-3-tts-int8-2026-05-11
             )
 
             export GIT_LFS_SKIP_SMUDGE=1

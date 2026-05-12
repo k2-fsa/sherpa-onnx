@@ -1375,8 +1375,13 @@ std::vector<std::string> ChunkText(const std::string &text, size_t max_len) {
           continue;
         }
 
-        if (cur.size() + 1 + p.size() <= max_len) {
-          cur.push_back(' ');
+        bool need_space = NeedSpaceBetween(cur, p);
+        size_t projected_len =
+            CountCodepoints(cur) + CountCodepoints(p) + (need_space ? 1 : 0);
+        if (projected_len <= max_len) {
+          if (need_space) {
+            cur.push_back(' ');
+          }
           cur += p;
         } else {
           flush();
