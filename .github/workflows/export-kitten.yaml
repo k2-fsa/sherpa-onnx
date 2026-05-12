@@ -3,7 +3,7 @@ name: export-kitten-to-onnx
 on:
   push:
     branches:
-      - update-kitten
+      - update-kitten-2
 
   workflow_dispatch:
 
@@ -25,10 +25,10 @@ jobs:
             "nano_v0_1",
             "nano_v0_2",
             "mini_v0_1",
-            # "nano_v0_8_fp32",
-            # "nano_v0_8_int8",
-            # "micro_v0_8",
-            # "mini_v0_8",
+            "nano_v0_8_fp32",
+            "nano_v0_8_int8",
+            "micro_v0_8",
+            "mini_v0_8",
           ]
         python-version: ["3.10"]
 
@@ -58,36 +58,42 @@ jobs:
           if [[ $version == "nano_v0_8_fp32" ]]; then
             cd scripts/kitten-tts/v0_8
             ./run.sh KittenML/kitten-tts-nano-0.8-fp32
+            export KITTEN=nano-v0_8-fp32
           elif [[ $version == "nano_v0_8_int8" ]]; then
             cd scripts/kitten-tts/v0_8
             ./run.sh KittenML/kitten-tts-nano-0.8-int8
+            export KITTEN=nano-v0_8-int8
           elif [[ $version == "micro_v0_8" ]]; then
             cd scripts/kitten-tts/v0_8
             ./run.sh KittenML/kitten-tts-micro-0.8
+            export KITTEN=micro-0.8
+            export KITTEN=micro-v0_8
           elif [[ $version == "mini_v0_8" ]]; then
             cd scripts/kitten-tts/v0_8
             ./run.sh KittenML/kitten-tts-mini-0.8
+            export KITTEN=mini-v0_8
           else
             cd scripts/kitten-tts/$version
             ./run.sh
+            export KITTEN=$version
+          fi
 
-            if true; then
-              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
-              tar xf espeak-ng-data.tar.bz2
-              rm espeak-ng-data.tar.bz2
+          if true; then
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+            tar xf espeak-ng-data.tar.bz2
+            rm espeak-ng-data.tar.bz2
 
-              # generate samples
-              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
-              mkdir -p hf/kitten/$version/mp3
-              ./generate_samples.py
-              pushd hf
-              git pull
-              git add .
-              git commit -m 'add kitten samples for $version'
-              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
-              popd
-              rm -rf hf
-            fi
+            # generate samples
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
+            mkdir -p hf/kitten/$KITTEN/mp3
+            ./generate_samples.py
+            pushd hf
+            git pull
+            git add .
+            git commit -m 'add kitten samples for $version'
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
+            popd
+            rm -rf hf
           fi
 
       - name: Collect results
