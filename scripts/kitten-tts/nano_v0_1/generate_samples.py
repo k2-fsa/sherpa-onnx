@@ -6,18 +6,18 @@ https://k2-fsa.github.io/sherpa/onnx/tts/all/
 """
 
 
+from generate_voices_bin import speaker2id
+
 import sherpa_onnx
 import soundfile as sf
-
-from generate_voices_bin import speaker2id
 
 config = sherpa_onnx.OfflineTtsConfig(
     model=sherpa_onnx.OfflineTtsModelConfig(
         kitten=sherpa_onnx.OfflineTtsKittenModelConfig(
-            model="kitten-nano-en-v0_1-fp16/model.fp16.onnx",
-            voices="kitten-nano-en-v0_1-fp16/voices.bin",
-            tokens="kitten-nano-en-v0_1-fp16/tokens.txt",
-            data_dir="kitten-nano-en-v0_1-fp16/espeak-ng-data",
+            model="model.fp16.onnx",
+            voices="voices.bin",
+            tokens="tokens.txt",
+            data_dir="espeak-ng-data",
         ),
         num_threads=2,
     ),
@@ -35,7 +35,7 @@ for s, i in speaker2id.items():
     audio = tts.generate(text, sid=i, speed=1.0)
 
     sf.write(
-        f"./hf/kitten/v0.1-nano/mp3/{i}-{s}.mp3",
+        f"./hf/kitten/nano_v0_1/mp3/{i}-{s}.mp3",
         audio.samples,
         samplerate=audio.sample_rate,
     )

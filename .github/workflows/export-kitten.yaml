@@ -25,10 +25,10 @@ jobs:
             "nano_v0_1",
             "nano_v0_2",
             "mini_v0_1",
-            "nano_v0_8_fp32",
-            "nano_v0_8_int8",
-            "micro_v0_8",
-            "mini_v0_8",
+            # "nano_v0_8_fp32",
+            # "nano_v0_8_int8",
+            # "micro_v0_8",
+            # "mini_v0_8",
           ]
         python-version: ["3.10"]
 
@@ -66,6 +66,24 @@ jobs:
           else
             cd scripts/kitten-tts/$version
             ./run.sh
+
+            if true; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+              tar xf espeak-ng-data.tar.bz2
+              rm espeak-ng-data.tar.bz2
+
+              # generate samples
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
+              mkdir -p hf/kitten/$version/mp3
+              ./generate_samples.py
+              pushd hf
+              git pull
+              git add .
+              git commit -m 'add kitten samples for $version'
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
+              popd
+              rm -rf hf
+            fi
           fi
 
       - name: Collect results
