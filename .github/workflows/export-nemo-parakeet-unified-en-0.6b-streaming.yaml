@@ -1,0 +1,108 @@
+name: export-nemo-parakeet-unified-en-0.6b-streaming
+
+on:
+  push:
+    branches:
+      - export-nemo-unified-streaming-2
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemo-parakeet-unified-en-0.6b-streaming-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HUB_ENABLE_HF_TRANSFER: "0"
+
+jobs:
+  export-nemo-parakeet-unified-en-0_6b_streaming:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: parakeet unified-en 0.6b streaming
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show disk space
+        run: |
+          df -h
+
+      # See https://github.com/vlayer-xyz/vlayer/pull/543/files
+      # Free up disk space as the macOS runners end up using most for Xcode
+      # versions we don't need and use iOS simulators.
+      - name: Free up disk space
+        run: |
+          echo '*** Delete iOS simulators and their caches'
+          xcrun simctl delete all
+          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
+
+      - name: Show disk space
+        run: |
+          df -h
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/nemo/parakeet-unified-en-0.6b/
+          ./run-streaming.sh
+
+          mv -v *.tar.bz2 ../../../
+          mv -v sherpa-onnx-nemo-parakeet* ../../../
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            models=(
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-streaming-1120ms
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-streaming-1120ms
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-streaming-560ms
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-streaming-560ms
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-streaming-240ms
+              sherpa-onnx-nemo-parakeet-unified-en-0.6b-streaming-240ms
+            )
+
+            for m in ${models[@]}; do
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$m huggingface
+              cp -av $m/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.wav"
+              git lfs track "*.weights"
+              git status
+              git add .
+              git status
+              git commit -m "first commit"
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$m main
+              cd ..
+            done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

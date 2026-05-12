@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
+# Copyright      2026  Milan Leonard
 """ONNX Runtime smoke test for buffered Parakeet Unified streaming."""
 
 import argparse

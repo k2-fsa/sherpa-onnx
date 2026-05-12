@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright      2026  Milan Leonard
 import unittest
 
 import numpy as np
