@@ -46,6 +46,9 @@ jobs:
           pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
           pip install --verbose sherpa_onnx_bin sherpa_onnx_core sherpa_onnx --no-index -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
       - name: Run
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
