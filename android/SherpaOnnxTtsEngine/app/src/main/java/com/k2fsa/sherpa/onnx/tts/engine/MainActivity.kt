@@ -323,7 +323,9 @@ class MainActivity : ComponentActivity() {
                                         }) {
                                         Text("Stop")
                                     }
+                                }
 
+                                Row {
                                     Button(
                                         enabled = saveEnabled,
                                         modifier = Modifier.padding(5.dp),
