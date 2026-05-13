@@ -35,8 +35,6 @@ if not config.validate():
 
 tts = sherpa_onnx.OfflineTts(config)
 
-k = 0
-
 for lang in SENTENCES:
     print("lang", lang)
 
@@ -69,10 +67,5 @@ for lang in SENTENCES:
                 audio.samples,
                 samplerate=audio.sample_rate,
             )
-            k += 1
-        if k > 900:
-            break
-    if k > 900:
-        break
 
         os.system(f"ls -lh hf/supertonic/v3/mp3/{lang}")
