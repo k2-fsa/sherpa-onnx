@@ -13,9 +13,10 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}, SHERPA_ONNX_ENABLE_SPACEMIT: ${SHERPA_ONNX_ENABLE_SPACEMIT}")
 endif()
 
-set(onnxruntime_pkg_name "spacemit-ort.riscv64.2.0.2%2Brc1.tar.gz")
-set(onnxruntime_URL  "https://archive.spacemit.com/spacemit-ai/onnxruntime/${onnxruntime_pkg_name}")
-set(onnxruntime_HASH "SHA256=36276ce948da5cb9e388f1efcbc24849f1a10dd6710d0b02943bd2fe54bad87f")
+set(onnxruntime_version "2.0.2")
+set(onnxruntime_pkg_name "spacemit-ort.riscv64.${onnxruntime_version}.tar.gz")
+set(onnxruntime_URL  "https://github.com/spacemit-com/onnxruntime/releases/download/${onnxruntime_version}/${onnxruntime_pkg_name}")
+set(onnxruntime_HASH "SHA256=b9d038eab644c42712b93e14648427467a02d1b66115795033093efbeb53c868")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
