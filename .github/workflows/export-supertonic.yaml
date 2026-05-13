@@ -3,7 +3,7 @@ name: export-supertonic-3-to-int8-onnx
 on:
   push:
     branches:
-      - ci-supertonic
+      - update-supertonic3-tts
 
   workflow_dispatch:
 
