@@ -41,6 +41,15 @@ acoustic_model_name={{ tts_model.acoustic_model_name }}
 vocoder={{ tts_model.vocoder }}
 voices={{ tts_model.voices }}
 lang={{ tts_model.lang }}
+lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
+is_supertonic={{ tts_model.is_supertonic }}
+supertonic_duration_predictor={{ tts_model.supertonic_duration_predictor }}
+supertonic_text_encoder={{ tts_model.supertonic_text_encoder }}
+supertonic_vector_estimator={{ tts_model.supertonic_vector_estimator }}
+supertonic_vocoder={{ tts_model.supertonic_vocoder }}
+supertonic_tts_json={{ tts_model.supertonic_tts_json }}
+supertonic_unicode_indexer={{ tts_model.supertonic_unicode_indexer }}
+supertonic_voice_style={{ tts_model.supertonic_voice_style }}
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
 tar xf $model_dir.tar.bz2
@@ -100,6 +109,18 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./MainActivity.kt
 {% endif %}
 
+{% if tts_model.is_supertonic %}
+  sed -i.bak s/"isSupertonic = false"/"isSupertonic = true"/ ./MainActivity.kt
+  sed -i.bak s/"durationPredictor: String? = null"/"durationPredictor: String? = \"$supertonic_duration_predictor\""/ ./MainActivity.kt
+  sed -i.bak s/"textEncoder: String? = null"/"textEncoder: String? = \"$supertonic_text_encoder\""/ ./MainActivity.kt
+  sed -i.bak s/"vectorEstimator: String? = null"/"vectorEstimator: String? = \"$supertonic_vector_estimator\""/ ./MainActivity.kt
+  sed -i.bak s/"supertonicVocoder: String? = null"/"supertonicVocoder: String? = \"$supertonic_vocoder\""/ ./MainActivity.kt
+  sed -i.bak s/"ttsJson: String? = null"/"ttsJson: String? = \"$supertonic_tts_json\""/ ./MainActivity.kt
+  sed -i.bak s/"unicodeIndexer: String? = null"/"unicodeIndexer: String? = \"$supertonic_unicode_indexer\""/ ./MainActivity.kt
+  sed -i.bak s/"voiceStyle: String? = null"/"voiceStyle: String? = \"$supertonic_voice_style\""/ ./MainActivity.kt
+  sed -i.bak s/"var supertonicLang: String = \"en\""/"var supertonicLang: String = \"$lang\""/ ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 
@@ -136,7 +157,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxTts/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-$model_dir.apk
+  mv android/SherpaOnnxTts/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang_iso_639_3-tts-$model_dir.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxTts/app/src/main/jniLibs/$arch/*.so
 done

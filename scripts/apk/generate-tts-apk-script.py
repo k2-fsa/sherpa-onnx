@@ -45,6 +45,14 @@ class TtsModel:
     lang_iso_639_3_2: str = ""
     lexicon: str = ""
     is_kitten: bool = False
+    is_supertonic: bool = False
+    supertonic_duration_predictor: str = ""
+    supertonic_text_encoder: str = ""
+    supertonic_vector_estimator: str = ""
+    supertonic_vocoder: str = ""
+    supertonic_tts_json: str = ""
+    supertonic_unicode_indexer: str = ""
+    supertonic_voice_style: str = ""
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -546,7 +554,7 @@ def get_kokoro_models() -> List[TtsModel]:
 
 
 def get_kitten_models() -> List[TtsModel]:
-    english_models = [
+    kitten_models = [
         TtsModel(
             model_dir="kitten-nano-en-v0_1-fp16",
             model_name="model.fp16.onnx",
@@ -583,12 +591,38 @@ def get_kitten_models() -> List[TtsModel]:
             lang="en",
         ),
     ]
-    for m in english_models:
+    for m in kitten_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.voices = "voices.bin"
         m.is_kitten = True
 
-    return english_models
+    return kitten_models
+
+
+def get_supertonic3_models() -> List[TtsModel]:
+    # fmt: off
+    langs = [
+        "en", "ko", "ja", "ar", "bg", "cs", "da", "de", "el", "es", "et",
+        "fi", "fr", "hi", "hr", "hu", "id", "it", "lt", "lv", "nl", "pl",
+        "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi"
+    ]
+    # fmt: on
+
+    supertonic_models = [
+        TtsModel(model_dir="sherpa-onnx-supertonic-3-tts-int8-2026-05-11", lang=lang)
+        for lang in langs
+    ]
+    for m in supertonic_models:
+        m.supertonic_duration_predictor = "duration_predictor.int8.onnx"
+        m.supertonic_text_encoder = "text_encoder.int8.onnx"
+        m.supertonic_vector_estimator = "vector_estimator.int8.onnx"
+        m.supertonic_vocoder = "vocoder.int8.onnx"
+        m.supertonic_tts_json = "tts.json"
+        m.supertonic_unicode_indexer = "unicode_indexer.bin"
+        m.supertonic_voice_style = "voice.bin"
+        m.is_supertonic = True
+
+    return supertonic_models
 
 
 def main():
@@ -605,6 +639,7 @@ def main():
     all_model_list += get_matcha_models()
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
+    all_model_list += get_supertonic3_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)

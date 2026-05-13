@@ -79,6 +79,14 @@ fun getSampleText(lang: String): String {
             text = "Ez egy szövegfelolvasó motor a következő generációs kaldi használatával"
         }
 
+        "hin" -> {
+            text = "यह अगली पीढ़ी के काल्डी का उपयोग करने वाला एक टेक्स्ट-टू-स्पीच इंजन है"
+        }
+
+        "ind" -> {
+            text = "Ini adalah mesin text-to-speech yang menggunakan Kaldi generasi berikutnya"
+        }
+
         "isl" -> {
             text = "Þetta er texta í tal vél sem notar næstu kynslóð kaldi"
         }
@@ -87,12 +95,20 @@ fun getSampleText(lang: String): String {
             text = "Questo è un motore di sintesi vocale che utilizza kaldi di nuova generazione"
         }
 
+        "jpn" -> {
+            text = "これは次世代のkaldiを使用したテキスト読み上げエンジンです"
+        }
+
         "kat" -> {
             text = "ეს არის ტექსტიდან მეტყველების ძრავა შემდეგი თაობის კალდის გამოყენებით"
         }
 
         "kaz" -> {
             text = "Бұл келесі буын kaldi көмегімен мәтіннен сөйлеуге арналған қозғалтқыш"
+        }
+
+        "kor" -> {
+            text = "이것은 차세대 kaldi를 사용하는 텍스트 음성 변환 엔진입니다"
         }
 
         "kur" -> {
