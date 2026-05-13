@@ -39,9 +39,12 @@ tts = sherpa_onnx.OfflineTts(config)
 model_dir = os.environ.get("KITTEN", "")
 
 for sid in range(tts.num_speakers):
+    print("sid", sid)
     for lang in SENTENCES:
+        print("lang", lang)
         sentence_list = SENTENCES[lang]
         for i, text in enumerate(sentence_list):
+            print(i, text)
             gen_config = sherpa_onnx.GenerationConfig()
 
             # This model has 10 speakers. Valid sid: 0-9
@@ -57,3 +60,4 @@ for sid in range(tts.num_speakers):
                 audio.samples,
                 samplerate=audio.sample_rate,
             )
+        os.system("ls -lh hf/supertonic/v3/mp3/")
