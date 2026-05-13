@@ -282,7 +282,15 @@ fun getOfflineTtsConfig(
     ruleFsts: String,
     ruleFars: String,
     numThreads: Int? = null,
-    isKitten: Boolean = false
+    isKitten: Boolean = false,
+    isSupertonic: Boolean = false,
+    durationPredictor: String = "", // for Supertonic
+    textEncoder: String = "", // for Supertonic
+    vectorEstimator: String = "", // for Supertonic
+    supertonicVocoder: String = "", // for Supertonic
+    ttsJson: String = "", // for Supertonic
+    unicodeIndexer: String = "", // for Supertonic
+    voiceStyle: String = "", // for Supertonic
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -296,6 +304,10 @@ fun getOfflineTtsConfig(
     // For VITS, please set
     // modelName
 
+    // For Supertonic TTS, please set
+    // isSupertonic, durationPredictor, textEncoder, vectorEstimator,
+    // supertonicVocoder, ttsJson, unicodeIndexer, voiceStyle
+
     val numberOfThreads = if (numThreads != null) {
         numThreads
     } else if (voices.isNotEmpty()) {
@@ -305,7 +317,7 @@ fun getOfflineTtsConfig(
         2
     }
 
-    if (modelName.isEmpty() && acousticModelName.isEmpty()) {
+    if (!isSupertonic && modelName.isEmpty() && acousticModelName.isEmpty()) {
         throw IllegalArgumentException("Please specify a TTS model")
     }
 
@@ -317,7 +329,7 @@ fun getOfflineTtsConfig(
         throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
     }
 
-    val vits = if (modelName.isNotEmpty() && voices.isEmpty()) {
+    val vits = if (modelName.isNotEmpty() && voices.isEmpty() && !isSupertonic) {
         OfflineTtsVitsModelConfig(
             model = "$modelDir/$modelName",
             lexicon = "$modelDir/$lexicon",
@@ -340,7 +352,7 @@ fun getOfflineTtsConfig(
         OfflineTtsMatchaModelConfig()
     }
 
-    val kokoro = if (voices.isNotEmpty() && !isKitten) {
+    val kokoro = if (voices.isNotEmpty() && !isKitten && !isSupertonic) {
         OfflineTtsKokoroModelConfig(
             model = "$modelDir/$modelName",
             voices = "$modelDir/$voices",
@@ -367,12 +379,27 @@ fun getOfflineTtsConfig(
         OfflineTtsKittenModelConfig()
     }
 
+    val supertonic = if (isSupertonic) {
+        OfflineTtsSupertonicModelConfig(
+            durationPredictor = "$modelDir/$durationPredictor",
+            textEncoder = "$modelDir/$textEncoder",
+            vectorEstimator = "$modelDir/$vectorEstimator",
+            vocoder = "$modelDir/$supertonicVocoder",
+            ttsJson = "$modelDir/$ttsJson",
+            unicodeIndexer = "$modelDir/$unicodeIndexer",
+            voiceStyle = "$modelDir/$voiceStyle",
+        )
+    } else {
+        OfflineTtsSupertonicModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
             kitten = kitten,
+            supertonic = supertonic,
             numThreads = numberOfThreads,
             debug = true,
             provider = "cpu",
