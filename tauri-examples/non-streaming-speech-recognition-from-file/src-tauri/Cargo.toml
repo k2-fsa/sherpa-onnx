@@ -1,6 +1,6 @@
 [package]
 name = "non-streaming-speech-recognition-from-file"
-version = "1.13.1"
+version = "1.13.2"
 description = "Non-streaming speech recognition from file with VAD"
 edition = "2021"
 
@@ -16,7 +16,7 @@ tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
-sherpa-onnx = { version = "1.13.1", default-features = false }
+sherpa-onnx = { version = "1.13.2", default-features = false }
 # sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false }
 # sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false, features = ["static"] }
 # sherpa-onnx = { path = "../../../sherpa-onnx/rust/sherpa-onnx", default-features = false, features = ["shared"] }

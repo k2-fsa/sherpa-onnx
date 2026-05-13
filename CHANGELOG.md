@@ -1,3 +1,17 @@
+## 1.13.2
+
+* Support Supertonic 3 TTS (#3605)
+* Release Supertonic3 TTS models (#3609)
+* Add Android demo for Supertonic3 TTS (#3612)
+* Add KittenTTS v0.8 support (#3591)
+* Export KittenTTS models (#3604)
+* Generate KittenTTS samples (#3607)
+* Export NeMo unified streaming 0.6b models (#3602)
+* Add buffered RNNT streaming path for Parakeet Unified (#3575)
+* Fix WASM onnxruntime pthread abort() crash (#3599)
+* Bump emsdk 4.0.23 (#3582)
+* Update onnxruntime package details for spacemit (#3610)
+
 ## 1.13.1
 
 * Fix bugs in NeMo transducer modified beam search (#3589)
