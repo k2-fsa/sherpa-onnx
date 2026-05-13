@@ -49,7 +49,7 @@ jobs:
           git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
           mkdir -p ./hf/supertonic/v3/mp3
 
-          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
           tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
           rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
 

@@ -5,14 +5,13 @@ Generate samples for
 https://k2-fsa.github.io/sherpa/onnx/tts/all/
 """
 
-
 import os
 from pathlib import Path
 
 import sherpa_onnx
 import soundfile as sf
 
-from gen_calib_configs import SUPPORTED_LANGS, SENTENCES
+from gen_calib_configs import SENTENCES
 
 config = sherpa_onnx.OfflineTtsConfig(
     model=sherpa_onnx.OfflineTtsModelConfig(
@@ -36,15 +35,25 @@ if not config.validate():
 
 tts = sherpa_onnx.OfflineTts(config)
 
-model_dir = os.environ.get("KITTEN", "")
+k = 0
 
-for sid in range(tts.num_speakers):
-    print("sid", sid)
-    for lang in SENTENCES:
-        print("lang", lang)
+for lang in SENTENCES:
+    print("lang", lang)
+
+    os.system(f"mkdir -p ./hf/supertonic/v3/mp3/{lang}")
+
+    for sid in range(tts.num_speakers):
+        print("sid", sid)
+
         sentence_list = SENTENCES[lang]
         for i, text in enumerate(sentence_list):
+
+            filename = f"./hf/supertonic/v3/mp3/{lang}/sid-{sid}-{lang}-{i}.mp3"
+            if Path(filename).is_file():
+                continue
+
             print(i, text)
+
             gen_config = sherpa_onnx.GenerationConfig()
 
             # This model has 10 speakers. Valid sid: 0-9
@@ -56,8 +65,14 @@ for sid in range(tts.num_speakers):
             audio = tts.generate(text, gen_config)
 
             sf.write(
-                f"./hf/supertonic/v3/mp3/sid-{sid}-{lang}-{i}.mp3",
+                filename,
                 audio.samples,
                 samplerate=audio.sample_rate,
             )
-        os.system("ls -lh hf/supertonic/v3/mp3/")
+            k += 1
+        if k > 900:
+            break
+    if k > 900:
+        break
+
+        os.system(f"ls -lh hf/supertonic/v3/mp3/{lang}")
