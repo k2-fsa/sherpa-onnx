@@ -96,4 +96,26 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/play" />
 
+    <Button
+        android:id="@+id/save"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="4dp"
+        android:text="@string/save"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/stop" />
+
+    <Button
+        android:id="@+id/share"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="4dp"
+        android:text="@string/share"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/save" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.k2fsa.sherpa.onnx
 
+import android.content.Intent
 import android.content.res.AssetManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
@@ -12,7 +13,9 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -27,8 +30,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var generate: Button
     private lateinit var play: Button
     private lateinit var stop: Button
+    private lateinit var save: Button
+    private lateinit var share: Button
     private var stopped: Boolean = false
     private var mediaPlayer: MediaPlayer? = null
+    private var isSupertonic: Boolean = false
+    private var supertonicLang: String = "en"
+
+    private val saveLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
+        if (uri != null) {
+            copyGeneratedWavToUri(uri)
+        }
+    }
 
     // see
     // https://developer.android.com/reference/kotlin/android/media/AudioTrack
@@ -53,10 +66,14 @@ class MainActivity : AppCompatActivity() {
         generate = findViewById(R.id.generate)
         play = findViewById(R.id.play)
         stop = findViewById(R.id.stop)
+        save = findViewById(R.id.save)
+        share = findViewById(R.id.share)
 
         generate.setOnClickListener { onClickGenerate() }
         play.setOnClickListener { onClickPlay() }
         stop.setOnClickListener { onClickStop() }
+        save.setOnClickListener { onClickSave() }
+        share.setOnClickListener { onClickShare() }
 
         sid.setText("0")
         speed.setText("1.0")
@@ -66,6 +83,8 @@ class MainActivity : AppCompatActivity() {
         text.setText(sampleText)
 
         play.isEnabled = false
+        save.isEnabled = false
+        share.isEnabled = false
     }
 
     private fun initAudioTrack() {
@@ -138,12 +157,18 @@ class MainActivity : AppCompatActivity() {
         track.play()
 
         play.isEnabled = false
+        save.isEnabled = false
+        share.isEnabled = false
         generate.isEnabled = false
         stopped = false
         Thread {
+            val genConfig = GenerationConfig(sid = sidInt, speed = speedFloat)
+            if (isSupertonic) {
+                genConfig.extra = mapOf("lang" to supertonicLang)
+            }
             val audio = tts.generateWithConfigAndCallback(
                 text = textStr,
-                config = GenerationConfig(sid = sidInt, speed = speedFloat),
+                config = genConfig,
                 callback = this::callback
             )
 
@@ -152,6 +177,8 @@ class MainActivity : AppCompatActivity() {
             if (ok) {
                 runOnUiThread {
                     play.isEnabled = true
+                    save.isEnabled = true
+                    share.isEnabled = true
                     generate.isEnabled = true
                     track.stop()
                 }
@@ -172,11 +199,51 @@ class MainActivity : AppCompatActivity() {
     private fun onClickStop() {
         stopped = true
         play.isEnabled = true
+        save.isEnabled = true
+        share.isEnabled = true
         generate.isEnabled = true
         track.pause()
         track.flush()
         mediaPlayer?.stop()
         mediaPlayer = null
+    }
+
+    private fun onClickSave() {
+        saveLauncher.launch("generated.wav")
+    }
+
+    private fun onClickShare() {
+        val file = File(application.filesDir.absolutePath + "/generated.wav")
+        if (!file.exists()) {
+            Toast.makeText(applicationContext, "No audio to share", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val uri = FileProvider.getUriForFile(
+            this,
+            "com.k2fsa.sherpa.onnx.fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "audio/wav"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Share audio"))
+    }
+
+    private fun copyGeneratedWavToUri(destUri: Uri) {
+        try {
+            val srcFile = File(application.filesDir.absolutePath + "/generated.wav")
+            contentResolver.openOutputStream(destUri)?.use { output ->
+                srcFile.inputStream().use { input ->
+                    input.copyTo(output)
+                }
+            }
+            Toast.makeText(applicationContext, "Audio saved", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save audio: $e")
+            Toast.makeText(applicationContext, "Failed to save audio", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun initTts() {
@@ -191,6 +258,15 @@ class MainActivity : AppCompatActivity() {
         var dataDir: String?
         var assets: AssetManager? = application.assets
         var isKitten = false
+        var isSupertonic = false
+        var durationPredictor: String? = null
+        var textEncoder: String? = null
+        var vectorEstimator: String? = null
+        var supertonicVocoder: String? = null
+        var ttsJson: String? = null
+        var unicodeIndexer: String? = null
+        var voiceStyle: String? = null
+        var supertonicLang: String = "en"
 
         // The purpose of such a design is to make the CI test easier
         // Please see
@@ -302,6 +378,23 @@ class MainActivity : AppCompatActivity() {
         // dataDir = "matcha-icefall-zh-en/espeak-ng-data"
         // lexicon = "lexicon.txt"
 
+        // Example 13
+        // supertonic-3-tts (supports 31 languages, default: English)
+        // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+        // modelDir = "sherpa-onnx-supertonic-3-tts-int8-2026-05-11"
+        // isSupertonic = true
+        // durationPredictor = "duration_predictor.int8.onnx"
+        // textEncoder = "text_encoder.int8.onnx"
+        // vectorEstimator = "vector_estimator.int8.onnx"
+        // supertonicVocoder = "vocoder.int8.onnx"
+        // ttsJson = "tts.json"
+        // unicodeIndexer = "unicode_indexer.bin"
+        // voiceStyle = "voice.bin"
+        // supertonicLang = "en"  // ISO 639-1: en, zh, ja, ko, fr, de, es, etc.
+
+        this.isSupertonic = isSupertonic
+        this.supertonicLang = supertonicLang
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
@@ -319,6 +412,14 @@ class MainActivity : AppCompatActivity() {
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,
+            isSupertonic = isSupertonic,
+            durationPredictor = durationPredictor ?: "",
+            textEncoder = textEncoder ?: "",
+            vectorEstimator = vectorEstimator ?: "",
+            supertonicVocoder = supertonicVocoder ?: "",
+            ttsJson = ttsJson ?: "",
+            unicodeIndexer = unicodeIndexer ?: "",
+            voiceStyle = voiceStyle ?: "",
         )!!
 
         tts = OfflineTts(assetManager = assets, config = config)

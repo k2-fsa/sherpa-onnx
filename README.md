@@ -1,3 +1,9 @@
+<div align="center">
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/k2-fsa/sherpa-onnx)
+
+</div>
+
  ### Supported functions
 
 |Speech recognition| [Speech synthesis][tts-url] | [Source separation][ss-url] |

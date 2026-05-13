@@ -3,7 +3,7 @@ name: generate-tts-samples
 on:
   push:
     branches:
-      - tts-samples
+      - tts-samples-2
 
   workflow_dispatch:
 
