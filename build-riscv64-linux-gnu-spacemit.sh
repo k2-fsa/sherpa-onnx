@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -ex
 
-SPACEMIT_TOOLCHAIN=spacemit-toolchain-linux-glibc-x86_64-v1.1.2
-DOWNLOAD_URL="https://archive.spacemit.com/toolchain/${SPACEMIT_TOOLCHAIN}.tar.xz"
-DOWNLOAD_FILE="./riscv-spacemit-toolchain.tar.gz"
+SPACEMIT_TOOLCHAIN_VERSION=v1.1.2
+SPACEMIT_TOOLCHAIN=spacemit-toolchain-linux-glibc-x86_64-${SPACEMIT_TOOLCHAIN_VERSION}
+DOWNLOAD_URL="https://github.com/spacemit-com/toolchain/releases/download/${SPACEMIT_TOOLCHAIN_VERSION}/${SPACEMIT_TOOLCHAIN}.tar.xz"
+DOWNLOAD_FILE="./${SPACEMIT_TOOLCHAIN}.tar.xz"
 
 if [ -n "$RISCV_ROOT_PATH" ] && [ -d "$RISCV_ROOT_PATH" ]; then
     echo "LOCAL RISCV_ROOT_PATH: $RISCV_ROOT_PATH"

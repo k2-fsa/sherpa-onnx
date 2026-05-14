@@ -24,6 +24,8 @@ jobs:
   riscv64_spacemit_linux:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} ${{ matrix.lib_type }}
+    env:
+      SPACEMIT_TOOLCHAIN_VERSION: v1.1.2
     strategy:
       fail-fast: false
       matrix:
@@ -67,17 +69,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: toolchain
-          key: https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.1.2.tar.xz
+          key: ${{ format('https://github.com/spacemit-com/toolchain/releases/download/{0}/spacemit-toolchain-linux-glibc-x86_64-{0}.tar.xz', env.SPACEMIT_TOOLCHAIN_VERSION) }}
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          wget -q https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.1.2.tar.xz
+          toolchain_archive=spacemit-toolchain-linux-glibc-x86_64-${SPACEMIT_TOOLCHAIN_VERSION}.tar.xz
+          toolchain_url=https://github.com/spacemit-com/toolchain/releases/download/${SPACEMIT_TOOLCHAIN_VERSION}/${toolchain_archive}
+
+          wget -q ${toolchain_url}
 
           mkdir $GITHUB_WORKSPACE/toolchain
 
-          tar xvf spacemit-toolchain-linux-glibc-x86_64-v1.1.2.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xvf ${toolchain_archive} --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
           ls -lh $GITHUB_WORKSPACE/toolchain/bin
 
       - name: Display toolchain info
