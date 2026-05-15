@@ -306,6 +306,17 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [@siteed/sherpa-onnx.rn](https://www.npmjs.com/package/@siteed/sherpa-onnx.rn) and [Sherpa Voice](https://deeeed.github.io/audiolab/sherpa-voice/)
+
+> `@siteed/sherpa-onnx.rn` is a React Native wrapper for sherpa-onnx on iOS,
+> Android, and Web. Sherpa Voice is a companion demo app for validating ASR,
+> TTS, VAD, KWS, speaker ID, diarization, language ID, punctuation, audio
+> tagging, and speech enhancement in React Native apps.
+
+- NPM: https://www.npmjs.com/package/@siteed/sherpa-onnx.rn
+- Source: https://github.com/deeeed/audiolab/tree/main/packages/sherpa-onnx.rn
+- Demo app: https://deeeed.github.io/audiolab/sherpa-voice/
+
 ### [Speed of Sound](https://github.com/zugaldia/speedofsound)
 
 > A voice-typing application for the Linux desktop (GTK4/Adwaita).
