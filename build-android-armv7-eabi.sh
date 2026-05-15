@@ -69,9 +69,14 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=1.24.3
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.24.3}
 
-if [ $BUILD_SHARED_LIBS == ON ]; then
+if [ -n "${SHERPA_ONNXRUNTIME_LIB_DIR:-}" ] && [ -n "${SHERPA_ONNXRUNTIME_INCLUDE_DIR:-}" ]; then
+  echo "Using externally provided ONNX Runtime"
+elif [ -n "${SHERPA_ONNX_ONNXRUNTIME_ROOT:-}" ] && [ $BUILD_SHARED_LIBS == ON ]; then
+  export SHERPA_ONNXRUNTIME_LIB_DIR=$SHERPA_ONNX_ONNXRUNTIME_ROOT/jni/armeabi-v7a/
+  export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$SHERPA_ONNX_ONNXRUNTIME_ROOT/headers/
+elif [ $BUILD_SHARED_LIBS == ON ]; then
   if [ ! -f $onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so ]; then
     mkdir -p $onnxruntime_version
     pushd $onnxruntime_version
