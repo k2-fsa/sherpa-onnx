@@ -73,7 +73,7 @@ const inputStream = cpal.createStream(
       const resampled = resampler.resample(data);
       const windowSize = vad.config.sileroVad.windowSize;
       buffer.push(resampled);
-      while (buffer.size() > windowSize) {
+      while (buffer.size() >= windowSize) {
         const samples = buffer.get(buffer.head(), windowSize);
         buffer.pop(windowSize);
         vad.acceptWaveform(samples);

@@ -95,4 +95,5 @@ async function main() {
 
 main().catch((err) => {
   console.error('Error:', err);
+  process.exitCode = 1;
 });

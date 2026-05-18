@@ -3674,14 +3674,14 @@ typedef struct SherpaOnnxLinearResampler SherpaOnnxLinearResampler;
  * int32_t num_zeros = 6;
  * @endcode
  *
- * @param samp_rate_in_hz Input sample rate in Hz.
- * @param samp_rate_out_hz Output sample rate in Hz.
+ * @param samp_rate_in_hz Input sample rate in Hz. Must be > 0.
+ * @param samp_rate_out_hz Output sample rate in Hz. Must be > 0.
  * @param filter_cutoff_hz Low-pass cutoff frequency in Hz. Pass 0 to use
- *                         the default formula above.
+ *                         the default formula above. Must be >= 0.
  * @param num_zeros Low-pass filter width control parameter. Pass 0 to use
- *                  the default value of 6.
- * @return A newly allocated resampler. Free it with
- *         SherpaOnnxDestroyLinearResampler().
+ *                  the default value of 6. Must be >= 0.
+ * @return A newly allocated resampler, or nullptr on invalid input. Free it
+ *         with SherpaOnnxDestroyLinearResampler().
  */
 SHERPA_ONNX_API const SherpaOnnxLinearResampler *
 SherpaOnnxCreateLinearResampler(int32_t samp_rate_in_hz,

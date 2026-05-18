@@ -21,3 +21,7 @@ npm i
 # see test/test_asr_streaming_transducer.js
 # for usages
 ```
+
+Please see doc at <https://k2-fsa.github.io/sherpa/onnx/javascript-api/index.html>.
+
+API doc can be found at <https://k2-fsa.github.io/sherpa/onnx/javascript-api/html/index.html>

@@ -42,6 +42,14 @@ static Napi::External<SherpaOnnxLinearResampler> CreateLinearResamplerWrapper(
   int32_t input_sample_rate = info[0].As<Napi::Number>().Int32Value();
   int32_t output_sample_rate = info[1].As<Napi::Number>().Int32Value();
 
+  if (input_sample_rate <= 0 || output_sample_rate <= 0) {
+    Napi::TypeError::New(env,
+                         "inputSampleRate and outputSampleRate must be > 0")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
   const SherpaOnnxLinearResampler *p = SherpaOnnxCreateLinearResampler(
       input_sample_rate, output_sample_rate, 0, 0);
 
@@ -76,7 +84,8 @@ static Napi::Float32Array ResampleLinearWrapper(
     return {};
   }
 
-  if (!info[1].IsTypedArray()) {
+  if (!info[1].IsTypedArray() ||
+      info[1].As<Napi::TypedArray>().TypedArrayType() != napi_float32_array) {
     Napi::TypeError::New(env, "Argument 1 should be a Float32Array.")
         .ThrowAsJavaScriptException();
 

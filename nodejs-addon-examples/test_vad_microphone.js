@@ -51,7 +51,6 @@ const nativeSampleRate = deviceConfig.sampleRate;
 const targetSampleRate = vad.config.sampleRate;
 const resampler =
     new sherpa_onnx.LinearResampler(nativeSampleRate, targetSampleRate);
-console.log(resampler);
 
 console.log(
     `Device: ${inputDevice.name}, native sample rate: ${nativeSampleRate} Hz`);
@@ -75,7 +74,7 @@ const inputStream = cpal.createStream(
 
       const resampled = resampler.resample(data);
       buffer.push(resampled);
-      while (buffer.size() > windowSize) {
+      while (buffer.size() >= windowSize) {
         const samples = buffer.get(buffer.head(), windowSize);
         buffer.pop(windowSize);
         vad.acceptWaveform(samples);
