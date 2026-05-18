@@ -1,3 +1,5 @@
+/** @typedef {import('./types').LinearResamplerHandle} LinearResamplerHandle */
+
 const addon = require('./addon.js');
 
 /**
@@ -11,6 +13,7 @@ class LinearResampler {
    * @param {number} outputSampleRate - Output sample rate in Hz.
    */
   constructor(inputSampleRate, outputSampleRate) {
+    /** @type {LinearResamplerHandle} */
     this.handle =
         addon.createLinearResampler(inputSampleRate, outputSampleRate);
     this.inputSampleRate = inputSampleRate;

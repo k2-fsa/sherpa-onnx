@@ -1,4 +1,6 @@
 /** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
+/** @typedef {import('./types').OfflineStreamHandle} OfflineStreamHandle */
+/** @typedef {import('./types').OfflineRecognizerHandle} OfflineRecognizerHandle */
 /** @typedef {import('./types').Waveform} Waveform */
 /**
  * @typedef {import('./types').OfflineRecognizerConfig} OfflineRecognizerConfig

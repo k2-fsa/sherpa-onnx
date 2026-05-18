@@ -10,13 +10,6 @@ const sherpa_onnx = require('sherpa-onnx-node');
 // the following code
 //
 
-// let encoder = new TextEncoder();
-// let tokens = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/测试.txt');
-// let model = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/测试.int8.onnx');
-
-
 const config = {
   'featConfig': {
     'sampleRate': 16000,

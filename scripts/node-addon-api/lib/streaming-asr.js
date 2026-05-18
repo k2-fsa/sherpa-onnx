@@ -1,5 +1,7 @@
 /** @typedef {import('./types').OnlineStreamObject} OnlineStreamObject */
 /** @typedef {import('./types').OnlineRecognizerHandle} OnlineRecognizerHandle */
+/** @typedef {import('./types').OnlineStreamHandle} OnlineStreamHandle */
+/** @typedef {import('./types').DisplayHandle} DisplayHandle */
 /** @typedef {import('./types').DisplayObject} DisplayObject */
 /** @typedef {import('./types').OnlineRecognizerConfig} OnlineRecognizerConfig */
 /** @typedef {import('./types').Waveform} Waveform */

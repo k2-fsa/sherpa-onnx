@@ -56,6 +56,56 @@
  */
 
 /**
+ * @typedef {Object} LinearResamplerHandle
+ * @see src/resampler.cc
+ */
+
+/**
+ * @typedef {Object} OfflineTtsHandle
+ * @see src/non-streaming-tts.cc
+ */
+
+/**
+ * @typedef {Object} OnlinePunctuationHandle
+ * @see src/punctuation.cc
+ */
+
+/**
+ * @typedef {Object} KeywordSpotterHandle
+ * @see src/keyword-spotter.cc
+ */
+
+/**
+ * @typedef {Object} SpeakerEmbeddingExtractorHandle
+ * @see src/speaker-identification.cc
+ */
+
+/**
+ * @typedef {Object} SpeakerEmbeddingManagerHandle
+ * @see src/speaker-identification.cc
+ */
+
+/**
+ * @typedef {Object} SpokenLanguageIdentificationHandle
+ * @see src/spoken-language-identification.cc
+ */
+
+/**
+ * @typedef {Object} OfflineSpeakerDiarizationHandle
+ * @see src/non-streaming-speaker-diarization.cc
+ */
+
+/**
+ * @typedef {Object} OfflineSpeechDenoiserHandle
+ * @see src/non-streaming-speech-denoiser.cc
+ */
+
+/**
+ * @typedef {Object} OnlineSpeechDenoiserHandle
+ * @see src/online-speech-denoiser.cc
+ */
+
+/**
  * A single audio event returned by AudioTagging.compute().
  * @typedef {Object} AudioEvent
  * @property {string} name - The event name.

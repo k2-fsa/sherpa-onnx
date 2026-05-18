@@ -1,4 +1,5 @@
 /** @typedef {import('./types').OfflineSpeechDenoiserConfig} OfflineSpeechDenoiserConfig */
+/** @typedef {import('./types').OfflineSpeechDenoiserHandle} OfflineSpeechDenoiserHandle */
 /** @typedef {import('./types').GeneratedAudio} GeneratedAudio */
 /** @typedef {import('./types').AudioProcessRequest} AudioProcessRequest */
 

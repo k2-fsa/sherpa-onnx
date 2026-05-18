@@ -2,6 +2,8 @@
 /** @typedef {import('./types').SpeakerEmbeddingManagerSearchObj} SpeakerEmbeddingManagerSearchObj */
 /** @typedef {import('./types').SpeakerEmbeddingManagerVerifyObj} SpeakerEmbeddingManagerVerifyObj */
 /** @typedef {import('./types').SpeakerEmbeddingExtractorConfig} SpeakerEmbeddingExtractorConfig */
+/** @typedef {import('./types').SpeakerEmbeddingExtractorHandle} SpeakerEmbeddingExtractorHandle */
+/** @typedef {import('./types').SpeakerEmbeddingManagerHandle} SpeakerEmbeddingManagerHandle */
 /** @typedef {import('./streaming-asr').OnlineStream} OnlineStream */
 
 const addon = require('./addon.js');
