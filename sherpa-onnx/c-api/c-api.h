@@ -3664,7 +3664,8 @@ typedef struct SherpaOnnxLinearResampler SherpaOnnxLinearResampler;
 /**
  * @brief Create a linear resampler.
  *
- * A common choice is:
+ * If @p filter_cutoff_hz or @p num_zeros is 0, the following defaults
+ * are used (same convention as alsa-play.cc):
  *
  * @code
  * float min_freq = samp_rate_in_hz < samp_rate_out_hz ? samp_rate_in_hz
@@ -3675,8 +3676,10 @@ typedef struct SherpaOnnxLinearResampler SherpaOnnxLinearResampler;
  *
  * @param samp_rate_in_hz Input sample rate in Hz.
  * @param samp_rate_out_hz Output sample rate in Hz.
- * @param filter_cutoff_hz Low-pass cutoff frequency in Hz.
- * @param num_zeros Low-pass filter width control parameter.
+ * @param filter_cutoff_hz Low-pass cutoff frequency in Hz. Pass 0 to use
+ *                         the default formula above.
+ * @param num_zeros Low-pass filter width control parameter. Pass 0 to use
+ *                  the default value of 6.
  * @return A newly allocated resampler. Free it with
  *         SherpaOnnxDestroyLinearResampler().
  */

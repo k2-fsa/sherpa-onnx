@@ -50,6 +50,7 @@ set(srcs
   src/version.cc
   src/wave-reader.cc
   src/wave-writer.cc
+  src/resampler.cc
 )
 
 if(NOT DEFINED ENV{SHERPA_ONNX_INSTALL_DIR})

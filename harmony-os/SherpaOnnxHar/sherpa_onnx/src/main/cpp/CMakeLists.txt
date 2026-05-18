@@ -58,6 +58,7 @@ add_library(sherpa_onnx SHARED
   version.cc
   wave-reader.cc
   wave-writer.cc
+  resampler.cc
 )
 
 add_library(sherpa_onnx_c_api SHARED IMPORTED)

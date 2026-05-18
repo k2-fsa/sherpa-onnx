@@ -12,9 +12,9 @@ const sherpa_onnx = require('sherpa-onnx-node');
 
 // let encoder = new TextEncoder();
 // let tokens = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/测试.txt');
+//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/测试.txt');
 // let model = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/测试.int8.onnx');
+//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/测试.int8.onnx');
 
 
 const config = {
@@ -25,11 +25,11 @@ const config = {
   'modelConfig': {
     'senseVoice': {
       'model':
-          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx',
+          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx',
       // 'model': model,
       'useInverseTextNormalization': 1,
     },
-    'tokens': './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt',
+    'tokens': './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt',
     // 'tokens': tokens,
     'numThreads': 2,
     'provider': 'cpu',
