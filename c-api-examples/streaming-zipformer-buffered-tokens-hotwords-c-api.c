@@ -91,28 +91,18 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer config
-  SherpaOnnxOnlineTransducerModelConfig zipformer_config;
-  memset(&zipformer_config, 0, sizeof(zipformer_config));
-  zipformer_config.encoder = encoder_filename;
-  zipformer_config.decoder = decoder_filename;
-  zipformer_config.joiner = joiner_filename;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens_buf = tokens_buf;
-  online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.transducer = zipformer_config;
-
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "modified_beam_search";
-  recognizer_config.model_config = online_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens_buf = tokens_buf;
+  recognizer_config.model_config.tokens_buf_size = token_buf_size;
+  recognizer_config.model_config.transducer.encoder = encoder_filename;
+  recognizer_config.model_config.transducer.decoder = decoder_filename;
+  recognizer_config.model_config.transducer.joiner = joiner_filename;
   recognizer_config.hotwords_buf = hotwords_buf;
   recognizer_config.hotwords_buf_size = hotwords_buf_size;
 

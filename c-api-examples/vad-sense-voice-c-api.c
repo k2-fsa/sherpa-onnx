@@ -71,26 +71,17 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineSenseVoiceModelConfig sense_voice_config;
-  memset(&sense_voice_config, 0, sizeof(sense_voice_config));
-  sense_voice_config.model = model_filename;
-  sense_voice_config.language = language;
-  sense_voice_config.use_itn = use_inverse_text_normalization;
-
-  // Offline model config
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 0;
-  offline_model_config.num_threads = 1;
-  offline_model_config.provider = provider;
-  offline_model_config.tokens = tokens_filename;
-  offline_model_config.sense_voice = sense_voice_config;
-
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 0;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens_filename;
+  recognizer_config.model_config.sense_voice.model = model_filename;
+  recognizer_config.model_config.sense_voice.language = language;
+  recognizer_config.model_config.sense_voice.use_itn = use_inverse_text_normalization;
 
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

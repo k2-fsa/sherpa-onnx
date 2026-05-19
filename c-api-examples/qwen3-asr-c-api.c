@@ -44,30 +44,22 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineQwen3ASRModelConfig qwen3;
-  memset(&qwen3, 0, sizeof(qwen3));
-  qwen3.conv_frontend = conv_frontend;
-  qwen3.encoder = encoder;
-  qwen3.decoder = decoder;
-  qwen3.tokenizer = tokenizer;
-  qwen3.max_total_len = 512;
-  qwen3.max_new_tokens = 128;
-  qwen3.temperature = 1e-6f;
-  qwen3.top_p = 0.8f;
-  qwen3.seed = 42;
-  qwen3.hotwords = "";  // optional; e.g. "foo,bar"
-
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 1;
-  offline_model_config.num_threads = 2;
-  offline_model_config.provider = "cpu";
-  offline_model_config.qwen3_asr = qwen3;
-
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 2;
+  recognizer_config.model_config.provider = "cpu";
+  recognizer_config.model_config.qwen3_asr.conv_frontend = conv_frontend;
+  recognizer_config.model_config.qwen3_asr.encoder = encoder;
+  recognizer_config.model_config.qwen3_asr.decoder = decoder;
+  recognizer_config.model_config.qwen3_asr.tokenizer = tokenizer;
+  recognizer_config.model_config.qwen3_asr.max_total_len = 512;
+  recognizer_config.model_config.qwen3_asr.max_new_tokens = 128;
+  recognizer_config.model_config.qwen3_asr.temperature = 1e-6f;
+  recognizer_config.model_config.qwen3_asr.top_p = 0.8f;
+  recognizer_config.model_config.qwen3_asr.seed = 42;
+  recognizer_config.model_config.qwen3_asr.hotwords = "";  // optional; e.g. "foo,bar"
 
   const SherpaOnnxOfflineRecognizer* recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

@@ -1,15 +1,15 @@
-// c-api-examples/streaming-zipformer-c-api.c
+// c-api-examples/streaming-nemotron-c-api.c
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2026  Xiaomi Corporation
 
 //
-// This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
+// This file demonstrates how to use streaming Nemotron with sherpa-onnx's C
 // API.
 // clang-format off
-// 
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+//
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25.tar.bz2
+// tar xvf sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25.tar.bz2
+// rm sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25.tar.bz2
 //
 // clang-format on
 
@@ -21,18 +21,20 @@
 
 int32_t main() {
   const char *wav_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs/0.wav";
+      "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+      "test_wavs/0.wav";
   const char *encoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "encoder-epoch-99-avg-1.onnx";
+      "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+      "encoder.int8.onnx";
   const char *decoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "decoder-epoch-99-avg-1.onnx";
+      "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+      "decoder.int8.onnx";
   const char *joiner_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "joiner-epoch-99-avg-1.onnx";
+      "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+      "joiner.int8.onnx";
   const char *tokens_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
+      "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+      "tokens.txt";
   const char *provider = "cpu";
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);

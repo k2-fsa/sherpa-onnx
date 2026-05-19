@@ -34,29 +34,19 @@ int32_t main() {
     return -1;
   }
 
-  // Whisper config
-  SherpaOnnxOfflineWhisperModelConfig whisper_config;
-  memset(&whisper_config, 0, sizeof(whisper_config));
-  whisper_config.decoder = decoder_filename;
-  whisper_config.encoder = encoder_filename;
-  whisper_config.language = language;
-  whisper_config.tail_paddings = 0;
-  whisper_config.task = "transcribe";
-
-  // Offline model config
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 1;
-  offline_model_config.num_threads = 1;
-  offline_model_config.provider = provider;
-  offline_model_config.tokens = tokens_filename;
-  offline_model_config.whisper = whisper_config;
-
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens_filename;
+  recognizer_config.model_config.whisper.decoder = decoder_filename;
+  recognizer_config.model_config.whisper.encoder = encoder_filename;
+  recognizer_config.model_config.whisper.language = language;
+  recognizer_config.model_config.whisper.tail_paddings = 0;
+  recognizer_config.model_config.whisper.task = "transcribe";
 
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

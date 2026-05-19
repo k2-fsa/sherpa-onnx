@@ -1,0 +1,51 @@
+/**
+@page audio_tagging Audio Tagging
+
+sherpa-onnx supports audio tagging through the
+@ref SherpaOnnxCreateAudioTagging() API. Configure exactly one model
+family by filling in the corresponding field of
+@ref SherpaOnnxAudioTaggingModelConfig.
+
+@see SherpaOnnxCreateAudioTagging, SherpaOnnxAudioTaggingConfig
+
+@tableofcontents
+
+@section audio_tagging_zipformer Zipformer
+
+The Zipformer audio tagging model uses a CSV file for class labels.
+
+@code
+SherpaOnnxAudioTaggingConfig config;
+memset(&config, 0, sizeof(config));
+config.model.zipformer.model =
+    "./sherpa-onnx-zipformer-audio-tagging-2024-04-09/model.int8.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+config.labels =
+    "./sherpa-onnx-zipformer-audio-tagging-2024-04-09/class_labels_indices.csv";
+config.top_k = 5;
+
+const SherpaOnnxAudioTagging *tagger = SherpaOnnxCreateAudioTagging(&config);
+@endcode
+
+Model package: `sherpa-onnx-zipformer-audio-tagging-2024-04-09`
+
+Example source: [audio-tagging-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/audio-tagging-c-api.c)
+
+@section audio_tagging_ced CED
+
+CED (Conditional Event Detection) is an alternative audio tagging model.
+
+@code
+SherpaOnnxAudioTaggingConfig config;
+memset(&config, 0, sizeof(config));
+config.model.ced = "./sherpa-onnx-audio-tagging-ced-mini-int8/model.int8.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+config.top_k = 5;
+
+const SherpaOnnxAudioTagging *tagger = SherpaOnnxCreateAudioTagging(&config);
+@endcode
+
+Model package: `sherpa-onnx-audio-tagging-ced-mini-int8`
+*/

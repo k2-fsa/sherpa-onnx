@@ -1,0 +1,40 @@
+/**
+@page keyword_spotting Keyword Spotting
+
+sherpa-onnx supports keyword spotting through the
+@ref SherpaOnnxCreateKeywordSpotter() API. It uses streaming transducer
+models with keyword lists.
+
+@see SherpaOnnxCreateKeywordSpotter, SherpaOnnxKeywordSpotterConfig
+
+@code
+SherpaOnnxKeywordSpotterConfig config;
+memset(&config, 0, sizeof(config));
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+    "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+    "decoder-epoch-12-avg-2-chunk-16-left-64.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+    "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.keywords_file =
+    "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+    "test_wavs/test_keywords.txt";
+config.max_active_paths = 4;
+config.keywords_score = 3.0f;
+config.keywords_threshold = 0.1f;
+
+const SherpaOnnxKeywordSpotter *kws =
+    SherpaOnnxCreateKeywordSpotter(&config);
+@endcode
+
+Model package: `sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile`
+
+Example source: [kws-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/kws-c-api.c)
+*/

@@ -1,0 +1,136 @@
+/**
+@page online_asr Streaming (Online) ASR Models
+
+sherpa-onnx supports several streaming ASR model families through the
+@ref SherpaOnnxCreateOnlineRecognizer() API. Configure exactly one model
+family by filling in the corresponding sub-struct of
+@ref SherpaOnnxOnlineModelConfig.
+
+@see SherpaOnnxCreateOnlineRecognizer, SherpaOnnxOnlineRecognizerConfig,
+     SherpaOnnxOnlineModelConfig
+
+@tableofcontents
+
+@section online_asr_transducer Transducer (Zipformer)
+
+Streaming Zipformer transducer models are the most widely used streaming
+ASR models in sherpa-onnx.
+
+@code
+SherpaOnnxOnlineRecognizerConfig config;
+memset(&config, 0, sizeof(config));
+config.feat_config.sample_rate = 16000;
+config.feat_config.feature_dim = 80;
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/"
+    "encoder-epoch-99-avg-1.int8.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/"
+    "decoder-epoch-99-avg-1.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/"
+    "joiner-epoch-99-avg-1.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+
+const SherpaOnnxOnlineRecognizer *recognizer =
+    SherpaOnnxCreateOnlineRecognizer(&config);
+@endcode
+
+Model package: `sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20`
+
+Example source: [streaming-zipformer-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/streaming-zipformer-c-api.c)
+
+@section online_asr_nemotron Nemotron (NeMo Transducer)
+
+Nemotron is an NVIDIA NeMo streaming transducer model. The runtime
+auto-detects NeMo transducer models from the decoder's output node count,
+so no `model_type` string is needed.
+
+@code
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+    "encoder.int8.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+    "decoder.int8.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+    "joiner.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25/"
+    "tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+@endcode
+
+Model package: `sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25`
+
+Available variants: 80ms, 160ms, 560ms, 1120ms chunk sizes.
+
+Example source: [streaming-nemotron-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/streaming-nemotron-c-api.c)
+
+@section online_asr_paraformer Streaming Paraformer
+
+Streaming Paraformer is a non-autoregressive streaming ASR model from
+FunASR.
+
+@code
+config.model_config.paraformer.encoder =
+    "./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx";
+config.model_config.paraformer.decoder =
+    "./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+@endcode
+
+Model package: `sherpa-onnx-streaming-paraformer-bilingual-zh-en`
+
+Example source: [streaming-paraformer-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/streaming-paraformer-c-api.c)
+
+@section online_asr_zipformer2_ctc Zipformer2 CTC
+
+Streaming Zipformer2 CTC models use CTC decoding instead of transducer
+decoding.
+
+@code
+config.model_config.zipformer2_ctc.model =
+    "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/"
+    "ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/"
+    "tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+@endcode
+
+Model package: `sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13`
+
+Example source: [streaming-ctc-buffered-tokens-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/streaming-ctc-buffered-tokens-c-api.c)
+
+@section online_asr_t_one T-One CTC
+
+T-One is a streaming CTC model for Russian.
+
+@code
+config.model_config.t_one_ctc.model =
+    "./sherpa-onnx-streaming-t-one-russian-2025-09-08/model.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-streaming-t-one-russian-2025-09-08/tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+@endcode
+
+Model package: `sherpa-onnx-streaming-t-one-russian-2025-09-08`
+
+Example source: [streaming-t-one-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/streaming-t-one-ctc-c-api.c)
+*/
