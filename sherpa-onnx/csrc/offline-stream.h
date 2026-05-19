@@ -45,6 +45,13 @@ struct OfflineRecognitionResult {
   /// ys_log_probs[i] contains the log probability (confidence) for tokens[i].
   std::vector<float> ys_log_probs;
 
+  /// vocab_log_probs[i] contains the full log-probability distribution over
+  /// the vocabulary at the emission frame of tokens[i]. Used for entropy-based
+  /// confidence estimation. Empty when not provided by the decoder.
+  /// If populated, vocab_log_probs.size() == tokens.size() and every inner
+  /// vector has the same length (the model vocab size).
+  std::vector<std::vector<float>> vocab_log_probs;
+
   // Word IDs from FST decoding (CTC models with FST decoder only).
   std::vector<int32_t> words;
 
