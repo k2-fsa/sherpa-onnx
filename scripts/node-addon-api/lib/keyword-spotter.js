@@ -1,4 +1,5 @@
 /** @typedef {import('./types').KeywordSpotterConfig} KeywordSpotterConfig */
+/** @typedef {import('./types').KeywordSpotterHandle} KeywordSpotterHandle */
 /** @typedef {import('./types').KeywordResult} KeywordResult */
 /** @typedef {import('./streaming-asr').OnlineStream} OnlineStream */
 

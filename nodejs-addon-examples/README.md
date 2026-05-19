@@ -174,18 +174,27 @@ The following tables list the examples in this folder.
 |[./test_tts_non_streaming_zipvoice_zh_en.js](./test_tts_non_streaming_zipvoice_zh_en.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model|
 |[./test_tts_non_streaming_zipvoice_zh_en_async.js](./test_tts_non_streaming_zipvoice_zh_en_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API|
 |[./test_tts_non_streaming_zipvoice_zh_en_play_async.js](./test_tts_non_streaming_zipvoice_zh_en_play_async.js)| Zero-shot text-to-speech with a ZipVoice Chinese/English Model using async JS API and live audio playback|
-|[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model|
-|[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model|
-|[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English|
-|[./test_tts_non_streaming_matcha_icefall_en.js](./test_tts_non_streaming_matcha_icefall_en.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)|
-|[./test_tts_non_streaming_matcha_icefall_zh.js](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)|
-|[./test_tts_non_streaming_supertonic_en.js](./test_tts_non_streaming_supertonic_en.js)| Text-to-speech with a Supertonic English Model|
-|[./test_tts_non_streaming_supertonic_en_async.js](./test_tts_non_streaming_supertonic_en_async.js)| Text-to-speech with a Supertonic English Model using async JS API|
-|[./test_tts_non_streaming_supertonic_en_play_async.js](./test_tts_non_streaming_supertonic_en_play_async.js)| Text-to-speech with a Supertonic English Model using async JS API and live audio playback|
-|[./test_tts_non_streaming_vits_piper_en.js](./test_tts_non_streaming_vits_piper_en.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model|
-|[./test_tts_non_streaming_vits_coqui_de.js](./test_tts_non_streaming_vits_coqui_de.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model|
-|[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba)|
-|[./test_tts_non_streaming_vits_zh_aishell3.js](./test_tts_non_streaming_vits_zh_aishell3.js)| Text-to-speech with a Chinese TTS model|
+|[./test_tts_non_streaming_kitten_en.js](./test_tts_non_streaming_kitten_en.js)| Text-to-speech with a KittenTTS English Model (async API)|
+|[./test_tts_non_streaming_kitten_en_sync.js](./test_tts_non_streaming_kitten_en_sync.js)| Text-to-speech with a KittenTTS English Model (sync API)|
+|[./test_tts_non_streaming_kokoro_en.js](./test_tts_non_streaming_kokoro_en.js)| Text-to-speech with a Kokoro English Model (sync API)|
+|[./test_tts_non_streaming_kokoro_en_async.js](./test_tts_non_streaming_kokoro_en_async.js)| Text-to-speech with a Kokoro English Model (async API)|
+|[./test_tts_non_streaming_kokoro_zh_en.js](./test_tts_non_streaming_kokoro_zh_en.js)| Text-to-speech with a Kokoro Model supporting Chinese and English (sync API)|
+|[./test_tts_non_streaming_kokoro_zh_en_async.js](./test_tts_non_streaming_kokoro_zh_en_async.js)| Text-to-speech with a Kokoro Model supporting Chinese and English (async API)|
+|[./test_tts_non_streaming_matcha_icefall_en.js](./test_tts_non_streaming_matcha_icefall_en.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker) (sync API)|
+|[./test_tts_non_streaming_matcha_icefall_en_async.js](./test_tts_non_streaming_matcha_icefall_en_async.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker) (async API)|
+|[./test_tts_non_streaming_matcha_icefall_zh.js](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker) (sync API)|
+|[./test_tts_non_streaming_matcha_icefall_zh_async.js](./test_tts_non_streaming_matcha_icefall_zh_async.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker) (async API)|
+|[./test_tts_non_streaming_supertonic_en.js](./test_tts_non_streaming_supertonic_en.js)| Text-to-speech with a Supertonic English Model (sync API)|
+|[./test_tts_non_streaming_supertonic_en_async.js](./test_tts_non_streaming_supertonic_en_async.js)| Text-to-speech with a Supertonic English Model (async API)|
+|[./test_tts_non_streaming_supertonic_en_play_async.js](./test_tts_non_streaming_supertonic_en_play_async.js)| Text-to-speech with a Supertonic English Model (async API + live playback)|
+|[./test_tts_non_streaming_vits_piper_en.js](./test_tts_non_streaming_vits_piper_en.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model (sync API)|
+|[./test_tts_non_streaming_vits_piper_en_async.js](./test_tts_non_streaming_vits_piper_en_async.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model (async API)|
+|[./test_tts_non_streaming_vits_coqui_de.js](./test_tts_non_streaming_vits_coqui_de.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model (sync API)|
+|[./test_tts_non_streaming_vits_coqui_de_async.js](./test_tts_non_streaming_vits_coqui_de_async.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model (async API)|
+|[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba) (sync API)|
+|[./test_tts_non_streaming_vits_zh_ll_async.js](./test_tts_non_streaming_vits_zh_ll_async.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba) (async API)|
+|[./test_tts_non_streaming_vits_zh_aishell3.js](./test_tts_non_streaming_vits_zh_aishell3.js)| Text-to-speech with a Chinese TTS model (sync API)|
+|[./test_tts_non_streaming_vits_zh_aishell3_async.js](./test_tts_non_streaming_vits_zh_aishell3_async.js)| Text-to-speech with a Chinese TTS model (async API)|
 
 
 ### Speaker diarization
@@ -218,8 +227,8 @@ node ./test_offline_speech_enhancement_gtcrn.js
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
 
-# To run the test with a microphone, you need to install the package naudiodon2
-npm install naudiodon2
+# To run the test with a microphone, you need to install the package node-cpal
+npm install node-cpal
 
 node ./test_vad_microphone.js
 ```
@@ -279,8 +288,8 @@ rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 
 node ./test_asr_streaming_transducer.js
 
-# To run the test with a microphone, you need to install the package naudiodon2
-npm install naudiodon2
+# To run the test with a microphone, you need to install the package node-cpal
+npm install node-cpal
 
 node ./test_asr_streaming_transducer_microphone.js
 ```
@@ -297,8 +306,8 @@ node ./test_asr_streaming_ctc.js
 # To decode with HLG.fst
 node ./test_asr_streaming_ctc_hlg.js
 
-# To run the test with a microphone, you need to install the package naudiodon2
-npm install naudiodon2
+# To run the test with a microphone, you need to install the package node-cpal
+npm install node-cpal
 
 node ./test_asr_streaming_ctc_microphone.js
 node ./test_asr_streaming_ctc_hlg_microphone.js
@@ -313,8 +322,8 @@ rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 
 node ./test_asr_streaming_paraformer.js
 
-# To run the test with a microphone, you need to install the package naudiodon2
-npm install naudiodon2
+# To run the test with a microphone, you need to install the package node-cpal
+npm install node-cpal
 
 node ./test_asr_streaming_paraformer_microphone.js
 ```
@@ -329,7 +338,7 @@ rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
 node ./test_asr_non_streaming_transducer.js
 
 # To run VAD + non-streaming ASR with transudcer using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_transducer_microphone.js
 ```
 
@@ -362,7 +371,7 @@ rm sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test_asr_non_streaming_whisper.js
 
 # To run VAD + non-streaming ASR with Whisper using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_whisper_microphone.js
 ```
 
@@ -386,7 +395,7 @@ rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
 node ./test_asr_non_streaming_moonshine.js
 
 # To run VAD + non-streaming ASR with Moonshine using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_moonshine_microphone.js
 ```
 
@@ -447,7 +456,7 @@ rm sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
 node ./test_asr_non_streaming_zipformer_ctc.js
 
 # To run VAD + non-streaming ASR with Paraformer using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_zipformer_ctc_microphone.js
 ```
 
@@ -471,7 +480,7 @@ rm sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 node ./test_asr_non_streaming_nemo_ctc.js
 
 # To run VAD + non-streaming ASR with Paraformer using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
 ```
 
@@ -575,15 +584,15 @@ rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 node ./test_asr_non_streaming_paraformer.js
 
 # To run VAD + non-streaming ASR with Paraformer using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_paraformer_microphone.js
 ```
 
 ### Non-streaming speech recognition with SenseVoice with homophone replacer
 ```bash
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/dict.tar.bz2
 tar xf dict.tar.bz2
@@ -598,14 +607,14 @@ node ./test_asr_non_streaming_sense_voice_with_hr.js
 ### Non-streaming speech recognition with SenseVoice
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 
 node ./test_asr_non_streaming_sense_voice.js
 
 # To run VAD + non-streaming ASR with Paraformer using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_asr_non_streaming_sense_voice_microphone.js
 ```
 
@@ -683,7 +692,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-mode
 node ./test_tts_non_streaming_zipvoice_zh_en.js
 ```
 
-### Text-to-speech with KittenTTS models (English TTS)
+### Text-to-speech with KittenTTS models (English TTS, async API)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
@@ -691,6 +700,16 @@ tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
 node ./test_tts_non_streaming_kitten_en.js
+```
+
+### Text-to-speech with KittenTTS models (English TTS, sync API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kitten-nano-en-v0_1-fp16.tar.bz2
+tar xf kitten-nano-en-v0_1-fp16.tar.bz2
+rm kitten-nano-en-v0_1-fp16.tar.bz2
+
+node ./test_tts_non_streaming_kitten_en_sync.js
 ```
 
 ### Text-to-speech with Supertonic TTS models (English TTS, sync API)
@@ -725,7 +744,7 @@ npm install speaker
 node ./test_tts_non_streaming_supertonic_en_play_async.js
 ```
 
-### Text-to-speech with Kokoro TTS models (Chinese + English TTS)
+### Text-to-speech with Kokoro TTS models (Chinese + English TTS, sync API)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
@@ -735,7 +754,17 @@ rm kokoro-multi-lang-v1_0.tar.bz2
 node ./test_tts_non_streaming_kokoro_zh_en.js
 ```
 
-### Text-to-speech with Kokoro TTS models (English TTS)
+### Text-to-speech with Kokoro TTS models (Chinese + English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+tar xf kokoro-multi-lang-v1_0.tar.bz2
+rm kokoro-multi-lang-v1_0.tar.bz2
+
+node ./test_tts_non_streaming_kokoro_zh_en_async.js
+```
+
+### Text-to-speech with Kokoro TTS models (English TTS, sync API)
 
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
@@ -745,7 +774,17 @@ rm kokoro-en-v0_19.tar.bz2
 node ./test_tts_non_streaming_kokoro_en.js
 ```
 
-### Text-to-speech with MatchaTTS models (English TTS)
+### Text-to-speech with Kokoro TTS models (English TTS, async API)
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+node ./test_tts_non_streaming_kokoro_en_async.js
+```
+
+### Text-to-speech with MatchaTTS models (English TTS, sync API)
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 tar xf matcha-icefall-en_US-ljspeech.tar.bz2
@@ -756,7 +795,18 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
 node ./test_tts_non_streaming_matcha_icefall_en.js
 ```
 
-### Text-to-speech with MatchaTTS models (Chinese TTS)
+### Text-to-speech with MatchaTTS models (English TTS, async API)
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+
+node ./test_tts_non_streaming_matcha_icefall_en_async.js
+```
+
+### Text-to-speech with MatchaTTS models (Chinese TTS, sync API)
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
 tar xvf matcha-icefall-zh-baker.tar.bz2
@@ -767,7 +817,18 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
 node ./test_tts_non_streaming_matcha_icefall_zh.js
 ```
 
-### Text-to-speech with piper VITS models (TTS)
+### Text-to-speech with MatchaTTS models (Chinese TTS, async API)
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+
+node ./test_tts_non_streaming_matcha_icefall_zh_async.js
+```
+
+### Text-to-speech with piper VITS models (sync API)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium.tar.bz2
@@ -777,7 +838,17 @@ rm vits-piper-en_GB-cori-medium.tar.bz2
 node ./test_tts_non_streaming_vits_piper_en.js
 ```
 
-### Text-to-speech with piper Coqui-ai/TTS models (TTS)
+### Text-to-speech with piper VITS models (async API)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium.tar.bz2
+tar xvf vits-piper-en_GB-cori-medium.tar.bz2
+rm vits-piper-en_GB-cori-medium.tar.bz2
+
+node ./test_tts_non_streaming_vits_piper_en_async.js
+```
+
+### Text-to-speech with Coqui-ai/TTS VITS models (German, sync API)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -787,7 +858,17 @@ rm vits-coqui-de-css10.tar.bz2
 node ./test_tts_non_streaming_vits_coqui_de.js
 ```
 
-### Text-to-speech with vits Chinese models (1/2)
+### Text-to-speech with Coqui-ai/TTS VITS models (German, async API)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
+tar xvf vits-coqui-de-css10.tar.bz2
+rm vits-coqui-de-css10.tar.bz2
+
+node ./test_tts_non_streaming_vits_coqui_de_async.js
+```
+
+### Text-to-speech with vits Chinese zh-ll models (sync API)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
@@ -797,7 +878,17 @@ rm sherpa-onnx-vits-zh-ll.tar.bz2
 node ./test_tts_non_streaming_vits_zh_ll.js
 ```
 
-### Text-to-speech with vits Chinese models (2/2)
+### Text-to-speech with vits Chinese zh-ll models (async API)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
+tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
+rm sherpa-onnx-vits-zh-ll.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_ll_async.js
+```
+
+### Text-to-speech with vits Chinese AiShell3 models (sync API)
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -805,6 +896,16 @@ tar xvf vits-icefall-zh-aishell3.tar.bz2
 rm vits-icefall-zh-aishell3.tar.bz2
 
 node ./test_tts_non_streaming_vits_zh_aishell3.js
+```
+
+### Text-to-speech with vits Chinese AiShell3 models (async API)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
+rm vits-icefall-zh-aishell3.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_aishell3_async.js
 ```
 
 ### Spoken language identification with Whisper multi-lingual models
@@ -821,7 +922,7 @@ rm spoken-language-identification-test-wavs.tar.bz2
 node ./test_spoken_language_identification.js
 
 # To run VAD + spoken language identification using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_vad_spoken_language_identification_microphone.js
 ```
 
@@ -868,6 +969,6 @@ rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 node ./test_keyword_spotter_transducer.js
 
 # To run keyword spotting using a microphone
-npm install naudiodon2
+npm install node-cpal
 node ./test_keyword_spotter_transducer_microphone.js
 ```

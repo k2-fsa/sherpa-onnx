@@ -2706,6 +2706,24 @@ struct SherpaOnnxLinearResampler {
 const SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
     int32_t samp_rate_in_hz, int32_t samp_rate_out_hz, float filter_cutoff_hz,
     int32_t num_zeros) {
+  if (samp_rate_in_hz <= 0 || samp_rate_out_hz <= 0) {
+    SHERPA_ONNX_LOGE("Sample rates must be > 0. Given in=%d out=%d",
+                     samp_rate_in_hz, samp_rate_out_hz);
+    return nullptr;
+  }
+  if (num_zeros < 0) {
+    SHERPA_ONNX_LOGE("num_zeros must be >= 0. Given %d", num_zeros);
+    return nullptr;
+  }
+  if (filter_cutoff_hz == 0) {
+    float min_freq = std::min(samp_rate_in_hz, samp_rate_out_hz);
+    filter_cutoff_hz = 0.99f * 0.5f * min_freq;
+  }
+
+  if (num_zeros == 0) {
+    num_zeros = 6;
+  }
+
   SherpaOnnxLinearResampler *p = new SherpaOnnxLinearResampler;
   p->impl = std::make_unique<sherpa_onnx::LinearResample>(
       samp_rate_in_hz, samp_rate_out_hz, filter_cutoff_hz, num_zeros);

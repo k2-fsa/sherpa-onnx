@@ -1,4 +1,5 @@
 /** @typedef {import('./types').CircularBufferHandle} CircularBufferHandle */
+/** @typedef {import('./types').VoiceActivityDetectorHandle} VoiceActivityDetectorHandle */
 /** @typedef {import('./types').SpeechSegment} SpeechSegment */
 /** @typedef {import('./types').VadConfig} VadConfig */
 

@@ -1,4 +1,5 @@
 /** @typedef {import('./types').OfflineSpeakerDiarizationConfig} OfflineSpeakerDiarizationConfig */
+/** @typedef {import('./types').OfflineSpeakerDiarizationHandle} OfflineSpeakerDiarizationHandle */
 /** @typedef {import('./types').SpeakerDiarizationSegment} SpeakerDiarizationSegment */
 
 const addon = require('./addon.js');

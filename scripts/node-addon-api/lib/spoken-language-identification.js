@@ -1,4 +1,5 @@
 /** @typedef {import('./types').SpokenLanguageIdentificationConfig} SpokenLanguageIdentificationConfig */
+/** @typedef {import('./types').SpokenLanguageIdentificationHandle} SpokenLanguageIdentificationHandle */
 /** @typedef {import('./non-streaming-asr').OfflineStream} OfflineStream */
 
 const addon = require('./addon.js');
