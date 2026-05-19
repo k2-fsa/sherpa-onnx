@@ -1,7 +1,7 @@
 # Copyright (c)  2023 by manyeyes
 # Copyright (c)  2023  Xiaomi Corporation
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sherpa_onnx.lib._sherpa_onnx import (
     FeatureExtractorConfig,
@@ -1782,3 +1782,18 @@ class OfflineRecognizer(object):
 
     def decode_streams(self, ss: List[OfflineStream]):
         self.recognizer.decode_streams(ss)
+
+    def set_run_options_config_entry(self, key: str, value: str) -> None:
+        """Inject a single Ort::RunOptions config entry applied to every
+        subsequent decode call. See the C++ docstring on
+        ``OfflineRecognizer::SetRunOptionsConfigEntry`` for details.
+        Currently honored by the transducer recognizer; other recognizer
+        types log a warning and ignore the setting.
+        """
+        self.recognizer.set_run_options_config_entry(key, value)
+
+    def set_run_options(self, options: Dict[str, str]) -> None:
+        """Convenience wrapper around :meth:`set_run_options_config_entry`
+        that accepts a dict of entries.
+        """
+        self.recognizer.set_run_options(options)

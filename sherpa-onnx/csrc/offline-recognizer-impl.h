@@ -47,6 +47,17 @@ class OfflineRecognizerImpl {
 
   virtual OfflineRecognizerConfig GetConfig() const = 0;
 
+  // Inject an Ort::RunOptions config entry (e.g.,
+  // "memory.enable_memory_arena_shrinkage" = "cpu:0") that will be applied
+  // to all subsequent Session::Run calls of this recognizer.
+  //
+  // The default implementation logs a warning and ignores the setting.
+  // Concrete recognizers that route their inference through a model class
+  // owning the Ort::Session(s) should override this and forward the entry
+  // to the underlying model.
+  virtual void SetRunOptionsConfigEntry(const std::string &key,
+                                        const std::string &value);
+
   std::string ApplyInverseTextNormalization(std::string text) const;
 
   std::string ApplyHomophoneReplacer(std::string text) const;

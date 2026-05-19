@@ -256,6 +256,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
+  void SetRunOptionsConfigEntry(const std::string &key,
+                                const std::string &value) override {
+    if (model_) {
+      model_->SetRunOptionsConfigEntry(key, value);
+    }
+  }
+
   void InitHotwords() {
     // each line in hotwords_file contains space-separated words
 

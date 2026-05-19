@@ -125,6 +125,26 @@ class OfflineRecognizer {
 
   OfflineRecognizerConfig GetConfig() const;
 
+  /** Inject an Ort::RunOptions config entry that will be applied to every
+   *  subsequent Session::Run call performed by this recognizer.
+   *
+   *  Typical use case is enabling per-Run memory arena shrinkage to keep
+   *  RSS bounded under varying input shapes:
+   *
+   *      recognizer.SetRunOptionsConfigEntry(
+   *          "memory.enable_memory_arena_shrinkage", "cpu:0");
+   *
+   *  Currently honored by the transducer recognizer. Other recognizer
+   *  implementations log a warning and ignore the setting.
+   *
+   *  Thread-safety: this method is intended to be called once after
+   *  recognizer construction (e.g., during model load) and before the
+   *  first decode. Concurrent calls with DecodeStream/DecodeStreams are
+   *  not synchronized.
+   */
+  void SetRunOptionsConfigEntry(const std::string &key,
+                                const std::string &value);
+
  private:
   std::unique_ptr<OfflineRecognizerImpl> impl_;
 };
