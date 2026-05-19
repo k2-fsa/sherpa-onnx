@@ -23,7 +23,7 @@
 int32_t main() {
   const char *wav_filename =
       "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
-      "test_wavs/0.wav";
+      "test_wavs/example.wav";
   const char *encoder_filename =
       "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
       "encoder.int8.onnx";

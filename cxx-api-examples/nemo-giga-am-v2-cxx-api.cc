@@ -53,7 +53,7 @@ int32_t main() {
 
   std::string wave_filename =
       "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
-      "test_wavs/0.wav";
+      "test_wavs/example.wav";
 
   Wave wave = ReadWave(wave_filename);
   if (wave.samples.empty()) {
