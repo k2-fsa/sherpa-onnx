@@ -45,7 +45,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.num_threads = 1;
 
   // If you don't want to see debug messages, please set it to 0
-  config.model.debug = 1;
+  config.model.debug = true;
 
   std::string filename = "./generated-piper-en-cxx.wav";
   std::string text =

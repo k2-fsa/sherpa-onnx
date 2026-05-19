@@ -42,6 +42,7 @@ Step 4. Run it
 
 #include <cstdint>
 #include <cstdio>
+#include <iostream>
 #include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
