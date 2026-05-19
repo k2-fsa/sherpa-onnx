@@ -8,7 +8,7 @@
 // API and with tokens and hotwords loaded from buffered strings instead of from
 // external files API.
 // clang-format off
-// 
+//
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
 // tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
 // rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2

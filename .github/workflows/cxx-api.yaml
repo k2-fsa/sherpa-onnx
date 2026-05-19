@@ -1313,7 +1313,7 @@ jobs:
 
           curl -SL -O https://github.com/csukuangfj/sr-data/archive/refs/heads/master.tar.gz
           tar xzf master.tar.gz
-          mv sr-data-master sr-data
+          mv sr-data-main sr-data
           rm master.tar.gz
 
           ./$name

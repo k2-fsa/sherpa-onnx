@@ -824,6 +824,8 @@ jobs:
           tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
           rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
 
+          printf "▁THE\n▁A\n" > sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
@@ -848,12 +850,15 @@ jobs:
           tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
           rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
 
+          cp sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs/test_keywords.txt .
+
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
           ./$name
 
           rm $name
+          rm test_keywords.txt
           rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
 
   test-tts:
@@ -1576,7 +1581,7 @@ jobs:
 
           curl -SL -O https://github.com/csukuangfj/sr-data/archive/refs/heads/master.tar.gz
           tar xzf master.tar.gz
-          mv sr-data-master sr-data
+          mv sr-data-main sr-data
           rm master.tar.gz
 
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
