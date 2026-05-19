@@ -1246,4 +1246,307 @@ int32_t OfflineSourceSeparation::GetNumberOfStems() const {
   return SherpaOnnxOfflineSourceSeparationGetNumberOfStems(p_);
 }
 
+// ============================================================================
+// Spoken Language Identification
+// ============================================================================
+
+SpokenLanguageIdentification SpokenLanguageIdentification::Create(
+    const SpokenLanguageIdentificationConfig &config) {
+  struct SherpaOnnxSpokenLanguageIdentificationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.whisper.encoder = config.whisper.encoder.c_str();
+  c.whisper.decoder = config.whisper.decoder.c_str();
+  c.whisper.tail_paddings = config.whisper.tail_paddings;
+  c.num_threads = config.num_threads;
+  c.debug = config.debug;
+  c.provider = config.provider.c_str();
+
+  const SherpaOnnxSpokenLanguageIdentification *p =
+      SherpaOnnxCreateSpokenLanguageIdentification(&c);
+  return SpokenLanguageIdentification(p);
+}
+
+SpokenLanguageIdentification::SpokenLanguageIdentification(
+    const SherpaOnnxSpokenLanguageIdentification *p)
+    : MoveOnly<SpokenLanguageIdentification,
+               SherpaOnnxSpokenLanguageIdentification>(p) {}
+
+void SpokenLanguageIdentification::Destroy(
+    const SherpaOnnxSpokenLanguageIdentification *p) const {
+  SherpaOnnxDestroySpokenLanguageIdentification(p);
+}
+
+OfflineStream SpokenLanguageIdentification::CreateStream() const {
+  const SherpaOnnxOfflineStream *s =
+      SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(p_);
+  return OfflineStream(s);
+}
+
+SpokenLanguageIdentificationResult SpokenLanguageIdentification::Compute(
+    const OfflineStream *s) const {
+  const SherpaOnnxSpokenLanguageIdentificationResult *r =
+      SherpaOnnxSpokenLanguageIdentificationCompute(p_, s->Get());
+  SpokenLanguageIdentificationResult ans;
+  if (r && r->lang) {
+    ans.lang = r->lang;
+  }
+  SherpaOnnxDestroySpokenLanguageIdentificationResult(r);
+  return ans;
+}
+
+// ============================================================================
+// Speaker Embedding Extractor
+// ============================================================================
+
+SpeakerEmbeddingExtractor SpeakerEmbeddingExtractor::Create(
+    const SpeakerEmbeddingExtractorConfig &config) {
+  struct SherpaOnnxSpeakerEmbeddingExtractorConfig c;
+  memset(&c, 0, sizeof(c));
+  c.model = config.model.c_str();
+  c.num_threads = config.num_threads;
+  c.debug = config.debug;
+  c.provider = config.provider.c_str();
+
+  const SherpaOnnxSpeakerEmbeddingExtractor *p =
+      SherpaOnnxCreateSpeakerEmbeddingExtractor(&c);
+  return SpeakerEmbeddingExtractor(p);
+}
+
+SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p)
+    : MoveOnly<SpeakerEmbeddingExtractor,
+               SherpaOnnxSpeakerEmbeddingExtractor>(p) {}
+
+void SpeakerEmbeddingExtractor::Destroy(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p) const {
+  SherpaOnnxDestroySpeakerEmbeddingExtractor(p);
+}
+
+int32_t SpeakerEmbeddingExtractor::Dim() const {
+  return SherpaOnnxSpeakerEmbeddingExtractorDim(p_);
+}
+
+OnlineStream SpeakerEmbeddingExtractor::CreateStream() const {
+  const SherpaOnnxOnlineStream *s =
+      SherpaOnnxSpeakerEmbeddingExtractorCreateStream(p_);
+  return OnlineStream(s);
+}
+
+bool SpeakerEmbeddingExtractor::IsReady(const OnlineStream *s) const {
+  return SherpaOnnxSpeakerEmbeddingExtractorIsReady(p_, s->Get()) != 0;
+}
+
+std::vector<float> SpeakerEmbeddingExtractor::ComputeEmbedding(
+    const OnlineStream *s) const {
+  const float *v =
+      SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(p_, s->Get());
+  if (!v) return {};
+  int32_t dim = Dim();
+  std::vector<float> ans(v, v + dim);
+  SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(v);
+  return ans;
+}
+
+// ============================================================================
+// Speaker Embedding Manager
+// ============================================================================
+
+SpeakerEmbeddingManager SpeakerEmbeddingManager::Create(int32_t dim) {
+  const SherpaOnnxSpeakerEmbeddingManager *p =
+      SherpaOnnxCreateSpeakerEmbeddingManager(dim);
+  return SpeakerEmbeddingManager(p);
+}
+
+SpeakerEmbeddingManager::SpeakerEmbeddingManager(
+    const SherpaOnnxSpeakerEmbeddingManager *p)
+    : MoveOnly<SpeakerEmbeddingManager, SherpaOnnxSpeakerEmbeddingManager>(p) {}
+
+void SpeakerEmbeddingManager::Destroy(
+    const SherpaOnnxSpeakerEmbeddingManager *p) const {
+  SherpaOnnxDestroySpeakerEmbeddingManager(p);
+}
+
+bool SpeakerEmbeddingManager::Add(const std::string &name,
+                                  const float *v) const {
+  return SherpaOnnxSpeakerEmbeddingManagerAdd(p_, name.c_str(), v) != 0;
+}
+
+bool SpeakerEmbeddingManager::AddList(const std::string &name,
+                                      const float **v) const {
+  return SherpaOnnxSpeakerEmbeddingManagerAddList(p_, name.c_str(), v) != 0;
+}
+
+bool SpeakerEmbeddingManager::AddListFlattened(const std::string &name,
+                                               const float *v,
+                                               int32_t n) const {
+  return SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(p_, name.c_str(), v,
+                                                           n) != 0;
+}
+
+bool SpeakerEmbeddingManager::Remove(const std::string &name) const {
+  return SherpaOnnxSpeakerEmbeddingManagerRemove(p_, name.c_str()) != 0;
+}
+
+std::string SpeakerEmbeddingManager::Search(const float *v,
+                                            float threshold) const {
+  const char *name =
+      SherpaOnnxSpeakerEmbeddingManagerSearch(p_, v, threshold);
+  if (!name) return {};
+  std::string ans(name);
+  SherpaOnnxSpeakerEmbeddingManagerFreeSearch(name);
+  return ans;
+}
+
+std::vector<SpeakerMatch> SpeakerEmbeddingManager::GetBestMatches(
+    const float *v, float threshold, int32_t n) const {
+  const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *r =
+      SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(p_, v, threshold, n);
+  std::vector<SpeakerMatch> ans;
+  if (r) {
+    for (int32_t i = 0; i < r->count; ++i) {
+      SpeakerMatch m;
+      m.score = r->matches[i].score;
+      if (r->matches[i].name) m.name = r->matches[i].name;
+      ans.push_back(std::move(m));
+    }
+    SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches(r);
+  }
+  return ans;
+}
+
+bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *v,
+                                     float threshold) const {
+  return SherpaOnnxSpeakerEmbeddingManagerVerify(p_, name.c_str(), v,
+                                                 threshold) != 0;
+}
+
+bool SpeakerEmbeddingManager::Contains(const std::string &name) const {
+  return SherpaOnnxSpeakerEmbeddingManagerContains(p_, name.c_str()) != 0;
+}
+
+int32_t SpeakerEmbeddingManager::NumSpeakers() const {
+  return SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(p_);
+}
+
+std::vector<std::string> SpeakerEmbeddingManager::GetAllSpeakers() const {
+  const char *const *names =
+      SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(p_);
+  std::vector<std::string> ans;
+  if (names) {
+    for (int32_t i = 0; names[i]; ++i) {
+      ans.emplace_back(names[i]);
+    }
+    SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(names);
+  }
+  return ans;
+}
+
+// ============================================================================
+// Offline Speaker Diarization
+// ============================================================================
+
+static int32_t DiarizationProgressCallback(int32_t num_processed_chunks,
+                                           int32_t num_total_chunks,
+                                           void *arg) {
+  auto *cb = static_cast<OfflineSpeakerDiarizationProgressCallback *>(arg);
+  (*cb)(num_processed_chunks, num_total_chunks);
+  return 0;
+}
+
+OfflineSpeakerDiarization OfflineSpeakerDiarization::Create(
+    const OfflineSpeakerDiarizationConfig &config) {
+  struct SherpaOnnxOfflineSpeakerDiarizationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.segmentation.pyannote.model =
+      config.segmentation.pyannote.model.c_str();
+  c.segmentation.num_threads = config.segmentation.num_threads;
+  c.segmentation.debug = config.segmentation.debug;
+  c.segmentation.provider = config.segmentation.provider.c_str();
+  c.embedding.model = config.embedding.model.c_str();
+  c.embedding.num_threads = config.embedding.num_threads;
+  c.embedding.debug = config.embedding.debug;
+  c.embedding.provider = config.embedding.provider.c_str();
+  c.clustering.num_clusters = config.clustering.num_clusters;
+  c.clustering.threshold = config.clustering.threshold;
+  c.min_duration_on = config.min_duration_on;
+  c.min_duration_off = config.min_duration_off;
+
+  const SherpaOnnxOfflineSpeakerDiarization *p =
+      SherpaOnnxCreateOfflineSpeakerDiarization(&c);
+  return OfflineSpeakerDiarization(p);
+}
+
+OfflineSpeakerDiarization::OfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarization *p)
+    : MoveOnly<OfflineSpeakerDiarization,
+               SherpaOnnxOfflineSpeakerDiarization>(p) {}
+
+void OfflineSpeakerDiarization::Destroy(
+    const SherpaOnnxOfflineSpeakerDiarization *p) const {
+  SherpaOnnxDestroyOfflineSpeakerDiarization(p);
+}
+
+int32_t OfflineSpeakerDiarization::GetSampleRate() const {
+  return SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(p_);
+}
+
+void OfflineSpeakerDiarization::SetConfig(
+    const OfflineSpeakerDiarizationConfig &config) const {
+  struct SherpaOnnxOfflineSpeakerDiarizationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.clustering.num_clusters = config.clustering.num_clusters;
+  c.clustering.threshold = config.clustering.threshold;
+  SherpaOnnxOfflineSpeakerDiarizationSetConfig(p_, &c);
+}
+
+std::vector<OfflineSpeakerDiarizationSegment>
+OfflineSpeakerDiarization::Process(const float *samples, int32_t n) const {
+  const SherpaOnnxOfflineSpeakerDiarizationResult *r =
+      SherpaOnnxOfflineSpeakerDiarizationProcess(p_, samples, n);
+  std::vector<OfflineSpeakerDiarizationSegment> ans;
+  if (r) {
+    int32_t num_segments =
+        SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
+    const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
+        SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(r);
+    for (int32_t i = 0; i < num_segments; ++i) {
+      OfflineSpeakerDiarizationSegment seg;
+      seg.start = segments[i].start;
+      seg.end = segments[i].end;
+      seg.speaker = segments[i].speaker;
+      ans.push_back(seg);
+    }
+    SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
+    SherpaOnnxOfflineSpeakerDiarizationDestroyResult(r);
+  }
+  return ans;
+}
+
+std::vector<OfflineSpeakerDiarizationSegment>
+OfflineSpeakerDiarization::Process(
+    const float *samples, int32_t n,
+    const OfflineSpeakerDiarizationProgressCallback &callback) const {
+  OfflineSpeakerDiarizationProgressCallback cb = callback;
+  const SherpaOnnxOfflineSpeakerDiarizationResult *r =
+      SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
+          p_, samples, n, DiarizationProgressCallback, &cb);
+  std::vector<OfflineSpeakerDiarizationSegment> ans;
+  if (r) {
+    int32_t num_segments =
+        SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);
+    const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
+        SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(r);
+    for (int32_t i = 0; i < num_segments; ++i) {
+      OfflineSpeakerDiarizationSegment seg;
+      seg.start = segments[i].start;
+      seg.end = segments[i].end;
+      seg.speaker = segments[i].speaker;
+      ans.push_back(seg);
+    }
+    SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
+    SherpaOnnxOfflineSpeakerDiarizationDestroyResult(r);
+  }
+  return ans;
+}
+
 }  // namespace sherpa_onnx::cxx

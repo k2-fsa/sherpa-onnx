@@ -92,6 +92,14 @@ add_executable(spoken-language-identification-cxx-api
                ./spoken-language-identification-cxx-api.cc)
 target_link_libraries(spoken-language-identification-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(speaker-identification-cxx-api
+               ./speaker-identification-cxx-api.cc)
+target_link_libraries(speaker-identification-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(offline-speaker-diarization-cxx-api
+               ./offline-speaker-diarization-cxx-api.cc)
+target_link_libraries(offline-speaker-diarization-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(cohere-transcribe-cxx-api ./cohere-transcribe-cxx-api.cc)
 target_link_libraries(cohere-transcribe-cxx-api sherpa-onnx-cxx-api)
 
@@ -216,14 +224,6 @@ target_link_libraries(funasr-nano-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(qwen3-asr-cxx-api ./qwen3-asr-cxx-api.cc)
 target_link_libraries(qwen3-asr-cxx-api sherpa-onnx-cxx-api)
-
-add_executable(offline-speaker-diarization-cxx-api
-               ./offline-speaker-diarization-cxx-api.cc)
-target_link_libraries(offline-speaker-diarization-cxx-api sherpa-onnx-cxx-api)
-
-add_executable(speaker-identification-cxx-api
-               ./speaker-identification-cxx-api.cc)
-target_link_libraries(speaker-identification-cxx-api sherpa-onnx-cxx-api)
 
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(matcha-tts-zh-cxx-api ./matcha-tts-zh-cxx-api.cc)

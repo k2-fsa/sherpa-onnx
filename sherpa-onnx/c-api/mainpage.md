@@ -145,6 +145,7 @@ Useful examples include:
 - [`vad-cxx-api.cc`](https://github.com/k2-fsa/sherpa-onnx/blob/master/cxx-api-examples/vad-cxx-api.cc)
 - [`offline-speaker-diarization-cxx-api.cc`](https://github.com/k2-fsa/sherpa-onnx/blob/master/cxx-api-examples/offline-speaker-diarization-cxx-api.cc)
 - [`speaker-identification-cxx-api.cc`](https://github.com/k2-fsa/sherpa-onnx/blob/master/cxx-api-examples/speaker-identification-cxx-api.cc)
+- [`spoken-language-identification-cxx-api.cc`](https://github.com/k2-fsa/sherpa-onnx/blob/master/cxx-api-examples/spoken-language-identification-cxx-api.cc)
 
 ## Generating the documentation
 
