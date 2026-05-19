@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherpa-ONNX VAD Demo</title>
+  <link rel="stylesheet" href="common.css">
+  
+  <!-- Load the common JS first -->
+  <script src="common.js"></script>
+  
+  <!-- Load WASM module first -->
+  <script src="../sherpa-onnx-wasm-combined.js"></script>
+  
+  <!-- Load the combined module loader script -->
+  <script src="../sherpa-onnx-combined.js"></script>
+</head>
+<body>
+  <h1>Sherpa-ONNX VAD Demo</h1>
+  
+  <div class="nav-menu">
+    <a href="index.html">Home</a>
+    <a href="asr.html">ASR</a>
+    <a href="tts.html">TTS</a>
+    <a href="vad.html" class="active">VAD</a>
+    <a href="kws.html">KWS</a>
+  </div>
+  
+  <div id="status">Loading WebAssembly module...</div>
+  
+  <section id="vad-section">
+    <h2>Voice Activity Detection (VAD)</h2>
+    
+    <div class="model-config">
+      <h3>Model Configuration</h3>
+      <div class="form-group">
+        <label for="vad-model-url">Model URL:</label>
+        <input type="text" class="model-url" id="vad-model-url" placeholder="Model URL" value="../assets/vad/silero_vad.onnx">
+      </div>
+      <div class="form-group">
+        <label for="vad-model-dir">Model Directory:</label>
+        <input type="text" id="vad-model-dir" value="vad-models">
+        <small>(The directory where model files will be stored)</small>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="vad-debug" checked>
+        <label for="vad-debug">Enable debug logging</label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" id="vad-clean-start">
+        <label for="vad-clean-start">Clean start (remove existing files)</label>
+      </div>
+      
+      <h3>VAD Parameters</h3>
+      <div class="form-group">
+        <label for="vad-threshold">Threshold:</label>
+        <input type="range" id="vad-threshold" min="0" max="1" step="0.05" value="0.5">
+        <small id="vad-threshold-value">0.5</small>
+      </div>
+      <div class="form-group">
+        <label for="vad-min-silence">Min Silence Duration (seconds):</label>
+        <input type="range" id="vad-min-silence" min="0.1" max="1.0" step="0.05" value="0.3">
+        <small id="vad-min-silence-value">0.3</small>
+      </div>
+      <div class="form-group">
+        <label for="vad-min-speech">Min Speech Duration (seconds):</label>
+        <input type="range" id="vad-min-speech" min="0.1" max="1.0" step="0.05" value="0.1">
+        <small id="vad-min-speech-value">0.1</small>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="load-vad-model">Load VAD Model</button>
+      <button id="start-vad" disabled>Start</button>
+      <button id="stop-vad" disabled>Stop</button>
+      <!-- Unload button will be added dynamically -->
+    </div>
+    <div id="vad-status">Status: Not active</div>
+    
+    <div class="visualization">
+      <div id="vad-visualization" style="height: 100px; margin-top: 20px; background-color: #ddd; position: relative; border-radius: 4px;">
+        <div id="vad-indicator" style="position: absolute; top: 0; bottom: 0; left: 0; width: 0; background-color: #4CAF50; border-radius: 4px; transition: width 0.2s;"></div>
+        <div style="position: relative; text-align: center; line-height: 100px; color: #333; font-weight: bold;">Voice Activity Level</div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // VAD-specific initialization code
+    let vad = null;
+    let vadProcessor = null;
+    let loadedModelData = null; // Add variable to store loaded model data
+    
+    function initializeUI() {
+      document.getElementById('status').textContent = 'WebAssembly module loaded. Ready to load models.';
+      setupVAD();
+      setupSliders();
+    }
+    
+    function setupSliders() {
+      const thresholdSlider = document.getElementById('vad-threshold');
+      const thresholdValue = document.getElementById('vad-threshold-value');
+      const minSilenceSlider = document.getElementById('vad-min-silence');
+      const minSilenceValue = document.getElementById('vad-min-silence-value');
+      const minSpeechSlider = document.getElementById('vad-min-speech');
+      const minSpeechValue = document.getElementById('vad-min-speech-value');
+      
+      thresholdSlider.addEventListener('input', () => {
+        thresholdValue.textContent = thresholdSlider.value;
+      });
+      
+      minSilenceSlider.addEventListener('input', () => {
+        minSilenceValue.textContent = minSilenceSlider.value;
+      });
+      
+      minSpeechSlider.addEventListener('input', () => {
+        minSpeechValue.textContent = minSpeechSlider.value;
+      });
+    }
+    
+    function setupVAD() {
+      const loadBtn = document.getElementById('load-vad-model');
+      const startBtn = document.getElementById('start-vad');
+      const stopBtn = document.getElementById('stop-vad');
+      const statusElem = document.getElementById('vad-status');
+      const controlsDiv = document.querySelector('.controls');
+      
+      let unloadBtn = null;
+      
+      loadBtn.addEventListener('click', async () => {
+        loadBtn.disabled = true;
+        loadBtn.textContent = 'Loading...';
+        statusElem.textContent = 'Status: Loading model...';
+        
+        try {
+          // Get options from UI
+          const modelUrl = document.getElementById('vad-model-url').value;
+          const modelDir = document.getElementById('vad-model-dir').value || 'vad-models';
+          const debug = document.getElementById('vad-debug').checked;
+          const cleanStart = document.getElementById('vad-clean-start').checked;
+          
+          // Build the model config with all options
+          const modelConfig = {
+            model: modelUrl,
+            modelDir: modelDir,
+            debug: debug,
+            cleanStart: cleanStart
+          };
+          
+          console.log(`VAD setup: Using model configuration:`, modelConfig);
+          
+          // Load the model
+          const loadedModel = await SherpaOnnx.VAD.loadModel(modelConfig);
+          loadedModelData = loadedModel; // Store the model data for later use
+          
+          loadBtn.textContent = 'Model Loaded';
+          statusElem.textContent = 'Status: Model loaded successfully';
+          startBtn.disabled = false;
+          
+          // Add unload button if it doesn't exist
+          if (!unloadBtn) {
+            unloadBtn = createUnloadButton(controlsDiv, 'VAD', null, statusElem); // VAD doesn't have a direct free() method
+            unloadBtn.id = 'unload-vad-model';
+            
+            // Custom handling for VAD unload
+            unloadBtn.addEventListener('click', function() {
+              if (vadProcessor) {
+                vadProcessor.disconnect();
+                mediaStream.disconnect();
+                vadProcessor = null;
+              }
+              
+              if (vad) {
+                // No direct free method, set to null
+                vad = null;
+              }
+              
+              SherpaOnnx.cleanupVAD();
+              loadedModelData = null; // Clear the stored model data
+              
+              unloadBtn.disabled = true;
+              startBtn.disabled = true;
+              stopBtn.disabled = true;
+              loadBtn.disabled = false;
+              statusElem.textContent = 'Status: VAD model unloaded';
+            });
+          } else {
+            unloadBtn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Failed to load VAD model:', error);
+          loadBtn.textContent = 'Load Failed';
+          statusElem.textContent = `Status: Error - ${error.message}`;
+          loadBtn.disabled = false;
+        }
+      });
+      
+      startBtn.addEventListener('click', async () => {
+        try {
+          await getMicrophoneInput();
+          
+          // Get VAD parameters from UI
+          const threshold = parseFloat(document.getElementById('vad-threshold').value);
+          const minSilenceDuration = parseFloat(document.getElementById('vad-min-silence').value);
+          const minSpeechDuration = parseFloat(document.getElementById('vad-min-speech').value);
+          const debug = document.getElementById('vad-debug').checked;
+          
+          // Use the stored model data
+          if (!loadedModelData) {
+            throw new Error("Model not loaded. Please load the model first.");
+          }
+          
+          // Create the VAD detector
+          vad = SherpaOnnx.VAD.createVoiceActivityDetector(loadedModelData, {
+            threshold: threshold,
+            minSilenceDuration: minSilenceDuration,
+            minSpeechDuration: minSpeechDuration,
+            windowSize: 512,
+            bufferSizeInSeconds: 5.0,
+            debug: debug
+          });
+          
+          const bufferSize = 4096;
+          vadProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+          
+          const indicator = document.getElementById('vad-indicator');
+          
+          vadProcessor.onaudioprocess = function(e) {
+            const samples = new Float32Array(e.inputBuffer.getChannelData(0));
+            vad.acceptWaveform(samples);
+            
+            // Check if speech is detected
+            const detected = vad.detected();
+            if (detected) {
+              statusElem.textContent = 'Status: Speech detected!';
+              statusElem.style.backgroundColor = '#c8e6c9';
+              
+              // Update visualization
+              indicator.style.width = '100%';
+              indicator.style.backgroundColor = '#4CAF50';
+            } else {
+              statusElem.textContent = 'Status: Silence';
+              statusElem.style.backgroundColor = '#ffcdd2';
+              
+              // Update visualization
+              indicator.style.width = '10%';
+              indicator.style.backgroundColor = '#f44336';
+            }
+          };
+          
+          mediaStream.connect(vadProcessor);
+          vadProcessor.connect(audioContext.destination);
+          
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+        } catch (error) {
+          console.error('Failed to start VAD:', error);
+          statusElem.textContent = `Status: Error - ${error.message}`;
+        }
+      });
+      
+      stopBtn.addEventListener('click', () => {
+        if (vadProcessor) {
+          vadProcessor.disconnect();
+          mediaStream.disconnect();
+          vadProcessor = null;
+        }
+        
+        document.getElementById('vad-indicator').style.width = '0%';
+        
+        statusElem.textContent = 'Status: Not active';
+        statusElem.style.backgroundColor = '';
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Generated WASM files
+*.wasm
+sherpa-onnx-wasm-combined.js
+sherpa-onnx-wasm-combined.data
+# Local model files
+*.onnx
+*tokens.txt 

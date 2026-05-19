@@ -1,0 +1,18 @@
+# Ignore all ONNX model files and subdirectories
+*.onnx
+asr/
+vad/
+tts/
+speakers/
+enhancement/
+kws/
+
+# Ignore tokens files
+*tokens.txt
+
+# Ignore temporary files
+tmp/
+
+# But keep the README.md and setup script
+!README.md
+!setup-assets.sh 
