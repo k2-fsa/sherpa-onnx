@@ -116,8 +116,7 @@ void PybindOfflineSpeakerDiarization(py::module *m) {
             std::function<int32_t(int32_t, int32_t, void *)> callback_wrapper =
                 [callback](int32_t processed_chunks, int32_t num_chunks,
                            void *) -> int32_t {
-              callback(processed_chunks, num_chunks);
-              return 0;
+              return callback(processed_chunks, num_chunks);
             };
 
             return self.Process(samples.data(), samples.size(),

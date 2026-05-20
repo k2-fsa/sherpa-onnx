@@ -72,7 +72,7 @@ class OnlineRecognizer(object):
         while recognizer.is_ready(stream):
             recognizer.decode_stream(stream)
 
-        result = recognizer.get_result(stream)
+        result = recognizer.get_result_all(stream)
         print(result.text)
 
     Example with endpoint detection::
@@ -84,7 +84,7 @@ class OnlineRecognizer(object):
             recognizer.decode_stream(stream)
 
         if recognizer.is_endpoint(stream):
-            result = recognizer.get_result(stream)
+            result = recognizer.get_result_all(stream)
             print("Endpoint detected:", result.text)
             recognizer.reset(stream)  # reset for next utterance
 

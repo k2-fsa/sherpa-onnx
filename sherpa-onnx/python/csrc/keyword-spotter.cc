@@ -56,7 +56,15 @@ Args:
 )doc";
 
 static constexpr const char *kCreateStreamDoc = R"doc(
-Create a new streaming recognition instance.
+Create a new streaming recognition instance using the keywords from the
+configuration.
+
+Returns:
+  An ``OnlineStream`` object.
+)doc";
+
+static constexpr const char *kCreateStreamKeywordsDoc = R"doc(
+Create a new streaming recognition instance with custom keywords.
 
 Args:
   keywords:
@@ -118,7 +126,8 @@ void PybindKeywordSpotter(py::module *m) {
           [](PyClass &self, const std::string &keywords) {
             return self.CreateStream(keywords);
           },
-          py::arg("keywords"), py::call_guard<py::gil_scoped_release>())
+          py::arg("keywords"), kCreateStreamKeywordsDoc,
+          py::call_guard<py::gil_scoped_release>())
       .def("is_ready", &PyClass::IsReady, kIsReadyDoc,
            py::call_guard<py::gil_scoped_release>())
       .def("reset", &PyClass::Reset, kResetStreamDoc,

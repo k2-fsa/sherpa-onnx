@@ -65,10 +65,16 @@ Args:
 static constexpr const char *kCreateStreamDoc = R"doc(
 Create a new ``OnlineStream`` for decoding.
 
+Return:
+  An ``OnlineStream`` object.
+)doc";
+
+static constexpr const char *kCreateStreamHotwordsDoc = R"doc(
+Create a new ``OnlineStream`` for decoding with custom hotwords.
+
 Args:
   hotwords:
-    Optional hotwords for this stream. If provided, it is a string of
-    hotwords separated by ``/``.
+    A string of hotwords separated by ``/``.
 Return:
   An ``OnlineStream`` object.
 )doc";
@@ -226,7 +232,7 @@ void PybindOnlineRecognizer(py::module *m) {
           [](PyClass &self, const std::string &hotwords) {
             return self.CreateStream(hotwords);
           },
-          py::arg("hotwords"), kCreateStreamDoc,
+          py::arg("hotwords"), kCreateStreamHotwordsDoc,
           py::call_guard<py::gil_scoped_release>())
       .def("is_ready", &PyClass::IsReady, kIsReadyDoc,
            py::call_guard<py::gil_scoped_release>())
