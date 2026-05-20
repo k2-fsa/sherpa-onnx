@@ -1526,6 +1526,9 @@ std::vector<OfflineSpeakerDiarizationSegment>
 OfflineSpeakerDiarization::Process(
     const float *samples, int32_t n,
     const OfflineSpeakerDiarizationProgressCallback &callback) const {
+  if (!callback) {
+    return Process(samples, n);
+  }
   OfflineSpeakerDiarizationProgressCallback cb = callback;
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(

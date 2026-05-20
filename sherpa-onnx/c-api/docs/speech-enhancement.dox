@@ -44,6 +44,8 @@ config.model.provider = "cpu";
 
 const SherpaOnnxOfflineSpeechDenoiser *sd =
     SherpaOnnxCreateOfflineSpeechDenoiser(&config);
+// ... use sd ...
+SherpaOnnxDestroyOfflineSpeechDenoiser(sd);
 @endcode
 
 Model file: `dpdfnet_baseline.onnx` (also: `dpdfnet2.onnx`, `dpdfnet4.onnx`,
@@ -67,6 +69,7 @@ int32_t frame_shift =
     SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(sd);
 // Feed audio in frame_shift chunks, then flush
 const SherpaOnnxDenoisedAudio *out = SherpaOnnxOnlineSpeechDenoiserFlush(sd);
+SherpaOnnxDestroyDenoisedAudio(out);
 SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
 @endcode
 
@@ -85,6 +88,8 @@ config.model.provider = "cpu";
 
 const SherpaOnnxOnlineSpeechDenoiser *sd =
     SherpaOnnxCreateOnlineSpeechDenoiser(&config);
+// ... use sd ...
+SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
 @endcode
 
 Model file: `dpdfnet_baseline.onnx`

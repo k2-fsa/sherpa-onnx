@@ -59,7 +59,7 @@ int32_t main(int32_t argc, char *argv[]) {
   GenerationConfig gen_config;
   gen_config.sid = 0;
   gen_config.speed = 1.0;  // larger -> faster in speech speed
-  gen_config.silence_scale = config.silence_scale;
+  gen_config.silence_scale = 0.2f;
 
 #if 0
   // If you don't want to use a callback, then please enable this branch

@@ -22,14 +22,14 @@
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 
-using namespace sherpa_onnx::cxx;  // NOLINT
-
 static std::vector<float> ComputeEmbedding(
-    const SpeakerEmbeddingExtractor &ex, const std::string &wav_filename) {
+    const sherpa_onnx::cxx::SpeakerEmbeddingExtractor &ex,
+    const std::string &wav_filename) {
+  using namespace sherpa_onnx::cxx;  // NOLINT
   Wave wave = ReadWave(wav_filename);
   if (wave.samples.empty()) {
     std::cerr << "Failed to read " << wav_filename << "\n";
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   OnlineStream stream = ex.CreateStream();
@@ -39,13 +39,14 @@ static std::vector<float> ComputeEmbedding(
 
   if (!ex.IsReady(&stream)) {
     std::cerr << "The input wave file " << wav_filename << " is too short!\n";
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   return ex.ComputeEmbedding(&stream);
 }
 
 int32_t main() {
+  using namespace sherpa_onnx::cxx;  // NOLINT
   SpeakerEmbeddingExtractorConfig config;
   config.model = "./3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx";
   config.num_threads = 1;

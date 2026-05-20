@@ -27,6 +27,8 @@ config.model.provider = "cpu";
 
 const SherpaOnnxOfflineSourceSeparation *ss =
     SherpaOnnxCreateOfflineSourceSeparation(&config);
+// ... use ss ...
+SherpaOnnxDestroyOfflineSourceSeparation(ss);
 @endcode
 
 Model package: `sherpa-onnx-spleeter-2stems-fp16`
@@ -46,6 +48,8 @@ config.model.provider = "cpu";
 
 const SherpaOnnxOfflineSourceSeparation *ss =
     SherpaOnnxCreateOfflineSourceSeparation(&config);
+// ... use ss ...
+SherpaOnnxDestroyOfflineSourceSeparation(ss);
 @endcode
 
 Model file: `UVR-MDX-NET-Voc_FT.onnx`
