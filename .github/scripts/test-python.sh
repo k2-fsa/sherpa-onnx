@@ -249,7 +249,7 @@ rm -rf /tmp/test-cluster
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
 log "test offline SenseVoice CTC"
-url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 name=$(basename $url)
 repo=$(basename -s .tar.bz2 $name)
 
