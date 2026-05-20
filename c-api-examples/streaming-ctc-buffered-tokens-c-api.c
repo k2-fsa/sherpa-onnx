@@ -74,26 +74,16 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer2Ctc config
-  SherpaOnnxOnlineZipformer2CtcModelConfig zipformer2_ctc_config;
-  memset(&zipformer2_ctc_config, 0, sizeof(zipformer2_ctc_config));
-  zipformer2_ctc_config.model = model_filename;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens_buf = tokens_buf;
-  online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.zipformer2_ctc = zipformer2_ctc_config;
-
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = online_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens_buf = tokens_buf;
+  recognizer_config.model_config.tokens_buf_size = token_buf_size;
+  recognizer_config.model_config.zipformer2_ctc.model = model_filename;
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);

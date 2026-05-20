@@ -34,24 +34,15 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineFireRedAsrCtcModelConfig fire_red_asr_ctc;
-  memset(&fire_red_asr_ctc, 0, sizeof(fire_red_asr_ctc));
-  fire_red_asr_ctc.model = model_filename;
-
-  // Offline model config
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 1;
-  offline_model_config.num_threads = 1;
-  offline_model_config.provider = provider;
-  offline_model_config.tokens = tokens_filename;
-  offline_model_config.fire_red_asr_ctc = fire_red_asr_ctc;
-
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens_filename;
+  recognizer_config.model_config.fire_red_asr_ctc.model = model_filename;
 
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

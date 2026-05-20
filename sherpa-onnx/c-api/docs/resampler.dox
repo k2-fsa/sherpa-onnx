@@ -1,0 +1,34 @@
+/**
+@page resampler Linear Resampler
+
+sherpa-onnx provides a linear resampler for sample rate conversion through
+the @ref SherpaOnnxCreateLinearResampler() API.
+
+@see SherpaOnnxCreateLinearResampler, SherpaOnnxDestroyLinearResampler
+
+@code
+const SherpaOnnxLinearResampler *resampler =
+    SherpaOnnxCreateLinearResampler(48000, 16000, 0, 0);
+
+// Process intermediate chunks (flush = 0)
+const SherpaOnnxResampleOut *out =
+    SherpaOnnxLinearResamplerResample(resampler, input_samples, n, 0);
+// Use out->samples[0..out->n-1]
+SherpaOnnxLinearResamplerResampleFree(out);
+
+// Flush the final chunk (flush = 1)
+out = SherpaOnnxLinearResamplerResample(resampler, last_chunk, last_n, 1);
+SherpaOnnxLinearResamplerResampleFree(out);
+
+SherpaOnnxDestroyLinearResampler(resampler);
+@endcode
+
+If `filter_cutoff_hz` or `num_zeros` is 0, default values are used:
+
+@code
+float min_freq = samp_rate_in_hz < samp_rate_out_hz ? samp_rate_in_hz
+                                                     : samp_rate_out_hz;
+float filter_cutoff_hz = 0.99f * 0.5f * min_freq;
+int32_t num_zeros = 6;
+@endcode
+*/

@@ -34,25 +34,15 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer config
-  SherpaOnnxOnlineToneCtcModelConfig t_one_ctc;
-  memset(&t_one_ctc, 0, sizeof(t_one_ctc));
-  t_one_ctc.model = model;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens = tokens;
-  online_model_config.t_one_ctc = t_one_ctc;
-
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = online_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens;
+  recognizer_config.model_config.t_one_ctc.model = model;
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);

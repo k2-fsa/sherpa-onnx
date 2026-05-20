@@ -36,26 +36,16 @@ int32_t main() {
     return -1;
   }
 
-  // Paraformer config
-  SherpaOnnxOnlineParaformerModelConfig paraformer_config;
-  memset(&paraformer_config, 0, sizeof(paraformer_config));
-  paraformer_config.encoder = encoder_filename;
-  paraformer_config.decoder = decoder_filename;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens = tokens_filename;
-  online_model_config.paraformer = paraformer_config;
-
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = online_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens_filename;
+  recognizer_config.model_config.paraformer.encoder = encoder_filename;
+  recognizer_config.model_config.paraformer.decoder = decoder_filename;
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);

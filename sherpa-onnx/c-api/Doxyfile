@@ -96,9 +96,23 @@ WARN_LOGFILE           =
 
 INPUT                  = mainpage.md \
                          c-api.h \
-                         cxx-api.h
+                         cxx-api.h \
+                         docs/offline-asr.dox \
+                         docs/online-asr.dox \
+                         docs/tts.dox \
+                         docs/vad.dox \
+                         docs/audio-tagging.dox \
+                         docs/punctuation.dox \
+                         docs/speech-enhancement.dox \
+                         docs/source-separation.dox \
+                         docs/speaker-diarization.dox \
+                         docs/speaker-embedding.dox \
+                         docs/spoken-language-id.dox \
+                         docs/keyword-spotting.dox \
+                         docs/resampler.dox
 INPUT_ENCODING         = UTF-8
-FILE_PATTERNS          = *.h
+FILE_PATTERNS          = *.h \
+                         *.dox
 RECURSIVE              = NO
 EXCLUDE                =
 EXCLUDE_SYMLINKS       = NO

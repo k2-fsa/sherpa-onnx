@@ -1,0 +1,58 @@
+/**
+@page source_separation Source Separation
+
+sherpa-onnx supports source separation through the
+@ref SherpaOnnxCreateOfflineSourceSeparation() API. Configure exactly one
+model family by filling in the corresponding field of
+@ref SherpaOnnxOfflineSourceSeparationModelConfig.
+
+@see SherpaOnnxCreateOfflineSourceSeparation,
+     SherpaOnnxOfflineSourceSeparationConfig
+
+@tableofcontents
+
+@section ss_spleeter Spleeter
+
+Spleeter separates audio into vocals and accompaniment (2 stems).
+
+@code
+SherpaOnnxOfflineSourceSeparationConfig config;
+memset(&config, 0, sizeof(config));
+config.model.spleeter.vocals =
+    "./sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx";
+config.model.spleeter.accompaniment =
+    "./sherpa-onnx-spleeter-2stems-fp16/accompaniment.fp16.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflineSourceSeparation *ss =
+    SherpaOnnxCreateOfflineSourceSeparation(&config);
+// ... use ss ...
+SherpaOnnxDestroyOfflineSourceSeparation(ss);
+@endcode
+
+Model package: `sherpa-onnx-spleeter-2stems-fp16`
+
+Example source: [source-separation-spleeter-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/source-separation-spleeter-c-api.c)
+
+@section ss_uvr UVR (MDX-Net)
+
+UVR separates audio into vocals and non-vocals.
+
+@code
+SherpaOnnxOfflineSourceSeparationConfig config;
+memset(&config, 0, sizeof(config));
+config.model.uvr.model = "./UVR-MDX-NET-Voc_FT.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflineSourceSeparation *ss =
+    SherpaOnnxCreateOfflineSourceSeparation(&config);
+// ... use ss ...
+SherpaOnnxDestroyOfflineSourceSeparation(ss);
+@endcode
+
+Model file: `UVR-MDX-NET-Voc_FT.onnx`
+
+Example source: [source-separation-uvr-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/source-separation-uvr-c-api.c)
+*/

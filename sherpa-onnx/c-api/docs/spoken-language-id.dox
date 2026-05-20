@@ -1,0 +1,39 @@
+/**
+@page spoken_language_id Spoken Language Identification
+
+sherpa-onnx supports spoken language identification through the
+@ref SherpaOnnxCreateSpokenLanguageIdentification() API. It uses
+Whisper-based models to detect the language of spoken audio.
+
+@see SherpaOnnxCreateSpokenLanguageIdentification,
+     SherpaOnnxSpokenLanguageIdentificationConfig
+
+@code
+SherpaOnnxSpokenLanguageIdentificationConfig config;
+memset(&config, 0, sizeof(config));
+config.whisper.encoder = "./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx";
+config.whisper.decoder = "./sherpa-onnx-whisper-tiny/tiny-decoder.int8.onnx";
+config.num_threads = 1;
+config.provider = "cpu";
+
+const SherpaOnnxSpokenLanguageIdentification *slid =
+    SherpaOnnxCreateSpokenLanguageIdentification(&config);
+
+SherpaOnnxOfflineStream *stream =
+    SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(slid);
+SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate,
+                                wave->samples, wave->num_samples);
+
+const SherpaOnnxSpokenLanguageIdentificationResult *result =
+    SherpaOnnxSpokenLanguageIdentificationCompute(slid, stream);
+printf("Detected language: %s\n", result->lang);
+
+SherpaOnnxDestroySpokenLanguageIdentificationResult(result);
+SherpaOnnxDestroyOfflineStream(stream);
+SherpaOnnxDestroySpokenLanguageIdentification(slid);
+@endcode
+
+Model package: `sherpa-onnx-whisper-tiny`
+
+Example source: [spoken-language-identification-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/spoken-language-identification-c-api.c)
+*/

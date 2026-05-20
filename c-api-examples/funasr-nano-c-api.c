@@ -33,26 +33,17 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineFunASRNanoModelConfig funasr_nano;
-  memset(&funasr_nano, 0, sizeof(funasr_nano));
-  funasr_nano.encoder_adaptor = encoder_adaptor;
-  funasr_nano.embedding = embedding;
-  funasr_nano.llm = llm;
-  funasr_nano.tokenizer = tokenizer;
-
-  // Offline model config
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 1;
-  offline_model_config.num_threads = 2;
-  offline_model_config.provider = "cpu";
-  offline_model_config.funasr_nano = funasr_nano;
-
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 2;
+  recognizer_config.model_config.provider = "cpu";
+  recognizer_config.model_config.funasr_nano.encoder_adaptor = encoder_adaptor;
+  recognizer_config.model_config.funasr_nano.embedding = embedding;
+  recognizer_config.model_config.funasr_nano.llm = llm;
+  recognizer_config.model_config.funasr_nano.tokenizer = tokenizer;
 
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

@@ -3,6 +3,9 @@ include_directories(${PROJECT_SOURCE_DIR})
 add_executable(streaming-zipformer-cxx-api ./streaming-zipformer-cxx-api.cc)
 target_link_libraries(streaming-zipformer-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(streaming-nemotron-cxx-api ./streaming-nemotron-cxx-api.cc)
+target_link_libraries(streaming-nemotron-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(streaming-zipformer-with-hr-cxx-api ./streaming-zipformer-with-hr-cxx-api.cc)
 target_link_libraries(streaming-zipformer-with-hr-cxx-api sherpa-onnx-cxx-api)
 
@@ -72,6 +75,30 @@ target_link_libraries(medasr-ctc-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(nemo-canary-cxx-api ./nemo-canary-cxx-api.cc)
 target_link_libraries(nemo-canary-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(nemo-giga-am-v2-cxx-api ./nemo-giga-am-v2-cxx-api.cc)
+target_link_libraries(nemo-giga-am-v2-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(nemo-ctc-cxx-api ./nemo-ctc-cxx-api.cc)
+target_link_libraries(nemo-ctc-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(paraformer-cxx-api ./paraformer-cxx-api.cc)
+target_link_libraries(paraformer-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(streaming-paraformer-cxx-api ./streaming-paraformer-cxx-api.cc)
+target_link_libraries(streaming-paraformer-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(spoken-language-identification-cxx-api
+               ./spoken-language-identification-cxx-api.cc)
+target_link_libraries(spoken-language-identification-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(speaker-identification-cxx-api
+               ./speaker-identification-cxx-api.cc)
+target_link_libraries(speaker-identification-cxx-api sherpa-onnx-cxx-api)
+
+add_executable(offline-speaker-diarization-cxx-api
+               ./offline-speaker-diarization-cxx-api.cc)
+target_link_libraries(offline-speaker-diarization-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(cohere-transcribe-cxx-api ./cohere-transcribe-cxx-api.cc)
 target_link_libraries(cohere-transcribe-cxx-api sherpa-onnx-cxx-api)
@@ -222,4 +249,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(zipvoice-tts-zh-en-cxx-api ./zipvoice-tts-zh-en-cxx-api.cc)
   target_link_libraries(zipvoice-tts-zh-en-cxx-api sherpa-onnx-cxx-api)
+
+  add_executable(offline-tts-piper-cxx-api ./offline-tts-piper-cxx-api.cc)
+  target_link_libraries(offline-tts-piper-cxx-api sherpa-onnx-cxx-api)
 endif()
