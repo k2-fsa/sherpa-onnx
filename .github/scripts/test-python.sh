@@ -279,7 +279,7 @@ if [[ $(uname) == Linux ]]; then
 
   python3 ./python-api-examples/generate-subtitles.py \
     --silero-vad-model=./silero_vad.onnx \
-    --sense-voice=$repo/model.onnx \
+    --sense-voice=$repo/model.int8.onnx \
     --tokens=$repo/tokens.txt \
     --num-threads=2 \
     ./lei-jun-test.wav
@@ -293,7 +293,7 @@ if [[ $(uname) == Linux ]]; then
 
   python3 ./python-api-examples/generate-subtitles.py \
     --silero-vad-model=./silero_vad.onnx \
-    --sense-voice=$repo/model.onnx \
+    --sense-voice=$repo/model.int8.onnx \
     --tokens=$repo/tokens.txt \
     --num-threads=2 \
     ./Obama.wav
