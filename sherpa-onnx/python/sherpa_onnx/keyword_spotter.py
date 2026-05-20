@@ -22,9 +22,60 @@ def _assert_file_exists(f: str):
 class KeywordSpotter(object):
     """A class for keyword spotting.
 
-    Please refer to the following files for usages
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/keyword-spotter.py
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/keyword-spotter-from-microphone.py
+    It uses streaming transducer models with keyword lists.
+
+    Example using pre-defined keywords::
+
+        import numpy as np
+        import sherpa_onnx
+        import soundfile as sf
+
+        kws = sherpa_onnx.KeywordSpotter(
+            tokens="./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/tokens.txt",
+            encoder="./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+            decoder="./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+            joiner="./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+            keywords_file="./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs/test_keywords.txt",
+            num_threads=2,
+            provider="cpu",
+        )
+
+        audio, sample_rate = sf.read("test.wav", dtype="float32")
+
+        tail_paddings = np.zeros(int(0.66 * sample_rate), dtype=np.float32)
+
+        stream = kws.create_stream()
+        stream.accept_waveform(sample_rate, audio)
+        stream.accept_waveform(sample_rate, tail_paddings)
+        stream.input_finished()
+
+        while kws.is_ready(stream):
+            kws.decode_stream(stream)
+            r = kws.get_result(stream)
+            if r != "":
+                # Remember to call reset right after detecting a keyword
+                kws.reset_stream(stream)
+                print(f"Detected: {r}")
+
+    Example with inline keywords::
+
+        # Add extra keywords at stream creation time
+        stream = kws.create_stream("y ǎn y uán @演员/zh ī m íng @知名")
+        stream.accept_waveform(sample_rate, audio)
+        stream.accept_waveform(sample_rate, tail_paddings)
+        stream.input_finished()
+
+        while kws.is_ready(stream):
+            kws.decode_stream(stream)
+            r = kws.get_result(stream)
+            if r != "":
+                kws.reset_stream(stream)
+                print(f"Detected: {r}")
+
+    Please refer to the following files for more usages:
+
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/keyword-spotter.py>`_
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/keyword-spotter-from-microphone.py>`_
     """
 
     def __init__(
@@ -132,28 +183,94 @@ class KeywordSpotter(object):
         self.keyword_spotter = _KeywordSpotter(keywords_spotter_config)
 
     def reset_stream(self, s: OnlineStream):
+        """Reset the stream after a keyword is detected.
+
+        You should call this right after a keyword is detected and before
+        feeding more audio to the stream.
+
+        Args:
+          s:
+            The stream to be reset.
+        """
         self.keyword_spotter.reset(s)
 
     def create_stream(self, keywords: Optional[str] = None):
+        """Create a new stream for keyword spotting.
+
+        Args:
+          keywords:
+            Optional extra keywords to add for this stream. The format is the
+            same as the keywords file content. Use ``None`` to use only the
+            keywords from the keywords file provided to the constructor.
+        Returns:
+          A new ``OnlineStream`` object.
+        """
         if keywords is None:
             return self.keyword_spotter.create_stream()
         else:
             return self.keyword_spotter.create_stream(keywords)
 
     def decode_stream(self, s: OnlineStream):
+        """Decode one step for the given stream.
+
+        Args:
+          s:
+            The stream to decode.
+        """
         self.keyword_spotter.decode_stream(s)
 
     def decode_streams(self, ss: List[OnlineStream]):
+        """Decode on multiple streams at the same time.
+
+        Args:
+          ss:
+            A list of streams to decode.
+        """
         self.keyword_spotter.decode_streams(ss)
 
     def is_ready(self, s: OnlineStream) -> bool:
+        """Check whether the stream has enough frames for decoding.
+
+        Args:
+          s:
+            The stream to check.
+        Returns:
+          ``True`` if the stream has enough frames for decoding.
+          ``False`` otherwise.
+        """
         return self.keyword_spotter.is_ready(s)
 
     def get_result(self, s: OnlineStream) -> str:
+        """Get the keyword spotting result as a string.
+
+        Args:
+          s:
+            The stream to get the result from.
+        Returns:
+          A string containing the detected keyword. Returns an empty string if
+          no keyword is detected.
+        """
         return self.keyword_spotter.get_result(s).keyword.strip()
 
     def tokens(self, s: OnlineStream) -> List[str]:
+        """Get the token list of the keyword result.
+
+        Args:
+          s:
+            The stream to get the tokens from.
+        Returns:
+          A list of strings, each being a token.
+        """
         return self.keyword_spotter.get_result(s).tokens
 
     def timestamps(self, s: OnlineStream) -> List[float]:
+        """Get the timestamp list of the keyword result.
+
+        Args:
+          s:
+            The stream to get the timestamps from.
+        Returns:
+          A list of floats, each being the timestamp (in seconds) of the
+          corresponding token.
+        """
         return self.keyword_spotter.get_result(s).timestamps

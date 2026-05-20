@@ -11,6 +11,21 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kWriteWaveDoc = R"doc(
+Write audio samples to a WAV file.
+
+Args:
+  filename:
+    Path to the output WAV file.
+  samples:
+    A 1-D float32 array of audio samples.
+  sample_rate:
+    The sample rate of the audio.
+
+Returns:
+  True if the file was written successfully.
+)doc";
+
 void PybindWaveWriter(py::module *m) {
   m->def(
       "write_wave",
@@ -21,7 +36,8 @@ void PybindWaveWriter(py::module *m) {
 
         return ok;
       },
-      py::arg("filename"), py::arg("samples"), py::arg("sample_rate"));
+      py::arg("filename"), py::arg("samples"), py::arg("sample_rate"),
+      kWriteWaveDoc);
 }
 
 }  // namespace sherpa_onnx

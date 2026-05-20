@@ -19,6 +19,43 @@ void PybindSpeechSegment(py::module *m) {
                              [](const PyClass &self) { return self.samples; });
 }
 
+static constexpr const char *kAcceptWaveformDoc = R"doc(
+Feed audio samples to the VAD.
+
+Args:
+  samples:
+    A 1-D float32 array of audio samples. The sample rate must match
+    the one configured in ``VadModelConfig``.
+)doc";
+
+static constexpr const char *kIsSpeechDetectedDoc = R"doc(
+Return True if speech is currently being detected.
+)doc";
+
+static constexpr const char *kEmptyDoc = R"doc(
+Return True if there are no queued speech segments.
+)doc";
+
+static constexpr const char *kFrontDoc = R"doc(
+Return the first queued speech segment.
+
+It is an error to access this property when ``empty()`` returns True.
+)doc";
+
+static constexpr const char *kPopDoc = R"doc(
+Remove the first queued speech segment.
+
+It is an error to call this when ``empty()`` returns True.
+)doc";
+
+static constexpr const char *kFlushDoc = R"doc(
+Flush the buffered tail samples so that the last segment is finalized.
+)doc";
+
+static constexpr const char *kResetDoc = R"doc(
+Reset the VAD internal state. Call this before processing a new audio stream.
+)doc";
+
 void PybindVoiceActivityDetector(py::module *m) {
   PybindSpeechSegment(m);
   using PyClass = VoiceActivityDetector;
@@ -41,15 +78,20 @@ void PybindVoiceActivityDetector(py::module *m) {
           [](PyClass &self, const std::vector<float> &samples) {
             self.AcceptWaveform(samples.data(), samples.size());
           },
-          py::arg("samples"), py::call_guard<py::gil_scoped_release>())
+          py::arg("samples"), kAcceptWaveformDoc,
+          py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("config", &PyClass::GetConfig)
-      .def("empty", &PyClass::Empty, py::call_guard<py::gil_scoped_release>())
-      .def("pop", &PyClass::Pop, py::call_guard<py::gil_scoped_release>())
-      .def("is_speech_detected", &PyClass::IsSpeechDetected,
+      .def("empty", &PyClass::Empty, kEmptyDoc,
            py::call_guard<py::gil_scoped_release>())
-      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
-      .def("flush", &PyClass::Flush, py::call_guard<py::gil_scoped_release>())
-      .def_property_readonly("front", &PyClass::Front)
+      .def("pop", &PyClass::Pop, kPopDoc,
+           py::call_guard<py::gil_scoped_release>())
+      .def("is_speech_detected", &PyClass::IsSpeechDetected,
+           kIsSpeechDetectedDoc, py::call_guard<py::gil_scoped_release>())
+      .def("reset", &PyClass::Reset, kResetDoc,
+           py::call_guard<py::gil_scoped_release>())
+      .def("flush", &PyClass::Flush, kFlushDoc,
+           py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly("front", &PyClass::Front, kFrontDoc)
       .def_property_readonly("current_segment", &PyClass::CurrentSpeechSegment);
 }
 

@@ -11,6 +11,25 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kFastClusteringInitDoc = R"doc(
+Constructor for FastClustering.
+
+Args:
+  config:
+    Config for fast clustering.
+)doc";
+
+static constexpr const char *kFastClusteringCallDoc = R"doc(
+Cluster the given feature vectors.
+
+Args:
+  features:
+    A 2-D float32 numpy array of shape (num_rows, num_cols).
+
+Returns:
+  A list of cluster labels for each row.
+)doc";
+
 static void PybindFastClusteringConfig(py::module *m) {
   using PyClass = FastClusteringConfig;
   py::class_<PyClass>(*m, "FastClusteringConfig")
@@ -27,7 +46,8 @@ void PybindFastClustering(py::module *m) {
 
   using PyClass = FastClustering;
   py::class_<PyClass>(*m, "FastClustering")
-      .def(py::init<const FastClusteringConfig &>(), py::arg("config"))
+      .def(py::init<const FastClusteringConfig &>(), py::arg("config"),
+           kFastClusteringInitDoc)
       .def(
           "__call__",
           [](const PyClass &self,
@@ -52,7 +72,7 @@ void PybindFastClustering(py::module *m) {
             py::gil_scoped_release release;
             return self.Cluster(p, num_rows, num_cols);
           },
-          py::arg("features"));
+          py::arg("features"), kFastClusteringCallDoc);
 }
 
 }  // namespace sherpa_onnx

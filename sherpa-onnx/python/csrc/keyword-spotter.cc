@@ -47,28 +47,83 @@ static void PybindKeywordSpotterConfig(py::module *m) {
       .def("__str__", &PyClass::ToString);
 }
 
+static constexpr const char *kKeywordSpotterDoc = R"doc(
+Keyword spotter engine.
+
+Args:
+  config:
+    The configuration for the keyword spotter.
+)doc";
+
+static constexpr const char *kCreateStreamDoc = R"doc(
+Create a new streaming recognition instance.
+
+Args:
+  keywords:
+    A string of keywords to spot, separated by ``/``.
+
+Returns:
+  An ``OnlineStream`` object.
+)doc";
+
+static constexpr const char *kIsReadyDoc = R"doc(
+Return True if the stream has enough frames for decoding.
+
+Args:
+  stream:
+    The stream to check.
+)doc";
+
+static constexpr const char *kDecodeStreamDoc = R"doc(
+Run one decoding step on the given stream.
+
+Args:
+  stream:
+    The stream to decode.
+)doc";
+
+static constexpr const char *kGetResultDoc = R"doc(
+Get the current keyword result for the given stream.
+
+Args:
+  stream:
+    The stream to query.
+
+Returns:
+  A ``KeywordResult`` object.
+)doc";
+
+static constexpr const char *kResetStreamDoc = R"doc(
+Reset the given stream for the next detection round.
+
+Args:
+  stream:
+    The stream to reset.
+)doc";
+
 void PybindKeywordSpotter(py::module *m) {
   PybindKeywordResult(m);
   PybindKeywordSpotterConfig(m);
 
   using PyClass = KeywordSpotter;
-  py::class_<PyClass>(*m, "KeywordSpotter")
+  py::class_<PyClass>(*m, "KeywordSpotter", kKeywordSpotterDoc)
       .def(py::init<const KeywordSpotterConfig &>(), py::arg("config"),
            py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](const PyClass &self) { return self.CreateStream(); },
-          py::call_guard<py::gil_scoped_release>())
+          kCreateStreamDoc, py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](PyClass &self, const std::string &keywords) {
             return self.CreateStream(keywords);
           },
           py::arg("keywords"), py::call_guard<py::gil_scoped_release>())
-      .def("is_ready", &PyClass::IsReady,
+      .def("is_ready", &PyClass::IsReady, kIsReadyDoc,
            py::call_guard<py::gil_scoped_release>())
-      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
-      .def("decode_stream", &PyClass::DecodeStream,
+      .def("reset", &PyClass::Reset, kResetStreamDoc,
+           py::call_guard<py::gil_scoped_release>())
+      .def("decode_stream", &PyClass::DecodeStream, kDecodeStreamDoc,
            py::call_guard<py::gil_scoped_release>())
       .def(
           "decode_streams",
@@ -76,7 +131,7 @@ void PybindKeywordSpotter(py::module *m) {
             self.DecodeStreams(ss.data(), ss.size());
           },
           py::call_guard<py::gil_scoped_release>())
-      .def("get_result", &PyClass::GetResult,
+      .def("get_result", &PyClass::GetResult, kGetResultDoc,
            py::call_guard<py::gil_scoped_release>());
 }
 

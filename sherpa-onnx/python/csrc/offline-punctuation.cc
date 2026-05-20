@@ -10,6 +10,25 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOfflinePunctuationInitDoc = R"doc(
+Constructor for OfflinePunctuation.
+
+Args:
+  config:
+    Config for offline punctuation.
+)doc";
+
+static constexpr const char *kOfflinePunctuationAddPunctuationDoc = R"doc(
+Add punctuation to the given text.
+
+Args:
+  text:
+    The input text without punctuation.
+
+Returns:
+  The text with punctuation added.
+)doc";
+
 static void PybindOfflinePunctuationModelConfig(py::module *m) {
   using PyClass = OfflinePunctuationModelConfig;
   py::class_<PyClass>(*m, "OfflinePunctuationModelConfig")
@@ -43,9 +62,11 @@ void PybindOfflinePunctuation(py::module *m) {
 
   py::class_<PyClass>(*m, "OfflinePunctuation")
       .def(py::init<const OfflinePunctuationConfig &>(), py::arg("config"),
-           py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>(),
+           kOfflinePunctuationInitDoc)
       .def("add_punctuation", &PyClass::AddPunctuation, py::arg("text"),
-           py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>(),
+           kOfflinePunctuationAddPunctuationDoc);
 }
 
 }  // namespace sherpa_onnx

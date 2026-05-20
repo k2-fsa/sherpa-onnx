@@ -32,11 +32,66 @@ def _assert_file_exists(f: str):
 
 
 class OnlineRecognizer(object):
-    """A class for streaming speech recognition.
+    """A class for streaming (online) speech recognition.
 
-    Please refer to the following files for usages
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/python/tests/test_online_recognizer.py
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/online-decode-files.py
+    It supports multiple model families via factory methods:
+
+    - :meth:`from_transducer` -- Zipformer, Nemotron, etc.
+    - :meth:`from_paraformer` -- Streaming Paraformer
+    - :meth:`from_zipformer2_ctc` -- Zipformer2 CTC
+    - :meth:`from_wenet_ctc` -- WeNet CTC
+
+    Example using streaming Zipformer transducer::
+
+        import numpy as np
+        import sherpa_onnx
+
+        recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
+            tokens="./model/tokens.txt",
+            encoder="./model/encoder-epoch-99-avg-1.int8.onnx",
+            decoder="./model/decoder-epoch-99-avg-1.onnx",
+            joiner="./model/joiner-epoch-99-avg-1.int8.onnx",
+            num_threads=2,
+            decoding_method="greedy_search",
+            enable_endpoint_detection=True,
+        )
+
+        # Read audio (float32, normalized to [-1, 1])
+        samples = read_audio("test.wav")  # your own function
+        sample_rate = 16000
+
+        stream = recognizer.create_stream()
+        stream.accept_waveform(sample_rate, samples)
+
+        # Add tail padding and signal end of input
+        tail = np.zeros(int(0.5 * sample_rate), dtype=np.float32)
+        stream.accept_waveform(sample_rate, tail)
+        stream.input_finished()
+
+        # Streaming decode loop
+        while recognizer.is_ready(stream):
+            recognizer.decode_stream(stream)
+
+        result = recognizer.get_result(stream)
+        print(result.text)
+
+    Example with endpoint detection::
+
+        stream = recognizer.create_stream()
+        stream.accept_waveform(sample_rate, samples)
+
+        while recognizer.is_ready(stream):
+            recognizer.decode_stream(stream)
+
+        if recognizer.is_endpoint(stream):
+            result = recognizer.get_result(stream)
+            print("Endpoint detected:", result.text)
+            recognizer.reset(stream)  # reset for next utterance
+
+    Please refer to the following files for more usages:
+
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/online-decode-files.py>`_
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/streaming-zipformer-rtf.py>`_
     """
 
     @classmethod
@@ -977,49 +1032,187 @@ class OnlineRecognizer(object):
         return self
 
     def create_stream(self, hotwords: Optional[str] = None):
+        """Create a new online stream for streaming recognition.
+
+        Args:
+          hotwords:
+            Optional hotwords string. Each word/phrase is separated by a
+            space, and the tokens within a phrase are separated by the
+            modeling unit separator.
+
+        Returns:
+          A new ``OnlineStream`` instance.
+        """
         if hotwords is None:
             return self.recognizer.create_stream()
         else:
             return self.recognizer.create_stream(hotwords)
 
     def decode_stream(self, s: OnlineStream):
+        """Run one decoding step on a single stream.
+
+        Args:
+          s:
+            The ``OnlineStream`` to decode.
+        """
         self.recognizer.decode_stream(s)
 
     def decode_streams(self, ss: List[OnlineStream]):
+        """Run one decoding step on multiple streams in parallel.
+
+        Args:
+          ss:
+            A list of ``OnlineStream`` instances to decode.
+        """
         self.recognizer.decode_streams(ss)
 
     def is_ready(self, s: OnlineStream) -> bool:
+        """Check whether the stream has enough data for decoding.
+
+        Args:
+          s:
+            The ``OnlineStream`` to check.
+
+        Returns:
+          True if there is enough data to run one decoding step.
+        """
         return self.recognizer.is_ready(s)
 
     def get_result_all(self, s: OnlineStream) -> OnlineRecognizerResult:
+        """Get the full recognition result object for a stream.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          An ``OnlineRecognizerResult`` containing text, tokens, timestamps,
+          and other fields.
+        """
         return self.recognizer.get_result(s)
 
     def get_result(self, s: OnlineStream) -> str:
+        """Get the recognition result as a plain string.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          The recognized text with leading/trailing whitespace removed.
+        """
         return self.recognizer.get_result(s).text.strip()
 
     def get_result_as_json_string(self, s: OnlineStream) -> str:
+        """Get the recognition result as a JSON string.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A JSON-encoded string representing the recognition result.
+        """
         return self.recognizer.get_result(s).as_json_string()
 
     def tokens(self, s: OnlineStream) -> List[str]:
+        """Get the list of recognized tokens for a stream.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A list of token strings from the recognition result.
+        """
         return self.recognizer.get_result(s).tokens
 
     def timestamps(self, s: OnlineStream) -> List[float]:
+        """Get the timestamps of each recognized token.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A list of floats where each element is the time in seconds of the
+          corresponding token from :meth:`tokens`.
+        """
         return self.recognizer.get_result(s).timestamps
 
     def start_time(self, s: OnlineStream) -> float:
+        """Get the start time of the current segment.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          The start time in seconds for the current recognition segment.
+        """
         return self.recognizer.get_result(s).start_time
 
     def ys_probs(self, s: OnlineStream) -> List[float]:
+        """Get the output log probabilities for each recognized token.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A list of log-probability values, one per token from
+          :meth:`tokens`.
+        """
         return self.recognizer.get_result(s).ys_probs
 
     def lm_probs(self, s: OnlineStream) -> List[float]:
+        """Get the language model log probabilities for each recognized token.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A list of LM log-probability values, one per token from
+          :meth:`tokens`.
+        """
         return self.recognizer.get_result(s).lm_probs
 
     def context_scores(self, s: OnlineStream) -> List[float]:
+        """Get the context biasing scores for each recognized token.
+
+        Args:
+          s:
+            The ``OnlineStream`` to query.
+
+        Returns:
+          A list of context scores, one per token from :meth:`tokens`.
+        """
         return self.recognizer.get_result(s).context_scores
 
     def is_endpoint(self, s: OnlineStream) -> bool:
+        """Check whether an endpoint has been detected for the stream.
+
+        Args:
+          s:
+            The ``OnlineStream`` to check.
+
+        Returns:
+          True if an endpoint (e.g. trailing silence) is detected.
+        """
         return self.recognizer.is_endpoint(s)
 
     def reset(self, s: OnlineStream) -> bool:
+        """Reset the stream state after an endpoint is detected.
+
+        Call this after :meth:`is_endpoint` returns True to prepare the
+        stream for the next utterance.
+
+        Args:
+          s:
+            The ``OnlineStream`` to reset.
+
+        Returns:
+          True if the stream was successfully reset.
+        """
         return self.recognizer.reset(s)
