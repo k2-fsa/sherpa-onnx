@@ -70,6 +70,9 @@ class ParseOptions {
   void Register(const std::string &name, std::string *ptr,
                 const std::string &doc);
 
+  void Register(const std::string &name, std::vector<int32_t> *ptr,
+                const std::string &doc);
+
   /// If called after registering an option and before calling
   /// Read(), disables that option from being used.  Will crash
   /// at runtime if that option had not been registered.
@@ -155,6 +158,12 @@ class ParseOptions {
   /// Does the actual job for both kinds of parameters
   /// Does the common part of the job for all datatypes,
   /// then calls RegisterSpecific
+
+  /// Register vector<int32_t>
+  void RegisterSpecific(const std::string &name, const std::string &idx,
+                        std::vector<int32_t> *v, const std::string &doc,
+                        bool is_standard);
+
   template <typename T>
   void RegisterCommon(const std::string &name, T *ptr, const std::string &doc,
                       bool is_standard);
@@ -180,6 +189,7 @@ class ParseOptions {
   std::unordered_map<std::string, float *> float_map_;
   std::unordered_map<std::string, double *> double_map_;
   std::unordered_map<std::string, std::string *> string_map_;
+  std::unordered_map<std::string, std::vector<int32_t> *> int_vec_map_;
 
   /**
      Structure for options' documentation
