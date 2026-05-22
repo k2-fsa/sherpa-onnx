@@ -69,7 +69,47 @@ void PybindOfflineRecognizer(py::module *m) {
           [](const PyClass &self, std::vector<OfflineStream *> ss) {
             self.DecodeStreams(ss.data(), ss.size());
           },
-          py::arg("ss"), py::call_guard<py::gil_scoped_release>());
+          py::arg("ss"), py::call_guard<py::gil_scoped_release>())
+      .def(
+          "set_run_options_config_entry",
+          [](PyClass &self, const std::string &key, const std::string &value) {
+            self.SetRunOptionsConfigEntry(key, value);
+          },
+          py::arg("key"), py::arg("value"),
+          py::call_guard<py::gil_scoped_release>(),
+          R"doc(Inject a single ONNX Runtime RunOptions config entry that will be
+applied to every subsequent decode_stream / decode_streams call.
+
+Example: enable per-Run CPU memory arena shrinkage to keep RSS bounded
+under varying input shapes:
+
+    recognizer.set_run_options_config_entry(
+        "memory.enable_memory_arena_shrinkage", "cpu:0")
+
+Currently honored by the transducer recognizer. Other recognizer types
+log a warning and ignore the setting.
+
+Thread-safety: intended to be called once after recognizer construction
+and before the first decode. Concurrent calls with decode are not
+synchronized.
+)doc")
+      .def(
+          "set_run_options",
+          [](PyClass &self, const py::dict &options) {
+            for (auto item : options) {
+              self.SetRunOptionsConfigEntry(
+                  py::cast<std::string>(item.first),
+                  py::cast<std::string>(item.second));
+            }
+          },
+          py::arg("options"),
+          R"doc(Convenience wrapper around set_run_options_config_entry that
+accepts a dict[str, str] of entries.
+
+    recognizer.set_run_options({
+        "memory.enable_memory_arena_shrinkage": "cpu:0",
+    })
+)doc");
 }
 
 }  // namespace sherpa_onnx

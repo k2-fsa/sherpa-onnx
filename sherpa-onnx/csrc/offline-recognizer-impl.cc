@@ -894,6 +894,14 @@ void OfflineRecognizerImpl::SetConfig(const OfflineRecognizerConfig &config) {
   config_ = config;
 }
 
+void OfflineRecognizerImpl::SetRunOptionsConfigEntry(const std::string &key,
+                                                     const std::string &value) {
+  SHERPA_ONNX_LOGE(
+      "SetRunOptionsConfigEntry is not implemented for this recognizer type. "
+      "The setting (%s = %s) will be ignored.",
+      key.c_str(), value.c_str());
+}
+
 #if __ANDROID_API__ >= 9
 template OfflineRecognizerImpl::OfflineRecognizerImpl(
     AAssetManager *mgr, const OfflineRecognizerConfig &config);
