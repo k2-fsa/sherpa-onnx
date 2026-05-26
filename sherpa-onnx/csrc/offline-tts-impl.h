@@ -25,10 +25,12 @@ class OfflineTtsImpl {
   static std::unique_ptr<OfflineTtsImpl> Create(Manager *mgr,
                                                 const OfflineTtsConfig &config);
 
+  [[deprecated("Use Generate(text, GenerationConfig, callback) instead")]]
   virtual GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const {
     SHERPA_ONNX_LOGE("Not implemented yet. Only some models support this");
+    SHERPA_ONNX_LOGE("Please use sherpa-onnx > v1.12.30");
     return {};
   }
 

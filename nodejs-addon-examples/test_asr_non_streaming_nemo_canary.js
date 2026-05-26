@@ -30,7 +30,7 @@ const waveFilename =
     './sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/test_wavs/en.wav';
 
 const recognizer = new sherpa_onnx.OfflineRecognizer(config);
-console.log('Started')
+console.log('Started');
 let start = Date.now();
 let stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
@@ -39,18 +39,18 @@ stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 recognizer.decode(stream);
 let result = recognizer.getResult(stream);
 let stop = Date.now();
-console.log('Done')
+console.log('Done');
 
 const elapsed_seconds = (stop - start) / 1000;
 const duration = wave.samples.length / wave.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
-console.log(waveFilename)
-console.log('result (English)\n', result)
+    real_time_factor.toFixed(3));
+console.log(waveFilename);
+console.log('result (English)\n', result);
 
 stream = recognizer.createStream();
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
@@ -58,5 +58,5 @@ recognizer.config.modelConfig.canary.tgtLang = 'de';
 recognizer.setConfig(recognizer.config);
 
 recognizer.decode(stream);
-result = recognizer.getResult(stream)
-console.log('result (German)\n', result)
+result = recognizer.getResult(stream);
+console.log('result (German)\n', result);

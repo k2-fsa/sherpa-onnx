@@ -184,7 +184,11 @@ to download more models.
     var tts = new OfflineTts(config);
     var speed = 1.0f / options.LengthScale;
     var sid = options.SpeakerId;
-    var audio = tts.Generate(options.Text, speed, sid);
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
+    var audio = tts.GenerateWithConfig(options.Text, genConfig, null);
     var ok = audio.SaveToWaveFile(options.OutputFilename);
 
     if (ok)

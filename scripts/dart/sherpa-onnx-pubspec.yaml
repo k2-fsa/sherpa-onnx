@@ -29,8 +29,17 @@ dependencies:
   flutter:
     sdk: flutter
 
-  sherpa_onnx_android:
-    path: ../sherpa_onnx_android
+  sherpa_onnx_android_arm64:
+    path: ../sherpa_onnx_android_arm64
+
+  sherpa_onnx_android_armeabi:
+    path: ../sherpa_onnx_android_armeabi
+
+  sherpa_onnx_android_x86:
+    path: ../sherpa_onnx_android_x86
+
+  sherpa_onnx_android_x86_64:
+    path: ../sherpa_onnx_android_x86_64
 
   sherpa_onnx_macos:
     path: ../sherpa_onnx_macos
@@ -45,7 +54,7 @@ flutter:
   plugin:
     platforms:
       android:
-        default_package: sherpa_onnx_android
+        default_package: sherpa_onnx_android_arm64
 
       macos:
         default_package: sherpa_onnx_macos

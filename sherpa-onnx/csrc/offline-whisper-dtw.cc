@@ -6,10 +6,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>  // For debug output
 #include <limits>
 #include <numeric>
 #include <vector>
-#include <cstdio>  // For debug output
 
 // Set to 1 to enable debug output
 #define DTW_DEBUG 0
@@ -29,9 +29,10 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(
 
 #if DTW_DEBUG
   fprintf(stderr, "\n========== DTW TIMING DEBUG ==========\n");
-  fprintf(stderr, "Input: n_heads=%d, n_tokens=%d, n_frames=%d\n",
-          n_heads, n_tokens, n_frames);
-  fprintf(stderr, "num_audio_frames=%d, sot_sequence_length=%d, num_text_tokens=%d\n",
+  fprintf(stderr, "Input: n_heads=%d, n_tokens=%d, n_frames=%d\n", n_heads,
+          n_tokens, n_frames);
+  fprintf(stderr,
+          "num_audio_frames=%d, sot_sequence_length=%d, num_text_tokens=%d\n",
           num_audio_frames, sot_sequence_length, num_text_tokens);
   fprintf(stderr, "timestamp_token_indices count: %zu\n",
           timestamp_token_indices.size());
@@ -112,8 +113,10 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(
   int32_t dtw_tokens = static_cast<int32_t>(filtered_to_original.size());
 
 #if DTW_DEBUG
-  fprintf(stderr, "DTW tokens after filtering: %d (filtered out %zu timestamp tokens)\n",
-          dtw_tokens, timestamp_token_indices.size());
+  fprintf(
+      stderr,
+      "DTW tokens after filtering: %d (filtered out %zu timestamp tokens)\n",
+      dtw_tokens, timestamp_token_indices.size());
 #endif
 
   if (dtw_tokens <= 1) {
@@ -138,10 +141,12 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(
   }
 
   // Extract jump times (where text_idx changes)
-  // Like OpenAI: jumps = np.pad(np.diff(text_indices), (1, 0), constant_values=1)
+  // Like OpenAI: jumps = np.pad(np.diff(text_indices), (1, 0),
+  // constant_values=1)
   //              jump_times = time_indices[jumps] / TOKENS_PER_SECOND
   std::vector<int32_t> jump_frame_indices;
-  jump_frame_indices.push_back(dtw_result.time_indices[0]);  // First is always a jump
+  jump_frame_indices.push_back(
+      dtw_result.time_indices[0]);  // First is always a jump
 
   for (size_t i = 1; i < dtw_result.text_indices.size(); ++i) {
     if (dtw_result.text_indices[i] != dtw_result.text_indices[i - 1]) {
@@ -168,21 +173,25 @@ TokenTimingResult WhisperDTW::ComputeTokenTimings(
 
   for (int32_t i = 0; i < num_text_tokens; ++i) {
     if (i < static_cast<int32_t>(jump_frame_indices.size())) {
-      float start = static_cast<float>(jump_frame_indices[i]) * kWhisperSecondsPerToken;
+      float start =
+          static_cast<float>(jump_frame_indices[i]) * kWhisperSecondsPerToken;
       result.start_times.push_back(start);
 
       // Duration = end_time - start_time = jump_times[i+1] - jump_times[i]
       if (i + 1 < static_cast<int32_t>(jump_frame_indices.size())) {
-        float end = static_cast<float>(jump_frame_indices[i + 1]) * kWhisperSecondsPerToken;
+        float end = static_cast<float>(jump_frame_indices[i + 1]) *
+                    kWhisperSecondsPerToken;
         result.durations.push_back(end - start);
       } else {
         // Last token: duration to end of audio
-        float audio_end = static_cast<float>(clipped_frames) * kWhisperSecondsPerToken;
+        float audio_end =
+            static_cast<float>(clipped_frames) * kWhisperSecondsPerToken;
         result.durations.push_back(std::max(0.0f, audio_end - start));
       }
     } else {
       // Fallback: use last known time
-      float last_time = result.start_times.empty() ? 0.0f : result.start_times.back();
+      float last_time =
+          result.start_times.empty() ? 0.0f : result.start_times.back();
       result.start_times.push_back(last_time);
       result.durations.push_back(0.0f);
     }
@@ -222,7 +231,7 @@ void WhisperDTW::ApplySoftmax(float *data, int32_t n_tokens, int32_t n_frames) {
 }
 
 void WhisperDTW::ApplyZScoreNormalization(float *data, int32_t n_tokens,
-                                           int32_t n_frames) {
+                                          int32_t n_frames) {
   // Normalize across tokens (dim=-2) for each frame
   for (int32_t f = 0; f < n_frames; ++f) {
     // Compute mean
@@ -249,7 +258,7 @@ void WhisperDTW::ApplyZScoreNormalization(float *data, int32_t n_tokens,
 }
 
 void WhisperDTW::ApplyMedianFilter(float *data, int32_t n_tokens,
-                                    int32_t n_frames, int32_t width) {
+                                   int32_t n_frames, int32_t width) {
   if (width <= 1 || n_frames <= 1) {
     return;
   }
@@ -287,7 +296,7 @@ void WhisperDTW::ApplyMedianFilter(float *data, int32_t n_tokens,
 }
 
 DTWResult WhisperDTW::RunDTW(const float *cost_matrix, int32_t n_tokens,
-                              int32_t n_frames) {
+                             int32_t n_frames) {
   // DTW algorithm based on whisper.cpp and OpenAI Whisper
   // O(N*M) time and space complexity
 
@@ -306,10 +315,10 @@ DTWResult WhisperDTW::RunDTW(const float *cost_matrix, int32_t n_tokens,
   std::vector<float> cost((N + 1) * (M + 1), kInf);
   std::vector<int32_t> trace((N + 1) * (M + 1), -1);
 
-  auto cost_at = [&](int32_t i, int32_t j) -> float& {
+  auto cost_at = [&](int32_t i, int32_t j) -> float & {
     return cost[i * (M + 1) + j];
   };
-  auto trace_at = [&](int32_t i, int32_t j) -> int32_t& {
+  auto trace_at = [&](int32_t i, int32_t j) -> int32_t & {
     return trace[i * (M + 1) + j];
   };
 

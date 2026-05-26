@@ -91,8 +91,8 @@ fun getSpokenLanguageIdentificationConfig(
             val modelDir = "sherpa-onnx-whisper-base"
             return SpokenLanguageIdentificationConfig(
                 whisper = SpokenLanguageIdentificationWhisperConfig(
-                    encoder = "$modelDir/tiny-encoder.int8.onnx",
-                    decoder = "$modelDir/tiny-decoder.int8.onnx",
+                    encoder = "$modelDir/base-encoder.int8.onnx",
+                    decoder = "$modelDir/base-decoder.int8.onnx",
                 ),
                 numThreads = 1,
                 debug = true,

@@ -11,6 +11,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-punctuation-impl.h"
 
@@ -40,10 +44,19 @@ std::string OfflinePunctuationConfig::ToString() const {
 OfflinePunctuation::OfflinePunctuation(const OfflinePunctuationConfig &config)
     : impl_(OfflinePunctuationImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflinePunctuation::OfflinePunctuation(AAssetManager *mgr,
+template <typename Manager>
+OfflinePunctuation::OfflinePunctuation(Manager *mgr,
                                        const OfflinePunctuationConfig &config)
     : impl_(OfflinePunctuationImpl::Create(mgr, config)) {}
+
+#if __ANDROID_API__ >= 9
+template OfflinePunctuation::OfflinePunctuation(
+    AAssetManager *mgr, const OfflinePunctuationConfig &config);
+#endif
+
+#if __OHOS__
+template OfflinePunctuation::OfflinePunctuation(
+    NativeResourceManager *mgr, const OfflinePunctuationConfig &config);
 #endif
 
 OfflinePunctuation::~OfflinePunctuation() = default;

@@ -42,7 +42,6 @@ void main(List<String> arguments) async {
   final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
     model: model,
     tokens: tokens,
-    lengthScale: 1 / speed,
   );
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
@@ -56,7 +55,12 @@ void main(List<String> arguments) async {
   );
 
   final tts = sherpa_onnx.OfflineTts(config);
-  final audio = tts.generate(text: text, sid: sid, speed: speed);
+  final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+    sid: sid,
+    speed: speed,
+    silenceScale: 0.2,
+  );
+  final audio = tts.generateWithConfig(text: text, config: genConfig);
   tts.free();
 
   sherpa_onnx.writeWave(

@@ -42,13 +42,13 @@ python3 ./python-api-examples/two-pass-wss.py \
   --paraformer-encoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.onnx \
   --paraformer-decoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.onnx \
   --tokens ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
-  --second-sense-voice ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.onnx \
-  --second-tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
+  --second-sense-voice ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx \
+  --second-tokens ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt \
   --certificate ./python-api-examples/web/cert.pem
 
 Please refer to
 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 to download pre-trained models.
 """
 

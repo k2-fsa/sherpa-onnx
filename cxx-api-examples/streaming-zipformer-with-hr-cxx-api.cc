@@ -21,6 +21,7 @@
 // clang-format on
 
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 

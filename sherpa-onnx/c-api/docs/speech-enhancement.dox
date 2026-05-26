@@ -1,0 +1,98 @@
+/**
+@page speech_enhancement Speech Enhancement / Denoising
+
+sherpa-onnx supports both offline and online speech enhancement with
+two model families: GTCRN and DPDFNet.
+
+@see SherpaOnnxCreateOfflineSpeechDenoiser, SherpaOnnxCreateOnlineSpeechDenoiser
+
+@tableofcontents
+
+@section se_offline_gtcrn Offline GTCRN
+
+@code
+SherpaOnnxOfflineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.gtcrn.model = "./gtcrn_simple.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflineSpeechDenoiser *sd =
+    SherpaOnnxCreateOfflineSpeechDenoiser(&config);
+
+const SherpaOnnxDenoisedAudio *denoised =
+    SherpaOnnxOfflineSpeechDenoiserRun(sd, wave->samples, wave->num_samples,
+                                       wave->sample_rate);
+SherpaOnnxWriteWave(denoised->samples, denoised->n, denoised->sample_rate,
+                    "./clean.wav");
+SherpaOnnxDestroyDenoisedAudio(denoised);
+SherpaOnnxDestroyOfflineSpeechDenoiser(sd);
+@endcode
+
+Model file: `gtcrn_simple.onnx`
+
+Example source: [speech-enhancement-gtcrn-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-gtcrn-c-api.c)
+
+@section se_offline_dpdfnet Offline DPDFNet
+
+@code
+SherpaOnnxOfflineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.dpdfnet.model = "./dpdfnet_baseline.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflineSpeechDenoiser *sd =
+    SherpaOnnxCreateOfflineSpeechDenoiser(&config);
+// ... use sd ...
+SherpaOnnxDestroyOfflineSpeechDenoiser(sd);
+@endcode
+
+Model file: `dpdfnet_baseline.onnx` (also: `dpdfnet2.onnx`, `dpdfnet4.onnx`,
+`dpdfnet8.onnx` for 16 kHz; `dpdfnet2_48khz_hr.onnx` for 48 kHz)
+
+Example source: [speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speech-enhancement-dpdfnet-c-api.c)
+
+@section se_online_gtcrn Online GTCRN
+
+@code
+SherpaOnnxOnlineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.gtcrn.model = "./gtcrn_simple.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOnlineSpeechDenoiser *sd =
+    SherpaOnnxCreateOnlineSpeechDenoiser(&config);
+
+int32_t frame_shift =
+    SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(sd);
+// Feed audio in frame_shift chunks, then flush
+const SherpaOnnxDenoisedAudio *out = SherpaOnnxOnlineSpeechDenoiserFlush(sd);
+SherpaOnnxDestroyDenoisedAudio(out);
+SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
+@endcode
+
+Model file: `gtcrn_simple.onnx`
+
+Example source: [online-speech-enhancement-gtcrn-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-gtcrn-c-api.c)
+
+@section se_online_dpdfnet Online DPDFNet
+
+@code
+SherpaOnnxOnlineSpeechDenoiserConfig config;
+memset(&config, 0, sizeof(config));
+config.model.dpdfnet.model = "./dpdfnet_baseline.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOnlineSpeechDenoiser *sd =
+    SherpaOnnxCreateOnlineSpeechDenoiser(&config);
+// ... use sd ...
+SherpaOnnxDestroyOnlineSpeechDenoiser(sd);
+@endcode
+
+Model file: `dpdfnet_baseline.onnx`
+
+Example source: [online-speech-enhancement-dpdfnet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/online-speech-enhancement-dpdfnet-c-api.c)
+*/

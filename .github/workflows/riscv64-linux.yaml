@@ -225,6 +225,7 @@ jobs:
           file: sherpa-onnx-*linux-riscv64*.tar.bz2
 
       - name: Test sherpa-onnx
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
@@ -247,6 +248,7 @@ jobs:
           readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts
 
       - name: Test streaming speech recognition
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
@@ -266,6 +268,7 @@ jobs:
             ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/test_wavs/0.wav
 
       - name: Test offline tts
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH

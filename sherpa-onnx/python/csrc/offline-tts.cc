@@ -80,7 +80,10 @@ void PybindOfflineTts(py::module *m) {
              std::function<int32_t(py::array_t<float>, float)> callback)
               -> GeneratedAudio {
             if (!callback) {
-              return self.Generate(text, sid, speed);
+              GenerationConfig config;
+              config.sid = sid;
+              config.speed = speed;
+              return self.Generate(text, config);
             }
 
             std::function<int32_t(const float *, int32_t, float)>
@@ -98,7 +101,10 @@ void PybindOfflineTts(py::module *m) {
                   return callback(array, progress);
                 };
 
-            return self.Generate(text, sid, speed, callback_wrapper);
+            GenerationConfig config;
+            config.sid = sid;
+            config.speed = speed;
+            return self.Generate(text, config, callback_wrapper);
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
           py::arg("callback") = py::none(),
@@ -138,9 +144,15 @@ void PybindOfflineTts(py::module *m) {
              float speed, int32_t num_steps,
              std::function<int32_t(py::array_t<float>, float)> callback)
               -> GeneratedAudio {
+            GenerationConfig config;
+            config.reference_audio = prompt_samples;
+            config.reference_sample_rate = sample_rate;
+            config.reference_text = prompt_text;
+            config.speed = speed;
+            config.num_steps = num_steps;
+
             if (!callback) {
-              return self.Generate(text, prompt_text, prompt_samples,
-                                   sample_rate, speed, num_steps);
+              return self.Generate(text, config);
             }
 
             std::function<int32_t(const float *, int32_t, float)>
@@ -158,8 +170,7 @@ void PybindOfflineTts(py::module *m) {
                   return callback(array, progress);
                 };
 
-            return self.Generate(text, prompt_text, prompt_samples, sample_rate,
-                                 speed, num_steps, callback_wrapper);
+            return self.Generate(text, config, callback_wrapper);
           },
           py::arg("text"), py::arg("prompt_text"), py::arg("prompt_samples"),
           py::arg("sample_rate"), py::arg("speed") = 1.0,

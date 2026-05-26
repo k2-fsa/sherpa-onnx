@@ -1,0 +1,48 @@
+/**
+@page speaker_diarization Offline Speaker Diarization
+
+sherpa-onnx supports offline speaker diarization through the
+@ref SherpaOnnxCreateOfflineSpeakerDiarization() API. It combines a
+segmentation model, a speaker embedding extractor, and a clustering
+algorithm.
+
+@see SherpaOnnxCreateOfflineSpeakerDiarization,
+     SherpaOnnxOfflineSpeakerDiarizationConfig
+
+@code
+SherpaOnnxOfflineSpeakerDiarizationConfig config;
+memset(&config, 0, sizeof(config));
+config.segmentation.pyannote.model =
+    "./sherpa-onnx-pyannote-segmentation-3-0/model.onnx";
+config.embedding.model =
+    "./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx";
+config.clustering.num_clusters = 4;
+
+const SherpaOnnxOfflineSpeakerDiarization *sd =
+    SherpaOnnxCreateOfflineSpeakerDiarization(&config);
+
+const SherpaOnnxWave *wave = SherpaOnnxReadWave("./meeting.wav");
+const SherpaOnnxOfflineSpeakerDiarizationResult *result =
+    SherpaOnnxOfflineSpeakerDiarizationProcess(sd, wave->samples,
+                                               wave->num_samples);
+
+const SherpaOnnxOfflineSpeakerDiarizationSegment *segments =
+    SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(result);
+int32_t n = SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(result);
+for (int32_t i = 0; i < n; ++i) {
+  printf("Speaker %d: %.2f - %.2f\n", segments[i].speaker,
+         segments[i].start, segments[i].end);
+}
+
+SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
+SherpaOnnxOfflineSpeakerDiarizationDestroyResult(result);
+SherpaOnnxFreeWave(wave);
+SherpaOnnxDestroyOfflineSpeakerDiarization(sd);
+@endcode
+
+Segmentation model: `sherpa-onnx-pyannote-segmentation-3-0/model.onnx`
+
+Embedding model: `3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx`
+
+Example source: [offline-speaker-diarization-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/offline-speaker-diarization-c-api.c)
+*/

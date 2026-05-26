@@ -4,6 +4,10 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Offline punctuation restoration.
+///
+/// This is intended for complete text strings when you want one-shot
+/// punctuation insertion. See `dart-api-examples/add-punctuations/`.
 class OfflinePunctuationModelConfig {
   OfflinePunctuationModelConfig(
       {required this.ctTransformer,
@@ -38,6 +42,7 @@ class OfflinePunctuationModelConfig {
   final bool debug;
 }
 
+/// Top-level configuration for [OfflinePunctuation].
 class OfflinePunctuationConfig {
   OfflinePunctuationConfig({
     required this.model,
@@ -62,12 +67,13 @@ class OfflinePunctuationConfig {
   final OfflinePunctuationModelConfig model;
 }
 
+/// Offline punctuation restorer.
 class OfflinePunctuation {
   OfflinePunctuation.fromPtr({required this.ptr, required this.config});
 
   OfflinePunctuation._({required this.ptr, required this.config});
 
-  // The user has to invoke OfflinePunctuation.free() to avoid memory leak.
+  /// Create an offline punctuator from [config].
   factory OfflinePunctuation({required OfflinePunctuationConfig config}) {
     if (SherpaOnnxBindings.sherpaOnnxCreateOfflinePunctuation == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -99,12 +105,29 @@ class OfflinePunctuation {
     return OfflinePunctuation._(ptr: ptr, config: config);
   }
 
+  /// Release the native punctuator.
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOfflinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyOfflinePunctuation?.call(ptr);
     ptr = nullptr;
   }
 
+  /// Add punctuation to [text].
   String addPunct(String text) {
+    if (SherpaOnnxBindings.sherpaOfflinePunctuationAddPunct == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return '';
+    }
+
     final textPtr = text.toNativeUtf8();
 
     final p = SherpaOnnxBindings.sherpaOfflinePunctuationAddPunct

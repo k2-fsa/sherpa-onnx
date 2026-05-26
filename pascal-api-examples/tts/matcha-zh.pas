@@ -36,6 +36,7 @@ end;
 var
   Tts: TSherpaOnnxOfflineTts;
   Audio: TSherpaOnnxGeneratedAudio;
+  GenerationConfig: TSherpaOnnxGenerationConfig;
 
   Text: AnsiString;
   Speed: Single = 1.0;  {Use a larger value to speak faster}
@@ -48,10 +49,14 @@ begin
 
   Text := '某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。';
 
-  Audio :=  Tts.Generate(Text, SpeakerId, Speed);
+  GenerationConfig := Default(TSherpaOnnxGenerationConfig);
+  GenerationConfig.SilenceScale := 0.2;
+  GenerationConfig.Speed := Speed;
+  GenerationConfig.Sid := SpeakerId;
+
+  Audio :=  Tts.Generate(Text, GenerationConfig, NIL, NIL);
   SherpaOnnxWriteWave('./matcha-zh.wav', Audio.Samples, Audio.SampleRate);
   WriteLn('Saved to ./matcha-zh.wav');
 
   FreeAndNil(Tts);
 end.
-

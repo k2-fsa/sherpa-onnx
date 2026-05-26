@@ -96,4 +96,34 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/play" />
 
+    <LinearLayout
+        android:id="@+id/save_share_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/stop">
+
+        <Button
+            android:id="@+id/save"
+            android:textAllCaps="false"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="2dp"
+            android:text="@string/save" />
+
+        <Button
+            android:id="@+id/share"
+            android:textAllCaps="false"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:text="@string/share" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

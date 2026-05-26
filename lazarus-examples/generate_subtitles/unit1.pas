@@ -193,7 +193,7 @@ end;
 
 procedure TForm1.UpdateInitStatus(Status: AnsiString);
 begin
-  if EndsStr('model is initialized succesfully!', Status) then
+  if EndsStr('model is initialized successfully!', Status) then
     begin
       Form1.ResultMemo.Lines.Add(Status);
       Form1.ResultMemo.Lines.Add('Please select a 16000Hz wave file to generate subtiles');

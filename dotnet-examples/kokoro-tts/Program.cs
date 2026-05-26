@@ -38,7 +38,12 @@ class KokoroTtsDemo
 
     var sid = 50;
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
+
+    var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       float[] data = new float[n];
       Marshal.Copy(samples, data, 0, n);
@@ -51,9 +56,9 @@ class KokoroTtsDemo
       return 1;
     };
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
     var outputFilename = "./generated-kokoro-zh-en.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
@@ -93,7 +98,12 @@ class KokoroTtsDemo
     // 6->am_michael, 7->bf_emma, 8->bf_isabella, 9->bm_george, 10->bm_lewis
     var sid = 0;
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
+
+    var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       float[] data = new float[n];
       Marshal.Copy(samples, data, 0, n);
@@ -106,9 +116,9 @@ class KokoroTtsDemo
       return 1;
     };
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
 
     var outputFilename = "./generated-kokoro-en.wav";
     var ok = audio.SaveToWaveFile(outputFilename);

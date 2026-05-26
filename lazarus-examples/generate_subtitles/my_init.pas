@@ -315,7 +315,7 @@ begin
     {
       Please visit
       https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
-      to donwload a NeMo transducer model.
+      to download a NeMo transducer model.
     }
     NeMoTransducerEncoder := ModelDir + 'nemo-transducer-encoder.onnx';
     NeMoTransducerDecoder := ModelDir + 'nemo-transducer-decoder.onnx';
@@ -405,7 +405,7 @@ begin
         Exit;
       end;
 
-    Status := 'Congratulations! The ' + Msg + ' model is initialized succesfully!';
+    Status := 'Congratulations! The ' + Msg + ' model is initialized successfully!';
     Synchronize(@ShowStatus);
 end;
 

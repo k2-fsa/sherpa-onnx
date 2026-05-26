@@ -173,7 +173,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_createStream(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_isReady(
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_isReady(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
   auto kws = reinterpret_cast<sherpa_onnx::KeywordSpotter *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
@@ -189,12 +189,13 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
 
   sherpa_onnx::KeywordResult result = kws->GetResult(stream);
 
-  jstring j_keyword = env->NewStringUTF(result.keyword.c_str());
+  jstring j_keyword = SafeNewStringUTF(env, result.keyword);
 
   // Convert tokens (std::vector<std::string> -> String[])
   jclass string_cls = env->FindClass("java/lang/String");
   if (string_cls == nullptr) {
     SHERPA_ONNX_LOGE("Failed to find class java/lang/String");
+    env->DeleteLocalRef(j_keyword);
     return nullptr;
   }
 
@@ -202,7 +203,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
       env->NewObjectArray(result.tokens.size(), string_cls, nullptr);
 
   for (size_t i = 0; i < result.tokens.size(); ++i) {
-    jstring t = env->NewStringUTF(result.tokens[i].c_str());
+    jstring t = SafeNewStringUTF(env, result.tokens[i]);
     env->SetObjectArrayElement(j_tokens, i, t);
     env->DeleteLocalRef(t);
   }
@@ -219,6 +220,10 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
   if (result_cls == nullptr) {
     SHERPA_ONNX_LOGE(
         "Failed to find class com/k2fsa/sherpa/onnx/KeywordSpotterResult");
+    env->DeleteLocalRef(j_keyword);
+    env->DeleteLocalRef(j_tokens);
+    env->DeleteLocalRef(j_timestamps);
+    env->DeleteLocalRef(string_cls);
     return nullptr;
   }
 
@@ -227,6 +232,11 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_getResult(
 
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get KeywordSpotterResult constructor");
+    env->DeleteLocalRef(j_keyword);
+    env->DeleteLocalRef(j_tokens);
+    env->DeleteLocalRef(j_timestamps);
+    env->DeleteLocalRef(result_cls);
+    env->DeleteLocalRef(string_cls);
     return nullptr;
   }
 

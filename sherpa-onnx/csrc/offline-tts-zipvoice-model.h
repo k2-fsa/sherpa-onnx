@@ -26,8 +26,9 @@ class OfflineTtsZipvoiceModel {
   // Return a float32 tensor containing the mel
   // of shape (batch_size, mel_dim, num_frames)
   Ort::Value Run(Ort::Value tokens, Ort::Value prompt_tokens,
-                 Ort::Value prompt_features, float speed,
-                 int32_t num_steps) const;
+                 Ort::Value prompt_features, float speed, int32_t num_steps,
+                 float t_shift = 0.5f,
+                 float guidance_scale = 1.0f) const;
 
   const OfflineTtsZipvoiceModelMetaData &GetMetaData() const;
 

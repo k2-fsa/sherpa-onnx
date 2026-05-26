@@ -49,7 +49,14 @@ function(download_kaldi_native_fbank)
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
+  set(_cmake_warn_deprecated_bak "${CMAKE_WARN_DEPRECATED}")
+  set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
   add_subdirectory(${kaldi_native_fbank_SOURCE_DIR} ${kaldi_native_fbank_BINARY_DIR} EXCLUDE_FROM_ALL)
+  set(CMAKE_WARN_DEPRECATED "${_cmake_warn_deprecated_bak}" CACHE BOOL "" FORCE)
+
+  if(TARGET kissfft AND (CMAKE_C_COMPILER_ID MATCHES "Clang"))
+    target_compile_options(kissfft PRIVATE -Wno-cast-align)
+  endif()
 
   if(_build_shared_libs_bak)
     set_target_properties(kaldi-native-fbank-core

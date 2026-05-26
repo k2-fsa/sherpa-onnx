@@ -3,6 +3,7 @@
 package com.k2fsa.sherpa.onnx.tts.engine
 
 import PreferenceHelper
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
@@ -13,7 +14,9 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,8 +42,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import com.k2fsa.sherpa.onnx.GenerationConfig
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,10 +117,33 @@ class MainActivity : ComponentActivity() {
                                 var testText by remember { mutableStateOf(testTextContent) }
                                 var startEnabled by remember { mutableStateOf(true) }
                                 var playEnabled by remember { mutableStateOf(false) }
+                                var saveEnabled by remember { mutableStateOf(false) }
+                                var shareEnabled by remember { mutableStateOf(false) }
                                 var rtfText by remember {
                                     mutableStateOf("")
                                 }
                                 val scrollState = rememberScrollState(0)
+
+                                val context = LocalContext.current
+
+                                val saveLauncher = rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.CreateDocument("audio/wav")
+                                ) { uri ->
+                                    if (uri != null) {
+                                        try {
+                                            val srcFile = File(application.filesDir.absolutePath + "/generated.wav")
+                                            contentResolver.openOutputStream(uri)?.use { output ->
+                                                srcFile.inputStream().use { input ->
+                                                    input.copyTo(output)
+                                                }
+                                            }
+                                            Toast.makeText(applicationContext, "Audio saved", Toast.LENGTH_SHORT).show()
+                                        } catch (e: Exception) {
+                                            Log.e(TAG, "Failed to save audio: $e")
+                                            Toast.makeText(applicationContext, "Failed to save audio", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
 
                                 val numSpeakers = TtsEngine.tts!!.numSpeakers()
                                 if (numSpeakers > 1) {
@@ -172,6 +201,8 @@ class MainActivity : ComponentActivity() {
                                             } else {
                                                 startEnabled = false
                                                 playEnabled = false
+                                                saveEnabled = false
+                                                shareEnabled = false
                                                 stopped = false
 
                                                 track.pause()
@@ -214,11 +245,14 @@ class MainActivity : ComponentActivity() {
                                                     val timeSource = TimeSource.Monotonic
                                                     val startTime = timeSource.markNow()
 
+                                                    val genConfig = GenerationConfig(sid = TtsEngine.speakerId, speed = TtsEngine.speed)
+                                                    if (TtsEngine.isSupertonic) {
+                                                        genConfig.extra = mapOf("lang" to TtsEngine.supertonicLang)
+                                                    }
                                                     val audio =
-                                                        TtsEngine.tts!!.generateWithCallback(
+                                                        TtsEngine.tts!!.generateWithConfigAndCallback(
                                                             text = testText,
-                                                            sid = TtsEngine.speakerId,
-                                                            speed = TtsEngine.speed,
+                                                            config = genConfig,
                                                             callback = ::callback,
                                                         )
 
@@ -256,6 +290,8 @@ class MainActivity : ComponentActivity() {
                                                         withContext(Dispatchers.Main) {
                                                             startEnabled = true
                                                             playEnabled = true
+                                                            saveEnabled = true
+                                                            shareEnabled = true
                                                             rtfText = RTF
                                                         }
 
@@ -286,6 +322,41 @@ class MainActivity : ComponentActivity() {
                                             startEnabled = true
                                         }) {
                                         Text("Stop")
+                                    }
+                                }
+
+                                Row {
+                                    Button(
+                                        enabled = saveEnabled,
+                                        modifier = Modifier.padding(5.dp),
+                                        onClick = {
+                                            saveLauncher.launch("generated.wav")
+                                        }) {
+                                        Text("Save")
+                                    }
+
+                                    Button(
+                                        enabled = shareEnabled,
+                                        modifier = Modifier.padding(5.dp),
+                                        onClick = {
+                                            val file = File(application.filesDir.absolutePath + "/generated.wav")
+                                            if (!file.exists()) {
+                                                Toast.makeText(applicationContext, "No audio to share", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                val uri = FileProvider.getUriForFile(
+                                                    context,
+                                                    "com.k2fsa.sherpa.onnx.tts.engine.fileprovider",
+                                                    file
+                                                )
+                                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "audio/wav"
+                                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                }
+                                                startActivity(Intent.createChooser(intent, "Share audio"))
+                                            }
+                                        }) {
+                                        Text("Share")
                                     }
                                 }
                                 if (rtfText.isNotEmpty()) {

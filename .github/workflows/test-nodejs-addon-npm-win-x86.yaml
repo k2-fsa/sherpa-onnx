@@ -11,7 +11,7 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
       - 'scripts/node-addon-api/*.js'
-      - 'nodejs-addon-examples/package.json'
+      - 'nodejs-addon-examples/**'
       - '.github/scripts/test-nodejs-addon-npm.sh'
 
   workflow_dispatch:

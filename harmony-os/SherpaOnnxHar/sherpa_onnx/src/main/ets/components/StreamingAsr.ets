@@ -67,6 +67,9 @@ export class OnlineModelConfig {
   public modelType: string = '';
   public modelingUnit: string = "cjkchar";
   public bpeVocab: string = '';
+  // Raw string data mirrored from the native OHOS binding; size is the string length.
+  public tokensBuf: string = '';
+  public tokensBufSize: number = 0;
 }
 
 export class OnlineCtcFstDecoderConfig {
@@ -89,6 +92,9 @@ export class OnlineRecognizerConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
+  // Raw string data mirrored from the native OHOS binding; size is the string length.
+  public hotwordsBuf: string = '';
+  public hotwordsBufSize: number = 0;
   public hr: HomophoneReplacerConfig = new HomophoneReplacerConfig();
 }
 

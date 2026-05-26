@@ -31,7 +31,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
     if (model_.NumEventClasses() != labels_.NumEventClasses()) {
       SHERPA_ONNX_LOGE("number of classes: %d (model) != %d (label file)",
                        model_.NumEventClasses(), labels_.NumEventClasses());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -44,7 +44,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
     if (model_.NumEventClasses() != labels_.NumEventClasses()) {
       SHERPA_ONNX_LOGE("number of classes: %d (model) != %d (label file)",
                        model_.NumEventClasses(), labels_.NumEventClasses());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 #endif

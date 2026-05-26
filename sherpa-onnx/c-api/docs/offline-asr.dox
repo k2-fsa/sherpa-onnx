@@ -1,0 +1,402 @@
+/**
+@page offline_asr Non-Streaming (Offline) ASR Models
+
+sherpa-onnx supports many non-streaming ASR model families through the
+@ref SherpaOnnxCreateOfflineRecognizer() API. Configure exactly one model
+family by filling in the corresponding sub-struct of
+@ref SherpaOnnxOfflineModelConfig.
+
+@see SherpaOnnxCreateOfflineRecognizer, SherpaOnnxOfflineRecognizerConfig,
+     SherpaOnnxOfflineModelConfig
+
+@tableofcontents
+
+@section offline_asr_zipformer_transducer Zipformer Transducer
+
+Zipformer transducer is a general-purpose offline ASR model using the
+encoder-decoder-joiner architecture.
+
+@code
+SherpaOnnxOfflineRecognizerConfig config;
+memset(&config, 0, sizeof(config));
+config.feat_config.sample_rate = 16000;
+config.feat_config.feature_dim = 80;
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-zipformer-small-en-2023-06-26/encoder-epoch-99-avg-1.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-zipformer-small-en-2023-06-26/decoder-epoch-99-avg-1.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-zipformer-small-en-2023-06-26/joiner-epoch-99-avg-1.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-zipformer-small-en-2023-06-26/tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+
+const SherpaOnnxOfflineRecognizer *recognizer =
+    SherpaOnnxCreateOfflineRecognizer(&config);
+@endcode
+
+Model package: `sherpa-onnx-zipformer-small-en-2023-06-26`
+
+Example source: [zipformer-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/zipformer-c-api.c)
+
+@section offline_asr_zipformer_ctc Zipformer CTC
+
+Zipformer CTC uses CTC decoding instead of transducer decoding.
+
+@code
+config.model_config.zipformer_ctc.model =
+    "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03`
+
+@section offline_asr_whisper Whisper
+
+Whisper is OpenAI's general-purpose speech recognition model.
+It supports language hints and translation.
+
+@code
+SherpaOnnxOfflineRecognizerConfig config;
+memset(&config, 0, sizeof(config));
+config.feat_config.sample_rate = 16000;
+config.feat_config.feature_dim = 80;
+config.model_config.whisper.encoder =
+    "./sherpa-onnx-whisper-tiny/tiny-encoder.onnx";
+config.model_config.whisper.decoder =
+    "./sherpa-onnx-whisper-tiny/tiny-decoder.onnx";
+config.model_config.whisper.language = "en";
+config.model_config.whisper.task = "transcribe";
+config.model_config.tokens =
+    "./sherpa-onnx-whisper-tiny/tiny-tokens.txt";
+config.model_config.provider = "cpu";
+config.model_config.num_threads = 1;
+config.decoding_method = "greedy_search";
+
+const SherpaOnnxOfflineRecognizer *recognizer =
+    SherpaOnnxCreateOfflineRecognizer(&config);
+@endcode
+
+Model package: `sherpa-onnx-whisper-tiny`
+
+Example source: [whisper-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/whisper-c-api.c)
+
+@section offline_asr_sense_voice SenseVoice
+
+SenseVoice is a multilingual model supporting Chinese, English, Japanese,
+Korean, and Cantonese. It supports automatic language detection and
+inverse text normalization.
+
+@code
+config.model_config.sense_voice.model =
+    "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8/model.int8.onnx";
+config.model_config.sense_voice.language = "auto";
+config.model_config.sense_voice.use_itn = 1;
+config.model_config.tokens =
+    "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8`
+
+Example source: [sense-voice-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/sense-voice-c-api.c)
+
+@section offline_asr_parakeet NeMo Parakeet TDT
+
+Parakeet TDT is an NVIDIA NeMo transducer model. Set `model_type` to
+`"nemo_transducer"` so the runtime selects the correct decoder
+implementation.
+
+@code
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/encoder.int8.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/decoder.int8.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/joiner.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8/tokens.txt";
+config.model_config.model_type = "nemo_transducer";
+@endcode
+
+Model package: `sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8`
+
+Example source: [nemo-parakeet-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/nemo-parakeet-c-api.c)
+
+@section offline_asr_giga_am GigaAM v2 (NeMo Transducer, Russian)
+
+GigaAM v2 is a NeMo transducer model for Russian speech recognition.
+Like Parakeet, set `model_type` to `"nemo_transducer"`.
+
+@code
+config.model_config.transducer.encoder =
+    "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
+    "encoder.int8.onnx";
+config.model_config.transducer.decoder =
+    "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
+    "decoder.onnx";
+config.model_config.transducer.joiner =
+    "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
+    "joiner.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19/"
+    "tokens.txt";
+config.model_config.model_type = "nemo_transducer";
+@endcode
+
+Model package: `sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19`
+
+Example source: [nemo-giga-am-v2-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/nemo-giga-am-v2-c-api.c)
+
+@section offline_asr_nemo_ctc NeMo CTC
+
+NeMo CTC models use CTC decoding. They are simpler than NeMo transducer
+models (no joiner network).
+
+@code
+config.model_config.nemo_ctc.model =
+    "./sherpa-onnx-nemo-ctc-en-citrinet-512/model.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-nemo-ctc-en-citrinet-512`
+
+Example source: [nemo-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/nemo-ctc-c-api.c)
+
+@section offline_asr_paraformer Paraformer
+
+Paraformer is a non-autoregressive ASR model from FunASR.
+
+@code
+config.model_config.paraformer.model =
+    "./sherpa-onnx-paraformer-zh-small-2024-03-09/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-paraformer-zh-small-2024-03-09/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-paraformer-zh-small-2024-03-09`
+
+Example source: [paraformer-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/paraformer-c-api.c)
+
+@section offline_asr_moonshine Moonshine
+
+Moonshine is a compact speech recognition model. It uses a preprocessor,
+encoder, and decoder (cached or uncached).
+
+@code
+config.model_config.moonshine.preprocessor =
+    "./sherpa-onnx-moonshine-tiny-en-int8/preprocess.onnx";
+config.model_config.moonshine.encoder =
+    "./sherpa-onnx-moonshine-tiny-en-int8/encode.int8.onnx";
+config.model_config.moonshine.uncached_decoder =
+    "./sherpa-onnx-moonshine-tiny-en-int8/uncached_decode.int8.onnx";
+config.model_config.moonshine.cached_decoder =
+    "./sherpa-onnx-moonshine-tiny-en-int8/cached_decode.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-moonshine-tiny-en-int8`
+
+Example source: [moonshine-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/moonshine-c-api.c)
+
+@section offline_asr_fire_red FireRedAsr
+
+FireRedAsr is an encoder-decoder ASR model supporting Chinese and English.
+
+@code
+config.model_config.fire_red_asr.encoder =
+    "./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx";
+config.model_config.fire_red_asr.decoder =
+    "./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/decoder.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16`
+
+Example source: [fire-red-asr-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/fire-red-asr-c-api.c)
+
+@section offline_asr_fire_red_ctc FireRedAsr CTC
+
+CTC variant of FireRedAsr.
+
+@code
+config.model_config.fire_red_asr_ctc.model =
+    "./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25`
+
+Example source: [fire-red-asr-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/fire-red-asr-ctc-c-api.c)
+
+@section offline_asr_dolphin Dolphin
+
+Dolphin is a multilingual CTC model.
+
+@code
+config.model_config.dolphin.model =
+    "./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02`
+
+Example source: [dolphin-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/dolphin-ctc-c-api.c)
+
+@section offline_asr_canary NeMo Canary
+
+Canary is an NVIDIA NeMo model supporting English, Spanish, German, and
+French with source/target language selection and punctuation.
+
+@code
+config.model_config.canary.encoder =
+    "./sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/encoder.int8.onnx";
+config.model_config.canary.decoder =
+    "./sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/decoder.int8.onnx";
+config.model_config.canary.src_lang = "de";
+config.model_config.canary.tgt_lang = "en";
+config.model_config.canary.use_pnc = 1;
+config.model_config.tokens =
+    "./sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8`
+
+Example source: [nemo-canary-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/nemo-canary-c-api.c)
+
+@section offline_asr_cohere Cohere Transcribe
+
+Cohere Transcribe is a multilingual encoder-decoder model with built-in
+punctuation and inverse text normalization.
+
+@code
+config.model_config.cohere_transcribe.encoder =
+    "./sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/encoder.int8.onnx";
+config.model_config.cohere_transcribe.decoder =
+    "./sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/decoder.int8.onnx";
+config.model_config.cohere_transcribe.use_punct = 1;
+config.model_config.cohere_transcribe.use_itn = 1;
+config.model_config.tokens =
+    "./sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01`
+
+Example source: [cohere-transcribe-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/cohere-transcribe-c-api.c)
+
+@section offline_asr_wenet WeNet CTC
+
+WeNet CTC models support Chinese, English, and Cantonese.
+
+@code
+config.model_config.wenet_ctc.model =
+    "./sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/"
+    "model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10/"
+    "tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-wenetspeech-yue-u2pp-conformer-ctc-zh-en-cantonese-int8-2025-09-10`
+
+Example source: [wenet-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/wenet-ctc-c-api.c)
+
+@section offline_asr_omnilingual Omnilingual
+
+Omnilingual is a CTC model supporting 1600 languages.
+
+@code
+config.model_config.omnilingual.model =
+    "./sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/"
+    "model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12/"
+    "tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12`
+
+Example source: [omnilingual-asr-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/omnilingual-asr-ctc-c-api.c)
+
+@section offline_asr_funasr FunASR Nano
+
+FunASR Nano is an LLM-based ASR model from FunASR.
+
+@code
+config.model_config.funasr_nano.encoder_adaptor =
+    "./sherpa-onnx-funasr-nano-int8-2025-12-30/encoder_adaptor.int8.onnx";
+config.model_config.funasr_nano.embedding =
+    "./sherpa-onnx-funasr-nano-int8-2025-12-30/embedding.int8.onnx";
+config.model_config.funasr_nano.llm =
+    "./sherpa-onnx-funasr-nano-int8-2025-12-30/llm.int8.onnx";
+config.model_config.funasr_nano.tokenizer =
+    "./sherpa-onnx-funasr-nano-int8-2025-12-30/Qwen3-0.6B";
+config.model_config.tokens =
+    "./sherpa-onnx-funasr-nano-int8-2025-12-30/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-funasr-nano-int8-2025-12-30`
+
+Example source: [funasr-nano-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/funasr-nano-c-api.c)
+
+@section offline_asr_qwen3 Qwen3-ASR
+
+Qwen3-ASR is an LLM-based ASR model from Alibaba.
+
+@code
+config.model_config.qwen3_asr.conv_frontend =
+    "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/conv_frontend.onnx";
+config.model_config.qwen3_asr.encoder =
+    "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/encoder.int8.onnx";
+config.model_config.qwen3_asr.decoder =
+    "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/decoder.int8.onnx";
+config.model_config.qwen3_asr.tokenizer =
+    "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokenizer";
+config.model_config.qwen3_asr.max_total_len = 512;
+config.model_config.qwen3_asr.max_new_tokens = 128;
+config.model_config.tokens =
+    "./sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25`
+
+Example source: [qwen3-asr-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/qwen3-asr-c-api.c)
+
+@section offline_asr_medasr MedASR
+
+MedASR is a medical-domain CTC model.
+
+@code
+config.model_config.medasr.model =
+    "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-medasr-ctc-en-int8-2025-12-25/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-medasr-ctc-en-int8-2025-12-25`
+
+Example source: [medasr-ctc-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/medasr-ctc-c-api.c)
+
+@section offline_asr_telespeech TeleSpeech CTC
+
+TeleSpeech is a Chinese CTC model. Note the simple string assignment
+for the model path.
+
+@code
+config.model_config.telespeech_ctc =
+    "./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx";
+config.model_config.tokens =
+    "./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt";
+@endcode
+
+Model package: `sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04`
+
+Example source: [telespeech-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/telespeech-c-api.c)
+*/

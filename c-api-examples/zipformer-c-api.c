@@ -38,27 +38,17 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer config
-  SherpaOnnxOfflineTransducerModelConfig zipformer_config;
-  memset(&zipformer_config, 0, sizeof(zipformer_config));
-  zipformer_config.encoder = encoder_filename;
-  zipformer_config.decoder = decoder_filename;
-  zipformer_config.joiner = joiner_filename;
-
-  // Offline model config
-  SherpaOnnxOfflineModelConfig offline_model_config;
-  memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.debug = 1;
-  offline_model_config.num_threads = 1;
-  offline_model_config.provider = provider;
-  offline_model_config.tokens = tokens_filename;
-  offline_model_config.transducer = zipformer_config;
-
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = offline_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens = tokens_filename;
+  recognizer_config.model_config.transducer.encoder = encoder_filename;
+  recognizer_config.model_config.transducer.decoder = decoder_filename;
+  recognizer_config.model_config.transducer.joiner = joiner_filename;
 
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);

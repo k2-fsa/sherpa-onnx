@@ -36,6 +36,19 @@ data class OfflineTtsKokoroModelConfig(
     var lengthScale: Float = 1.0f,
 )
 
+data class OfflineTtsZipVoiceModelConfig(
+    var tokens: String = "",
+    var encoder: String = "",
+    var decoder: String = "",
+    var vocoder: String = "",
+    var dataDir: String = "",
+    var lexicon: String = "",
+    var featScale: Float = 0.1f,
+    var tShift: Float = 0.5f,
+    var targetRms: Float = 0.1f,
+    var guidanceScale: Float = 1.0f,
+)
+
 data class OfflineTtsKittenModelConfig(
     var model: String = "",
     var voices: String = "",
@@ -68,12 +81,24 @@ data class OfflineTtsPocketModelConfig(
   var voiceEmbeddingCacheCapacity: Int = 50,
 )
 
+data class OfflineTtsSupertonicModelConfig(
+  var durationPredictor: String = "",
+  var textEncoder: String = "",
+  var vectorEstimator: String = "",
+  var vocoder: String = "",
+  var ttsJson: String = "",
+  var unicodeIndexer: String = "",
+  var voiceStyle: String = "",
+)
+
 data class OfflineTtsModelConfig(
     var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var matcha: OfflineTtsMatchaModelConfig = OfflineTtsMatchaModelConfig(),
     var kokoro: OfflineTtsKokoroModelConfig = OfflineTtsKokoroModelConfig(),
+    var zipvoice: OfflineTtsZipVoiceModelConfig = OfflineTtsZipVoiceModelConfig(),
     var kitten: OfflineTtsKittenModelConfig = OfflineTtsKittenModelConfig(),
-    val pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+    var pocket: OfflineTtsPocketModelConfig = OfflineTtsPocketModelConfig(),
+    var supertonic: OfflineTtsSupertonicModelConfig = OfflineTtsSupertonicModelConfig(),
 
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -257,7 +282,15 @@ fun getOfflineTtsConfig(
     ruleFsts: String,
     ruleFars: String,
     numThreads: Int? = null,
-    isKitten: Boolean = false
+    isKitten: Boolean = false,
+    isSupertonic: Boolean = false,
+    durationPredictor: String = "", // for Supertonic
+    textEncoder: String = "", // for Supertonic
+    vectorEstimator: String = "", // for Supertonic
+    supertonicVocoder: String = "", // for Supertonic
+    ttsJson: String = "", // for Supertonic
+    unicodeIndexer: String = "", // for Supertonic
+    voiceStyle: String = "", // for Supertonic
 ): OfflineTtsConfig {
     // For Matcha TTS, please set
     // acousticModelName, vocoder
@@ -271,6 +304,10 @@ fun getOfflineTtsConfig(
     // For VITS, please set
     // modelName
 
+    // For Supertonic TTS, please set
+    // isSupertonic, durationPredictor, textEncoder, vectorEstimator,
+    // supertonicVocoder, ttsJson, unicodeIndexer, voiceStyle
+
     val numberOfThreads = if (numThreads != null) {
         numThreads
     } else if (voices.isNotEmpty()) {
@@ -280,7 +317,7 @@ fun getOfflineTtsConfig(
         2
     }
 
-    if (modelName.isEmpty() && acousticModelName.isEmpty()) {
+    if (!isSupertonic && modelName.isEmpty() && acousticModelName.isEmpty()) {
         throw IllegalArgumentException("Please specify a TTS model")
     }
 
@@ -292,7 +329,7 @@ fun getOfflineTtsConfig(
         throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
     }
 
-    val vits = if (modelName.isNotEmpty() && voices.isEmpty()) {
+    val vits = if (modelName.isNotEmpty() && voices.isEmpty() && !isSupertonic) {
         OfflineTtsVitsModelConfig(
             model = "$modelDir/$modelName",
             lexicon = "$modelDir/$lexicon",
@@ -315,7 +352,7 @@ fun getOfflineTtsConfig(
         OfflineTtsMatchaModelConfig()
     }
 
-    val kokoro = if (voices.isNotEmpty() && !isKitten) {
+    val kokoro = if (voices.isNotEmpty() && !isKitten && !isSupertonic) {
         OfflineTtsKokoroModelConfig(
             model = "$modelDir/$modelName",
             voices = "$modelDir/$voices",
@@ -342,12 +379,27 @@ fun getOfflineTtsConfig(
         OfflineTtsKittenModelConfig()
     }
 
+    val supertonic = if (isSupertonic) {
+        OfflineTtsSupertonicModelConfig(
+            durationPredictor = "$modelDir/$durationPredictor",
+            textEncoder = "$modelDir/$textEncoder",
+            vectorEstimator = "$modelDir/$vectorEstimator",
+            vocoder = "$modelDir/$supertonicVocoder",
+            ttsJson = "$modelDir/$ttsJson",
+            unicodeIndexer = "$modelDir/$unicodeIndexer",
+            voiceStyle = "$modelDir/$voiceStyle",
+        )
+    } else {
+        OfflineTtsSupertonicModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = vits,
             matcha = matcha,
             kokoro = kokoro,
             kitten = kitten,
+            supertonic = supertonic,
             numThreads = numberOfThreads,
             debug = true,
             provider = "cpu",

@@ -31,7 +31,7 @@ const waveFilename =
     './sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav';
 
 const kws = new sherpa_onnx.KeywordSpotter(config);
-console.log('Started')
+console.log('Started');
 let start = Date.now();
 const stream = kws.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
@@ -50,15 +50,15 @@ while (kws.isReady(stream)) {
 }
 let stop = Date.now();
 
-console.log('Done')
+console.log('Done');
 
 const elapsed_seconds = (stop - start) / 1000;
 const duration = wave.samples.length / wave.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
-console.log(waveFilename)
-console.log('result\n', detectedKeywords)
+    real_time_factor.toFixed(3));
+console.log(waveFilename);
+console.log('result\n', detectedKeywords);

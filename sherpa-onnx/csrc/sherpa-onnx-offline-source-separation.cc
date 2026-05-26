@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/offline-source-separation.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
@@ -64,31 +65,31 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
   if (po.NumArgs() != 0) {
     fprintf(stderr, "Please don't give positional arguments\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
   if (input_wave.empty()) {
     fprintf(stderr, "Please provide --input-wav\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (output_vocals_wave.empty()) {
     fprintf(stderr, "Please provide --output-vocals-wav\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (output_accompaniment_wave.empty()) {
     fprintf(stderr, "Please provide --output-accompaniment-wav\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   if (!config.Validate()) {
     fprintf(stderr, "Errors in config!\n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   bool is_ok = false;
@@ -119,7 +120,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
 
   if (!is_ok) {
     fprintf(stderr, "Failed to write to '%s'\n", output_vocals_wave.c_str());
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   is_ok = sherpa_onnx::WriteWave(output_accompaniment_wave, output.sample_rate,
@@ -130,7 +131,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-m
   if (!is_ok) {
     fprintf(stderr, "Failed to write to '%s'\n",
             output_accompaniment_wave.c_str());
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "Done\n");

@@ -52,6 +52,12 @@ void PybindOnlineStream(py::module *m) {
           py::call_guard<py::gil_scoped_release>())
       .def("input_finished", &PyClass::InputFinished,
            py::call_guard<py::gil_scoped_release>())
+      .def("set_option", &PyClass::SetOption, py::arg("key"),
+           py::arg("value"), py::call_guard<py::gil_scoped_release>())
+      .def("has_option", &PyClass::HasOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("get_option", &PyClass::GetOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
       .def("get_frames", &PyClass::GetFrames,
            py::arg("frame_index"), py::arg("n"), kGetFramesUsage,
            py::call_guard<py::gil_scoped_release>());

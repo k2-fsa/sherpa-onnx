@@ -40,23 +40,27 @@ public class NonStreamingTtsMatchaZh {
         OfflineTtsConfig.builder().setModel(modelConfig).setRuleFsts(ruleFsts).build();
     OfflineTts tts = new OfflineTts(config);
 
-    int sid = 0;
-    float speed = 1.0f;
+    GenerationConfig genConfig = new GenerationConfig();
+    genConfig.setSid(0);
+    genConfig.setSpeed(1.0f);
+    genConfig.setSilenceScale(config.getSilenceScale());
+
     long start = System.currentTimeMillis();
-    GeneratedAudio audio = tts.generate(text, sid, speed);
+    GeneratedAudio audio = tts.generateWithConfigAndCallback(text, genConfig, (float[] samples) -> 1);
     long stop = System.currentTimeMillis();
 
     float timeElapsedSeconds = (stop - start) / 1000.0f;
 
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
-    float real_time_factor = timeElapsedSeconds / audioDuration;
+    float realTimeFactor = timeElapsedSeconds / audioDuration;
 
     String waveFilename = "tts-matcha-zh.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
-    System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
+    System.out.printf("-- real-time factor (RTF): %.3f\n", realTimeFactor);
     System.out.printf("-- text: %s\n", text);
+    System.out.printf("-- speaker ID: %d\n", genConfig.getSid());
     System.out.printf("-- Saved to %s\n", waveFilename);
 
     tts.release();

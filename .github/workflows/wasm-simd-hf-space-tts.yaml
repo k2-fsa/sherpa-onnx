@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["4"]
-        index: ["0", "1", "2", "3"]
+        total: ["7"]
+        index: ["0", "1", "2", "3", "4", "5", "6"]
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.53
+          version: 4.0.23
           actions-cache-folder: 'emsdk-cache'
 
       - name: View emsdk version

@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 
@@ -13,7 +14,9 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-whisper-impl.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -26,9 +29,46 @@ enum class ModelType : std::uint8_t {
 
 }
 
+static ModelType GetModelType(const std::string &model_path, bool debug) {
+  Ort::Env env = CreateOrtEnv();
+  Ort::SessionOptions sess_opts;
+
+  auto sess = std::make_unique<Ort::Session>(
+      env, SHERPA_ONNX_TO_ORT_PATH(model_path), sess_opts);
+
+
+  Ort::ModelMetadata meta_data = sess->GetModelMetadata();
+  if (debug) {
+    std::ostringstream os;
+    PrintModelMetadata(os, meta_data);
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+  }
+
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
+    SHERPA_ONNX_LOGE(
+        "No model_type in the metadata!\n"
+        "Please make sure you have added metadata to the model.\n\n"
+        "For instance, you can use\n"
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/whisper/"
+        "export-onnx.py "
+        "to add metadata to models from whisper\n");
+    return ModelType::kUnknown;
+  }
+
+  if (model_type.find("whisper") == 0) {
+    return ModelType::kWhisper;
+  } else {
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+    return ModelType::kUnknown;
+  }
+}
+
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
+  Ort::Env env = CreateOrtEnv();
   Ort::SessionOptions sess_opts;
 
   auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,
@@ -70,11 +110,9 @@ SpokenLanguageIdentificationImpl::Create(
   {
     if (config.whisper.encoder.empty()) {
       SHERPA_ONNX_LOGE("Only whisper models are supported at present");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
-    auto buffer = ReadFile(config.whisper.encoder);
-
-    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+    model_type = GetModelType(config.whisper.encoder, config.debug);
   }
 
   switch (model_type) {
@@ -98,7 +136,7 @@ SpokenLanguageIdentificationImpl::Create(
   {
     if (config.whisper.encoder.empty()) {
       SHERPA_ONNX_LOGE("Only whisper models are supported at present");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     auto buffer = ReadFile(mgr, config.whisper.encoder);
 

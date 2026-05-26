@@ -1,0 +1,61 @@
+/**
+@page vad Voice Activity Detection (VAD)
+
+sherpa-onnx supports two VAD model families through the
+@ref SherpaOnnxCreateVoiceActivityDetector() API. Configure exactly one
+by filling in the corresponding field of @ref SherpaOnnxVadModelConfig.
+
+@see SherpaOnnxCreateVoiceActivityDetector, SherpaOnnxVadModelConfig
+
+@tableofcontents
+
+@section vad_silero Silero VAD
+
+Silero VAD is a widely used voice activity detection model.
+The recommended window size is 512 samples.
+
+@code
+SherpaOnnxVadModelConfig config;
+memset(&config, 0, sizeof(config));
+config.silero_vad.model = "./silero_vad.onnx";
+config.silero_vad.threshold = 0.25f;
+config.silero_vad.min_silence_duration = 0.5f;
+config.silero_vad.min_speech_duration = 0.5f;
+config.silero_vad.max_speech_duration = 10.0f;
+config.silero_vad.window_size = 512;
+config.sample_rate = 16000;
+config.num_threads = 1;
+
+const SherpaOnnxVoiceActivityDetector *vad =
+    SherpaOnnxCreateVoiceActivityDetector(&config, 30.0f);
+@endcode
+
+Model file: `silero_vad.onnx`
+
+Example source: [vad-whisper-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/vad-whisper-c-api.c)
+
+@section vad_ten Ten VAD
+
+Ten VAD is an alternative VAD model. The recommended window size is 256
+samples.
+
+@code
+SherpaOnnxVadModelConfig config;
+memset(&config, 0, sizeof(config));
+config.ten_vad.model = "./ten-vad.onnx";
+config.ten_vad.threshold = 0.25f;
+config.ten_vad.min_silence_duration = 0.5f;
+config.ten_vad.min_speech_duration = 0.5f;
+config.ten_vad.max_speech_duration = 10.0f;
+config.ten_vad.window_size = 256;
+config.sample_rate = 16000;
+config.num_threads = 1;
+
+const SherpaOnnxVoiceActivityDetector *vad =
+    SherpaOnnxCreateVoiceActivityDetector(&config, 30.0f);
+@endcode
+
+Model file: `ten-vad.onnx`
+
+Example source: [vad-whisper-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/vad-whisper-c-api.c)
+*/

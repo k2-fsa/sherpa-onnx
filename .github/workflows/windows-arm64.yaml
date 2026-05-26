@@ -179,11 +179,32 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
+          if [[ $shared_lib == "ON" && -f build/install/lib/onnxruntime.lib ]]; then
+            cp -v build/install/lib/onnxruntime.lib $dst/lib/
+          fi
+
+          rm -rf $dst/lib/pkgconfig
+          rm -f $dst/lib/cargs.dll $dst/lib/cargs.lib $dst/lib/cargs.h
+          rm -f $dst/include/cargs.h
+
           ls -lh $dst/bin/
           echo "---"
           ls -lh $dst/lib/
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+          lib_dst=${dst}-lib
+          mkdir -p ${lib_dst}/lib
+          if [[ $shared_lib == "ON" ]]; then
+            cp -av build/install/lib/*.dll ${lib_dst}/lib/
+            cp -av build/install/lib/*.lib ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/cargs.dll ${lib_dst}/lib/cargs.lib
+          else
+            cp -av build/install/lib/*.lib ${lib_dst}/lib/
+            rm -f ${lib_dst}/lib/cargs.lib
+          fi
+          ls -lh ${lib_dst}/lib/
+          tar cjvf ${lib_dst}.tar.bz2 ${lib_dst}
 
           ls -lh $dst/
 

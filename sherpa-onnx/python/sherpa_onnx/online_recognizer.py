@@ -167,7 +167,7 @@ class OnlineRecognizer(object):
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
           temperature_scale:
-            Temperature scaling for output symbol confidence estiamation.
+            Temperature scaling for output symbol confidence estimation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
           reset_encoder:
@@ -229,8 +229,6 @@ class OnlineRecognizer(object):
         _assert_file_exists(encoder)
         _assert_file_exists(decoder)
         _assert_file_exists(joiner)
-
-        assert num_threads > 0, num_threads
 
         transducer_config = OnlineTransducerModelConfig(
             encoder=encoder,
@@ -415,8 +413,6 @@ class OnlineRecognizer(object):
         _assert_file_exists(encoder)
         _assert_file_exists(decoder)
 
-        assert num_threads > 0, num_threads
-
         paraformer_config = OnlineParaformerModelConfig(
             encoder=encoder,
             decoder=decoder,
@@ -550,8 +546,6 @@ class OnlineRecognizer(object):
         _assert_file_exists(tokens)
         _assert_file_exists(model)
 
-        assert num_threads > 0, num_threads
-
         zipformer2_ctc_config = OnlineZipformer2CtcModelConfig(model=model)
 
         provider_config = ProviderConfig(
@@ -680,8 +674,6 @@ class OnlineRecognizer(object):
         _assert_file_exists(tokens)
         _assert_file_exists(model)
 
-        assert num_threads > 0, num_threads
-
         t_one_ctc_config = OnlineToneCtcModelConfig(
             model=model,
         )
@@ -805,8 +797,6 @@ class OnlineRecognizer(object):
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
         _assert_file_exists(model)
-
-        assert num_threads > 0, num_threads
 
         nemo_ctc_config = OnlineNeMoCtcModelConfig(
             model=model,
@@ -936,8 +926,6 @@ class OnlineRecognizer(object):
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
         _assert_file_exists(model)
-
-        assert num_threads > 0, num_threads
 
         wenet_ctc_config = OnlineWenetCtcModelConfig(
             model=model,

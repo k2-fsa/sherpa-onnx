@@ -10,6 +10,26 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------Cohere Transcribe----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+tar xvf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+rm sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01.tar.bz2
+
+node ./test_asr_non_streaming_cohere_transcribe.js
+node ./test_asr_non_streaming_cohere_transcribe_async.js
+
+rm -rf sherpa-onnx-cohere-transcribe-14-lang-int8-2026-04-01
+
+echo "----------Qwen3 ASR----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+tar xvf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+rm sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2
+
+node ./test_asr_non_streaming_qwen3_asr.js
+node ./test_asr_non_streaming_qwen3_asr_async.js
+
+rm -rf sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25
+
 echo "----------Moonshine v2----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
 tar xvf sherpa-onnx-moonshine-tiny-en-quantized-2026-02-27.tar.bz2
@@ -39,6 +59,20 @@ node ./test_tts_non_streaming_pocket_en.js
 node ./test_tts_non_streaming_pocket_en_async.js
 
 rm -rf sherpa-onnx-pocket-tts-int8-2026-01-26
+
+echo "----------ZipVoice----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+tar xf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+rm sherpa-onnx-zipvoice-distill-int8-zh-en-emilia.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos_24khz.onnx
+
+node ./test_tts_non_streaming_zipvoice_zh_en.js
+node ./test_tts_non_streaming_zipvoice_zh_en_async.js
+
+rm -rf sherpa-onnx-zipvoice-distill-int8-zh-en-emilia
+rm -f vocos_24khz.onnx
 
 echo "----------non-streaming ASR FunASR Nano----------"
 
@@ -96,8 +130,20 @@ tar xf kitten-nano-en-v0_1-fp16.tar.bz2
 rm kitten-nano-en-v0_1-fp16.tar.bz2
 
 node ./test_tts_non_streaming_kitten_en.js
+node ./test_tts_non_streaming_kitten_en_sync.js
 
 rm -rf kitten-nano-en-v0_1-fp16
+
+echo "----------SupertonicTTS----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+tar xf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+
+node ./test_tts_non_streaming_supertonic_en.js
+node ./test_tts_non_streaming_supertonic_en_async.js
+
+rm -rf sherpa-onnx-supertonic-3-tts-int8-2026-05-11
 
 echo "----------non-streaming ASR NeMo Canary----------"
 
@@ -139,10 +185,15 @@ rm -rf sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 echo "----------non-streaming speech denoiser----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/dpdfnet_baseline.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 
 node ./test_offline_speech_enhancement_gtcrn.js
+node ./test_offline_speech_enhancement_dpdfnet.js
+node ./test_online_speech_enhancement_gtcrn.js
+node ./test_online_speech_enhancement_dpdfnet.js
 rm gtcrn_simple.onnx
+rm dpdfnet_baseline.onnx
 ls -lh *.wav
 
 echo "----------non-streaming asr FireRedAsr----------"
@@ -203,9 +254,9 @@ if [[ $arch != "ia32" && $platform != "win32" ]]; then
   node ./test_asr_non_streaming_nemo_ctc.js
   rm -rf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-  tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-  rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+  tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+  rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 
   node ./test_asr_non_streaming_sense_voice.js
 
@@ -218,8 +269,12 @@ if [[ $arch != "ia32" && $platform != "win32" ]]; then
 
   node ./test_asr_non_streaming_sense_voice_with_hr.js
 
-  rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
-  rm -rf dict replace.fst test-hr.wav lexicon.txt
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+  node ./test_vad_asr_non_streaming_sense_voice_microphone.js
+
+  rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
+  rm -rf dict replace.fst test-hr.wav lexicon.txt silero_vad.onnx
 
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
@@ -244,6 +299,7 @@ tar xf kokoro-multi-lang-v1_0.tar.bz2
 rm kokoro-multi-lang-v1_0.tar.bz2
 
 node ./test_tts_non_streaming_kokoro_zh_en.js
+node ./test_tts_non_streaming_kokoro_zh_en_async.js
 ls -lh *.wav
 rm -rf kokoro-multi-lang-v1_0
 
@@ -252,6 +308,7 @@ tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
 node ./test_tts_non_streaming_kokoro_en.js
+node ./test_tts_non_streaming_kokoro_en_async.js
 ls -lh *.wav
 rm -rf kokoro-en-v0_19
 
@@ -261,6 +318,7 @@ rm matcha-icefall-en_US-ljspeech.tar.bz2
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test_tts_non_streaming_matcha_icefall_en.js
+node ./test_tts_non_streaming_matcha_icefall_en_async.js
 rm vocos-22khz-univ.onnx
 rm -rf matcha-icefall-en_US-ljspeech
 
@@ -270,6 +328,7 @@ rm matcha-icefall-zh-baker.tar.bz2
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test_tts_non_streaming_matcha_icefall_zh.js
+node ./test_tts_non_streaming_matcha_icefall_zh_async.js
 rm vocos-22khz-univ.onnx
 rm -rf matcha-icefall-zh-baker
 ls -lh *.wav
@@ -279,6 +338,7 @@ tar xf vits-piper-en_GB-cori-medium.tar.bz2
 rm vits-piper-en_GB-cori-medium.tar.bz2
 
 node ./test_tts_non_streaming_vits_piper_en.js
+node ./test_tts_non_streaming_vits_piper_en_async.js
 rm -rf vits-piper-en_GB-cori-medium
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -286,6 +346,7 @@ tar xvf vits-coqui-de-css10.tar.bz2
 rm vits-coqui-de-css10.tar.bz2
 
 node ./test_tts_non_streaming_vits_coqui_de.js
+node ./test_tts_non_streaming_vits_coqui_de_async.js
 rm -rf vits-coqui-de-css10
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
@@ -293,6 +354,7 @@ tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
 rm sherpa-onnx-vits-zh-ll.tar.bz2
 
 node ./test_tts_non_streaming_vits_zh_ll.js
+node ./test_tts_non_streaming_vits_zh_ll_async.js
 rm -rf sherpa-onnx-vits-zh-ll
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -300,6 +362,7 @@ tar xvf vits-icefall-zh-aishell3.tar.bz2
 rm vits-icefall-zh-aishell3.tar.bz2
 
 node ./test_tts_non_streaming_vits_zh_aishell3.js
+node ./test_tts_non_streaming_vits_zh_aishell3_async.js
 rm -rf vits-icefall-zh-aishell3
 
 echo "----------keyword spotting----------"

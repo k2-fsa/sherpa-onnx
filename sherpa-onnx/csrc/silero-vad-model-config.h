@@ -34,7 +34,8 @@ struct SileroVadModelConfig {
   // Negative (exit) threshold for transitioning from speech → silence.
   // If left as a negative value, the default Silero rule applies:
   //     neg_threshold = max(threshold - 0.15f, 0.01f)
-  // This prevents the exit threshold from becoming negative when threshold < 0.15.
+  // This prevents the exit threshold from becoming negative when
+  // threshold < 0.15.
   float neg_threshold = -1;
 
   SileroVadModelConfig() = default;

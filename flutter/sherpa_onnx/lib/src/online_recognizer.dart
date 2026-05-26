@@ -10,6 +10,35 @@ import './online_stream.dart';
 import './sherpa_onnx_bindings.dart';
 import './utils.dart';
 
+/// Streaming speech recognition.
+///
+/// This module wraps the online ASR APIs used by the examples in
+/// `dart-api-examples/streaming-asr/bin/`, including Zipformer transducer,
+/// Zipformer CTC, Paraformer, T-One-CTC, and NeMo-CTC style models.
+///
+/// Example:
+///
+/// ```dart
+/// final model = OnlineModelConfig(
+///   transducer: const OnlineTransducerModelConfig(
+///     encoder: './streaming-zipformer/encoder-epoch-99-avg-1.int8.onnx',
+///     decoder: './streaming-zipformer/decoder-epoch-99-avg-1.onnx',
+///     joiner: './streaming-zipformer/joiner-epoch-99-avg-1.int8.onnx',
+///   ),
+///   tokens: './streaming-zipformer/tokens.txt',
+///   modelType: 'zipformer2',
+/// );
+///
+/// final recognizer = OnlineRecognizer(OnlineRecognizerConfig(model: model));
+/// final stream = recognizer.createStream();
+/// stream.acceptWaveform(samples: chunk, sampleRate: 16000);
+/// while (recognizer.isReady(stream)) {
+///   recognizer.decode(stream);
+/// }
+/// print(recognizer.getResult(stream).text);
+/// ```
+
+/// Model files for a streaming transducer recognizer.
 class OnlineTransducerModelConfig {
   const OnlineTransducerModelConfig({
     this.encoder = '',
@@ -41,6 +70,7 @@ class OnlineTransducerModelConfig {
   final String joiner;
 }
 
+/// Model files for a streaming Paraformer recognizer.
 class OnlineParaformerModelConfig {
   const OnlineParaformerModelConfig({this.encoder = '', this.decoder = ''});
 
@@ -65,6 +95,7 @@ class OnlineParaformerModelConfig {
   final String decoder;
 }
 
+/// Model file for a streaming Zipformer2 CTC recognizer.
 class OnlineZipformer2CtcModelConfig {
   const OnlineZipformer2CtcModelConfig({this.model = ''});
 
@@ -86,6 +117,7 @@ class OnlineZipformer2CtcModelConfig {
   final String model;
 }
 
+/// Model file for a streaming NeMo CTC recognizer.
 class OnlineNemoCtcModelConfig {
   const OnlineNemoCtcModelConfig({this.model = ''});
 
@@ -107,6 +139,7 @@ class OnlineNemoCtcModelConfig {
   final String model;
 }
 
+/// Model file for a streaming tone-aware CTC recognizer.
 class OnlineToneCtcModelConfig {
   const OnlineToneCtcModelConfig({this.model = ''});
 
@@ -128,6 +161,10 @@ class OnlineToneCtcModelConfig {
   final String model;
 }
 
+/// Aggregate model configuration for streaming recognition.
+///
+/// Configure exactly one model family for a typical deployment and supply the
+/// shared tokenizer and runtime settings here.
 class OnlineModelConfig {
   const OnlineModelConfig({
     this.transducer = const OnlineTransducerModelConfig(),
@@ -207,6 +244,7 @@ class OnlineModelConfig {
   final String bpeVocab;
 }
 
+/// FST decoder settings for CTC-based streaming recognition.
 class OnlineCtcFstDecoderConfig {
   const OnlineCtcFstDecoderConfig({this.graph = '', this.maxActive = 3000});
 
@@ -231,6 +269,11 @@ class OnlineCtcFstDecoderConfig {
   final int maxActive;
 }
 
+/// Top-level configuration for [OnlineRecognizer].
+///
+/// This combines feature extraction, the selected online model family,
+/// endpointing rules, hotwords, grammar resources, and optional homophone
+/// replacement resources.
 class OnlineRecognizerConfig {
   const OnlineRecognizerConfig({
     this.feat = const FeatureConfig(),
@@ -325,6 +368,7 @@ class OnlineRecognizerConfig {
   final HomophoneReplacerConfig hr;
 }
 
+/// Streaming recognition result returned by [OnlineRecognizer.getResult].
 class OnlineRecognizerResult {
   OnlineRecognizerResult(
       {required this.text, required this.tokens, required this.timestamps});
@@ -355,6 +399,10 @@ class OnlineRecognizerResult {
   final List<double> timestamps;
 }
 
+/// Streaming speech recognizer.
+///
+/// Create one from an [OnlineRecognizerConfig], then feed chunks to an
+/// [OnlineStream] and call [decode] while [isReady] is true.
 class OnlineRecognizer {
   OnlineRecognizer.fromPtr({required this.ptr, required this.config});
 
@@ -362,6 +410,7 @@ class OnlineRecognizer {
 
   /// The user is responsible to call the OnlineRecognizer.free()
   /// method of the returned instance to avoid memory leak.
+  /// Create a recognizer from [config].
   factory OnlineRecognizer(OnlineRecognizerConfig config) {
     if (SherpaOnnxBindings.createOnlineRecognizer == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -456,16 +505,45 @@ class OnlineRecognizer {
     return OnlineRecognizer._(ptr: ptr, config: config);
   }
 
+  /// Release the native recognizer.
   void free() {
+    if (SherpaOnnxBindings.destroyOnlineRecognizer == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOnlineRecognizer?.call(ptr);
     ptr = nullptr;
   }
 
   /// The user has to invoke stream.free() on the returned instance
   /// to avoid memory leak
+  /// Create a streaming input stream.
+  ///
+  /// If [hotwords] is provided, the stream uses those per-stream hotwords in
+  /// addition to any recognizer-wide settings.
   OnlineStream createStream({String hotwords = ''}) {
     if (hotwords == '') {
+      if (SherpaOnnxBindings.createOnlineStream == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    } else {
+      if (SherpaOnnxBindings.createOnlineStreamWithHotwords == null) {
+        throw Exception("Please initialize sherpa-onnx first");
+      }
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
+    if (hotwords == '') {
       final p = SherpaOnnxBindings.createOnlineStream?.call(ptr) ?? nullptr;
+      if (p == nullptr) {
+        throw Exception("Failed to create online stream");
+      }
       return OnlineStream(ptr: p);
     }
 
@@ -474,17 +552,40 @@ class OnlineRecognizer {
         SherpaOnnxBindings.createOnlineStreamWithHotwords?.call(ptr, utf8) ??
             nullptr;
     calloc.free(utf8);
+
+    if (p == nullptr) {
+      throw Exception("Failed to create online stream");
+    }
+
     return OnlineStream(ptr: p);
   }
 
+  /// Return `true` if the recognizer has enough audio to run another step.
   bool isReady(OnlineStream stream) {
+    if (SherpaOnnxBindings.isOnlineStreamReady == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int ready =
         SherpaOnnxBindings.isOnlineStreamReady?.call(ptr, stream.ptr) ?? 0;
 
     return ready == 1;
   }
 
+  /// Fetch the current recognition hypothesis.
   OnlineRecognizerResult getResult(OnlineStream stream) {
+    if (SherpaOnnxBindings.getOnlineStreamResultAsJson == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
+    }
+
     final json =
         SherpaOnnxBindings.getOnlineStreamResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
@@ -502,15 +603,42 @@ class OnlineRecognizer {
         timestamps: List<double>.from(parsedJson['timestamps']));
   }
 
+  /// Reset stream state after an endpoint or utterance boundary.
   void reset(OnlineStream stream) {
+    if (SherpaOnnxBindings.reset == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.reset?.call(ptr, stream.ptr);
   }
 
+  /// Decode one incremental step for [stream].
   void decode(OnlineStream stream) {
+    if (SherpaOnnxBindings.decodeOnlineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return;
+    }
+
     SherpaOnnxBindings.decodeOnlineStream?.call(ptr, stream.ptr);
   }
 
+  /// Return `true` if endpointing rules say the current utterance has ended.
   bool isEndpoint(OnlineStream stream) {
+    if (SherpaOnnxBindings.isEndpoint == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return false;
+    }
+
     int yes = SherpaOnnxBindings.isEndpoint?.call(ptr, stream.ptr) ?? 0;
 
     return yes == 1;

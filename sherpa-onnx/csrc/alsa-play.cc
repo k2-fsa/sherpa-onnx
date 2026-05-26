@@ -5,6 +5,7 @@
 #ifdef SHERPA_ONNX_ENABLE_ALSA
 
 #include "sherpa-onnx/csrc/alsa-play.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -18,7 +19,7 @@ AlsaPlay::AlsaPlay(const char *device_name, int32_t sample_rate) {
 
   if (err) {
     fprintf(stderr, "Unable to open: %s. %s\n", device_name, snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   SetParameters(sample_rate);
@@ -47,14 +48,14 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
   if (err < 0) {
     printf("SND_PCM_ACCESS_RW_INTERLEAVED is not supported: %s\n",
            snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   err = snd_pcm_hw_params_set_format(handle_, params, SND_PCM_FORMAT_S16_LE);
 
   if (err < 0) {
     printf("Can't set format to 16-bit: %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   err = snd_pcm_hw_params_set_channels(handle_, params, 1);
@@ -72,7 +73,7 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
   err = snd_pcm_hw_params(handle_, params);
   if (err < 0) {
     printf("Can't set hardware parameters. %s\n", snd_strerror(err));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   uint32_t tmp;
@@ -121,7 +122,7 @@ void AlsaPlay::Play(const std::vector<float> &samples) {
       snd_pcm_prepare(handle_);
     } else if (err < 0) {
       printf("Can't write to PCM device: %s\n", snd_strerror(err));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 
@@ -136,7 +137,7 @@ void AlsaPlay::Play(const std::vector<float> &samples) {
       snd_pcm_prepare(handle_);
     } else if (err < 0) {
       printf("Can't write to PCM device: %s\n", snd_strerror(err));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 }

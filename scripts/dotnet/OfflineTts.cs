@@ -30,8 +30,27 @@ namespace SherpaOnnx
             byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
             utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
-            IntPtr p = SherpaOnnxOfflineTtsGenerate(_handle.Handle, utf8BytesWithNull, speakerId, speed);
-            return new OfflineTtsGeneratedAudio(p);
+
+            var config = new OfflineTtsGenerationConfig();
+            config.Speed = speed;
+            config.Sid = speakerId;
+            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
+
+            try
+            {
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(
+                    _handle.Handle,
+                    utf8BytesWithNull,
+                    ref nativeConfig,
+                    null,
+                    IntPtr.Zero);
+                return new OfflineTtsGeneratedAudio(p);
+            }
+            finally
+            {
+                if (audioHandle.HasValue)
+                    audioHandle.Value.Free();
+            }
         }
 
         public OfflineTtsGeneratedAudio GenerateWithCallback(
@@ -45,18 +64,34 @@ namespace SherpaOnnx
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
             utf8BytesWithNull[utf8Bytes.Length] = 0;
 
+            var config = new OfflineTtsGenerationConfig();
+            config.Speed = speed;
+            config.Sid = speakerId;
+
+            // Wrap the simple callback as a progress-with-arg callback
+            OfflineTtsCallbackProgressWithArg wrappedCallback = null;
+            if (callback != null)
+            {
+                wrappedCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
+                {
+                    return callback(samples, n);
+                };
+            }
+
+            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
             GCHandle callbackHandle = default(GCHandle);
+
             try
             {
-                callbackHandle = GCHandle.Alloc(callback);
+                if (wrappedCallback != null)
+                    callbackHandle = GCHandle.Alloc(wrappedCallback);
 
-                IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(
                     _handle.Handle,
                     utf8BytesWithNull,
-                    speakerId,
-                    speed,
-                    callback
-                );
+                    ref nativeConfig,
+                    wrappedCallback,
+                    IntPtr.Zero);
 
                 return new OfflineTtsGeneratedAudio(p);
             }
@@ -64,6 +99,9 @@ namespace SherpaOnnx
             {
                 if (callbackHandle.IsAllocated)
                     callbackHandle.Free();
+
+                if (audioHandle.HasValue)
+                    audioHandle.Value.Free();
             }
         }
 
@@ -78,18 +116,34 @@ namespace SherpaOnnx
             Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
             utf8BytesWithNull[utf8Bytes.Length] = 0;
 
+            var config = new OfflineTtsGenerationConfig();
+            config.Speed = speed;
+            config.Sid = speakerId;
+
+            // Wrap the progress callback as a progress-with-arg callback
+            OfflineTtsCallbackProgressWithArg wrappedCallback = null;
+            if (callback != null)
+            {
+                wrappedCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
+                {
+                    return callback(samples, n, progress);
+                };
+            }
+
+            var nativeConfig = config.ToNative(out GCHandle? audioHandle);
             GCHandle callbackHandle = default(GCHandle);
+
             try
             {
-                callbackHandle = GCHandle.Alloc(callback);
+                if (wrappedCallback != null)
+                    callbackHandle = GCHandle.Alloc(wrappedCallback);
 
-                IntPtr p = SherpaOnnxOfflineTtsGenerateWithProgressCallback(
+                IntPtr p = SherpaOnnxOfflineTtsGenerateWithConfig(
                     _handle.Handle,
                     utf8BytesWithNull,
-                    speakerId,
-                    speed,
-                    callback
-                );
+                    ref nativeConfig,
+                    wrappedCallback,
+                    IntPtr.Zero);
 
                 return new OfflineTtsGeneratedAudio(p);
             }
@@ -97,6 +151,9 @@ namespace SherpaOnnx
             {
                 if (callbackHandle.IsAllocated)
                     callbackHandle.Free();
+
+                if (audioHandle.HasValue)
+                    audioHandle.Value.Free();
             }
         }
 

@@ -69,6 +69,12 @@ void PybindOfflineStream(py::module *m) {
           },
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
           py::call_guard<py::gil_scoped_release>())
+      .def("set_option", &PyClass::SetOption, py::arg("key"),
+           py::arg("value"), py::call_guard<py::gil_scoped_release>())
+      .def("has_option", &PyClass::HasOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("get_option", &PyClass::GetOption, py::arg("key"),
+           py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("result", &PyClass::GetResult);
 }
 

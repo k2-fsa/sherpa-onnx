@@ -23,6 +23,9 @@ struct OfflineTtsVitsModelMetaData {
   bool is_icefall = false;
   bool is_melo_tts = false;
 
+  // for piper zh models using pinyin instead of espeak-ng
+  bool use_g2pw = false;
+
   // for Chinese TTS models from
   // https://github.com/Plachtaa/VITS-fast-fine-tuning
   int32_t jieba = 0;

@@ -6,12 +6,13 @@ on:
       - master
     paths:
       - '.github/workflows/test-nodejs-addon-npm.yaml'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
       - 'scripts/node-addon-api/*.js'
-      - 'nodejs-addon-examples/package.json'
+      - 'nodejs-addon-examples/**'
 
   workflow_dispatch:
 

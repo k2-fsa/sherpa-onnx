@@ -29,6 +29,9 @@ object TtsEngine {
     // if a model supports two languages, set also lang2
     var lang2: String? = null
 
+    // for Supertonic TTS: language code in ISO 639-1 format, e.g., "en", "zh", "ja"
+    var supertonicLang: String = "en"
+
 
     val speedState: MutableState<Float> = mutableFloatStateOf(1.0F)
     val speakerIdState: MutableState<Int> = mutableIntStateOf(0)
@@ -56,6 +59,14 @@ object TtsEngine {
     private var dataDir: String? = null
     private var assets: AssetManager? = null
     private var isKitten = false
+    var isSupertonic = false
+    private var durationPredictor: String? = null
+    private var textEncoder: String? = null
+    private var vectorEstimator: String? = null
+    private var supertonicVocoder: String? = null
+    private var ttsJson: String? = null
+    private var unicodeIndexer: String? = null
+    private var voiceStyle: String? = null
 
     init {
         // The purpose of such a design is to make the CI test easier
@@ -189,6 +200,20 @@ object TtsEngine {
         // dataDir = "matcha-icefall-zh-en/espeak-ng-data"
         // lexicon = "lexicon.txt"
         // lang = "zho"
+
+        // Example 13
+        // supertonic-3-tts (supports 31 languages, default: English)
+        // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+        // modelDir = "sherpa-onnx-supertonic-3-tts-int8-2026-05-11"
+        // isSupertonic = true
+        // durationPredictor = "duration_predictor.int8.onnx"
+        // textEncoder = "text_encoder.int8.onnx"
+        // vectorEstimator = "vector_estimator.int8.onnx"
+        // supertonicVocoder = "vocoder.int8.onnx"
+        // ttsJson = "tts.json"
+        // unicodeIndexer = "unicode_indexer.bin"
+        // voiceStyle = "voice.bin"
+        // supertonicLang = "en"  // ISO 639-1: en, zh, ja, ko, fr, de, es, etc.
     }
 
     fun createTts(context: Context) {
@@ -218,6 +243,14 @@ object TtsEngine {
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
             isKitten = isKitten,
+            isSupertonic = isSupertonic,
+            durationPredictor = durationPredictor ?: "",
+            textEncoder = textEncoder ?: "",
+            vectorEstimator = vectorEstimator ?: "",
+            supertonicVocoder = supertonicVocoder ?: "",
+            ttsJson = ttsJson ?: "",
+            unicodeIndexer = unicodeIndexer ?: "",
+            voiceStyle = voiceStyle ?: "",
         )
 
         speed = PreferenceHelper(context).getSpeed()

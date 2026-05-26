@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - master
+      - jni
+      - kotlin
     paths:
       - '.github/workflows/jni.yaml'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
+      - 'sherpa-onnx/kotlin-api/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
 

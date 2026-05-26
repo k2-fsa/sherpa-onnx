@@ -10,6 +10,7 @@
 #include <cctype>  // std::tolower
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "c-api-examples/asr-microphone-example/alsa.h"
 

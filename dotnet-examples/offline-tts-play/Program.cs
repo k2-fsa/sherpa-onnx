@@ -190,6 +190,10 @@ to download more models.
     var tts = new OfflineTts(config);
     var speed = 1.0f / options.LengthScale;
     var sid = options.SpeakerId;
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -224,7 +228,7 @@ to download more models.
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var myCallback = (IntPtr samples, int n) =>
+    var myCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       float[] data = new float[n];
 
@@ -314,9 +318,9 @@ to download more models.
 
     stream.Start();
 
-    var callback = new OfflineTtsCallback(myCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(myCallback);
 
-    var audio = tts.GenerateWithCallback(options.Text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(options.Text, genConfig, callback);
     var ok = audio.SaveToWaveFile(options.OutputFilename);
 
     if (ok)

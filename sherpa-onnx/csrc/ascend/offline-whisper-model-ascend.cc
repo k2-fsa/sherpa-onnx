@@ -88,6 +88,9 @@ class OfflineWhisperModelAscend::Impl {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
 
+    aclError ret_set_ctx = aclrtSetCurrentContext(*context_);
+    SHERPA_ONNX_ASCEND_CHECK(ret_set_ctx, "Failed to call aclrtSetCurrentContext");
+
     OfflineWhisperDecoderResult r;
 
     if (features.empty()) {
@@ -120,7 +123,7 @@ class OfflineWhisperModelAscend::Impl {
 
     RunEncoder(std::move(features));
 
-    // Note(fangjun): No need to intialize the self kv cache to 0
+    // Note(fangjun): No need to initialize the self kv cache to 0
 
     std::vector<int32_t> sot_sequence(sot_sequence_);
 

@@ -238,6 +238,51 @@ static std::vector<std::vector<int64_t>> PiperPhonemesToIdsKokoroOrKitten(
   return ans;
 }
 
+static std::vector<std::vector<int64_t>> PiperPhonemesToIdsKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<piper::Phoneme> &phonemes,
+    const OfflineTtsKittenModelMetaData &meta_data) {
+  std::vector<std::vector<int64_t>> ans;
+
+  std::vector<int64_t> current;
+  current.reserve(phonemes.size());
+
+  current.push_back(meta_data.start_id);
+
+  int32_t suffix_size = meta_data.add_pad_after_end ? 2 : 1;
+  for (auto p : phonemes) {
+    if (token2id.count(p)) {
+      int32_t emitted_tokens = p == '.' ? 2 : 1;
+      if (static_cast<int32_t>(current.size()) + emitted_tokens + suffix_size >
+          meta_data.max_token_len) {
+        current.push_back(meta_data.end_id);
+        if (meta_data.add_pad_after_end) {
+          current.push_back(meta_data.pad_id);
+        }
+        ans.push_back(std::move(current));
+
+        current.reserve(phonemes.size());
+        current.push_back(meta_data.start_id);
+      }
+
+      current.push_back(token2id.at(p));
+      if (p == '.') {
+        current.push_back(token2id.at(' '));
+      }
+    } else {
+      SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
+                       static_cast<uint32_t>(p));
+    }
+  }
+
+  current.push_back(meta_data.end_id);
+  if (meta_data.add_pad_after_end) {
+    current.push_back(meta_data.pad_id);
+  }
+  ans.push_back(std::move(current));
+  return ans;
+}
+
 static std::vector<int64_t> CoquiPhonemesToIds(
     const std::unordered_map<char32_t, int32_t> &token2id,
     const std::vector<piper::Phoneme> &phonemes,
@@ -325,6 +370,16 @@ void InitEspeak(const std::string &data_dir) {
     }
   });
 }
+
+std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    int32_t max_token_len, const std::string &text,
+    const std::string &voice);
+
+std::vector<TokenIDs> ConvertTextToTokenIdsKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const OfflineTtsKittenModelMetaData &meta_data, const std::string &text,
+    const std::string &voice);
 
 PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const std::string &tokens, const std::string &data_dir,
@@ -450,8 +505,8 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     return ConvertTextToTokenIdsKokoroOrKitten(
         token2id_, kokoro_meta_data_.max_token_len, text, voice);
   } else if (is_kitten_) {
-    return ConvertTextToTokenIdsKokoroOrKitten(
-        token2id_, kitten_meta_data_.max_token_len, text, voice);
+    return ConvertTextToTokenIdsKitten(token2id_, kitten_meta_data_, text,
+                                       voice);
   } else {
     return ConvertTextToTokenIdsVits(text, voice);
   }
@@ -502,6 +557,33 @@ std::vector<TokenIDs> ConvertTextToTokenIdsKokoroOrKitten(
   for (const auto &p : phonemes) {
     auto phoneme_ids =
         PiperPhonemesToIdsKokoroOrKitten(token2id, p, max_token_len);
+
+    for (auto &ids : phoneme_ids) {
+      ans.emplace_back(std::move(ids));
+    }
+  }
+
+  return ans;
+}
+
+std::vector<TokenIDs> ConvertTextToTokenIdsKitten(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const OfflineTtsKittenModelMetaData &meta_data, const std::string &text,
+    const std::string &voice /*= ""*/) {
+  piper::eSpeakPhonemeConfig config;
+
+  // ./bin/espeak-ng-bin --path  ./install/share/espeak-ng-data/ --voices
+  // to list available voices
+  config.voice = voice;  // e.g., voice is en-us
+
+  std::vector<std::vector<piper::Phoneme>> phonemes;
+
+  CallPhonemizeEspeak(text, config, &phonemes);
+
+  std::vector<TokenIDs> ans;
+
+  for (const auto &p : phonemes) {
+    auto phoneme_ids = PiperPhonemesToIdsKitten(token2id, p, meta_data);
 
     for (auto &ids : phoneme_ids) {
       ans.emplace_back(std::move(ids));

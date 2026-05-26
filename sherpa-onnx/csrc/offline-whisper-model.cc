@@ -3,6 +3,7 @@
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -43,7 +44,7 @@ class OfflineWhisperModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(
@@ -62,7 +63,7 @@ class OfflineWhisperModel::Impl {
 
   explicit Impl(const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(
@@ -82,7 +83,7 @@ class OfflineWhisperModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(
@@ -104,7 +105,7 @@ class OfflineWhisperModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
         cpu_mem_info_(
@@ -297,8 +298,9 @@ class OfflineWhisperModel::Impl {
   int32_t NoTimeStampsToken() const { return no_timestamps_; }
 
   // First timestamp token (represents 0.00s)
-  // Timestamp tokens are: timestamp_begin, timestamp_begin+1, ..., timestamp_end
-  // Each token represents 0.02s (20ms) intervals from 0.00s to 30.00s
+  // Timestamp tokens are: timestamp_begin, timestamp_begin+1, ...,
+  // timestamp_end Each token represents 0.02s (20ms) intervals from 0.00s
+  // to 30.00s
   int32_t TimestampBegin() const { return timestamp_begin_; }
 
   // Last timestamp token (represents 30.00s)
@@ -378,7 +380,7 @@ class OfflineWhisperModel::Impl {
         SHERPA_ONNX_LOGE("# lang_id: %d != # lang_code: %d",
                          static_cast<int32_t>(all_language_tokens_.size()),
                          static_cast<int32_t>(all_language_codes_.size()));
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       for (int32_t i = 0;
@@ -407,14 +409,16 @@ class OfflineWhisperModel::Impl {
                    &decoder_output_names_ptr_);
 
     // Check if decoder has attention output (4 outputs instead of 3)
-    // Outputs are: logits, self_k_cache, self_v_cache, [cross_attention_weights]
+    // Outputs are: logits, self_k_cache, self_v_cache,
+    // [cross_attention_weights]
     has_attention_output_ = (decoder_output_names_.size() >= 4);
 
     if (has_attention_output_) {
       // Try to read n_alignment_heads from encoder metadata
       Ort::AllocatorWithDefaultOptions allocator;
       Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
-      SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(n_alignment_heads_, "n_alignment_heads", 0);
+      SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(n_alignment_heads_,
+                                              "n_alignment_heads", 0);
 
       if (config_.debug) {
         SHERPA_ONNX_LOGE("Decoder has attention output with %d alignment heads",
@@ -483,7 +487,8 @@ class OfflineWhisperModel::Impl {
   int32_t translate_ = 0;
   int32_t transcribe_ = 0;
   int32_t no_timestamps_ = 0;
-  int32_t timestamp_begin_ = 0;  // First timestamp token, typically no_timestamps_ + 1
+  int32_t timestamp_begin_ =
+      0;  // First timestamp token, typically no_timestamps_ + 1
   int32_t no_speech_ = 0;
   int32_t is_multilingual_ = 0;
   std::vector<int64_t> sot_sequence_;

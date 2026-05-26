@@ -9,9 +9,9 @@
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-// tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-// rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+// tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
+// rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 //
 // clang-format on
 
@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <algorithm>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
 #include <iostream>
@@ -82,11 +83,11 @@ static sherpa_onnx::cxx::OfflineRecognizer CreateOfflineRecognizer() {
   OfflineRecognizerConfig config;
 
   config.model_config.sense_voice.model =
-      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx";
+      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx";
   config.model_config.sense_voice.use_itn = false;
   config.model_config.sense_voice.language = "auto";
   config.model_config.tokens =
-      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt";
+      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt";
 
   config.model_config.num_threads = 2;
   config.model_config.debug = false;
@@ -129,8 +130,8 @@ int32_t main() {
   float mic_sample_rate = 16000;
   const char *sample_rate_str = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (sample_rate_str) {
-    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(sample_rate_str);
+    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
   }
   float sample_rate = 16000;
   LinearResampler resampler;

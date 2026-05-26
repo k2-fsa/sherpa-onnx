@@ -56,6 +56,9 @@ class OfflineSenseVoiceModelAscend::Impl {
     // TODO(fangjun): Support multi clients
     std::lock_guard<std::mutex> lock(mutex_);
 
+    aclError ret_set_ctx = aclrtSetCurrentContext(*context_);
+    SHERPA_ONNX_ASCEND_CHECK(ret_set_ctx, "Failed to call aclrtSetCurrentContext");
+
     features = ApplyLFR(std::move(features));
     if (features.empty()) {
       return {};

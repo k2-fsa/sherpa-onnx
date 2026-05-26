@@ -69,7 +69,7 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
   if (!asset) {
     __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",
                         "Read binary file: Load '%s' failed", filename.c_str());
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset));

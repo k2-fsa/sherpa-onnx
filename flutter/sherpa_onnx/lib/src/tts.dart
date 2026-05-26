@@ -7,6 +7,44 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Offline text-to-speech.
+///
+/// This module supports VITS, Matcha, Kokoro, Kitten, ZipVoice, Pocket TTS,
+/// and Supertonic model families. See `dart-api-examples/tts/bin/` for working
+/// examples such as `pocket-en.dart`, `kokoro-en.dart`, `kokoro-zh-en.dart`,
+/// `matcha-en.dart`, and `zipvoice-zh-en.dart`.
+///
+/// Example:
+///
+/// ```dart
+/// final model = OfflineTtsModelConfig(
+///   pocketTts: const OfflineTtsPocketSphinxModelConfig(
+///     model: './sherpa-onnx-pocket-tts/model.int8.onnx',
+///     tokens: './sherpa-onnx-pocket-tts/tokens.txt',
+///     dataDir: './sherpa-onnx-pocket-tts/espeak-ng-data',
+///   ),
+///   numThreads: 1,
+/// );
+///
+/// final tts = OfflineTts(OfflineTtsConfig(model: model));
+/// final audio = tts.generate(
+///   text: 'Hello from sherpa-onnx',
+///   sid: 0,
+///   speed: 1.0,
+/// );
+/// writeWave(
+///   filename: './out.wav',
+///   samples: audio.samples,
+///   sampleRate: audio.sampleRate,
+/// );
+/// tts.free();
+/// ```
+
+/// Per-request generation options for [OfflineTts.generateWithConfig].
+///
+/// Use this when you need advanced generation controls such as zero-shot voice
+/// cloning reference audio, explicit reference sample rate, or model-specific
+/// values in [extra].
 class OfflineTtsGenerationConfig {
   const OfflineTtsGenerationConfig({
     this.silenceScale = 0.2,
@@ -98,6 +136,7 @@ class OfflineTtsGenerationConfig {
   final Map<String, Object> extra;
 }
 
+/// VITS model configuration.
 class OfflineTtsVitsModelConfig {
   const OfflineTtsVitsModelConfig({
     this.model = '',
@@ -147,6 +186,7 @@ class OfflineTtsVitsModelConfig {
   final String dictDir; // unused
 }
 
+/// Matcha model configuration.
 class OfflineTtsMatchaModelConfig {
   const OfflineTtsMatchaModelConfig({
     this.acousticModel = '',
@@ -196,6 +236,7 @@ class OfflineTtsMatchaModelConfig {
   final String dictDir; // unused
 }
 
+/// Kokoro model configuration.
 class OfflineTtsKokoroModelConfig {
   const OfflineTtsKokoroModelConfig({
     this.model = '',
@@ -245,6 +286,7 @@ class OfflineTtsKokoroModelConfig {
   final String lang;
 }
 
+/// Kitten model configuration.
 class OfflineTtsKittenModelConfig {
   const OfflineTtsKittenModelConfig({
     this.model = '',
@@ -284,6 +326,7 @@ class OfflineTtsKittenModelConfig {
   final double lengthScale;
 }
 
+/// ZipVoice model configuration.
 class OfflineTtsZipVoiceModelConfig {
   const OfflineTtsZipVoiceModelConfig({
     this.tokens = '',
@@ -343,6 +386,9 @@ class OfflineTtsZipVoiceModelConfig {
   final double guidanceScale;
 }
 
+/// Pocket TTS model configuration.
+///
+/// This family supports zero-shot voice cloning with a reference waveform.
 class OfflineTtsPocketModelConfig {
   const OfflineTtsPocketModelConfig({
     this.lmFlow = '',
@@ -395,6 +441,58 @@ class OfflineTtsPocketModelConfig {
   final int voiceEmbeddingCacheCapacity;
 }
 
+/// Supertonic model configuration.
+class OfflineTtsSupertonicModelConfig {
+  const OfflineTtsSupertonicModelConfig({
+    this.durationPredictor = '',
+    this.textEncoder = '',
+    this.vectorEstimator = '',
+    this.vocoder = '',
+    this.ttsJson = '',
+    this.unicodeIndexer = '',
+    this.voiceStyle = '',
+  });
+
+  factory OfflineTtsSupertonicModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsSupertonicModelConfig(
+      durationPredictor: json['durationPredictor'] as String? ?? '',
+      textEncoder: json['textEncoder'] as String? ?? '',
+      vectorEstimator: json['vectorEstimator'] as String? ?? '',
+      vocoder: json['vocoder'] as String? ?? '',
+      ttsJson: json['ttsJson'] as String? ?? '',
+      unicodeIndexer: json['unicodeIndexer'] as String? ?? '',
+      voiceStyle: json['voiceStyle'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'durationPredictor': durationPredictor,
+    'textEncoder': textEncoder,
+    'vectorEstimator': vectorEstimator,
+    'vocoder': vocoder,
+    'ttsJson': ttsJson,
+    'unicodeIndexer': unicodeIndexer,
+    'voiceStyle': voiceStyle,
+  };
+
+  @override
+  String toString() {
+    return 'OfflineTtsSupertonicModelConfig(durationPredictor: $durationPredictor, textEncoder: $textEncoder, vectorEstimator: $vectorEstimator, vocoder: $vocoder, ttsJson: $ttsJson, unicodeIndexer: $unicodeIndexer, voiceStyle: $voiceStyle)';
+  }
+
+  final String durationPredictor;
+  final String textEncoder;
+  final String vectorEstimator;
+  final String vocoder;
+  final String ttsJson;
+  final String unicodeIndexer;
+  final String voiceStyle;
+}
+
+/// Aggregate model configuration for offline TTS.
+///
+/// Configure exactly one model family for a typical setup and set the shared
+/// runtime options such as [numThreads] and [provider].
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
     this.vits = const OfflineTtsVitsModelConfig(),
@@ -403,6 +501,7 @@ class OfflineTtsModelConfig {
     this.kitten = const OfflineTtsKittenModelConfig(),
     this.zipvoice = const OfflineTtsZipVoiceModelConfig(),
     this.pocket = const OfflineTtsPocketModelConfig(),
+    this.supertonic = const OfflineTtsSupertonicModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -428,6 +527,9 @@ class OfflineTtsModelConfig {
       pocket: OfflineTtsPocketModelConfig.fromJson(
         json['pocket'] as Map<String, dynamic>? ?? const {},
       ),
+      supertonic: OfflineTtsSupertonicModelConfig.fromJson(
+        json['supertonic'] as Map<String, dynamic>? ?? const {},
+      ),
       numThreads: json['numThreads'] as int? ?? 1,
       debug: json['debug'] as bool? ?? true,
       provider: json['provider'] as String? ?? 'cpu',
@@ -436,7 +538,7 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, pocket: $pocket, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, kitten: $kitten, zipvoice: $zipvoice, pocket: $pocket, supertonic: $supertonic, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   Map<String, dynamic> toJson() => {
@@ -446,6 +548,7 @@ class OfflineTtsModelConfig {
     'kitten': kitten.toJson(),
     'zipvoice': zipvoice.toJson(),
     'pocket': pocket.toJson(),
+    'supertonic': supertonic.toJson(),
     'numThreads': numThreads,
     'debug': debug,
     'provider': provider,
@@ -457,11 +560,13 @@ class OfflineTtsModelConfig {
   final OfflineTtsKittenModelConfig kitten;
   final OfflineTtsZipVoiceModelConfig zipvoice;
   final OfflineTtsPocketModelConfig pocket;
+  final OfflineTtsSupertonicModelConfig supertonic;
   final int numThreads;
   final bool debug;
   final String provider;
 }
 
+/// Top-level configuration for [OfflineTts].
 class OfflineTtsConfig {
   const OfflineTtsConfig({
     required this.model,
@@ -503,6 +608,7 @@ class OfflineTtsConfig {
   final double silenceScale;
 }
 
+/// Audio generated by [OfflineTts].
 class GeneratedAudio {
   GeneratedAudio({required this.samples, required this.sampleRate});
 
@@ -510,6 +616,11 @@ class GeneratedAudio {
   final int sampleRate;
 }
 
+/// Offline text-to-speech engine.
+///
+/// Create one from an [OfflineTtsConfig], then call [generate],
+/// [generateWithCallback], or [generateWithConfig] depending on how much
+/// control you need over the generation process.
 class OfflineTts {
   OfflineTts.fromPtr({required this.ptr, required this.config});
 
@@ -577,6 +688,21 @@ class OfflineTts {
     c.ref.model.pocket.voiceEmbeddingCacheCapacity =
         config.model.pocket.voiceEmbeddingCacheCapacity;
 
+    c.ref.model.supertonic.durationPredictor = config.model.supertonic
+        .durationPredictor.toNativeUtf8();
+    c.ref.model.supertonic.textEncoder = config.model.supertonic.textEncoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.vectorEstimator = config.model.supertonic
+        .vectorEstimator.toNativeUtf8();
+    c.ref.model.supertonic.vocoder = config.model.supertonic.vocoder
+        .toNativeUtf8();
+    c.ref.model.supertonic.ttsJson = config.model.supertonic.ttsJson
+        .toNativeUtf8();
+    c.ref.model.supertonic.unicodeIndexer = config.model.supertonic
+        .unicodeIndexer.toNativeUtf8();
+    c.ref.model.supertonic.voiceStyle = config.model.supertonic.voiceStyle
+        .toNativeUtf8();
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -591,6 +717,14 @@ class OfflineTts {
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+
+    calloc.free(c.ref.model.supertonic.voiceStyle);
+    calloc.free(c.ref.model.supertonic.unicodeIndexer);
+    calloc.free(c.ref.model.supertonic.ttsJson);
+    calloc.free(c.ref.model.supertonic.vocoder);
+    calloc.free(c.ref.model.supertonic.vectorEstimator);
+    calloc.free(c.ref.model.supertonic.textEncoder);
+    calloc.free(c.ref.model.supertonic.durationPredictor);
 
     calloc.free(c.ref.model.pocket.tokenScoresJson);
     calloc.free(c.ref.model.pocket.vocabJson);
@@ -638,87 +772,63 @@ class OfflineTts {
     return OfflineTts._(ptr: ptr, config: config);
   }
 
+  /// Release the native TTS engine.
   void free() {
+    if (SherpaOnnxBindings.destroyOfflineTts == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.destroyOfflineTts?.call(ptr);
     ptr = nullptr;
   }
 
+  /// Generate audio using the simple `(text, sid, speed)` API.
   GeneratedAudio generate({
     required String text,
     int sid = 0,
     double speed = 1.0,
   }) {
-    final Pointer<Utf8> textPtr = text.toNativeUtf8();
-    final p =
-        SherpaOnnxBindings.offlineTtsGenerate?.call(ptr, textPtr, sid, speed) ??
-        nullptr;
-    calloc.free(textPtr);
-
-    if (p == nullptr) {
-      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
-    }
-
-    final samples = p.ref.samples.asTypedList(p.ref.n);
-    final sampleRate = p.ref.sampleRate;
-    final newSamples = Float32List.fromList(samples);
-
-    SherpaOnnxBindings.destroyOfflineTtsGeneratedAudio?.call(p);
-
-    return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
+    return generateWithConfig(
+      text: text,
+      config: OfflineTtsGenerationConfig(sid: sid, speed: speed),
+    );
   }
 
+  /// Generate audio while receiving partial sample chunks through [callback].
   GeneratedAudio generateWithCallback({
     required String text,
     int sid = 0,
     double speed = 1.0,
     required int Function(Float32List samples) callback,
   }) {
-    // see
-    // https://github.com/dart-lang/sdk/issues/54276#issuecomment-1846109285
-    // https://stackoverflow.com/questions/69537440/callbacks-in-dart-dartffi-only-supports-calling-static-dart-functions-from-nat
-    // https://github.com/dart-lang/sdk/blob/main/tests/ffi/isolate_local_function_callbacks_test.dart#L46
-    final wrapper =
-        NativeCallable<SherpaOnnxGeneratedAudioCallbackNative>.isolateLocal((
-          Pointer<Float> samples,
-          int n,
-        ) {
-          final s = samples.asTypedList(n);
-          final newSamples = Float32List.fromList(s);
-          return callback(newSamples);
-        }, exceptionalReturn: 0);
-
-    final Pointer<Utf8> textPtr = text.toNativeUtf8();
-    final p =
-        SherpaOnnxBindings.offlineTtsGenerateWithCallback?.call(
-          ptr,
-          textPtr,
-          sid,
-          speed,
-          wrapper.nativeFunction,
-        ) ??
-        nullptr;
-
-    calloc.free(textPtr);
-    wrapper.close();
-
-    if (p == nullptr) {
-      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
-    }
-
-    final samples = p.ref.samples.asTypedList(p.ref.n);
-    final sampleRate = p.ref.sampleRate;
-    final newSamples = Float32List.fromList(samples);
-
-    SherpaOnnxBindings.destroyOfflineTtsGeneratedAudio?.call(p);
-
-    return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
+    return generateWithConfig(
+      text: text,
+      config: OfflineTtsGenerationConfig(sid: sid, speed: speed),
+      onProgress: (samples, progress) => callback(samples),
+    );
   }
 
+  /// Generate audio using [OfflineTtsGenerationConfig].
+  ///
+  /// This is the most flexible generation API and is the recommended entry
+  /// point for features such as Pocket TTS reference-audio cloning and
+  /// model-specific options supplied through [OfflineTtsGenerationConfig.extra].
   GeneratedAudio generateWithConfig({
     required String text,
     required OfflineTtsGenerationConfig config,
     int Function(Float32List samples, double progress)? onProgress,
   }) {
+    if (SherpaOnnxBindings.offlineTtsGenerateWithConfig == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
     final textPtr = text.toNativeUtf8();
     final cfgPtr = config.toNative();
 
@@ -766,10 +876,31 @@ class OfflineTts {
     return GeneratedAudio(samples: samples, sampleRate: sampleRate);
   }
 
-  int get sampleRate => SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
+  /// Return the output sample rate reported by the model.
+  int get sampleRate {
+    if (SherpaOnnxBindings.offlineTtsSampleRate == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
 
-  int get numSpeakers =>
-      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
+  }
+
+  /// Return the number of built-in speakers reported by the model.
+  int get numSpeakers {
+    if (SherpaOnnxBindings.offlineTtsNumSpeakers == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+
+    return SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
+  }
 
   Pointer<SherpaOnnxOfflineTts> ptr;
   OfflineTtsConfig config;

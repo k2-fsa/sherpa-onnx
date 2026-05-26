@@ -50,7 +50,7 @@ const config = {
 const waveFilename = './0-four-speakers-zh.wav';
 
 const sd = new sherpa_onnx.OfflineSpeakerDiarization(config);
-console.log('Started')
+console.log('Started');
 
 const wave = sherpa_onnx.readWave(waveFilename);
 if (sd.sampleRate != wave.sampleRate) {

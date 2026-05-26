@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   nightly-wheel-arm:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     name: ${{ matrix.python-version }}
     # see https://github.com/actions/virtual-environments/blob/win19/20210525.0/images/win/Windows2019-Readme.md
     runs-on: ${{ matrix.os}}

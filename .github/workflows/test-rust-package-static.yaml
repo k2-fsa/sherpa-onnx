@@ -1,0 +1,101 @@
+name: Test rust package static
+
+on:
+  push:
+    branches:
+      - rust-static2
+  workflow_dispatch:
+
+concurrency:
+  group: test-rust-package-static-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-rust-package-static:
+    name: Test static ${{ matrix.os }} (${{ matrix.lib_setup }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-15-intel, ubuntu-22.04-arm, windows-latest]
+        lib_setup: [explicit, auto]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Set up MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Select MSVC linker
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $linker = Join-Path $env:VCToolsInstallDir 'bin\HostX64\x64\link.exe'
+          if (-not (Test-Path $linker)) {
+            throw "MSVC linker not found: $linker"
+          }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using linker: $linker"
+          & where.exe link
+
+      - name: Use local sherpa-onnx crates
+        if: false
+        shell: bash
+        run: |
+          mkdir -p rust-api-examples/.cargo
+          cat > rust-api-examples/.cargo/config.toml <<'PATCH'
+          [patch.crates-io]
+          sherpa-onnx = { path = "../sherpa-onnx/rust/sherpa-onnx" }
+          sherpa-onnx-sys = { path = "../sherpa-onnx/rust/sherpa-onnx-sys" }
+          PATCH
+
+      - name: Download static libraries for explicit SHERPA_ONNX_LIB_DIR
+        if: matrix.lib_setup == 'explicit'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt | cut -d " " -f 2 | cut -d '"' -f 2)
+
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-arm64-static-lib
+          elif [[ "${{ matrix.os }}" == "macos-15-intel" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-osx-x64-static-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-x64-static-lib
+          elif [[ "${{ matrix.os }}" == "ubuntu-22.04-arm" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-linux-aarch64-static-lib
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            d=sherpa-onnx-v$SHERPA_ONNX_VERSION-win-x64-static-MT-Release-lib
+          else
+            echo "Unknown ${{ matrix.os }}"
+            exit 1
+          fi
+
+          curl -SsL -O "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$SHERPA_ONNX_VERSION/$d.tar.bz2"
+          tar -xvf "$d.tar.bz2"
+          ls -lh "$d/lib"
+          echo "SHERPA_ONNX_LIB_DIR=$PWD/$d/lib" >> "$GITHUB_ENV"
+
+      - name: Show library setup
+        shell: bash
+        run: |
+          echo "lib_setup: ${{ matrix.lib_setup }}"
+          if [[ -n "${SHERPA_ONNX_LIB_DIR:-}" ]]; then
+            echo "SHERPA_ONNX_LIB_DIR: $SHERPA_ONNX_LIB_DIR"
+            ls -lh "$SHERPA_ONNX_LIB_DIR"
+          else
+            echo "SHERPA_ONNX_LIB_DIR is not set; build.rs will download the static libs automatically."
+          fi
+
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER: $CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER"
+          fi
+
+      - name: Run static tests
+        shell: bash
+        run: |
+          ./.github/scripts/test-rust-static.sh

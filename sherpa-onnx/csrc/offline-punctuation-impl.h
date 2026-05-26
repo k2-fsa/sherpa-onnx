@@ -7,10 +7,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 
@@ -23,10 +19,9 @@ class OfflinePunctuationImpl {
   static std::unique_ptr<OfflinePunctuationImpl> Create(
       const OfflinePunctuationConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<OfflinePunctuationImpl> Create(
-      AAssetManager *mgr, const OfflinePunctuationConfig &config);
-#endif
+      Manager *mgr, const OfflinePunctuationConfig &config);
 
   virtual std::string AddPunctuation(const std::string &text) const = 0;
 };

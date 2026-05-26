@@ -18,25 +18,25 @@ fn c_str_to_static_str(ptr: *const c_char) -> &'static str {
     }
 }
 
-/// Returns the version string of sherpa-onnx
+/// Return the sherpa-onnx version string compiled into the native library.
 pub fn version() -> &'static str {
     let ptr = unsafe { sys::SherpaOnnxGetVersionStr() };
     c_str_to_static_str(ptr)
 }
 
-/// Returns the Git SHA1 of the build
+/// Return the Git SHA1 of the native library build.
 pub fn git_sha1() -> &'static str {
     let ptr = unsafe { sys::SherpaOnnxGetGitSha1() };
     c_str_to_static_str(ptr)
 }
 
-/// Returns the Git date of the build
+/// Return the Git date of the native library build.
 pub fn git_date() -> &'static str {
     let ptr = unsafe { sys::SherpaOnnxGetGitDate() };
     c_str_to_static_str(ptr)
 }
 
-/// Returns true if the given file exists
+/// Return `true` if `filename` exists according to the native helper.
 pub fn file_exists(filename: &str) -> bool {
     let cstr = match CString::new(filename) {
         Ok(cstr) => cstr,

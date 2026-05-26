@@ -62,20 +62,22 @@ int32_t main(int32_t argc, char *argv[]) {
       "thing in the world was to lose touch with someone.";
 
   auto tts = OfflineTts::Create(config);
-  int32_t sid = 0;
-  float speed = 1.0;  // larger -> faster in speech speed
+  GenerationConfig gen_config;
+  gen_config.sid = 0;
+  gen_config.speed = 1.0;  // larger -> faster in speech speed
+  gen_config.silence_scale = config.silence_scale;
 
 #if 0
   // If you don't want to use a callback, then please enable this branch
-  GeneratedAudio audio = tts.Generate(text, sid, speed);
+  GeneratedAudio audio = tts.Generate(text, gen_config);
 #else
-  GeneratedAudio audio = tts.Generate(text, sid, speed, ProgressCallback);
+  GeneratedAudio audio = tts.Generate(text, gen_config, ProgressCallback);
 #endif
 
   WriteWave(filename, {audio.samples, audio.sample_rate});
 
   fprintf(stderr, "Input text is: %s\n", text.c_str());
-  fprintf(stderr, "Speaker ID is: %d\n", sid);
+  fprintf(stderr, "Speaker ID is: %d\n", gen_config.sid);
   fprintf(stderr, "Saved to: %s\n", filename.c_str());
 
   return 0;

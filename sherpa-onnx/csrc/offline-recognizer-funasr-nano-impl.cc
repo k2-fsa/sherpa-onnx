@@ -25,7 +25,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -726,9 +726,10 @@ OfflineRecognitionResult OfflineRecognizerFunASRNanoImpl::GenerateText(
     int32_t time_dim = static_cast<int32_t>(log_shape[1]);
     int32_t vocab_size = static_cast<int32_t>(log_shape[2]);
     if (time_dim <= 0 || vocab_size <= 0) {
-      SHERPA_ONNX_LOGE("Invalid logits shape [%lld,%lld,%lld]",
-                       (long long)log_shape[0], (long long)log_shape[1],
-                       (long long)log_shape[2]);
+      SHERPA_ONNX_LOGE("Invalid logits shape [%d,%d,%d]",
+                       static_cast<int32_t>(log_shape[0]),
+                       static_cast<int32_t>(log_shape[1]),
+                       static_cast<int32_t>(log_shape[2]));
       result.text = "";
       return result;
     }

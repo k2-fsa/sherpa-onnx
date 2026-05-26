@@ -55,7 +55,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     PostInit();
   }
@@ -65,17 +65,21 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       Manager *mgr, const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
-        symbol_table_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config),
         model_(std::make_unique<OnlineTransducerNeMoModel>(
             mgr, config.model_config)) {
+    if (!config.model_config.tokens_buf.empty()) {
+      symbol_table_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      symbol_table_ = SymbolTable(mgr, config.model_config.tokens);
+    }
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     PostInit();
@@ -223,18 +227,18 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // check the blank ID
     if (!symbol_table_.Contains("<blk>")) {
       SHERPA_ONNX_LOGE("tokens.txt does not include the blank token <blk>");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (symbol_table_["<blk>"] != vocab_size - 1) {
       SHERPA_ONNX_LOGE("<blk> is not the last token!");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (symbol_table_.NumSymbols() != vocab_size) {
       SHERPA_ONNX_LOGE("number of lines in tokens.txt %d != %d (vocab_size)",
                        symbol_table_.NumSymbols(), vocab_size);
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

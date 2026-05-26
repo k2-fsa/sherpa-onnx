@@ -361,13 +361,13 @@ type
 
 {** Return information about the last host error encountered. The error
  information returned by Pa_GetLastHostErrorInfo() will never be modified
- asyncronously by errors occurring in other PortAudio owned threads
+ asynchronously by errors occurring in other PortAudio owned threads
  (such as the thread that manages the stream callback.)
 
  This function is provided as a last resort, primarily to enhance debugging
  by providing clients with access to all available error information.
 
- @return A pointer to an immutable structure constaining information about
+ @return A pointer to an immutable structure containing information about
  the host error. The values in this structure will only be valid if a
  PortAudio function has previously returned the paUnanticipatedHostError
  error code.
@@ -400,7 +400,7 @@ function Pa_GetDefaultInputDevice(): TPaDeviceIndex; cdecl; external LibName;
 {** Retrieve the index of the default output device. The result can be
  used in the outputDevice parameter to Pa_OpenStream().
 
- @return The default output device index for the defualt host API, or paNoDevice
+ @return The default output device index for the default host API, or paNoDevice
  if no default output device is available or an error was encountered.
 
  @note
@@ -416,7 +416,7 @@ function Pa_GetDefaultOutputDevice(): TPaDeviceIndex; cdecl; external LibName;
 
 
 {** The type used to represent monotonic time in seconds that can be used
- for syncronisation. The type is used for the outTime argument to the
+ for synchronisation. The type is used for the outTime argument to the
  PaStreamCallback and as the result of Pa_GetStreamTime().
      
  @see PaStreamCallback, Pa_GetStreamTime
@@ -524,8 +524,8 @@ type
        configure their latency based on these parameters, otherwise they may
        choose the closest viable latency instead. Unless the suggested latency
        is greater than the absolute upper limit for the device implementations
-       should round the suggestedLatency up to the next practial value - ie to
-       provide an equal or higher latency than suggestedLatency wherever possibe.
+       should round the suggestedLatency up to the next practical value - ie to
+       provide an equal or higher latency than suggestedLatency wherever possible.
        Actual latency values for an open stream may be retrieved using the
        inputLatency and outputLatency fields of the PaStreamInfo structure
        returned by Pa_GetStreamInfo().
@@ -757,7 +757,7 @@ type TPaStreamCallbackResult = {enum}cint; const
 
  @see Pa_OpenStream, Pa_OpenDefaultStream
 
- @note With the exception of Pa_GetStreamCpuLoad() it is not permissable to call
+ @note With the exception of Pa_GetStreamCpuLoad() it is not permissible to call
  PortAudio API functions from within the stream callback.
 *}
 type
@@ -789,7 +789,7 @@ type
  @param framesPerBuffer The number of frames passed to the stream callback
  function, or the preferred block granularity for a blocking read/write stream.
  The special value paFramesPerBufferUnspecified (0) may be used to request that
- the stream callback will recieve an optimal (and possibly varying) number of
+ the stream callback will receive an optimal (and possibly varying) number of
  frames based on host requirements and the requested latency settings.
  Note: With some host APIs, the use of non-zero framesPerBuffer for a callback
  stream may introduce an additional layer of buffering which could introduce
@@ -1023,7 +1023,7 @@ function Pa_GetStreamInfo( stream: PPaStream ): PPaStreamInfo; cdecl; external L
 
 
 {** Determine the current time for the stream according to the same clock used
- to generate buffer timestamps. This time may be used for syncronising other
+ to generate buffer timestamps. This time may be used for synchronising other
  events to the audio stream, for example synchronizing audio to MIDI.
                                         
  @return The stream's current time in seconds, or 0 if an error occurred.
@@ -1047,7 +1047,7 @@ function Pa_GetStreamTime( stream: PPaStream ): TPaTime; cdecl; external LibName
  to maintain real-time operation. A value of 0.5 would imply that PortAudio and
  the stream callback was consuming roughly 50% of the available CPU time. The
  return value may exceed 1.0. A value of 0.0 will always be returned for a
- blocking read/write stream, or if an error occurrs.
+ blocking read/write stream, or if an error occurs.
 *}
 function Pa_GetStreamCpuLoad( stream: PPaStream ): cdouble; cdecl; external LibName;
 

@@ -79,6 +79,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
 
   if (!config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");
+    return 0;
   }
 
   auto extractor = new sherpa_onnx::SpeakerEmbeddingExtractor(config);

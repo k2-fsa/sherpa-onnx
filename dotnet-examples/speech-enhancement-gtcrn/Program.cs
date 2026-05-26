@@ -21,8 +21,9 @@ class OfflineSpeechEnhancementDemo
 {
   static void Main(string[] args)
   {
+    var model = "./gtcrn_simple.onnx";
     var config = new OfflineSpeechDenoiserConfig();
-    config.Model.Gtcrn.Model = "./gtcrn_simple.onnx";
+    config.Model.Gtcrn.Model = model;
     config.Model.Debug = 1;
     config.Model.NumThreads = 1;
     var sd = new OfflineSpeechDenoiser(config);
@@ -30,7 +31,7 @@ class OfflineSpeechEnhancementDemo
     WaveReader waveReader = new WaveReader("./inp_16k.wav");
     var denoisedAudio =  sd.Run(waveReader.Samples, waveReader.SampleRate);
 
-    var outputFilename = "./enhanced-16k.wav";
+    var outputFilename = "./enhanced.wav";
     var ok = denoisedAudio.SaveToWaveFile(outputFilename);
 
     if (ok)

@@ -71,7 +71,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   if (argc == 1) {
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   po.Read(argc, argv);
@@ -79,7 +79,7 @@ int32_t main(int32_t argc, char *argv[]) {
   if (po.NumArgs() != 0) {
     SHERPA_ONNX_LOGE("Unrecognized positional arguments!");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   config.Validate();

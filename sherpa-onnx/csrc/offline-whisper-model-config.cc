@@ -56,7 +56,8 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
       "segment-level timestamps. The decoder outputs timestamp tokens like "
       "<|0.00|> interleaved with text, creating segments with start/end times. "
       "Does not require attention outputs. Can be combined with "
-      "--whisper-enable-token-timestamps for both segment-level and token-level "
+      "--whisper-enable-token-timestamps for both segment-level and "
+      "token-level "
       "timestamps. Default: false.");
 }
 
@@ -103,8 +104,10 @@ std::string OfflineWhisperModelConfig::ToString() const {
   os << "language=\"" << language << "\", ";
   os << "task=\"" << task << "\", ";
   os << "tail_paddings=" << tail_paddings << ", ";
-  os << "enable_token_timestamps=" << (enable_token_timestamps ? "True" : "False") << ", ";
-  os << "enable_segment_timestamps=" << (enable_segment_timestamps ? "True" : "False") << ")";
+  os << "enable_token_timestamps="
+     << (enable_token_timestamps ? "True" : "False") << ", ";
+  os << "enable_segment_timestamps="
+     << (enable_segment_timestamps ? "True" : "False") << ")";
 
   return os.str();
 }

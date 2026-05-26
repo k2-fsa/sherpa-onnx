@@ -46,7 +46,9 @@ add_library(sherpa_onnx SHARED
   non-streaming-speaker-diarization.cc
   non-streaming-speech-denoiser.cc
   non-streaming-tts.cc
-  punctuation.cc
+  offline-punctuation.cc
+  online-punctuation.cc
+  streaming-speech-denoiser.cc
   sherpa-onnx-node-addon-api.cc
   speaker-identification.cc
   spoken-language-identification.cc
@@ -56,6 +58,7 @@ add_library(sherpa_onnx SHARED
   version.cc
   wave-reader.cc
   wave-writer.cc
+  resampler.cc
 )
 
 add_library(sherpa_onnx_c_api SHARED IMPORTED)

@@ -10,8 +10,16 @@ It generates speech from text and saves it to a wave file.
 {$mode objfpc}
 
 uses
+  ctypes,
   SysUtils,
   sherpa_onnx;
+
+function ProgressCallback(Samples: pcfloat; N: cint32; P: cfloat;
+  Arg: Pointer): cint32; cdecl;
+begin
+  WriteLn(Format('Progress: %.2f%%, samples: %d', [P * 100.0, N]));
+  Result := 1;
+end;
 
 function GetOfflineTts: TSherpaOnnxOfflineTts;
 var
@@ -53,10 +61,9 @@ begin
   GenerationConfig.ReferenceAudioLen := Length(Wave.Samples);
   GenerationConfig.ReferenceSampleRate := Wave.SampleRate;
 
-  Audio :=  Tts.Generate(Text, GenerationConfig, NIL, NIL);
+  Audio := Tts.Generate(Text, GenerationConfig, @ProgressCallback, NIL);
   SherpaOnnxWriteWave('./pocket-tts-en.wav', Audio.Samples, Audio.SampleRate);
   WriteLn('Saved to ./pocket-tts-en.wav');
 
   FreeAndNil(Tts);
 end.
-

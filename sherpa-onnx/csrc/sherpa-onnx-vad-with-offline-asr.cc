@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
@@ -154,7 +155,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Error: Please provide at only 1 wave file. Given: %d\n\n",
             po.NumArgs());
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", vad_config.ToString().c_str());
@@ -230,8 +231,8 @@ for a list of pre-trained models to download.
       recognizer.DecodeStream(s.get());
       const auto &result = s->GetResult();
       if (!result.text.empty()) {
-        fprintf(stderr, "%.3f -- %.3f: %s\n", start_time, end_time,
-                result.text.c_str());
+        fprintf(stdout, "%.3f -- %.3f: ", start_time, end_time);
+        fprintf(stdout, "%s\n", result.text.c_str());
       }
       vad->Pop();
     }

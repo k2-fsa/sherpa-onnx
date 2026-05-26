@@ -232,11 +232,14 @@ OfflineTts::~OfflineTts() = default;
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
     GeneratedAudioCallback callback /*= nullptr*/) const {
+  GenerationConfig config;
+  config.sid = static_cast<int32_t>(sid);
+  config.speed = speed;
 #if !defined(_WIN32)
-  return impl_->Generate(text, sid, speed, std::move(callback));
+  return impl_->Generate(text, config, std::move(callback));
 #else
   if (IsUtf8(text)) {
-    return impl_->Generate(text, sid, speed, std::move(callback));
+    return impl_->Generate(text, config, std::move(callback));
   } else if (IsGB2312(text)) {
     auto utf8_text = Gb2312ToUtf8(text);
     static bool printed = false;
@@ -245,12 +248,12 @@ GeneratedAudio OfflineTts::Generate(
           "Detected GB2312 encoded string! Converting it to UTF8.");
       printed = true;
     }
-    return impl_->Generate(utf8_text, sid, speed, std::move(callback));
+    return impl_->Generate(utf8_text, config, std::move(callback));
   } else {
     SHERPA_ONNX_LOGE(
         "Non UTF8 encoded string is received. You would not get expected "
         "results!");
-    return impl_->Generate(text, sid, speed, std::move(callback));
+    return impl_->Generate(text, config, std::move(callback));
   }
 #endif
 }
@@ -260,9 +263,14 @@ GeneratedAudio OfflineTts::Generate(
     const std::vector<float> &prompt_samples, int32_t sample_rate,
     float speed /*=1.0*/, int32_t num_steps /*=4*/,
     GeneratedAudioCallback callback /*=nullptr*/) const {
+  GenerationConfig config;
+  config.speed = speed;
+  config.reference_audio = prompt_samples;
+  config.reference_sample_rate = sample_rate;
+  config.reference_text = prompt_text;
+  config.num_steps = num_steps;
 #if !defined(_WIN32)
-  return impl_->Generate(text, prompt_text, prompt_samples, sample_rate, speed,
-                         num_steps, std::move(callback));
+  return impl_->Generate(text, config, std::move(callback));
 #else
   static bool printed = false;
   auto utf8_text = text;
@@ -282,15 +290,14 @@ GeneratedAudio OfflineTts::Generate(
       printed = true;
     }
   }
+  config.reference_text = utf8_prompt_text;
   if (IsUtf8(utf8_text) && IsUtf8(utf8_prompt_text)) {
-    return impl_->Generate(utf8_text, utf8_prompt_text, prompt_samples,
-                           sample_rate, speed, num_steps, std::move(callback));
+    return impl_->Generate(utf8_text, config, std::move(callback));
   } else {
     SHERPA_ONNX_LOGE(
         "Non UTF8 encoded string is received. You would not get expected "
         "results!");
-    return impl_->Generate(utf8_text, utf8_prompt_text, prompt_samples,
-                           sample_rate, speed, num_steps, std::move(callback));
+    return impl_->Generate(utf8_text, config, std::move(callback));
   }
 #endif
 }

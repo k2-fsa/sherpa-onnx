@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
@@ -52,7 +53,7 @@ for a list of pre-trained models to download.
   if (po.NumArgs() != 1) {
     fprintf(stderr, "Error: Please provide 1 wave file.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -88,8 +89,9 @@ for a list of pre-trained models to download.
   const auto end = std::chrono::steady_clock::now();
 
   fprintf(stderr, "Done!\n\n");
-  fprintf(stderr, "%s\nDetected language: %s\n", wav_filename.c_str(),
-          language.c_str());
+  fprintf(stderr, "%s\n", wav_filename.c_str());
+  fprintf(stderr, "Detected language: ");
+  fprintf(stdout, "%s\n", language.c_str());
 
   float elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)

@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   sanitizer:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     name: sanitizer
     strategy:
@@ -98,6 +99,15 @@ jobs:
           export EXE=sherpa-onnx-online-punctuation
 
           .github/scripts/test-online-punctuation.sh
+
+      - name: Test offline Cohere Transcribe
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-cohere-transcribe.sh
 
       - name: Test offline punctuation
         shell: bash

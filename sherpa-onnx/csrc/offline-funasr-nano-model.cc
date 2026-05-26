@@ -24,7 +24,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -945,16 +945,15 @@ class OfflineFunASRNanoModel::Impl {
     int64_t pos0 = pos_data[0];
 
     if (pos0 < 0) {
-      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0 < 0 (%lld)",
-                       static_cast<long long>(pos0));
+      SHERPA_ONNX_LOGE("ApplyKvDeltaInplace: pos0 < 0 (%d)",
+                       static_cast<int32_t>(pos0));
       SHERPA_ONNX_EXIT(-1);
     }
     if (pos0 + S > max_total_len_) {
       SHERPA_ONNX_LOGE(
-          "ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%lld + %lld > "
+          "ApplyKvDeltaInplace: pos0+S exceeds max_total_len_ (%d + %d > "
           "%d), clamping S",
-          static_cast<long long>(pos0), static_cast<long long>(S),
-          max_total_len_);
+          static_cast<int32_t>(pos0), static_cast<int32_t>(S), max_total_len_);
       S = max_total_len_ - pos0;
       if (S <= 0) return;
     }

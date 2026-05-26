@@ -3,12 +3,14 @@ package com.k2fsa.sherpa.onnx;
 
 public class OfflineSpeechDenoiserModelConfig {
     private final OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+    private final OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
 
     private OfflineSpeechDenoiserModelConfig(Builder builder) {
         this.gtcrn = builder.gtcrn;
+        this.dpdfnet = builder.dpdfnet;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -20,6 +22,7 @@ public class OfflineSpeechDenoiserModelConfig {
 
     public static class Builder {
         private OfflineSpeechDenoiserGtcrnModelConfig gtcrn = OfflineSpeechDenoiserGtcrnModelConfig.builder().build();
+        private OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet = OfflineSpeechDenoiserDpdfNetModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -30,6 +33,11 @@ public class OfflineSpeechDenoiserModelConfig {
 
         public Builder setGtcrn(OfflineSpeechDenoiserGtcrnModelConfig gtcrn) {
             this.gtcrn = gtcrn;
+            return this;
+        }
+
+        public Builder setDpdfnet(OfflineSpeechDenoiserDpdfNetModelConfig dpdfnet) {
+            this.dpdfnet = dpdfnet;
             return this;
         }
 

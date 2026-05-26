@@ -56,11 +56,57 @@ export class OfflineDolphinModelConfig {
   public model: string = '';
 }
 
+export class OfflineOmnilingualAsrCtcModelConfig {
+  public model: string = '';
+}
+
+export class OfflineMedAsrCtcModelConfig {
+  public model: string = '';
+}
+
+export class OfflineFunASRNanoModelConfig {
+  public encoderAdaptor: string = '';
+  public llm: string = '';
+  public embedding: string = '';
+  public tokenizer: string = '';
+  public systemPrompt: string = '';
+  public userPrompt: string = '';
+  public maxNewTokens: number = 0;
+  public temperature: number = 1e-6;
+  public topP: number = 0.8;
+  public seed: number = 0;
+  public language: string = '';
+  public itn: number = 0;
+  public hotwords: string = '';
+}
+
+export class OfflineQwen3AsrModelConfig {
+  public convFrontend: string = '';
+  public encoder: string = '';
+  public decoder: string = '';
+  public tokenizer: string = '';
+  public maxTotalLen: number = 512;
+  public maxNewTokens: number = 64;
+  public temperature: number = 1e-6;
+  public topP: number = 0.8;
+  public seed: number = 42;
+  public hotwords: string = '';
+}
+
 export class OfflineZipformerCtcModelConfig {
   public model: string = '';
 }
 
 export class OfflineWenetCtcModelConfig {
+  public model: string = '';
+}
+
+export class OfflineFireRedAsrModelConfig {
+  public encoder: string = '';
+  public decoder: string = '';
+}
+
+export class OfflineFireRedAsrCtcModelConfig {
   public model: string = '';
 }
 
@@ -70,6 +116,8 @@ export class OfflineWhisperModelConfig {
   public language: string = '';
   public task: string = 'transcribe';
   public tailPaddings: number = -1;
+  public enableTokenTimestamps: boolean = false;
+  public enableSegmentTimestamps: boolean = false;
 }
 
 export class OfflineCanaryModelConfig {
@@ -95,6 +143,7 @@ export class OfflineMoonshineModelConfig {
   public encoder: string = '';
   public uncachedDecoder: string = '';
   public cachedDecoder: string = '';
+  public mergedDecoder: string = '';
 }
 
 export class OfflineModelConfig {
@@ -113,10 +162,16 @@ export class OfflineModelConfig {
   public telespeechCtc: string = '';
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
+  public fireRedAsr: OfflineFireRedAsrModelConfig = new OfflineFireRedAsrModelConfig();
   public dolphin: OfflineDolphinModelConfig = new OfflineDolphinModelConfig();
   public zipformerCtc: OfflineZipformerCtcModelConfig = new OfflineZipformerCtcModelConfig();
   public canary: OfflineCanaryModelConfig = new OfflineCanaryModelConfig();
   public wenetCtc: OfflineWenetCtcModelConfig = new OfflineWenetCtcModelConfig();
+  public omnilingual: OfflineOmnilingualAsrCtcModelConfig = new OfflineOmnilingualAsrCtcModelConfig();
+  public medasr: OfflineMedAsrCtcModelConfig = new OfflineMedAsrCtcModelConfig();
+  public funasrNano: OfflineFunASRNanoModelConfig = new OfflineFunASRNanoModelConfig();
+  public qwen3Asr: OfflineQwen3AsrModelConfig = new OfflineQwen3AsrModelConfig();
+  public fireRedAsrCtc: OfflineFireRedAsrCtcModelConfig = new OfflineFireRedAsrCtcModelConfig();
 }
 
 export class OfflineLMConfig {

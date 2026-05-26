@@ -1,4 +1,6 @@
 /** @typedef {import('./types').OfflineStreamObject} OfflineStreamObject */
+/** @typedef {import('./types').OfflineStreamHandle} OfflineStreamHandle */
+/** @typedef {import('./types').OfflineRecognizerHandle} OfflineRecognizerHandle */
 /** @typedef {import('./types').Waveform} Waveform */
 /**
  * @typedef {import('./types').OfflineRecognizerConfig} OfflineRecognizerConfig
@@ -32,6 +34,15 @@ class OfflineStream {
    */
   acceptWaveform(obj) {
     addon.acceptWaveformOffline(this.handle, obj);
+  }
+
+  /**
+   * Set a string option on the underlying offline stream.
+   * @param {string} key
+   * @param {string} value
+   */
+  setOption(key, value) {
+    addon.offlineStreamSetOption(this.handle, key, value);
   }
 }
 

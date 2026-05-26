@@ -18,6 +18,8 @@ const punct = require('./punctuation.js');
 const kws = require('./keyword-spotter.js');
 const sd = require('./non-streaming-speaker-diarization.js');
 const speech_denoiser = require('./non-streaming-speech-denoiser.js');
+const online_speech_denoiser = require('./online-speech-denoiser.js');
+const resampler = require('./resampler.js');
 
 module.exports = {
   OnlineRecognizer : streaming_asr.OnlineRecognizer,
@@ -38,6 +40,8 @@ module.exports = {
   KeywordSpotter : kws.KeywordSpotter,
   OfflineSpeakerDiarization : sd.OfflineSpeakerDiarization,
   OfflineSpeechDenoiser : speech_denoiser.OfflineSpeechDenoiser,
+  OnlineSpeechDenoiser : online_speech_denoiser.OnlineSpeechDenoiser,
+  LinearResampler : resampler.LinearResampler,
   version : addon.version,
   gitSha1 : addon.gitSha1,
   gitDate : addon.gitDate,

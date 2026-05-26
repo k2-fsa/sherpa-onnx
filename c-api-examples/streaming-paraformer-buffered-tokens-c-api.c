@@ -38,7 +38,7 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
   }
   size_t read_bytes = fread((void *)*buffer_out, 1, size, file);
   if (read_bytes != size) {
-    printf("Errors occured in reading the file %s\n", filename);
+    printf("Errors occurred in reading the file %s\n", filename);
     free((void *)*buffer_out);
     *buffer_out = NULL;
     fclose(file);
@@ -74,27 +74,17 @@ int32_t main() {
     return -1;
   }
 
-  // Paraformer config
-  SherpaOnnxOnlineParaformerModelConfig paraformer_config;
-  memset(&paraformer_config, 0, sizeof(paraformer_config));
-  paraformer_config.encoder = encoder_filename;
-  paraformer_config.decoder = decoder_filename;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens_buf = tokens_buf;
-  online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.paraformer = paraformer_config;
-
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.model_config = online_model_config;
+  recognizer_config.model_config.debug = 1;
+  recognizer_config.model_config.num_threads = 1;
+  recognizer_config.model_config.provider = provider;
+  recognizer_config.model_config.tokens_buf = tokens_buf;
+  recognizer_config.model_config.tokens_buf_size = token_buf_size;
+  recognizer_config.model_config.paraformer.encoder = encoder_filename;
+  recognizer_config.model_config.paraformer.decoder = decoder_filename;
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);

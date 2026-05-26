@@ -13,6 +13,7 @@ rm sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-int8-2025-11-12.tar.bz2
 // clang-format on
 
 #include <chrono>  // NOLINT
+#include <cstdio>
 #include <iostream>
 #include <string>
 

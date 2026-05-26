@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
@@ -139,6 +140,8 @@ void ScaleAdd(const float *src, float scale, int32_t n, float *in_out);
 // out[i] = src[i] * scale
 void Scale(const float *src, float scale, int32_t n, float *out);
 
+std::vector<float> MakeVorbisWindow(int32_t window_length);
+
 // For Paraformer
 std::vector<float> ComputeAcousticEmbedding(
     const std::vector<float> &encoder_out, const std::vector<float> &alphas,
@@ -163,6 +166,8 @@ void ComputeMeanAndInvStd(const float *p, int32_t num_rows, int32_t num_cols,
 
 void NormalizeWhisperFeatures(float *features, int32_t num_frames,
                               int32_t feat_dim);
+
+void NemoNormalizePerFeature(float *p, int32_t num_frames, int32_t feature_dim);
 
 int32_t MaxElementIndex(const float *v, int32_t n);
 

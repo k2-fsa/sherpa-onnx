@@ -4,6 +4,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-rnn-lm.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <memory>
@@ -25,7 +26,7 @@ class OnlineRnnLM::Impl {
  public:
   explicit Impl(const OnlineLMConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_{GetSessionOptions(config)},
         allocator_{} {
     Init(config);
@@ -163,10 +164,8 @@ class OnlineRnnLM::Impl {
 
  private:
   void Init(const OnlineLMConfig &config) {
-    auto buf = ReadFile(config_.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
-                                           sess_opts_);
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config_.model), sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);

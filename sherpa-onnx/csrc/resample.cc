@@ -31,6 +31,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
+
 #ifndef M_2PI
 #define M_2PI 6.283185307179586476925286766559005
 #endif
@@ -47,7 +49,7 @@ static I Gcd(I m, I n) {
   if (m == 0 || n == 0) {
     if (m == 0 && n == 0) {  // gcd not defined, as all integers are divisors.
       fprintf(stderr, "Undefined GCD since m = 0, n = 0.\n");
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
     return (m == 0 ? (n > 0 ? n : -n) : (m > 0 ? m : -m));
     // return absolute value of whichever is nonzero

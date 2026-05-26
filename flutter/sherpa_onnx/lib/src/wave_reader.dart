@@ -5,6 +5,10 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Audio samples loaded from a WAV file.
+///
+/// Samples are normalized to the range `[-1, 1]` and are stored as mono
+/// `Float32List` PCM data.
 class WaveData {
   WaveData({required this.samples, required this.sampleRate});
 
@@ -13,6 +17,9 @@ class WaveData {
   int sampleRate;
 }
 
+/// Read a WAV file from disk.
+///
+/// Returns an empty [WaveData] object if the file cannot be read or decoded.
 WaveData readWave(String filename) {
   final Pointer<Utf8> str = filename.toNativeUtf8();
 

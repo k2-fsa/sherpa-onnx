@@ -5,10 +5,10 @@ class MyClass {
 }
 
 func run() {
-  let model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx"
-  let voices = "./kitten-nano-en-v0_1-fp16/voices.bin"
-  let tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt"
-  let dataDir = "./kitten-nano-en-v0_1-fp16/espeak-ng-data"
+  let model = "./kitten-mini-en-v0_8/model.onnx"
+  let voices = "./kitten-mini-en-v0_8/voices.bin"
+  let tokens = "./kitten-mini-en-v0_8/tokens.txt"
+  let dataDir = "./kitten-mini-en-v0_8/espeak-ng-data"
   let kitten = sherpaOnnxOfflineTtsKittenModelConfig(
     model: model,
     voices: voices,
@@ -26,7 +26,7 @@ func run() {
   // https://medium.com/codex/swift-c-callback-interoperability-6d57da6c8ee6
   let arg = Unmanaged<MyClass>.passUnretained(myClass).toOpaque()
 
-  let callback: TtsCallbackWithArg = { samples, n, arg in
+  let callback: TtsProgressCallbackWithArg = { samples, n, progress, arg in
     let o = Unmanaged<MyClass>.fromOpaque(arg!).takeUnretainedValue()
     var savedSamples: [Float] = []
     for index in 0..<n {
@@ -43,11 +43,13 @@ func run() {
 
   let text =
     "Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone."
-  let sid = 0
-  let speed: Float = 1.0
+  var genConfig = SherpaOnnxGenerationConfigSwift()
+  genConfig.sid = 0
+  genConfig.speed = 1.0
+  genConfig.silenceScale = 0.2
 
-  let audio = tts.generateWithCallbackWithArg(
-    text: text, callback: callback, arg: arg, sid: sid, speed: speed)
+  let audio = tts.generateWithConfig(
+    text: text, config: genConfig, callback: callback, arg: arg)
   let filename = "test-kitten-en.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {

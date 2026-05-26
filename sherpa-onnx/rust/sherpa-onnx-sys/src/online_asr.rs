@@ -182,6 +182,22 @@ extern "C" {
 
     pub fn SherpaOnnxOnlineStreamInputFinished(stream: *const OnlineStream);
 
+    pub fn SherpaOnnxOnlineStreamSetOption(
+        stream: *const OnlineStream,
+        key: *const c_char,
+        value: *const c_char,
+    );
+
+    pub fn SherpaOnnxOnlineStreamGetOption(
+        stream: *const OnlineStream,
+        key: *const c_char,
+    ) -> *const c_char;
+
+    pub fn SherpaOnnxOnlineStreamHasOption(
+        stream: *const OnlineStream,
+        key: *const c_char,
+    ) -> i32;
+
     pub fn SherpaOnnxOnlineStreamIsEndpoint(
         recognizer: *const OnlineRecognizer,
         stream: *const OnlineStream,

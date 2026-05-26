@@ -1,0 +1,64 @@
+/**
+@page punctuation Punctuation Restoration
+
+sherpa-onnx supports both offline and online punctuation restoration.
+
+@see SherpaOnnxCreateOfflinePunctuation, SherpaOnnxCreateOnlinePunctuation
+
+@tableofcontents
+
+@section punct_offline Offline Punctuation
+
+Offline punctuation processes the entire input text at once using a
+CT-Transformer model.
+
+@code
+SherpaOnnxOfflinePunctuationConfig config;
+memset(&config, 0, sizeof(config));
+config.model.ct_transformer =
+    "./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8/model.int8.onnx";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOfflinePunctuation *punct =
+    SherpaOnnxCreateOfflinePunctuation(&config);
+
+const char *result = SherpaOfflinePunctuationAddPunct(
+    punct, "how are you i am fine thank you");
+printf("%s\n", result);
+SherpaOfflinePunctuationFreeText(result);
+SherpaOnnxDestroyOfflinePunctuation(punct);
+@endcode
+
+Model package: `sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12-int8`
+
+Example source: [add-punctuation-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/add-punctuation-c-api.c)
+
+@section punct_online Online Punctuation
+
+Online punctuation processes text incrementally using a CNN-BiLSTM model.
+
+@code
+SherpaOnnxOnlinePunctuationConfig config;
+memset(&config, 0, sizeof(config));
+config.model.cnn_bilstm =
+    "./sherpa-onnx-online-punct-en-2024-08-06/model.int8.onnx";
+config.model.bpe_vocab =
+    "./sherpa-onnx-online-punct-en-2024-08-06/bpe.vocab";
+config.model.num_threads = 1;
+config.model.provider = "cpu";
+
+const SherpaOnnxOnlinePunctuation *punct =
+    SherpaOnnxCreateOnlinePunctuation(&config);
+
+const char *out = SherpaOnnxOnlinePunctuationAddPunct(
+    punct, "how are you i am fine thank you");
+printf("%s\n", out);
+SherpaOnnxOnlinePunctuationFreeText(out);
+SherpaOnnxDestroyOnlinePunctuation(punct);
+@endcode
+
+Model package: `sherpa-onnx-online-punct-en-2024-08-06`
+
+Example source: [add-punctuation-online-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/add-punctuation-online-c-api.c)
+*/

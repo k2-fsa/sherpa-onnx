@@ -21,11 +21,12 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 
 int32_t main() {
   SherpaOnnxOfflineSpeechDenoiserConfig config;
+  const char *model_filename = "./gtcrn_simple.onnx";
   const char *wav_filename = "./inp_16k.wav";
-  const char *out_wave_filename = "./enhanced_16k.wav";
+  const char *out_wave_filename = "./enhanced.wav";
 
   memset(&config, 0, sizeof(config));
-  config.model.gtcrn.model = "./gtcrn_simple.onnx";
+  config.model.gtcrn.model = model_filename;
 
   const SherpaOnnxOfflineSpeechDenoiser *sd =
       SherpaOnnxCreateOfflineSpeechDenoiser(&config);

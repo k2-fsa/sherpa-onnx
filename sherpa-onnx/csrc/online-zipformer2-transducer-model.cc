@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-zipformer2-transducer-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cassert>
@@ -37,36 +38,33 @@ namespace sherpa_onnx {
 
 OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(CreateOrtEnv()),
       encoder_sess_opts_(GetSessionOptions(config)),
       decoder_sess_opts_(GetSessionOptions(config, "decoder")),
       joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       config_(config),
       allocator_{} {
-  {
-    auto buf = ReadFile(config.transducer.encoder);
-    InitEncoder(buf.data(), buf.size());
-  }
+  encoder_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.encoder), encoder_sess_opts_);
+  InitEncoder(nullptr, 0);
 
-  {
-    auto buf = ReadFile(config.transducer.decoder);
-    InitDecoder(buf.data(), buf.size());
-  }
+  decoder_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.decoder), decoder_sess_opts_);
+  InitDecoder(nullptr, 0);
 
-  {
-    auto buf = ReadFile(config.transducer.joiner);
-    InitJoiner(buf.data(), buf.size());
-  }
+  joiner_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_ONNX_TO_ORT_PATH(config.transducer.joiner), joiner_sess_opts_);
+  InitJoiner(nullptr, 0);
 }
 
 template <typename Manager>
 OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     Manager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_ERROR),
+    : env_(CreateOrtEnv()),
       config_(config),
       encoder_sess_opts_(GetSessionOptions(config)),
-      decoder_sess_opts_(GetSessionOptions(config)),
-      joiner_sess_opts_(GetSessionOptions(config)),
+      decoder_sess_opts_(GetSessionOptions(config, "decoder")),
+      joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       allocator_{} {
   {
     auto buf = ReadFile(mgr, config.transducer.encoder);
@@ -86,8 +84,15 @@ OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
 
 void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
                                                   size_t model_data_length) {
-  encoder_sess_ = std::make_unique<Ort::Session>(
-      env_, model_data, model_data_length, encoder_sess_opts_);
+  if (model_data) {
+    encoder_sess_ = std::make_unique<Ort::Session>(
+        env_, model_data, model_data_length, encoder_sess_opts_);
+  } else if (!encoder_sess_) {
+    SHERPA_ONNX_LOGE(
+        "Please pass model data or initialize the encoder outside of "
+        "this function");
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                 &encoder_input_names_ptr_);
@@ -159,8 +164,15 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
 
 void OnlineZipformer2TransducerModel::InitDecoder(void *model_data,
                                                   size_t model_data_length) {
-  decoder_sess_ = std::make_unique<Ort::Session>(
-      env_, model_data, model_data_length, decoder_sess_opts_);
+  if (model_data) {
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, model_data, model_data_length, decoder_sess_opts_);
+  } else if (!decoder_sess_) {
+    SHERPA_ONNX_LOGE(
+        "Please pass model data or initialize the decoder outside of "
+        "this function");
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   GetInputNames(decoder_sess_.get(), &decoder_input_names_,
                 &decoder_input_names_ptr_);
@@ -184,8 +196,15 @@ void OnlineZipformer2TransducerModel::InitDecoder(void *model_data,
 
 void OnlineZipformer2TransducerModel::InitJoiner(void *model_data,
                                                  size_t model_data_length) {
-  joiner_sess_ = std::make_unique<Ort::Session>(
-      env_, model_data, model_data_length, joiner_sess_opts_);
+  if (model_data) {
+    joiner_sess_ = std::make_unique<Ort::Session>(
+        env_, model_data, model_data_length, joiner_sess_opts_);
+  } else if (!joiner_sess_) {
+    SHERPA_ONNX_LOGE(
+        "Please pass model data or initialize the joiner outside of "
+        "this function");
+    SHERPA_ONNX_EXIT(-1);
+  }
 
   GetInputNames(joiner_sess_.get(), &joiner_input_names_,
                 &joiner_input_names_ptr_);

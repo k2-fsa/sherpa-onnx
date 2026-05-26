@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <algorithm>
 #include <chrono>              // NOLINT
 #include <condition_variable>  // NOLINT
 #include <iostream>
@@ -127,8 +128,8 @@ int32_t main() {
   float mic_sample_rate = 16000;
   const char *sample_rate_str = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (sample_rate_str) {
-    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(sample_rate_str);
+    fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
   }
   float sample_rate = 16000;
   LinearResampler resampler;

@@ -22,7 +22,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   ../
 
-make VERBOSE=1 -j4
+make -j4
 make install
 rm -fv ./install/include/cargs.h
 

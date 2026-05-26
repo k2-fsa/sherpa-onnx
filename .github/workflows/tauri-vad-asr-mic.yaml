@@ -1,0 +1,123 @@
+name: tauri-vad-asr-mic
+
+on:
+  push:
+    branches:
+      - apk
+
+  workflow_dispatch:
+
+concurrency:
+  group: tauri-vad-asr-mic-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  tauri_vad_asr_mic:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.index }}/10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+        index: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            python3 -m pip install --upgrade --break-system-packages jinja2 pillow
+          else
+            python3 -m pip install --upgrade jinja2 pillow
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/tauri
+          python3 generate-vad-asr.py --target mic --total 10 --index ${{ matrix.index }}
+          chmod +x build-tauri-vad-asr-mic.sh
+          mv build-tauri-vad-asr-mic.sh ../..
+
+      - name: Build
+        shell: bash
+        run: ./build-tauri-vad-asr-mic.sh
+
+      - name: Show
+        shell: bash
+        run: |
+          dist=tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
+          ls -lh "$dist"
+          for f in "$dist"*.tar.gz "$dist"*.tar.bz2 "$dist"*.zip; do
+            [ -f "$f" ] || continue
+            echo "========== Contents of $(basename "$f") =========="
+            case "$f" in
+              *.tar.gz)  tar tzf "$f" ;;
+              *.tar.bz2) tar tjf "$f" ;;
+              *.zip)     unzip -l "$f" ;;
+            esac
+            echo ""
+          done
+
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: tauri-mic-${{ matrix.os }}-shard-${{ matrix.index }}
+      #     path: tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
+      #     retention-days: 7
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            src=tauri-examples/non-streaming-speech-recognition-from-microphone/dist/
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/tauri-app huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            d=vad-asr-mic/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+
+            cp -v ../$src/* $d/
+
+            ls -lh $d/
+
+            git status
+            git lfs track "*.tar.gz"
+            git lfs track "*.tar.bz2"
+            git lfs track "*.zip"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/tauri-app main

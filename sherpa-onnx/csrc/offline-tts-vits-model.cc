@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <memory>
@@ -23,6 +24,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -30,17 +32,18 @@ class OfflineTtsVitsModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config.vits.model);
-    Init(buf.data(), buf.size());
+    sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.vits.model), sess_opts_);
+    Init(nullptr, 0);
   }
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.vits.model);
@@ -68,7 +71,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];
@@ -119,8 +122,15 @@ class OfflineTtsVitsModel::Impl {
 
  private:
   void Init(void *model_data, size_t model_data_length) {
-    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
-                                           sess_opts_);
+    if (model_data) {
+      sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                             model_data_length, sess_opts_);
+    } else if (!sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 
@@ -178,6 +188,7 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_eos_bos,
                                             "use_eos_bos", 1);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_g2pw, "has_g2pw", 0);
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");
@@ -202,7 +213,7 @@ class OfflineTtsVitsModel::Impl {
             "Please download the latest MeloTTS model and retry. Current "
             "version: %d. Expected version: %d",
             meta_data_.version, expected_version);
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       // NOTE(fangjun):
@@ -219,7 +230,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];
@@ -280,7 +291,7 @@ class OfflineTtsVitsModel::Impl {
     if (x_shape[0] != 1) {
       SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
                        static_cast<int32_t>(x_shape[0]));
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     int64_t len = x_shape[1];

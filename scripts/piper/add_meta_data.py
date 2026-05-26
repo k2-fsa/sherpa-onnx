@@ -8,6 +8,11 @@ from typing import Any, Dict
 import onnx
 from iso639 import Lang
 
+# For the following model,
+# https://huggingface.co/rhasspy/piper-voices/blob/main/zh/zh_CN/xiao_ya/medium/zh_CN-xiao_ya-medium.onnx.json
+# it uses g2pw, not espeak-ng.
+# To handle that, we use has_g2pw = 1 in the meta_data
+
 
 def get_args():
     # For en_GB-semaine-medium
@@ -110,13 +115,26 @@ def main():
     else:
         voice = config["espeak"]["voice"]
 
+    has_g2pw = 0
+    has_espeak = 1
+
+    if (
+        "phoneme_type" in config
+        and config["phoneme_type"] == "pinyin"
+        and voice == "zh"
+    ):
+        has_espeak = 0
+        has_g2pw = 1
+
     print("add model metadata")
     meta_data = {
         "model_type": "vits",
         "comment": "piper",  # must be piper for models from piper
         "language": lang_iso.name,
         "voice": voice,  # e.g., en-us
-        "has_espeak": 1,
+        "version": 1,
+        "has_espeak": has_espeak,
+        "has_g2pw": has_g2pw,
         "n_speakers": config["num_speakers"],
         "sample_rate": sample_rate,
     }

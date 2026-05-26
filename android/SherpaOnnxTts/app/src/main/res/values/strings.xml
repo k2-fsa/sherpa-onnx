@@ -8,4 +8,6 @@
     <string name="generate">Generate</string>
     <string name="play">Play</string>
     <string name="stop">Stop</string>
+    <string name="save">Save</string>
+    <string name="share">Share</string>
 </resources>

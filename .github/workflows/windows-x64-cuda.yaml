@@ -10,6 +10,7 @@ on:
       - '.github/workflows/windows-x64-cuda.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-cohere-transcribe.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-online-ctc.sh'
@@ -31,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        onnxruntime_version: ["1.17.1", "1.23.2"]
+        onnxruntime_version: ["1.17.1", "1.24.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +84,7 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-cuda
 
           onnxruntime_version=${{ matrix.onnxruntime_version }}
-          if [[ $onnxruntime_version == "1.23.2" ]]; then
+          if [[ $onnxruntime_version == "1.24.4" ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-cuda-12.x-cudnn-9.x-win-x64-cuda
           fi
 
@@ -114,7 +115,17 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*cuda.tar.bz2
 
+      - name: Test offline Cohere Transcribe for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-cohere-transcribe.sh
+
       - name: Test spoken language identification
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -123,6 +134,7 @@ jobs:
           .github/scripts/test-spoken-language-identification.sh
 
       - name: Test online CTC
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -131,6 +143,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -139,6 +152,7 @@ jobs:
           .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -147,6 +161,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -155,6 +170,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
 
       - name: Test offline CTC for windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -163,6 +179,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -171,6 +188,7 @@ jobs:
           .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer for Windows x64
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -179,11 +197,10 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer (C API)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
           export EXE=decode-file-c-api.exe
 
           .github/scripts/test-online-transducer.sh
-
-

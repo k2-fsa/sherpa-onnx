@@ -34,6 +34,7 @@ end;
 var
   Tts: TSherpaOnnxOfflineTts;
   Audio: TSherpaOnnxGeneratedAudio;
+  GenerationConfig: TSherpaOnnxGenerationConfig;
 
   Text: AnsiString;
   Speed: Single = 1.0;  {Use a larger value to speak faster}
@@ -46,10 +47,14 @@ begin
 
   Text := 'Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone.';
 
-  Audio :=  Tts.Generate(Text, SpeakerId, Speed);
+  GenerationConfig := Default(TSherpaOnnxGenerationConfig);
+  GenerationConfig.SilenceScale := 0.2;
+  GenerationConfig.Speed := Speed;
+  GenerationConfig.Sid := SpeakerId;
+
+  Audio :=  Tts.Generate(Text, GenerationConfig, NIL, NIL);
   SherpaOnnxWriteWave('./matcha-en.wav', Audio.Samples, Audio.SampleRate);
   WriteLn('Saved to ./matcha-en.wav');
 
   FreeAndNil(Tts);
 end.
-

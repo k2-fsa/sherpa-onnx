@@ -11,6 +11,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-punctuation-cnn-bilstm-impl.h"
 
@@ -28,9 +32,9 @@ std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
   return nullptr;
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
-    AAssetManager *mgr, const OnlinePunctuationConfig &config) {
+    Manager *mgr, const OnlinePunctuationConfig &config) {
   if (!config.model.cnn_bilstm.empty() && !config.model.bpe_vocab.empty()) {
     return std::make_unique<OnlinePunctuationCNNBiLSTMImpl>(mgr, config);
   }
@@ -40,6 +44,15 @@ std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
       "pointer");
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
+    AAssetManager *mgr, const OnlinePunctuationConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
+    NativeResourceManager *mgr, const OnlinePunctuationConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

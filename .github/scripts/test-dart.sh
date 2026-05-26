@@ -6,6 +6,14 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------Cohere Transcribe----------'
+./run-cohere-transcribe.sh
+rm -rf sherpa-onnx-*
+
+echo '----------Qwen3 ASR----------'
+./run-qwen3-asr.sh
+rm -rf sherpa-onnx-*
+
 echo '----------Moonshine v2----------'
 ./run-moonshine-v2.sh
 rm -rf sherpa-onnx-*
@@ -84,17 +92,44 @@ rm -rf sherpa-onnx-*
 
 popd # non-streaming-asr
 
+pushd speech-enhancement-gtcrn
+echo "speech enhancement with gtcrn models"
+./run.sh
+ls -lh
+popd
+
+pushd speech-enhancement-dpdfnet
+echo "speech enhancement with dpdfnet models"
+./run.sh
+ls -lh
+popd
+
+pushd streaming-speech-enhancement-gtcrn
+echo "streaming speech enhancement with gtcrn models"
+./run.sh
+ls -lh
+popd
+
+pushd streaming-speech-enhancement-dpdfnet
+echo "streaming speech enhancement with dpdfnet models"
+./run.sh
+ls -lh
+popd
+
 pushd tts
 
 echo '----------tts----------'
 ./run-pocket-en.sh
 ./run-kitten-en.sh
+./run-supertonic-en.sh
 ./run-kokoro-zh-en.sh
 ./run-kokoro-en.sh
 ./run-matcha-zh.sh
 ./run-matcha-en.sh
+./run-zipvoice-zh-en.sh
 ls -lh *.wav
 rm -rf matcha-icefall-*
+rm -rf sherpa-onnx-zipvoice-*
 rm *.onnx
 
 echo '----------piper tts----------'
@@ -153,12 +188,6 @@ pushd vad
 rm *.onnx
 popd
 
-pushd speech-enhancement-gtcrn
-echo "speech enhancement with gtcrn models"
-./run.sh
-ls -lh
-popd
-
 pushd speaker-diarization
 echo '----------speaker diarization----------'
 ./run.sh
@@ -172,6 +201,9 @@ popd
 pushd add-punctuations
 echo '----------CT Transformer----------'
 ./run-ct-transformer.sh
+echo '----------Online punctuation----------'
+./run-online.sh
+rm -rf sherpa-onnx-online-punct-en-2024-08-06
 popd
 
 pushd audio-tagging

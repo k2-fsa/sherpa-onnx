@@ -1,58 +1,12 @@
 // scripts/node-addon-api/src/non-streaming-speech-denoiser.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
-#include <algorithm>
 #include <memory>
 #include <sstream>
 
-#include "macros.h"  // NOLINT
-#include "napi.h"    // NOLINT
+#include "napi.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
-
-static SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig
-GetOfflineSpeechDenoiserGtcrnModelConfig(Napi::Object obj) {
-  SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig c;
-  memset(&c, 0, sizeof(c));
-
-  if (!obj.Has("gtcrn") || !obj.Get("gtcrn").IsObject()) {
-    return c;
-  }
-
-  Napi::Object o = obj.Get("gtcrn").As<Napi::Object>();
-
-  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
-
-  return c;
-}
-
-static SherpaOnnxOfflineSpeechDenoiserModelConfig
-GetOfflineSpeechDenoiserModelConfig(Napi::Object obj) {
-  SherpaOnnxOfflineSpeechDenoiserModelConfig c;
-  memset(&c, 0, sizeof(c));
-
-  if (!obj.Has("model") || !obj.Get("model").IsObject()) {
-    return c;
-  }
-
-  Napi::Object o = obj.Get("model").As<Napi::Object>();
-
-  c.gtcrn = GetOfflineSpeechDenoiserGtcrnModelConfig(o);
-
-  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
-
-  if (o.Has("debug") &&
-      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
-    if (o.Get("debug").IsBoolean()) {
-      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
-    } else {
-      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-    }
-  }
-
-  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
-
-  return c;
-}
+#include "speech-denoiser.h"  // NOLINT
 
 static Napi::External<SherpaOnnxOfflineSpeechDenoiser>
 CreateOfflineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
@@ -89,7 +43,7 @@ CreateOfflineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
 
   SherpaOnnxOfflineSpeechDenoiserConfig c;
   memset(&c, 0, sizeof(c));
-  c.model = GetOfflineSpeechDenoiserModelConfig(o);
+  c.model = GetSpeechDenoiserModelConfig(o);
 
 #if __OHOS__
   std::unique_ptr<NativeResourceManager,
@@ -104,8 +58,7 @@ CreateOfflineSpeechDenoiserWrapper(const Napi::CallbackInfo &info) {
       SherpaOnnxCreateOfflineSpeechDenoiser(&c);
 #endif
 
-  SHERPA_ONNX_DELETE_C_STR(c.model.gtcrn.model);
-  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
+  DeleteSpeechDenoiserModelConfig(c.model);
 
   if (!sd) {
     Napi::TypeError::New(env, "Please check your config!")
@@ -188,54 +141,10 @@ static Napi::Object OfflineSpeechDenoiserRunWrapper(
 
   const SherpaOnnxDenoisedAudio *audio;
 
-#if __OHOS__
-  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
-  // sizeof(float) here
   audio = SherpaOnnxOfflineSpeechDenoiserRun(
-      sd, samples.Data(), samples.ElementLength() / sizeof(float), sample_rate);
-#else
-  audio = SherpaOnnxOfflineSpeechDenoiserRun(
-      sd, samples.Data(), samples.ElementLength(), sample_rate);
-#endif
+      sd, samples.Data(), GetFloat32ArrayElementLength(samples), sample_rate);
 
-  bool enable_external_buffer = true;
-  if (obj.Has("enableExternalBuffer") &&
-      obj.Get("enableExternalBuffer").IsBoolean()) {
-    enable_external_buffer =
-        obj.Get("enableExternalBuffer").As<Napi::Boolean>().Value();
-  }
-
-  if (enable_external_buffer) {
-    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-        env, const_cast<float *>(audio->samples), sizeof(float) * audio->n,
-        [](Napi::Env /*env*/, void * /*data*/,
-           const SherpaOnnxDenoisedAudio *hint) {
-          SherpaOnnxDestroyDenoisedAudio(hint);
-        },
-        audio);
-    Napi::Float32Array float32Array =
-        Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
-
-    Napi::Object ans = Napi::Object::New(env);
-    ans.Set(Napi::String::New(env, "samples"), float32Array);
-    ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
-    return ans;
-  } else {
-    // don't use external buffer
-    Napi::ArrayBuffer arrayBuffer =
-        Napi::ArrayBuffer::New(env, sizeof(float) * audio->n);
-
-    Napi::Float32Array float32Array =
-        Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
-
-    std::copy(audio->samples, audio->samples + audio->n, float32Array.Data());
-
-    Napi::Object ans = Napi::Object::New(env);
-    ans.Set(Napi::String::New(env, "samples"), float32Array);
-    ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
-    SherpaOnnxDestroyDenoisedAudio(audio);
-    return ans;
-  }
+  return CreateDenoisedAudioObject(env, audio, GetEnableExternalBuffer(obj));
 }
 
 static Napi::Number OfflineSpeechDenoiserGetSampleRateWrapper(

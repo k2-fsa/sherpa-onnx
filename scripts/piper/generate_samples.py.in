@@ -5,12 +5,13 @@ config = sherpa_onnx.OfflineTtsConfig(
     model=sherpa_onnx.OfflineTtsModelConfig(
         vits=sherpa_onnx.OfflineTtsVitsModelConfig(
             model="{{ model }}",
-            lexicon="",
+            lexicon="{{ lexicon }}",
             data_dir="{{ data_dir }}",
             tokens="{{ tokens }}",
         ),
         num_threads=1,
     ),
+    rule_fsts="{{ rule_fsts }}",
 )
 
 if not config.validate():

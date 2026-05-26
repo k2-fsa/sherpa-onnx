@@ -38,7 +38,7 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
   }
   size_t read_bytes = fread((void *)*buffer_out, 1, size, file);
   if (read_bytes != size) {
-    printf("Errors occured in reading the file %s\n", filename);
+    printf("Errors occurred in reading the file %s\n", filename);
     free((void *)*buffer_out);
     *buffer_out = NULL;
     fclose(file);
@@ -89,30 +89,20 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer config
-  SherpaOnnxOnlineTransducerModelConfig zipformer_config;
-  memset(&zipformer_config, 0, sizeof(zipformer_config));
-  zipformer_config.encoder = encoder_filename;
-  zipformer_config.decoder = decoder_filename;
-  zipformer_config.joiner = joiner_filename;
-
-  // Online model config
-  SherpaOnnxOnlineModelConfig online_model_config;
-  memset(&online_model_config, 0, sizeof(online_model_config));
-  online_model_config.debug = 1;
-  online_model_config.num_threads = 1;
-  online_model_config.provider = provider;
-  online_model_config.tokens_buf = tokens_buf;
-  online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.transducer = zipformer_config;
-
   // Keywords-spotter config
   SherpaOnnxKeywordSpotterConfig keywords_spotter_config;
   memset(&keywords_spotter_config, 0, sizeof(keywords_spotter_config));
   keywords_spotter_config.max_active_paths = 4;
   keywords_spotter_config.keywords_threshold = 0.1;
   keywords_spotter_config.keywords_score = 3.0;
-  keywords_spotter_config.model_config = online_model_config;
+  keywords_spotter_config.model_config.debug = 1;
+  keywords_spotter_config.model_config.num_threads = 1;
+  keywords_spotter_config.model_config.provider = provider;
+  keywords_spotter_config.model_config.tokens_buf = tokens_buf;
+  keywords_spotter_config.model_config.tokens_buf_size = token_buf_size;
+  keywords_spotter_config.model_config.transducer.encoder = encoder_filename;
+  keywords_spotter_config.model_config.transducer.decoder = decoder_filename;
+  keywords_spotter_config.model_config.transducer.joiner = joiner_filename;
   keywords_spotter_config.keywords_buf = keywords_buf;
   keywords_spotter_config.keywords_buf_size = keywords_buf_size;
 

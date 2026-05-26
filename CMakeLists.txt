@@ -7,6 +7,15 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 # https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
 cmake_policy(SET CMP0091 NEW)
 
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
+endif()
+
+if(POLICY CMP0177)
+  cmake_policy(SET CMP0177 NEW)
+endif()
+
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
@@ -19,7 +28,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./CHANGELOG.md
 # ./new-release.sh
-set(SHERPA_ONNX_VERSION "1.12.28")
+set(SHERPA_ONNX_VERSION "1.13.2")
 
 # Disable warning about
 #
@@ -126,7 +135,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_SKIP_BUILD_RPATH FALSE)
   set(BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -138,7 +147,7 @@ else()
   set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
 endif()
 
-if(NOT WIN32)
+if(UNIX)
   set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
   set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
 endif()
@@ -147,6 +156,8 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "")
 
 if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI AND NOT SHERPA_ONNX_ENABLE_C_API)
   message(STATUS "Set SHERPA_ONNX_ENABLE_JNI to ON for Android")
@@ -237,6 +248,11 @@ endif()
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
+
+# Rust on Linux links static sherpa-onnx archives into PIE executables by
+# default, so static objects need PIC as well.
+if(NOT WIN32)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
@@ -316,6 +332,12 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_WASM)
   add_definitions(-DSHERPA_ONNX_ENABLE_WASM=1)
+  # Build every wasm artifact with pthread/atomics support so the .a files
+  # can be linked with the threaded ONNX Runtime prebuild and a wasm module
+  # that pre-spawns a worker pool. Browsers require COOP/COEP headers to
+  # expose SharedArrayBuffer; wasm/serve.py is provided for that.
+  string(APPEND CMAKE_C_FLAGS " -pthread")
+  string(APPEND CMAKE_CXX_FLAGS " -pthread -fexceptions")
 endif()
 
 if(SHERPA_ONNX_ENABLE_WASM_KWS)
@@ -513,6 +535,10 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   endif()
 endif()
 
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  include(pybind11)
+endif()
+
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)
@@ -524,10 +550,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   # portaudio is used only in building demo binaries and the sherpa-onnx-core
   # library does not depend on it.
   include(portaudio)
-endif()
-
-if(SHERPA_ONNX_ENABLE_PYTHON)
-  include(pybind11)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TESTS)
@@ -619,6 +641,6 @@ install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    ./
+    .
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

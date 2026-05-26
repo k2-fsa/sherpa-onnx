@@ -6,41 +6,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 #include "sherpa-onnx/jni/common.h"
-
-namespace sherpa_onnx {
-static OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
-    JNIEnv *env, jobject config, bool *ok) {
-  OfflineSpeechDenoiserConfig ans;
-
-  jclass cls = env->GetObjectClass(config);
-  jfieldID fid;
-
-  fid = env->GetFieldID(
-      cls, "model", "Lcom/k2fsa/sherpa/onnx/OfflineSpeechDenoiserModelConfig;");
-  jobject model = env->GetObjectField(config, fid);
-  jclass model_config_cls = env->GetObjectClass(model);
-
-  fid = env->GetFieldID(
-      model_config_cls, "gtcrn",
-      "Lcom/k2fsa/sherpa/onnx/OfflineSpeechDenoiserGtcrnModelConfig;");
-  jobject gtcrn = env->GetObjectField(model, fid);
-  jclass gtcrn_cls = env->GetObjectClass(gtcrn);
-
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.gtcrn.model, model, gtcrn_cls, gtcrn);
-
-  SHERPA_ONNX_JNI_READ_INT(ans.model.num_threads, numThreads, model_config_cls,
-                           model);
-
-  SHERPA_ONNX_JNI_READ_BOOL(ans.model.debug, debug, model_config_cls, model);
-
-  SHERPA_ONNX_JNI_READ_STRING(ans.model.provider, provider, model_config_cls,
-                              model);
-
-  *ok = true;
-  return ans;
-}
-
-}  // namespace sherpa_onnx
+#include "sherpa-onnx/jni/speech-denoiser.h"
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
@@ -129,24 +95,7 @@ JNIEXPORT jobject JNICALL Java_com_k2fsa_sherpa_onnx_OfflineSpeechDenoiser_run(
   auto denoised = speech_denoiser->Run(p, n, sample_rate);
   env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
 
-  jclass cls = env->FindClass("com/k2fsa/sherpa/onnx/DenoisedAudio");
-  if (cls == nullptr) {
-    SHERPA_ONNX_LOGE("Failed to get class for DenoisedAudio");
-    return nullptr;
-  }
-
-  // https://javap.yawk.at/
-  jmethodID constructor = env->GetMethodID(cls, "<init>", "([FI)V");
-  if (constructor == nullptr) {
-    SHERPA_ONNX_LOGE("Failed to get constructor for DenoisedAudio");
-    return nullptr;
-  }
-
-  jfloatArray samples_arr = env->NewFloatArray(denoised.samples.size());
-  env->SetFloatArrayRegion(samples_arr, 0, denoised.samples.size(),
-                           denoised.samples.data());
-
-  return env->NewObject(cls, constructor, samples_arr, denoised.sample_rate);
+  return sherpa_onnx::NewDenoisedAudio(env, denoised);
 }
 
 SHERPA_ONNX_EXTERN_C

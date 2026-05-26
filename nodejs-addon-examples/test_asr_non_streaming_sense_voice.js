@@ -9,13 +9,6 @@ const sherpa_onnx = require('sherpa-onnx-node');
 // the following code
 //
 
-// let encoder = new TextEncoder();
-// let tokens = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/测试.txt');
-// let model = encoder.encode(
-//     './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/测试.int8.onnx');
-
-
 const config = {
   'featConfig': {
     'sampleRate': 16000,
@@ -24,11 +17,11 @@ const config = {
   'modelConfig': {
     'senseVoice': {
       'model':
-          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx',
+          './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx',
       // 'model': model,
       'useInverseTextNormalization': 1,
     },
-    'tokens': './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt',
+    'tokens': './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt',
     // 'tokens': tokens,
     'numThreads': 2,
     'provider': 'cpu',
@@ -37,10 +30,10 @@ const config = {
 };
 
 const waveFilename =
-    './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs/zh.wav';
+    './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/test_wavs/zh.wav';
 
 const recognizer = new sherpa_onnx.OfflineRecognizer(config);
-console.log('Started')
+console.log('Started');
 let start = Date.now();
 const stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
@@ -49,15 +42,15 @@ stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 recognizer.decode(stream);
 const result = recognizer.getResult(stream);
 let stop = Date.now();
-console.log('Done')
+console.log('Done');
 
 const elapsed_seconds = (stop - start) / 1000;
 const duration = wave.samples.length / wave.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'seconds')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
+console.log('Wave duration', duration.toFixed(3), 'seconds');
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds');
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
-    real_time_factor.toFixed(3))
-console.log(waveFilename)
-console.log('result\n', result)
+    real_time_factor.toFixed(3));
+console.log(waveFilename);
+console.log('result\n', result);

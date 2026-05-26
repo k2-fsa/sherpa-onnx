@@ -1,0 +1,163 @@
+// sherpa-onnx/csrc/sherpa-onnx-online-denoiser.cc
+//
+// Copyright (c)  2026  Xiaomi Corporation
+
+#include <stdio.h>
+
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "sherpa-onnx/csrc/online-speech-denoiser.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
+
+int main(int32_t argc, char *argv[]) {
+  const char *kUsageMessage = R"usage(
+Streaming speech denoising with sherpa-onnx.
+
+Please download GTCRN and sample files from:
+
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+
+DPDFNet models are available from either:
+
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
+https://huggingface.co/Ceva-IP/DPDFNet
+
+Currently this binary supports:
+  gtcrn_simple.onnx
+  dpdfnet_baseline.onnx
+  dpdfnet2.onnx
+  dpdfnet4.onnx
+  dpdfnet8.onnx
+  dpdfnet2_48khz_hr.onnx
+
+Usage:
+
+./bin/sherpa-onnx-online-denoiser \
+  --speech-denoiser-gtcrn-model=gtcrn_simple.onnx \
+  --chunk-duration-ms=16 \
+  --input-wav=input.wav \
+  --output-wav=output_16k.wav
+
+./bin/sherpa-onnx-online-denoiser \
+  --speech-denoiser-dpdfnet-model=dpdfnet4.onnx \
+  --chunk-duration-ms=10 \
+  --input-wav=input.wav \
+  --output-wav=output_16k.wav
+
+./bin/sherpa-onnx-online-denoiser \
+  --speech-denoiser-dpdfnet-model=dpdfnet2_48khz_hr.onnx \
+  --chunk-duration-ms=10 \
+  --input-wav=input.wav \
+  --output-wav=output_48k.wav
+)usage";
+
+  sherpa_onnx::ParseOptions po(kUsageMessage);
+  sherpa_onnx::OnlineSpeechDenoiserConfig config;
+  std::string input_wave;
+  std::string output_wave;
+  int32_t chunk_duration_ms = 10;
+
+  config.Register(&po);
+  po.Register("input-wav", &input_wave, "Path to input wav.");
+  po.Register("output-wav", &output_wave, "Path to output wav.");
+  po.Register("chunk-duration-ms", &chunk_duration_ms,
+              "Streaming chunk duration in milliseconds.");
+
+  po.Read(argc, argv);
+  if (po.NumArgs() != 0) {
+    fprintf(stderr, "Please don't give positional arguments\n");
+    po.PrintUsage();
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
+  }
+
+  fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    return -1;
+  }
+
+  if (input_wave.empty()) {
+    fprintf(stderr, "Please provide --input-wav\n");
+    po.PrintUsage();
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
+  }
+
+  if (output_wave.empty()) {
+    fprintf(stderr, "Please provide --output-wav\n");
+    po.PrintUsage();
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
+  }
+
+  if (chunk_duration_ms <= 0) {
+    fprintf(stderr, "Please provide --chunk-duration-ms > 0\n");
+    return -1;
+  }
+
+  int32_t sampling_rate = -1;
+  bool is_ok = false;
+  std::vector<float> samples =
+      sherpa_onnx::ReadWave(input_wave, &sampling_rate, &is_ok);
+  if (!is_ok) {
+    fprintf(stderr, "Failed to read '%s'\n", input_wave.c_str());
+    return -1;
+  }
+
+  int32_t chunk_size = sampling_rate * chunk_duration_ms / 1000;
+  if (chunk_size <= 0) {
+    fprintf(stderr,
+            "The selected chunk duration is too small for sample rate %d\n",
+            sampling_rate);
+    return -1;
+  }
+
+  sherpa_onnx::OnlineSpeechDenoiser denoiser(config);
+
+  fprintf(stderr, "Started\n");
+  const auto begin = std::chrono::steady_clock::now();
+
+  std::vector<float> enhanced;
+  enhanced.reserve(samples.size());
+
+  for (size_t i = 0; i < samples.size(); i += chunk_size) {
+    size_t num_samples =
+        std::min(static_cast<size_t>(chunk_size), samples.size() - i);
+    auto chunk = denoiser.Run(samples.data() + i, num_samples, sampling_rate);
+    enhanced.insert(enhanced.end(), chunk.samples.begin(), chunk.samples.end());
+  }
+
+  auto tail = denoiser.Flush();
+  enhanced.insert(enhanced.end(), tail.samples.begin(), tail.samples.end());
+
+  const auto end = std::chrono::steady_clock::now();
+
+  float elapsed_seconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count() /
+      1000.;
+
+  fprintf(stderr, "Done\n");
+  is_ok = sherpa_onnx::WriteWave(output_wave, denoiser.GetSampleRate(),
+                                 enhanced.data(), enhanced.size());
+  if (is_ok) {
+    fprintf(stderr, "Saved to %s\n", output_wave.c_str());
+  } else {
+    fprintf(stderr, "Failed to save to %s\n", output_wave.c_str());
+  }
+
+  float duration = samples.size() / static_cast<float>(sampling_rate);
+  fprintf(stderr, "num threads: %d\n", config.model.num_threads);
+  fprintf(stderr, "chunk duration: %d ms\n", chunk_duration_ms);
+  fprintf(stderr, "frame shift: %d samples @ %d Hz\n",
+          denoiser.GetFrameShiftInSamples(), denoiser.GetSampleRate());
+  fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
+  float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
+          elapsed_seconds, duration, rtf);
+}

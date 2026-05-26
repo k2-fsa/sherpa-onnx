@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
@@ -56,7 +57,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       SHERPA_ONNX_LOGE(
           "Only greedy_search is supported at present for whisper. Given %s",
           config_.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
   }
 

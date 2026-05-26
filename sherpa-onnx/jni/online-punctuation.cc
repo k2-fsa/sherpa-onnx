@@ -122,5 +122,5 @@ Java_com_k2fsa_sherpa_onnx_OnlinePunctuation_addPunctuation(JNIEnv *env,
 
   env->ReleaseStringUTFChars(text, ptext);
 
-  return env->NewStringUTF(result.c_str());
+  return SafeNewStringUTF(env, result);
 }

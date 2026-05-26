@@ -70,7 +70,7 @@ std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
 }
 
 #if __ANDROID_API__ >= 9

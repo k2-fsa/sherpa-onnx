@@ -135,7 +135,7 @@ class DumpTextToSpeech(TextToSpeech):
         assert (
             style.ttl.shape[0] == 1
         ), "Single speaker text to speech only supports single style"
-        max_len = 120 if lang == "ko" else 300
+        max_len = 120 if lang in ("ko", "ja") else 300
         text_list = chunk_text(text, max_len=max_len)
         wav_cat = None
         dur_cat = None
@@ -196,7 +196,7 @@ def get_args():
         "--dump-dir", type=str, default="calib", help="output npz dir"
     )
     parser.add_argument(
-        "--total-step", type=int, default=5, help="denoising steps"
+        "--total-step", type=int, default=8, help="denoising steps"
     )
     parser.add_argument(
         "--speed", type=float, default=1.05, help="speech speed"

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/keyword-spotter.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -58,7 +59,7 @@ for a list of pre-trained models to download.
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -103,8 +104,9 @@ for a list of pre-trained models to download.
       if (!r.keyword.empty()) {
         keyword_spotter.Reset(s.get());
 
-        fprintf(stderr, "%s\n%s\n\n", wav_filename.c_str(),
-                r.AsJsonString().c_str());
+        fprintf(stderr, "%s\n", wav_filename.c_str());
+        fprintf(stdout, "%s\n", r.AsJsonString().c_str());
+        fprintf(stderr, "\n");
       }
     }
 
@@ -163,8 +165,9 @@ for a list of pre-trained models to download.
         const auto r = keyword_spotter.GetResult(p_ss);
         if (!r.keyword.empty()) {
           os << s.filename << "\n";
-          os << r.AsJsonString() << "\n\n";
           fprintf(stderr, "%s", os.str().c_str());
+          fprintf(stdout, "%s\n", r.AsJsonString().c_str());
+          fprintf(stderr, "\n");
         }
       }
 

@@ -3,7 +3,7 @@ name: export-kitten-to-onnx
 on:
   push:
     branches:
-      - kitten-0.2
+      - update-kitten-2
 
   workflow_dispatch:
 
@@ -20,7 +20,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        version: ["nano_v0_1", "nano_v0_2", "mini_v0_1"]
+        version:
+          [
+            "nano_v0_1",
+            "nano_v0_2",
+            "mini_v0_1",
+            "nano_v0_8_fp32",
+            "nano_v0_8_int8",
+            "micro_v0_8",
+            "mini_v0_8",
+          ]
         python-version: ["3.10"]
 
     steps:
@@ -35,14 +44,57 @@ jobs:
         shell: bash
         run: |
           pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+          pip install --verbose sherpa_onnx_bin sherpa_onnx_core sherpa_onnx --no-index -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
+
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
 
       - name: Run
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
         run: |
-          cd scripts/kitten-tts/${{ matrix.version }}
-          ./run.sh
+          version=${{ matrix.version }}
+          if [[ $version == "nano_v0_8_fp32" ]]; then
+            cd scripts/kitten-tts/v0_8
+            ./run.sh KittenML/kitten-tts-nano-0.8-fp32
+            export KITTEN=nano-v0_8-fp32
+          elif [[ $version == "nano_v0_8_int8" ]]; then
+            cd scripts/kitten-tts/v0_8
+            ./run.sh KittenML/kitten-tts-nano-0.8-int8
+            export KITTEN=nano-v0_8-int8
+          elif [[ $version == "micro_v0_8" ]]; then
+            cd scripts/kitten-tts/v0_8
+            ./run.sh KittenML/kitten-tts-micro-0.8
+            export KITTEN=micro-0.8
+            export KITTEN=micro-v0_8
+          elif [[ $version == "mini_v0_8" ]]; then
+            cd scripts/kitten-tts/v0_8
+            ./run.sh KittenML/kitten-tts-mini-0.8
+            export KITTEN=mini-v0_8
+          else
+            cd scripts/kitten-tts/$version
+            ./run.sh
+            export KITTEN=$version
+          fi
+
+          if true; then
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+            tar xf espeak-ng-data.tar.bz2
+            rm espeak-ng-data.tar.bz2
+
+            # generate samples
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
+            mkdir -p hf/kitten/$KITTEN/mp3
+            ./generate_samples.py
+            pushd hf
+            git pull
+            git add .
+            git commit -m 'add kitten samples for $version'
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
+            popd
+            rm -rf hf
+          fi
 
       - name: Collect results
         shell: bash
@@ -54,6 +106,7 @@ jobs:
           version=${{ matrix.version }}
 
           src=scripts/kitten-tts/$version
+          model_file=model.fp16.onnx
 
           if [[ $version == "nano_v0_1" ]]; then
             d=kitten-nano-en-v0_1-fp16
@@ -61,6 +114,22 @@ jobs:
             d=kitten-nano-en-v0_2-fp16
           elif [[ $version == "mini_v0_1" ]]; then
             d=kitten-mini-en-v0_1-fp16
+          elif [[ $version == "nano_v0_8_fp32" ]]; then
+            src=scripts/kitten-tts/v0_8
+            d=kitten-nano-en-v0_8-fp32
+            model_file=model.fp32.onnx
+          elif [[ $version == "nano_v0_8_int8" ]]; then
+            src=scripts/kitten-tts/v0_8
+            d=kitten-nano-en-v0_8-int8
+            model_file=model.int8.onnx
+          elif [[ $version == "micro_v0_8" ]]; then
+            src=scripts/kitten-tts/v0_8
+            d=kitten-micro-en-v0_8
+            model_file=model.onnx
+          elif [[ $version == "mini_v0_8" ]]; then
+            src=scripts/kitten-tts/v0_8
+            d=kitten-mini-en-v0_8
+            model_file=model.onnx
           else
             echo "version $version"
             exit 1
@@ -69,7 +138,7 @@ jobs:
           mkdir $d
           cp -a LICENSE $d/LICENSE
           cp -a espeak-ng-data $d/
-          cp -v $src/model.fp16.onnx $d/model.fp16.onnx
+          cp -v $src/$model_file $d/$model_file
           cp -v $src/voices.bin $d/
           cp -v $src/tokens.txt $d/
           cp -v $src/../README.md $d/README.md
@@ -114,6 +183,10 @@ jobs:
               kitten-nano-en-v0_1-fp16
               kitten-nano-en-v0_2-fp16
               kitten-mini-en-v0_1-fp16
+              kitten-nano-en-v0_8-fp32
+              kitten-nano-en-v0_8-int8
+              kitten-micro-en-v0_8
+              kitten-mini-en-v0_8
             )
 
             export GIT_LFS_SKIP_SMUDGE=1
@@ -129,7 +202,7 @@ jobs:
               echo "$d exists"
               rm -rf huggingface
 
-              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
               cd huggingface
               rm -rf ./*
 
@@ -149,5 +222,5 @@ jobs:
               git status
 
               git commit -m "add models"
-              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main || true
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main || true
             done

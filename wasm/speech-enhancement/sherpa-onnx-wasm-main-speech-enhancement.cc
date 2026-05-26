@@ -15,10 +15,14 @@ extern "C" {
 
 static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) == 1 * 4,
               "");
-static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig) ==
-                  sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) +
-                      3 * 4,
+static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) ==
+                  1 * 4,
               "");
+static_assert(
+    sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig) ==
+        sizeof(SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig) +
+            sizeof(SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig) + 3 * 4,
+    "");
 static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserConfig) ==
                   sizeof(SherpaOnnxOfflineSpeechDenoiserModelConfig),
               "");
@@ -26,8 +30,10 @@ static_assert(sizeof(SherpaOnnxOfflineSpeechDenoiserConfig) ==
 void MyPrint(SherpaOnnxOfflineSpeechDenoiserConfig *config) {
   auto model = &config->model;
   auto gtcrn = &model->gtcrn;
+  auto dpdfnet = &model->dpdfnet;
   fprintf(stdout, "----------offline speech denoiser model config----------\n");
   fprintf(stdout, "gtcrn: %s\n", gtcrn->model);
+  fprintf(stdout, "dpdfnet: %s\n", dpdfnet->model);
   fprintf(stdout, "num threads: %d\n", model->num_threads);
   fprintf(stdout, "debug: %d\n", model->debug);
   fprintf(stdout, "provider: %s\n", model->provider);

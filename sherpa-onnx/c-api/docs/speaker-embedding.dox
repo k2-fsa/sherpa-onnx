@@ -1,0 +1,49 @@
+/**
+@page speaker_embedding Speaker Embedding Extraction and Management
+
+sherpa-onnx provides speaker embedding extraction via
+@ref SherpaOnnxCreateSpeakerEmbeddingExtractor() and speaker
+enrollment/search/verification via
+@ref SherpaOnnxCreateSpeakerEmbeddingManager().
+
+@see SherpaOnnxCreateSpeakerEmbeddingExtractor,
+     SherpaOnnxSpeakerEmbeddingExtractorConfig,
+     SherpaOnnxCreateSpeakerEmbeddingManager
+
+@code
+SherpaOnnxSpeakerEmbeddingExtractorConfig config;
+memset(&config, 0, sizeof(config));
+config.model = "./3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx";
+config.num_threads = 1;
+config.provider = "cpu";
+
+const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+    SherpaOnnxCreateSpeakerEmbeddingExtractor(&config);
+
+int32_t dim = SherpaOnnxSpeakerEmbeddingExtractorDim(extractor);
+const SherpaOnnxSpeakerEmbeddingManager *manager =
+    SherpaOnnxCreateSpeakerEmbeddingManager(dim);
+
+// Enroll a speaker
+const float *embedding = /* compute from audio */;
+SherpaOnnxSpeakerEmbeddingManagerAdd(manager, "alice", embedding);
+SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(embedding);
+
+// Search for a speaker
+const float *query = /* compute from test audio */;
+const char *name = SherpaOnnxSpeakerEmbeddingManagerSearch(
+    manager, query, 0.5f);
+if (name) {
+  printf("Identified: %s\n", name);
+  SherpaOnnxSpeakerEmbeddingManagerFreeSearch(name);
+}
+SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(query);
+
+SherpaOnnxDestroySpeakerEmbeddingManager(manager);
+SherpaOnnxDestroySpeakerEmbeddingExtractor(extractor);
+@endcode
+
+Model file: `3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx`
+
+Example source: [speaker-identification-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/speaker-identification-c-api.c)
+*/

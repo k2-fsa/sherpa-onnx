@@ -5,6 +5,36 @@ import 'package:ffi/ffi.dart';
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 
+/// Offline audio tagging.
+///
+/// This module classifies complete audio clips and returns the most likely
+/// events. See `dart-api-examples/audio-tagging/` for working examples.
+///
+/// Example:
+///
+/// ```dart
+/// final modelConfig = AudioTaggingModelConfig(
+///   zipformer: const OfflineZipformerAudioTaggingModelConfig(
+///     model: './sherpa-onnx-zipformer-audio-tagging/model.int8.onnx',
+///   ),
+///   numThreads: 1,
+///   debug: true,
+/// );
+///
+/// final config = AudioTaggingConfig(
+///   model: modelConfig,
+///   labels: './sherpa-onnx-zipformer-audio-tagging/class_labels_indices.csv',
+/// );
+///
+/// final tagger = AudioTagging(config: config);
+/// final wave = readWave('./test.wav');
+/// final stream = tagger.createStream();
+/// stream.acceptWaveform(samples: wave.samples, sampleRate: wave.sampleRate);
+/// final events = tagger.compute(stream: stream, topK: 5);
+/// print(events);
+/// stream.free();
+/// tagger.free();
+/// ```
 class OfflineZipformerAudioTaggingModelConfig {
   const OfflineZipformerAudioTaggingModelConfig({this.model = ''});
 
@@ -29,6 +59,9 @@ class OfflineZipformerAudioTaggingModelConfig {
   final String model;
 }
 
+/// Aggregate model configuration for audio tagging.
+///
+/// Configure either [zipformer] or [ced] for typical use.
 class AudioTaggingModelConfig {
   AudioTaggingModelConfig(
       {this.zipformer = const OfflineZipformerAudioTaggingModelConfig(),
@@ -70,6 +103,7 @@ class AudioTaggingModelConfig {
   final bool debug;
 }
 
+/// Top-level configuration for [AudioTagging].
 class AudioTaggingConfig {
   AudioTaggingConfig({required this.model, this.labels = ''});
 
@@ -96,6 +130,7 @@ class AudioTaggingConfig {
   final String labels;
 }
 
+/// One predicted audio event.
 class AudioEvent {
   AudioEvent({required this.name, required this.index, required this.prob});
 
@@ -125,12 +160,13 @@ class AudioEvent {
   final double prob;
 }
 
+/// Offline audio tagger.
 class AudioTagging {
   AudioTagging.fromPtr({required this.ptr, required this.config});
 
   AudioTagging._({required this.ptr, required this.config});
 
-  // The user has to invoke AudioTagging.free() to avoid memory leak.
+  /// Create an audio tagger from [config].
   factory AudioTagging({required AudioTaggingConfig config}) {
     final c = calloc<SherpaOnnxAudioTaggingConfig>();
 
@@ -171,21 +207,50 @@ class AudioTagging {
     return AudioTagging._(ptr: ptr, config: config);
   }
 
+  /// Release the native tagger.
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyAudioTagging == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyAudioTagging?.call(ptr);
     ptr = nullptr;
   }
 
-  /// The user has to invoke stream.free() on the returned instance
-  /// to avoid memory leak
+  /// Create an offline stream for one audio clip.
   OfflineStream createStream() {
+    if (SherpaOnnxBindings.sherpaOnnxAudioTaggingCreateOfflineStream == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     final p = SherpaOnnxBindings.sherpaOnnxAudioTaggingCreateOfflineStream
             ?.call(ptr) ??
         nullptr;
+
+    if (p == nullptr) {
+      throw Exception("Failed to create offline stream");
+    }
+
     return OfflineStream(ptr: p);
   }
 
+  /// Compute the top [topK] events for [stream].
   List<AudioEvent> compute({required OfflineStream stream, required int topK}) {
+    if (SherpaOnnxBindings.sherpaOnnxAudioTaggingCompute == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr || stream.ptr == nullptr) {
+      return <AudioEvent>[];
+    }
+
     final pp = SherpaOnnxBindings.sherpaOnnxAudioTaggingCompute
             ?.call(ptr, stream.ptr, topK) ??
         nullptr;

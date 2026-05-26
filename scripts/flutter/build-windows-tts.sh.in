@@ -71,6 +71,11 @@ sed -i.bak s/"modelName = ''"/"modelName = \"$model_name\""/ ./model.dart
   sed -i.bak "s|lexicon = ''|lexicon = \"lexicon.txt\"|" ./model.dart
 {% endif %}
 
+{% if tts_model.is_kitten %}
+  sed -i.bak "s|voices = ''|voices = \"voices.bin\"|" ./model.dart
+  sed -i.bak "s|isKitten = false|isKitten = true|" ./model.dart
+{% endif %}
+
 git status
 
 git diff .

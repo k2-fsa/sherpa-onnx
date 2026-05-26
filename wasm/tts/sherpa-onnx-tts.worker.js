@@ -1,34 +1,49 @@
+// Module-type worker. The wasm glue is built with -sEXPORT_ES6=1 so its
+// pthread runtime can spawn its own worker pool from inside this worker
+// (classic-worker importScripts() of the same glue hangs during nested
+// pthread bootstrap).
+import createModule from "./sherpa-onnx-wasm-main-tts.js";
+import {
+  createOfflineTts,
+  getDefaultOfflineTtsModelType,
+} from "./sherpa-onnx-tts.js";
+
 let tts = null;
-self.Module = {
-  // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
-  locateFile: function (path, scriptDirectory = "") {
-    return scriptDirectory + path;
-  },
-  // https://emscripten.org/docs/api_reference/module.html#Module.locateFile
-  setStatus: function (status) {
+
+const Module = await createModule({
+  locateFile: (path, scriptDirectory = "") => scriptDirectory + path,
+  setStatus: (status) => {
     self.postMessage({ type: "sherpa-onnx-tts-progress", status });
   },
-  onRuntimeInitialized: function () {
-    console.log("Model files downloaded!");
-    console.log("Initializing tts ......");
-    try {
-      tts = createOfflineTts(self.Module);
-      self.postMessage({
-        type: "sherpa-onnx-tts-ready",
-        numSpeakers: tts.numSpeakers,
-      });
-    } catch (e) {
-      self.postMessage({
-        type: "error",
-        message: "TTS Initialization failed: " + e.message,
-      });
+});
+
+try {
+  tts = createOfflineTts(Module);
+  self.postMessage({
+    type: "sherpa-onnx-tts-ready",
+    modelType: getDefaultOfflineTtsModelType(),
+    numSpeakers: tts.numSpeakers,
+  });
+} catch (e) {
+  self.postMessage({
+    type: "error",
+    message: "TTS Initialization failed: " + e.message,
+  });
+}
+
+function getErrorMessage(err) {
+  if (err instanceof Error) {
+    if (err.stack) {
+      return `${err.message}\n${err.stack}`;
     }
-  },
-};
-importScripts("/sherpa-onnx-wasm-main-tts.js");
-importScripts("/sherpa-onnx-tts.js");
+    return err.message;
+  }
+
+  return `${err}`;
+}
+
 self.onmessage = async (e) => {
-  const { type, text, sid, speed } = e.data;
+  const { type, text, sid, speed, genConfig } = e.data;
   if (type === "generate") {
     if (!tts) {
       return;
@@ -52,7 +67,38 @@ self.onmessage = async (e) => {
     } catch (err) {
       self.postMessage({
         type: "error",
-        message: "Generation failed: " + err.message,
+        message: "Generation failed: " + getErrorMessage(err),
+      });
+    }
+  } else if (type === "generateWithConfig") {
+    if (!tts) {
+      return;
+    }
+    try {
+      const config = Object.assign({}, genConfig || {});
+      config.callback = (samples, n, progress) => {
+        self.postMessage({
+          type: "sherpa-onnx-tts-generation-progress",
+          progress: progress,
+        });
+        return 1;
+      };
+
+      const audio = tts.generateWithConfig(text, config);
+      const samples = audio.samples;
+      const sampleRate = audio.sampleRate;
+      self.postMessage(
+          {
+            type: "sherpa-onnx-tts-result",
+            samples: samples,
+            sampleRate: sampleRate,
+          },
+          [samples.buffer],
+      );
+    } catch (err) {
+      self.postMessage({
+        type: "error",
+        message: "Generation failed: " + getErrorMessage(err),
       });
     }
   }

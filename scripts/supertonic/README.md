@@ -1,6 +1,6 @@
-# Supertonic TTS INT8 Quantization
+# Supertonic 3 TTS INT8 Quantization
 
-Quantize [Supertonic](https://github.com/supertone-inc/supertonic) TTS ONNX models to INT8 for on-device deployment.
+Quantize [Supertonic 3](https://github.com/supertone-inc/supertonic) TTS ONNX models to INT8 for on-device deployment.
 
 ## Overview
 
@@ -9,6 +9,12 @@ Quantize [Supertonic](https://github.com/supertone-inc/supertonic) TTS ONNX mode
 - **Voice**: Runtime loads one **`voice.bin`**. Generate with `python3 generate_voices_bin.py [input_dir] [output_bin]`. Pass `--supertonic-voice-style=/path/to/voice.bin`. Use `--sid` 0..N-1 to select speaker.
 - **Unicode indexer**: Runtime uses **`unicode_indexer.bin`**. Generate with `python3 generate_indexer_bin.py [json_path] [bin_path]`. Pass `--supertonic-unicode-indexer=/path/to/unicode_indexer.bin`.
 - **TTS config**: Runtime loads **`tts.json`**. Pass `--supertonic-tts-json=/path/to/tts.json`.
+- **Calibration text**: `gen_calib_configs.py` covers all 31 Supertonic
+  3 language codes: `en`, `ko`, `ja`, `ar`, `bg`, `cs`, `da`, `de`, `el`,
+  `es`, `et`, `fi`, `fr`, `hi`, `hr`, `hu`, `id`, `it`, `lt`, `lv`, `nl`,
+  `pl`, `pt`, `ro`, `ru`, `sk`, `sl`, `sv`, `tr`, `uk`, `vi`. It emits 4
+  samples per language and interleaves languages so the default first 100
+  calibration records still cover every supported language.
 
 ## Usage
 

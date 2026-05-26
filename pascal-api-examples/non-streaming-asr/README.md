@@ -13,4 +13,5 @@ APIs with non-streaming models for speech recognition.
 |[run-sense-voice.sh](./run-sense-voice.sh)|Use a non-streaming SenseVoice model for speech recognition|
 |[run-telespeech-ctc.sh](./run-telespeech-ctc.sh)|Use a non-streaming TeleSpeech CTC model for speech recognition|
 |[run-whisper.sh](./run-whisper.sh)|Use a Whisper model for speech recognition|
+|[run-qwen3-asr.sh](./run-qwen3-asr.sh)|Use a non-streaming Qwen3 ASR model for speech recognition|
 |[run-zipformer-transducer.sh](./run-zipformer-transducer.sh)|Use a non-streaming Zipformer transducer model for speech recognition|

@@ -42,6 +42,11 @@ public class OfflineRecognizer {
         return new OfflineStream(p);
     }
 
+    public OfflineStream createStream(String hotwords) {
+        long p = createStreamWithHotwords(ptr, hotwords);
+        return new OfflineStream(p);
+    }
+
     @Override
     protected void finalize() throws Throwable {
         release();
@@ -65,6 +70,8 @@ public class OfflineRecognizer {
     private native long newFromFile(OfflineRecognizerConfig config);
 
     private native long createStream(long ptr);
+
+    private native long createStreamWithHotwords(long ptr, String hotwords);
 
     private native void decode(long ptr, long streamPtr);
 

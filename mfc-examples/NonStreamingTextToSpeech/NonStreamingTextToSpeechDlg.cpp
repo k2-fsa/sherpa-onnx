@@ -72,6 +72,12 @@ static int32_t AudioGeneratedCallback(const float *s, int32_t n) {
   return 1;
 }
 
+static int32_t AudioGeneratedProgressCallback(const float *s, int32_t n,
+                                              float /*progress*/,
+                                              void * /*arg*/) {
+  return AudioGeneratedCallback(s, n);
+}
+
 static int PlayCallback(const void * /*in*/, void *out,
                         unsigned long _n,  // NOLINT
                         const PaStreamCallbackTimeInfo * /*time_info*/,
@@ -667,25 +673,32 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
 
       // generate_btn_.EnableWindow(FALSE);
 
-	  const SherpaOnnxGeneratedAudio *audio =
-		  SherpaOnnxOfflineTtsGenerateWithCallback(tts_, text.c_str(), speaker_id, speed, &AudioGeneratedCallback);
+      SherpaOnnxGenerationConfig config = {0};
+      config.silence_scale = 0.2f;
+      config.sid = speaker_id;
+      config.speed = speed;
+
+      const SherpaOnnxGeneratedAudio *audio =
+          SherpaOnnxOfflineTtsGenerateWithConfig(tts_, text.c_str(), &config,
+                                                &AudioGeneratedProgressCallback,
+                                                nullptr);
       // generate_btn_.EnableWindow(TRUE);
        g_stopped = true;
 
-	  int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
-						filename.c_str());
+      int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
+                                   filename.c_str());
 
-	  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+      SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 
-	  if (ok) {
-		// AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
+      if (ok) {
+        // AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
 
-		// AppendLineToMultilineEditCtrl(my_hint_, std::string("Saved to ") + filename + " successfully");
-	  } else {
-		// AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
+        // AppendLineToMultilineEditCtrl(my_hint_, std::string("Saved to ") + filename + " successfully");
+      } else {
+        // AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
 
-		// AppendLineToMultilineEditCtrl(my_hint_, std::string("Failed to saved to ") + filename);
-	  }
+        // AppendLineToMultilineEditCtrl(my_hint_, std::string("Failed to saved to ") + filename);
+      }
   });
 
   //CDialogEx::OnOK();

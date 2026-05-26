@@ -307,7 +307,7 @@ jobs:
           docker run --rm \
             --platform linux/arm/v7 \
             --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx \
-            quay.io/pypa/manylinux_2_35_armv7l \
+            quay.io/pypa/manylinux_2_35_armv7l${{ matrix.python-version == '3.8' && ':2025.11.29-1' || '' }} \
             bash -c '
               find / -name "*gcc*" 2>/dev/null
 

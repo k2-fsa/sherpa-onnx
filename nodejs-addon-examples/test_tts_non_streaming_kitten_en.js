@@ -41,12 +41,16 @@ async function main() {
   console.log('Sample rate:', tts.sampleRate);
 
   const start = Date.now();
+  const generationConfig = new sherpa_onnx.GenerationConfig({
+    sid: 6,
+    speed: 1.0,
+    silenceScale: 0.2,
+  });
 
   // Asynchronous generation with progress reporting
   const audio = await tts.generateAsync({
     text,
-    sid: 6,
-    speed: 1.0,
+    generationConfig,
 
     // Progress callback receives audio chunks
     onProgress({samples, progress}) {

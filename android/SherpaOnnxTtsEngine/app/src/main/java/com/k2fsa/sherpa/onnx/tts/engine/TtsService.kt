@@ -1,6 +1,7 @@
 package com.k2fsa.sherpa.onnx.tts.engine
 
 import android.media.AudioFormat
+import com.k2fsa.sherpa.onnx.GenerationConfig
 import android.speech.tts.SynthesisCallback
 import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
@@ -157,10 +158,9 @@ class TtsService : TextToSpeechService() {
         }
 
         Log.i(TAG, "text: $text")
-        tts.generateWithCallback(
+        tts.generateWithConfigAndCallback(
             text = text,
-            sid = TtsEngine.speakerId,
-            speed = engineSpeed,
+            config = GenerationConfig(sid = TtsEngine.speakerId, speed = engineSpeed),
             callback = ttsCallback,
         )
 

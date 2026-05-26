@@ -31,6 +31,24 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
 void WriteWave(char *buffer, int32_t sampling_rate, const float *samples_ch0,
                const float *samples_ch1, int32_t n);
 
+// Write a multi-channel wave file.
+// Note that the input samples are in the range [-1, 1]. It will be multiplied
+// by 32767 and saved in int16_t format in the wave file.
+//
+// @param filename Path to save the samples.
+// @param sampling_rate Sample rate of the samples.
+// @param samples    samples[c] is a pointer to channel c samples.
+// @param num_channels Number of channels.
+// @param n Number of samples per channel.
+// @return Return true if the write succeeds; return false otherwise.
+bool WriteWaveMultiChannel(const std::string &filename, int32_t sampling_rate,
+                           const float *const *samples, int32_t num_channels,
+                           int32_t n);
+
+void WriteWaveMultiChannel(char *buffer, int32_t sampling_rate,
+                           const float *const *samples, int32_t num_channels,
+                           int32_t n);
+
 int64_t WaveFileSize(int32_t n_samples, int32_t num_channels = 1);
 
 }  // namespace sherpa_onnx

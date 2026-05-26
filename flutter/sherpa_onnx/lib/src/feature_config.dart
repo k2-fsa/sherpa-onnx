@@ -1,5 +1,9 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
+/// Feature extraction settings shared by recognizers and keyword spotting.
+///
+/// In most cases the defaults of 16 kHz audio and 80-dimensional filterbank
+/// features should match the model packages provided in the repository.
 class FeatureConfig {
   const FeatureConfig({this.sampleRate = 16000, this.featureDim = 80});
 

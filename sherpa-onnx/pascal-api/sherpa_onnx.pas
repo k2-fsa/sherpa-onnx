@@ -42,13 +42,9 @@ type
     property GetOutputSampleRate: Integer Read OutputSampleRate;
   end;
 
-  PSherpaOnnxGeneratedAudioCallbackWithArg = ^TSherpaOnnxGeneratedAudioCallbackWithArg;
-
   TSherpaOnnxGeneratedAudioCallbackWithArg = function(
       Samples: pcfloat; N: cint32;
       Arg: Pointer): cint32; cdecl;
-
-  PSherpaOnnxGeneratedAudioProgressCallbackWithArg = ^TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
 
   TSherpaOnnxGeneratedAudioProgressCallbackWithArg = function(
       Samples: pcfloat; N: cint32; P: cfloat;
@@ -150,6 +146,18 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsPocketModelConfig);
   end;
 
+  TSherpaOnnxOfflineTtsSupertonicModelConfig = record
+    DurationPredictor: AnsiString;
+    TextEncoder: AnsiString;
+    VectorEstimator: AnsiString;
+    Vocoder: AnsiString;
+    TtsJson: AnsiString;
+    UnicodeIndexer: AnsiString;
+    VoiceStyle: AnsiString;
+
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineTtsModelConfig = record
     Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: Integer;
@@ -160,6 +168,7 @@ type
     Kitten: TSherpaOnnxOfflineTtsKittenModelConfig;
     ZipVoice: TSherpaOnnxOfflineTtsZipVoiceModelConfig;
     Pocket: TSherpaOnnxOfflineTtsPocketModelConfig;
+    Supertonic: TSherpaOnnxOfflineTtsSupertonicModelConfig;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
@@ -196,13 +205,13 @@ type
 
     function Generate(Text: AnsiString; SpeakerId: Integer;
       Speed: Single;
-      Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
     function Generate(Text: AnsiString;
       GenerationConfig: TSherpaOnnxGenerationConfig;
-      Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+      Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
@@ -390,6 +399,21 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineQwen3ASRModelConfig = record
+    ConvFrontend: AnsiString;
+    Encoder: AnsiString;
+    Decoder: AnsiString;
+    Tokenizer: AnsiString;
+    MaxTotalLen: Integer;
+    MaxNewTokens: Integer;
+    Temperature: Single;
+    TopP: Single;
+    Seed: Integer;
+    Hotwords: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineFunAsrNanoModelConfig = record
     EncoderAdaptor: AnsiString;
     LLM: AnsiString;
@@ -428,6 +452,16 @@ type
     UsePnc: Boolean;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCanaryModelConfig);
+  end;
+
+  TSherpaOnnxOfflineCohereTranscribeModelConfig = record
+    Encoder: AnsiString;
+    Decoder: AnsiString;
+    Language: AnsiString;
+    UsePunct: Boolean;
+    UseItn: Boolean;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCohereTranscribeModelConfig);
   end;
 
   TSherpaOnnxOfflineMoonshineModelConfig = record
@@ -490,6 +524,8 @@ type
     MedAsr: TSherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: TSherpaOnnxOfflineFunAsrNanoModelConfig;
     FireRedAsrCtc: TSherpaOnnxOfflineFireRedAsrCtcModelConfig;
+    Qwen3Asr: TSherpaOnnxOfflineQwen3ASRModelConfig;
+    CohereTranscribe: TSherpaOnnxOfflineCohereTranscribeModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -524,6 +560,7 @@ type
     constructor Create(P: Pointer);
     destructor Destroy; override;
     procedure AcceptWaveform(const Samples: array of Single; SampleRate: Integer);
+    procedure SetOption(const Key: AnsiString; const Value: AnsiString);
     property GetHandle: Pointer Read Handle;
   end;
 
@@ -693,8 +730,14 @@ type
     function ToString: AnsiString;
   end;
 
+  TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: TSherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
+    DpdfNet: TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
     NumThreads: Integer;
     Debug: Boolean;
     Provider: AnsiString;
@@ -703,6 +746,11 @@ type
   end;
 
   TSherpaOnnxOfflineSpeechDenoiserConfig = record
+    Model: TSherpaOnnxOfflineSpeechDenoiserModelConfig;
+    function ToString: AnsiString;
+  end;
+
+  TSherpaOnnxOnlineSpeechDenoiserConfig = record
     Model: TSherpaOnnxOfflineSpeechDenoiserModelConfig;
     function ToString: AnsiString;
   end;
@@ -727,6 +775,25 @@ type
     property GetSampleRate: Integer Read SampleRate;
   end;
 
+  TSherpaOnnxOnlineSpeechDenoiser = class
+  private
+   Handle: Pointer;
+   SampleRate: Integer;
+   FrameShiftInSamples: Integer;
+   _Config: TSherpaOnnxOnlineSpeechDenoiserConfig;
+  public
+    constructor Create(Config: TSherpaOnnxOnlineSpeechDenoiserConfig);
+    destructor Destroy; override;
+
+    function Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+    function Flush: TSherpaOnnxDenoisedAudio;
+    procedure Reset;
+
+    property GetHandle: Pointer Read Handle;
+    property GetSampleRate: Integer Read SampleRate;
+    property GetFrameShiftInSamples: Integer Read FrameShiftInSamples;
+  end;
+
   { It supports reading a single channel wave with 16-bit encoded samples.
     Samples are normalized to the range [-1, 1].
   }
@@ -742,6 +809,7 @@ type
 implementation
 
 uses
+  Math,
   fpjson,
     { See
       - https://wiki.freepascal.org/fcl-json
@@ -923,6 +991,18 @@ type
   SherpaOnnxOfflineFireRedAsrCtcModelConfig = record
     Model: PAnsiChar;
   end;
+  SherpaOnnxOfflineQwen3ASRModelConfig = record
+    ConvFrontend: PAnsiChar;
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
+    Tokenizer: PAnsiChar;
+    MaxTotalLen: cint32;
+    MaxNewTokens: cint32;
+    Temperature: cfloat;
+    TopP: cfloat;
+    Seed: cint32;
+    Hotwords: PAnsiChar;
+  end;
   SherpaOnnxOfflineWhisperModelConfig = record
     Encoder: PAnsiChar;
     Decoder: PAnsiChar;
@@ -938,6 +1018,13 @@ type
     SrcLang: PAnsiChar;
     TgtLang: PAnsiChar;
     UsePnc: cint32;
+  end;
+  SherpaOnnxOfflineCohereTranscribeModelConfig = record
+    Encoder: PAnsiChar;
+    Decoder: PAnsiChar;
+    Language: PAnsiChar;
+    UsePunct: cint32;
+    UseItn: cint32;
   end;
   SherpaOnnxOfflineFireRedAsrModelConfig = record
     Encoder: PAnsiChar;
@@ -987,6 +1074,8 @@ type
     MedAsr: SherpaOnnxOfflineMedAsrCtcModelConfig;
     FunAsrNano: SherpaOnnxOfflineFunAsrNanoModelConfig;
     FireRedAsrCtc: SherpaOnnxOfflineFireRedAsrCtcModelConfig;
+    Qwen3Asr: SherpaOnnxOfflineQwen3ASRModelConfig;
+    CohereTranscribe: SherpaOnnxOfflineCohereTranscribeModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1052,7 +1141,7 @@ type
     DictDir: PAnsiChar;
   end;
 
-  PSherpaOnnxGenerationConfig = ^TSherpaOnnxGenerationConfig;
+  PSherpaOnnxGenerationConfig = ^SherpaOnnxGenerationConfig;
 
   SherpaOnnxGenerationConfig = record
     SilenceScale: cfloat;
@@ -1120,6 +1209,16 @@ type
     VoiceEmbeddingCacheCapacity: cint32;
   end;
 
+  SherpaOnnxOfflineTtsSupertonicModelConfig = record
+    DurationPredictor: PAnsiChar;
+    TextEncoder: PAnsiChar;
+    VectorEstimator: PAnsiChar;
+    Vocoder: PAnsiChar;
+    TtsJson: PAnsiChar;
+    UnicodeIndexer: PAnsiChar;
+    VoiceStyle: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineTtsModelConfig = record
     Vits: SherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: cint32;
@@ -1130,6 +1229,7 @@ type
     Kitten: SherpaOnnxOfflineTtsKittenModelConfig;
     ZipVoice: SherpaOnnxOfflineTtsZipVoiceModelConfig;
     Pocket: SherpaOnnxOfflineTtsPocketModelConfig;
+    Supertonic: SherpaOnnxOfflineTtsSupertonicModelConfig;
   end;
 
   SherpaOnnxOfflineTtsConfig = record
@@ -1202,11 +1302,16 @@ type
     Model: PAnsiChar;
   end;
 
+  SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig = record
+    Model: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineSpeechDenoiserModelConfig = record
     Gtcrn: SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
     NumThreads: cint32;
     Debug: cint32;
     Provider: PAnsiChar;
+    DpdfNet: SherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig;
   end;
 
   SherpaOnnxOfflineSpeechDenoiserConfig = record
@@ -1214,6 +1319,12 @@ type
   end;
 
   PSherpaOnnxOfflineSpeechDenoiserConfig = ^SherpaOnnxOfflineSpeechDenoiserConfig;
+
+  SherpaOnnxOnlineSpeechDenoiserConfig = record
+    Model: SherpaOnnxOfflineSpeechDenoiserModelConfig;
+  end;
+
+  PSherpaOnnxOnlineSpeechDenoiserConfig = ^SherpaOnnxOnlineSpeechDenoiserConfig;
 
   SherpaOnnxDenoisedAudio = record
     Samples: pcfloat;
@@ -1281,6 +1392,28 @@ function SherpaOnnxOfflineSpeechDenoiserRun(P: Pointer;
   Samples: pcfloat; N: cint32;SampleRate: cint32):PSherpaOnnxDenoisedAudio; cdecl;
   external SherpaOnnxLibName;
 
+function SherpaOnnxCreateOnlineSpeechDenoiser(Config: PSherpaOnnxOnlineSpeechDenoiserConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOnlineSpeechDenoiser(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserGetSampleRate(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserRun(P: Pointer;
+  Samples: pcfloat; N: cint32; SampleRate: cint32): PSherpaOnnxDenoisedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineSpeechDenoiserFlush(P: Pointer): PSherpaOnnxDenoisedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOnlineSpeechDenoiserReset(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
 procedure SherpaOnnxDestroyDenoisedAudio(Audio: Pointer); cdecl;
   external SherpaOnnxLibName;
 
@@ -1333,13 +1466,13 @@ function SherpaOnnxOfflineTtsGenerate(Tts: Pointer;
 
 function SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Tts: Pointer;
   Text: PAnsiChar; Sid: cint32; Speed: cfloat;
-  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer): PSherpaOnnxGeneratedAudio; cdecl;
   external SherpaOnnxLibName;
 
 function SherpaOnnxOfflineTtsGenerateWithConfig(Tts: Pointer;
   Text: PAnsiChar; config: PSherpaOnnxGenerationConfig;
-  Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
   Arg: Pointer): PSherpaOnnxGeneratedAudio; cdecl;
   external SherpaOnnxLibName;
 
@@ -1462,6 +1595,10 @@ procedure SherpaOnnxDestroyOfflineStream(Stream: Pointer); cdecl;
 
 procedure SherpaOnnxAcceptWaveformOffline(Stream: Pointer;
   SampleRate: cint32; Samples: pcfloat; N: cint32); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOfflineStreamSetOption(Stream: Pointer; Key: PAnsiChar;
+  Value: PAnsiChar); cdecl;
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxDecodeOfflineStream(Recognizer: Pointer; Stream: Pointer); cdecl;
@@ -1858,6 +1995,25 @@ begin
     [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineQwen3ASRModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineQwen3ASRModelConfig(' +
+    'ConvFrontend := %s' +
+    ', Encoder := %s' +
+    ', Decoder := %s' +
+    ', Tokenizer := %s' +
+    ', MaxTotalLen := %d' +
+    ', MaxNewTokens := %d' +
+    ', Temperature := %.3f' +
+    ', TopP := %.3f' +
+    ', Seed := %d' +
+    ', Hotwords := %s' +
+    ')',
+    [Self.ConvFrontend, Self.Encoder, Self.Decoder, Self.Tokenizer,
+     Self.MaxTotalLen, Self.MaxNewTokens, Self.Temperature,
+     Self.TopP, Self.Seed, Self.Hotwords]);
+end;
+
 function TSherpaOnnxOfflineFunAsrNanoModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineFunAsrNanoModelConfig(' +
@@ -1907,6 +2063,19 @@ begin
     ')',
     [Self.Encoder, Self.Decoder, Self.SrcLang,
      Self.TgtLang, Self.UsePnc.ToString]);
+end;
+
+function TSherpaOnnxOfflineCohereTranscribeModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineCohereTranscribeModelConfig(' +
+    'Encoder := %s, ' +
+    'Decoder := %s, ' +
+    'Language := %s, ' +
+    'UsePunct := %s, ' +
+    'UseItn := %s' +
+    ')',
+    [Self.Encoder, Self.Decoder, Self.Language, Self.UsePunct.ToString,
+     Self.UseItn.ToString]);
 end;
 
 function TSherpaOnnxOfflineFireRedAsrModelConfig.ToString: AnsiString;
@@ -1977,11 +2146,13 @@ begin
     'ZipformerCtc := %s, ' +
     'Canary := %s, ' +
     'WenetCtc := %s, ' +
-    'Omnilingual := %s' +
-    ', MedAsr := %s' +
-    ', FunAsrNano := %s' +
-    ', FireRedAsrCtc := %s' +
-    ')',
+     'Omnilingual := %s' +
+     ', MedAsr := %s' +
+     ', FunAsrNano := %s' +
+     ', FireRedAsrCtc := %s' +
+     ', Qwen3Asr := %s' +
+     ', CohereTranscribe := %s' +
+     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
      Self.Tokens, Self.NumThreads, Self.Debug.ToString, Self.Provider,
@@ -1990,8 +2161,9 @@ begin
      Self.FireRedAsr.ToString, Self.Dolphin.ToString,
      Self.ZipformerCtc.ToString, Self.Canary.ToString, Self.WenetCtc.ToString,
      Self.Omnilingual.ToString, Self.MedAsr.ToString,
-     Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString
-     ]);
+     Self.FunAsrNano.ToString, Self.FireRedAsrCtc.ToString,
+     Self.Qwen3Asr.ToString, Self.CohereTranscribe.ToString
+      ]);
 end;
 
 function TSherpaOnnxOfflineRecognizerConfig.ToString: AnsiString;
@@ -2091,6 +2263,23 @@ begin
   C.ModelConfig.FunAsrNano.Hotwords := PAnsiChar(Config.ModelConfig.FunAsrNano.Hotwords);
 
   C.ModelConfig.FireRedAsrCtc.Model := PAnsiChar(Config.ModelConfig.FireRedAsrCtc.Model);
+
+  C.ModelConfig.Qwen3Asr.ConvFrontend := PAnsiChar(Config.ModelConfig.Qwen3Asr.ConvFrontend);
+  C.ModelConfig.Qwen3Asr.Encoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Encoder);
+  C.ModelConfig.Qwen3Asr.Decoder := PAnsiChar(Config.ModelConfig.Qwen3Asr.Decoder);
+  C.ModelConfig.Qwen3Asr.Tokenizer := PAnsiChar(Config.ModelConfig.Qwen3Asr.Tokenizer);
+  C.ModelConfig.Qwen3Asr.MaxTotalLen := Config.ModelConfig.Qwen3Asr.MaxTotalLen;
+  C.ModelConfig.Qwen3Asr.MaxNewTokens := Config.ModelConfig.Qwen3Asr.MaxNewTokens;
+  C.ModelConfig.Qwen3Asr.Temperature := Config.ModelConfig.Qwen3Asr.Temperature;
+  C.ModelConfig.Qwen3Asr.TopP := Config.ModelConfig.Qwen3Asr.TopP;
+  C.ModelConfig.Qwen3Asr.Seed := Config.ModelConfig.Qwen3Asr.Seed;
+  C.ModelConfig.Qwen3Asr.Hotwords := PAnsiChar(Config.ModelConfig.Qwen3Asr.Hotwords);
+
+  C.ModelConfig.CohereTranscribe.Encoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Encoder);
+  C.ModelConfig.CohereTranscribe.Decoder := PAnsiChar(Config.ModelConfig.CohereTranscribe.Decoder);
+  C.ModelConfig.CohereTranscribe.Language := PAnsiChar(Config.ModelConfig.CohereTranscribe.Language);
+  C.ModelConfig.CohereTranscribe.UsePunct := Ord(Config.ModelConfig.CohereTranscribe.UsePunct);
+  C.ModelConfig.CohereTranscribe.UseItn := Ord(Config.ModelConfig.CohereTranscribe.UseItn);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
@@ -2199,6 +2388,13 @@ begin
     Length(Samples));
 end;
 
+procedure TSherpaOnnxOfflineStream.SetOption(const Key: AnsiString;
+  const Value: AnsiString);
+begin
+  SherpaOnnxOfflineStreamSetOption(Self.Handle, PAnsiChar(Key),
+    PAnsiChar(Value));
+end;
+
 function TSherpaOnnxOfflineRecognizerResult.ToString: AnsiString;
 var
   TokensStr: AnsiString;
@@ -2269,6 +2465,15 @@ begin
   Dest.TopP := 0.8;
   Dest.Seed := 42;
   Dest.UseItn := False;
+end;
+
+class operator TSherpaOnnxOfflineQwen3ASRModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineQwen3ASRModelConfig);
+begin
+  Dest.MaxTotalLen := 512;
+  Dest.MaxNewTokens := 128;
+  Dest.Temperature := 1e-6;
+  Dest.TopP := 0.8;
+  Dest.Seed := 42;
 end;
 
 class operator TSherpaOnnxSileroVadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
@@ -2354,6 +2559,13 @@ begin
   Dest.SrcLang := 'en';
   Dest.TgtLang := 'en';
   Dest.UsePnc := True;
+end;
+
+class operator TSherpaOnnxOfflineCohereTranscribeModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineCohereTranscribeModelConfig);
+begin
+  Dest.Language := '';
+  Dest.UsePunct := True;
+  Dest.UseItn := True;
 end;
 
 class operator TSherpaOnnxOfflineLMConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineLMConfig);
@@ -2686,6 +2898,21 @@ begin
      Self.VocabJson, Self.TokenScoresJson, Self.VoiceEmbeddingCacheCapacity]);
 end;
 
+function TSherpaOnnxOfflineTtsSupertonicModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsSupertonicModelConfig(' +
+    'DurationPredictor := %s, ' +
+    'TextEncoder := %s, ' +
+    'VectorEstimator := %s, ' +
+    'Vocoder := %s, ' +
+    'TtsJson := %s, ' +
+    'UnicodeIndexer := %s, ' +
+    'VoiceStyle := %s' +
+    ')',
+    [Self.DurationPredictor, Self.TextEncoder, Self.VectorEstimator, Self.Vocoder,
+     Self.TtsJson, Self.UnicodeIndexer, Self.VoiceStyle]);
+end;
+
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
@@ -2697,11 +2924,12 @@ begin
     'Kokoro := %s, ' +
     'Kitten := %s, ' +
     'ZipVoice := %s, ' +
-    'Pocket := %s' +
+    'Pocket := %s, ' +
+    'Supertonic := %s' +
     ')',
     [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.Matcha.ToString, Self.Kokoro.ToString, Self.Kitten.ToString,
-     Self.ZipVoice.ToString, Self.Pocket.ToString
+     Self.ZipVoice.ToString, Self.Pocket.ToString, Self.Supertonic.ToString
     ]);
 end;
 
@@ -2788,6 +3016,14 @@ begin
   C.Model.Pocket.TokenScoresJson := PAnsiChar(Config.Model.Pocket.TokenScoresJson);
   C.Model.Pocket.VoiceEmbeddingCacheCapacity := Config.Model.Pocket.VoiceEmbeddingCacheCapacity;
 
+  C.Model.Supertonic.DurationPredictor := PAnsiChar(Config.Model.Supertonic.DurationPredictor);
+  C.Model.Supertonic.TextEncoder := PAnsiChar(Config.Model.Supertonic.TextEncoder);
+  C.Model.Supertonic.VectorEstimator := PAnsiChar(Config.Model.Supertonic.VectorEstimator);
+  C.Model.Supertonic.Vocoder := PAnsiChar(Config.Model.Supertonic.Vocoder);
+  C.Model.Supertonic.TtsJson := PAnsiChar(Config.Model.Supertonic.TtsJson);
+  C.Model.Supertonic.UnicodeIndexer := PAnsiChar(Config.Model.Supertonic.UnicodeIndexer);
+  C.Model.Supertonic.VoiceStyle := PAnsiChar(Config.Model.Supertonic.VoiceStyle);
+
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
   C.Model.Debug := Ord(Config.Model.Debug);
@@ -2809,87 +3045,119 @@ begin
   Self.Handle := nil;
 end;
 
+function ExtractGeneratedAudio(Audio: PSherpaOnnxGeneratedAudio): TSherpaOnnxGeneratedAudio;
+begin
+  Result := Default(TSherpaOnnxGeneratedAudio);
+
+  if Audio = nil then
+    Exit;
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(Audio);
+end;
+
+{ Adapts TSherpaOnnxGeneratedAudioCallbackWithArg (no progress) to
+  TSherpaOnnxGeneratedAudioProgressCallbackWithArg so we can use the
+  non-deprecated SherpaOnnxOfflineTtsGenerateWithConfig. }
+var
+  _OfflineTtsCallbackWithArg: TSherpaOnnxGeneratedAudioCallbackWithArg;
+  _OfflineTtsCallbackWithArgUserArg: Pointer;
+
+function _OfflineTtsCallbackWithArgWrapper(Samples: pcfloat; N: cint32;
+  P: cfloat; Arg: Pointer): cint32; cdecl;
+begin
+  Result := _OfflineTtsCallbackWithArg(Samples, N, _OfflineTtsCallbackWithArgUserArg);
+end;
+
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
+  Config: TSherpaOnnxGenerationConfig;
 begin
-  Result := Default(TSherpaOnnxGeneratedAudio);
-
-  Audio := SherpaOnnxOfflineTtsGenerate(Self.Handle, PAnsiChar(Text), SpeakerId, Speed);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Config := Default(TSherpaOnnxGenerationConfig);
+  Config.Sid := SpeakerId;
+  Config.Speed := Speed;
+  Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+    @Config, nil, nil);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single;
-  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
+  Config: TSherpaOnnxGenerationConfig;
 begin
-  Result := Default(TSherpaOnnxGeneratedAudio);
+  Config := Default(TSherpaOnnxGenerationConfig);
+  Config.Sid := SpeakerId;
+  Config.Speed := Speed;
 
-  Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
-    SpeakerId, Speed, Callback, Arg);
+  _OfflineTtsCallbackWithArg := Callback;
+  _OfflineTtsCallbackWithArgUserArg := Arg;
 
-  if Audio = nil then
-    Exit;
+  if Assigned(Callback) then
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @Config, @_OfflineTtsCallbackWithArgWrapper, nil)
+  else
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @Config, nil, nil);
 
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString;
   GenerationConfig: TSherpaOnnxGenerationConfig;
-  Callback: PSherpaOnnxGeneratedAudioProgressCallbackWithArg;
+  Callback: TSherpaOnnxGeneratedAudioProgressCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
   Audio: PSherpaOnnxGeneratedAudio;
   C: SherpaOnnxGenerationConfig;
+  ReferenceAudio: TSherpaOnnxSamplesArray;
+  CReferenceAudio: pcfloat;
+  ReferenceText: AnsiString;
+  Extra: AnsiString;
 begin
   C := Default(SherpaOnnxGenerationConfig);
   C.SilenceScale := GenerationConfig.SilenceScale;
   C.Speed := GenerationConfig.Speed;
   C.Sid := GenerationConfig.Sid;
-  C.ReferenceAudio := pcfloat(GenerationConfig.ReferenceAudio);
-  C.ReferenceAudioLen := GenerationConfig.ReferenceAudioLen;
+  ReferenceAudio := GenerationConfig.ReferenceAudio;
+  CReferenceAudio := nil;
+  C.ReferenceAudio := nil;
+  C.ReferenceAudioLen := Length(ReferenceAudio);
+  if C.ReferenceAudioLen > 0 then
+    begin
+      GetMem(CReferenceAudio, C.ReferenceAudioLen * SizeOf(Single));
+      Move(ReferenceAudio[0], CReferenceAudio[0], C.ReferenceAudioLen * SizeOf(Single));
+      C.ReferenceAudio := CReferenceAudio;
+    end;
   C.ReferenceSampleRate:= GenerationConfig.ReferenceSampleRate;
-  C.ReferenceText := PAnsiChar(GenerationConfig.ReferenceText);
+  ReferenceText := GenerationConfig.ReferenceText;
+  C.ReferenceText := PAnsiChar(ReferenceText);
   C.NumSteps := GenerationConfig.NumSteps;
-  C.Extra := PAnsiChar(GenerationConfig.Extra);
+  Extra := GenerationConfig.Extra;
+  C.Extra := PAnsiChar(Extra);
 
-  Result := Default(TSherpaOnnxGeneratedAudio);
+  Audio := nil;
+  try
+    Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
+      @C, Callback, Arg);
+  finally
+    if CReferenceAudio <> nil then
+      FreeMem(CReferenceAudio);
+  end;
 
-  Audio := SherpaOnnxOfflineTtsGenerateWithConfig(Self.Handle, PAnsiChar(Text),
-    @C, Callback, Arg);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+  Result := ExtractGeneratedAudio(Audio);
 end;
 
 constructor TSherpaOnnxLinearResampler.Create(SampleRateIn: Integer; SampleRateOut: Integer);
@@ -3142,14 +3410,21 @@ begin
     'Model := %s)', [Self.Model]);
 end;
 
+function TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeechDenoiserDpdfNetModelConfig(' +
+    'Model := %s)', [Self.Model]);
+end;
+
 function TSherpaOnnxOfflineSpeechDenoiserModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineSpeechDenoiserModelConfig(' +
     'Gtcrn := %s, '+
+    'DpdfNet := %s, '+
     'NumThreads := %d, '+
     'Debug := %s, '+
     'Provider := %s)',
-    [Self.Gtcrn.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
+    [Self.Gtcrn.ToString, Self.DpdfNet.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
 end;
 
 class operator TSherpaOnnxOfflineSpeechDenoiserModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeechDenoiserModelConfig);
@@ -3165,12 +3440,35 @@ begin
     'Model := %s)', [Self.Model.ToString]);
 end;
 
+function TSherpaOnnxOnlineSpeechDenoiserConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOnlineSpeechDenoiserConfig(' +
+    'Model := %s)', [Self.Model.ToString]);
+end;
+
+function ExtractDenoisedAudio(Audio: PSherpaOnnxDenoisedAudio): TSherpaOnnxDenoisedAudio;
+begin
+  Result := Default(TSherpaOnnxDenoisedAudio);
+
+  if Audio = nil then
+    Exit;
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  if Audio^.N > 0 then
+    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
+
+  SherpaOnnxDestroyDenoisedAudio(Audio);
+end;
+
 constructor TSherpaOnnxOfflineSpeechDenoiser.Create(Config: TSherpaOnnxOfflineSpeechDenoiserConfig);
 var
   C: SherpaOnnxOfflineSpeechDenoiserConfig;
 begin
   C := Default(SherpaOnnxOfflineSpeechDenoiserConfig);
   C.Model.Gtcrn.Model := PAnsiChar(Config.Model.Gtcrn.Model);
+  C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Debug := Ord(Config.Model.Debug);
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
@@ -3195,20 +3493,67 @@ function TSherpaOnnxOfflineSpeechDenoiser.Run(const Samples: array of Single; In
 var
   Audio: PSherpaOnnxDenoisedAudio;
 begin
-  Result := Default(TSherpaOnnxDenoisedAudio);
-
   Audio := SherpaOnnxOfflineSpeechDenoiserRun(Self.Handle, pcfloat(Samples), Length(Samples), InputSampleRate);
-
-  if Audio = nil then
-    Exit;
-
-  SetLength(Result.Samples, Audio^.N);
-  Result.SampleRate := Audio^.SampleRate;
-
-  if Audio^.N > 0 then
-    Move(Audio^.Samples[0], Result.Samples[0], Audio^.N * SizeOf(Single));
-
-  SherpaOnnxDestroyDenoisedAudio(audio);
+  Result := ExtractDenoisedAudio(Audio);
 end;
+
+constructor TSherpaOnnxOnlineSpeechDenoiser.Create(Config: TSherpaOnnxOnlineSpeechDenoiserConfig);
+var
+  C: SherpaOnnxOnlineSpeechDenoiserConfig;
+begin
+  C := Default(SherpaOnnxOnlineSpeechDenoiserConfig);
+  C.Model.Gtcrn.Model := PAnsiChar(Config.Model.Gtcrn.Model);
+  C.Model.DpdfNet.Model := PAnsiChar(Config.Model.DpdfNet.Model);
+  C.Model.NumThreads := Config.Model.NumThreads;
+  C.Model.Debug := Ord(Config.Model.Debug);
+  C.Model.Provider := PAnsiChar(Config.Model.Provider);
+
+  Self.Handle := SherpaOnnxCreateOnlineSpeechDenoiser(@C);
+  Self._Config := Config;
+  Self.SampleRate := 0;
+  Self.FrameShiftInSamples := 0;
+
+  if Self.Handle <> nil then
+    begin
+      Self.SampleRate := SherpaOnnxOnlineSpeechDenoiserGetSampleRate(Self.Handle);
+      Self.FrameShiftInSamples := SherpaOnnxOnlineSpeechDenoiserGetFrameShiftInSamples(Self.Handle);
+    end;
+end;
+
+destructor TSherpaOnnxOnlineSpeechDenoiser.Destroy;
+begin
+  SherpaOnnxDestroyOnlineSpeechDenoiser(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxOnlineSpeechDenoiser.Run(const Samples: array of Single; InputSampleRate: Integer): TSherpaOnnxDenoisedAudio;
+var
+  Audio: PSherpaOnnxDenoisedAudio;
+begin
+  Audio := SherpaOnnxOnlineSpeechDenoiserRun(Self.Handle, pcfloat(Samples), Length(Samples), InputSampleRate);
+  Result := ExtractDenoisedAudio(Audio);
+end;
+
+function TSherpaOnnxOnlineSpeechDenoiser.Flush: TSherpaOnnxDenoisedAudio;
+var
+  Audio: PSherpaOnnxDenoisedAudio;
+begin
+  Audio := SherpaOnnxOnlineSpeechDenoiserFlush(Self.Handle);
+  Result := ExtractDenoisedAudio(Audio);
+end;
+
+procedure TSherpaOnnxOnlineSpeechDenoiser.Reset;
+begin
+  SherpaOnnxOnlineSpeechDenoiserReset(Self.Handle);
+end;
+
+initialization
+  { Match the C API's default behavior. PocketTTS can raise FP overflow flags
+    during native inference on some platforms, and Free Pascal would otherwise
+    surface them as EOverflow.
+    See also https://github.com/k2-fsa/sherpa-onnx/pull/3351
+  }
+  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow,
+    exUnderflow, exPrecision]);
 
 end.

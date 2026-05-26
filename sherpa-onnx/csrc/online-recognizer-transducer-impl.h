@@ -132,7 +132,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (model_->UseWhisperFeature()) {
@@ -168,7 +168,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
       }
 
-      if (!config_.hotwords_file.empty()) {
+      if (!config_.hotwords_buf.empty()) {
+        InitHotwordsFromBufStr();
+      } else if (!config_.hotwords_file.empty()) {
         InitHotwords(mgr);
       }
 
@@ -185,7 +187,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (model_->UseWhisperFeature()) {
@@ -252,8 +254,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       return;
     }
     int32_t chunk_size = model_->ChunkSize();
-    int32_t chunk_shift = model_->ChunkShift();
-    int32_t feature_dim = 80;
+    int32_t feature_dim = config_.feat_config.feature_dim;
     std::vector<OnlineTransducerDecoderResult> results(max_batch_size);
     std::vector<float> features_vec(max_batch_size * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(max_batch_size);
@@ -442,7 +443,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
                        config_.hotwords_file.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
@@ -466,7 +467,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
                        config_.hotwords_file.c_str());
-      exit(-1);
+      SHERPA_ONNX_EXIT(-1);
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,

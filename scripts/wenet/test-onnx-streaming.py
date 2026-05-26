@@ -136,7 +136,7 @@ def main():
     filename = "./0.wav"
     x = get_features(filename)
 
-    padding = torch.zeros(int(16000 * 0.5), 80)
+    padding = torch.zeros(50, 80)
     x = torch.cat([x, padding], dim=0)
 
     chunk_length = (

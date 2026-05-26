@@ -215,6 +215,8 @@ void LengthsToMask(const std::vector<int64_t> &lengths,
 // TTS text chunking helpers.
 std::vector<std::string> SplitByBlankLines(const std::string &text);
 std::vector<std::string> SplitByPunctuation(const std::string &text);
+std::vector<std::string> MergeShortSentences(
+    const std::vector<std::string> &sentences, size_t min_chars);
 std::vector<std::string> SplitLongSentence(const std::string &sentence,
                                            size_t max_chars);
 std::vector<std::string> ChunkText(const std::string &text, size_t max_len);

@@ -61,13 +61,16 @@ export class VadConfig {
   public sampleRate: number;
   public debug: boolean;
   public numThreads: number;
+  public provider: string = 'cpu';
 
-  public constructor(sileroVad: SileroVadConfig, tenVad: TenVadConfig, sampleRate: number, debug: boolean, numThreads: number) {
+  public constructor(sileroVad: SileroVadConfig, tenVad: TenVadConfig, sampleRate: number, debug: boolean,
+    numThreads: number, provider: string = 'cpu') {
     this.sileroVad = sileroVad;
     this.tenVad = tenVad;
     this.sampleRate = sampleRate;
     this.debug = debug;
     this.numThreads = numThreads;
+    this.provider = provider;
   }
 }
 
@@ -114,7 +117,7 @@ export class Vad {
   public config: VadConfig;
   private handle: object;
 
-  constructor(config: VadConfig, bufferSizeInSeconds?: number, mgr?: object) {
+  constructor(config: VadConfig, bufferSizeInSeconds: number = 60, mgr?: object) {
     this.handle = createVoiceActivityDetector(config, bufferSizeInSeconds, mgr);
     this.config = config;
   }

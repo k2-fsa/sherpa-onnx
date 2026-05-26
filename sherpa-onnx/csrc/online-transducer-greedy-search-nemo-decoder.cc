@@ -62,37 +62,39 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
 
   bool emitted = false;
 
+  int32_t max_symbols_per_frame = 10;
+
   for (int32_t t = 0; t != num_rows; ++t) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
         memory_info, const_cast<float *>(encoder_out) + t * num_cols, num_cols,
         encoder_shape.data(), encoder_shape.size());
 
-    Ort::Value logit = model->RunJoiner(std::move(cur_encoder_out),
-                                        View(&decoder_output_pair.first));
+    for (int32_t q = 0; q != max_symbols_per_frame; ++q) {
+      Ort::Value logit = model->RunJoiner(View(&cur_encoder_out),
+                                          View(&decoder_output_pair.first));
 
-    float *p_logit = logit.GetTensorMutableData<float>();
-    if (blank_penalty > 0) {
-      p_logit[blank_id] -= blank_penalty;
-    }
+      float *p_logit = logit.GetTensorMutableData<float>();
+      if (blank_penalty > 0) {
+        p_logit[blank_id] -= blank_penalty;
+      }
 
-    auto y = static_cast<int32_t>(std::distance(
-        static_cast<const float *>(p_logit),
-        std::max_element(static_cast<const float *>(p_logit),
-                         static_cast<const float *>(p_logit) + vocab_size)));
+      int32_t y = MaxElementIndex(p_logit, vocab_size);
 
-    if (y != blank_id) {
-      emitted = true;
-      r.tokens.push_back(y);
-      r.timestamps.push_back(t + r.frame_offset);
-      r.num_trailing_blanks = 0;
+      if (y != blank_id) {
+        emitted = true;
+        r.tokens.push_back(y);
+        r.timestamps.push_back(t + r.frame_offset);
+        r.num_trailing_blanks = 0;
 
-      decoder_input = BuildDecoderInput(y, model->Allocator());
+        decoder_input = BuildDecoderInput(y, model->Allocator());
 
-      // last decoder state becomes the current state for the first chunk
-      decoder_output_pair = model->RunDecoder(
-          std::move(decoder_input), std::move(decoder_output_pair.second));
-    } else {
-      ++r.num_trailing_blanks;
+        // last decoder state becomes the current state for the first chunk
+        decoder_output_pair = model->RunDecoder(
+            std::move(decoder_input), std::move(decoder_output_pair.second));
+      } else {
+        ++r.num_trailing_blanks;
+        break;
+      }
     }
   }
 
@@ -112,7 +114,7 @@ void OnlineTransducerGreedySearchNeMoDecoder::Decode(Ort::Value encoder_out,
   if (batch_size != n) {
     SHERPA_ONNX_LOGE("Size mismatch! encoder_out.size(0) %d, n: %d",
                      static_cast<int32_t>(shape[0]), n);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   int32_t dim1 = static_cast<int32_t>(shape[1]);  // T

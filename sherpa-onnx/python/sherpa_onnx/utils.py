@@ -148,10 +148,10 @@ def text2token(
             mix_chars = [w for w in chars if len(w.strip()) > 0]
             text_list = []
             for ch_or_w in mix_chars:
-                # ch_or_w is a single CJK charater(i.e., "你"), do nothing.
+                # ch_or_w is a single CJK character(i.e., "你"), do nothing.
                 if pattern.fullmatch(ch_or_w) is not None:
                     text_list.append(ch_or_w)
-                # ch_or_w contains non-CJK charaters(i.e., " IT'S OKAY "),
+                # ch_or_w contains non-CJK characters(i.e., " IT'S OKAY "),
                 # encode ch_or_w using bpe_model.
                 else:
                     text_list += sp.encode_as_pieces(ch_or_w)

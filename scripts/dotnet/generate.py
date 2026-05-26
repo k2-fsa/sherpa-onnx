@@ -33,6 +33,25 @@ def get_dict():
     }
 
 
+def process_android(s, rid):
+    libs = [
+        "libonnxruntime.so",
+        "libsherpa-onnx-c-api.so",
+    ]
+    prefix = f"{src_dir}/android-{rid}/"
+    libs = [prefix + lib for lib in libs]
+    libs = "\n      ;".join(libs)
+
+    d = get_dict()
+    d["dotnet_rid"] = f"android-{rid}"
+    d["libs"] = libs
+
+    environment = jinja2.Environment()
+    template = environment.from_string(s)
+    s = template.render(**d)
+    with open(f"./android-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
+        f.write(s)
+
 def process_linux(s, rid):
     libs = [
         "libonnxruntime.so",
@@ -101,6 +120,7 @@ def main():
     process_macos(s, "arm64")
     process_linux(s, "x64")
     process_linux(s, "arm64")
+    process_android(s, "arm64")
     process_windows(s, "x64")
     process_windows(s, "x86")
     process_windows(s, "arm64")

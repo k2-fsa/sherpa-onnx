@@ -29,10 +29,44 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install "numpy<=1.26.4" sherpa-onnx soundfile
+          pip install "numpy<=1.26.4" soundfile
+          pip install --verbose sherpa_onnx_bin sherpa_onnx_core sherpa_onnx --no-index -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
+
+      - name: supertonic
+        if: true
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          cd scripts/supertonic
+          pwd=$PWD
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples hf
+          mkdir -p ./hf/supertonic/v3/mp3
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+          tar xvf sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+          rm sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2
+
+          ls -lh sherpa-onnx-supertonic-3-tts-int8-2026-05-11
+
+          python3 ./generate_samples.py
+
+          pushd hf
+          git pull
+          git add .
+          git commit -m 'add supertonic v3 tts samples'
+          git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-tts-samples main
+          popd
+          rm -rf hf
 
       - name: kitten
-        if: true
+        if: false
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

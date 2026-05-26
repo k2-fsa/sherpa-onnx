@@ -88,7 +88,7 @@ ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
 
   if (!node) {
     SHERPA_ONNX_LOGE("Some bad things happened.");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   const ContextState *matched_node =

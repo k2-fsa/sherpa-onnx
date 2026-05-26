@@ -40,20 +40,25 @@ public class NonStreamingTtsPiperEn {
 
     int sid = 100;
     float speed = 1.0f;
+    GenerationConfig genConfig = new GenerationConfig();
+    genConfig.setSid(sid);
+    genConfig.setSpeed(speed);
+    genConfig.setSilenceScale(config.getSilenceScale());
     long start = System.currentTimeMillis();
-    GeneratedAudio audio = tts.generate(text, sid, speed);
+    GeneratedAudio audio =
+        tts.generateWithConfigAndCallback(text, genConfig, (float[] samples) -> 1);
     long stop = System.currentTimeMillis();
 
     float timeElapsedSeconds = (stop - start) / 1000.0f;
 
     float audioDuration = audio.getSamples().length / (float) audio.getSampleRate();
-    float real_time_factor = timeElapsedSeconds / audioDuration;
+    float realTimeFactor = timeElapsedSeconds / audioDuration;
 
     String waveFilename = "tts-vits-zh.wav";
     audio.save(waveFilename);
     System.out.printf("-- elapsed : %.3f seconds\n", timeElapsedSeconds);
     System.out.printf("-- audio duration: %.3f seconds\n", audioDuration);
-    System.out.printf("-- real-time factor (RTF): %.3f\n", real_time_factor);
+    System.out.printf("-- real-time factor (RTF): %.3f\n", realTimeFactor);
     System.out.printf("-- text: %s\n", text);
     System.out.printf("-- Saved to %s\n", waveFilename);
 

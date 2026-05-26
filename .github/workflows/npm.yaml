@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.8"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.51
+          version: 4.0.23
           actions-cache-folder: 'emsdk-cache'
 
       - name: View emsdk version

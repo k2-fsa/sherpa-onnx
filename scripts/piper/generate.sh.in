@@ -12,8 +12,15 @@ log() {
 }
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/lexicon-zh-g2pw.txt
+
+wget -qq https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+wget -qq https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+wget -qq https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
 tar xf espeak-ng-data.tar.bz2
 rm espeak-ng-data.tar.bz2
+ls -lh lexicon-zh-g2pw.txt
 
 mkdir -p release
 
@@ -50,7 +57,16 @@ mv -v README $dst/ || true
 mv -v README.md $dst/ || true
 mv -v LICENSE.txt $dst/ || true
 mv -v *.json  $dst/
-cp -a ./espeak-ng-data $dst/
+if [[ ! $model_name =~ zh_CN-(xiao_ya|chaowen)-medium ]]; then
+  cp -a ./espeak-ng-data $dst/
+else
+  cp lexicon-zh-g2pw.txt $dst/lexicon.txt
+  cp date.fst $dst/
+  cp number.fst $dst/
+  cp phone.fst $dst/
+fi
+
+ls -lh $dst/
 
 cp -a $dst $dst_int8
 cp -a $dst $dst_fp16
@@ -79,6 +95,7 @@ if [ -d hf ]; then
   mkdir -p hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind
   for i in $(seq $num_speakers); do
     i=$((i-1))
+    cat ./generate_samples-$dst-$i.py
     python3 ./generate_samples-$dst-$i.py
   done
   ls -lh hf/piper/mp3/$lang/vits-piper-$lang-$name-$kind

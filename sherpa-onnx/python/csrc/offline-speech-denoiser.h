@@ -9,8 +9,10 @@
 
 namespace sherpa_onnx {
 
+void PybindDenoisedAudio(py::module *m);
+
 void PybindOfflineSpeechDenoiser(py::module *m);
 
-}
+}  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_PYTHON_CSRC_OFFLINE_SPEECH_DENOISER_H_

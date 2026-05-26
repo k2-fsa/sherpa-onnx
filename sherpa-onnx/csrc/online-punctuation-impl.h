@@ -8,10 +8,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
 
@@ -24,10 +20,9 @@ class OnlinePunctuationImpl {
   static std::unique_ptr<OnlinePunctuationImpl> Create(
       const OnlinePunctuationConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<OnlinePunctuationImpl> Create(
-      AAssetManager *mgr, const OnlinePunctuationConfig &config);
-#endif
+      Manager *mgr, const OnlinePunctuationConfig &config);
 
   virtual std::string AddPunctuationWithCase(const std::string &text) const = 0;
 };

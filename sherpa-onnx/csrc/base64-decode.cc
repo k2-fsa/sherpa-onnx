@@ -25,7 +25,7 @@ static int32_t Ord(char c) {
 
   SHERPA_ONNX_LOGE("Unknown character %d, %c\n", c, c);
 
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
 }
 
 // see
@@ -33,7 +33,7 @@ static int32_t Ord(char c) {
 std::string Base64Decode(const std::string &s) {
   if (s.empty()) {
     SHERPA_ONNX_LOGE("Empty string!");
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   int32_t n = static_cast<int32_t>(s.size()) / 4 * 3;

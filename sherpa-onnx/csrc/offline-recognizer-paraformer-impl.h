@@ -13,6 +13,7 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model.h"

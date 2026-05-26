@@ -131,13 +131,15 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OnlineRecognizerConfig::Validate() const {
-  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
+  if (decoding_method == "modified_beam_search") {
     if (max_active_paths <= 0) {
-      SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",
+      SHERPA_ONNX_LOGE("max_active_paths must be > 0. Given: %d",
                        max_active_paths);
       return false;
     }
+  }
 
+  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (!lm_config.Validate()) {
       return false;
     }

@@ -60,8 +60,8 @@ Note that you need a non-streaming model for this script.
 
 ./python-api-examples/vad-with-non-streaming-asr.py  \
   --silero-vad-model=/path/to/silero_vad.onnx \
-  --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.onnx \
-  --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
+  --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx \
+  --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt \
   --num-threads=2
 
 Please refer to

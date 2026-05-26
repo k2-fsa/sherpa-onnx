@@ -69,6 +69,7 @@ def get_binaries():
         "sherpa-onnx-offline-tts",
         "sherpa-onnx-offline-tts-play",
         "sherpa-onnx-offline-websocket-server",
+        "sherpa-onnx-online-denoiser",
         "sherpa-onnx-online-punctuation",
         "sherpa-onnx-online-websocket-client",
         "sherpa-onnx-online-websocket-server",
@@ -189,16 +190,12 @@ class BuildExtension(build_ext):
 
             print(f"build command is:\n{build_cmd}")
 
-            # Build cmake command as a list to prevent command injection
-            # Use shlex.split() for safer parsing of user-provided arguments
             cmake_configure_cmd = (
-                ["cmake"]
-                + shlex.split(cmake_args)
-                + ["-B", str(self.build_temp), "-S", str(sherpa_onnx_dir)]
+                f'cmake {cmake_args} -B "{self.build_temp}" -S "{sherpa_onnx_dir}"'
             )
             print("cmake_configure_cmd", cmake_configure_cmd)
 
-            ret = subprocess.run(cmake_configure_cmd, shell=False).returncode
+            ret = subprocess.run(cmake_configure_cmd, shell=True).returncode
 
             if ret != 0:
                 raise Exception("Failed to configure sherpa-onnx")

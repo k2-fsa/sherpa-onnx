@@ -28,8 +28,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   // Check if we should collect attention weights for DTW timestamp computation
-  bool collect_attention = config_.enable_token_timestamps &&
-                           model_->HasAttentionOutput();
+  bool collect_attention =
+      config_.enable_token_timestamps && model_->HasAttentionOutput();
 
   // Warn once if timestamps requested but model doesn't support it
   static bool warned_no_attention = false;
@@ -56,7 +56,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 
       if (!lang2id.count(config_.language)) {
         SHERPA_ONNX_LOGE("Invalid language: %s", config_.language.c_str());
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       int32_t lang_id = lang2id.at(config_.language);
@@ -126,11 +126,13 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       std::move(offset));
 
   // Note: decoder_out is now a 7-tuple with attention weights as 7th element
-  // Indices: 0=logits, 1=self_k, 2=self_v, 3=cross_k, 4=cross_v, 5=offset, 6=attention
+  // Indices: 0=logits, 1=self_k, 2=self_v, 3=cross_k, 4=cross_v, 5=offset,
+  // 6=attention
   *(std::get<5>(decoder_out).GetTensorMutableData<int64_t>()) =
       initial_tokens.size();
 
-  auto logits_shape = std::get<0>(decoder_out).GetTensorTypeAndShapeInfo().GetShape();
+  auto logits_shape =
+      std::get<0>(decoder_out).GetTensorTypeAndShapeInfo().GetShape();
   int32_t vocab_size = logits_shape[2];
 
   int32_t n_text_ctx = model_->TextCtx();
@@ -181,7 +183,8 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       for (int32_t t = 0; t < n_initial_tokens; ++t) {
         std::vector<float> token_attn(attention_n_heads * attention_n_frames);
         for (int32_t h = 0; h < attention_n_heads; ++h) {
-          const float *src = p_attn + h * n_initial_tokens * stride + t * stride;
+          const float *src =
+              p_attn + h * n_initial_tokens * stride + t * stride;
           std::copy(src, src + attention_n_frames,
                     token_attn.begin() + h * attention_n_frames);
         }
@@ -290,10 +293,12 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
     ans[0].num_audio_frames = num_feature_frames / 2;
 
     // Flatten to (n_heads, n_tokens, n_frames)
-    ans[0].attention_weights.resize(attention_n_heads * n_tokens * attention_n_frames);
+    ans[0].attention_weights.resize(attention_n_heads * n_tokens *
+                                    attention_n_frames);
     for (int32_t h = 0; h < attention_n_heads; ++h) {
       for (int32_t t = 0; t < n_tokens; ++t) {
-        const float *src = all_attention_weights[t].data() + h * attention_n_frames;
+        const float *src =
+            all_attention_weights[t].data() + h * attention_n_frames;
         float *dst = ans[0].attention_weights.data() +
                      h * n_tokens * attention_n_frames + t * attention_n_frames;
         std::copy(src, src + attention_n_frames, dst);

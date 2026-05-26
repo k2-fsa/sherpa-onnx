@@ -92,7 +92,7 @@ class FeatureExtractor::Impl {
             "You changed the input sampling rate!! Expected: %d, given: "
             "%d",
             resampler_->GetInputSamplingRate(), sampling_rate);
-        exit(-1);
+        SHERPA_ONNX_EXIT(-1);
       }
 
       std::vector<float> samples;

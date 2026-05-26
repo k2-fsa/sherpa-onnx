@@ -231,8 +231,13 @@ int32_t main(int32_t argc, char *argv[]) {
 
   const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
 
+  SherpaOnnxGenerationConfig cfg = {0};
+  cfg.silence_scale = 0.2f;
+  cfg.sid = sid;
+  cfg.speed = 1.0f;
+
   const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerate(tts, text, sid, 1.0);
+      SherpaOnnxOfflineTtsGenerateWithConfig(tts, text, &cfg, NULL, NULL);
 
   SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate, filename);
 

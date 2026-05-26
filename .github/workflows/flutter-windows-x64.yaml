@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - flutter
+      - apk
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -38,7 +39,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2
+          python3 -m pip install --upgrade jinja2
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
@@ -103,7 +104,7 @@ jobs:
             SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-flutter huggingface
             cd huggingface
             git fetch
             git pull
@@ -117,7 +118,7 @@ jobs:
             git lfs track "*.bz2"
             git add .
             git commit -m "add more files"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-flutter main
 
   tts:
     name: tts ${{ matrix.index }}/${{ matrix.total }}
@@ -143,7 +144,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2 iso639-lang
+          python3 -m pip install --upgrade jinja2 iso639-lang
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -207,7 +208,7 @@ jobs:
             SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-flutter huggingface
             cd huggingface
             git fetch
             git pull
@@ -221,4 +222,4 @@ jobs:
             git lfs track "*.bz2"
             git add .
             git commit -m "add more files"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+            git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/sherpa-onnx-flutter main

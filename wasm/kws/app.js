@@ -205,7 +205,7 @@ if (navigator.mediaDevices.getUserMedia) {
   };
 
   let onError = function(err) {
-    console.log('The following error occured: ' + err);
+    console.log('The following error occurred: ' + err);
   };
 
   navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);

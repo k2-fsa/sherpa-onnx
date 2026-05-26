@@ -19,7 +19,7 @@ namespace sherpa_onnx {
  *           by spaces.
  * @param symbol_table  The tokens table mapping symbols to ids. All the symbols
  *                      in the stream should be in the symbol_table, if not this
- *                      function returns fasle.
+ *                      function returns false.
  *
  * @@param hotwords  The encoded ids to be written to.
  *
@@ -41,7 +41,7 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
  *           with @) too.
  * @param symbol_table  The tokens table mapping symbols to ids. All the symbols
  *                      in the stream should be in the symbol_table, if not this
- *                      function returns fasle.
+ *                      function returns false.
  *
  * @param keywords_id The encoded ids to be written to.
  * @param keywords The original keyword string to be written to.

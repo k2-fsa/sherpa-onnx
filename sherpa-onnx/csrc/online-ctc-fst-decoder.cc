@@ -98,13 +98,13 @@ void OnlineCtcFstDecoder::Decode(const float *log_probs, int32_t batch_size,
   if (batch_size != results->size()) {
     SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, results.size(0): %d",
                      batch_size, static_cast<int32_t>(results->size()));
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   if (batch_size != n) {
     SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, n: %d", batch_size,
                      n);
-    exit(-1);
+    SHERPA_ONNX_EXIT(-1);
   }
 
   const float *p = log_probs;

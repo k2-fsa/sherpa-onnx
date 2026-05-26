@@ -66,7 +66,7 @@ class Client {
     if (ec) {
       SHERPA_ONNX_LOGE("Could not create connection to %s because %s",
                        uri_.str().c_str(), ec.message().c_str());
-      exit(EXIT_FAILURE);
+      SHERPA_ONNX_EXIT(EXIT_FAILURE);
     }
 
     c_.connect(con);
@@ -86,7 +86,7 @@ class Client {
       c_.close(hdl, websocketpp::close::status::normal, "I'm exiting now", ec);
       if (ec) {
         SHERPA_ONNX_LOGE("Failed to close because %s", ec.message().c_str());
-        exit(EXIT_FAILURE);
+        SHERPA_ONNX_EXIT(EXIT_FAILURE);
       }
     } else {
       SHERPA_ONNX_LOGE("%s", payload.c_str());
@@ -123,7 +123,7 @@ class Client {
       if (ec) {
         SHERPA_ONNX_LOGE("Failed to send audio samples because %s",
                          ec.message().c_str());
-        exit(EXIT_FAILURE);
+        SHERPA_ONNX_EXIT(EXIT_FAILURE);
       }
 
       ec.clear();
@@ -142,7 +142,7 @@ class Client {
         if (ec) {
           SHERPA_ONNX_LOGE("Failed to send audio samples because %s",
                            ec.message().c_str());
-          exit(EXIT_FAILURE);
+          SHERPA_ONNX_EXIT(EXIT_FAILURE);
         }
         ec.clear();
       }
@@ -154,7 +154,7 @@ class Client {
       if (ec) {
         SHERPA_ONNX_LOGE("Failed to send audio samples because %s",
                          ec.message().c_str());
-        exit(EXIT_FAILURE);
+        SHERPA_ONNX_EXIT(EXIT_FAILURE);
       }
     } else {
       asio::post(io_, [this, hdl, start_time]() {

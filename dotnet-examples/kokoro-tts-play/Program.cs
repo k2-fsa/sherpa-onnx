@@ -38,6 +38,10 @@ class KokoroTtsPlayDemo
     // 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
     // 6->am_michael, 7->bf_emma, 8->bf_isabella, 9->bm_george, 10->bm_lewis
     var sid = 0;
+    OfflineTtsGenerationConfig genConfig = new OfflineTtsGenerationConfig();
+    genConfig.Sid = sid;
+    genConfig.Speed = speed;
+    genConfig.SilenceScale = 0.2f;
 
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
@@ -73,7 +77,7 @@ class KokoroTtsPlayDemo
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
     var dataItems = new BlockingCollection<float[]>();
 
-    var MyCallback = (IntPtr samples, int n, float progress) =>
+    var MyCallback = (IntPtr samples, int n, float progress, IntPtr arg) =>
     {
       Console.WriteLine($"Progress {progress*100}%");
 
@@ -165,9 +169,9 @@ class KokoroTtsPlayDemo
 
     stream.Start();
 
-    var callback = new OfflineTtsCallbackProgress(MyCallback);
+    var callback = new OfflineTtsCallbackProgressWithArg(MyCallback);
 
-    var audio = tts.GenerateWithCallbackProgress(text, speed, sid, callback);
+    var audio = tts.GenerateWithConfig(text, genConfig, callback);
     var outputFilename = "./generated-kokoro-0.wav";
     var ok = audio.SaveToWaveFile(outputFilename);
 

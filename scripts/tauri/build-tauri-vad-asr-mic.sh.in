@@ -1,0 +1,393 @@
+#!/usr/bin/env bash
+#
+# Auto generated! Please DO NOT EDIT!
+
+set -ex
+
+log() {
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="${SCRIPT_DIR}/tauri-examples/non-streaming-speech-recognition-from-microphone"
+SRC_DIR="${PROJECT_DIR}/src-tauri"
+
+log "SCRIPT_DIR=$SCRIPT_DIR"
+log "PROJECT_DIR=$PROJECT_DIR"
+log "SRC_DIR=$SRC_DIR"
+
+# Detect current platform
+detect_platform() {
+  local os arch
+  os="$(uname -s)"
+  arch="$(uname -m)"
+  case "$os" in
+    Linux)
+      case "$arch" in
+        x86_64)  echo "linux-x64" ;;
+        aarch64) echo "linux-aarch64" ;;
+        *)       log "Unsupported Linux arch: $arch"; exit 1 ;;
+      esac
+      ;;
+    Darwin)
+      echo "macos-$(uname -m)"
+      ;;
+    MINGW*|MSYS*|CYGWIN*)
+      echo "windows-x64"
+      ;;
+    *)
+      log "Unsupported OS: $os"
+      exit 1
+      ;;
+  esac
+}
+
+PLATFORM="$(detect_platform)"
+log "Detected platform: $PLATFORM"
+
+# Rust targets per platform
+RUST_TARGET=""
+case "$PLATFORM" in
+  linux-x64)       RUST_TARGET="x86_64-unknown-linux-gnu" ;;
+  linux-aarch64)   RUST_TARGET="aarch64-unknown-linux-gnu" ;;
+  macos-x86_64)    RUST_TARGET="x86_64-apple-darwin" ;;
+  macos-arm64)     RUST_TARGET="aarch64-apple-darwin" ;;
+  windows-x64)     RUST_TARGET="x86_64-pc-windows-msvc" ;;
+  *)               log "Unknown platform: $PLATFORM"; exit 1 ;;
+esac
+log "Rust target: $RUST_TARGET"
+
+# Install system deps on Linux
+install_deps() {
+  if [[ "$PLATFORM" == linux-* ]]; then
+    log "Installing Linux system dependencies"
+    sudo apt-get update
+    sudo apt-get install -y \
+      libwebkit2gtk-4.1-dev \
+      libgtk-3-dev \
+      libayatana-appindicator3-dev \
+      librsvg2-dev \
+      patchelf \
+      libasound2-dev
+    log "Linux dependencies installed"
+  fi
+}
+
+install_deps
+
+log "Adding Rust target: $RUST_TARGET"
+rustup target add "$RUST_TARGET"
+
+mkdir -p "${PROJECT_DIR}/dist-2"
+
+{% for model in model_list %}
+
+cd "${PROJECT_DIR}"
+
+log "PWD: $PWD"
+
+log "============================================================"
+log "Building model {{ model.idx }}: {{ model.model_name }}"
+log "============================================================"
+
+model_name={{ model.model_name }}
+type={{ model.idx }}
+short_name={{ model.short_name }}
+lang={{ model.lang }}
+
+log "model_name=$model_name"
+log "type=$type"
+log "short_name=$short_name"
+log "lang=$lang"
+
+# Clean dist from previous model builds
+log "Cleaning dist directory"
+rm -rf "${PROJECT_DIR}/dist"
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" "${SCRIPT_DIR}/CMakeLists.txt" | cut -d " " -f 2 | cut -d '"' -f 2)
+log "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION"
+
+# Download model
+if [ ! -d "$model_name" ]; then
+  log "Downloading model: $model_name"
+  curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2 || {
+    log "ERROR: failed to download model $model_name"
+    exit 1
+  }
+  log "Extracting model archive"
+  tar xvf ${model_name}.tar.bz2 || {
+    log "ERROR: failed to extract model archive"
+    exit 1
+  }
+  rm -f ${model_name}.tar.bz2
+  log "Model downloaded and extracted"
+else
+  log "Model already exists: $model_name"
+fi
+
+log "Checking model directory: $model_name"
+if [ ! -d "$model_name" ]; then
+  log "ERROR: model directory '$model_name' does not exist"
+  log "Current directory contents:"
+  ls -la
+  exit 1
+fi
+log "Model directory OK"
+ls -lh "$model_name"
+
+{{ model.cmd }}
+
+log "After model cmd, checking directory again"
+if [ ! -d "$model_name" ]; then
+  log "ERROR: model directory '$model_name' was deleted by model cmd"
+  ls -la
+  exit 1
+fi
+
+# Download Silero VAD
+if [ ! -f silero_vad.onnx ]; then
+  log "Downloading silero_vad.onnx"
+  curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  log "silero_vad.onnx downloaded"
+else
+  log "silero_vad.onnx already exists"
+fi
+
+{% if model.rule_fsts %}
+rule_fsts={{ model.rule_fsts }}
+if [ ! -f "$rule_fsts" ]; then
+  log "Downloading rule_fsts: $rule_fsts"
+  curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${rule_fsts}
+  log "rule_fsts downloaded"
+else
+  log "rule_fsts already exists: $rule_fsts"
+fi
+{% endif %}
+
+# Patch MODEL_TYPE and MODEL_NAME in lib.rs
+log "Patching MODEL_TYPE=$type and MODEL_NAME=$model_name in lib.rs"
+cd "${SRC_DIR}"
+sed -i.bak "s/const MODEL_TYPE: u32 = [0-9]*;/const MODEL_TYPE: u32 = ${type};/" src/lib.rs
+sed -i.bak "s/const MODEL_NAME: \&str = \".*\";/const MODEL_NAME: \&str = \"${model_name}\";/" src/lib.rs
+
+# Patch bundle targets to minimize build time
+if [[ "$PLATFORM" == macos-* ]]; then
+  log "Patching tauri.conf.json: targets=[\"app\"]"
+  sed -i.bak 's/"targets": \[.*\]/"targets": ["app"]/' tauri.conf.json
+else
+  log "Patching tauri.conf.json: targets=[]"
+  sed -i.bak 's/"targets": \[.*\]/"targets": []/' tauri.conf.json
+fi
+
+# Generate icon.ico from icon.png (needed by Tauri bundler on all platforms)
+if [ ! -f icons/icon.ico ]; then
+  log "Generating icons/icon.ico from icons/icon.png"
+  PYTHON=python3
+  command -v python3 >/dev/null 2>&1 || PYTHON=python
+  $PYTHON -c "
+from PIL import Image
+img = Image.open('icons/icon.png')
+img.save('icons/icon.ico', sizes=[(16,16),(32,32),(48,48),(256,256)])
+"
+  if [ ! -f icons/icon.ico ]; then
+    log "ERROR: Failed to generate icons/icon.ico"
+    exit 1
+  fi
+  log "icons/icon.ico generated"
+else
+  log "icons/icon.ico already exists"
+fi
+
+git diff .
+
+# Copy model, vad, and rule_fsts into src-tauri/assets/ for Tauri bundling
+log "Preparing assets directory"
+mkdir -p "${SRC_DIR}/assets"
+cd "${PROJECT_DIR}"
+log "About to copy model dir, checking existence: $model_name"
+ls -la
+if [ ! -d "$model_name" ]; then
+  log "FATAL: model directory '$model_name' does not exist at copy time"
+  pwd
+  ls -la
+  exit 1
+fi
+cp -a "$model_name" "${SRC_DIR}/assets/"
+cp -a silero_vad.onnx "${SRC_DIR}/assets/"
+{% if model.rule_fsts %}
+cp -a {{ model.rule_fsts }} "${SRC_DIR}/assets/"
+{% endif %}
+{% if model.use_hr %}
+if [ ! -f "${SRC_DIR}/assets/lexicon.txt" ]; then
+  log "Downloading homophone replacer files"
+  cd "${SRC_DIR}/assets"
+  curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/lexicon.txt
+  curl -fSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/hr-files/replace.fst
+  cd "${PROJECT_DIR}"
+  log "Homophone replacer files downloaded"
+fi
+{% endif %}
+log "Assets prepared:"
+ls -lhR "${SRC_DIR}/assets/"
+
+# Build
+log "Building for $PLATFORM (target: $RUST_TARGET)"
+cd "${SRC_DIR}"
+cargo tauri build --target "$RUST_TARGET"
+log "Build completed for $RUST_TARGET"
+ls -lh "target/${RUST_TARGET}/release/bundle/" || true
+
+# On macOS arm64, also build x64 and create universal binary
+if [[ "$PLATFORM" == "macos-arm64" ]]; then
+  OTHER_TARGET="x86_64-apple-darwin"
+
+  rustup target add "$OTHER_TARGET"
+  log "Building for other macOS arch: $OTHER_TARGET"
+  cargo tauri build --target "$OTHER_TARGET"
+  log "Build completed for $OTHER_TARGET"
+
+  # Create universal binary via lipo
+  ARTIFACT_PREFIX="vad-asr-mic-${SHERPA_ONNX_VERSION}-${lang}-${short_name}"
+  x64_bin="target/x86_64-apple-darwin/release/non-streaming-speech-recognition-from-microphone"
+  arm64_bin="target/aarch64-apple-darwin/release/non-streaming-speech-recognition-from-microphone"
+  binary_name="non-streaming-speech-recognition-from-microphone"
+  app_name="${binary_name}.app"
+
+  arm64_app="target/aarch64-apple-darwin/release/bundle/macos/$app_name"
+  universal_dir="target/universal2-apple-darwin/release/bundle/macos"
+  mkdir -p "$universal_dir"
+  # Copy the full arm64 .app as a starting point (includes Info.plist, icons, etc.)
+  cp -a "$arm64_app" "$universal_dir/$app_name"
+  # Replace the arm64-only binary with the universal one
+  lipo -create "$x64_bin" "$arm64_bin" \
+    -output "$universal_dir/$app_name/Contents/MacOS/$binary_name"
+  log "Universal binary created via lipo"
+  file "$universal_dir/$app_name/Contents/MacOS/$binary_name"
+
+  # Rename binary and .app to model-specific names
+  log "Renaming .app to ${ARTIFACT_PREFIX}-universal.app"
+  mv "$universal_dir/$app_name/Contents/MacOS/$binary_name" \
+     "$universal_dir/$app_name/Contents/MacOS/${ARTIFACT_PREFIX}"
+  # Update CFBundleExecutable in Info.plist
+  sed -i.bak "s|<string>${binary_name}</string>|<string>${ARTIFACT_PREFIX}</string>|g" "$universal_dir/$app_name/Contents/Info.plist"
+  rm -f "$universal_dir/$app_name/Contents/Info.plist.bak"
+  mv "$universal_dir/$app_name" "$universal_dir/${ARTIFACT_PREFIX}-universal.app"
+  # Re-sign ad-hoc so macOS will allow launching
+  codesign --force --sign - --deep \
+    "$universal_dir/${ARTIFACT_PREFIX}-universal.app"
+  log "Renamed .app: $universal_dir/${ARTIFACT_PREFIX}-universal.app"
+  ls -lhR "$universal_dir/${ARTIFACT_PREFIX}-universal.app/Contents/" || true
+fi
+
+# Collect artifacts into dist/ (flat structure)
+DIST_DIR="${PROJECT_DIR}/dist"
+mkdir -p "${DIST_DIR}"
+
+ARTIFACT_PREFIX="vad-asr-mic-${SHERPA_ONNX_VERSION}-${lang}-${short_name}"
+log "ARTIFACT_PREFIX=$ARTIFACT_PREFIX"
+
+# Copy platform bundles (dmg, deb, rpm, app, etc.)
+log "Copying platform bundles to dist/"
+cp -r target/${RUST_TARGET}/release/bundle/*/* "${DIST_DIR}/" 2>/dev/null || true
+log "Contents of dist/ after bundle copy:"
+ls -lh "${DIST_DIR}/" || true
+
+# Rename native .app to model name (will be deleted if universal is built)
+for f in "${DIST_DIR}"/non-streaming-speech-recognition-from-microphone.app; do
+  if [ -e "$f" ]; then
+    log "Renaming native .app to ${ARTIFACT_PREFIX}.app"
+    mv "$f" "${DIST_DIR}/${ARTIFACT_PREFIX}.app"
+  fi
+done
+
+# Collect universal .app on macOS (replaces native)
+if [[ "$PLATFORM" == "macos-arm64" ]]; then
+  # Delete native .app — we only ship universal
+  rm -rf "${DIST_DIR}/${ARTIFACT_PREFIX}.app"
+
+  app_dir="target/universal2-apple-darwin/release/bundle/macos/${ARTIFACT_PREFIX}-universal.app"
+  if [ -d "$app_dir" ]; then
+    log "Creating universal .app tar.bz2"
+    cd "$(dirname "$app_dir")"
+    tar cjf "${DIST_DIR}/${ARTIFACT_PREFIX}-universal.app.tar.bz2" "$(basename "$app_dir")"
+    cd "${SRC_DIR}"
+    log "Universal .app archived"
+  else
+    log "WARNING: universal .app not found at $app_dir"
+  fi
+fi
+
+# Portable archives (no install needed)
+if [[ "$PLATFORM" == windows-* ]]; then
+  PORTABLE_NAME="${ARTIFACT_PREFIX}-windows-x64"
+  PORTABLE_DIR="${DIST_DIR}/${PORTABLE_NAME}"
+  log "Creating Windows portable archive: ${PORTABLE_NAME}.zip"
+  mkdir -p "${PORTABLE_DIR}"
+  cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-microphone.exe "${PORTABLE_DIR}/${ARTIFACT_PREFIX}.exe"
+  cp -a "${SRC_DIR}/assets" "${PORTABLE_DIR}/"
+  cd "${DIST_DIR}"
+  PYTHON=python3
+  command -v python3 >/dev/null 2>&1 || PYTHON=python
+  $PYTHON -c "
+import zipfile, os, sys
+with zipfile.ZipFile(sys.argv[1], 'w', zipfile.ZIP_DEFLATED) as zf:
+    for root, dirs, files in os.walk(sys.argv[2]):
+        for f in files:
+            p = os.path.join(root, f)
+            zf.write(p, p)
+" "${PORTABLE_NAME}.zip" "${PORTABLE_NAME}"
+  rm -rf "${PORTABLE_NAME}"
+  cd "${SRC_DIR}"
+  log "Windows portable archive created"
+elif [[ "$PLATFORM" == linux-* ]]; then
+  PORTABLE_NAME="${ARTIFACT_PREFIX}-${PLATFORM}"
+  PORTABLE_DIR="${DIST_DIR}/${PORTABLE_NAME}"
+  log "Creating Linux portable archive: ${PORTABLE_NAME}.tar.gz"
+  mkdir -p "${PORTABLE_DIR}"
+  cp -v target/${RUST_TARGET}/release/non-streaming-speech-recognition-from-microphone "${PORTABLE_DIR}/${ARTIFACT_PREFIX}"
+  cp -a "${SRC_DIR}/assets" "${PORTABLE_DIR}/"
+  cd "${DIST_DIR}"
+  tar czf "${PORTABLE_NAME}.tar.gz" "${PORTABLE_NAME}/"
+  rm -rf "${PORTABLE_NAME}"
+  cd "${SRC_DIR}"
+  log "Linux portable archive created"
+fi
+
+# Remove Tauri build artifacts not needed for deployment
+log "Cleaning up unwanted build artifacts from dist/"
+rm -f "${DIST_DIR}/bundle_dmg.sh"
+rm -rf "${DIST_DIR}/create-dmg"
+rm -f "${DIST_DIR}"/*.icns
+rm -f "${DIST_DIR}"/*.dmg
+rm -f "${DIST_DIR}"/*.deb
+rm -f "${DIST_DIR}"/*.rpm
+rm -f "${DIST_DIR}"/*.AppImage
+rm -f "${DIST_DIR}"/*.msi
+rm -f "${DIST_DIR}"/*.exe
+log "Cleanup done"
+
+# Restore and clean up
+log "Restoring patched files and cleaning up assets"
+cd "${SRC_DIR}"
+git checkout src/lib.rs tauri.conf.json 2>/dev/null || true
+rm -f icons/icon.ico
+rm -rf assets
+
+log "Final dist/ contents for model $model_name:"
+
+ls -lh ${PROJECT_DIR}/dist/
+
+cp -v ${PROJECT_DIR}/dist/* ${PROJECT_DIR}/dist-2/
+
+ls -lh "${PROJECT_DIR}/dist-2/"
+
+{% endfor %}
+
+rm  -rf "${PROJECT_DIR}/dist"
+
+mv "${PROJECT_DIR}/dist-2" "${PROJECT_DIR}/dist"
+
+log "Done! Artifacts in ${PROJECT_DIR}/dist/"
+
+ls -lh "${PROJECT_DIR}/dist/"

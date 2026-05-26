@@ -46,9 +46,9 @@ def get_args():
         help="""Path to the input texts.
 
         Each line in the texts contains the original phrase, it might also contain some
-        extra items, for example, the boosting score (startting with :), the triggering
-        threshold (startting with #, only used in keyword spotting task) and the original
-        phrase (startting with @). Note: extra items will be kept in the output.
+        extra items, for example, the boosting score (starting with :), the triggering
+        threshold (starting with #, only used in keyword spotting task) and the original
+        phrase (starting with @). Note: extra items will be kept in the output.
 
         example input 1 (tokens_type = ppinyin):
 

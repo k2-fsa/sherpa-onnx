@@ -4,6 +4,17 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 # Usage
 
+## Non-streaming speech enhancement
+
+```bash
+./run-non-streaming-speech-enhancement-gtcrn.sh
+./run-non-streaming-speech-enhancement-dpdfnet.sh
+```
+
+Use 16 kHz DPDFNet models such as
+`dpdfnet_baseline.onnx`, `dpdfnet2.onnx`, `dpdfnet4.onnx`, or `dpdfnet8.onnx` for
+downstream ASR and `dpdfnet2_48khz_hr.onnx` for 48 kHz enhancement output.
+
 ## Non-streaming speaker diarization
 
 ```bash
@@ -65,6 +76,7 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-tts-piper-en.sh
 ./run-non-streaming-tts-vits-zh.sh
 ./run-pocket-tts.sh
+./run-zipvoice-tts.sh
 ```
 
 ## Non-Streaming text-to-speech (Playback the audio as it is being generated)

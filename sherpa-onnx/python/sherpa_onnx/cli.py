@@ -75,9 +75,9 @@ def encode_text(
     """
     Encode the texts given by the INPUT to tokens and write the results to the OUTPUT.
     Each line in the texts contains the original phrase, it might also contain some
-    extra items, for example, the boosting score (startting with :), the triggering
-    threshold (startting with #, only used in keyword spotting task) and the original
-    phrase (startting with @). Note: the extra items will be kept same in the output.
+    extra items, for example, the boosting score (starting with :), the triggering
+    threshold (starting with #, only used in keyword spotting task) and the original
+    phrase (starting with @). Note: the extra items will be kept same in the output.
 
     example input 1 (tokens_type = ppinyin):
 

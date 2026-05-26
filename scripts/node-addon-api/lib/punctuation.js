@@ -1,6 +1,7 @@
 /** @typedef {import('./types').OfflinePunctuationHandle} OfflinePunctuationHandle */
 /** @typedef {import('./types').OfflinePunctuationConfig} OfflinePunctuationConfig */
 /** @typedef {import('./types').OnlinePunctuationConfig} OnlinePunctuationConfig */
+/** @typedef {import('./types').OnlinePunctuationHandle} OnlinePunctuationHandle */
 
 const addon = require('./addon.js');
 

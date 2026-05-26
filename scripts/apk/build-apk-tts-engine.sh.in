@@ -43,6 +43,14 @@ voices={{ tts_model.voices }}
 lang={{ tts_model.lang }}
 lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 lang_iso_639_3_2={{ tts_model.lang_iso_639_3_2 }}
+is_supertonic={{ tts_model.is_supertonic }}
+supertonic_duration_predictor={{ tts_model.supertonic_duration_predictor }}
+supertonic_text_encoder={{ tts_model.supertonic_text_encoder }}
+supertonic_vector_estimator={{ tts_model.supertonic_vector_estimator }}
+supertonic_vocoder={{ tts_model.supertonic_vocoder }}
+supertonic_tts_json={{ tts_model.supertonic_tts_json }}
+supertonic_unicode_indexer={{ tts_model.supertonic_unicode_indexer }}
+supertonic_voice_style={{ tts_model.supertonic_voice_style }}
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
 tar xf $model_dir.tar.bz2
@@ -66,6 +74,18 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.is_kitten %}
   sed -i.bak s/"isKitten = false"/"isKitten = true"/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.is_supertonic %}
+  sed -i.bak s/"isSupertonic = false"/"isSupertonic = true"/ ./TtsEngine.kt
+  sed -i.bak s/"durationPredictor: String? = null"/"durationPredictor: String? = \"$supertonic_duration_predictor\""/ ./TtsEngine.kt
+  sed -i.bak s/"textEncoder: String? = null"/"textEncoder: String? = \"$supertonic_text_encoder\""/ ./TtsEngine.kt
+  sed -i.bak s/"vectorEstimator: String? = null"/"vectorEstimator: String? = \"$supertonic_vector_estimator\""/ ./TtsEngine.kt
+  sed -i.bak s/"supertonicVocoder: String? = null"/"supertonicVocoder: String? = \"$supertonic_vocoder\""/ ./TtsEngine.kt
+  sed -i.bak s/"ttsJson: String? = null"/"ttsJson: String? = \"$supertonic_tts_json\""/ ./TtsEngine.kt
+  sed -i.bak s/"unicodeIndexer: String? = null"/"unicodeIndexer: String? = \"$supertonic_unicode_indexer\""/ ./TtsEngine.kt
+  sed -i.bak s/"voiceStyle: String? = null"/"voiceStyle: String? = \"$supertonic_voice_style\""/ ./TtsEngine.kt
+  sed -i.bak s/"var supertonicLang: String = \"en\""/"var supertonicLang: String = \"$lang\""/ ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.model_name %}
@@ -142,7 +162,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
+  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang_iso_639_3-tts-engine-$model_dir.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxTtsEngine/app/src/main/jniLibs/$arch/*.so
 done

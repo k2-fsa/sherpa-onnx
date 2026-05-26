@@ -11,7 +11,7 @@
 
 namespace sherpa_onnx {
 
-TEST(Tranpose, Tranpose01) {
+TEST(Transpose, Tranpose01) {
   Ort::AllocatorWithDefaultOptions allocator;
   std::array<int64_t, 3> shape{3, 2, 5};
   Ort::Value v =
@@ -35,7 +35,7 @@ TEST(Tranpose, Tranpose01) {
   }
 }
 
-TEST(Tranpose, Tranpose12) {
+TEST(Transpose, Tranpose12) {
   Ort::AllocatorWithDefaultOptions allocator;
   std::array<int64_t, 3> shape{3, 2, 5};
   Ort::Value v =

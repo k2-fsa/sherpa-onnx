@@ -134,6 +134,10 @@ bool OnlineModelConfig::Validate() const {
     }
   }
 
+  if (!provider_config.Validate()) {
+    return false;
+  }
+
   if (!paraformer.encoder.empty()) {
     return paraformer.Validate();
   }
@@ -152,10 +156,6 @@ bool OnlineModelConfig::Validate() const {
 
   if (!t_one_ctc.model.empty()) {
     return t_one_ctc.Validate();
-  }
-
-  if (!provider_config.Validate()) {
-    return false;
   }
 
   return transducer.Validate();

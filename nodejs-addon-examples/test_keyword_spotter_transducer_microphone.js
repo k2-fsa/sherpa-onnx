@@ -1,7 +1,7 @@
 // Copyright (c)  2023-2024  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-const portAudio = require('naudiodon2');
-// console.log(portAudio.getDevices());
+const cpal = require('node-cpal');
+
 
 const sherpa_onnx = require('sherpa-onnx-node');
 
@@ -39,36 +39,37 @@ const stream = kws.createStream();
 let lastText = '';
 let segmentIndex = 0;
 
-const ai = new portAudio.AudioIO({
-  inOptions: {
-    channelCount: 1,
-    closeOnError: true,  // Close the stream if an audio error is detected, if
-                         // set false then just log the error
-    deviceId: -1,  // Use -1 or omit the deviceId to select the default device
-    sampleFormat: portAudio.SampleFormatFloat32,
-    sampleRate: kws.config.featConfig.sampleRate
-  }
-});
+const inputDevice = cpal.getDefaultInputDevice();
+const deviceConfig = cpal.getDefaultInputConfig(inputDevice.deviceId);
+const nativeSampleRate = deviceConfig.sampleRate;
+const targetSampleRate = kws.config.featConfig.sampleRate;
 
+const resampler = new sherpa_onnx.LinearResampler(nativeSampleRate, targetSampleRate);
 const display = new sherpa_onnx.Display(50);
 
-ai.on('data', data => {
-  const samples = new Float32Array(data.buffer);
+const inputStream = cpal.createStream(
+    inputDevice.deviceId,
+    true,
+    {
+      sampleRate: nativeSampleRate,
+      channels: 1,
+      format: 'f32',
+    },
+    (data) => {
+      const resampled = resampler.resample(data);
+      stream.acceptWaveform(
+          {sampleRate: targetSampleRate, samples: resampled});
 
-  stream.acceptWaveform(
-      {sampleRate: kws.config.featConfig.sampleRate, samples: samples});
+      while (kws.isReady(stream)) {
+        kws.decode(stream);
+      }
 
-  while (kws.isReady(stream)) {
-    kws.decode(stream);
-  }
+      const keyword = kws.getResult(stream).keyword;
+      if (keyword != '') {
+        display.print(segmentIndex, keyword);
+        segmentIndex += 1;
+      }
+    });
 
-  const keyword = kws.getResult(stream).keyword;
-  if (keyword != '') {
-    display.print(segmentIndex, keyword);
-    segmentIndex += 1;
-  }
-});
-
-ai.start();
-console.log('Started! Please speak.')
-console.log(`Only words from ${kws.config.keywordsFile} can be recognized`)
+console.log('Started! Please speak.');
+console.log(`Only words from ${kws.config.keywordsFile} can be recognized`);

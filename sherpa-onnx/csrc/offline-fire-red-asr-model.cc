@@ -3,6 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-fire-red-asr-model.h"
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <algorithm>
 #include <cmath>
@@ -42,21 +43,21 @@ class OfflineFireRedAsrModel::Impl {
  public:
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
-    {
-      auto buf = ReadFile(config.fire_red_asr.encoder);
-      InitEncoder(buf.data(), buf.size());
-    }
+    encoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.fire_red_asr.encoder),
+        sess_opts_);
+    InitEncoder(nullptr, 0);
 
-    {
-      auto buf = ReadFile(config.fire_red_asr.decoder);
-      InitDecoder(buf.data(), buf.size());
-    }
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(config.fire_red_asr.decoder),
+        sess_opts_);
+    InitDecoder(nullptr, 0);
 
     InitCudaIOBinding();
   }
@@ -64,11 +65,11 @@ class OfflineFireRedAsrModel::Impl {
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_ERROR),
+        env_(CreateOrtEnv()),
         sess_opts_(GetSessionOptions(config)),
         allocator_{},
-        cpu_mem_info_(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator,
-                                                 OrtMemTypeDefault)),
+        cpu_mem_info_(
+            Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault)),
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     {
       auto buf = ReadFile(mgr, config.fire_red_asr.encoder);
@@ -188,8 +189,15 @@ class OfflineFireRedAsrModel::Impl {
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
-    encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      encoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!encoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the encoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                   &encoder_input_names_ptr_);
@@ -225,8 +233,15 @@ class OfflineFireRedAsrModel::Impl {
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
-    decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, model_data, model_data_length, sess_opts_);
+    if (model_data) {
+      decoder_sess_ = std::make_unique<Ort::Session>(
+          env_, model_data, model_data_length, sess_opts_);
+    } else if (!decoder_sess_) {
+      SHERPA_ONNX_LOGE(
+          "Please pass model data or initialize the decoder session outside of "
+          "this function");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     GetInputNames(decoder_sess_.get(), &decoder_input_names_,
                   &decoder_input_names_ptr_);
@@ -236,7 +251,8 @@ class OfflineFireRedAsrModel::Impl {
   }
 
   void InitCudaIOBinding() {
-    use_cuda_iobinding_ = (!is_cpu_provider_ && IsCudaProvider(config_.provider));
+    use_cuda_iobinding_ =
+        (!is_cpu_provider_ && IsCudaProvider(config_.provider));
     if (use_cuda_iobinding_) {
       // Use device 0 by default. SessionOptions() in sherpa-onnx usually
       // configures the CUDA EP device; binding here only affects output memory.

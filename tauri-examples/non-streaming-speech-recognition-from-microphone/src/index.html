@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sherpa-ONNX Microphone Recognition</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1><a href="https://github.com/k2-fsa/sherpa-onnx" rel="noopener noreferrer">Sherpa-ONNX</a></h1>
+      <h2>Non-Streaming Speech Recognition from Microphone</h2>
+      <p class="subtitle">
+        Captures microphone audio, uses VAD to detect speech segments, then
+        recognizes each segment with an offline ASR model.
+      </p>
+      <p class="source-link">
+        <a href="https://github.com/k2-fsa/sherpa-onnx/tree/master/tauri-examples/non-streaming-speech-recognition-from-microphone">Source code</a>
+      </p>
+
+      <div class="actions">
+        <select id="device-select" disabled>
+          <option value="">Loading devices...</option>
+        </select>
+        <button id="start-btn" disabled>Start Recording</button>
+        <button id="stop-btn" style="display: none">Stop Recording</button>
+        <button id="clear-btn" disabled>Clear</button>
+        <button id="settings-btn" title="Settings" disabled>&#9881;</button>
+      </div>
+
+      <p id="status" class="status"></p>
+
+      <div id="recording-indicator" class="recording-indicator" style="display: none">
+        <span class="rec-dot"></span>
+        <span>Recording...</span>
+        <span id="elapsed-timer" class="elapsed-timer">00:00</span>
+      </div>
+
+      <div id="results" class="results" style="display: none">
+        <h3>Recognition Results</h3>
+        <div class="result-actions">
+          <button id="copy-text-btn">Copy Text</button>
+          <button id="copy-timed-btn">Copy with Time</button>
+          <button id="export-srt-btn">Export SRT</button>
+          <button id="save-all-btn">Save All Audio</button>
+        </div>
+
+        <div id="player-wrapper" class="player-wrapper" style="display: none">
+          <audio id="player" controls></audio>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Text</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="settings-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+          <h3>VAD &amp; Recognizer Settings</h3>
+          <label>
+            VAD Threshold (0.0 &ndash; 1.0)
+            <input id="set-threshold" type="number" min="0" max="1" step="0.05" />
+          </label>
+          <label>
+            Min Silence Duration (s)
+            <input id="set-min-silence" type="number" min="0" step="0.1" />
+          </label>
+          <label>
+            Min Speech Duration (s)
+            <input id="set-min-speech" type="number" min="0" step="0.1" />
+          </label>
+          <label>
+            Max Speech Duration (s)
+            <input id="set-max-speech" type="number" min="0.5" step="0.5" />
+          </label>
+          <label>
+            Recognizer Threads (1 &ndash; 16)
+            <input id="set-num-threads" type="number" min="1" max="16" step="1" />
+          </label>
+          <div class="modal-actions">
+            <button id="settings-apply">Apply</button>
+            <button id="settings-cancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

@@ -51,7 +51,7 @@ if (!addon) {
        !process.env.DYLD_LIBRARY_PATH.includes(
            `node_modules/sherpa-onnx-${platform_arch}`))) {
     msg +=
-        'Please remeber to set the following environment variable and try again:\n';
+        'Please remember to set the following environment variable and try again:\n';
 
     msg += `export DYLD_LIBRARY_PATH=${addon_path}`;
 
@@ -63,7 +63,7 @@ if (!addon) {
        !process.env.LD_LIBRARY_PATH.includes(
            `node_modules/sherpa-onnx-${platform_arch}`))) {
     msg +=
-        'Please remeber to set the following environment variable and try again:\n';
+        'Please remember to set the following environment variable and try again:\n';
 
     msg += `export LD_LIBRARY_PATH=${addon_path}`;
 

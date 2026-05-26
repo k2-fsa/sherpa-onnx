@@ -16,6 +16,7 @@
 // clang-format on
 #include <array>
 #include <iostream>
+#include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 

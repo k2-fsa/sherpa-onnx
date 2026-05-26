@@ -25,7 +25,7 @@ func run() {
   // https://medium.com/codex/swift-c-callback-interoperability-6d57da6c8ee6
   let arg = Unmanaged<MyClass>.passUnretained(myClass).toOpaque()
 
-  let callback: TtsCallbackWithArg = { samples, n, arg in
+  let callback: TtsProgressCallbackWithArg = { samples, n, progress, arg in
     let o = Unmanaged<MyClass>.fromOpaque(arg!).takeUnretainedValue()
     var savedSamples: [Float] = []
     for index in 0..<n {
@@ -42,11 +42,13 @@ func run() {
 
   let text =
     "“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”"
-  let sid = 99
-  let speed: Float = 1.0
+  var genConfig = SherpaOnnxGenerationConfigSwift()
+  genConfig.sid = 99
+  genConfig.speed = 1.0
+  genConfig.silenceScale = 0.2
 
-  let audio = tts.generateWithCallbackWithArg(
-    text: text, callback: callback, arg: arg, sid: sid, speed: speed)
+  let audio = tts.generateWithConfig(
+    text: text, config: genConfig, callback: callback, arg: arg)
   let filename = "test-vits-en.wav"
   let ok = audio.save(filename: filename)
   if ok == 1 {

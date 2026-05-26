@@ -45,6 +45,14 @@ class TtsModel:
     lang_iso_639_3_2: str = ""
     lexicon: str = ""
     is_kitten: bool = False
+    is_supertonic: bool = False
+    supertonic_duration_predictor: str = ""
+    supertonic_text_encoder: str = ""
+    supertonic_vector_estimator: str = ""
+    supertonic_vocoder: str = ""
+    supertonic_tts_json: str = ""
+    supertonic_unicode_indexer: str = ""
+    supertonic_voice_style: str = ""
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -188,6 +196,8 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-es_ES-sharvard-medium"),
         TtsModel(model_dir="vits-piper-es_MX-ald-medium"),
         TtsModel(model_dir="vits-piper-es_MX-claude-high"),
+        TtsModel(model_dir="vits-piper-eu_ES-antton-medium"),
+        TtsModel(model_dir="vits-piper-eu_ES-maider-medium"),
         TtsModel(model_dir="vits-piper-fa_IR-amir-medium"),
         TtsModel(model_dir="vits-piper-fa_IR-ganji-medium"),
         TtsModel(model_dir="vits-piper-fa_IR-ganji_adabi-medium"),
@@ -236,11 +246,13 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-nl_BE-rdh-x_low"),
         TtsModel(model_dir="vits-piper-nl_NL-miro-high"),
         TtsModel(model_dir="vits-piper-nl_NL-dii-high"),
+        TtsModel(model_dir="vits-piper-nl_NL-alex-medium"),
         #  TtsModel(model_dir="vits-piper-nl_NL-mls-medium"),
         #  TtsModel(model_dir="vits-piper-nl_NL-mls_5809-low"),
         #  TtsModel(model_dir="vits-piper-nl_NL-mls_7432-low"),
         TtsModel(model_dir="vits-piper-no_NO-talesyntese-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-darkman-medium"),
+        TtsModel(model_dir="vits-piper-pl_PL-bass-high"),
         TtsModel(model_dir="vits-piper-pl_PL-gosia-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-jarvis_wg_glos-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-justyna_wg_glos-medium"),
@@ -263,23 +275,36 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-ru_RU-ruslan-medium"),
         TtsModel(model_dir="vits-piper-sk_SK-lili-medium"),
         TtsModel(model_dir="vits-piper-sl_SI-artur-medium"),
+        TtsModel(model_dir="vits-piper-sq_AL-edon-medium"),
         TtsModel(model_dir="vits-piper-sr_RS-serbski_institut-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-lisa-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-nst-medium"),
+        TtsModel(model_dir="vits-piper-sv_SE-alma-medium"),
         TtsModel(model_dir="vits-piper-sw_CD-lanfrica-medium"),
         TtsModel(model_dir="vits-piper-tr_TR-dfki-medium"),
         TtsModel(model_dir="vits-piper-tr_TR-fahrettin-medium"),
         TtsModel(model_dir="vits-piper-tr_TR-fettah-medium"),
+        TtsModel(model_dir="vits-piper-ku_TR-berfin_renas-medium"),
         TtsModel(model_dir="vits-piper-uk_UA-lada-x_low"),
         TtsModel(model_dir="vits-piper-uk_UA-ukrainian_tts-medium"),
+        TtsModel(model_dir="vits-piper-ur_PK-fasih-medium"),
         TtsModel(model_dir="vits-piper-vi_VN-25hours_single-low"),
         TtsModel(model_dir="vits-piper-vi_VN-vais1000-medium"),
         TtsModel(model_dir="vits-piper-vi_VN-vivos-x_low"),
         TtsModel(model_dir="vits-piper-zh_CN-huayan-medium"),
+        TtsModel(model_dir="vits-piper-zh_CN-xiao_ya-medium"),
+        TtsModel(model_dir="vits-piper-zh_CN-chaowen-medium"),
     ]
 
     for m in models:
-        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        if "zh_CN" in m.model_dir and (
+            "xiao_ya" in m.model_dir or "chaowen" in m.model_dir
+        ):
+            m.lexicon = f"{m.model_dir}/lexicon.txt"
+            m.rule_fsts = f"{m.model_dir}/phone.fst,{m.model_dir}/date.fst,{m.model_dir}/number.fst"
+        else:
+            m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
@@ -529,7 +554,7 @@ def get_kokoro_models() -> List[TtsModel]:
 
 
 def get_kitten_models() -> List[TtsModel]:
-    english_models = [
+    kitten_models = [
         TtsModel(
             model_dir="kitten-nano-en-v0_1-fp16",
             model_name="model.fp16.onnx",
@@ -545,13 +570,59 @@ def get_kitten_models() -> List[TtsModel]:
             model_name="model.fp16.onnx",
             lang="en",
         ),
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-fp32",
+            model_name="model.fp32.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-nano-en-v0_8-int8",
+            model_name="model.int8.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-micro-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kitten-mini-en-v0_8",
+            model_name="model.onnx",
+            lang="en",
+        ),
     ]
-    for m in english_models:
+    for m in kitten_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.voices = "voices.bin"
         m.is_kitten = True
 
-    return english_models
+    return kitten_models
+
+
+def get_supertonic3_models() -> List[TtsModel]:
+    # fmt: off
+    langs = [
+        "en", "ko", "ja", "ar", "bg", "cs", "da", "de", "el", "es", "et",
+        "fi", "fr", "hi", "hr", "hu", "id", "it", "lt", "lv", "nl", "pl",
+        "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi"
+    ]
+    # fmt: on
+
+    supertonic_models = [
+        TtsModel(model_dir="sherpa-onnx-supertonic-3-tts-int8-2026-05-11", lang=lang)
+        for lang in langs
+    ]
+    for m in supertonic_models:
+        m.supertonic_duration_predictor = "duration_predictor.int8.onnx"
+        m.supertonic_text_encoder = "text_encoder.int8.onnx"
+        m.supertonic_vector_estimator = "vector_estimator.int8.onnx"
+        m.supertonic_vocoder = "vocoder.int8.onnx"
+        m.supertonic_tts_json = "tts.json"
+        m.supertonic_unicode_indexer = "unicode_indexer.bin"
+        m.supertonic_voice_style = "voice.bin"
+        m.is_supertonic = True
+
+    return supertonic_models
 
 
 def main():
@@ -568,6 +639,7 @@ def main():
     all_model_list += get_matcha_models()
     all_model_list += get_kokoro_models()
     all_model_list += get_kitten_models()
+    all_model_list += get_supertonic3_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)

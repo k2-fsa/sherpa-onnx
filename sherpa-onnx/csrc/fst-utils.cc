@@ -4,8 +4,13 @@
 
 #include "sherpa-onnx/csrc/fst-utils.h"
 
+#include <fstream>
+#include <sstream>
 #include <string>
+#include <vector>
 
+#include "fst/extensions/far/far.h"
+#include "kaldifst/csrc/kaldi-fst-io.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -50,6 +55,27 @@ fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   } else {
     return decode_fst;
   }
+}
+
+std::vector<std::unique_ptr<fst::StdConstFst>> ReadFstsFromFar(
+    const std::vector<char> &buffer) {
+  std::vector<std::unique_ptr<fst::StdConstFst>> ans;
+
+  auto stream = std::make_unique<std::istringstream>(
+      std::string(buffer.data(), buffer.size()), std::ios::binary);
+
+  std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+      fst::FarReader<fst::StdArc>::Open(std::move(stream)));
+  if (!reader) {
+    SHERPA_ONNX_LOGE("Failed to open FAR data");
+    SHERPA_ONNX_EXIT(-1);
+  }
+
+  for (; !reader->Done(); reader->Next()) {
+    ans.emplace_back(fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+  }
+
+  return ans;
 }
 
 }  // namespace sherpa_onnx

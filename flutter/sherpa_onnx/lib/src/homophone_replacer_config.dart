@@ -1,5 +1,9 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
+/// Optional resources for homophone replacement during decoding.
+///
+/// Set [lexicon] and [ruleFsts] when using models or grammars that support
+/// homophone-aware post-processing.
 class HomophoneReplacerConfig {
   const HomophoneReplacerConfig(
       {this.dictDir = '', this.lexicon = '', this.ruleFsts = ''});

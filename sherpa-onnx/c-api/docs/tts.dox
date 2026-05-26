@@ -1,0 +1,196 @@
+/**
+@page tts Text-to-Speech (TTS) Models
+
+sherpa-onnx supports multiple offline TTS model families through the
+@ref SherpaOnnxCreateOfflineTts() API. Configure exactly one model
+family by filling in the corresponding sub-struct of
+@ref SherpaOnnxOfflineTtsModelConfig.
+
+@see SherpaOnnxCreateOfflineTts, SherpaOnnxOfflineTtsConfig,
+     SherpaOnnxOfflineTtsModelConfig
+
+@tableofcontents
+
+@section tts_kokoro Kokoro
+
+Kokoro is a high-quality TTS model with multiple voice support.
+It uses a model file and a voices binary file.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.kokoro.model = "./kokoro-en-v0_19/model.onnx";
+config.model.kokoro.voices = "./kokoro-en-v0_19/voices.bin";
+config.model.kokoro.tokens = "./kokoro-en-v0_19/tokens.txt";
+config.model.kokoro.data_dir = "./kokoro-en-v0_19/espeak-ng-data";
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `kokoro-en-v0_19` (English), `kokoro-multi-lang-v1_0` (multilingual)
+
+Example source: [kokoro-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/kokoro-tts-en-c-api.c)
+
+@section tts_vits VITS (Piper)
+
+VITS models from the Piper project use espeak-ng for phonemization.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.vits.model =
+    "./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx";
+config.model.vits.tokens =
+    "./vits-piper-en_US-lessac-medium/tokens.txt";
+config.model.vits.data_dir =
+    "./vits-piper-en_US-lessac-medium/espeak-ng-data";
+config.model.vits.noise_scale = 0.667f;
+config.model.vits.noise_scale_w = 0.8f;
+config.model.vits.length_scale = 1.0f;
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `vits-piper-en_US-lessac-medium`
+
+Example source: [offline-tts-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/offline-tts-c-api.c)
+
+@section tts_matcha Matcha
+
+Matcha is a flow-matching TTS model that requires a separate vocoder
+(e.g., Vocos).
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.matcha.acoustic_model =
+    "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx";
+config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
+config.model.matcha.tokens =
+    "./matcha-icefall-en_US-ljspeech/tokens.txt";
+config.model.matcha.data_dir =
+    "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `matcha-icefall-en_US-ljspeech` (English),
+`matcha-icefall-zh-baker` (Chinese)
+
+Example source: [matcha-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/matcha-tts-en-c-api.c)
+
+@section tts_kitten Kitten
+
+Kitten is a compact TTS model with voice support.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.kitten.model = "./kitten-nano-en-v0_1-fp16/model.fp16.onnx";
+config.model.kitten.voices = "./kitten-nano-en-v0_1-fp16/voices.bin";
+config.model.kitten.tokens = "./kitten-nano-en-v0_1-fp16/tokens.txt";
+config.model.kitten.data_dir =
+    "./kitten-nano-en-v0_1-fp16/espeak-ng-data";
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `kitten-nano-en-v0_1-fp16`
+
+Example source: [kitten-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/kitten-tts-en-c-api.c)
+
+@section tts_zipvoice ZipVoice
+
+ZipVoice is a flow-matching TTS model with a separate vocoder. It supports
+Chinese and English.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.zipvoice.encoder =
+    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/encoder.int8.onnx";
+config.model.zipvoice.decoder =
+    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/decoder.int8.onnx";
+config.model.zipvoice.vocoder = "./vocos_24khz.onnx";
+config.model.zipvoice.tokens =
+    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/tokens.txt";
+config.model.zipvoice.lexicon =
+    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/lexicon.txt";
+config.model.zipvoice.data_dir =
+    "./sherpa-onnx-zipvoice-distill-int8-zh-en-emilia/espeak-ng-data";
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `sherpa-onnx-zipvoice-distill-int8-zh-en-emilia`
+
+Example source: [zipvoice-tts-zh-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/zipvoice-tts-zh-en-c-api.c)
+
+@section tts_pocket Pocket
+
+Pocket TTS uses a language model flow architecture with multiple ONNX
+files.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.pocket.lm_flow =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_flow.int8.onnx";
+config.model.pocket.lm_main =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/lm_main.int8.onnx";
+config.model.pocket.encoder =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/encoder.onnx";
+config.model.pocket.decoder =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/decoder.int8.onnx";
+config.model.pocket.text_conditioner =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/text_conditioner.onnx";
+config.model.pocket.vocab_json =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/vocab.json";
+config.model.pocket.token_scores_json =
+    "./sherpa-onnx-pocket-tts-int8-2026-01-26/token_scores.json";
+config.model.pocket.voice_embedding_cache_capacity = 50;
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `sherpa-onnx-pocket-tts-int8-2026-01-26`
+
+Example source: [pocket-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/pocket-tts-en-c-api.c)
+
+@section tts_supertonic Supertonic
+
+Supertonic is a non-autoregressive TTS model using duration prediction
+and vector estimation.
+
+@code
+SherpaOnnxOfflineTtsConfig config;
+memset(&config, 0, sizeof(config));
+config.model.supertonic.duration_predictor =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx";
+config.model.supertonic.text_encoder =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx";
+config.model.supertonic.vector_estimator =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx";
+config.model.supertonic.vocoder =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx";
+config.model.supertonic.tts_json =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json";
+config.model.supertonic.unicode_indexer =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin";
+config.model.supertonic.voice_style =
+    "./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin";
+config.model.num_threads = 2;
+
+const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+@endcode
+
+Model package: `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`
+
+Example source: [supertonic-tts-en-c-api.c](https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/supertonic-tts-en-c-api.c)
+*/

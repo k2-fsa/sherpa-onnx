@@ -23,6 +23,18 @@ void Scale(const float *src, float scale, int32_t n, float *out) {
   out_vec = scale * src_vec;
 }
 
+std::vector<float> MakeVorbisWindow(int32_t window_length) {
+  constexpr float kPi = 3.14159265358979323846f;
+  std::vector<float> window(window_length);
+  const float half = window_length / 2.0f;
+  for (int32_t i = 0; i != window_length; ++i) {
+    float s = std::sin(0.5f * kPi * (i + 0.5f) / half);
+    window[i] = std::sin(0.5f * kPi * s * s);
+  }
+
+  return window;
+}
+
 // this if for Paraformer
 std::vector<float> ComputeAcousticEmbedding(
     const std::vector<float> &encoder_out, const std::vector<float> &alphas,
@@ -115,6 +127,22 @@ void NormalizeWhisperFeatures(float *features, int32_t num_frames,
 
   feats = feats.max(max_v);
   feats = (feats + 4.0f) / 4.0f;
+}
+
+void NemoNormalizePerFeature(float *p, int32_t num_frames,
+                             int32_t feature_dim) {
+  using RowMajorMat =
+      Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+  Eigen::Map<RowMajorMat> x(p, num_frames, feature_dim);
+
+  Eigen::RowVectorXf mean = x.colwise().mean();
+  Eigen::RowVectorXf var =
+      (x.array().square().colwise().mean() - mean.array().square()).max(0.0f);
+
+  Eigen::RowVectorXf inv_std = (var.array().sqrt() + 1e-5f).inverse();
+
+  x.array() = (x.array().rowwise() - mean.array()).rowwise() * inv_std.array();
 }
 
 int32_t MaxElementIndex(const float *v, int32_t n) {

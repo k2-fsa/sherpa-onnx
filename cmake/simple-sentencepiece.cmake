@@ -50,6 +50,10 @@ function(download_simple_sentencepiece)
 
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  if(TARGET ssentencepiece_core AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    target_compile_options(ssentencepiece_core PRIVATE -Wno-deprecated-declarations)
+  endif()
+
   if(_build_shared_libs_bak)
     set_target_properties(ssentencepiece_core
       PROPERTIES

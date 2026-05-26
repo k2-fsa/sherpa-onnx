@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
@@ -123,7 +124,7 @@ for a list of pre-trained models to download.
   if (po.NumArgs() < 1) {
     fprintf(stderr, "Error: Please provide at least 1 wave file.\n\n");
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -177,8 +178,9 @@ for a list of pre-trained models to download.
 
   fprintf(stderr, "Done!\n\n");
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
-    fprintf(stderr, "%s\n%s\n----\n", po.GetArg(i).c_str(),
-            ss[i - 1]->GetResult().AsJsonString().c_str());
+    fprintf(stderr, "%s\n", po.GetArg(i).c_str());
+    fprintf(stdout, "%s\n", ss[i - 1]->GetResult().AsJsonString().c_str());
+    fprintf(stderr, "----\n");
   }
 
   float elapsed_seconds =

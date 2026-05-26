@@ -132,7 +132,8 @@ struct OnlineRecognizerConfig {
       int32_t max_active_paths, const std::string &hotwords_file,
       float hotwords_score, float blank_penalty, float temperature_scale,
       const std::string &rule_fsts, const std::string &rule_fars,
-      bool reset_encoder, const HomophoneReplacerConfig &hr)
+      bool reset_encoder, const HomophoneReplacerConfig &hr,
+      const std::string &hotwords_buf = {})
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -148,7 +149,8 @@ struct OnlineRecognizerConfig {
         rule_fsts(rule_fsts),
         rule_fars(rule_fars),
         reset_encoder(reset_encoder),
-        hr(hr) {}
+        hr(hr),
+        hotwords_buf(hotwords_buf) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

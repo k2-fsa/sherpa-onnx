@@ -14,6 +14,7 @@
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/display.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
@@ -93,7 +94,7 @@ for a list of pre-trained models to download.
   po.Read(argc, argv);
   if (po.NumArgs() != 0) {
     po.PrintUsage();
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -113,7 +114,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "No default input device found\n");
     fprintf(stderr, "If you are using Linux, please switch to \n");
     fprintf(stderr, " ./bin/sherpa-onnx-alsa \n");
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   const char *pDeviceIndex = std::getenv("SHERPA_ONNX_MIC_DEVICE");
@@ -134,7 +135,7 @@ for a list of pre-trained models to download.
   if (!mic.OpenDevice(device_index, mic_sample_rate, 1, RecordCallback,
                       s.get())) {
     fprintf(stderr, "portaudio error: %d\n", device_index);
-    exit(EXIT_FAILURE);
+    SHERPA_ONNX_EXIT(EXIT_FAILURE);
   }
 
   std::string last_text;

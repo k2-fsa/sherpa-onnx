@@ -3,6 +3,10 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 
+/// Online punctuation restoration.
+///
+/// This wrapper is intended for shorter or incremental text fragments. See
+/// `dart-api-examples/add-punctuations/` for working examples.
 class OnlinePunctuationModelConfig {
   OnlinePunctuationModelConfig(
       {required this.cnnBiLstm,
@@ -45,6 +49,7 @@ class OnlinePunctuationModelConfig {
   final bool debug;
 }
 
+/// Top-level configuration for [OnlinePunctuation].
 class OnlinePunctuationConfig {
   OnlinePunctuationConfig({
     required this.model,
@@ -70,12 +75,13 @@ class OnlinePunctuationConfig {
   final OnlinePunctuationModelConfig model;
 }
 
+/// Online punctuation restorer.
 class OnlinePunctuation {
   OnlinePunctuation.fromPtr({required this.ptr, required this.config});
 
   OnlinePunctuation._({required this.ptr, required this.config});
 
-  // The user has to invoke OnlinePunctuation.free() to avoid memory leak.
+  /// Create an online punctuator from [config].
   factory OnlinePunctuation({required OnlinePunctuationConfig config}) {
     if (SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation == null) {
       throw Exception("Please initialize sherpa-onnx first");
@@ -109,12 +115,29 @@ class OnlinePunctuation {
     return OnlinePunctuation._(ptr: ptr, config: config);
   }
 
+  /// Release the native punctuator.
   void free() {
+    if (SherpaOnnxBindings.sherpaOnnxDestroyOnlinePunctuation == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
     SherpaOnnxBindings.sherpaOnnxDestroyOnlinePunctuation?.call(ptr);
     ptr = nullptr;
   }
 
+  /// Add punctuation to [text].
   String addPunct(String text) {
+    if (SherpaOnnxBindings.sherpaOnnxOnlinePunctuationAddPunct == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return '';
+    }
+
     final textPtr = text.toNativeUtf8();
 
     final p = SherpaOnnxBindings.sherpaOnnxOnlinePunctuationAddPunct

@@ -144,6 +144,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_compute(
   jmethodID ctor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;IF)V");
   if (ctor == nullptr) {
     SHERPA_ONNX_LOGE("Failed to get AudioEvent constructor");
+    env->DeleteLocalRef(cls);
     return nullptr;
   }
 
@@ -153,7 +154,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_AudioTagging_compute(
   for (size_t i = 0; i < events.size(); ++i) {
     const auto &e = events[i];
 
-    jstring name = env->NewStringUTF(e.name.c_str());
+    jstring name = SafeNewStringUTF(env, e.name);
     jobject event_obj = env->NewObject(cls, ctor, name, e.index, e.prob);
 
     env->SetObjectArrayElement(obj_arr, i, event_obj);

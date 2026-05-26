@@ -440,6 +440,63 @@ def get_fa_models():
     return ans
 
 
+# Basque
+def get_eu_models():
+    eu_ES = [
+        PiperModel(name="antton", kind="medium", sr=22050, ns=1),
+        PiperModel(name="maider", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in eu_ES:
+        m.lang = "eu_ES"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = eu_ES
+
+    for m in ans:
+        m.text = "Aberats izatea baino, izen ona hobe."
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
+# Urdu
+def get_ur_models():
+    ur_PK = [
+        PiperModel(name="fasih", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in ur_PK:
+        m.lang = "ur_PK"
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+    ans = ur_PK
+
+    for m in ans:
+        m.text = "قوس قزح، جسے قوس قزح یا رنگوں کی قوس قزح بھی کہا جاتا ہے، ایک قدرتی طبعی رجحان ہے جو بارش کے قطرے کے ذریعے سورج کی روشنی کے اضطراب اور پھیلاؤ کے نتیجے میں ہوتا ہے۔"
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # finnish
 def get_fi_models():
     fi_FI = [
@@ -921,6 +978,7 @@ def get_nl_models():
     nl_NL = [
         PiperModel(name="pim", kind="medium", sr=22050, ns=1),
         PiperModel(name="ronnie", kind="medium", sr=22050, ns=1),
+        PiperModel(name="alex", kind="medium", sr=22050, ns=1),
     ]
 
     nl_NL += [
@@ -1049,6 +1107,7 @@ def get_pl_models():
         PiperModel(name="darkman", kind="medium", sr=22050, ns=1),
         PiperModel(name="gosia", kind="medium", sr=22050, ns=1),
         PiperModel(name="mc_speech", kind="medium", sr=22050, ns=1),
+        PiperModel(name="bass", kind="high", sr=22050, ns=1),
     ]
 
     pl_PL.extend(
@@ -1431,6 +1490,36 @@ def get_sl_models():
     return ans
 
 
+# Albanian
+def get_sq_models():
+    sq_AL = [
+        PiperModel(name="edon", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in sq_AL:
+        m.lang = "sq_AL"
+
+    ans = sq_AL
+
+    for m in ans:
+        m.text = "Çdo fillim është i vështirë, por çdo fund është i bukur."
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
 # Serbian
 def get_sr_models():
     sr_RS = [
@@ -1466,6 +1555,7 @@ def get_sv_models():
     sv_SE = [
         PiperModel(name="lisa", kind="medium", sr=22050, ns=1),
         PiperModel(name="nst", kind="medium", sr=22050, ns=1),
+        PiperModel(name="alma", kind="medium", sr=22050, ns=1),
     ]
 
     for m in sv_SE:
@@ -1526,18 +1616,25 @@ def get_sw_models():
 def get_tr_models():
     tr_TR = [
         PiperModel(name="dfki", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1),
-        PiperModel(name="fettah", kind="medium", sr=22050, ns=1),
+        #  PiperModel(name="fahrettin", kind="medium", sr=22050, ns=1), # removed
+        #  PiperModel(name="fettah", kind="medium", sr=22050, ns=1), # removed
+    ]
+
+    ku_TR = [
+        PiperModel(name="berfin_renas", kind="medium", sr=22050, ns=1),
     ]
 
     for m in tr_TR:
         m.lang = "tr_TR"
-
-    ans = tr_TR
-
-    for m in ans:
         m.text = "Bir evin duvarları, bir adamın sözü, bir kadının gülü kırılmaz"
 
+    for m in ku_TR:
+        m.lang = "ku_TR"
+        m.text = "Ev motorê nivîsandinê bi dengî ye ku Kaldiya serî de bi kar tîne"
+
+    ans = tr_TR + ku_TR
+
+    for m in ans:
         if m.model_name == "":
             m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
 
@@ -1600,6 +1697,37 @@ def get_vi_models():
 
     for m in ans:
         m.text = "Nước cũ đào gỗ mới, sông cũ chảy nước mới"
+
+        if m.model_name == "":
+            m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
+
+        code = m.lang[:2]
+        if m.cmd == "":
+            m.cmd = f"""
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/{m.model_name}.json
+            wget -qq https://huggingface.co/rhasspy/piper-voices/resolve/main/{code}/{m.lang}/{m.name}/{m.kind}/MODEL_CARD
+            """
+        if m.url == "":
+            m.url = f"https://huggingface.co/rhasspy/piper-voices/tree/main/{code}/{m.lang}/{m.name}/{m.kind}"
+
+    return ans
+
+
+# Chinese
+def get_zh_models():
+    zh_CN = [
+        PiperModel(name="xiao_ya", kind="medium", sr=22050, ns=1),
+        PiperModel(name="chaowen", kind="medium", sr=22050, ns=1),
+    ]
+
+    for m in zh_CN:
+        m.lang = "zh_CN"
+
+    ans = zh_CN
+
+    for m in ans:
+        m.text = "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔."
 
         if m.model_name == "":
             m.model_name = f"{m.lang}-{m.name}-{m.kind}.onnx"
@@ -2055,6 +2183,7 @@ def get_all_models():
     ans += get_el_models()
     ans += get_en_models()
     ans += get_es_models()
+    ans += get_eu_models()
     ans += get_fa_models()
     ans += get_fi_models()
     ans += get_fr_models()
@@ -2077,13 +2206,15 @@ def get_all_models():
     ans += get_ru_models()
     ans += get_sk_models()
     ans += get_sl_models()
+    ans += get_sq_models()
     ans += get_sr_models()
     ans += get_sv_models()
     ans += get_sw_models()
     ans += get_tr_models()
     ans += get_uk_models()
+    ans += get_ur_models()
     ans += get_vi_models()
-
+    ans += get_zh_models()
 
     for i, m in enumerate(ans):
         m.index = i
@@ -2152,8 +2283,21 @@ def main():
                 "model": f"{model_dir}/{m.model_name}",
                 "data_dir": f"{model_dir}/espeak-ng-data",
                 "tokens": f"{model_dir}/tokens.txt",
+                "lexicon": "",
                 "text": m.text,
+                "rule_fsts": "",
             }
+
+            if m.lang == "zh_CN" and m.name in ("xiao_ya", "chaowen"):
+                d = {
+                    "model": f"{model_dir}/{m.model_name}",
+                    "data_dir": "",
+                    "tokens": f"{model_dir}/tokens.txt",
+                    "lexicon": f"{model_dir}/lexicon.txt",
+                    "text": m.text,
+                    "rule_fsts": f"{model_dir}/phone.fst,{model_dir}/date.fst,{model_dir}/number.fst",
+                }
+
             for i in range(m.ns):
                 s = template.render(
                     **d,
