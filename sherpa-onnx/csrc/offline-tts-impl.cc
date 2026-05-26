@@ -28,6 +28,10 @@
 #include "sherpa-onnx/csrc/axera/offline-tts-supertonic-impl-axera.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_AXCL
+#include "sherpa-onnx/csrc/axcl/offline-tts-supertonic-impl-axcl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
@@ -63,6 +67,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
       return std::make_unique<OfflineTtsSupertonicImplAxera>(config);
     }
 #endif
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (config.model.provider == "axcl") {
+      return std::make_unique<OfflineTtsSupertonicImplAxcl>(config);
+    }
+#endif
     return std::make_unique<OfflineTtsSupertonicImpl>(config);
   }
 
@@ -91,6 +100,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
 #if SHERPA_ONNX_ENABLE_AXERA
     if (config.model.provider == "axera") {
       return std::make_unique<OfflineTtsSupertonicImplAxera>(mgr, config);
+    }
+#endif
+#if SHERPA_ONNX_ENABLE_AXCL
+    if (config.model.provider == "axcl") {
+      return std::make_unique<OfflineTtsSupertonicImplAxcl>(mgr, config);
     }
 #endif
     return std::make_unique<OfflineTtsSupertonicImpl>(mgr, config);
