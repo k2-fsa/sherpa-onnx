@@ -214,6 +214,8 @@ if(SHERPA_ONNX_ENABLE_AXERA)
   list(APPEND sources
     ./axera/ax-engine-guard.cc
     ./axera/offline-sense-voice-model-axera.cc
+    ./axera/offline-tts-supertonic-model-axera.cc
+    ./axera/offline-tts-supertonic-impl-axera.cc
     ./axera/utils.cc
   )
 endif()
