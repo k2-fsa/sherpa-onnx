@@ -10,6 +10,32 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kSpokenLanguageIdentificationInitDoc = R"doc(
+Constructor for SpokenLanguageIdentification.
+
+Args:
+  config:
+    Config for spoken language identification.
+)doc";
+
+static constexpr const char *kSpokenLanguageIdentificationCreateStreamDoc = R"doc(
+Create a stream for feeding audio data.
+
+Returns:
+  An OnlineStream object.
+)doc";
+
+static constexpr const char *kSpokenLanguageIdentificationComputeDoc = R"doc(
+Identify the language of the audio in the given stream.
+
+Args:
+  s:
+    The stream containing audio data.
+
+Returns:
+  A string representing the identified language code.
+)doc";
+
 static void PybindSpokenLanguageIdentificationWhisperConfig(py::module *m) {
   using PyClass = SpokenLanguageIdentificationWhisperConfig;
 
@@ -50,11 +76,14 @@ void PybindSpokenLanguageIdentification(py::module *m) {
   using PyClass = SpokenLanguageIdentification;
   py::class_<PyClass>(*m, "SpokenLanguageIdentification")
       .def(py::init<const SpokenLanguageIdentificationConfig &>(),
-           py::arg("config"), py::call_guard<py::gil_scoped_release>())
+           py::arg("config"), py::call_guard<py::gil_scoped_release>(),
+           kSpokenLanguageIdentificationInitDoc)
       .def("create_stream", &PyClass::CreateStream,
-           py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>(),
+           kSpokenLanguageIdentificationCreateStreamDoc)
       .def("compute", &PyClass::Compute, py::arg("s"),
-           py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>(),
+           kSpokenLanguageIdentificationComputeDoc);
 }
 
 }  // namespace sherpa_onnx

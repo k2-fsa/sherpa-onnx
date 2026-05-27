@@ -40,11 +40,64 @@ def _assert_file_exists(f: str):
 
 
 class OfflineRecognizer(object):
-    """A class for offline speech recognition.
+    """A class for offline (non-streaming) speech recognition.
 
-    Please refer to the following files for usages
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/python/tests/test_offline_recognizer.py
-     - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/offline-decode-files.py
+    It supports multiple model families via factory methods:
+
+    - :meth:`from_transducer` -- Zipformer, NeMo transducer, etc.
+    - :meth:`from_paraformer` -- FunASR Paraformer
+    - :meth:`from_sense_voice` -- SenseVoice multilingual model
+    - :meth:`from_whisper` -- OpenAI Whisper
+    - :meth:`from_moonshine` -- Moonshine
+    - :meth:`from_dolphin` -- Dolphin CTC
+    - :meth:`from_nemo_ctc` -- NeMo CTC
+    - :meth:`from_zipformer2_ctc` -- Zipformer CTC
+
+    Example using SenseVoice::
+
+        import sherpa_onnx
+        import soundfile as sf
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model="./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/model.int8.onnx",
+            tokens="./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/tokens.txt",
+            use_itn=True,
+            debug=True,
+        )
+
+        audio, sample_rate = sf.read("test.wav", dtype="float32", always_2d=True)
+        audio = audio[:, 0]  # mono
+
+        stream = recognizer.create_stream()
+        stream.accept_waveform(sample_rate, audio)
+        recognizer.decode_stream(stream)
+        print(stream.result)
+
+    Example using Whisper::
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
+            encoder="./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx",
+            decoder="./sherpa-onnx-whisper-tiny/tiny-decoder.int8.onnx",
+            tokens="./sherpa-onnx-whisper-tiny/tiny-tokens.txt",
+            language="en",
+            task="transcribe",
+        )
+
+    Example using transducer::
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_transducer(
+            encoder="./model/encoder-epoch-99-avg-1.int8.onnx",
+            decoder="./model/decoder-epoch-99-avg-1.onnx",
+            joiner="./model/joiner-epoch-99-avg-1.int8.onnx",
+            tokens="./model/tokens.txt",
+            num_threads=2,
+            decoding_method="greedy_search",
+        )
+
+    Please refer to the following files for more usages:
+
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/offline-decode-files.py>`_
+    - `<https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/offline-sense-voice-ctc-decode-files.py>`_
     """
 
     @classmethod
@@ -1772,13 +1825,84 @@ class OfflineRecognizer(object):
         return self
 
     def create_stream(self, hotwords: Optional[str] = None):
+        """Create a new offline stream for feeding audio data.
+
+        The returned stream should be passed to :meth:`decode_stream` or
+        :meth:`decode_streams` after audio has been accepted.
+
+        Args:
+          hotwords:
+            Optional hotwords string for biasing recognition. Each hotword
+            is separated by ``/``, and tokens within a hotword are separated
+            by a space. For instance, ``"HELLO WORLD/GOODBYE"``.
+            If ``None``, no hotwords biasing is applied.
+
+        Returns:
+          An :class:`OfflineStream` instance.
+
+        Example::
+
+            stream = recognizer.create_stream()
+            stream.accept_waveform(sample_rate, audio)
+            recognizer.decode_stream(stream)
+            print(stream.result)
+
+        Example with hotwords::
+
+            stream = recognizer.create_stream(hotwords="HELLO WORLD/GOODBYE")
+            stream.accept_waveform(sample_rate, audio)
+            recognizer.decode_stream(stream)
+            print(stream.result)
+        """
         if hotwords is None:
             return self.recognizer.create_stream()
         else:
             return self.recognizer.create_stream(hotwords)
 
     def decode_stream(self, s: OfflineStream):
+        """Run speech recognition on a single stream.
+
+        After calling this method, the recognition result is available via
+        ``stream.result.text``.
+
+        Args:
+          s:
+            An :class:`OfflineStream` that has already been fed audio with
+            :meth:`~OfflineStream.accept_waveform`.
+
+        Example::
+
+            stream = recognizer.create_stream()
+            stream.accept_waveform(sample_rate, audio)
+            recognizer.decode_stream(stream)
+            print(stream.result.text)
+        """
         self.recognizer.decode_stream(s)
 
     def decode_streams(self, ss: List[OfflineStream]):
+        """Run speech recognition on multiple streams in parallel.
+
+        This is more efficient than calling :meth:`decode_stream` in a loop,
+        as the internal decoder processes all streams concurrently.
+
+        Args:
+          ss:
+            A list of :class:`OfflineStream` instances, each of which has
+            already been fed audio with
+            :meth:`~OfflineStream.accept_waveform`.
+
+        Example::
+
+            streams = []
+            for audio_file in audio_files:
+                audio, sample_rate = sf.read(audio_file, dtype="float32", always_2d=True)
+                audio = audio[:, 0]  # mono
+                s = recognizer.create_stream()
+                s.accept_waveform(sample_rate, audio)
+                streams.append(s)
+
+            recognizer.decode_streams(streams)
+            for s in streams:
+                print(s.result.text)
+        """
         self.recognizer.decode_streams(ss)

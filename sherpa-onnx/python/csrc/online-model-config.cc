@@ -20,6 +20,40 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOnlineModelConfigInitDoc = R"doc(
+Configuration for the online model.
+
+Args:
+  transducer:
+    Config for the transducer model (optional).
+  paraformer:
+    Config for the paraformer model (optional).
+  wenet_ctc:
+    Config for the WeNet CTC model (optional).
+  zipformer2_ctc:
+    Config for the zipformer2 CTC model (optional).
+  nemo_ctc:
+    Config for the NeMo CTC model (optional).
+  t_one_ctc:
+    Config for the T-one CTC model (optional).
+  provider_config:
+    Config for the inference provider (optional).
+  tokens:
+    Path to the tokens file. Each line in the file represents a token.
+  num_threads:
+    Number of threads for the inference engine.
+  warm_up:
+    Number of warm-up frames for the model (optional).
+  debug:
+    If True, print debug information during model loading (optional).
+  model_type:
+    Type of the model, e.g., ``transducer``, ``paraformer``, etc. (optional).
+  modeling_unit:
+    Modeling unit used by the model, e.g., ``bpe``, ``cjkchar+bpe`` (optional).
+  bpe_vocab:
+    Path to the BPE vocabulary file (optional).
+)doc";
+
 void PybindOnlineModelConfig(py::module *m) {
   PybindOnlineTransducerModelConfig(m);
   PybindOnlineParaformerModelConfig(m);
@@ -49,7 +83,8 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("provider_config") = ProviderConfig(), py::arg("tokens"),
            py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("model_type") = "",
-           py::arg("modeling_unit") = "", py::arg("bpe_vocab") = "")
+           py::arg("modeling_unit") = "", py::arg("bpe_vocab") = "",
+           kOnlineModelConfigInitDoc)
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)

@@ -13,6 +13,40 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOfflineSpeakerDiarizationInitDoc = R"doc(
+Constructor for OfflineSpeakerDiarization.
+
+Args:
+  config:
+    Config for offline speaker diarization.
+)doc";
+
+static constexpr const char *kOfflineSpeakerDiarizationSampleRateDoc = R"doc(
+Return the expected sample rate of the input audio.
+)doc";
+
+static constexpr const char *kOfflineSpeakerDiarizationSetConfigDoc = R"doc(
+Update the config for the diarization pipeline.
+
+Args:
+  config:
+    The new config to use.
+)doc";
+
+static constexpr const char *kOfflineSpeakerDiarizationProcessDoc = R"doc(
+Perform speaker diarization on the given audio samples.
+
+Args:
+  samples:
+    A 1-D float32 array of audio samples.
+  callback:
+    An optional callback function ``callback(processed_chunks, num_chunks)``
+    that is called to report progress. Return a non-zero value to abort.
+
+Returns:
+  A list of segments, each containing speaker, start, and end times.
+)doc";
+
 static void PybindOfflineSpeakerSegmentationPyannoteModelConfig(py::module *m) {
   using PyClass = OfflineSpeakerSegmentationPyannoteModelConfig;
   py::class_<PyClass>(*m, "OfflineSpeakerSegmentationPyannoteModelConfig")
@@ -66,9 +100,11 @@ void PybindOfflineSpeakerDiarization(py::module *m) {
   using PyClass = OfflineSpeakerDiarization;
   py::class_<PyClass>(*m, "OfflineSpeakerDiarization")
       .def(py::init<const OfflineSpeakerDiarizationConfig &>(),
-           py::arg("config"))
-      .def_property_readonly("sample_rate", &PyClass::SampleRate)
-      .def("set_config", &PyClass::SetConfig, py::arg("config"))
+           py::arg("config"), kOfflineSpeakerDiarizationInitDoc)
+      .def_property_readonly("sample_rate", &PyClass::SampleRate,
+                             kOfflineSpeakerDiarizationSampleRateDoc)
+      .def("set_config", &PyClass::SetConfig, py::arg("config"),
+           kOfflineSpeakerDiarizationSetConfigDoc)
       .def(
           "process",
           [](const PyClass &self, const std::vector<float> samples,
@@ -80,14 +116,14 @@ void PybindOfflineSpeakerDiarization(py::module *m) {
             std::function<int32_t(int32_t, int32_t, void *)> callback_wrapper =
                 [callback](int32_t processed_chunks, int32_t num_chunks,
                            void *) -> int32_t {
-              callback(processed_chunks, num_chunks);
-              return 0;
+              return callback(processed_chunks, num_chunks);
             };
 
             return self.Process(samples.data(), samples.size(),
                                 callback_wrapper);
           },
-          py::arg("samples"), py::arg("callback") = py::none());
+          py::arg("samples"), py::arg("callback") = py::none(),
+          kOfflineSpeakerDiarizationProcessDoc);
 }
 
 }  // namespace sherpa_onnx

@@ -62,17 +62,54 @@ static void PybindOfflineTtsConfig(py::module *m) {
       .def("__str__", &PyClass::ToString);
 }
 
+static constexpr const char *kOfflineTtsDoc = R"doc(
+Offline text-to-speech engine.
+
+Args:
+  config:
+    The configuration for the offline TTS model.
+)doc";
+
+static constexpr const char *kGenerateDoc = R"doc(
+Generate speech from text.
+
+Args:
+  text:
+    The text to generate speech for.
+  sid:
+    Speaker ID. Used for multi-speaker models.
+  speed:
+    The speaking speed. Larger values produce faster speech.
+  callback:
+    If not None, it is called during speech generation with
+    ``(samples: np.ndarray, progress: float) -> int``.
+    Return a non-zero value to stop generation early.
+
+Returns:
+  A ``GeneratedAudio`` object containing the audio samples and sample rate.
+)doc";
+
+static constexpr const char *kSampleRateDoc = R"doc(
+Return the sample rate of the generated audio.
+)doc";
+
+static constexpr const char *kNumSpeakersDoc = R"doc(
+Return the number of speakers supported by the model.
+)doc";
+
 void PybindOfflineTts(py::module *m) {
   PybindOfflineTtsConfig(m);
   PybindGeneratedAudio(m);
   PybindGenerationConfig(m);
 
   using PyClass = OfflineTts;
-  py::class_<PyClass>(*m, "OfflineTts")
+  py::class_<PyClass>(*m, "OfflineTts", kOfflineTtsDoc)
       .def(py::init<const OfflineTtsConfig &>(), py::arg("config"),
            py::call_guard<py::gil_scoped_release>())
-      .def_property_readonly("sample_rate", &PyClass::SampleRate)
-      .def_property_readonly("num_speakers", &PyClass::NumSpeakers)
+      .def_property_readonly("sample_rate", &PyClass::SampleRate,
+                             kSampleRateDoc)
+      .def_property_readonly("num_speakers", &PyClass::NumSpeakers,
+                             kNumSpeakersDoc)
       .def(
           "generate",
           [](const PyClass &self, const std::string &text, int64_t sid,
@@ -108,7 +145,7 @@ void PybindOfflineTts(py::module *m) {
           },
           py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
           py::arg("callback") = py::none(),
-          py::call_guard<py::gil_scoped_release>())
+          kGenerateDoc, py::call_guard<py::gil_scoped_release>())
       .def(
           "generate",
           [](const PyClass &self, const std::string &text,

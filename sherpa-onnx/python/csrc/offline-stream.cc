@@ -10,7 +10,7 @@
 
 namespace sherpa_onnx {
 
-constexpr const char *kAcceptWaveformUsage = R"(
+constexpr const char *kAcceptWaveformUsage = R"doc(
 Process audio samples.
 
 Args:
@@ -20,11 +20,58 @@ Args:
   waveform:
     A 1-D float32 tensor containing audio samples. It must be normalized
     to the range [-1, 1].
-)";
+)doc";
+
+static constexpr const char *kOfflineRecognitionResultDoc = R"doc(
+The result of offline (non-streaming) speech recognition.
+
+Use the read-only properties to access individual fields of the result
+such as text, tokens, timestamps, etc.
+)doc";
+
+static constexpr const char *kOfflineStreamDoc = R"doc(
+An offline stream is created by an OfflineRecognizer and holds a
+single utterance of audio. Feed audio into it with ``accept_waveform``,
+then decode the stream with the recognizer to obtain the result.
+)doc";
+
+static constexpr const char *kSetOptionDoc = R"doc(
+Set a per-stream option.
+
+Args:
+  key:
+    The option name.
+  value:
+    The option value.
+)doc";
+
+static constexpr const char *kHasOptionDoc = R"doc(
+Check whether a per-stream option is set.
+
+Args:
+  key:
+    The option name.
+
+Return:
+  True if the option exists, False otherwise.
+)doc";
+
+static constexpr const char *kGetOptionDoc = R"doc(
+Get the value of a per-stream option.
+
+Args:
+  key:
+    The option name.
+
+Return:
+  The option value as a string, or an empty string if the key
+  does not exist.
+)doc";
 
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
-  py::class_<PyClass>(*m, "OfflineRecognitionResult")
+  py::class_<PyClass>(*m, "OfflineRecognitionResult",
+                      kOfflineRecognitionResultDoc)
       .def("__str__", &PyClass::AsJsonString)
       .def_property_readonly(
           "text",
@@ -60,7 +107,7 @@ void PybindOfflineStream(py::module *m) {
   PybindOfflineRecognitionResult(m);
 
   using PyClass = OfflineStream;
-  py::class_<PyClass>(*m, "OfflineStream")
+  py::class_<PyClass>(*m, "OfflineStream", kOfflineStreamDoc)
       .def(
           "accept_waveform",
           [](PyClass &self, float sample_rate,
@@ -70,11 +117,12 @@ void PybindOfflineStream(py::module *m) {
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
           py::call_guard<py::gil_scoped_release>())
       .def("set_option", &PyClass::SetOption, py::arg("key"),
-           py::arg("value"), py::call_guard<py::gil_scoped_release>())
+           py::arg("value"), kSetOptionDoc,
+           py::call_guard<py::gil_scoped_release>())
       .def("has_option", &PyClass::HasOption, py::arg("key"),
-           py::call_guard<py::gil_scoped_release>())
+           kHasOptionDoc, py::call_guard<py::gil_scoped_release>())
       .def("get_option", &PyClass::GetOption, py::arg("key"),
-           py::call_guard<py::gil_scoped_release>())
+           kGetOptionDoc, py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("result", &PyClass::GetResult);
 }
 

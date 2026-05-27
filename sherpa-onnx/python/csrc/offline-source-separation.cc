@@ -14,6 +14,19 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOfflineSourceSeparationProcessDoc = R"doc(
+Separate sources from multi-channel audio.
+
+Args:
+  sample_rate:
+    The sample rate of the input audio.
+  samples:
+    A 2-D float32 numpy array of shape (num_channels, num_samples).
+
+Returns:
+  An OfflineSourceSeparationOutput object.
+)doc";
+
 static void PybindOfflineSourceSeparationConfig(py::module *m) {
   PybindOfflineSourceSeparationModelConfig(m);
 
@@ -127,8 +140,7 @@ void PybindOfflineSourceSeparation(py::module *m) {
             return self.Process(input);
           },
           py::arg("sample_rate"), py::arg("samples"),
-          "samples is of shape (num_channels, num-samples) with dtype "
-          "np.float32");
+          kOfflineSourceSeparationProcessDoc);
 }
 
 }  // namespace sherpa_onnx

@@ -10,6 +10,58 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kAudioTaggingConfigDoc = R"doc(
+Configuration for audio tagging.
+
+Args:
+  model:
+    Config for the audio tagging model.
+  labels:
+    Path to the label file.
+  top_k:
+    Number of top results to return.
+)doc";
+
+static constexpr const char *kAudioEventDoc = R"doc(
+Represents an audio event detected by the tagger.
+
+Attributes:
+  name:
+    The name of the audio event.
+  index:
+    The index of the audio event.
+  prob:
+    The probability of the audio event.
+)doc";
+
+static constexpr const char *kAudioTaggingInitDoc = R"doc(
+Constructor for AudioTagging.
+
+Args:
+  config:
+    Config for audio tagging.
+)doc";
+
+static constexpr const char *kAudioTaggingCreateStreamDoc = R"doc(
+Create a stream for feeding audio data.
+
+Returns:
+  An OnlineStream object.
+)doc";
+
+static constexpr const char *kAudioTaggingComputeDoc = R"doc(
+Compute audio tagging results for the given stream.
+
+Args:
+  s:
+    The stream containing audio data.
+  top_k:
+    Number of top results to return. -1 means use the config value.
+
+Returns:
+  A list of AudioEvent objects.
+)doc";
+
 static void PybindOfflineZipformerAudioTaggingModelConfig(py::module *m) {
   using PyClass = OfflineZipformerAudioTaggingModelConfig;
   py::class_<PyClass>(*m, "OfflineZipformerAudioTaggingModelConfig")
@@ -45,7 +97,7 @@ static void PybindAudioTaggingConfig(py::module *m) {
 
   using PyClass = AudioTaggingConfig;
 
-  py::class_<PyClass>(*m, "AudioTaggingConfig")
+  py::class_<PyClass>(*m, "AudioTaggingConfig", kAudioTaggingConfigDoc)
       .def(py::init<>())
       .def(py::init<const AudioTaggingModelConfig &, const std::string &,
                     int32_t>(),
@@ -60,7 +112,7 @@ static void PybindAudioTaggingConfig(py::module *m) {
 static void PybindAudioEvent(py::module *m) {
   using PyClass = AudioEvent;
 
-  py::class_<PyClass>(*m, "AudioEvent")
+  py::class_<PyClass>(*m, "AudioEvent", kAudioEventDoc)
       .def_property_readonly(
           "name", [](const PyClass &self) -> std::string { return self.name; })
       .def_property_readonly(
@@ -78,11 +130,12 @@ void PybindAudioTagging(py::module *m) {
 
   py::class_<PyClass>(*m, "AudioTagging")
       .def(py::init<const AudioTaggingConfig &>(), py::arg("config"),
-           py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>(), kAudioTaggingInitDoc)
       .def("create_stream", &PyClass::CreateStream,
-           py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>(),
+           kAudioTaggingCreateStreamDoc)
       .def("compute", &PyClass::Compute, py::arg("s"), py::arg("top_k") = -1,
-           py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>(), kAudioTaggingComputeDoc);
 }
 
 }  // namespace sherpa_onnx

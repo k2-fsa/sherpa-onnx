@@ -12,20 +12,44 @@ def clear_console():
 
 
 class Display:
+    """A class for displaying real-time speech recognition results.
+
+    It maintains a history of finalized sentences and the current
+    in-progress text, and renders them to the console.
+    """
+
     def __init__(self):
+        """Initialize the display with empty history and current text."""
         self.sentences = []
         self.currentText = ""
 
     def update_text(self, text):
+        """Update the current in-progress text.
+
+        Args:
+          text:
+            The new text to display as the current recognition result.
+        """
         self.currentText = text
 
     def finalize_current_sentence(self):
+        """Finalize the current sentence and add it to the history.
+
+        If the current text is non-empty (after stripping whitespace), it is
+        appended to the sentence history with a timestamp. The current text
+        is then cleared.
+        """
         if self.currentText.strip():
             self.sentences.append((get_current_time(), self.currentText))
 
         self.currentText = ""
 
     def display(self):
+        """Render the display to the console.
+
+        Clears the console and prints the header, finalized sentence history,
+        and the current in-progress recognition text.
+        """
         clear_console()
         print("=== Speech Recognition with Next-gen Kaldi ===")
         print("Time:", get_current_time())

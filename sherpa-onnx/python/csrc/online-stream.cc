@@ -10,6 +10,14 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOnlineStreamClassDoc = R"doc(
+Represents a stream for the online (streaming) recognizer.
+
+An ``OnlineStream`` manages the input audio features for a single decoding
+session. Use ``accept_waveform`` to feed audio and ``input_finished`` to
+signal the end of input.
+)doc";
+
 constexpr const char *kAcceptWaveformUsage = R"(
 Process audio samples.
 
@@ -22,6 +30,12 @@ Args:
     to the range [-1, 1].
 )";
 
+
+static constexpr const char *kInputFinishedDoc = R"doc(
+Signal that no more audio will be fed into the stream. After calling this,
+the stream will flush any remaining buffered audio and mark input as
+complete.
+)doc";
 
 constexpr const char *kGetFramesUsage = R"(
 Get n frames starting from the given frame index.
@@ -41,7 +55,7 @@ Return:
 
 void PybindOnlineStream(py::module *m) {
   using PyClass = OnlineStream;
-  py::class_<PyClass>(*m, "OnlineStream")
+  py::class_<PyClass>(*m, "OnlineStream", kOnlineStreamClassDoc)
       .def(
           "accept_waveform",
           [](PyClass &self, float sample_rate,
@@ -50,7 +64,7 @@ void PybindOnlineStream(py::module *m) {
           },
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
           py::call_guard<py::gil_scoped_release>())
-      .def("input_finished", &PyClass::InputFinished,
+      .def("input_finished", &PyClass::InputFinished, kInputFinishedDoc,
            py::call_guard<py::gil_scoped_release>())
       .def("set_option", &PyClass::SetOption, py::arg("key"),
            py::arg("value"), py::call_guard<py::gil_scoped_release>())

@@ -11,9 +11,132 @@
 
 namespace sherpa_onnx {
 
+static constexpr const char *kOnlineRecognizerResultDoc = R"doc(
+Result for a streaming (online) recognizer. Call `result()` to obtain the
+current partial/final decoding result for an ``OnlineStream``.
+)doc";
+
+static constexpr const char *kOnlineRecognizerConfigInitDoc = R"doc(
+Configuration for the streaming (online) recognizer.
+
+Args:
+  feat_config:
+    Config for the feature extractor.
+  model_config:
+    Config for the online model.
+  lm_config:
+    Config for the language model (optional).
+  endpoint_config:
+    Config for endpoint detection (optional).
+  ctc_fst_decoder_config:
+    Config for CTC FST decoding (optional).
+  enable_endpoint:
+    If True, enable endpoint detection.
+  decoding_method:
+    Decoding method, e.g., ``greedy_search`` or ``modified_beam_search``.
+  max_active_paths:
+    Number of active paths for modified beam search.
+  hotwords_file:
+    File containing hotwords, one per line.
+  hotwords_score:
+    Score for hotwords.
+  blank_penalty:
+    Penalty for blank tokens.
+  temperature_scale:
+    Temperature scale for non-blank tokens.
+  rule_fsts:
+    Rule FSTs for inverse text normalization.
+  rule_fars:
+    Rule FARs for inverse text normalization.
+  reset_encoder:
+    If True, reset the encoder state after endpoint detection.
+  hr:
+    Config for homophone replacer.
+)doc";
+
+static constexpr const char *kOnlineRecognizerInitDoc = R"doc(
+Constructor for the streaming (online) recognizer.
+
+Args:
+  config:
+    The configuration for the recognizer.
+)doc";
+
+static constexpr const char *kCreateStreamDoc = R"doc(
+Create a new ``OnlineStream`` for decoding.
+
+Return:
+  An ``OnlineStream`` object.
+)doc";
+
+static constexpr const char *kCreateStreamHotwordsDoc = R"doc(
+Create a new ``OnlineStream`` for decoding with custom hotwords.
+
+Args:
+  hotwords:
+    A string of hotwords separated by ``/``.
+Return:
+  An ``OnlineStream`` object.
+)doc";
+
+static constexpr const char *kIsReadyDoc = R"doc(
+Check if the stream has enough frames for decoding.
+
+Args:
+  s:
+    The ``OnlineStream`` to check.
+Return:
+  True if the stream has enough frames for decoding; False otherwise.
+)doc";
+
+static constexpr const char *kDecodeStreamDoc = R"doc(
+Decode one frame for the given stream.
+
+Args:
+  s:
+    The ``OnlineStream`` to decode.
+)doc";
+
+static constexpr const char *kDecodeStreamsDoc = R"doc(
+Decode multiple streams at the same time.
+
+Args:
+  ss:
+    A list of ``OnlineStream`` objects.
+)doc";
+
+static constexpr const char *kGetResultDoc = R"doc(
+Get the current decoding result for the given stream.
+
+Args:
+  s:
+    The ``OnlineStream``.
+Return:
+  An ``OnlineRecognizerResult`` object.
+)doc";
+
+static constexpr const char *kIsEndpointDoc = R"doc(
+Check whether an endpoint has been detected for the given stream.
+
+Args:
+  s:
+    The ``OnlineStream`` to check.
+Return:
+  True if an endpoint is detected; False otherwise.
+)doc";
+
+static constexpr const char *kResetDoc = R"doc(
+Reset the given stream after an endpoint is detected. The internal state of
+the stream is cleared.
+
+Args:
+  s:
+    The ``OnlineStream`` to reset.
+)doc";
+
 static void PybindOnlineRecognizerResult(py::module *m) {
   using PyClass = OnlineRecognizerResult;
-  py::class_<PyClass>(*m, "OnlineRecognizerResult")
+  py::class_<PyClass>(*m, "OnlineRecognizerResult", kOnlineRecognizerResultDoc)
       .def_property_readonly(
           "text",
           [](PyClass &self) -> py::str {
@@ -69,7 +192,8 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
            py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0,
            py::arg("temperature_scale") = 2.0, py::arg("rule_fsts") = "",
            py::arg("rule_fars") = "", py::arg("reset_encoder") = false,
-           py::arg("hr") = HomophoneReplacerConfig{})
+           py::arg("hr") = HomophoneReplacerConfig{},
+           kOnlineRecognizerConfigInitDoc)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
@@ -96,32 +220,37 @@ void PybindOnlineRecognizer(py::module *m) {
   using PyClass = OnlineRecognizer;
   py::class_<PyClass>(*m, "OnlineRecognizer")
       .def(py::init<const OnlineRecognizerConfig &>(), py::arg("config"),
+           kOnlineRecognizerInitDoc,
            py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](const PyClass &self) { return self.CreateStream(); },
+          kCreateStreamDoc,
           py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](PyClass &self, const std::string &hotwords) {
             return self.CreateStream(hotwords);
           },
-          py::arg("hotwords"), py::call_guard<py::gil_scoped_release>())
-      .def("is_ready", &PyClass::IsReady,
+          py::arg("hotwords"), kCreateStreamHotwordsDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def("is_ready", &PyClass::IsReady, kIsReadyDoc,
            py::call_guard<py::gil_scoped_release>())
       .def("decode_stream", &PyClass::DecodeStream, py::arg("s"),
+           kDecodeStreamDoc,
            py::call_guard<py::gil_scoped_release>())
       .def(
           "decode_streams",
           [](PyClass &self, std::vector<OnlineStream *> ss) {
             self.DecodeStreams(ss.data(), ss.size());
           },
-          py::arg("ss"), py::call_guard<py::gil_scoped_release>())
-      .def("get_result", &PyClass::GetResult, py::arg("s"),
+          py::arg("ss"), kDecodeStreamsDoc,
+          py::call_guard<py::gil_scoped_release>())
+      .def("get_result", &PyClass::GetResult, py::arg("s"), kGetResultDoc,
            py::call_guard<py::gil_scoped_release>())
-      .def("is_endpoint", &PyClass::IsEndpoint, py::arg("s"),
+      .def("is_endpoint", &PyClass::IsEndpoint, py::arg("s"), kIsEndpointDoc,
            py::call_guard<py::gil_scoped_release>())
-      .def("reset", &PyClass::Reset, py::arg("s"),
+      .def("reset", &PyClass::Reset, py::arg("s"), kResetDoc,
            py::call_guard<py::gil_scoped_release>());
 }
 
