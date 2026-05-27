@@ -110,15 +110,25 @@ void SubtractBlank(T *in, int32_t w, int32_t h, int32_t blank_idx,
 
 template <class T>
 std::vector<int32_t> TopkIndex(const T *vec, int32_t size, int32_t topk) {
+  // Clamp topk to [0, size]: std::partial_sort(begin, begin + k, end, cmp)
+  // requires k in [0, end-begin]. Callers (e.g. FinalizeLabels in
+  // offline-speaker-diarization-pyannote-impl.h) can pass topk > size
+  // on short/degenerate inputs; the unclamped call invokes undefined
+  // behavior by reading past the end of vec_index. A negative topk would
+  // be UB for the same reason.
+  int32_t k_num = std::max<int32_t>(0, std::min<int32_t>(size, topk));
   std::vector<int32_t> vec_index(size);
   std::iota(vec_index.begin(), vec_index.end(), 0);
 
-  std::partial_sort(vec_index.begin(), vec_index.begin() + topk,
+  std::partial_sort(vec_index.begin(), vec_index.begin() + k_num,
                     vec_index.end(), [vec](int32_t index_1, int32_t index_2) {
                       return vec[index_1] > vec[index_2];
                     });
 
-  int32_t k_num = std::min<int32_t>(size, topk);
+  if (k_num == size) {
+    // partial_sort with middle == end fully sorts vec_index; skip the copy.
+    return vec_index;
+  }
   return {vec_index.begin(), vec_index.begin() + k_num};
 }
 
