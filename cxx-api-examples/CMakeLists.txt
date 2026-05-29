@@ -103,6 +103,9 @@ target_link_libraries(offline-speaker-diarization-cxx-api sherpa-onnx-cxx-api)
 add_executable(cohere-transcribe-cxx-api ./cohere-transcribe-cxx-api.cc)
 target_link_libraries(cohere-transcribe-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(offline-diacritization-cxx-api ./offline-diacritization-cxx-api.cc)
+target_link_libraries(offline-diacritization-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(offline-punctuation-cxx-api ./offline-punctuation-cxx-api.cc)
 target_link_libraries(offline-punctuation-cxx-api sherpa-onnx-cxx-api)
 

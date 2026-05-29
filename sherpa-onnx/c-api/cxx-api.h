@@ -1991,6 +1991,46 @@ class SHERPA_ONNX_API OfflineSpeakerDiarization
       const SherpaOnnxOfflineSpeakerDiarization *p);
 };
 
+// ============================================================================
+// Offline Diacritization
+// ============================================================================
+/** @brief Offline diacritization model configuration. */
+struct OfflineDiacritizationModelConfig {
+  /** Encoder CATT model file. */
+  std::string catt_encoder;
+  /** Decoder CATT model file. */
+  std::string catt_decoder;
+  /** Number of inference threads. */
+  int32_t num_threads = 1;
+  /** Enable verbose debug logging. */
+  bool debug = false;
+  /** Execution provider such as `"cpu"`. */
+  std::string provider = "cpu";
+};
+
+/** @brief Configuration for offline diacritization. */
+struct OfflineDiacritizationConfig {
+  /** Model configuration. */
+  OfflineDiacritizationModelConfig model;
+};
+
+/** @brief RAII wrapper for offline diacritization. */
+class SHERPA_ONNX_API OfflineDiacritization
+    : public MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization> {
+ public:
+  /** @brief Create an offline diacritization model. */
+  static OfflineDiacritization Create(const OfflineDiacritizationConfig &config);
+
+  /** @brief Destroy the wrapped C handle. */
+  void Destroy(const SherpaOnnxOfflineDiacritization *diacrt) const;
+
+  /** @brief Add diacritics to a complete input text. */
+  std::string AddDiacritics(const std::string &text) const;
+
+ private:
+  explicit OfflineDiacritization(const SherpaOnnxOfflineDiacritization *diacrt);
+};
+
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_

@@ -1552,4 +1552,37 @@ OfflineSpeakerDiarization::Process(
   return ans;
 }
 
+// ============================================================
+// For Offline Diacritization
+// ============================================================
+OfflineDiacritization OfflineDiacritization::Create(
+    const OfflineDiacritizationConfig &config) {
+  struct SherpaOnnxOfflineDiacritizationConfig c;
+  memset(&c, 0, sizeof(c));
+  c.model.catt_encoder = config.model.catt_encoder.c_str();
+  c.model.catt_decoder = config.model.catt_decoder.c_str();
+  c.model.num_threads = config.model.num_threads;
+  c.model.debug = config.model.debug;
+  c.model.provider = config.model.provider.c_str();
+
+  const SherpaOnnxOfflineDiacritization *diacrt =
+      SherpaOnnxCreateOfflineDiacritization(&c);
+  return OfflineDiacritization(diacrt);
+}
+
+OfflineDiacritization::OfflineDiacritization(const SherpaOnnxOfflineDiacritization *diacrt)
+    : MoveOnly<OfflineDiacritization, SherpaOnnxOfflineDiacritization>(diacrt) {}
+
+void OfflineDiacritization::Destroy(const SherpaOnnxOfflineDiacritization *diacrt) const {
+  SherpaOnnxDestroyOfflineDiacritization(diacrt);
+}
+
+std::string OfflineDiacritization::AddDiacritics(const std::string &text) const {
+  const char *result = SherpaOfflineDiacritizationAddDiacritics(p_, text.c_str());
+  if (!result) return {};
+  std::string ans(result);
+  SherpaOfflineDiacritizationFreeText(result);
+  return ans;
+}
+
 }  // namespace sherpa_onnx::cxx

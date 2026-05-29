@@ -117,6 +117,14 @@ jobs:
 
           .github/scripts/test-offline-punctuation.sh
 
+      - name: Test offline diacritization
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-diacritization
+
+          .github/scripts/test-offline-diacritization.sh
+
       - name: Test offline transducer
         shell: bash
         run: |

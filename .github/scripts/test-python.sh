@@ -341,6 +341,16 @@ python3 ./python-api-examples/add-punctuation.py
 
 rm -rf $repo
 
+log "test offline diacritization"
+
+curl -SL -O https://github.com/abjadai/catt/releases/download/v2/eo_model_onnx.zip
+unzip eo_model_onnx.zip -d catt_eo_model_onnx
+rm eo_model_onnx.zip
+
+python3 ./python-api-examples/add-diacritics.py
+
+rm -rf catt_eo_model_onnx
+
 log "test online punctuation"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
