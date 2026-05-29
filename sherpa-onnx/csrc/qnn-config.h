@@ -17,7 +17,10 @@ struct QnnConfig {
   std::string backend_lib;
 
   // If it exists, you need to also provide system_lib.
-  // In this case, the model lib, i.e., libmodel.so, is ignored
+  // In this case, the model lib, i.e., libmodel.so, is ignored.
+  //
+  // For models with multiple QNN components, e.g. paraformer or online
+  // transducer, you can provide multiple context binaries separated by commas.
   //
   // If it does not exist and if the user want to save the context binary,
   // it will save it to this path.

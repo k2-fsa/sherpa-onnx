@@ -41,6 +41,8 @@ class QnnModel {
                           int32_t n) const;
 
   std::vector<float> GetOutputTensorData(const std::string &name) const;
+  std::vector<int32_t> GetOutputTensorDataInt32(
+      const std::string &name) const;
 
   bool Run() const;
   bool IsInitialized() const;

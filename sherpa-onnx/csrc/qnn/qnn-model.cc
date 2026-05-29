@@ -308,6 +308,19 @@ class QnnModel::Impl {
     }
 
     auto t = name2tensor_.at(name);
+    if (t->v1.dataType == QNN_DATATYPE_FLOAT_32) {
+      if (n * sizeof(float) != t->v1.clientBuf.dataSize) {
+        SHERPA_ONNX_LOGE("tensor '%s' expects %d bytes, but you provide %d bytes",
+                         name.c_str(),
+                         static_cast<int32_t>(t->v1.clientBuf.dataSize),
+                         static_cast<int32_t>(n * sizeof(float)));
+        return false;
+      }
+
+      FillDataNonQuant(t, p, n);
+      return true;
+    }
+
     if (t->v1.dataType != QNN_DATATYPE_UFIXED_POINT_16) {
       SHERPA_ONNX_LOGE(
           "tensor '%s' should be of type "
@@ -377,6 +390,13 @@ class QnnModel::Impl {
     }
 
     auto t = name2tensor_.at(name);
+    if (t->v1.dataType == QNN_DATATYPE_FLOAT_32) {
+      int32_t n = t->v1.clientBuf.dataSize / sizeof(float);
+      std::vector<float> ans(n);
+      GetDataNonQuant(t, ans.data(), n);
+      return ans;
+    }
+
     if (t->v1.dataType != QNN_DATATYPE_UFIXED_POINT_16) {
       SHERPA_ONNX_LOGE(
           "tensor '%s' should be of type "
@@ -400,6 +420,28 @@ class QnnModel::Impl {
     int32_t n = t->v1.clientBuf.dataSize / sizeof(uint16_t);
     std::vector<float> ans(n);
 
+    GetData(t, ans.data(), n);
+
+    return ans;
+  }
+
+  std::vector<int32_t> GetOutputTensorDataInt32(const std::string &name) {
+    if (!HasTensor(name)) {
+      SHERPA_ONNX_LOGE("No such tensor '%s'", name.c_str());
+      return {};
+    }
+
+    auto t = name2tensor_.at(name);
+    if (t->v1.dataType != QNN_DATATYPE_INT_32) {
+      SHERPA_ONNX_LOGE(
+          "tensor '%s' should be of type "
+          "QNN_DATATYPE_INT_32, but it is %s",
+          name.c_str(), TensorDataTypeToString(t->v1.dataType).c_str());
+      return {};
+    }
+
+    int32_t n = t->v1.clientBuf.dataSize / sizeof(int32_t);
+    std::vector<int32_t> ans(n);
     GetData(t, ans.data(), n);
 
     return ans;
@@ -674,6 +716,11 @@ bool QnnModel::SetInputTensorData(const std::string &name, const int32_t *p,
 std::vector<float> QnnModel::GetOutputTensorData(
     const std::string &name) const {
   return impl_->GetOutputTensorData(name);
+}
+
+std::vector<int32_t> QnnModel::GetOutputTensorDataInt32(
+    const std::string &name) const {
+  return impl_->GetOutputTensorDataInt32(name);
 }
 
 bool QnnModel::Run() const { return impl_->Run(); }
