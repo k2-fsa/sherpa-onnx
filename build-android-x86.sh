@@ -9,6 +9,28 @@ fi
 
 dir=$PWD/build-android-x86
 
+if [ -n "${SHERPA_ONNXRUNTIME_LIB_DIR:-}" ] && [ -n "${SHERPA_ONNXRUNTIME_INCLUDE_DIR:-}" ]; then
+  if [ ! -d "$SHERPA_ONNXRUNTIME_LIB_DIR" ]; then
+    echo "Error: SHERPA_ONNXRUNTIME_LIB_DIR does not exist: $SHERPA_ONNXRUNTIME_LIB_DIR"
+    exit 1
+  fi
+  if [ ! -d "$SHERPA_ONNXRUNTIME_INCLUDE_DIR" ]; then
+    echo "Error: SHERPA_ONNXRUNTIME_INCLUDE_DIR does not exist: $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
+    exit 1
+  fi
+  SHERPA_ONNXRUNTIME_LIB_DIR=$(cd "$SHERPA_ONNXRUNTIME_LIB_DIR" && pwd)
+  SHERPA_ONNXRUNTIME_INCLUDE_DIR=$(cd "$SHERPA_ONNXRUNTIME_INCLUDE_DIR" && pwd)
+  export SHERPA_ONNXRUNTIME_LIB_DIR
+  export SHERPA_ONNXRUNTIME_INCLUDE_DIR
+elif [ -n "${SHERPA_ONNX_ONNXRUNTIME_ROOT:-}" ]; then
+  if [ ! -d "$SHERPA_ONNX_ONNXRUNTIME_ROOT" ]; then
+    echo "Error: SHERPA_ONNX_ONNXRUNTIME_ROOT does not exist: $SHERPA_ONNX_ONNXRUNTIME_ROOT"
+    exit 1
+  fi
+  SHERPA_ONNX_ONNXRUNTIME_ROOT=$(cd "$SHERPA_ONNX_ONNXRUNTIME_ROOT" && pwd)
+  export SHERPA_ONNX_ONNXRUNTIME_ROOT
+fi
+
 mkdir -p $dir
 cd $dir
 
@@ -49,9 +71,14 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=1.24.3
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.24.3}
 
-if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
+if [ -n "${SHERPA_ONNXRUNTIME_LIB_DIR:-}" ] && [ -n "${SHERPA_ONNXRUNTIME_INCLUDE_DIR:-}" ]; then
+  echo "Using externally provided ONNX Runtime"
+elif [ -n "${SHERPA_ONNX_ONNXRUNTIME_ROOT:-}" ]; then
+  export SHERPA_ONNXRUNTIME_LIB_DIR="$SHERPA_ONNX_ONNXRUNTIME_ROOT/jni/x86/"
+  export SHERPA_ONNXRUNTIME_INCLUDE_DIR="$SHERPA_ONNX_ONNXRUNTIME_ROOT/headers/"
+elif [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
   mkdir -p $onnxruntime_version
   pushd $onnxruntime_version
   wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
@@ -60,8 +87,13 @@ if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
   popd
 fi
 
-export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/x86/
-export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
+if [ -z "${SHERPA_ONNXRUNTIME_LIB_DIR:-}" ]; then
+  export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/x86/
+fi
+
+if [ -z "${SHERPA_ONNXRUNTIME_INCLUDE_DIR:-}" ]; then
+  export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
+fi
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
@@ -110,7 +142,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv $onnxruntime_version/jni/x86/libonnxruntime.so install/lib
+cp -fv "$SHERPA_ONNXRUNTIME_LIB_DIR/libonnxruntime.so" install/lib
 rm -rf install/lib/pkgconfig
 
 if [ -f install/lib/libsherpa-onnx-c-api.so ]; then
