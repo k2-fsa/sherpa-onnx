@@ -27,7 +27,7 @@ namespace sherpa_onnx {
 
 namespace qnn_impl {
 
-static std::vector<int32_t> GetQnnContext(const std::vector<int32_t> &tokens,
+inline std::vector<int32_t> GetQnnContext(const std::vector<int32_t> &tokens,
                                           int32_t context_size) {
   if (static_cast<int32_t>(tokens.size()) <= context_size) {
     return tokens;
@@ -36,20 +36,20 @@ static std::vector<int32_t> GetQnnContext(const std::vector<int32_t> &tokens,
   return std::vector<int32_t>(tokens.end() - context_size, tokens.end());
 }
 
-static std::vector<int64_t> ToInt64Tokens(const std::vector<int32_t> &tokens) {
+inline std::vector<int64_t> ToInt64Tokens(const std::vector<int32_t> &tokens) {
   return std::vector<int64_t>(tokens.begin(), tokens.end());
 }
 
-static std::vector<int32_t> ToInt32Tokens(const std::vector<int64_t> &tokens) {
+inline std::vector<int32_t> ToInt32Tokens(const std::vector<int64_t> &tokens) {
   return std::vector<int32_t>(tokens.begin(), tokens.end());
 }
 
-static std::vector<int32_t> GetQnnContext(const std::vector<int64_t> &tokens,
+inline std::vector<int32_t> GetQnnContext(const std::vector<int64_t> &tokens,
                                           int32_t context_size) {
   return GetQnnContext(ToInt32Tokens(tokens), context_size);
 }
 
-static OnlineRecognizerResult ConvertQnnResult(
+inline OnlineRecognizerResult ConvertQnnResult(
     OnlineTransducerDecoderResultNoOrt src, const SymbolTable &sym_table,
     float frame_shift_ms, int32_t subsampling_factor, int32_t segment,
     int32_t frames_since_start, int32_t context_size) {
@@ -367,7 +367,9 @@ class OnlineRecognizerZipformerTransducerQnnImpl
       if (config_.decoding_method == "modified_beam_search") {
         r.hyps = Hypotheses({Hypothesis(qnn_impl::ToInt64Tokens(r.tokens), 0)});
       }
-    } else if (config_.reset_encoder) {
+    }
+
+    if (config_.reset_encoder) {
       s->SetQnnStates(model_->GetEncoderInitStates());
     }
 

@@ -18,15 +18,15 @@ static bool IsQnnModelLibFile(const std::string &filename) {
 }
 
 static bool ValidateQnnContextBinaries(const std::string &context_binary,
-                                       std::vector<std::string> *filenames) {
-  filenames->clear();
+                                       std::vector<std::string> &filenames) {
+  filenames.clear();
 
   if (context_binary.empty()) {
     return true;
   }
 
-  SplitStringToVector(context_binary, ",", true, filenames);
-  if (filenames->size() != 3) {
+  SplitStringToVector(context_binary, ",", true, &filenames);
+  if (filenames.size() != 3) {
     SHERPA_ONNX_LOGE(
         "For online transducer with QNN, you should provide 3 context "
         "binaries separated by commas. Given '%s'",
@@ -54,7 +54,7 @@ bool OnlineTransducerModelConfig::Validate() const {
   if (uses_qnn) {
     std::vector<std::string> context_binaries;
     if (!ValidateQnnContextBinaries(qnn_config.context_binary,
-                                    &context_binaries)) {
+                                    context_binaries)) {
       return false;
     }
 

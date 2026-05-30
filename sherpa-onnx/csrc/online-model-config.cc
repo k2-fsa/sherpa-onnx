@@ -93,11 +93,11 @@ bool OnlineModelConfig::Validate() const {
   }
 
   if (provider_config.provider != "qnn") {
-    if (!transducer.encoder.empty() &&
-        (EndsWith(transducer.encoder, ".so") ||
-         EndsWith(transducer.decoder, ".so") ||
-         EndsWith(transducer.joiner, ".so") ||
-         !transducer.qnn_config.context_binary.empty())) {
+    if ((!transducer.encoder.empty() &&
+         (EndsWith(transducer.encoder, ".so") ||
+          EndsWith(transducer.decoder, ".so") ||
+          EndsWith(transducer.joiner, ".so"))) ||
+        !transducer.qnn_config.context_binary.empty()) {
       SHERPA_ONNX_LOGE(
           "--provider is %s, which is not qnn, but you pass QNN model "
           "filenames or QNN context binaries. encoder: '%s', decoder: '%s', "

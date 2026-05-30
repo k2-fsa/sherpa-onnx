@@ -33,27 +33,23 @@ namespace sherpa_onnx {
 
 namespace {
 
-static bool IsQnnContextBinary(const std::string &filename) {
-  return EndsWith(filename, ".bin");
-}
-
 static bool NeedsCacheTranspose(const std::string &name) {
   return name.rfind("cached_key_", 0) == 0 ||
          name.rfind("cached_val_", 0) == 0 ||
          name.rfind("cached_val2_", 0) == 0;
 }
 
-static std::vector<float> Transpose0123To0231(const float *x, int32_t d0,
-                                              int32_t d1, int32_t d2,
-                                              int32_t d3) {
+static std::vector<float> Transpose0123To0231(const float *x, int64_t d0,
+                                              int64_t d1, int64_t d2,
+                                              int64_t d3) {
   std::vector<float> y(static_cast<size_t>(d0) * d1 * d2 * d3);
 
-  for (int32_t i0 = 0; i0 != d0; ++i0) {
-    for (int32_t i1 = 0; i1 != d1; ++i1) {
-      for (int32_t i2 = 0; i2 != d2; ++i2) {
-        for (int32_t i3 = 0; i3 != d3; ++i3) {
-          int32_t src = ((i0 * d1 + i1) * d2 + i2) * d3 + i3;
-          int32_t dst = ((i0 * d2 + i2) * d3 + i3) * d1 + i1;
+  for (int64_t i0 = 0; i0 != d0; ++i0) {
+    for (int64_t i1 = 0; i1 != d1; ++i1) {
+      for (int64_t i2 = 0; i2 != d2; ++i2) {
+        for (int64_t i3 = 0; i3 != d3; ++i3) {
+          int64_t src = ((i0 * d1 + i1) * d2 + i2) * d3 + i3;
+          int64_t dst = ((i0 * d2 + i2) * d3 + i3) * d1 + i1;
           y[dst] = x[src];
         }
       }
@@ -105,6 +101,11 @@ class OnlineZipformerTransducerModelQnn::Impl {
 
   std::vector<float> RunEncoder(std::vector<float> features, int32_t num_frames,
                                std::vector<OnlineStreamStateTensor> *states) const {
+    if (!states) {
+      SHERPA_ONNX_LOGE("states pointer is null");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
 
     features = Transpose(features.data(), num_frames, feat_dim_);
@@ -123,9 +124,8 @@ class OnlineZipformerTransducerModelQnn::Impl {
         int32_t n = static_cast<int32_t>((*states)[i].float_data.size());
         if (state_needs_transpose_[i]) {
           const auto &shape = state_storage_shapes_[i];
-          auto transposed = Transpose0123To0231(
-              p, static_cast<int32_t>(shape[0]), static_cast<int32_t>(shape[1]),
-              static_cast<int32_t>(shape[2]), static_cast<int32_t>(shape[3]));
+          auto transposed =
+              Transpose0123To0231(p, shape[0], shape[1], shape[2], shape[3]);
           encoder_->SetInputTensorData(name, transposed.data(),
                                        static_cast<int32_t>(transposed.size()));
         } else {
@@ -186,9 +186,9 @@ class OnlineZipformerTransducerModelQnn::Impl {
    encoder_backend_ = std::make_unique<QnnBackend>(
        config_.transducer.qnn_config.backend_lib, config_.debug);
    decoder_backend_ = std::make_unique<QnnBackend>(
-        config_.transducer.qnn_config.backend_lib, config_.debug);
-    joiner_backend_ = std::make_unique<QnnBackend>(
-        config_.transducer.qnn_config.backend_lib, config_.debug);
+       config_.transducer.qnn_config.backend_lib, config_.debug);
+   joiner_backend_ = std::make_unique<QnnBackend>(
+       config_.transducer.qnn_config.backend_lib, config_.debug);
 
     InitEncoder();
     InitDecoder();
@@ -389,17 +389,24 @@ class OnlineZipformerTransducerModelQnn::Impl {
     }
     context_size_ = in_shape[1];
 
-    const auto &output_names = decoder_->OutputTensorNames();
-    if (output_names.size() != 1) {
-      SHERPA_ONNX_LOGE("Expected one decoder output. Given %d",
-                       static_cast<int32_t>(output_names.size()));
+    if (!decoder_->HasTensor("decoder_out")) {
+      SHERPA_ONNX_LOGE("The decoder model does not have output 'decoder_out'");
       SHERPA_ONNX_EXIT(-1);
     }
 
-    decoder_output_name_ = output_names[0];
+    decoder_output_name_ = "decoder_out";
     auto out_shape = decoder_->TensorShape(decoder_output_name_);
     if (out_shape.size() != 2 || out_shape[0] != 1) {
-      SHERPA_ONNX_LOGE("Expected decoder output shape [1, decoder_dim]");
+      SHERPA_ONNX_LOGE(
+          "The decoder output should be of shape [1, decoder_dim]");
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    const auto &output_names = decoder_->OutputTensorNames();
+    if (output_names.size() != 1 || output_names[0] != decoder_output_name_) {
+      SHERPA_ONNX_LOGE(
+          "Expected one decoder output named 'decoder_out'. Given %d outputs",
+          static_cast<int32_t>(output_names.size()));
       SHERPA_ONNX_EXIT(-1);
     }
     decoder_out_dim_ = out_shape[1];
@@ -411,23 +418,36 @@ class OnlineZipformerTransducerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
-    for (const auto &name : joiner_->InputTensorNames()) {
-      auto shape = joiner_->TensorShape(name);
-      if (shape.size() != 2 || shape[0] != 1) {
-        continue;
-      }
+    joiner_encoder_input_name_ = "encoder_out";
+    joiner_decoder_input_name_ = "decoder_out";
 
-      if (shape[1] == encoder_out_dim_ && joiner_encoder_input_name_.empty()) {
-        joiner_encoder_input_name_ = name;
-      } else if (shape[1] == decoder_out_dim_ &&
-                 joiner_decoder_input_name_.empty()) {
-        joiner_decoder_input_name_ = name;
-      }
+    if (!joiner_->HasTensor(joiner_encoder_input_name_)) {
+      SHERPA_ONNX_LOGE("The joiner model does not have input '%s'",
+                       joiner_encoder_input_name_.c_str());
+      SHERPA_ONNX_EXIT(-1);
     }
 
-    if (joiner_encoder_input_name_.empty() ||
-        joiner_decoder_input_name_.empty()) {
-      SHERPA_ONNX_LOGE("Failed to identify joiner inputs");
+    if (!joiner_->HasTensor(joiner_decoder_input_name_)) {
+      SHERPA_ONNX_LOGE("The joiner model does not have input '%s'",
+                       joiner_decoder_input_name_.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    auto encoder_in_shape = joiner_->TensorShape(joiner_encoder_input_name_);
+    if (encoder_in_shape.size() != 2 || encoder_in_shape[0] != 1 ||
+        encoder_in_shape[1] != encoder_out_dim_) {
+      SHERPA_ONNX_LOGE(
+          "The joiner input '%s' should be of shape [1, %d]",
+          joiner_encoder_input_name_.c_str(), encoder_out_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    auto decoder_in_shape = joiner_->TensorShape(joiner_decoder_input_name_);
+    if (decoder_in_shape.size() != 2 || decoder_in_shape[0] != 1 ||
+        decoder_in_shape[1] != decoder_out_dim_) {
+      SHERPA_ONNX_LOGE(
+          "The joiner input '%s' should be of shape [1, %d]",
+          joiner_decoder_input_name_.c_str(), decoder_out_dim_);
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -445,7 +465,7 @@ class OnlineZipformerTransducerModelQnn::Impl {
  mutable std::mutex mutex_;
 
  OnlineModelConfig config_;
-  int32_t expected_feature_dim_ = 80;
+ int32_t expected_feature_dim_ = 80;
 
   std::unique_ptr<QnnBackend> encoder_backend_;
   std::unique_ptr<QnnBackend> decoder_backend_;
