@@ -93,6 +93,11 @@ std::string TensorMemTypeToString(Qnn_TensorMemType_t t) {
 
 #undef SHERPA_ONNX_TO_STRING
 
+void FillDataNonQuant(Qnn_Tensor_t *t, const float *data, int32_t n) {
+  float *out = reinterpret_cast<float *>(t->v1.clientBuf.data);
+  std::copy(data, data + n, out);
+}
+
 // quantized = float / scale - offset;
 void FillData(Qnn_Tensor_t *t, const float *data, int32_t n) {
   float scale = t->v1.quantizeParams.scaleOffsetEncoding.scale;
@@ -124,6 +129,11 @@ void FillData(Qnn_Tensor_t *t, const int32_t *data, int32_t n) {
   std::copy(data, data + n, out);
 }
 
+void GetDataNonQuant(const Qnn_Tensor_t *t, float *data, int32_t n) {
+  const float *p = reinterpret_cast<const float *>(t->v1.clientBuf.data);
+  std::copy(p, p + n, data);
+}
+
 void GetData(const Qnn_Tensor_t *t, float *data, int32_t n) {
   double scale = t->v1.quantizeParams.scaleOffsetEncoding.scale;
   double offset = t->v1.quantizeParams.scaleOffsetEncoding.offset;
@@ -133,6 +143,11 @@ void GetData(const Qnn_Tensor_t *t, float *data, int32_t n) {
     double quantizedValue = static_cast<double>(p[i]);
     data[i] = (quantizedValue + offset) * scale;
   }
+}
+
+void GetData(const Qnn_Tensor_t *t, int32_t *data, int32_t n) {
+  const int32_t *p = reinterpret_cast<const int32_t *>(t->v1.clientBuf.data);
+  std::copy(p, p + n, data);
 }
 
 static void FreeTensorV1(Qnn_Tensor_t *t) {

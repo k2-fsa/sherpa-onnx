@@ -111,6 +111,18 @@ class OnlineStream::Impl {
 
   std::vector<Ort::Value> &GetStates() { return states_; }
 
+  void SetQnnStates(std::vector<OnlineStreamStateTensor> states) {
+    qnn_states_ = std::move(states);
+  }
+
+  std::vector<OnlineStreamStateTensor> &GetQnnStates() { return qnn_states_; }
+
+  void SetQnnResult(const OnlineTransducerDecoderResultNoOrt &r) {
+    qnn_result_ = r;
+  }
+
+  OnlineTransducerDecoderResultNoOrt &GetQnnResult() { return qnn_result_; }
+
   void SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states) {
     decoder_states_ = std::move(decoder_states);
   }
@@ -190,11 +202,13 @@ class OnlineStream::Impl {
   TransducerKeywordResult empty_keyword_result_;
   OnlineCtcDecoderResult ctc_result_;
   std::vector<Ort::Value> states_;  // states for transducer or ctc models
+  std::vector<OnlineStreamStateTensor> qnn_states_;
   std::vector<Ort::Value> decoder_states_;  // states for nemo transducer models
   std::vector<float> paraformer_feat_cache_;
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
   OnlineParaformerDecoderResult paraformer_result_;
+  OnlineTransducerDecoderResultNoOrt qnn_result_;
   std::unordered_map<std::string, std::string> options_;
   std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
   int32_t faster_decoder_processed_frames_ = 0;
@@ -279,6 +293,22 @@ void OnlineStream::SetStates(std::vector<Ort::Value> states) {
 
 std::vector<Ort::Value> &OnlineStream::GetStates() {
   return impl_->GetStates();
+}
+
+void OnlineStream::SetQnnStates(std::vector<OnlineStreamStateTensor> states) {
+  impl_->SetQnnStates(std::move(states));
+}
+
+std::vector<OnlineStreamStateTensor> &OnlineStream::GetQnnStates() {
+  return impl_->GetQnnStates();
+}
+
+void OnlineStream::SetQnnResult(const OnlineTransducerDecoderResultNoOrt &r) {
+  impl_->SetQnnResult(r);
+}
+
+OnlineTransducerDecoderResultNoOrt &OnlineStream::GetQnnResult() {
+  return impl_->GetQnnResult();
 }
 
 void OnlineStream::SetNeMoDecoderStates(

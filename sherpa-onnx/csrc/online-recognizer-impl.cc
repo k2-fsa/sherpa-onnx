@@ -38,6 +38,10 @@
 #include "sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h"
 #endif
 
+#ifdef SHERPA_ONNX_ENABLE_QNN
+#include "sherpa-onnx/csrc/qnn/online-recognizer-zipformer-transducer-qnn-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 static bool IsNeMoParakeetUnifiedStreaming(const Ort::Session &decoder_sess) {
@@ -66,6 +70,26 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider_config.provider == "qnn") {
+#ifdef SHERPA_ONNX_ENABLE_QNN
+    if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerZipformerTransducerQnnImpl>(
+          config);
+    }
+
+    SHERPA_ONNX_LOGE(
+        "Only Zipformer transducers are currently supported by qnn for "
+        "online recognition.");
+    SHERPA_ONNX_EXIT(-1);
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_QNN=ON if you "
+        "want to use qnn.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif
@@ -132,6 +156,26 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
         "want to use rknn.");
+    SHERPA_ONNX_EXIT(-1);
+    return nullptr;
+#endif
+  }
+
+  if (config.model_config.provider_config.provider == "qnn") {
+#ifdef SHERPA_ONNX_ENABLE_QNN
+    if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<OnlineRecognizerZipformerTransducerQnnImpl>(
+          mgr, config);
+    }
+
+    SHERPA_ONNX_LOGE(
+        "Only Zipformer transducers are currently supported by qnn for "
+        "online recognition.");
+    SHERPA_ONNX_EXIT(-1);
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_QNN=ON if you "
+        "want to use qnn.");
     SHERPA_ONNX_EXIT(-1);
     return nullptr;
 #endif

@@ -35,6 +35,9 @@ std::vector<T> ReadFile(const std::string &filename) {
 
 void PrintTensor(Qnn_TensorV2_t t);
 
+// float -> float
+void FillDataNonQuant(Qnn_Tensor_t *t, const float *data, int32_t n);
+
 // float -> uint16_t
 void FillData(Qnn_Tensor_t *t, const float *data, int32_t n);
 
@@ -43,6 +46,12 @@ void FillData(Qnn_Tensor_t *t, const int32_t *data, int32_t n);
 
 // uint16_t -> float
 void GetData(const Qnn_Tensor_t *t, float *data, int32_t n);
+
+// int32_t -> int32_t
+void GetData(const Qnn_Tensor_t *t, int32_t *data, int32_t n);
+
+// float -> float
+void GetDataNonQuant(const Qnn_Tensor_t *t, float *data, int32_t n);
 
 void FreeTensor(Qnn_Tensor_t *t);
 

@@ -62,11 +62,15 @@ bool OnlineModelConfig::Validate() const {
   // num_threads == -2 -> Use NPU core 2
   // num_threads == -3 -> Use NPU core 0 and core 1
   // num_threads == -4 -> Use NPU core 0, core 1, and core 2
-  if (provider_config.provider != "rknn") {
+  if (provider_config.provider != "rknn" &&
+      provider_config.provider != "qnn") {
     if (num_threads < 1) {
       SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
       return false;
     }
+  }
+
+  if (provider_config.provider != "rknn") {
     if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".rknn") ||
                                         EndsWith(transducer.decoder, ".rknn") ||
                                         EndsWith(transducer.joiner, ".rknn"))) {
@@ -84,6 +88,23 @@ bool OnlineModelConfig::Validate() const {
           "--provider is %s, which is not rknn, but you pass rknn model "
           "filename for zipformer2_ctc: '%s'",
           provider_config.provider.c_str(), zipformer2_ctc.model.c_str());
+      return false;
+    }
+  }
+
+  if (provider_config.provider != "qnn") {
+    if ((!transducer.encoder.empty() &&
+         (EndsWith(transducer.encoder, ".so") ||
+          EndsWith(transducer.decoder, ".so") ||
+          EndsWith(transducer.joiner, ".so"))) ||
+        !transducer.qnn_config.context_binary.empty()) {
+      SHERPA_ONNX_LOGE(
+          "--provider is %s, which is not qnn, but you pass QNN model "
+          "filenames or QNN context binaries. encoder: '%s', decoder: '%s', "
+          "joiner: '%s', context_binary: '%s'",
+          provider_config.provider.c_str(), transducer.encoder.c_str(),
+          transducer.decoder.c_str(), transducer.joiner.c_str(),
+          transducer.qnn_config.context_binary.c_str());
       return false;
     }
   }
@@ -106,6 +127,19 @@ bool OnlineModelConfig::Validate() const {
           "--provider rknn, but you pass onnx model filename for "
           "zipformer2_ctc: '%s'",
           zipformer2_ctc.model.c_str());
+      return false;
+    }
+  }
+
+  if (provider_config.provider == "qnn") {
+    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".onnx") ||
+                                        EndsWith(transducer.decoder, ".onnx") ||
+                                        EndsWith(transducer.joiner, ".onnx"))) {
+      SHERPA_ONNX_LOGE(
+          "--provider is qnn, but you pass onnx model filenames. "
+          "encoder: '%s', decoder: '%s', joiner: '%s'",
+          transducer.encoder.c_str(), transducer.decoder.c_str(),
+          transducer.joiner.c_str());
       return false;
     }
   }

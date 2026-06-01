@@ -8,12 +8,15 @@
 
 #include "sherpa-onnx/csrc/parse-options.h"
 
+#include "sherpa-onnx/csrc/qnn-config.h"
+
 namespace sherpa_onnx {
 
 struct OnlineTransducerModelConfig {
   std::string encoder;
   std::string decoder;
   std::string joiner;
+  QnnConfig qnn_config;
 
   OnlineTransducerModelConfig() = default;
   OnlineTransducerModelConfig(const std::string &encoder,
