@@ -328,7 +328,7 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 > It supports Kokoro-82M, Piper, and VITS engines with multilingual support including
 > Hindi, English, British English, Japanese, Chinese and 50+ more languages.
 
-- [Download APK v1.0-beta](https://huggingface.co/CodeBySonu95/Sherpa-onnx-models/resolve/main/VoxSherpa-TTS_test.apk)
+- [Download APK (All Versions)](https://github.com/CodeBySonu95/VoxSherpa-TTS/releases)
 - Android 11+ · 100% offline · No telemetry
 
 <div align="center">
