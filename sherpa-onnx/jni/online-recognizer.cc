@@ -315,6 +315,16 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromFile(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_prependAdspLibraryPath(
+    JNIEnv *env, jclass /*cls*/, jstring new_path) {
+  const char *p = env->GetStringUTFChars(new_path, nullptr);
+  sherpa_onnx::PrependAdspLibraryPath(p);
+
+  env->ReleaseStringUTFChars(new_path, p);
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_delete(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
