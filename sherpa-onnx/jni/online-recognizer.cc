@@ -31,6 +31,20 @@ OnlineModelConfig GetOnlineModelConfig(JNIEnv *env, jclass model_config_cls,
   SHERPA_ONNX_JNI_READ_STRING(ans.transducer.joiner, joiner,
                               transducer_config_cls, transducer_config);
 
+  fid = env->GetFieldID(transducer_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  jobject qnn_config = env->GetObjectField(transducer_config, fid);
+  jclass qnn_config_cls = env->GetObjectClass(qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.qnn_config.backend_lib, backendLib,
+                              qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.qnn_config.context_binary,
+                              contextBinary, qnn_config_cls, qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(ans.transducer.qnn_config.system_lib, systemLib,
+                              qnn_config_cls, qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OnlineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);

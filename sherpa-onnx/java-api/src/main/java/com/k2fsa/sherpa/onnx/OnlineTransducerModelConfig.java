@@ -7,11 +7,13 @@ public class OnlineTransducerModelConfig {
     private final String encoder;
     private final String decoder;
     private final String joiner;
+    private final QnnConfig qnnConfig;
 
     private OnlineTransducerModelConfig(Builder builder) {
         this.encoder = builder.encoder;
         this.decoder = builder.decoder;
         this.joiner = builder.joiner;
+        this.qnnConfig = builder.qnnConfig;
     }
 
     public static Builder builder() {
@@ -30,10 +32,15 @@ public class OnlineTransducerModelConfig {
         return joiner;
     }
 
+    public QnnConfig getQnnConfig() {
+        return qnnConfig;
+    }
+
     public static class Builder {
         private String encoder = "";
         private String decoder = "";
         private String joiner = "";
+        private QnnConfig qnnConfig = QnnConfig.builder().build();
 
         public OnlineTransducerModelConfig build() {
           return new OnlineTransducerModelConfig(this);
@@ -51,6 +58,11 @@ public class OnlineTransducerModelConfig {
 
         public Builder setJoiner(String joiner) {
             this.joiner = joiner;
+            return this;
+        }
+
+        public Builder setQnnConfig(QnnConfig qnnConfig) {
+            this.qnnConfig = qnnConfig;
             return this;
         }
     }
