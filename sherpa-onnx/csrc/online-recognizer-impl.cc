@@ -44,6 +44,11 @@
 
 namespace sherpa_onnx {
 
+static bool HasQnnOnlineTransducerModel(const OnlineModelConfig &config) {
+  return !config.transducer.encoder.empty() ||
+         !config.transducer.qnn_config.context_binary.empty();
+}
+
 static bool IsNeMoParakeetUnifiedStreaming(const Ort::Session &decoder_sess) {
   Ort::AllocatorWithDefaultOptions allocator;
   Ort::ModelMetadata meta_data = decoder_sess.GetModelMetadata();
@@ -77,7 +82,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   if (config.model_config.provider_config.provider == "qnn") {
 #ifdef SHERPA_ONNX_ENABLE_QNN
-    if (!config.model_config.transducer.encoder.empty()) {
+    if (HasQnnOnlineTransducerModel(config.model_config)) {
       return std::make_unique<OnlineRecognizerZipformerTransducerQnnImpl>(
           config);
     }
@@ -163,7 +168,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   if (config.model_config.provider_config.provider == "qnn") {
 #ifdef SHERPA_ONNX_ENABLE_QNN
-    if (!config.model_config.transducer.encoder.empty()) {
+    if (HasQnnOnlineTransducerModel(config.model_config)) {
       return std::make_unique<OnlineRecognizerZipformerTransducerQnnImpl>(
           mgr, config);
     }
