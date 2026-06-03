@@ -191,7 +191,9 @@ bool OfflineModelConfig::Validate() const {
     return false;
   }
 
-  if (!transducer.encoder_filename.empty()) {
+  if (!transducer.encoder_filename.empty() || !transducer.decoder_filename.empty() ||
+      !transducer.joiner_filename.empty() ||
+      !transducer.qnn_config.context_binary.empty()) {
     return transducer.Validate();
   }
 

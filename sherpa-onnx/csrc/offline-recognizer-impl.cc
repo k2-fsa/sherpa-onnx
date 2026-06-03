@@ -67,6 +67,7 @@
 
 #if SHERPA_ONNX_ENABLE_QNN
 #include "sherpa-onnx/csrc/qnn/offline-paraformer-model-qnn.h"
+#include "sherpa-onnx/csrc/qnn/offline-recognizer-transducer-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-zipformer-ctc-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-sense-voice-model-qnn.h"
 #endif
@@ -188,6 +189,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           config);
+    } else if (!config.model_config.transducer.encoder_filename.empty() ||
+               !config.model_config.transducer.qnn_config.context_binary.empty()) {
+      return std::make_unique<OfflineRecognizerTransducerQnnImpl>(config);
     } else if (!config.model_config.zipformer_ctc.model.empty() ||
                !config.model_config.zipformer_ctc.qnn_config.context_binary
                     .empty()) {
@@ -200,8 +204,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
-          "supported by QNN for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, offline transducer, and Zipformer CTC "
+          "models are currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -537,6 +541,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           mgr, config);
+    } else if (!config.model_config.transducer.encoder_filename.empty() ||
+               !config.model_config.transducer.qnn_config.context_binary.empty()) {
+      return std::make_unique<OfflineRecognizerTransducerQnnImpl>(mgr, config);
     } else if (!config.model_config.zipformer_ctc.model.empty() ||
                !config.model_config.zipformer_ctc.qnn_config.context_binary
                     .empty()) {
@@ -550,8 +557,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, and Zipformer CTC models are currently "
-          "supported by QNN for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, offline transducer, and Zipformer CTC "
+          "models are currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }

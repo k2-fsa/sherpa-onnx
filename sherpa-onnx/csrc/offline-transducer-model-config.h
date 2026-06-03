@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
@@ -14,6 +15,7 @@ struct OfflineTransducerModelConfig {
   std::string encoder_filename;
   std::string decoder_filename;
   std::string joiner_filename;
+  QnnConfig qnn_config;
 
   OfflineTransducerModelConfig() = default;
   OfflineTransducerModelConfig(const std::string &encoder_filename,
