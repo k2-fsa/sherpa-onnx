@@ -49,8 +49,9 @@ std::string QuantizationEncodingToString(Qnn_QuantizationEncoding_t q) {
     SHERPA_ONNX_TO_STRING(QNN_QUANTIZATION_ENCODING_BLOCKWISE_EXPANSION);
     SHERPA_ONNX_TO_STRING(QNN_QUANTIZATION_ENCODING_VECTOR);
     SHERPA_ONNX_TO_STRING(QNN_QUANTIZATION_ENCODING_UNDEFINED);
+    default:
+      return "Unknown";
   }
-  return "Unknown";
 }
 
 std::string TensorDataTypeToString(Qnn_DataType_t t) {

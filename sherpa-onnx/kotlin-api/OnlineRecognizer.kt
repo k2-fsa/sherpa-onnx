@@ -18,6 +18,7 @@ data class OnlineTransducerModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var joiner: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OnlineParaformerModelConfig(
@@ -145,6 +146,9 @@ class OnlineRecognizer(
         init {
             System.loadLibrary("sherpa-onnx-jni")
         }
+
+        @JvmStatic
+        external fun prependAdspLibraryPath(newPath: String) // for qnn
     }
 }
 
@@ -186,6 +190,14 @@ by following the code)
 8 - csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
     https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
     encoder int8, decoder/joiner float32
+
+9025 - sherpa-onnx-qnn-streaming-zipformer-transducer-zh-en-2023-03-20-chunk-size-32-android-aarch64
+    QNN model libs with writable binary context files
+    libencoder.so, libdecoder.so, libjoiner.so
+
+9026 - sherpa-onnx-qnn-SM8850-binary-streaming-zipformer-transducer-zh-en-2023-03-20-chunk-size-32
+    QNN binary context files only
+    encoder.bin, decoder.bin, joiner.bin
 
  */
 fun getModelConfig(type: Int): OnlineModelConfig? {
@@ -601,6 +613,46 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
             )
         }
 
+        9025 -> {
+            val modelDir =
+                "sherpa-onnx-qnn-streaming-zipformer-transducer-zh-en-2023-03-20-chunk-size-32-android-aarch64"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/libencoder.so",
+                    decoder = "$modelDir/libdecoder.so",
+                    joiner = "$modelDir/libjoiner.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        // The following three *.bin files are generated during the first run
+                        // and are used to replace the corresponding *.so files in later runs
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
+        9026 -> {
+            // for Xiaomi 17 Pro
+            val modelDir =
+                "sherpa-onnx-qnn-SM8850-binary-streaming-zipformer-transducer-zh-en-2023-03-20-chunk-size-32"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
         1000 -> {
             val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
             return OnlineModelConfig(
@@ -666,4 +718,3 @@ fun getEndpointConfig(): EndpointConfig {
         rule3 = EndpointRule(false, 0.0f, 20.0f)
     )
 }
-

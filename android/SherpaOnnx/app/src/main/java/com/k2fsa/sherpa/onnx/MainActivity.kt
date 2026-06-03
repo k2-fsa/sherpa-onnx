@@ -1,6 +1,8 @@
 package com.k2fsa.sherpa.onnx
 
 import android.Manifest
+import android.content.Context
+import android.content.res.AssetManager
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -14,7 +16,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import kotlin.concurrent.thread
 
 private const val TAG = "sherpa-onnx"
@@ -23,6 +26,54 @@ private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 // To enable microphone in android emulator, use
 //
 // adb emu avd hostmicon
+
+private fun assetExists(assetManager: AssetManager, path: String): Boolean {
+    val dir = path.substringBeforeLast('/', "")
+    val fileName = path.substringAfterLast('/')
+
+    val files = assetManager.list(dir) ?: return false
+    return files.contains(fileName)
+}
+
+private fun copyAssetToInternalStorage(path: String, context: Context): String {
+    val targetRoot = context.filesDir
+    val outFile = File(targetRoot, path)
+
+    if (!assetExists(context.assets, path = path)) {
+        outFile.parentFile?.mkdirs()
+        Log.i(TAG, "$path does not exist, return ${outFile.absolutePath}")
+        return outFile.absolutePath
+    }
+
+    if (outFile.exists()) {
+        val assetSize = context.assets.open(path).use { it.available() }
+        if (outFile.length() == assetSize.toLong()) {
+            Log.i(TAG, "$targetRoot/$path already exists, skip copying, return $targetRoot/$path")
+            return outFile.absolutePath
+        }
+    }
+
+    outFile.parentFile?.mkdirs()
+
+    context.assets.open(path).use { input: InputStream ->
+        FileOutputStream(outFile).use { output: OutputStream ->
+            input.copyTo(output)
+        }
+    }
+    Log.i(TAG, "Copied $path to $targetRoot/$path")
+
+    return outFile.absolutePath
+}
+
+private fun copyAssetListToInternalStorage(paths: String, context: Context): String {
+    if (paths.isBlank()) return paths
+
+    return paths.split(",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .map { copyAssetToInternalStorage(it, context) }
+        .joinToString(",")
+}
 
 class MainActivity : AppCompatActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
@@ -232,8 +283,54 @@ class MainActivity : AppCompatActivity() {
             config.hr = hr
         }
 
+        var assetManager: AssetManager? = application.assets
+        if (config.modelConfig.provider == "qnn") {
+            Log.i(TAG, "nativelibdir: ${applicationInfo.nativeLibraryDir}")
+            OnlineRecognizer.prependAdspLibraryPath(applicationInfo.nativeLibraryDir)
+
+            val transducer = config.modelConfig.transducer
+            val qnnConfig = transducer.qnnConfig
+
+            if (qnnConfig.backendLib.isEmpty()) {
+                throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
+            }
+
+            config.modelConfig.tokens =
+                copyAssetToInternalStorage(config.modelConfig.tokens, this)
+
+            if (transducer.encoder.isNotEmpty()) {
+                transducer.encoder =
+                    copyAssetToInternalStorage(transducer.encoder, this)
+            }
+
+            if (transducer.decoder.isNotEmpty()) {
+                transducer.decoder =
+                    copyAssetToInternalStorage(transducer.decoder, this)
+            }
+
+            if (transducer.joiner.isNotEmpty()) {
+                transducer.joiner =
+                    copyAssetToInternalStorage(transducer.joiner, this)
+            }
+
+            if (qnnConfig.contextBinary.isNotEmpty()) {
+                qnnConfig.contextBinary =
+                    copyAssetListToInternalStorage(qnnConfig.contextBinary, this)
+            }
+
+            if (config.hr.lexicon.isNotEmpty()) {
+                config.hr.lexicon = copyAssetToInternalStorage(config.hr.lexicon, this)
+            }
+
+            if (config.hr.ruleFsts.isNotEmpty()) {
+                config.hr.ruleFsts = copyAssetToInternalStorage(config.hr.ruleFsts, this)
+            }
+
+            assetManager = null
+        }
+
         recognizer = OnlineRecognizer(
-            assetManager = application.assets,
+            assetManager = assetManager,
             config = config,
         )
     }
