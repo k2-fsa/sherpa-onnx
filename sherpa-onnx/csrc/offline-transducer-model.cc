@@ -31,41 +31,64 @@ namespace sherpa_onnx {
 
 namespace {
 
-static Ort::Value Cast1DIntTensorToInt64(Ort::Value tensor,
-                                         OrtAllocator *allocator) {
+static Ort::Value CastIntTensor(Ort::Value tensor,
+                                ONNXTensorElementDataType target_type,
+                                OrtAllocator *allocator) {
   auto info = tensor.GetTensorTypeAndShapeInfo();
   auto source_type = info.GetElementType();
   auto shape = info.GetShape();
-  if (shape.size() != 1) {
-    SHERPA_ONNX_LOGE("Expected a 1-D integer tensor. Given rank: %d",
-                     static_cast<int32_t>(shape.size()));
-    SHERPA_ONNX_EXIT(-1);
-  }
-
-  if (source_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
+  if (source_type == target_type) {
     return tensor;
   }
 
-  size_t n = info.GetElementCount();
-  Ort::Value ans =
-      Ort::Value::CreateTensor<int64_t>(allocator, shape.data(), shape.size());
-  int64_t *dst = ans.GetTensorMutableData<int64_t>();
-
   switch (source_type) {
-    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32: {
-      const int32_t *src = tensor.GetTensorData<int32_t>();
-      for (size_t i = 0; i != n; ++i) {
-        dst[i] = src[i];
-      }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
       break;
-    }
     default:
       SHERPA_ONNX_LOGE("Expected int32 or int64 source tensor. Given %d",
                        static_cast<int32_t>(source_type));
       SHERPA_ONNX_EXIT(-1);
   }
 
-  return ans;
+  size_t n = info.GetElementCount();
+  switch (target_type) {
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32: {
+      Ort::Value ans =
+          Ort::Value::CreateTensor<int32_t>(allocator, shape.data(), shape.size());
+      int32_t *dst = ans.GetTensorMutableData<int32_t>();
+      if (source_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
+        const int32_t *src = tensor.GetTensorData<int32_t>();
+        std::copy(src, src + n, dst);
+      } else {
+        const int64_t *src = tensor.GetTensorData<int64_t>();
+        for (size_t i = 0; i != n; ++i) {
+          dst[i] = static_cast<int32_t>(src[i]);
+        }
+      }
+      return ans;
+    }
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64: {
+      Ort::Value ans =
+          Ort::Value::CreateTensor<int64_t>(allocator, shape.data(), shape.size());
+      int64_t *dst = ans.GetTensorMutableData<int64_t>();
+      if (source_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
+        const int64_t *src = tensor.GetTensorData<int64_t>();
+        std::copy(src, src + n, dst);
+      } else {
+        const int32_t *src = tensor.GetTensorData<int32_t>();
+        for (size_t i = 0; i != n; ++i) {
+          dst[i] = src[i];
+        }
+      }
+      return ans;
+    }
+    default:
+      SHERPA_ONNX_LOGE("Expected int32 or int64 target tensor. Given %d",
+                       static_cast<int32_t>(target_type));
+      SHERPA_ONNX_EXIT(-1);
+      return Ort::Value{nullptr};
+  }
 }
 
 static void ValidateIntTensorType(ONNXTensorElementDataType type,
@@ -128,7 +151,8 @@ class OfflineTransducerModel::Impl {
   std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
                                                Ort::Value features_length) {
     features_length =
-        Cast1DIntTensorToInt64(std::move(features_length), Allocator());
+        CastIntTensor(std::move(features_length), encoder_input_length_type_,
+                      Allocator());
     std::array<Ort::Value, 2> encoder_inputs = {std::move(features),
                                                 std::move(features_length)};
 
@@ -137,10 +161,13 @@ class OfflineTransducerModel::Impl {
         encoder_inputs.size(), encoder_output_names_ptr_.data(),
         encoder_output_names_ptr_.size());
     return {std::move(encoder_out[0]),
-            Cast1DIntTensorToInt64(std::move(encoder_out[1]), Allocator())};
+            CastIntTensor(std::move(encoder_out[1]),
+                          ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64, Allocator())};
   }
 
   Ort::Value RunDecoder(Ort::Value decoder_input) {
+    decoder_input =
+        CastIntTensor(std::move(decoder_input), decoder_input_type_, Allocator());
     auto decoder_out = decoder_sess_->Run(
         {}, decoder_input_names_ptr_.data(), &decoder_input, 1,
         decoder_output_names_ptr_.data(), decoder_output_names_ptr_.size());
@@ -228,8 +255,10 @@ class OfflineTransducerModel::Impl {
     GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
                    &encoder_output_names_ptr_);
 
-    ValidateIntTensorType(
-        encoder_sess_->GetInputTypeInfo(1).GetTensorTypeAndShapeInfo().GetElementType(),
+    encoder_input_length_type_ = encoder_sess_->GetInputTypeInfo(1)
+                                     .GetTensorTypeAndShapeInfo()
+                                     .GetElementType();
+    ValidateIntTensorType(encoder_input_length_type_,
         "offline transducer encoder input 1");
 
     ValidateIntTensorType(
@@ -266,6 +295,12 @@ class OfflineTransducerModel::Impl {
 
     GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
                    &decoder_output_names_ptr_);
+
+    decoder_input_type_ = decoder_sess_->GetInputTypeInfo(0)
+                              .GetTensorTypeAndShapeInfo()
+                              .GetElementType();
+    ValidateIntTensorType(decoder_input_type_,
+                          "offline transducer decoder input 0");
 
     // get meta data
     Ort::ModelMetadata meta_data = decoder_sess_->GetModelMetadata();
@@ -335,6 +370,11 @@ class OfflineTransducerModel::Impl {
 
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
+
+  ONNXTensorElementDataType encoder_input_length_type_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+  ONNXTensorElementDataType decoder_input_type_ =
+      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
   int32_t vocab_size_ = 0;    // initialized in InitDecoder
   int32_t context_size_ = 0;  // initialized in InitDecoder

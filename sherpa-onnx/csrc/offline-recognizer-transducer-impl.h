@@ -25,10 +25,33 @@
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/utils.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
+
+static std::string RemoveSpaceBetweenCjk(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(text);
+  if (u32.size() < 3) {
+    return text;
+  }
+
+  std::u32string ans;
+  ans.reserve(u32.size());
+  ans.push_back(u32[0]);
+
+  for (size_t i = 1; i + 1 < u32.size(); ++i) {
+    if (u32[i] == U' ' && IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) {
+      continue;
+    }
+
+    ans.push_back(u32[i]);
+  }
+
+  ans.push_back(u32.back());
+  return Utf32ToUtf8(ans);
+}
 
 static OfflineRecognitionResult Convert(
     const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
@@ -58,6 +81,8 @@ static OfflineRecognitionResult Convert(
   if (sym_table.IsByteBpe()) {
     text = sym_table.DecodeByteBpe(text);
   }
+
+  text = RemoveSpaceBetweenCjk(text);
 
   r.text = std::move(text);
 

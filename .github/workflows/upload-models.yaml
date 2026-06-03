@@ -3,12 +3,12 @@ name: upload-models
 on:
   push:
     branches:
-      - upload-models-2
+      - upload-models
   workflow_dispatch:
 
-# concurrency:
-#   group: upload-models-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: upload-models-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   upload-models:
@@ -73,7 +73,7 @@ jobs:
           ls -lh $d $d.tar.bz2
 
       - name: X-ASR non-stremaing zipformer transducer punct
-        if: false
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-2026-06-03
@@ -86,9 +86,10 @@ jobs:
             done
           cd ..
 
-          for f in README.md bpe.model encoder-epoch-99-avg-1.onnx decoder-epoch-99-avg-1.onnx joiner-epoch-99-avg-1.onnx tokens.txt; do
+          for f in bpe.model encoder-epoch-99-avg-1.onnx decoder-epoch-99-avg-1.onnx joiner-epoch-99-avg-1.onnx tokens.txt; do
             curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/punct/$f
           done
+          curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/README.md
 
           popd
           ls -lh $d
@@ -97,7 +98,7 @@ jobs:
           ls -lh $d $d.tar.bz2
 
       - name: X-ASR non-stremaing zipformer transducer punct int8
-        if: false
+        if: true
         shell: bash
         run: |
           d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-int8-2026-06-03
@@ -110,9 +111,10 @@ jobs:
             done
           cd ..
 
-          for f in README.md bpe.model encoder-epoch-99-avg-1.int8.onnx decoder-epoch-99-avg-1.onnx joiner-epoch-99-avg-1.int8.onnx tokens.txt; do
+          for f in bpe.model encoder-epoch-99-avg-1.int8.onnx decoder-epoch-99-avg-1.onnx joiner-epoch-99-avg-1.int8.onnx tokens.txt; do
             curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/punct/$f
           done
+          curl -SL -O https://modelscope.cn/models/csukuangfj/2026-06-03/resolve/master/README.md
 
           popd
           ls -lh $d
