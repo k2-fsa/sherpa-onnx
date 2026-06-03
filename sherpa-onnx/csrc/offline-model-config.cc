@@ -11,21 +11,6 @@
 
 namespace sherpa_onnx {
 
-namespace {
-
-static bool IsQnnTransducerArtifact(const OfflineTransducerModelConfig &config) {
-  auto is_qnn_lib = [](const std::string &filename) {
-    return EndsWith(filename, ".so");
-  };
-
-  return is_qnn_lib(config.encoder_filename) ||
-         is_qnn_lib(config.decoder_filename) ||
-         is_qnn_lib(config.joiner_filename) ||
-         !config.qnn_config.context_binary.empty();
-}
-
-}  // namespace
-
 void OfflineModelConfig::Register(ParseOptions *po) {
   transducer.Register(po);
   paraformer.Register(po);
@@ -211,6 +196,20 @@ bool OfflineModelConfig::Validate() const {
         "Offline transducer QNN artifacts require --provider=qnn. "
         "Given provider: '%s'",
         provider.c_str());
+    return false;
+  }
+
+  if (provider == "qnn" &&
+      (!transducer.encoder_filename.empty() ||
+       !transducer.decoder_filename.empty() ||
+       !transducer.joiner_filename.empty()) &&
+      !IsQnnTransducerArtifact(transducer)) {
+    SHERPA_ONNX_LOGE(
+        "--provider=qnn requires QNN offline transducer artifacts (*.so or "
+        "--transducer.qnn-context-binary). Given encoder: '%s', decoder: '%s', "
+        "joiner: '%s'",
+        transducer.encoder_filename.c_str(), transducer.decoder_filename.c_str(),
+        transducer.joiner_filename.c_str());
     return false;
   }
 

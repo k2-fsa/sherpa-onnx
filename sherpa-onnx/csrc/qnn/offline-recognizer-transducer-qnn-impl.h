@@ -9,7 +9,6 @@
 #include <fstream>
 #include <ios>
 #include <memory>
-#include <regex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <utility>

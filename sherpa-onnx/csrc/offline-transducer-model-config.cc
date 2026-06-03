@@ -17,6 +17,13 @@ static bool IsQnnModelLibFile(const std::string &filename) {
   return EndsWith(filename, ".so");
 }
 
+bool IsQnnTransducerArtifact(const OfflineTransducerModelConfig &config) {
+  return IsQnnModelLibFile(config.encoder_filename) ||
+         IsQnnModelLibFile(config.decoder_filename) ||
+         IsQnnModelLibFile(config.joiner_filename) ||
+         !config.qnn_config.context_binary.empty();
+}
+
 static bool ValidateQnnContextBinaries(const std::string &context_binary,
                                        std::vector<std::string> &filenames) {
   filenames.clear();
@@ -47,10 +54,7 @@ void OfflineTransducerModelConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineTransducerModelConfig::Validate() const {
-  bool uses_qnn = IsQnnModelLibFile(encoder_filename) ||
-                  IsQnnModelLibFile(decoder_filename) ||
-                  IsQnnModelLibFile(joiner_filename) ||
-                  !qnn_config.context_binary.empty();
+  bool uses_qnn = IsQnnTransducerArtifact(*this);
 
   if (uses_qnn) {
     std::vector<std::string> context_binaries;

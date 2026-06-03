@@ -31,6 +31,8 @@ struct OfflineTransducerModelConfig {
   std::string ToString() const;
 };
 
+bool IsQnnTransducerArtifact(const OfflineTransducerModelConfig &config);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_TRANSDUCER_MODEL_CONFIG_H_
