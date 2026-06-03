@@ -94,7 +94,7 @@ OfflineTransducerModifiedBeamSearchNeMoDecoder::Decode(
 
   int32_t vocab_size = model_->VocabSize();
   int32_t blank_id = vocab_size - 1;  // NeMo models have blank at the end
-  int32_t max_symbols_per_frame = 5;  // Match greedy TDT decoder limit
+  int32_t max_symbols_per_frame = is_tdt_ ? 5 : 10;  // TDT: match greedy decoder limit
 
   // For TDT models, we need to know the number of duration bins
   // We'll detect this from the joiner output size on first run
