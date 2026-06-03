@@ -11,6 +11,21 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
+static bool IsQnnTransducerArtifact(const OfflineTransducerModelConfig &config) {
+  auto is_qnn_lib = [](const std::string &filename) {
+    return EndsWith(filename, ".so");
+  };
+
+  return is_qnn_lib(config.encoder_filename) ||
+         is_qnn_lib(config.decoder_filename) ||
+         is_qnn_lib(config.joiner_filename) ||
+         !config.qnn_config.context_binary.empty();
+}
+
+}  // namespace
+
 void OfflineModelConfig::Register(ParseOptions *po) {
   transducer.Register(po);
   paraformer.Register(po);
@@ -188,6 +203,14 @@ bool OfflineModelConfig::Validate() const {
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
+    return false;
+  }
+
+  if (IsQnnTransducerArtifact(transducer) && provider != "qnn") {
+    SHERPA_ONNX_LOGE(
+        "Offline transducer QNN artifacts require --provider=qnn. "
+        "Given provider: '%s'",
+        provider.c_str());
     return false;
   }
 

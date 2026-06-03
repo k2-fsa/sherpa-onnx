@@ -36,6 +36,7 @@ class OfflineZipformerTransducerModelQnn::Impl {
 
   template <typename Manager>
   Impl(Manager *mgr, const OfflineModelConfig &config) : config_(config) {
+    (void)mgr;
     SHERPA_ONNX_LOGE(
         "Please copy all files from assets to SD card and set assetManager to "
         "null");
@@ -75,6 +76,12 @@ class OfflineZipformerTransducerModelQnn::Impl {
   }
 
   std::vector<float> RunDecoder(const std::vector<int32_t> &tokens) const {
+    if (static_cast<int32_t>(tokens.size()) != context_size_) {
+      SHERPA_ONNX_LOGE("Expected decoder input size %d, given %d",
+                       context_size_, static_cast<int32_t>(tokens.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
     decoder_->SetInputTensorData(decoder_input_name_, tokens.data(),
                                  static_cast<int32_t>(tokens.size()));
@@ -84,6 +91,13 @@ class OfflineZipformerTransducerModelQnn::Impl {
 
   std::vector<float> RunJoiner(const float *encoder_out,
                                const std::vector<float> &decoder_out) const {
+    if (static_cast<int32_t>(decoder_out.size()) != decoder_out_dim_) {
+      SHERPA_ONNX_LOGE("Expected joiner decoder input size %d, given %d",
+                       decoder_out_dim_,
+                       static_cast<int32_t>(decoder_out.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
     joiner_->SetInputTensorData(joiner_encoder_input_name_, encoder_out,
                                 encoder_out_dim_);
@@ -266,6 +280,16 @@ class OfflineZipformerTransducerModelQnn::Impl {
     max_num_encoder_frames_ = out_shape[1];
     encoder_out_dim_ = out_shape[2];
 
+    if (feat_dim_ <= 0 || max_num_frames_ <= 0 || max_num_encoder_frames_ <= 0 ||
+        encoder_out_dim_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Invalid encoder shapes. feat_dim: %d, max_num_frames: %d, "
+          "max_num_encoder_frames: %d, encoder_out_dim: %d",
+          feat_dim_, max_num_frames_, max_num_encoder_frames_,
+          encoder_out_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     subsampling_factor_ = max_num_frames_ / max_num_encoder_frames_;
     if (subsampling_factor_ <= 0) {
       SHERPA_ONNX_LOGE(
@@ -305,6 +329,13 @@ class OfflineZipformerTransducerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
     decoder_out_dim_ = out_shape[1];
+
+    if (context_size_ <= 0 || decoder_out_dim_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Invalid decoder shapes. context_size: %d, decoder_out_dim: %d",
+          context_size_, decoder_out_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
   void CheckJoiner() {
@@ -355,6 +386,11 @@ class OfflineZipformerTransducerModelQnn::Impl {
     }
 
     vocab_size_ = out_shape[1];
+    if (vocab_size_ <= 0) {
+      SHERPA_ONNX_LOGE("Invalid joiner output shape. vocab_size: %d",
+                       vocab_size_);
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
  private:

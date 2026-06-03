@@ -543,7 +543,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           mgr, config);
     } else if (!config.model_config.transducer.encoder_filename.empty() ||
                !config.model_config.transducer.qnn_config.context_binary.empty()) {
-      return std::make_unique<OfflineRecognizerTransducerQnnImpl>(mgr, config);
+      SHERPA_ONNX_LOGE(
+          "QNN offline transducer does not support loading from asset manager. "
+          "Please copy model files to writable storage and use file paths.");
+      SHERPA_ONNX_EXIT(-1);
+      return nullptr;
     } else if (!config.model_config.zipformer_ctc.model.empty() ||
                !config.model_config.zipformer_ctc.qnn_config.context_binary
                     .empty()) {

@@ -131,7 +131,8 @@ class OfflineRecognizerTransducerQnnImpl : public OfflineRecognizerImpl {
 
   std::unique_ptr<OfflineStream> CreateStream(
       const std::string &hotwords) const override {
-    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::string hws = hotwords;
+    std::replace(hws.begin(), hws.end(), '/', '\n');
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
     std::vector<float> current_scores;
