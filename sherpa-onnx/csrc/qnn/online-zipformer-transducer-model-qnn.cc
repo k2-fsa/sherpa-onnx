@@ -113,25 +113,10 @@ class OnlineZipformerTransducerModelQnn::Impl {
     encoder_->SetInputTensorData(encoder_input_name_, features.data(),
                                 features.size());
 
-    for (size_t i = 0; i != state_input_names_.size(); ++i) {
-      const auto &name = state_input_names_[i];
-      if (!(*states)[i].int32_data.empty()) {
-        const auto *p = (*states)[i].int32_data.data();
-        int32_t n = static_cast<int32_t>((*states)[i].int32_data.size());
-        encoder_->SetInputTensorData(name, p, n);
-      } else {
-        const auto *p = (*states)[i].float_data.data();
-        int32_t n = static_cast<int32_t>((*states)[i].float_data.size());
-        if (state_needs_transpose_[i]) {
-          const auto &shape = state_storage_shapes_[i];
-          auto transposed =
-              Transpose0123To0231(p, shape[0], shape[1], shape[2], shape[3]);
-          encoder_->SetInputTensorData(name, transposed.data(),
-                                       static_cast<int32_t>(transposed.size()));
-        } else {
-          encoder_->SetInputTensorData(name, p, n);
-        }
-      }
+    if (has_processed_lens_) {
+      RunEncoderV2(states);
+    } else {
+      RunEncoderV1(states);
     }
 
     encoder_->Run();
@@ -181,6 +166,46 @@ class OnlineZipformerTransducerModelQnn::Impl {
   int32_t EncoderDim() const { return encoder_out_dim_; }
 
  private:
+  // Set encoder state inputs for V1 model (cached_* states, some need transpose)
+  void RunEncoderV1(std::vector<OnlineStreamStateTensor> *states) const {
+    for (size_t i = 0; i != state_input_names_.size(); ++i) {
+      const auto &name = state_input_names_[i];
+      if (!(*states)[i].int32_data.empty()) {
+        const auto *p = (*states)[i].int32_data.data();
+        int32_t n = static_cast<int32_t>((*states)[i].int32_data.size());
+        encoder_->SetInputTensorData(name, p, n);
+      } else {
+        const auto *p = (*states)[i].float_data.data();
+        int32_t n = static_cast<int32_t>((*states)[i].float_data.size());
+        if (state_needs_transpose_[i]) {
+          const auto &shape = state_storage_shapes_[i];
+          auto transposed =
+              Transpose0123To0231(p, shape[0], shape[1], shape[2], shape[3]);
+          encoder_->SetInputTensorData(name, transposed.data(),
+                                       static_cast<int32_t>(transposed.size()));
+        } else {
+          encoder_->SetInputTensorData(name, p, n);
+        }
+      }
+    }
+  }
+
+  // Set encoder state inputs for V2 model (processed_lens, no transpose)
+  void RunEncoderV2(std::vector<OnlineStreamStateTensor> *states) const {
+    for (size_t i = 0; i != state_input_names_.size(); ++i) {
+      const auto &name = state_input_names_[i];
+      if (!(*states)[i].int32_data.empty()) {
+        const auto *p = (*states)[i].int32_data.data();
+        int32_t n = static_cast<int32_t>((*states)[i].int32_data.size());
+        encoder_->SetInputTensorData(name, p, n);
+      } else {
+        const auto *p = (*states)[i].float_data.data();
+        int32_t n = static_cast<int32_t>((*states)[i].float_data.size());
+        encoder_->SetInputTensorData(name, p, n);
+      }
+    }
+  }
+
   void Init() {
    ParseContextBinaries();
    encoder_backend_ = std::make_unique<QnnBackend>(
@@ -311,11 +336,17 @@ class OnlineZipformerTransducerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    has_processed_lens_ = encoder_->HasTensor("processed_lens");
+
     encoder_input_name_.clear();
     for (const auto &name : encoder_->InputTensorNames()) {
       if (name == "x") {
         encoder_input_name_ = name;
+      } else if (has_processed_lens_) {
+        // V2: all non-"x" inputs are streaming states
+        state_input_names_.push_back(name);
       } else if (name.rfind("cached_", 0) == 0) {
+        // V1: only "cached_*" inputs are streaming states
         state_input_names_.push_back(name);
       }
     }
@@ -368,8 +399,14 @@ class OnlineZipformerTransducerModelQnn::Impl {
       auto output_shape = encoder_->TensorShape(new_name);
       state_storage_shapes_.emplace_back(output_shape.begin(),
                                          output_shape.end());
-      state_is_int32_.push_back(name.rfind("cached_len_", 0) == 0);
-      state_needs_transpose_.push_back(NeedsCacheTranspose(name));
+
+      if (has_processed_lens_) {
+        state_is_int32_.push_back(name == "processed_lens");
+        state_needs_transpose_.push_back(false);
+      } else {
+        state_is_int32_.push_back(name.rfind("cached_len_", 0) == 0);
+        state_needs_transpose_.push_back(NeedsCacheTranspose(name));
+      }
     }
   }
 
@@ -490,6 +527,8 @@ class OnlineZipformerTransducerModelQnn::Impl {
   std::vector<std::vector<int64_t>> state_storage_shapes_;
   std::vector<bool> state_is_int32_;
   std::vector<bool> state_needs_transpose_;
+
+  bool has_processed_lens_ = false;
 
   int32_t chunk_size_ = 0;
   int32_t chunk_shift_ = 0;

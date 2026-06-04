@@ -22,6 +22,7 @@
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/qnn/online-zipformer-transducer-model-qnn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -82,6 +83,8 @@ inline OnlineRecognizerResult ConvertQnnResult(
   if (sym_table.IsByteBpe()) {
     text = sym_table.DecodeByteBpe(text);
   }
+
+  text = RemoveSpaceBetweenCjk(text);
 
   r.text = std::move(text);
 
