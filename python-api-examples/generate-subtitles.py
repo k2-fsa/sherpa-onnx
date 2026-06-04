@@ -397,7 +397,7 @@ def get_args():
 
 
 def assert_file_exists(filename: str):
-    assert Path(filename).is_file(), (
+    assert Path(filename).exists(), (
         f"{filename} does not exist!\n"
         "Please refer to "
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
