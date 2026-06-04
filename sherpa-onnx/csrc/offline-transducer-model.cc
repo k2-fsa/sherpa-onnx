@@ -31,9 +31,9 @@ namespace sherpa_onnx {
 
 namespace {
 
-static Ort::Value CastIntTensor(Ort::Value tensor,
-                                ONNXTensorElementDataType target_type,
-                                OrtAllocator *allocator) {
+Ort::Value CastIntTensor(Ort::Value tensor,
+                         ONNXTensorElementDataType target_type,
+                         OrtAllocator *allocator) {
   auto info = tensor.GetTensorTypeAndShapeInfo();
   auto source_type = info.GetElementType();
   auto shape = info.GetShape();
@@ -57,14 +57,9 @@ static Ort::Value CastIntTensor(Ort::Value tensor,
       Ort::Value ans =
           Ort::Value::CreateTensor<int32_t>(allocator, shape.data(), shape.size());
       int32_t *dst = ans.GetTensorMutableData<int32_t>();
-      if (source_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
-        const int32_t *src = tensor.GetTensorData<int32_t>();
-        std::copy(src, src + n, dst);
-      } else {
-        const int64_t *src = tensor.GetTensorData<int64_t>();
-        for (size_t i = 0; i != n; ++i) {
-          dst[i] = static_cast<int32_t>(src[i]);
-        }
+      const int64_t *src = tensor.GetTensorData<int64_t>();
+      for (size_t i = 0; i != n; ++i) {
+        dst[i] = static_cast<int32_t>(src[i]);
       }
       return ans;
     }
@@ -72,14 +67,9 @@ static Ort::Value CastIntTensor(Ort::Value tensor,
       Ort::Value ans =
           Ort::Value::CreateTensor<int64_t>(allocator, shape.data(), shape.size());
       int64_t *dst = ans.GetTensorMutableData<int64_t>();
-      if (source_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
-        const int64_t *src = tensor.GetTensorData<int64_t>();
-        std::copy(src, src + n, dst);
-      } else {
-        const int32_t *src = tensor.GetTensorData<int32_t>();
-        for (size_t i = 0; i != n; ++i) {
-          dst[i] = src[i];
-        }
+      const int32_t *src = tensor.GetTensorData<int32_t>();
+      for (size_t i = 0; i != n; ++i) {
+        dst[i] = src[i];
       }
       return ans;
     }
@@ -87,12 +77,11 @@ static Ort::Value CastIntTensor(Ort::Value tensor,
       SHERPA_ONNX_LOGE("Expected int32 or int64 target tensor. Given %d",
                        static_cast<int32_t>(target_type));
       SHERPA_ONNX_EXIT(-1);
-      return Ort::Value{nullptr};
+      return Ort::Value{nullptr};  // unreachable
   }
 }
 
-static void ValidateIntTensorType(ONNXTensorElementDataType type,
-                                  const char *name) {
+void ValidateIntTensorType(ONNXTensorElementDataType type, const char *name) {
   if (type != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32 &&
       type != ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64) {
     SHERPA_ONNX_LOGE("%s should be int32 or int64. Given %d", name,
