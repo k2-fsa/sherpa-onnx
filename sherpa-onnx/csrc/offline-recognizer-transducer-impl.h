@@ -31,28 +31,6 @@
 
 namespace sherpa_onnx {
 
-static std::string RemoveSpaceBetweenCjk(const std::string &text) {
-  std::u32string u32 = Utf8ToUtf32(text);
-  if (u32.size() < 3) {
-    return text;
-  }
-
-  std::u32string ans;
-  ans.reserve(u32.size());
-  ans.push_back(u32[0]);
-
-  for (size_t i = 1; i + 1 < u32.size(); ++i) {
-    if (u32[i] == U' ' && IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) {
-      continue;
-    }
-
-    ans.push_back(u32[i]);
-  }
-
-  ans.push_back(u32.back());
-  return Utf32ToUtf8(ans);
-}
-
 static OfflineRecognitionResult Convert(
     const OfflineTransducerDecoderResult &src, const SymbolTable &sym_table,
     int32_t frame_shift_ms, int32_t subsampling_factor) {
