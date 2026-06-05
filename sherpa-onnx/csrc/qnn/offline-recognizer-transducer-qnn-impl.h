@@ -32,25 +32,6 @@ namespace sherpa_onnx {
 
 namespace qnn_offline_impl {
 
-inline std::string RemoveSpaceBetweenCjk(const std::string &text) {
-  std::u32string u32 = Utf8ToUtf32(text);
-  if (u32.size() < 3) {
-    return text;
-  }
-
-  std::u32string ans;
-  ans.reserve(u32.size());
-  for (size_t i = 0; i != u32.size(); ++i) {
-    if (u32[i] == U' ' && i > 0 && i + 1 < u32.size() && IsCJK(u32[i - 1]) &&
-        IsCJK(u32[i + 1])) {
-      continue;
-    }
-    ans.push_back(u32[i]);
-  }
-
-  return Utf32ToUtf8(ans);
-}
-
 inline std::vector<int32_t> GetQnnContext(const std::vector<int64_t> &tokens,
                                           int32_t context_size) {
   if (static_cast<int32_t>(tokens.size()) <= context_size) {
