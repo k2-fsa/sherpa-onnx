@@ -1,0 +1,288 @@
+name: export-x-asr
+
+on:
+  push:
+    branches:
+      - export-x-asr
+  workflow_dispatch:
+
+concurrency:
+  group: export-x-asr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-non-streaming:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Non-streaming ONNX
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone icefall
+        shell: bash
+        run: |
+          git clone https://github.com/k2-fsa/icefall
+
+      - name: Export onnx models
+        uses: addnab/docker-run-action@v3
+        with:
+            image: ghcr.io/${{ github.repository_owner }}/icefall:cpu-py3.10-torch2.6.0-v20250630
+            options: |
+              --volume ${{ github.workspace }}/icefall:/icefall
+              --volume ${{ github.workspace }}/:/sherpa-onnx
+            shell: bash
+            run: |
+              export PYTHONPATH=/icefall:$PYTHONPATH
+              cd /icefall
+              git config --global --add safe.directory /icefall
+
+              python3 -m torch.utils.collect_env
+              python3 -m k2.version
+
+              python3 -m pip install kaldi-native-fbank
+
+              /sherpa-onnx/scripts/zipformer-transducer/x-asr/export-non-streaming.sh
+
+              mv punct /sherpa-onnx
+              mv no-punct /sherpa-onnx
+              mv test_wavs /sherpa-onnx
+
+      - name: Show model files
+        shell: bash
+        run: |
+          ls -lh punct
+          echo "---"
+          ls -lh no-punct
+
+      - name: Collect model files (punct fp32)
+        shell: bash
+        run: |
+          d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-2026-06-03
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v punct/README.md $d
+          cp -v punct/encoder-epoch-99-avg-1.onnx $d
+          cp -v punct/decoder-epoch-99-avg-1.onnx $d
+          cp -v punct/joiner-epoch-99-avg-1.onnx $d
+          cp -v punct/tokens.txt $d
+          cp -v punct/test_onnx.py $d
+          cp -v punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (punct int8)
+        shell: bash
+        run: |
+          d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-punct-int8-2026-06-03
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v punct/README.md $d
+          cp -v punct/encoder-epoch-99-avg-1.int8.onnx $d
+          cp -v punct/decoder-epoch-99-avg-1.onnx $d # NOTE:  Use fp32 for decoder
+          cp -v punct/joiner-epoch-99-avg-1.int8.onnx $d
+          cp -v punct/tokens.txt $d
+          cp -v punct/test_onnx.py $d
+          cp -v punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (no-punct fp32)
+        shell: bash
+        run: |
+          d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-2026-06-03
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v no-punct/README.md $d
+          cp -v no-punct/encoder-epoch-99-avg-1.onnx $d
+          cp -v no-punct/decoder-epoch-99-avg-1.onnx $d
+          cp -v no-punct/joiner-epoch-99-avg-1.onnx $d
+          cp -v no-punct/tokens.txt $d
+          cp -v no-punct/test_onnx.py $d
+          cp -v no-punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (no-punct int8)
+        shell: bash
+        run: |
+          d=sherpa-onnx-x-asr-zipformer-transducer-zh-en-int8-2026-06-03
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v no-punct/README.md $d
+          cp -v no-punct/encoder-epoch-99-avg-1.int8.onnx $d
+          cp -v no-punct/decoder-epoch-99-avg-1.onnx $d         # NOTE:  Use fp32 for decoder
+          cp -v no-punct/joiner-epoch-99-avg-1.int8.onnx $d
+          cp -v no-punct/tokens.txt $d
+          cp -v no-punct/test_onnx.py $d
+          cp -v no-punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Release
+        if: true
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./sherpa-onnx-x-asr-*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+
+  export-streaming:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: streaming ONNX
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk_size_ms: [160, 480, 960, 1920]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone icefall
+        shell: bash
+        run: |
+          git clone https://github.com/k2-fsa/icefall
+
+      - name: Export onnx models
+        uses: addnab/docker-run-action@v3
+        with:
+            image: ghcr.io/${{ github.repository_owner }}/icefall:cpu-py3.10-torch2.6.0-v20250630
+            options: |
+              --volume ${{ github.workspace }}/icefall:/icefall
+              --volume ${{ github.workspace }}/:/sherpa-onnx
+            shell: bash
+            run: |
+              export PYTHONPATH=/icefall:$PYTHONPATH
+              cd /icefall
+              git config --global --add safe.directory /icefall
+
+              python3 -m torch.utils.collect_env
+              python3 -m k2.version
+
+              python3 -m pip install kaldi-native-fbank
+
+              chunk_size_ms=${{ matrix.chunk_size_ms }}
+
+              /sherpa-onnx/scripts/zipformer-transducer/x-asr/export-streaming.sh $chunk_size_ms
+
+              mv punct /sherpa-onnx
+              mv no-punct /sherpa-onnx
+              mv test_wavs /sherpa-onnx
+
+      - name: Show model files
+        shell: bash
+        run: |
+          ls -lh punct
+          echo "---"
+          ls -lh no-punct
+
+      - name: Collect model files (punct fp32)
+        shell: bash
+        run: |
+          chunk=${{ matrix.chunk_size_ms }}ms
+          d=sherpa-onnx-x-asr-$chunk-streaming-zipformer-transducer-zh-en-punct-2026-06-05
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v punct/README.md $d
+          cp -v punct/encoder.onnx $d
+          cp -v punct/decoder.onnx $d
+          cp -v punct/joiner.onnx $d
+          cp -v punct/tokens.txt $d
+          cp -v punct/test_onnx.py $d
+          cp -v punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (punct int8)
+        shell: bash
+        run: |
+          chunk=${{ matrix.chunk_size_ms }}ms
+          d=sherpa-onnx-x-asr-$chunk-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v punct/README.md $d
+          cp -v punct/encoder.int8.onnx $d
+          cp -v punct/decoder.onnx $d
+          cp -v punct/joiner.int8.onnx $d
+          cp -v punct/tokens.txt $d
+          cp -v punct/test_onnx.py $d
+          cp -v punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (no-punct fp32)
+        shell: bash
+        run: |
+          chunk=${{ matrix.chunk_size_ms }}ms
+          d=sherpa-onnx-x-asr-$chunk-streaming-zipformer-transducer-zh-en-2026-06-05
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v no-punct/README.md $d
+          cp -v no-punct/encoder.onnx $d
+          cp -v no-punct/decoder.onnx $d
+          cp -v no-punct/joiner.onnx $d
+          cp -v no-punct/tokens.txt $d
+          cp -v no-punct/test_onnx.py $d
+          cp -v no-punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+      - name: Collect model files (no-punct int8)
+        shell: bash
+        run: |
+          chunk=${{ matrix.chunk_size_ms }}ms
+          d=sherpa-onnx-x-asr-$chunk-streaming-zipformer-transducer-zh-en-int8-2026-06-05
+          mkdir $d
+          cp -av test_wavs $d
+          cp -v no-punct/README.md $d
+          cp -v no-punct/encoder.int8.onnx $d
+          cp -v no-punct/decoder.onnx $d
+          cp -v no-punct/joiner.int8.onnx $d
+          cp -v no-punct/tokens.txt $d
+          cp -v no-punct/test_onnx.py $d
+          cp -v no-punct/bpe.model $d
+
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d
+          ls -lh $d.tar.bz2
+
+
+      - name: Release
+        if: true
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./sherpa-onnx-x-asr-*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
