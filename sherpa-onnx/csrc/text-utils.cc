@@ -1057,6 +1057,28 @@ bool ContainsCJK(const std::u32string &text) {
   return false;
 }
 
+std::string RemoveSpaceBetweenCjk(const std::string &text) {
+  std::u32string u32 = Utf8ToUtf32(text);
+  if (u32.size() < 3) {
+    return text;
+  }
+
+  std::u32string ans;
+  ans.reserve(u32.size());
+  ans.push_back(u32[0]);
+
+  for (size_t i = 1; i + 1 < u32.size(); ++i) {
+    if (u32[i] == U' ' && IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) {
+      continue;
+    }
+
+    ans.push_back(u32[i]);
+  }
+
+  ans.push_back(u32.back());
+  return Utf32ToUtf8(ans);
+}
+
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end) {
   std::string ans;

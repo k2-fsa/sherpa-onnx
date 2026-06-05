@@ -188,6 +188,10 @@ bool ContainsCJK(const std::string &text);
 
 bool ContainsCJK(const std::u32string &text);
 
+// Remove spaces between two CJK characters.
+// e.g., "昨 天 是 Monday" -> "昨天是 Monday"
+std::string RemoveSpaceBetweenCjk(const std::string &text);
+
 bool StringToBool(const std::string &s);
 
 // end is inclusive
