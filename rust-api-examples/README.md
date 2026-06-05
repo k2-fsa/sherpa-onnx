@@ -90,6 +90,7 @@ in your own Cargo project, see
 | 45 | [zipformer_transducer_simulate_streaming_microphone](#example-45-simulated-streaming-asr-with-zipformer-transducer-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer and VAD from microphone |
 | 46 | [zipformer_transducer_simulate_streaming_microphone](#example-46-simulated-streaming-asr-with-zipformer-transducer-japanese-and-vad-from-microphone) | Simulated streaming ASR with Zipformer transducer (Japanese) and VAD from microphone |
 | 47 | [qwen3_asr_simulate_streaming_microphone](#example-47-simulated-streaming-asr-with-qwen3-asr-and-vad-from-microphone) | Simulated streaming ASR with Qwen3 ASR and VAD from microphone |
+| 48 | [whisper](#example-48-asr-with-non-streaming-whisper) | Non-streaming ASR with Whisper (multilingual) |
 
 ## Run it
 
@@ -414,4 +415,10 @@ Qwen3 ASR recognizer on each detected segment.
 
 ```bash
 ./run-qwen3-asr-simulate-streaming-microphone.sh
+```
+
+### Example 48: ASR with non-streaming Whisper
+
+```bash
+./run-whisper.sh
 ```

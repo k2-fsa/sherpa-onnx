@@ -67,6 +67,7 @@ rm -rf sherpa-onnx-online-punct-*
 rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
 
 ./run-spoken-language-identification.sh
+./run-whisper.sh
 rm -rf sherpa-onnx-whisper-tiny spoken-language-identification-test-wavs
 
 ./run-offline-punctuation.sh
