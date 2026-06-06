@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Xiaomi Corporation
+// Copyright (c) 2026 Yujie Wu
 //
 // This file demonstrates how to use Whisper with sherpa-onnx's Rust API
 // for offline speech recognition.
