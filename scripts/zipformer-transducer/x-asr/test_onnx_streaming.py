@@ -166,8 +166,13 @@ class OnnxModel:
     def get_encoder_states(self):
         states = []
         for n in self.encoder.get_inputs()[1:]:
-            assert n.type in ("tensor(float)", "tensor(int64)"), n
-            dtype = np.int64 if "int64" in n.type else np.float32
+            assert n.type in ("tensor(float)", "tensor(int64)", "tensor(int32)"), n
+            if n.type == "tensor(float)":
+                dtype = np.float32
+            elif n.type == "tensor(int64)":
+                dtype = np.int64
+            else:
+                dtype = np.int32
             shape = [1 if isinstance(s, str) else s for s in n.shape]
             s = np.zeros(shape, dtype=dtype)
             states.append(s)
@@ -186,7 +191,15 @@ class OnnxModel:
         return out[0], out[1:]
 
     def run_decoder(self, hyp):
-        hyp = np.array([hyp], dtype=np.int64)
+
+        n = self.decoder.get_inputs()[0]
+        assert n.type in ("tensor(int64)", "tensor(int32)"), n
+        if n.type == "tensor(int64)":
+            dtype = np.int64
+        else:
+            dtype = np.int32
+
+        hyp = np.array([hyp], dtype=dtype)
         out = self.decoder.run(
             [self.decoder.get_outputs()[0].name],
             {self.decoder.get_inputs()[0].name: hyp},
