@@ -653,6 +653,82 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
             )
         }
 
+        9027 -> {
+            val modelDir =
+                "sherpa-onnx-qnn-x-asr-streaming-zipformer-transducer-zh-en-2026-06-05-chunk-size-480ms-android-aarch64"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/libencoder.so",
+                    decoder = "$modelDir/libdecoder.so",
+                    joiner = "$modelDir/libjoiner.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
+        9028 -> {
+            val modelDir =
+                "sherpa-onnx-qnn-x-asr-streaming-zipformer-transducer-zh-en-punct-2026-06-05-chunk-size-480ms-android-aarch64"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/libencoder.so",
+                    decoder = "$modelDir/libdecoder.so",
+                    joiner = "$modelDir/libjoiner.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
+        9029 -> {
+            // for Xiaomi 17 Pro
+            val modelDir =
+                "sherpa-onnx-qnn-SM8850-binary-x-asr-streaming-zipformer-transducer-zh-en-2026-06-05-chunk-size-480ms"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
+        9030 -> {
+            // for Xiaomi 17 Pro
+            val modelDir =
+                "sherpa-onnx-qnn-SM8850-binary-x-asr-streaming-zipformer-transducer-zh-en-punct-2026-06-05-chunk-size-480ms"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                provider = "qnn",
+                modelType = "zipformer",
+            )
+        }
+
         1000 -> {
             val modelDir = "sherpa-onnx-rk3588-streaming-zipformer-bilingual-zh-en-2023-02-20"
             return OnlineModelConfig(

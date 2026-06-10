@@ -58,7 +58,7 @@ type={{ model.idx }}
 lang={{ model.lang }}
 short_name={{ model.short_name }}
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models-qnn/${model_name}.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/{{ model.release_tag }}/${model_name}.tar.bz2
 tar xvf ${model_name}.tar.bz2
 
 {{ model.cmd }}
