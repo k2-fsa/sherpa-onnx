@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - apk
-      - android-qnn-asr
+      - android-qnn-x-asr
 
   workflow_dispatch:
 

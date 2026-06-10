@@ -31,6 +31,7 @@ class Model:
     lang: str
     short_name: str = ""
     cmd: str = ""
+    release_tag: str = "asr-models-qnn"
 
 
 def get_models():
@@ -40,6 +41,68 @@ def get_models():
             idx=9025,
             lang="zh_en",
             short_name="streaming_zipformer_transducer_2023_03_20_chunk_32",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-x-asr-streaming-zipformer-transducer-zh-en-2026-06-05-chunk-size-480ms-android-aarch64",
+            idx=9027,
+            lang="zh_en",
+            short_name="x_asr_streaming_zipformer_transducer_2026_06_05_chunk_480ms",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-x-asr-streaming-zipformer-transducer-zh-en-punct-2026-06-05-chunk-size-480ms-android-aarch64",
+            idx=9028,
+            lang="zh_en",
+            short_name="x_asr_streaming_zipformer_transducer_punct_2026_06_05_chunk_480ms",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-x-asr-streaming-zipformer-transducer-zh-en-2026-06-05-chunk-size-480ms",
+            idx=9029,
+            lang="zh_en",
+            short_name="SM8850_x_asr_streaming_zipformer_transducer_2026_06_05_chunk_480ms",
+            release_tag="asr-models-qnn-binary",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-x-asr-streaming-zipformer-transducer-zh-en-punct-2026-06-05-chunk-size-480ms",
+            idx=9030,
+            lang="zh_en",
+            short_name="SM8850_x_asr_streaming_zipformer_transducer_punct_2026_06_05_chunk_480ms",
+            release_tag="asr-models-qnn-binary",
             cmd="""
             pushd $model_name
 
