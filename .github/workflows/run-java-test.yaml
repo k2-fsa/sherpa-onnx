@@ -252,6 +252,14 @@ jobs:
           # Delete model files to save space
           rm -rf sherpa-onnx-punct-*
 
+      - name:  Run java test (Offline add diacritics)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-offline-add-diacritics.sh
+          # Delete model files to save space
+          rm -rf catt_eo_model_onnx
+
       - name:  Run java test (speaker diarization)
         shell: bash
         run: |

@@ -117,6 +117,10 @@ java_files += OfflineSpeechDenoiser.java
 java_files += OnlineSpeechDenoiserConfig.java
 java_files += OnlineSpeechDenoiser.java
 
+java_files += OfflineDiacritizationModelConfig.java
+java_files += OfflineDiacritizationConfig.java
+java_files += OfflineDiacritization.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/main/java/$(package_dir)/,$(java_files))
