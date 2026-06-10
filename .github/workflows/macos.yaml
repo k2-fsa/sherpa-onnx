@@ -18,6 +18,7 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-diacritization.sh'
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
@@ -41,6 +42,7 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-diacritization.sh'
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
@@ -341,6 +343,15 @@ jobs:
           export EXE=sherpa-onnx-offline-punctuation
 
           .github/scripts/test-offline-punctuation.sh
+
+      - name: Test offline diacritization
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-diacritization
+
+          .github/scripts/test-offline-diacritization.sh
 
       - name: Test C API
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

@@ -4612,6 +4612,72 @@ SherpaOnnxCreateOfflineSourceSeparationOHOS(
     NativeResourceManager *mgr);
 #endif
 
+// ============================================================
+// For diacritization
+// ============================================================
+
+/**
+ * @brief Offline diacritization model configuration.
+ */
+typedef struct SherpaOnnxOfflineDiacritizationModelConfig {
+  /** Offline diacritization encoder model file. */
+  const char *catt_encoder;
+  /** Offline diacritization decoder model file. */
+  const char *catt_decoder;
+  /** Number of inference threads. */
+  int32_t num_threads;
+  /** Non-zero to print debug information. */
+  int32_t debug;
+  /** Execution provider such as `"cpu"`. */
+  const char *provider;
+} SherpaOnnxOfflineDiacritizationModelConfig;
+
+/** @brief Configuration for offline diacritization. */
+typedef struct SherpaOnnxOfflineDiacritizationConfig {
+  /** Model configuration. */
+  SherpaOnnxOfflineDiacritizationModelConfig model;
+} SherpaOnnxOfflineDiacritizationConfig;
+
+/** @brief Opaque offline diacritization handle. */
+typedef struct SherpaOnnxOfflineDiacritization SherpaOnnxOfflineDiacritization;
+
+/**
+ * @brief Create an offline diacritization processor.
+ *
+ * @param config Offline diacritization configuration.
+ * @return A newly allocated diacritization processor on success, or NULL on
+ *         error. Free it with SherpaOnnxDestroyOfflineDiacritization().
+ */
+SHERPA_ONNX_API const SherpaOnnxOfflineDiacritization *
+SherpaOnnxCreateOfflineDiacritization(
+    const SherpaOnnxOfflineDiacritizationConfig *config);
+
+/**
+ * @brief Destroy an offline diacritization processor.
+ *
+ * @param diacrt A pointer returned by SherpaOnnxCreateOfflineDiacritization().
+ */
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineDiacritization(
+    const SherpaOnnxOfflineDiacritization *diacrt);
+
+/**
+ * @brief Add diacritics to a complete input text.
+ *
+ * @param diacrt A pointer returned by SherpaOnnxCreateOfflineDiacritization().
+ * @param text Input text without diacritics.
+ * @return A newly allocated diacritized string. Free it with
+ *         SherpaOfflineDiacritizationFreeText().
+ */
+SHERPA_ONNX_API const char *SherpaOfflineDiacritizationAddDiacritics(
+    const SherpaOnnxOfflineDiacritization *diacrt, const char *text);
+
+/**
+ * @brief Free a string returned by SherpaOfflineDiacritizationAddDiacritics().
+ *
+ * @param text A pointer returned by SherpaOfflineDiacritizationAddDiacritics().
+ */
+SHERPA_ONNX_API void SherpaOfflineDiacritizationFreeText(const char *text);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
