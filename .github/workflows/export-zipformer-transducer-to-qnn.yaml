@@ -427,7 +427,7 @@ jobs:
           path: ./non_quant/*.json
 
       - name: Release
-        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850' && matrix.input_in_seconds == '5'
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -449,7 +449,7 @@ jobs:
           tag: asr-models-qnn-binary
 
       - name: Release
-        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850' && matrix.input_in_seconds == '5'
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

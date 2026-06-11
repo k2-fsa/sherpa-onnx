@@ -25,9 +25,6 @@ def main():
     configs = []
 
     for name, soc in soc_info_dict.items():
-        if soc.model.name != "SM8850":
-            continue
-
         if soc.model.name == "SM8350":
             # SM8350 does not support fp16
             continue
