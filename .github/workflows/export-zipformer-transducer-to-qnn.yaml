@@ -3,7 +3,7 @@ name: export-zipformer-transducer-qnn
 on:
   push:
     branches:
-      - export-reazonspeech-zipformer-qnn
+      - export-reazonspeech-zipformer-qnn-2
   workflow_dispatch:
 
 concurrency:

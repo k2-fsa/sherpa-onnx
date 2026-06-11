@@ -1483,7 +1483,6 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
                 modelType = "transducer",
                 debug = true,
-                lang = "ja",
             )
         }
 
@@ -1503,7 +1502,6 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
                 modelType = "transducer",
                 debug = true,
-                lang = "ja",
             )
         }
     }
