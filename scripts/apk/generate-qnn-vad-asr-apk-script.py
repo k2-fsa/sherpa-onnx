@@ -48,6 +48,11 @@ class Model:
 
     release_tag: str = "asr-models-qnn"
 
+    # If non-empty, sed replaces the duration in OfflineRecognizer.kt
+    # e.g., sed_old="5s", sed_new="8s" replaces "ja-5s-" with "ja-8s-"
+    sed_old: str = ""
+    sed_new: str = ""
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
@@ -486,11 +491,361 @@ def get_models():
             """,
         ),
         Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-8s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_8s",
+            sed_old="ja-5s-",
+            sed_new="ja-8s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-10s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_10s",
+            sed_old="ja-5s-",
+            sed_new="ja-10s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-13s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_13s",
+            sed_old="ja-5s-",
+            sed_new="ja-13s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-15s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_15s",
+            sed_old="ja-5s-",
+            sed_new="ja-15s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-18s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_18s",
+            sed_old="ja-5s-",
+            sed_new="ja-18s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-20s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_20s",
+            sed_old="ja-5s-",
+            sed_new="ja-20s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-23s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_23s",
+            sed_old="ja-5s-",
+            sed_new="ja-23s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-25s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_25s",
+            sed_old="ja-5s-",
+            sed_new="ja-25s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-28s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_28s",
+            sed_old="ja-5s-",
+            sed_new="ja-28s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-30s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_30s",
+            sed_old="ja-5s-",
+            sed_new="ja-30s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
             model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-5s-2024-08-01",
             idx=9027,
             lang="ja",
             short_name="SM8850_reazonspeech_zipformer_transducer_ja_5s",
             release_tag="asr-models-qnn-binary",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-8s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_8s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-8s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-10s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_10s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-10s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-13s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_13s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-13s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-15s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_15s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-15s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-18s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_18s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-18s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-20s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_20s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-20s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-23s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_23s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-23s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-25s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_25s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-25s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-28s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_28s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-28s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-30s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_30s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-30s-",
             cmd="""
             pushd $model_name
 

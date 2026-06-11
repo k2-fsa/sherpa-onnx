@@ -86,6 +86,10 @@ pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/
 sed -i.bak s/"asrModelType = [0-9]*/asrModelType = $type/" ./Home.kt
 popd
 
+{% if model.sed_old %}
+sed -i.bak 's/{{ model.sed_old }}/{{ model.sed_new }}/g' ./sherpa-onnx/kotlin-api/OfflineRecognizer.kt
+{% endif %}
+
 pushd android/SherpaOnnxSimulateStreamingAsr/app/src/main/java/com/k2fsa/sherpa/onnx/simulate/streaming/asr
 
 {% if model.use_hr %}
