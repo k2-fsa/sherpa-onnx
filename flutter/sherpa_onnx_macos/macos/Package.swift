@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "sherpa_onnx_macos",
-    platforms: [.macOS(.v10_11)],
+    platforms: [.macOS(.v10_13)],
     products: [
         .library(name: "sherpa_onnx_macos", targets: ["sherpa_onnx_macos"]),
     ],
