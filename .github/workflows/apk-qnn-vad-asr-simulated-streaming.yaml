@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - apk
-      - export-reazonspeech-zipformer-qnn
+      - export-reazonspeech-zipformer-qnn-2
 
   workflow_dispatch:
 

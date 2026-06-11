@@ -40,7 +40,6 @@ def main():
                     input_in_seconds=num_seconds,
                 )
             )
-        break
 
     ans = [asdict(c) for c in configs]
 
