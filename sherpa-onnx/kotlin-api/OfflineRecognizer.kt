@@ -18,6 +18,7 @@ data class OfflineTransducerModelConfig(
     var encoder: String = "",
     var decoder: String = "",
     var joiner: String = "",
+    var qnnConfig: QnnConfig = QnnConfig(),
 )
 
 data class OfflineParaformerModelConfig(
@@ -1461,6 +1462,48 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 debug = true,
+            )
+        }
+
+        9026 -> {
+            val modelDir =
+                "sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-5s-2024-08-01-android-aarch64"
+            return OfflineModelConfig(
+                provider = "qnn",
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/libencoder.so",
+                    decoder = "$modelDir/libdecoder.so",
+                    joiner = "$modelDir/libjoiner.so",
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+                debug = true,
+                lang = "ja",
+            )
+        }
+
+        9027 -> {
+            // for Xiaomi 17 Pro
+            val modelDir =
+                "sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-5s-2024-08-01"
+            return OfflineModelConfig(
+                provider = "qnn",
+                transducer = OfflineTransducerModelConfig(
+                    qnnConfig = QnnConfig(
+                        backendLib = "libQnnHtp.so",
+                        systemLib = "libQnnSystem.so",
+                        contextBinary = "$modelDir/encoder.bin,$modelDir/decoder.bin,$modelDir/joiner.bin",
+                    ),
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+                debug = true,
+                lang = "ja",
             )
         }
     }

@@ -162,6 +162,7 @@ object SimulateStreamingAsr {
                 if (config.modelConfig.senseVoice.qnnConfig.backendLib.isEmpty()
                     && config.modelConfig.zipformerCtc.qnnConfig.backendLib.isEmpty()
                     && config.modelConfig.paraformer.qnnConfig.backendLib.isEmpty()
+                    && config.modelConfig.transducer.qnnConfig.backendLib.isEmpty()
                 ) {
                     Log.e(TAG, "You should provide libQnnHtp.so for qnn")
                     throw IllegalArgumentException("You should provide libQnnHtp.so for qnn")
@@ -220,6 +221,35 @@ object SimulateStreamingAsr {
                     config.modelConfig.paraformer.qnnConfig.contextBinary =
                         copyAssetListToInternalStorage(
                             config.modelConfig.paraformer.qnnConfig.contextBinary,
+                            context
+                        )
+                } else if (config.modelConfig.transducer.encoder.isNotEmpty()
+                    || assetListExists(
+                        context.assets,
+                        config.modelConfig.transducer.qnnConfig.contextBinary
+                    )
+                ) {
+                    if (config.modelConfig.transducer.encoder.isNotEmpty()) {
+                        config.modelConfig.transducer.encoder =
+                            copyAssetListToInternalStorage(
+                                config.modelConfig.transducer.encoder,
+                                context
+                            )
+                        config.modelConfig.transducer.decoder =
+                            copyAssetListToInternalStorage(
+                                config.modelConfig.transducer.decoder,
+                                context
+                            )
+                        config.modelConfig.transducer.joiner =
+                            copyAssetListToInternalStorage(
+                                config.modelConfig.transducer.joiner,
+                                context
+                            )
+                    }
+
+                    config.modelConfig.transducer.qnnConfig.contextBinary =
+                        copyAssetListToInternalStorage(
+                            config.modelConfig.transducer.qnnConfig.contextBinary,
                             context
                         )
                 }

@@ -91,6 +91,23 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config,
   SHERPA_ONNX_JNI_READ_STRING(ans.model_config.transducer.joiner_filename,
                               joiner, transducer_config_cls, transducer_config);
 
+  fid = env->GetFieldID(transducer_config_cls, "qnnConfig",
+                        "Lcom/k2fsa/sherpa/onnx/QnnConfig;");
+  jobject transducer_qnn_config = env->GetObjectField(transducer_config, fid);
+  jclass transducer_qnn_config_cls = env->GetObjectClass(transducer_qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.transducer.qnn_config.backend_lib, backendLib,
+      transducer_qnn_config_cls, transducer_qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.transducer.qnn_config.context_binary, contextBinary,
+      transducer_qnn_config_cls, transducer_qnn_config);
+
+  SHERPA_ONNX_JNI_READ_STRING(
+      ans.model_config.transducer.qnn_config.system_lib, systemLib,
+      transducer_qnn_config_cls, transducer_qnn_config);
+
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OfflineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);
