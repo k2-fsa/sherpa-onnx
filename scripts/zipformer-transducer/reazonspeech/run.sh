@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -ex
 
 # We run this script inside a docker container using GitHub actions
 # sherpa-onnx repo is mounted at /sherpa-onnx
@@ -76,8 +77,6 @@ pushd $dir
 
 
 popd
-
-echo "copy onnx model files"
 
 echo "copy onnx model files"
 
