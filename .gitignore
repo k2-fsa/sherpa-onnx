@@ -137,10 +137,23 @@ sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 cmake-build-debug
 cmake-build-release
 README-DEV.txt
-*.rknn
-*.jit
+
+# WASM combined build artifacts
+wasm/combined/*.wasm
+wasm/combined/sherpa-onnx-wasm-combined.js
+build-wasm-combined/
+# Don't ignore the build script
+!build-wasm-combined.sh
+
 ##clion
 .idea
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfo.cs
+scripts/dotnet/examples/obj/Debug/net8.0/Common.GeneratedMSBuildEditorConfig.editorconfig
+scripts/dotnet/examples/obj/Debug/net8.0/Common.AssemblyInfoInputs.cache
+wasm/asr/sherpa-onnx-wasm-main-asr.data
+wasm/asr/sherpa-onnx-wasm-main-asr.js
+wasm/asr/sherpa-onnx-wasm-main-asr.wasm
+
 sherpa-onnx-dolphin-base-ctc-multi-lang-int8-2025-04-02
 dict
 *.npz
