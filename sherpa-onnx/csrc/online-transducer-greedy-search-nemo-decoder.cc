@@ -29,6 +29,17 @@ static Ort::Value BuildDecoderInput(int32_t token, OrtAllocator *allocator) {
   return decoder_input;
 }
 
+static std::vector<Ort::Value> BuildStateViews(
+    std::vector<Ort::Value> *states) {
+  std::vector<Ort::Value> ans;
+  ans.reserve(states->size());
+  for (auto &v : *states) {
+    ans.push_back(View(&v));
+  }
+
+  return ans;
+}
+
 static void DecodeOne(const float *encoder_out, int32_t num_rows,
                       int32_t num_cols, OnlineTransducerNeMoModel *model,
                       float blank_penalty, OnlineStream *s) {
@@ -48,10 +59,7 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
   std::vector<Ort::Value> &last_decoder_states = s->GetNeMoDecoderStates();
 
   std::vector<Ort::Value> tmp_decoder_states;
-  tmp_decoder_states.reserve(last_decoder_states.size());
-  for (auto &v : last_decoder_states) {
-    tmp_decoder_states.push_back(View(&v));
-  }
+  tmp_decoder_states = BuildStateViews(&last_decoder_states);
 
   // decoder_output_pair.second returns the next decoder state
   std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =

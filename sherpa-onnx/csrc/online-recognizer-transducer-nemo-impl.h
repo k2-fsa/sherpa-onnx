@@ -7,12 +7,14 @@
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <ios>
 #include <memory>
 #include <regex>  // NOLINT
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -100,9 +102,17 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = model_->SubsamplingFactor();
-    auto r = Convert(s->GetResult(), symbol_table_, frame_shift_ms,
-                     subsampling_factor, s->GetCurrentSegment(),
-                     s->GetNumFramesSinceStart());
+    OnlineRecognizerResult r;
+    if (language_tag_token_ids_.empty()) {
+      r = Convert(s->GetResult(), symbol_table_, frame_shift_ms,
+                  subsampling_factor, s->GetCurrentSegment(),
+                  s->GetNumFramesSinceStart());
+    } else {
+      auto filtered = FilterLanguageTags(s->GetResult());
+      r = Convert(filtered, symbol_table_, frame_shift_ms, subsampling_factor,
+                  s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    }
+
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
@@ -180,7 +190,9 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     auto states = model_->StackStates(std::move(encoder_states));
     int32_t num_states = states.size();  // num_states = 3
-    auto t = model_->RunEncoder(std::move(x), std::move(states));
+    auto language_prompt_ids = GetLanguagePromptIds(ss, n);
+    auto t = model_->RunEncoder(std::move(x), std::move(states),
+                                language_prompt_ids);
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
     // t[1] next states
 
@@ -210,6 +222,117 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  static bool IsLanguageTagToken(const std::string &sym) {
+    if (sym.size() < 4 || sym.front() != '<' || sym.back() != '>') {
+      return false;
+    }
+
+    size_t i = 1;
+    int32_t num_lowercase = 0;
+    while (i + 1 < sym.size() && num_lowercase != 3 &&
+           std::islower(static_cast<unsigned char>(sym[i]))) {
+      ++i;
+      ++num_lowercase;
+    }
+
+    if (num_lowercase < 2) {
+      return false;
+    }
+
+    if (i == sym.size() - 1) {
+      return true;
+    }
+
+    if (sym[i] != '-' || i + 3 != sym.size() - 1) {
+      return false;
+    }
+
+    return std::isupper(static_cast<unsigned char>(sym[i + 1])) &&
+           std::isupper(static_cast<unsigned char>(sym[i + 2]));
+  }
+
+  void InitLanguageTagTokenIds() {
+    if (!model_->IsMultilingual()) {
+      return;
+    }
+
+    for (int32_t i = 0; i != symbol_table_.NumSymbols(); ++i) {
+      if (symbol_table_.Contains(i) && IsLanguageTagToken(symbol_table_[i])) {
+        language_tag_token_ids_.insert(i);
+      }
+    }
+  }
+
+  OnlineTransducerDecoderResult FilterLanguageTags(
+      const OnlineTransducerDecoderResult &src) const {
+    OnlineTransducerDecoderResult ans;
+    ans.frame_offset = src.frame_offset;
+    ans.num_trailing_blanks = src.num_trailing_blanks;
+    ans.tokens.reserve(src.tokens.size());
+    ans.timestamps.reserve(src.timestamps.size());
+
+    bool filter_ys_probs = src.ys_probs.size() == src.tokens.size();
+    bool filter_lm_probs = src.lm_probs.size() == src.tokens.size();
+    bool filter_context_scores =
+        src.context_scores.size() == src.tokens.size();
+
+    if (filter_ys_probs) {
+      ans.ys_probs.reserve(src.ys_probs.size());
+    } else {
+      ans.ys_probs = src.ys_probs;
+    }
+
+    if (filter_lm_probs) {
+      ans.lm_probs.reserve(src.lm_probs.size());
+    } else {
+      ans.lm_probs = src.lm_probs;
+    }
+
+    if (filter_context_scores) {
+      ans.context_scores.reserve(src.context_scores.size());
+    } else {
+      ans.context_scores = src.context_scores;
+    }
+
+    for (size_t i = 0; i != src.tokens.size(); ++i) {
+      if (language_tag_token_ids_.count(src.tokens[i])) {
+        continue;
+      }
+
+      ans.tokens.push_back(src.tokens[i]);
+      if (i < src.timestamps.size()) {
+        ans.timestamps.push_back(src.timestamps[i]);
+      }
+
+      if (filter_ys_probs) {
+        ans.ys_probs.push_back(src.ys_probs[i]);
+      }
+      if (filter_lm_probs) {
+        ans.lm_probs.push_back(src.lm_probs[i]);
+      }
+      if (filter_context_scores) {
+        ans.context_scores.push_back(src.context_scores[i]);
+      }
+    }
+
+    return ans;
+  }
+
+  std::vector<int64_t> GetLanguagePromptIds(OnlineStream **ss,
+                                            int32_t n) const {
+    std::vector<int64_t> ans;
+    if (!model_->IsMultilingual()) {
+      return ans;
+    }
+
+    ans.reserve(n);
+    for (int32_t i = 0; i != n; ++i) {
+      ans.push_back(model_->GetLanguagePromptId(ss[i]->GetOption("language")));
+    }
+
+    return ans;
+  }
+
   void PostInit() {
     config_.feat_config.feature_dim = model_->FeatureDim();
 
@@ -240,12 +363,15 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                        symbol_table_.NumSymbols(), vocab_size);
       SHERPA_ONNX_EXIT(-1);
     }
+
+    InitLanguageTagTokenIds();
   }
 
  private:
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
+  std::unordered_set<int64_t> language_tag_token_ids_;
   std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
   Endpoint endpoint_;
 };
