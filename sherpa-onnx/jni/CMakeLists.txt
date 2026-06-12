@@ -15,6 +15,7 @@ set(sources
   common.cc
   jni.cc
   keyword-spotter.cc
+  offline-diacritization.cc
   offline-punctuation.cc
   offline-recognizer.cc
   offline-speech-denoiser.cc
