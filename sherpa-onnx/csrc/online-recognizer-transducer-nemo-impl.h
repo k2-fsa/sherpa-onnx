@@ -102,16 +102,16 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = model_->SubsamplingFactor();
-    OnlineRecognizerResult r;
-    if (language_tag_token_ids_.empty()) {
-      r = Convert(s->GetResult(), symbol_table_, frame_shift_ms,
-                  subsampling_factor, s->GetCurrentSegment(),
-                  s->GetNumFramesSinceStart());
-    } else {
-      auto filtered = FilterLanguageTags(s->GetResult());
-      r = Convert(filtered, symbol_table_, frame_shift_ms, subsampling_factor,
-                  s->GetCurrentSegment(), s->GetNumFramesSinceStart());
-    }
+    const auto &decoder_result = s->GetResult();
+    bool has_language_tag = !language_tag_token_ids_.empty() &&
+                            ContainsLanguageTag(decoder_result);
+    auto r = has_language_tag
+                 ? Convert(FilterLanguageTags(decoder_result), symbol_table_,
+                           frame_shift_ms, subsampling_factor,
+                           s->GetCurrentSegment(), s->GetNumFramesSinceStart())
+                 : Convert(decoder_result, symbol_table_, frame_shift_ms,
+                           subsampling_factor, s->GetCurrentSegment(),
+                           s->GetNumFramesSinceStart());
 
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
@@ -261,6 +261,16 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
         language_tag_token_ids_.insert(i);
       }
     }
+  }
+
+  bool ContainsLanguageTag(const OnlineTransducerDecoderResult &src) const {
+    for (auto token : src.tokens) {
+      if (language_tag_token_ids_.count(token)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   OnlineTransducerDecoderResult FilterLanguageTags(

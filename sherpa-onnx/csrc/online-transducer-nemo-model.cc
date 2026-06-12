@@ -233,20 +233,18 @@ class OnlineTransducerNeMoModel::Impl {
     inputs.push_back(std::move(cache_last_time));
     inputs.push_back(std::move(cache_last_channel_len));
 
-    std::vector<int64_t> prompt_id_buf;
     Ort::Value prompt_id_tensor{nullptr};
     if (is_multilingual_) {
-      if (static_cast<int32_t>(language_prompt_ids.size()) == batch_size) {
-        prompt_id_buf = language_prompt_ids;
-      } else {
-        prompt_id_buf.assign(batch_size, default_prompt_id_);
-      }
-
       std::array<int64_t, 1> prompt_id_shape{batch_size};
       prompt_id_tensor = Ort::Value::CreateTensor<int64_t>(
           allocator_, prompt_id_shape.data(), prompt_id_shape.size());
-      std::copy(prompt_id_buf.begin(), prompt_id_buf.end(),
-                prompt_id_tensor.GetTensorMutableData<int64_t>());
+      int64_t *p_prompt_id = prompt_id_tensor.GetTensorMutableData<int64_t>();
+      if (static_cast<int32_t>(language_prompt_ids.size()) == batch_size) {
+        std::copy(language_prompt_ids.begin(), language_prompt_ids.end(),
+                  p_prompt_id);
+      } else {
+        std::fill(p_prompt_id, p_prompt_id + batch_size, default_prompt_id_);
+      }
       inputs.push_back(std::move(prompt_id_tensor));
     }
 
@@ -353,12 +351,17 @@ class OnlineTransducerNeMoModel::Impl {
       return default_prompt_id_;
     }
 
+    auto it = language_prompt_ids_.find(language);
+    if (it != language_prompt_ids_.end()) {
+      return it->second;
+    }
+
     auto normalized = NormalizeLanguage(language);
     if (normalized.empty() || normalized == "auto") {
       return default_prompt_id_;
     }
 
-    auto it = language_prompt_ids_.find(normalized);
+    it = language_prompt_ids_.find(normalized);
     if (it != language_prompt_ids_.end()) {
       return it->second;
     }
