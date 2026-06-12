@@ -1,0 +1,185 @@
+name: export-nemotron-3-5-asr-streaming-06b
+
+on:
+  push:
+    branches:
+      - export-nemotron-3-5-asr-streaming
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemotron-3-5-asr-streaming-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-nemotron-3-5-asr-streaming-0-6b-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: nemotron-3-5-asr-streaming-0-6b-to-onnx
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install NeMo
+        shell: bash
+        run: |
+          # nemotron-3.5-asr-streaming-0.6b requires EncDecRNNTBPEModelWithPrompt,
+          # which is not in the stable nemo-toolkit release yet; the model card
+          # instructs installing NeMo from main.
+          BRANCH='main'
+          pip install Cython packaging
+          pip install "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@$BRANCH"
+          pip install onnxruntime ipython sentencepiece
+          pip install kaldi-native-fbank
+          pip install soundfile librosa
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/nemo/nemotron-3.5-asr-streaming-0.6b
+
+          python3 ./export_onnx.py
+
+          ls -lh
+          echo "---"
+
+          ls -lh */
+
+          echo "---"
+
+      - name: Collect results
+        shell: bash
+        run: |
+          src=scripts/nemo/nemotron-3.5-asr-streaming-0.6b
+
+          for chunk in 80 160 560 1120; do
+            d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
+            mkdir -p $d
+
+            cp -av $src/$chunk/encoder.onnx $d/
+            cp -av $src/$chunk/encoder.data $d/
+            cp -av $src/$chunk/decoder.onnx $d/
+            cp -av $src/$chunk/joiner.onnx $d/
+            cp -av $src/tokens.txt $d/
+            cat >$d/README.md <<EOF
+            # Introduction
+            This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
+
+            The chunk size is ${chunk}ms for the exported ONNX model.
+
+            Use per-stream language strings such as "en", "ja", or "auto".
+          EOF
+
+            ls -lh $d
+
+            d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-int8-2026-06-11
+            mkdir -p $d
+
+            cp -av $src/${chunk}/encoder.int8.onnx $d/
+            cp -av $src/${chunk}/decoder.int8.onnx $d/
+            cp -av $src/${chunk}/joiner.int8.onnx $d/
+            cp -av $src/tokens.txt $d/
+            cat >$d/README.md <<EOF
+            # Introduction
+            This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
+
+            The chunk size is ${chunk}ms for the exported ONNX model.
+
+            Use per-stream language strings such as "en", "ja", or "auto".
+          EOF
+
+            ls -lh $d
+          done
+
+      - name: Download test waves
+        shell: bash
+        run: |
+          mkdir test_wavs
+          pushd test_wavs
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
+          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+          popd
+
+          models=(
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
+          )
+          for m in ${models[@]}; do
+            cp -av test_wavs $m
+            tar cjvf $m.tar.bz2 $m
+          done
+
+          ls -lh *.tar.bz2
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-*-int8-2026-06-11.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            models=(
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
+            )
+
+            for m in ${models[@]}; do
+              if [ ! -d $m ]; then
+                echo "skip $m"
+                continue
+              fi
+
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$m huggingface
+              cp -av $m/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git lfs track "*.data"
+              git lfs track "*.wav"
+              git status
+              git add .
+              git status
+              git commit -m "first commit"
+              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$m main
+              cd ..
+            done
+
+            rm -rf huggingface
