@@ -27,6 +27,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -65,34 +66,6 @@ std::string NormalizeLanguage(std::string s) {
   return s;
 }
 
-bool ParseLanguagePromptEntry(const std::string &entry, std::string *language,
-                              int64_t *prompt_id) {
-  auto pos = entry.find(':');
-  if (pos == std::string::npos) {
-    pos = entry.find('=');
-  }
-
-  if (pos == std::string::npos) {
-    return false;
-  }
-
-  auto key = NormalizeLanguage(entry.substr(0, pos));
-  auto value = StripQuotes(entry.substr(pos + 1));
-
-  if (key.empty()) {
-    return false;
-  }
-
-  int64_t id = -1;
-  if (!ConvertStringToInteger(value, &id) || id < 0) {
-    return false;
-  }
-
-  *language = std::move(key);
-  *prompt_id = id;
-  return true;
-}
-
 void AddLanguagePromptId(
     const std::string &language, int64_t prompt_id,
     std::unordered_map<std::string, int64_t> *language_prompt_ids,
@@ -121,27 +94,29 @@ void AddBaseLanguageAliases(
   }
 }
 
+// The metadata value is a JSON object mapping language strings to integer
+// prompt ids, e.g. {"auto": 101, "en-US": 0, "ja-JP": 1}.
 void ParseLanguagePromptDictionary(
     const std::string &value,
     std::unordered_map<std::string, int64_t> *language_prompt_ids,
     std::vector<std::pair<std::string, int64_t>> *ordered_prompt_ids) {
-  std::string s = value;
-  for (auto &c : s) {
-    if (c == '{' || c == '}' || c == '[' || c == ']') {
-      c = ' ';
-    }
+  auto j = nlohmann::json::parse(value, nullptr, /*allow_exceptions*/ false);
+  if (j.is_discarded() || !j.is_object()) {
+    return;
   }
 
-  std::vector<std::string> entries;
-  SplitStringToVector(s, ",;\n", true, &entries);
-
-  for (const auto &entry : entries) {
-    std::string language;
-    int64_t prompt_id = -1;
-    if (ParseLanguagePromptEntry(entry, &language, &prompt_id)) {
-      AddLanguagePromptId(language, prompt_id, language_prompt_ids,
-                          ordered_prompt_ids);
+  for (const auto &item : j.items()) {
+    if (!item.value().is_number_integer()) {
+      continue;
     }
+
+    int64_t prompt_id = item.value().get<int64_t>();
+    if (prompt_id < 0) {
+      continue;
+    }
+
+    AddLanguagePromptId(item.key(), prompt_id, language_prompt_ids,
+                        ordered_prompt_ids);
   }
 }
 
@@ -347,7 +322,7 @@ class OnlineTransducerNeMoModel::Impl {
   bool IsMultilingual() const { return is_multilingual_; }
 
   int64_t GetLanguagePromptId(const std::string &language) const {
-    if (!is_multilingual_) {
+    if (!is_multilingual_ || language.empty()) {
       return default_prompt_id_;
     }
 

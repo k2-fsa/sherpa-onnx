@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright      2026  Xiaomi Corp.        (authors: Fangjun Kuang)
+# Copyright      2026  Julian Pscheid
 import inspect
 import json
 import os
