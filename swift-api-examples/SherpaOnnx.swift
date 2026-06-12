@@ -1859,6 +1859,10 @@ class SherpaOnnxOnlineStreamWrapper {
     }
   }
 
+  func setOption(key: String, value: String) {
+    SherpaOnnxOnlineStreamSetOption(impl, toCPointer(key), toCPointer(value))
+  }
+
   func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
     SherpaOnnxOnlineStreamAcceptWaveform(impl, Int32(sampleRate), samples, Int32(samples.count))
   }

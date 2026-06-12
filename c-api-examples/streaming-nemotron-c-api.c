@@ -67,6 +67,10 @@ int32_t main() {
 
   const SherpaOnnxOnlineStream *stream =
       SherpaOnnxCreateOnlineStream(recognizer);
+  // Multilingual Nemotron models use the generic stream option "language".
+  // For example: SherpaOnnxOnlineStreamSetOption(stream, "language", "ja");
+  // Empty/unset means auto. English-only Nemotron ignores this option.
+  SherpaOnnxOnlineStreamSetOption(stream, "language", "en");
 
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;

@@ -64,6 +64,7 @@ class _StreamingAsrScreenState extends State<StreamingAsrScreen> {
       sherpa_onnx.initBindings();
       _recognizer = await createOnlineRecognizer();
       _stream = _recognizer?.createStream();
+      // Multilingual Nemotron: _stream?.setOption(key: 'language', value: 'ja');
 
       _isInitialized = true;
     }
