@@ -27,7 +27,7 @@ def get_args():
 @dataclass
 class Model:
     # We will download
-    # https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/{model_name}.tar.bz2
+    # https://github.com/k2-fsa/sherpa-onnx/releases/download/{release_tag}/{model_name}.tar.bz2
     model_name: str
 
     # The type of the model, e..g, 0, 1, 2. It is hardcoded in the kotlin code
@@ -46,12 +46,19 @@ class Model:
 
     use_hr: bool = False
 
+    release_tag: str = "asr-models-qnn"
+
+    # If non-empty, sed replaces the duration in OfflineRecognizer.kt
+    # e.g., sed_old="5s", sed_new="8s" replaces "ja-5s-" with "ja-8s-"
+    sed_old: str = ""
+    sed_new: str = ""
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
     models = [
         Model(
-            model_name="sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-5-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9000,
             lang="zh_en_ko_ja_yue",
             short_name="5-seconds-sense_voice_2024_07_17_int8",
@@ -67,7 +74,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-8-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-8-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9001,
             lang="zh_en_ko_ja_yue",
             short_name="8-seconds-sense_voice_2024_07_17_int8",
@@ -83,7 +90,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9002,
             lang="zh_en_ko_ja_yue",
             short_name="10-seconds-sense_voice_2024_07_17_int8",
@@ -99,7 +106,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-13-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-13-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9003,
             lang="zh_en_ko_ja_yue",
             short_name="13-seconds-sense_voice_2024_07_17_int8",
@@ -115,7 +122,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-15-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-15-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9004,
             lang="zh_en_ko_ja_yue",
             short_name="15-seconds-sense_voice_2024_07_17_int8",
@@ -131,7 +138,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-18-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9005,
             lang="zh_en_ko_ja_yue",
             short_name="18-seconds-sense_voice_2024_07_17_int8",
@@ -147,7 +154,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-20-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9006,
             lang="zh_en_ko_ja_yue",
             short_name="20-seconds-sense_voice_2024_07_17_int8",
@@ -163,7 +170,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-23-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9007,
             lang="zh_en_ko_ja_yue",
             short_name="23-seconds-sense_voice_2024_07_17_int8",
@@ -179,7 +186,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-25-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9008,
             lang="zh_en_ko_ja_yue",
             short_name="25-seconds-sense_voice_2024_07_17_int8",
@@ -195,7 +202,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-28-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9009,
             lang="zh_en_ko_ja_yue",
             short_name="28-seconds-sense_voice_2024_07_17_int8",
@@ -211,7 +218,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            model_name="sherpa-onnx-qnn-30-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8-android-aarch64",
             idx=9010,
             lang="zh_en_ko_ja_yue",
             short_name="30-seconds-sense_voice_2024_07_17_int8",
@@ -227,7 +234,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-5-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9011,
             lang="zh",
             short_name="5-seconds-zipformer_ctc_2025_07_03_int8",
@@ -243,7 +250,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-8-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9012,
             lang="zh",
             short_name="8-seconds-zipformer_ctc_2025_07_03_int8",
@@ -259,7 +266,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-10-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9013,
             lang="zh",
             short_name="10-seconds-zipformer_ctc_2025_07_03_int8",
@@ -275,7 +282,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-13-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9014,
             lang="zh",
             short_name="13-seconds-zipformer_ctc_2025_07_03_int8",
@@ -291,7 +298,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-15-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9015,
             lang="zh",
             short_name="15-seconds-zipformer_ctc_2025_07_03_int8",
@@ -307,7 +314,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-18-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9016,
             lang="zh",
             short_name="18-seconds-zipformer_ctc_2025_07_03_int8",
@@ -323,7 +330,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-20-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9017,
             lang="zh",
             short_name="20-seconds-zipformer_ctc_2025_07_03_int8",
@@ -339,7 +346,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-23-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9018,
             lang="zh",
             short_name="23-seconds-zipformer_ctc_2025_07_03_int8",
@@ -355,7 +362,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-25-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9019,
             lang="zh",
             short_name="25-seconds-zipformer_ctc_2025_07_03_int8",
@@ -371,7 +378,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-28-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9020,
             lang="zh",
             short_name="28-seconds-zipformer_ctc_2025_07_03_int8",
@@ -387,7 +394,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8",
+            model_name="sherpa-onnx-qnn-30-seconds-zipformer-ctc-zh-2025-07-03-int8-android-aarch64",
             idx=9021,
             lang="zh",
             short_name="30-seconds-zipformer_ctc_2025_07_03_int8",
@@ -403,7 +410,24 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2023-03-28-int8",
+            model_name="sherpa-onnx-qnn-SM8850-binary-10-seconds-sense-voice-zh-en-ja-ko-yue-2024-07-17-int8",
+            idx=9022,
+            lang="zh_en_ko_ja_yue",
+            short_name="SM8850_10-seconds-sense_voice_2024_07_17_int8",
+            release_tag="asr-models-qnn-binary",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2023-03-28-int8-android-aarch64",
             idx=9023,
             lang="zh",
             short_name="5-seconds-paraformer_zh_2023_03_28_int8",
@@ -419,11 +443,409 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2025-10-07-int8",
+            model_name="sherpa-onnx-qnn-SM8850-binary-5-seconds-paraformer-zh-2023-03-28-int8",
+            idx=9025,
+            lang="zh",
+            short_name="SM8850_5-seconds-paraformer_zh_2023_03_28_int8",
+            release_tag="asr-models-qnn-binary",
+            use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-5-seconds-paraformer-zh-2025-10-07-int8-android-aarch64",
             idx=9024,
             lang="zh",
             short_name="5-seconds-paraformer_zh_2025_10_07_int8",
             use_hr=True,
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-5s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_5s",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-8s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_8s",
+            sed_old="ja-5s-",
+            sed_new="ja-8s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-10s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_10s",
+            sed_old="ja-5s-",
+            sed_new="ja-10s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-13s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_13s",
+            sed_old="ja-5s-",
+            sed_new="ja-13s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-15s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_15s",
+            sed_old="ja-5s-",
+            sed_new="ja-15s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-18s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_18s",
+            sed_old="ja-5s-",
+            sed_new="ja-18s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-20s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_20s",
+            sed_old="ja-5s-",
+            sed_new="ja-20s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-23s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_23s",
+            sed_old="ja-5s-",
+            sed_new="ja-23s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-25s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_25s",
+            sed_old="ja-5s-",
+            sed_new="ja-25s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-28s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_28s",
+            sed_old="ja-5s-",
+            sed_new="ja-28s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-reazonspeech-zipformer-transducer-ja-30s-2024-08-01-android-aarch64",
+            idx=9026,
+            lang="ja",
+            short_name="reazonspeech_zipformer_transducer_ja_30s",
+            sed_old="ja-5s-",
+            sed_new="ja-30s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-5s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_5s",
+            release_tag="asr-models-qnn-binary",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-8s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_8s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-8s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-10s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_10s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-10s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-13s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_13s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-13s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-15s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_15s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-15s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-18s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_18s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-18s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-20s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_20s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-20s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-23s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_23s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-23s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-25s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_25s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-25s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-28s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_28s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-28s-",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-qnn-SM8850-binary-reazonspeech-zipformer-transducer-ja-30s-2024-08-01",
+            idx=9027,
+            lang="ja",
+            short_name="SM8850_reazonspeech_zipformer_transducer_ja_30s",
+            release_tag="asr-models-qnn-binary",
+            sed_old="ja-5s-",
+            sed_new="ja-30s-",
             cmd="""
             pushd $model_name
 
