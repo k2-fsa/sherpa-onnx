@@ -81,8 +81,12 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OnlineRecognizerConfig config;
+  std::string language;
 
   config.Register(&po);
+  po.Register("language", &language,
+              "Per-stream language hint for prompt-conditioned multilingual "
+              "models, e.g., en, fr, ja, or auto. Empty means auto.");
 
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
@@ -124,10 +128,13 @@ for a list of pre-trained models to download.
     const float duration = samples.size() / static_cast<float>(sampling_rate);
 
     auto s = recognizer.CreateStream();
+    if (!language.empty()) {
+      s->SetOption("language", language);
+    }
 
-    // std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
-    // s->AcceptWaveform(sampling_rate, left_paddings.data(),
-    //                   left_paddings.size());
+    std::vector<float> left_paddings(static_cast<int>(0.3 * sampling_rate));
+    s->AcceptWaveform(sampling_rate, left_paddings.data(),
+                      left_paddings.size());
 
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 

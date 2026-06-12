@@ -6,6 +6,7 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_MODEL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_MODEL_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -52,7 +53,8 @@ class OnlineTransducerNeMoModel {
    *           - ans[1:]: contains next states
    */
   std::vector<Ort::Value> RunEncoder(
-      Ort::Value features, std::vector<Ort::Value> states) const;  // NOLINT
+      Ort::Value features, std::vector<Ort::Value> states,  // NOLINT
+      const std::vector<int64_t> &language_prompt_ids = {}) const;
 
   /** Run the decoder network.
    *
@@ -100,6 +102,10 @@ class OnlineTransducerNeMoModel {
   int32_t VocabSize() const;
 
   int32_t FeatureDim() const;
+
+  bool IsMultilingual() const;
+
+  int64_t GetLanguagePromptId(const std::string &language) const;
 
   /** Return an allocator for allocating memory
    */

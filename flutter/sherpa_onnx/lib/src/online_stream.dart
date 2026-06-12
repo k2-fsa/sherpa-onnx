@@ -67,5 +67,25 @@ class OnlineStream {
     SherpaOnnxBindings.onlineStreamInputFinished?.call(ptr);
   }
 
+  /// Set a string option on the underlying stream.
+  ///
+  /// For multilingual Nemotron models, use `key: 'language'` with values such
+  /// as `ja` or `auto`.
+  void setOption({required String key, required String value}) {
+    if (SherpaOnnxBindings.onlineStreamSetOption == null) {
+      throw Exception("Please initialize sherpa-onnx first");
+    }
+
+    if (ptr == nullptr) {
+      return;
+    }
+
+    final pKey = key.toNativeUtf8();
+    final pValue = value.toNativeUtf8();
+    SherpaOnnxBindings.onlineStreamSetOption?.call(ptr, pKey, pValue);
+    calloc.free(pKey);
+    calloc.free(pValue);
+  }
+
   Pointer<SherpaOnnxOnlineStream> ptr;
 }

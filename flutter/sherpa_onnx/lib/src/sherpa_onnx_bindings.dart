@@ -1795,6 +1795,20 @@ typedef OnlineStreamInputFinishedNative =
 typedef OnlineStreamInputFinished =
     void Function(Pointer<SherpaOnnxOnlineStream>);
 
+typedef OnlineStreamSetOptionNative =
+    Void Function(
+      Pointer<SherpaOnnxOnlineStream>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
+
+typedef OnlineStreamSetOption =
+    void Function(
+      Pointer<SherpaOnnxOnlineStream>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
+
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative =
     Int32 Function(
       Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
@@ -2042,6 +2056,8 @@ class SherpaOnnxBindings {
   static OnlineStreamAcceptWaveform? onlineStreamAcceptWaveform;
 
   static OnlineStreamInputFinished? onlineStreamInputFinished;
+
+  static OnlineStreamSetOption? onlineStreamSetOption;
 
   static SherpaOnnxSpeakerEmbeddingExtractorIsReady?
   speakerEmbeddingExtractorIsReady;
@@ -2746,6 +2762,12 @@ class SherpaOnnxBindings {
     onlineStreamInputFinished ??= dynamicLibrary
         .lookup<NativeFunction<OnlineStreamInputFinishedNative>>(
           'SherpaOnnxOnlineStreamInputFinished',
+        )
+        .asFunction();
+
+    onlineStreamSetOption ??= dynamicLibrary
+        .lookup<NativeFunction<OnlineStreamSetOptionNative>>(
+          'SherpaOnnxOnlineStreamSetOption',
         )
         .asFunction();
 

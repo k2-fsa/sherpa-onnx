@@ -63,6 +63,10 @@ int32_t main() {
   const auto begin = std::chrono::steady_clock::now();
 
   OnlineStream stream = recognizer.CreateStream();
+  // Multilingual Nemotron models use the generic stream option "language".
+  // For example: stream.SetOption("language", "ja");
+  // Empty/unset means auto. English-only Nemotron ignores this option.
+  stream.SetOption("language", "en");
   stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                         wave.samples.size());
   stream.InputFinished();
