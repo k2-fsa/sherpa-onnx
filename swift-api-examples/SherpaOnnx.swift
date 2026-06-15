@@ -1374,10 +1374,25 @@ class SherpaOnnxOfflineTtsWrapper {
   /// A pointer to the underlying counterpart in C
   let tts: OpaquePointer!
 
+  /// Whether the model is a Supertonic TTS model
+  let isSupertonic: Bool
+
+  /// The sample rate of the generated audio
+  var sampleRate: Int32 {
+    return SherpaOnnxOfflineTtsSampleRate(tts)
+  }
+
+  /// The number of speakers supported by the model
+  var numSpeakers: Int32 {
+    return SherpaOnnxOfflineTtsNumSpeakers(tts)
+  }
+
   /// Constructor taking a model config
   init(
     config: UnsafePointer<SherpaOnnxOfflineTtsConfig>!
   ) {
+    isSupertonic = config.pointee.model.supertonic.duration_predictor != nil
+      && String(cString: config.pointee.model.supertonic.duration_predictor) != ""
     tts = SherpaOnnxCreateOfflineTts(config)
   }
 
