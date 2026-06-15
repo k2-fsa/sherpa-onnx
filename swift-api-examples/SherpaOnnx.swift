@@ -1392,7 +1392,7 @@ class SherpaOnnxOfflineTtsWrapper {
     config: UnsafePointer<SherpaOnnxOfflineTtsConfig>!
   ) {
     isSupertonic = config.pointee.model.supertonic.duration_predictor != nil
-      && String(cString: config.pointee.model.supertonic.duration_predictor) != ""
+      && config.pointee.model.supertonic.duration_predictor.pointee != 0
     tts = SherpaOnnxCreateOfflineTts(config)
   }
 
