@@ -19,11 +19,14 @@ class TtsProgressHandler: ObservableObject {
     private var sampleRate: Float = 22050
     private var pendingBuffers = 0
     private var shouldStop = false
+    private let lock = NSLock()
 
     func startPlayback(sampleRate: Float) {
         self.sampleRate = sampleRate
+        lock.lock()
         self.pendingBuffers = 0
         self.shouldStop = false
+        lock.unlock()
 
         do {
             let session = AVAudioSession.sharedInstance()
@@ -64,7 +67,10 @@ class TtsProgressHandler: ObservableObject {
     }
 
     func appendSamples(_ samples: UnsafePointer<Float>?, count: Int32, progress: Float) {
-        guard !shouldStop,
+        lock.lock()
+        let stop = shouldStop
+        lock.unlock()
+        guard !stop,
               let playerNode = playerNode,
               let audioFormat = audioFormat,
               let samples = samples,
@@ -80,11 +86,15 @@ class TtsProgressHandler: ObservableObject {
         let channelData = buffer.floatChannelData![0]
         memcpy(channelData, samples, Int(count) * MemoryLayout<Float>.size)
 
+        lock.lock()
         pendingBuffers += 1
+        lock.unlock()
+
         playerNode.scheduleBuffer(buffer) { [weak self] in
-            DispatchQueue.main.async {
-                self?.pendingBuffers -= 1
-            }
+            guard let self = self else { return }
+            self.lock.lock()
+            self.pendingBuffers -= 1
+            self.lock.unlock()
         }
 
         DispatchQueue.main.async {
@@ -94,37 +104,49 @@ class TtsProgressHandler: ObservableObject {
 
     /// Returns 0 to stop generation, 1 to continue
     var stopFlag: Int32 {
+        lock.lock()
+        defer { lock.unlock() }
         return shouldStop ? 0 : 1
     }
 
     func requestStop() {
+        lock.lock()
         shouldStop = true
+        lock.unlock()
     }
 
     func finishGeneration() {
         // Wait for all scheduled buffers to finish playing, then clean up
         DispatchQueue.global(qos: .background).async { [weak self] in
-            while let self = self, self.pendingBuffers > 0 && !self.shouldStop {
+            guard let self = self else { return }
+            while true {
+                self.lock.lock()
+                let pending = self.pendingBuffers
+                let stop = self.shouldStop
+                self.lock.unlock()
+                if pending <= 0 || stop { break }
                 Thread.sleep(forTimeInterval: 0.05)
             }
 
-            if self?.shouldStop == true {
-                // Immediate stop requested
-                self?.playerNode?.stop()
+            self.lock.lock()
+            let stopped = self.shouldStop
+            self.lock.unlock()
+
+            if stopped {
+                self.playerNode?.stop()
             } else {
-                // Let the last buffers play out
                 Thread.sleep(forTimeInterval: 0.3)
             }
 
             DispatchQueue.main.async {
-                self?.playerNode?.stop()
-                self?.audioEngine?.stop()
-                self?.audioEngine = nil
-                self?.playerNode = nil
-                self?.audioFormat = nil
-                self?.isGenerating = false
-                if self?.shouldStop != true {
-                    self?.progress = 1.0
+                self.playerNode?.stop()
+                self.audioEngine?.stop()
+                self.audioEngine = nil
+                self.playerNode = nil
+                self.audioFormat = nil
+                self.isGenerating = false
+                if !stopped {
+                    self.progress = 1.0
                 }
             }
         }
@@ -165,7 +187,7 @@ struct ContentView: View {
             if tts.numSpeakers > 1 {
                 HStack {
                     Text("Speaker (1-\(tts.numSpeakers))")
-                    Stepper("\(Int(sid)! + 1)", value: Binding(
+                    Stepper("\((Int(sid) ?? 0) + 1)", value: Binding(
                         get: { (Int(sid) ?? 0) + 1 },
                         set: { sid = "\($0 - 1)" }
                     ), in: 1...Int(tts.numSpeakers))
@@ -288,6 +310,11 @@ struct ContentView: View {
 
         let handler = progressHandler
         let sampleRate = Float(tts.sampleRate)
+        let currentSpeed = Float(self.speed)
+        let currentNumSteps = self.numSteps
+        let currentLang = self.lang
+        let currentFilename = self.filename
+        let isSupertonic = tts.isSupertonic
 
         DispatchQueue.global(qos: .userInitiated).async {
             handler.startPlayback(sampleRate: sampleRate)
@@ -296,7 +323,7 @@ struct ContentView: View {
 
             let audio: SherpaOnnxGeneratedAudioWrapper
 
-            if tts.isSupertonic {
+            if isSupertonic {
                 let progressCallback: TtsProgressCallbackWithArg = {
                     samples, n, progress, arg in
                     let h = Unmanaged<TtsProgressHandler>.fromOpaque(arg!)
@@ -307,9 +334,9 @@ struct ContentView: View {
 
                 var genConfig = SherpaOnnxGenerationConfigSwift()
                 genConfig.sid = speakerId
-                genConfig.speed = Float(self.speed)
-                genConfig.numSteps = self.numSteps
-                genConfig.extra = ["lang": self.lang]
+                genConfig.speed = currentSpeed
+                genConfig.numSteps = currentNumSteps
+                genConfig.extra = ["lang": currentLang]
                 audio = tts.generateWithConfig(
                     text: t, config: genConfig,
                     callback: progressCallback, arg: arg)
@@ -323,10 +350,10 @@ struct ContentView: View {
 
                 audio = tts.generateWithCallbackWithArg(
                     text: t, callback: simpleCallback, arg: arg,
-                    sid: speakerId, speed: Float(self.speed))
+                    sid: speakerId, speed: currentSpeed)
             }
 
-            let _ = audio.save(filename: self.filename.path)
+            let _ = audio.save(filename: currentFilename.path)
 
             handler.finishGeneration()
 
