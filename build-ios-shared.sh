@@ -10,7 +10,7 @@ set -e
 dir=build-ios-shared
 mkdir -p $dir
 cd $dir
-onnxruntime_version=1.17.1
+onnxruntime_version=${SHERPA_ONNX_ONNXRUNTIME_VERSION:-1.26.0}
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
 SHERPA_ONNX_GITHUB=github.com
@@ -25,12 +25,14 @@ else
   CMAKE_VERBOSE_MAKEFILE=OFF
 fi
 
-if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
+if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
-  tar xvf onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
-  rm onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
+  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
+  unzip onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
+  rm onnxruntime-ios-static-xcframework-${onnxruntime_version}.zip
+  mv onnxruntime-ios-static-xcframework-${onnxruntime_version}/onnxruntime.xcframework .
+  rmdir onnxruntime-ios-static-xcframework-${onnxruntime_version}
   cd ..
   ln -sf $onnxruntime_version/onnxruntime.xcframework .
   popd
@@ -40,7 +42,7 @@ fi
 echo "Building for simulator (x86_64)"
 
 export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator
-export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/Headers
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
@@ -117,6 +119,7 @@ echo "Building for arm64"
 
 if [[ ! -f build/os64/install/lib/libsherpa-onnx-c-api.dylib ]]; then
   export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
+  export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers
 
   cmake \
     -DSHERPA_ONNX_ENABLE_BINARY=OFF \
