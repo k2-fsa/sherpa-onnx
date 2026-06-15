@@ -1,3 +1,31 @@
+## 1.13.3
+
+* Update onnxruntime to 1.26.0 for iOS (#3678)
+* Add multilingual Nemotron-3.5 streaming ASR support (#3671)
+* Add OfflineDiacritization JAVA bindings (#3669)
+* Add Android QNN demo for non-streaming zipformer with Reazonspeech (#3670)
+* Add offline CATT diacritization (encoder only) (#3647)
+* Add Android demo with QNN for Streaming X-ASR (#3668)
+* Export X-ASR models to QNN (#3666)
+* Add a Whisper example for the Rust API (#3661)
+* Export X-ASR models to sherpa-onnx (#3662)
+* Support streaming zipformer transducer ASR for QNN (#3660)
+* Support non-streaming Zipformer transducer for Qualcomm NPU with QNN (#3655)
+* Fix generating subtitles for funasr nano (#3659)
+* Upload X-ASR non-streaming zipformer transducer models (#3656)
+* Add Android demo for streaming zipformer transducer ASR with QNN (#3654)
+* Begin to export streaming zipformer transducer to QNN (#3653)
+* Add streaming zipformer transducer for Qualcomm NPU with QNN (#3645)
+* Update VoxSherpa TTS link for stable APK releases (#3648)
+* Allow overriding ONNX Runtime for mobile (#3617)
+* Fix heap-buffer-overflow in TopkIndex when topk > size (#3628)
+* Add doc for Python API (#3627)
+* Improve C/C++ API documentation, examples, and CI (#3626)
+* Add async TTS examples, LinearResampler API, and use node-cpal for microphone (#3623)
+* Add React Native sherpa-onnx wrapper (#3615)
+* Update Spacemit toolchain download URL (#3618)
+* Add JavaScript API examples for Supertonic3 TTS (#3614)
+
 ## 1.13.2
 
 * Support Supertonic 3 TTS (#3605)
