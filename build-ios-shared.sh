@@ -191,6 +191,7 @@ install_name_tool \
   sherpa_onnx
 
 chmod +x sherpa_onnx
+strip -x sherpa_onnx
 popd
 
 pushd ios-arm64_x86_64-simulator
@@ -214,6 +215,7 @@ install_name_tool \
   sherpa_onnx
 
 chmod +x sherpa_onnx
+strip -x sherpa_onnx
 popd
 
 for d in ios-arm64_x86_64-simulator ios-arm64; do
