@@ -77,7 +77,7 @@ class OfflineCATTModel::Impl {
     return std::move(ans[0]);
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
  private:
   void InitEncoder() {
