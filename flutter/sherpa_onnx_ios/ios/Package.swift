@@ -11,7 +11,7 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "sherpa_onnx_ios",
-            path: "sherpa_onnx.xcframework"
+            path: "sherpa-onnx.xcframework"
         ),
     ]
 )
