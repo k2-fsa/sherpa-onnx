@@ -7,11 +7,13 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
 struct OfflineNemoEncDecCtcModelConfig {
   std::string model;
+  QnnConfig qnn_config;
 
   OfflineNemoEncDecCtcModelConfig() = default;
   explicit OfflineNemoEncDecCtcModelConfig(const std::string &model)

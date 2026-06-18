@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/math.h"
 
 namespace sherpa_onnx {
 
@@ -19,10 +20,8 @@ OfflineCtcDecoderResult OfflineCtcGreedySearchDecoderRknn::Decode(
   int64_t prev_id = -1;
 
   for (int32_t t = 0; t != num_frames; ++t) {
-    auto y = static_cast<int64_t>(std::distance(
-        static_cast<const float *>(logits),
-        std::max_element(static_cast<const float *>(logits),
-                         static_cast<const float *>(logits) + vocab_size)));
+    int64_t y = MaxElementIndex(logits, vocab_size);
+
     logits += vocab_size;
 
     if (y != blank_id_ && y != prev_id) {

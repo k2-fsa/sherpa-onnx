@@ -256,6 +256,7 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_QNN)
   list(APPEND sources
+    ./qnn/offline-parakeet-ctc-model-qnn.cc
     ./qnn/offline-sense-voice-model-qnn.cc
     ./qnn/offline-paraformer-model-qnn.cc
     ./qnn/offline-zipformer-transducer-model-qnn.cc
