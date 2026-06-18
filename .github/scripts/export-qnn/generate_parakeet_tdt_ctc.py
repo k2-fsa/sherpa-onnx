@@ -19,7 +19,7 @@ class Config:
 
 def main():
 
-    model_name_list = ["parakeet-tdt_ctc-110m"]
+    model_name_list = ["parakeet-tdt_ctc-110m", "parakeet-tdt_ctc-0.6b-ja"]
     num_seconds_list = [3, 5, 8, 10, 13, 15, 18, 20, 23, 25, 28, 30]
 
     configs = []

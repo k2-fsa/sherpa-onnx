@@ -3,7 +3,7 @@ name: export-parakeet-tdt-ctc-qnn
 on:
   push:
     branches:
-      - export-parakeet-tdt-ctc-qnn
+      - export-parakeet-tdt-ctc-qnn-2
   workflow_dispatch:
 
 concurrency:
@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         num_seconds: [3, 5, 8, 10, 13, 15, 18, 20, 23, 25, 28, 30]
-        model_id: ["parakeet-tdt_ctc-110m"]
+        model_id: ["parakeet-tdt_ctc-110m", "parakeet-tdt_ctc-0.6b-ja"]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,28 +36,52 @@ jobs:
           num_frames=$((num_seconds*100))
 
           # https://huggingface.co/nvidia/parakeet-tdt_ctc-110m
-          model_id=nvidia/${{ matrix.model_id }}
+          model_id=${{ matrix.model_id }}
 
           echo "num_frames: $num_frames"
           echo "model_id: $model_id"
 
           cd scripts/nemo/qnn/parakeet-tdt-ctc/
 
-          wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
-          mv 2086-149220-0033.wav 2.wav
+          if [[ $model_id == "parakeet-tdt_ctc-110m" ]]; then
+            wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
+            mv 2086-149220-0033.wav 2.wav
 
-          wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/0.wav
-          wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/1.wav
+            wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/0.wav
+            wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/1.wav
+          elif [[ $model_id == "parakeet-tdt_ctc-0.6b-ja" ]]; then
+            wget https://huggingface.co/csukuangfj/reazonspeech-k2-v2/resolve/main/test_wavs/1.wav
+            wget https://huggingface.co/csukuangfj/reazonspeech-k2-v2/resolve/main/test_wavs/2.wav
+            wget https://huggingface.co/csukuangfj/reazonspeech-k2-v2/resolve/main/test_wavs/3.wav
+            wget https://huggingface.co/csukuangfj/reazonspeech-k2-v2/resolve/main/test_wavs/4.wav
+            wget https://huggingface.co/csukuangfj/reazonspeech-k2-v2/resolve/main/test_wavs/5.wav
+          else
+            echo "Unsupported model id $model_id"
+            exit 1
+          fi
 
-          ./run.sh $num_frames $model_id
+          ./run.sh $num_frames nvidia/$model_id
 
           ls -lh model.*
 
-          python3 ./test_onnx.py --wav ./0.wav
-          python3 ./test_onnx.py --wav ./1.wav
-          python3 ./test_onnx.py --wav ./2.wav
+          if [[ $model_id == "parakeet-tdt_ctc-110m" ]]; then
+            python3 ./test_onnx.py --wav ./0.wav
+            python3 ./test_onnx.py --wav ./1.wav
+            python3 ./test_onnx.py --wav ./2.wav
 
-          printf "0.raw\n1.raw\n2.raw\n" > model.txt
+            printf "0.raw\n1.raw\n2.raw\n" > model.txt
+          elif [[ $model_id == "parakeet-tdt_ctc-0.6b-ja" ]]; then
+            python3 ./test_onnx.py --wav ./1.wav
+            python3 ./test_onnx.py --wav ./2.wav
+            python3 ./test_onnx.py --wav ./3.wav
+            python3 ./test_onnx.py --wav ./4.wav
+            python3 ./test_onnx.py --wav ./5.wav
+
+            printf "1.raw\n2.raw\n3.raw\n4.raw\n5.raw\n" > model.txt
+          else
+            echo "Unsupported model id $model_id"
+            exit 1
+          fi
 
           ls -lh model.*
           ls -lh *.raw
@@ -209,7 +233,18 @@ jobs:
       - name: Download toolkit
         shell: bash
         run: |
-          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          url=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          for i in $(seq 1 10); do
+            curl -SL -O $url
+            size=$(stat -c%s v2.40.0.251030.zip 2>/dev/null || stat -f%z v2.40.0.251030.zip 2>/dev/null)
+            if [ "$size" -gt 100000000 ]; then
+              echo "Download succeeded, size=$size"
+              break
+            fi
+            echo "Download failed (size=$size), retrying in 30s... ($i/10)"
+            rm -f v2.40.0.251030.zip
+            sleep 30
+          done
           ls -lh v2.40.0.251030.zip
 
       - name: Unzip toolkit
@@ -500,7 +535,7 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models-qnn
+          tag: asr-models-qnn-2
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -511,7 +546,7 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models-qnn-binary
+          tag: asr-models-qnn-binary-2
 
       - name: Release
         if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
@@ -520,7 +555,7 @@ jobs:
           file_glob: true
           file: ./so/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn
+          tag: asr-models-qnn-2
 
       - name: Release
         if: github.repository_owner == 'k2-fsa'
@@ -529,4 +564,4 @@ jobs:
           file_glob: true
           file: ./binary/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn-binary
+          tag: asr-models-qnn-binary-2
