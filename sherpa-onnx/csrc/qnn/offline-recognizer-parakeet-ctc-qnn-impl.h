@@ -34,8 +34,7 @@ class OfflineRecognizerParakeetCtcQnnImpl : public OfflineRecognizerImpl {
   explicit OfflineRecognizerParakeetCtcQnnImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
-        config_(config),
-        symbol_table_(config_.model_config.tokens),
+        symbol_table_(config.model_config.tokens),
         model_(std::make_unique<OfflineParakeetCtcModelQnn>(
             config.model_config)) {
     Init();
@@ -45,8 +44,7 @@ class OfflineRecognizerParakeetCtcQnnImpl : public OfflineRecognizerImpl {
   OfflineRecognizerParakeetCtcQnnImpl(Manager *mgr,
                                       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
-        config_(config),
-        symbol_table_(mgr, config_.model_config.tokens),
+        symbol_table_(mgr, config.model_config.tokens),
         model_(std::make_unique<OfflineParakeetCtcModelQnn>(
             mgr, config.model_config)) {
     Init();
@@ -103,7 +101,9 @@ class OfflineRecognizerParakeetCtcQnnImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override { return config_; }
+  OfflineRecognizerConfig GetConfig() const override {
+    return OfflineRecognizerImpl::config_;
+  }
 
  private:
   // Decode a single stream.
@@ -131,7 +131,6 @@ class OfflineRecognizerParakeetCtcQnnImpl : public OfflineRecognizerImpl {
   }
 
  private:
-  OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineParakeetCtcModelQnn> model_;
   std::unique_ptr<OfflineCtcGreedySearchDecoderRknn> decoder_;

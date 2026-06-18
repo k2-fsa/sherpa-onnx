@@ -13,8 +13,10 @@
 namespace sherpa_onnx {
 
 void OfflineNemoEncDecCtcModelConfig::Register(ParseOptions *po) {
-  po->Register("nemo-ctc-model", &model,
-               "Path to model.onnx of Nemo EncDecCtcModel.");
+  po->Register(
+      "nemo-ctc-model", &model,
+      "Path to NeMo CTC model. For qnn, use compiled model library "
+      "(e.g. libmodel.so). For onnxruntime, use model.onnx.");
 
   std::string prefix = "nemo-ctc";
   ParseOptions p(prefix, po);

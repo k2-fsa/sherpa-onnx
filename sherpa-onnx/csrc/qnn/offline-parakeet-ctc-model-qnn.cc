@@ -190,12 +190,31 @@ class OfflineParakeetCtcModelQnn::Impl {
     max_num_frames_ = x_shape[1];
     feat_dim_ = x_shape[2];
 
+    if (max_num_frames_ <= 0 || feat_dim_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Invalid input shape: max_num_frames=%d, feat_dim=%d",
+          max_num_frames_, feat_dim_);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     if (!model_->HasTensor("log_probs")) {
       SHERPA_ONNX_LOGE("Model does not have output node 'log_probs'");
       SHERPA_ONNX_EXIT(-1);
     }
 
     auto out_shape = model_->TensorShape("log_probs");
+    if (out_shape.size() != 3) {
+      SHERPA_ONNX_LOGE("The output log_probs should be 3-d, actual '%d'",
+                       static_cast<int32_t>(out_shape.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (out_shape[1] <= 0 || out_shape[2] <= 0) {
+      SHERPA_ONNX_LOGE("Invalid log_probs shape: [%d, %d, %d]", out_shape[0],
+                       out_shape[1], out_shape[2]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     vocab_size_ = out_shape[2];
 
     subsampling_factor_ = max_num_frames_ / out_shape[1];
