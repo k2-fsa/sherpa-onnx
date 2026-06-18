@@ -425,6 +425,12 @@ jobs:
       - name: Build sdist
         if: matrix.python-version == 'cp38' && matrix.manylinux == 'manylinux2014'
         shell: bash
+        env:
+          # Build the sdist in split-package mode so its metadata declares the
+          # sherpa-onnx-core dependency, matching the published wheels. Without
+          # this, the sdist's Requires-Dist omits sherpa-onnx-core, which breaks
+          # tools that resolve from sdist metadata (e.g. `uv lock`). See #3689.
+          SHERPA_ONNX_SPLIT_PYTHON_PACKAGE: ON
         run: |
           python3 setup.py sdist
           ls -l dist/*
