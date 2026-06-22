@@ -54,14 +54,14 @@ class OnnxModel:
         return log_probs
 
 
-def create_fbank():
+def create_fbank(feat_dim):
     opts = knf.FbankOptions()
     opts.frame_opts.dither = 0
     opts.frame_opts.remove_dc_offset = False
     opts.frame_opts.window_type = "hann"
 
     opts.mel_opts.low_freq = 0
-    opts.mel_opts.num_bins = 80
+    opts.mel_opts.num_bins = feat_dim
 
     opts.mel_opts.is_librosa = True
 
@@ -111,10 +111,11 @@ def main():
     name = Path(args.wav).stem
 
     model = OnnxModel("./model.onnx")
+    feat_dim = model.encoder.get_inputs()[0].shape[1]
     max_len = model.encoder.get_inputs()[0].shape[2]
     print("max_len", max_len)
 
-    fbank = create_fbank()
+    fbank = create_fbank(feat_dim=feat_dim)
     audio, sample_rate = sf.read(args.wav, dtype="float32", always_2d=True)
     audio = audio[:, 0]  # only use the first channel
     if sample_rate != 16000:

@@ -198,7 +198,18 @@ jobs:
       - name: Download toolkit
         shell: bash
         run: |
-          curl -SL -O https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          url=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v2.40.0.251030.zip
+          for i in $(seq 1 10); do
+            curl -SL -O $url
+            size=$(stat -c%s v2.40.0.251030.zip 2>/dev/null || stat -f%z v2.40.0.251030.zip 2>/dev/null)
+            if [ "$size" -gt 100000000 ]; then
+              echo "Download succeeded, size=$size"
+              break
+            fi
+            echo "Download failed (size=$size), retrying in 30s... ($i/10)"
+            rm -f v2.40.0.251030.zip
+            sleep 30
+          done
           ls -lh v2.40.0.251030.zip
 
       - name: Unzip toolkit

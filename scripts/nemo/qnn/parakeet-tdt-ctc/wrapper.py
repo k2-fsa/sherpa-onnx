@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        help="e.g., nvidia/parakeet-ctc-0.6b",
+        help="e.g., nvidia/parakeet-tdt_ctc-110m",
         required=True,
     )
     return parser.parse_args()
@@ -40,7 +40,7 @@ class ModelWrapper(torch.nn.Module):
         encoder_output, encoder_out_lens = self.model.encoder(
             audio_signal=x, length=x_lens
         )
-        log_probs = self.model.decoder(encoder_output=encoder_output)
+        log_probs = self.model.ctc_decoder(encoder_output=encoder_output)
 
         return log_probs
 
@@ -53,19 +53,22 @@ def main():
     asr_model = nemo_asr.models.EncDecCTCModelBPE.from_pretrained(
         model_name=args.model_id
     )
+    asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=args.model_id)
+    asr_model.change_decoding_strategy(decoder_type="ctc")
+
     asr_model.eval()
     print(type(asr_model))
     print(asr_model)
     print(asr_model.cfg)
 
-    with open("tokens.txt", "w") as f:
-        for i, t in enumerate(asr_model.cfg["decoder"]["vocabulary"]):
-            f.write(f"{t} {i}\n")
-        f.write(f"<blk> {i+1}")
+    with open("./tokens.txt", "w", encoding="utf-8") as f:
+        for i, s in enumerate(asr_model.joint.vocabulary):
+            f.write(f"{s} {i}\n")
+        f.write(f"<blk> {i+1}\n")
 
     m = ModelWrapper(asr_model)
     m.eval()
-
+    feat_dim = asr_model.cfg["preprocessor"]["features"]
     print("feat_dim", feat_dim)
     x = torch.rand(1, feat_dim, args.max_len, dtype=torch.float32)
 
