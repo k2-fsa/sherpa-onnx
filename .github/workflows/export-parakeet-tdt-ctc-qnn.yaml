@@ -41,7 +41,7 @@ jobs:
           echo "num_frames: $num_frames"
           echo "model_id: $model_id"
 
-          cd scripts/nemo/qnn/parakeet-tdt-ctc/
+          cd scripts/nemo/qnn/parakeet-tdt-ctc/ctc
 
           if [[ $model_id == "parakeet-tdt_ctc-110m" ]]; then
             wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
@@ -94,7 +94,7 @@ jobs:
           # https://huggingface.co/nvidia/parakeet-tdt_ctc-110m
           model_id=${{ matrix.model_id }}
 
-          src=scripts/nemo/qnn/parakeet-tdt-ctc
+          src=scripts/nemo/qnn/parakeet-tdt-ctc/ctc
           dst=${model_id}-${num_seconds}
 
           mkdir -p $dst
