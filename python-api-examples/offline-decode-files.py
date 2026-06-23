@@ -286,7 +286,10 @@ def get_args():
         "--decoding-method",
         type=str,
         default="greedy_search",
-        help="Valid values are greedy_search and modified_beam_search",
+        help=(
+            "Valid values are greedy_search, modified_beam_search "
+            "(for transducer), and prefix_beam_search (for CTC)"
+        ),
     )
 
     parser.add_argument(
