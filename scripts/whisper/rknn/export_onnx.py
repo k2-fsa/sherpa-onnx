@@ -33,7 +33,7 @@ from whisper.model import (
 )
 
 
-def get_args():
+def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
@@ -53,7 +53,11 @@ def get_args():
             ],
         # fmt: on
     )
-    return parser.parse_args()
+    return parser
+
+
+def get_args():
+    return get_parser().parse_args()
 
 
 def causal_mask_1d(n: int, L: int, device=None, dtype=torch.int32):
