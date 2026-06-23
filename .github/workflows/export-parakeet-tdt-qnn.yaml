@@ -397,16 +397,16 @@ jobs:
               qnn-onnx-converter \
                 --input_network ./$m.onnx \
                 --output_path ./quant/$m.cpp \
-                --input_list $m.txt \
-                --use_native_input_files \
+                --float_bitwidth 16 \
                 --act_bitwidth 16 \
-                --bias_bitwidth 32 > ${m}-log-converter.t 2>&1
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             else
               qnn-onnx-converter \
                 --input_network ./$m.onnx \
                 --output_path ./quant/$m.cpp \
+                --float_bitwidth 16 \
                 --act_bitwidth 16 \
-                --bias_bitwidth 32 > ${m}-log-converter.t 2>&1
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             fi
 
             ls -lh quant
