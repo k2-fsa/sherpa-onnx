@@ -511,7 +511,7 @@ jobs:
             cp -v $model_dir/tokens.txt $d
             cp -v $model_dir/*.wav $d/test_wavs
 
-            echo "num_seconds=${num_seconds}ms" > $d/info.txt
+            echo "num_seconds=${num_seconds}s" > $d/info.txt
             echo "target=$p" >> $d/info.txt
 
             ls -lh $d
@@ -655,7 +655,7 @@ jobs:
             cp -v $model_dir/tokens.txt $d
             cp -v $model_dir/*.wav $d/test_wavs
 
-            echo "num_seconds=${num_seconds}ms" > $d/info.txt
+            echo "num_seconds=${num_seconds}s" > $d/info.txt
             echo "target=$p" >> $d/info.txt
 
             ls -lh $d
