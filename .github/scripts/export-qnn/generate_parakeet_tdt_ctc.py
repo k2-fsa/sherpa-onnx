@@ -15,6 +15,7 @@ class Config:
     arch: str  # v81
     num_seconds: int
     model_name: str
+    model_type: str
 
 
 def main():
@@ -28,15 +29,19 @@ def main():
         for num_seconds, model_name in itertools.product(
             num_seconds_list, model_name_list
         ):
-            configs.append(
-                Config(
-                    soc=name,
-                    soc_id=soc.model.value,
-                    arch=soc.info.arch.name,
-                    model_name=model_name,
-                    num_seconds=num_seconds,
+            for t in ["ctc", "transducer"]:
+                if soc.model.name == "SM8350" and t == "transducer":
+                    continue
+                configs.append(
+                    Config(
+                        soc=name,
+                        soc_id=soc.model.value,
+                        arch=soc.info.arch.name,
+                        model_name=model_name,
+                        num_seconds=num_seconds,
+                        model_type=t,
+                    )
                 )
-            )
 
     ans = [asdict(c) for c in configs]
 

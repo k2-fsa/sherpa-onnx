@@ -50,9 +50,7 @@ def main():
     args = get_args()
     print(vars(args))
 
-    asr_model = nemo_asr.models.EncDecCTCModelBPE.from_pretrained(
-        model_name=args.model_id
-    )
+    asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=args.model_id)
     asr_model.eval()
     print(type(asr_model))
     print(asr_model)
