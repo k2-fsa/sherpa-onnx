@@ -44,9 +44,15 @@ static std::string ParseModelPrefix(const std::string &input_name) {
   return input_name.substr(0, pos);
 }
 
-// Convert prefix like "tiny_en" to WhisperModelType
+// Convert prefix like "tiny_en" or "distil_small_en" to WhisperModelType
 static WhisperModelType ParseWhisperModelFromPrefix(const std::string &prefix) {
   std::string name = prefix;
+
+  // Strip "distil_" prefix if present
+  if (name.substr(0, 7) == "distil_") {
+    name = name.substr(7);
+  }
+
   auto pos = name.find('_');
   if (pos != std::string::npos) {
     name[pos] = '.';
