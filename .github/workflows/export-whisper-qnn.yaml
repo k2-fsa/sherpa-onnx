@@ -3,7 +3,7 @@ name: export-whisper-qnn
 on:
   push:
     branches:
-      - export-whisper-qnn
+      - cpp-qnn-whisper-2
   workflow_dispatch:
 
 concurrency:
@@ -410,7 +410,7 @@ jobs:
 
           echo "collect results"
 
-          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-${{ matrix.model_name }}
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-whisper-${{ matrix.model_name }}
           mkdir -p $d
           mkdir -p $d/test_wavs
           cp -v non_quant/binary/*.bin $d/
@@ -427,9 +427,9 @@ jobs:
 
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-linux-x64
+              d=sherpa-onnx-qnn-whisper-${{ matrix.model_name }}-linux-x64
             elif [[ $p == aarch64-android ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-android-aarch64
+              d=sherpa-onnx-qnn-whisper-${{ matrix.model_name }}-android-aarch64
             else
               echo "Unknown $p"
               exit -1
