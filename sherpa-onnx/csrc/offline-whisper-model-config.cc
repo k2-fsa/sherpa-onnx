@@ -10,8 +10,39 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+static bool IsQnnModelLibFile(const std::string &filename) {
+  return EndsWith(filename, ".so");
+}
+
+static bool IsQnnWhisperArtifact(const OfflineWhisperModelConfig &config) {
+  return IsQnnModelLibFile(config.encoder) ||
+         IsQnnModelLibFile(config.decoder) ||
+         !config.qnn_config.context_binary.empty();
+}
+
+static bool ValidateQnnContextBinaries(const std::string &context_binary,
+                                       std::vector<std::string> &filenames) {
+  filenames.clear();
+
+  if (context_binary.empty()) {
+    return true;
+  }
+
+  SplitStringToVector(context_binary, ",", true, &filenames);
+  if (filenames.size() != 2) {
+    SHERPA_ONNX_LOGE(
+        "For offline whisper with QNN, you should provide 2 context "
+        "binaries separated by commas (encoder,decoder). Given '%s'",
+        context_binary.c_str());
+    return false;
+  }
+
+  return true;
+}
 
 void OfflineWhisperModelConfig::Register(ParseOptions *po) {
   po->Register("whisper-encoder", &encoder,
@@ -59,17 +90,71 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
       "--whisper-enable-token-timestamps for both segment-level and "
       "token-level "
       "timestamps. Default: false.");
+
+  std::string prefix = "whisper";
+  ParseOptions p(prefix, po);
+  qnn_config.Register(&p);
 }
 
 bool OfflineWhisperModelConfig::Validate() const {
+  bool uses_qnn = IsQnnWhisperArtifact(*this);
+
+  if (uses_qnn) {
+    std::vector<std::string> context_binaries;
+    if (!ValidateQnnContextBinaries(qnn_config.context_binary,
+                                    context_binaries)) {
+      return false;
+    }
+
+    bool need_model_libs = context_binaries.empty();
+    for (const auto &name : context_binaries) {
+      if (!FileExists(name)) {
+        need_model_libs = true;
+        break;
+      }
+    }
+
+    if (need_model_libs) {
+      if (!EndsWith(encoder, ".so") || !EndsWith(decoder, ".so")) {
+        SHERPA_ONNX_LOGE(
+            "For offline whisper with QNN, encoder/decoder should be "
+            "*.so when context binaries are missing. Given encoder: '%s', "
+            "decoder: '%s'",
+            encoder.c_str(), decoder.c_str());
+        return false;
+      }
+
+      if (!FileExists(encoder)) {
+        SHERPA_ONNX_LOGE("whisper encoder: '%s' does not exist",
+                         encoder.c_str());
+        return false;
+      }
+
+      if (!FileExists(decoder)) {
+        SHERPA_ONNX_LOGE("whisper decoder: '%s' does not exist",
+                         decoder.c_str());
+        return false;
+      }
+    }
+
+    for (const auto &name : context_binaries) {
+      if (FileExists(name) && !EndsWith(name, ".bin")) {
+        SHERPA_ONNX_LOGE("QNN context binary should end with .bin. Given '%s'",
+                         name.c_str());
+        return false;
+      }
+    }
+
+    return qnn_config.Validate();
+  }
+
   if (encoder.empty()) {
     SHERPA_ONNX_LOGE("Please provide --whisper-encoder");
     return false;
   }
 
   if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("whisper encoder file '%s' does not exist",
-                     encoder.c_str());
+    SHERPA_ONNX_LOGE("whisper encoder: '%s' does not exist", encoder.c_str());
     return false;
   }
 
@@ -79,8 +164,7 @@ bool OfflineWhisperModelConfig::Validate() const {
   }
 
   if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("whisper decoder file '%s' does not exist",
-                     decoder.c_str());
+    SHERPA_ONNX_LOGE("whisper decoder: '%s' does not exist", decoder.c_str());
     return false;
   }
 
@@ -88,7 +172,6 @@ bool OfflineWhisperModelConfig::Validate() const {
     SHERPA_ONNX_LOGE(
         "--whisper-task supports only translate and transcribe. Given: %s",
         task.c_str());
-
     return false;
   }
 
@@ -107,7 +190,11 @@ std::string OfflineWhisperModelConfig::ToString() const {
   os << "enable_token_timestamps="
      << (enable_token_timestamps ? "True" : "False") << ", ";
   os << "enable_segment_timestamps="
-     << (enable_segment_timestamps ? "True" : "False") << ")";
+     << (enable_segment_timestamps ? "True" : "False") << ", ";
+  if (!qnn_config.backend_lib.empty()) {
+    os << "qnn_config=" << qnn_config.ToString() << ", ";
+  }
+  os << ")";
 
   return os.str();
 }

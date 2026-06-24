@@ -8,12 +8,15 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
 struct OfflineWhisperModelConfig {
   std::string encoder;
   std::string decoder;
+
+  QnnConfig qnn_config;
 
   // Available languages can be found at
   // https://github.com/openai/whisper/blob/main/whisper/tokenizer.py#L10
