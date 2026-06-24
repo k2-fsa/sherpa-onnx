@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -8,8 +9,8 @@ import onnxruntime as ort
 import torch
 import whisper
 
+from export_onnx import causal_mask_1d, get_parser
 from test_torch import compute_feat
-from export_onnx import causal_mask_1d, get_args
 
 
 class OnnxModel:
@@ -114,15 +115,102 @@ class OnnxModel:
 
 
 def main():
-    args = get_args()
+    parser = get_parser()
+    parser.add_argument(
+        "--wav",
+        type=str,
+        required=True,
+    )
+    args = parser.parse_args()
     print(vars(args))
 
-    torch_model = whisper.load_model(args.model)
+    name = args.model
+    if name == "distil-medium.en":
+        filename = "./distil-medium-en-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-medium.en
+                to download original-model.bin
+                You can use the following command to do that:
+
+                wget -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    elif name == "distil-large-v2":
+        filename = "./distil-large-v2-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v2
+                to download original-model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    elif name == "distil-large-v3":
+        filename = "./distil-large-v3-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v3-openai
+                to download model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    elif name == "distil-large-v3.5":
+        filename = "./distil-large-v3.5-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v3.5-openai/
+                to download model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    elif name == "distil-small.en":
+        filename = "./distil-small-en-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-small.en
+                to download original-model.bin
+                You can use the following command to do that:
+
+                wget -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    elif name == "medium-aishell":
+        filename = "./medium-aishell.pt"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/yuekai/icefall_asr_aishell_whisper/tree/main/exp_medium
+                to download whisper-medium-aishell1-epoch-10-avg-4.pt
+                You can use the following command to do that:
+
+                wget -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
+            """
+            )
+        torch_model = whisper.load_model(filename)
+    else:
+        torch_model = whisper.load_model(name)
+
     tokenizer = whisper.tokenizer.get_tokenizer(
         torch_model.is_multilingual, num_languages=torch_model.num_languages
     )
 
-    mel = compute_feat("./en-16k.wav").numpy()
+    mel = compute_feat(args.wav).numpy()
     print(mel.shape)  # (1, 80. 3000)
     model = OnnxModel(f"./{args.model}-encoder.onnx", f"./{args.model}-decoder.onnx")
 
@@ -161,13 +249,14 @@ def main():
     while idx != eot and offset.item() < 200:
         ans.append(idx)
         token = np.array([[idx]], dtype=np.int32)  # no_timestamps
-        for i in range(1, len(out)):
-            self_kv[i - 1][:, offset.item() : offset.item() + 1, :] = out[i]
 
         mask = causal_mask_1d(offset.item(), model.n_text_ctx).numpy()
 
         out = model.run_decoder([token] + self_kv + cross_kv + [offset, mask])
         idx = out[0][0, 0].argmax()
+
+        for i in range(1, len(out)):
+            self_kv[i - 1][:, offset.item() : offset.item() + 1, :] = out[i]
 
         offset += 1
 

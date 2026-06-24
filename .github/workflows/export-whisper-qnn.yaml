@@ -1,13 +1,13 @@
-name: export-parakeet-ctc-qnn
+name: export-whisper-qnn
 
 on:
   push:
     branches:
-      - export-parakeet-ctc-qnn
+      - export-whisper-qnn
   workflow_dispatch:
 
 concurrency:
-  group: export-parakeet-ctc-qnn-${{ github.ref }}
+  group: export-whisper-qnn-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,8 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        num_seconds: [3, 5, 8, 10, 13, 15, 18, 20, 23, 25, 28, 30]
-        model_id: ["parakeet-ctc-0.6b"]
+        model_name: ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "distil-medium.en", "distil-small.en", "medium-aishell"]
 
     steps:
       - uses: actions/checkout@v4
@@ -29,55 +28,67 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install \
+            torch==2.6.0 torchaudio==2.6.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html "numpy<2" \
+            openai-whisper \
+            onnxruntime onnx soundfile librosa
+
       - name: Export models
         shell: bash
         run: |
-          num_seconds=${{ matrix.num_seconds }}
-          num_frames=$((num_seconds*100))
+          model_name=${{ matrix.model_name }}
+          cd scripts/whisper/qnn
 
-          # https://huggingface.co/nvidia/parakeet-ctc-0.6b
-          model_id=nvidia/${{ matrix.model_id }}
-
-          echo "num_frames: $num_frames"
-          echo "model_id: $model_id"
-
-          cd scripts/nemo/qnn/parakeet-ctc/
-
-          wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
-          mv 2086-149220-0033.wav 2.wav
+          model=$model_name
+          echo "model: $model"
+          if [[ $model == distil-medium.en ]]; then
+            wget -q -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == distil-large-v2 ]]; then
+            wget -q -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == distil-large-v3 ]]; then
+            wget -q -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3-openai/resolve/main/model.bin
+            ls -lh
+          elif [[ $model == distil-large-v3.5 ]]; then
+            wget -q -O distil-large-v3.5-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3.5-openai/resolve/main/model.bin
+            ls -lh
+          elif [[ $model == distil-small.en ]]; then
+            wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == medium-aishell ]]; then
+            wget -q -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
+            ls -lh
+          fi
 
           wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/0.wav
           wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/1.wav
+          wget https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main/test_wavs/8k.wav
 
-          ./run.sh $num_frames $model_id
+          python3 ./export_onnx.py --model $model_name
 
-          ls -lh model.*
+          ls -lh
 
-          python3 ./test_onnx.py --wav ./0.wav
-          python3 ./test_onnx.py --wav ./1.wav
-          python3 ./test_onnx.py --wav ./2.wav
-
-          printf "0.raw\n1.raw\n2.raw\n" > model.txt
-
-          ls -lh model.*
-          ls -lh *.raw
+          python3 ./test_onnx.py --model $model_name --wav ./0.wav
+          python3 ./test_onnx.py --model $model_name --wav ./1.wav
+          python3 ./test_onnx.py --model $model_name --wav ./8k.wav
 
       - name: Collect models
         shell: bash
         run: |
-          num_seconds=${{ matrix.num_seconds }}
+          model_name=${{ matrix.model_name }}
 
-          # https://huggingface.co/nvidia/parakeet-ctc-0.6b
-          model_id=${{ matrix.model_id }}
-
-          src=scripts/nemo/qnn/parakeet-ctc
-          dst=${model_id}-${num_seconds}
+          src=scripts/whisper/qnn
+          dst=${model_name}
 
           mkdir -p $dst
 
-          mv -v $src/model.* $dst
-          cp -v $src/tokens.txt $dst
-          cp -v $src/*.raw $dst
+          mv -v $src/${model_name}-encoder.onnx $dst/encoder.onnx
+          mv -v $src/${model_name}-decoder.onnx $dst/decoder.onnx
+          cp -v $src/${model_name}-tokens.txt $dst/tokens.txt
           cp -v $src/*.wav $dst
 
           ls -lh $dst/
@@ -86,7 +97,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.model_id }}-${{ matrix.num_seconds }}
+          name: ${{ matrix.model_name }}
           path: ./*.tar.bz2
 
   generate_build_matrix:
@@ -103,8 +114,8 @@ jobs:
         id: set-matrix
         run: |
           # outputting for debugging purposes
-          python3 .github/scripts/export-qnn/generate_parakeet_ctc.py
-          MATRIX=$(python3 .github/scripts/export-qnn/generate_parakeet_ctc.py)
+          python3 .github/scripts/export-qnn/generate_whisper.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_whisper.py)
 
           # deprecated
           # echo "::set-output name=matrix::${MATRIX}"
@@ -113,7 +124,7 @@ jobs:
   qnn:
     needs: [generate_build_matrix, onnx]
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}
+    name: ${{ matrix.model_name }} ${{ matrix.soc }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -126,26 +137,22 @@ jobs:
       - name: Retrieve artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.model_name }}-${{ matrix.num_seconds }}
+          name: ${{ matrix.model_name }}
           path: /tmp/
 
       - name: Show
         shell: bash
         run: |
-          num_seconds=${{ matrix.num_seconds }}
-          model_id=${{ matrix.model_name }}
+          model_name=${{ matrix.model_name }}
 
           dir=$PWD
-          mkdir -p model-files/$num_seconds
+          mkdir -p model-files
 
           ls -lh /tmp/
 
           pushd /tmp
-          echo "num_seconds: $num_seconds"
 
-
-          src=${model_id}-${num_seconds}
-
+          src=${model_name}
 
           ls -lh $src.tar.bz2
 
@@ -157,14 +164,12 @@ jobs:
           ls -lh $src/*
           popd
 
-          mv -v /tmp/$src/* $dir/model-files/$num_seconds/
+          mv -v /tmp/$src/* $dir/model-files/
 
       - name: Show
         shell: bash
         run: |
           ls -lh model-files
-          echo "---"
-          ls -lh model-files/*
 
       - name: Setup Python 3.10
         uses: actions/setup-python@v5
@@ -347,80 +352,70 @@ jobs:
 
           export LDFLAGS="-Wl,-z,max-page-size=16384"
           dir=$PWD
-          num_seconds=${{ matrix.num_seconds }}
-          model_dir=$PWD/model-files/$num_seconds
+          model_dir=$PWD/model-files
           soc=${{ matrix.soc }}
+          model_name=${{ matrix.model_name }}
 
-          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/model.onnx
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/encoder.onnx
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/decoder.onnx
 
           export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
 
           echo "export to qnn"
-          echo "----------$num_seconds----------"
+          echo "----------$model_name----------"
 
-          for m in model; do
+          for m in encoder decoder; do
             echo "Processing $m"
-            mv -v $model_dir/${m}.* ./
-            mv -v $model_dir/*.raw ./
-            ls -lh $m.*
-            ls -lh *.raw
-
-            cat $m.txt
-
             qnn-onnx-converter \
-              --input_network ./$m.onnx \
-              --output_path ./quant/$m.cpp \
-              --input_list $m.txt \
-              --use_native_input_files \
+              --input_network $model_dir/$m.onnx \
+              --output_path ./non_quant/$m.cpp \
               --act_bitwidth 16 \
               --bias_bitwidth 32 > ${m}-log-converter.t 2>&1
 
-            ls -lh quant
+            ls -lh non_quant
 
             python3 ./scripts/qnn/generate_config.py  \
                 --soc $soc \
                 --graph-name $m \
-                --output-dir ./quant/my-config-$m \
+                --output-dir ./non_quant/my-config-$m \
                 --qnn-sdk-root $QNN_SDK_ROOT
 
-            ls -lh quant/my-config-$m
+            ls -lh non_quant/my-config-$m
 
-            head -n100 ./quant/my-config-$m/*.json
+            head -n100 ./non_quant/my-config-$m/*.json
 
             python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
-                -c quant/$m.cpp \
-                -b quant/$m.bin \
-                -o quant/model_libs > ${m}-log-generator.txt 2>&1
+                -c non_quant/$m.cpp \
+                -b non_quant/$m.bin \
+                -o non_quant/model_libs > ${m}-log-generator.txt 2>&1
 
-            ls -lh quant/model_libs
+            ls -lh non_quant/model_libs
             echo "---"
-            ls -lh quant/model_libs/x86_64-linux-clang
+            ls -lh non_quant/model_libs/x86_64-linux-clang
             echo "---"
-            ls -lh quant/model_libs/aarch64-android
+            ls -lh non_quant/model_libs/aarch64-android
 
 
             $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
               --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
-              --model ./quant/model_libs/x86_64-linux-clang/lib$m.so \
-              --output_dir ./quant/binary \
+              --model ./non_quant/model_libs/x86_64-linux-clang/lib$m.so \
+              --output_dir ./non_quant/binary \
               --binary_file $m \
-              --config_file ./quant/my-config-$m/htp_backend_extensions.json > ${m}-log-generator.txt 2>&1
+              --config_file ./non_quant/my-config-$m/htp_backend_extensions.json > ${m}-log-generator.txt 2>&1
 
-            ls -lh quant/binary/
+            ls -lh non_quant/binary/
           done
 
-          readelf -lW quant/model_libs/*/lib*.so
+          readelf -lW non_quant/model_libs/*/lib*.so
 
           echo "collect results"
 
-          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-${{ matrix.model_name }}-${{ matrix.num_seconds }}s
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-${{ matrix.model_name }}
           mkdir -p $d
           mkdir -p $d/test_wavs
-          cp -v quant/binary/*.bin $d/
+          cp -v non_quant/binary/*.bin $d/
           cp -v $model_dir/tokens.txt $d
           cp -v $model_dir/*.wav $d/test_wavs
-
-          echo "num_seconds=${num_seconds}s" > $d/info.txt
 
           ls -lh $d
           tar cjfv $d.tar.bz2 $d
@@ -432,9 +427,9 @@ jobs:
 
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-linux-x64
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-linux-x64
             elif [[ $p == aarch64-android ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-android-aarch64
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-android-aarch64
             else
               echo "Unknown $p"
               exit -1
@@ -443,11 +438,10 @@ jobs:
             mkdir -p $d
             mkdir -p $d/test_wavs
 
-            cp -v quant/model_libs/$p/lib*.so $d/
+            cp -v non_quant/model_libs/$p/lib*.so $d/
             cp -v $model_dir/tokens.txt $d
             cp -v $model_dir/*.wav $d/test_wavs
 
-            echo "num_seconds=${num_seconds}s" > $d/info.txt
             echo "target=$p" >> $d/info.txt
 
             ls -lh $d
@@ -479,11 +473,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.model_name }}-${{ matrix.soc }}-${{ matrix.num_seconds }}-json
-          path: ./quant/*.json
+          name: ${{ matrix.model_name }}-${{ matrix.soc }}json
+          path: ./non_quant/*.json
 
       - name: Release
-        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850' && matrix.model_name != 'medium-aishell'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -491,7 +485,7 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models-qnn
+          tag: asr-models-qnn-2
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'
@@ -502,7 +496,7 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models-qnn-binary
+          tag: asr-models-qnn-binary-2
 
       - name: Release
         if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
@@ -511,7 +505,7 @@ jobs:
           file_glob: true
           file: ./so/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn
+          tag: asr-models-qnn-2
 
       - name: Release
         if: github.repository_owner == 'k2-fsa'
@@ -520,4 +514,4 @@ jobs:
           file_glob: true
           file: ./binary/*.tar.bz2
           overwrite: true
-          tag: asr-models-qnn-binary
+          tag: asr-models-qnn-binary-2
