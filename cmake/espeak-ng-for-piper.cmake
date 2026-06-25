@@ -1,9 +1,8 @@
 function(download_espeak_ng_for_piper)
   include(FetchContent)
 
-  set(espeak_ng_URL  "https://github.com/csukuangfj/espeak-ng/archive/f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip")
-  set(espeak_ng_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip")
-  set(espeak_ng_HASH "SHA256=70cbf4050e7a014aae19140b05e57249da4720f56128459fbe3a93beaf971ae6")
+  set(espeak_ng_URL  "https://github.com/csukuangfj/espeak-ng/archive/ed530aa113046142eb5115cf2fc9157854d0ffe1.zip")
+  set(espeak_ng_HASH "SHA256=e4e262cbe34f7fe21f91f1ba3397f2728e1f30eafbae7853f2b753a9ed13f0dd")
 
   set(BUILD_ESPEAK_NG_TESTS OFF CACHE BOOL "" FORCE)
   set(USE_ASYNC OFF CACHE BOOL "" FORCE)
@@ -21,11 +20,11 @@ function(download_espeak_ng_for_piper)
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip
-    ${CMAKE_SOURCE_DIR}/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip
-    ${CMAKE_BINARY_DIR}/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip
-    /tmp/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip
-    /star-fj/fangjun/download/github/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip
+    $ENV{HOME}/Downloads/espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip
+    ${CMAKE_SOURCE_DIR}/espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip
+    ${CMAKE_BINARY_DIR}/espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip
+    /tmp/espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip
+    /star-fj/fangjun/download/github/espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -33,7 +32,6 @@ function(download_espeak_ng_for_piper)
       set(espeak_ng_URL  "${f}")
       file(TO_CMAKE_PATH "${espeak_ng_URL}" espeak_ng_URL)
       message(STATUS "Found local downloaded espeak-ng: ${espeak_ng_URL}")
-      set(espeak_ng_URL2 )
       break()
     endif()
   endforeach()
@@ -41,7 +39,6 @@ function(download_espeak_ng_for_piper)
   FetchContent_Declare(espeak_ng
     URL
       ${espeak_ng_URL}
-      ${espeak_ng_URL2}
     URL_HASH          ${espeak_ng_HASH}
   )
 
