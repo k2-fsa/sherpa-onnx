@@ -1,18 +1,17 @@
 function(download_piper_phonemize)
   include(FetchContent)
 
-  set(piper_phonemize_URL  "https://github.com/csukuangfj/piper-phonemize/archive/78a788e0b719013401572d70fef372e77bff8e43.zip")
-  set(piper_phonemize_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip")
-  set(piper_phonemize_HASH "SHA256=89641a46489a4898754643ce57bda9c9b54b4ca46485fdc02bf0dc84b866645d")
+  set(piper_phonemize_URL  "https://github.com/csukuangfj/piper-phonemize/archive/f3ff95afc03640bc1399e113e83361192a2fafb4.zip")
+  set(piper_phonemize_HASH "SHA256=d9cca4e2bdc7d6dd8dffb96a4668283dbd3f77a9c194a3e530c1e8eba9406a5d")
 
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip
-    ${CMAKE_SOURCE_DIR}/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip
-    ${CMAKE_BINARY_DIR}/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip
-    /tmp/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip
-    /star-fj/fangjun/download/github/piper-phonemize-78a788e0b719013401572d70fef372e77bff8e43.zip
+    $ENV{HOME}/Downloads/piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip
+    ${CMAKE_SOURCE_DIR}/piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip
+    ${CMAKE_BINARY_DIR}/piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip
+    /tmp/piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip
+    /star-fj/fangjun/download/github/piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -20,7 +19,6 @@ function(download_piper_phonemize)
       set(piper_phonemize_URL  "${f}")
       file(TO_CMAKE_PATH "${piper_phonemize_URL}" piper_phonemize_URL)
       message(STATUS "Found local downloaded espeak-ng: ${piper_phonemize_URL}")
-      set(piper_phonemize_URL2 )
       break()
     endif()
   endforeach()
@@ -28,7 +26,6 @@ function(download_piper_phonemize)
   FetchContent_Declare(piper_phonemize
     URL
       ${piper_phonemize_URL}
-      ${piper_phonemize_URL2}
     URL_HASH          ${piper_phonemize_HASH}
   )
 
