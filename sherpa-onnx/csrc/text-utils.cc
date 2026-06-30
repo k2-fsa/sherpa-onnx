@@ -1057,9 +1057,46 @@ bool ContainsCJK(const std::u32string &text) {
   return false;
 }
 
+// Detect if a codepoint is a punctuation character.
+// Covers ASCII punctuation, CJK Symbols and Punctuation, and Fullwidth forms.
+static bool IsPunct(char32_t cp) {
+  // ASCII punctuation: ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ `
+  // { | } ~
+  if (cp >= 0x21 && cp <= 0x2F) {
+    return true;
+  }
+  if (cp >= 0x3A && cp <= 0x40) {
+    return true;
+  }
+  if (cp >= 0x5B && cp <= 0x60) {
+    return true;
+  }
+  if (cp >= 0x7B && cp <= 0x7E) {
+    return true;
+  }
+  // CJK Symbols and Punctuation: 。，、；：！？ etc.
+  if (cp >= 0x3000 && cp <= 0x303F) {
+    return true;
+  }
+  // Fullwidth punctuation variants
+  if (cp >= 0xFF01 && cp <= 0xFF0F) {
+    return true;
+  }
+  if (cp >= 0xFF1A && cp <= 0xFF20) {
+    return true;
+  }
+  if (cp >= 0xFF3B && cp <= 0xFF40) {
+    return true;
+  }
+  if (cp >= 0xFF5B && cp <= 0xFF65) {
+    return true;
+  }
+  return false;
+}
+
 std::string RemoveSpaceBetweenCjk(const std::string &text) {
   std::u32string u32 = Utf8ToUtf32(text);
-  if (u32.size() < 3) {
+  if (u32.size() < 2) {
     return text;
   }
 
@@ -1067,15 +1104,15 @@ std::string RemoveSpaceBetweenCjk(const std::string &text) {
   ans.reserve(u32.size());
   ans.push_back(u32[0]);
 
-  for (size_t i = 1; i + 1 < u32.size(); ++i) {
-    if (u32[i] == U' ' && IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) {
+  for (size_t i = 1; i < u32.size(); ++i) {
+    if (u32[i] == U' ' && i + 1 < u32.size() &&
+        ((IsCJK(u32[i - 1]) && IsCJK(u32[i + 1])) || IsPunct(u32[i + 1]))) {
       continue;
     }
 
     ans.push_back(u32[i]);
   }
 
-  ans.push_back(u32.back());
   return Utf32ToUtf8(ans);
 }
 
@@ -1355,8 +1392,7 @@ std::vector<std::string> SplitLongSentence(const std::string &sentence,
       split_pos = end;
     }
 
-    std::string piece =
-        Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
+    std::string piece = Trim(Utf32ToUtf8(u32.substr(start, split_pos - start)));
     if (!piece.empty()) {
       chunks.emplace_back(std::move(piece));
     }
