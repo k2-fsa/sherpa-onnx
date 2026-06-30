@@ -169,6 +169,7 @@ function testOnlineAsr() {
     test_online_asr.kt \
     FeatureConfig.kt \
     HomophoneReplacerConfig.kt \
+    QnnConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
@@ -400,6 +401,7 @@ function testInverseTextNormalizationOnlineAsr() {
     test_itn_online_asr.kt \
     FeatureConfig.kt \
     HomophoneReplacerConfig.kt \
+    QnnConfig.kt \
     OnlineRecognizer.kt \
     OnlineStream.kt \
     WaveReader.kt \
