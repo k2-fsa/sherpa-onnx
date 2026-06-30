@@ -44,12 +44,12 @@ class CharacterLexicon::Impl {
     }
 
     {
-      std::ifstream is(tokens);
+      auto is = OpenInputFile(tokens);
       InitTokens(is);
     }
 
     {
-      std::ifstream is(lexicon);
+      auto is = OpenInputFile(lexicon);
       InitLexicon(is);
     }
   }

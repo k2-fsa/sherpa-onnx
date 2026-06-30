@@ -427,7 +427,7 @@ class KokoroMultiLangLexicon::Impl {
   }
 
   void InitTokens(const std::string &tokens) {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     InitTokens(is);
   }
 
@@ -471,7 +471,7 @@ class KokoroMultiLangLexicon::Impl {
     std::vector<std::string> files;
     SplitStringToVector(lexicon, ",", false, &files);
     for (const auto &f : files) {
-      std::ifstream is(f);
+      auto is = OpenInputFile(f);
       InitLexicon(is);
     }
   }

@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -41,7 +42,7 @@ std::vector<std::vector<std::string>> SplitToBatches(
 
 std::vector<std::string> LoadScpFile(const std::string &wav_scp_path) {
   std::vector<std::string> wav_paths;
-  std::ifstream in(wav_scp_path);
+  auto in = sherpa_onnx::OpenInputFile(wav_scp_path);
   if (!in.is_open()) {
     fprintf(stderr, "Failed to open file: %s.\n", wav_scp_path.c_str());
     return wav_paths;

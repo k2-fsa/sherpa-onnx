@@ -36,7 +36,7 @@ static json LoadJson(const std::string &filename) {
   }
   AssertFileExists(filename);
 
-  std::ifstream is(filename);
+  auto is = OpenInputFile(filename);
   json j;
   is >> j;
   return j;

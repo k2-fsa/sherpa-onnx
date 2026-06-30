@@ -20,7 +20,7 @@
 namespace sherpa_onnx {
 
 AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
-  std::ifstream is(filename);
+  auto is = OpenInputFile(filename);
   Init(is);
 }
 

@@ -442,7 +442,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   void InitHotwords() {
     // each line in hotwords_file contains space-separated words
 
-    std::ifstream is(config_.hotwords_file);
+    auto is = OpenInputFile(config_.hotwords_file);
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
                        config_.hotwords_file.c_str());

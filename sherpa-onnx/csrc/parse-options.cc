@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -445,7 +446,7 @@ void ParseOptions::PrintConfig(std::ostream &os) const {
 }
 
 void ParseOptions::ReadConfigFile(const std::string &filename) {
-  std::ifstream is(filename.c_str(), std::ifstream::in);
+  auto is = OpenInputFile(filename);
   if (!is.good()) {
     SHERPA_ONNX_LOGE("Cannot open config file: %s", filename.c_str());
     SHERPA_ONNX_EXIT(-1);

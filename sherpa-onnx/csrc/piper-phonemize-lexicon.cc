@@ -386,7 +386,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const OfflineTtsVitsModelMetaData &vits_meta_data)
     : vits_meta_data_(vits_meta_data) {
   {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     token2id_ = ReadTokens(is);
   }
 
@@ -415,7 +415,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const OfflineTtsMatchaModelMetaData &matcha_meta_data)
     : matcha_meta_data_(matcha_meta_data), is_matcha_(true) {
   {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     token2id_ = ReadTokens(is);
   }
 
@@ -427,7 +427,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const OfflineTtsKokoroModelMetaData &kokoro_meta_data)
     : kokoro_meta_data_(kokoro_meta_data), is_kokoro_(true) {
   {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     token2id_ = ReadTokens(is);
   }
 
@@ -439,7 +439,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const OfflineTtsKittenModelMetaData &kitten_meta_data)
     : kitten_meta_data_(kitten_meta_data), is_kitten_(true) {
   {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     token2id_ = ReadTokens(is);
   }
 

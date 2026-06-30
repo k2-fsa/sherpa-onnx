@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -136,7 +137,7 @@ OfflineWebsocketServer::OfflineWebsocketServer(
     : io_conn_(io_conn),
       io_work_(io_work),
       config_(config),
-      log_(config.log_file, std::ios::app),
+      log_(OpenOutputFile(config.log_file, std::ios::app)),
       tee_(std::cout, log_),
       decoder_(this) {
   SetupLog();

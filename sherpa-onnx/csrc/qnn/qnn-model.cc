@@ -249,7 +249,7 @@ class QnnModel::Impl {
           static_cast<int32_t>(required_buffer_size));
       return false;
     }
-    std::ofstream ofs(filename, std::ios::binary | std::ios::trunc);
+    auto ofs = OpenOutputFile(filename, std::ios::binary | std::ios::trunc);
     if (!ofs) {
       SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
       return false;

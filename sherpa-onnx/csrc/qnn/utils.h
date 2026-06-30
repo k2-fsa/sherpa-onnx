@@ -10,13 +10,27 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "QnnInterface.h"
 #include "System/QnnSystemInterface.h"
 #include "sherpa-onnx/csrc/macros.h"
 
+#ifdef _WIN32
+namespace sherpa_onnx {
+std::wstring ToWideString(const std::string &s);
+}
+#endif
+
 template <typename T>
 std::vector<T> ReadFile(const std::string &filename) {
+#ifdef _WIN32
+  FILE *fp = _wfopen(sherpa_onnx::ToWideString(filename).c_str(), L"rb");
+#else
   FILE *fp = fopen(filename.c_str(), "rb");
+#endif
   if (!fp) {
     SHERPA_ONNX_LOGE("Failed to open '%s'", filename.c_str());
     return {};

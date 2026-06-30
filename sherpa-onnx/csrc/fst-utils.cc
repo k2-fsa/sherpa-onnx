@@ -11,6 +11,7 @@
 
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -22,7 +23,7 @@ namespace sherpa_onnx {
 //         avoid memory leak.
 fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   // read decoding network FST
-  std::ifstream is(filename, std::ios::binary);
+  auto is = OpenInputFile(filename, std::ios::binary);
   if (!is.good()) {
     SHERPA_ONNX_LOGE("Could not open decoding-graph FST %s", filename.c_str());
   }
