@@ -126,7 +126,7 @@ class MatchaTtsLexicon::Impl {
     }
 
     {
-      std::ifstream is(tokens);
+      auto is = OpenInputFile(tokens);
       InitTokens(is);
     }
 
@@ -386,7 +386,7 @@ class MatchaTtsLexicon::Impl {
     std::vector<std::string> files;
     SplitStringToVector(lexicon, ",", false, &files);
     for (const auto &f : files) {
-      std::ifstream is(f);
+      auto is = OpenInputFile(f);
       InitLexicon(is);
     }
   }

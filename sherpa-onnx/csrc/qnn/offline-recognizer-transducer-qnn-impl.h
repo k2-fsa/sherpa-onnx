@@ -332,7 +332,7 @@ class OfflineRecognizerTransducerQnnImpl : public OfflineRecognizerImpl {
   }
 
   void InitHotwords() {
-    std::ifstream is(config_.hotwords_file);
+    auto is = OpenInputFile(config_.hotwords_file);
     if (!is) {
       SHERPA_ONNX_LOGE("Open hotwords file failed: '%s'",
                        config_.hotwords_file.c_str());

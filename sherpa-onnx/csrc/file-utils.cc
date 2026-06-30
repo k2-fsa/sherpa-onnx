@@ -5,7 +5,6 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 
 #include <fstream>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -14,25 +13,41 @@
 #include <windows.h>
 #else
 #include <sys/stat.h>
-#include <unistd.h>
 #include <limits.h>
 #include <stdlib.h>
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-std::wstring ToWideString(const std::string &s);
-std::string ToString(const std::wstring &s);
+
+std::ifstream OpenInputFile(const std::string &filename,
+                            std::ios_base::openmode mode) {
+#ifdef _WIN32
+  return std::ifstream(ToWideString(filename).c_str(), mode);
+#else
+  return std::ifstream(filename, mode);
+#endif
+}
+
+std::ofstream OpenOutputFile(const std::string &filename,
+                             std::ios_base::openmode mode) {
+#ifdef _WIN32
+  return std::ofstream(ToWideString(filename).c_str(), mode);
+#else
+  return std::ofstream(filename, mode);
+#endif
+}
 
 bool FileExists(const std::string &filename) {
 #ifdef _WIN32
-    DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
-    
-    return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+  DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
+  return attributes != INVALID_FILE_ATTRIBUTES &&
+         !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 #else
-    struct stat file_stat;
-    return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
+  struct stat file_stat;
+  return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
 #endif
 }
 
@@ -47,67 +62,24 @@ std::vector<char> ReadFile(const std::string &filename) {
   if (filename.empty()) {
     return {};
   }
-  try {
-#ifdef _WIN32     
-    HANDLE hFile = CreateFileW(
-        ToWideString(filename).c_str(),
-        GENERIC_READ,
-        FILE_SHARE_READ,
-        nullptr,
-        OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
-        nullptr
-    );
 
-    if (hFile == INVALID_HANDLE_VALUE) {
-      return {};
-    }
-
-    std::unique_ptr<void, decltype(&CloseHandle)> file_guard(
-      hFile, CloseHandle);
-
-    LARGE_INTEGER file_size;
-    if (!GetFileSizeEx(hFile, &file_size) || file_size.QuadPart > SIZE_MAX) {
-      return {};
-    }
-
-    std::vector<char> buffer(static_cast<size_t>(file_size.QuadPart));
-
-    DWORD bytes_read = 0;
-    bool read_success = ::ReadFile(
-      hFile, 
-      buffer.data(), 
-      static_cast<DWORD>(buffer.size()), 
-      &bytes_read, 
-      nullptr
-    );
-    if (!read_success || bytes_read != buffer.size()) {
-      return {};
-    }
-    
-    return buffer;
-#else
-    std::ifstream file(filename, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-      return {};
-    }
-
-    std::streamsize size = file.tellg();
-    if (size < 0) {
-      return {};
-    }
-    file.seekg(0, std::ios::beg);
-
-    std::vector<char> buffer(static_cast<size_t>(size));
-    if (!file.read(buffer.data(), size)) {
-      return {};
-    }
-
-    return buffer;
-#endif
-  } catch (const std::exception&) {
+  std::ifstream file = OpenInputFile(filename, std::ios::binary | std::ios::ate);
+  if (!file.is_open()) {
     return {};
   }
+
+  std::streamsize size = file.tellg();
+  if (size < 0) {
+    return {};
+  }
+  file.seekg(0, std::ios::beg);
+
+  std::vector<char> buffer(static_cast<size_t>(size));
+  if (!file.read(buffer.data(), size)) {
+    return {};
+  }
+
+  return buffer;
 }
 
 #if __ANDROID_API__ >= 9

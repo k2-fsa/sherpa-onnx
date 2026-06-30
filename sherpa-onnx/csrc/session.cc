@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -58,7 +59,7 @@ static void ParseConfigFile(
   // format is still supported for backward compatibility.
   // additionally, DEBUG=1 can be set to print all configs read from the file.
 
-  std::ifstream is(config_path);
+  auto is = OpenInputFile(config_path);
   if (!is.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open provider config file: %s",
                      config_path.c_str());

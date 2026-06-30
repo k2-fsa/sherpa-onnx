@@ -108,12 +108,12 @@ Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
   InitLanguage(language);
 
   {
-    std::ifstream is(tokens);
+    auto is = OpenInputFile(tokens);
     InitTokens(is);
   }
 
   {
-    std::ifstream is(lexicon);
+    auto is = OpenInputFile(lexicon);
     InitLexicon(is);
   }
 

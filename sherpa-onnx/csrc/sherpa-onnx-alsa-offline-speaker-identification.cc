@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/alsa.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
@@ -116,7 +117,7 @@ static std::unordered_map<std::string, std::vector<std::string>>
 ReadSpeakerFile(const std::string &filename) {
   std::unordered_map<std::string, std::vector<std::string>> ans;
 
-  std::ifstream is(filename);
+  auto is = sherpa_onnx::OpenInputFile(filename);
   if (!is) {
     fprintf(stderr, "Failed to open %s", filename.c_str());
     SHERPA_ONNX_EXIT(0);

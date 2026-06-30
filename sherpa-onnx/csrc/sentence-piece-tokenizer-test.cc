@@ -3,11 +3,11 @@
 // Copyright (c)  2026  Xiaomi Corporation
 #include "sherpa-onnx/csrc/sentence-piece-tokenizer.h"
 
-#include <fstream>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -18,8 +18,7 @@ TEST(SpTokenizer, TestEncode) {
   auto vocab_json = std::string(dir) + "/vocab.json";
   auto token_scores_json = std::string(dir) + "/token_scores.json";
 
-  if (!std::ifstream(vocab_json).good() ||
-      !std::ifstream(token_scores_json).good()) {
+  if (!FileExists(vocab_json) || !FileExists(token_scores_json)) {
     SHERPA_ONNX_LOGE(
         "No test data found, skipping TestEncode()."
         "You can download the test data from: "

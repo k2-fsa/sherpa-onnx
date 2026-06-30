@@ -35,12 +35,12 @@ class MeloTtsLexicon::Impl {
        const OfflineTtsVitsModelMetaData &meta_data, bool debug)
       : meta_data_(meta_data), debug_(debug) {
     {
-      std::ifstream is(tokens);
+      auto is = OpenInputFile(tokens);
       InitTokens(is);
     }
 
     {
-      std::ifstream is(lexicon);
+      auto is = OpenInputFile(lexicon);
       InitLexicon(is);
     }
   }

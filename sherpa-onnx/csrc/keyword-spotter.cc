@@ -23,6 +23,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 
 namespace sherpa_onnx {
@@ -118,7 +119,7 @@ bool KeywordSpotterConfig::Validate() const {
   // keywords file will be packaged into the sherpa-onnx-wasm-kws-main.data file
   // Solution: take keyword_file variable is directly
   // parsed as a string of keywords
-  if (keywords_buf.empty() && !std::ifstream(keywords_file.c_str()).good()) {
+  if (keywords_buf.empty() && !FileExists(keywords_file)) {
     SHERPA_ONNX_LOGE("Keywords file '%s' does not exist.",
                      keywords_file.c_str());
     return false;

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -59,7 +60,7 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
 
   WriteWave(buffer.data(), sampling_rate, samples_ch0, samples_ch1, n);
 
-  std::ofstream os(filename, std::ios::binary);
+  auto os = OpenOutputFile(filename, std::ios::binary);
   if (!os) {
     SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
     return false;
@@ -135,7 +136,7 @@ bool WriteWaveMultiChannel(const std::string &filename, int32_t sampling_rate,
 
   WriteWaveMultiChannel(buffer.data(), sampling_rate, samples, num_channels, n);
 
-  std::ofstream os(filename, std::ios::binary);
+  auto os = OpenOutputFile(filename, std::ios::binary);
   if (!os) {
     SHERPA_ONNX_LOGE("Failed to create '%s'", filename.c_str());
     return false;

@@ -239,7 +239,7 @@ class KeywordSpotterTransducerRknnImpl : public KeywordSpotterImpl {
     InitKeywords(is);
 #else
     // each line in keywords_file contains space-separated words
-    std::ifstream is(config_.keywords_file);
+    auto is = OpenInputFile(config_.keywords_file);
     if (!is) {
 #if __OHOS__
       SHERPA_ONNX_LOGE("Open keywords file failed: %{public}s",

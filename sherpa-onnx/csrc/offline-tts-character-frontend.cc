@@ -84,7 +84,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
     const std::string &tokens, const OfflineTtsVitsModelMetaData &meta_data)
     : meta_data_(meta_data) {
-  std::ifstream is(tokens);
+  auto is = OpenInputFile(tokens);
   token2id_ = ReadTokens(is);
 }
 

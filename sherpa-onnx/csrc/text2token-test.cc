@@ -2,13 +2,13 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
-#include <fstream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/utils.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
@@ -26,7 +26,7 @@ TEST(TEXT2TOKEN, TEST_cjkchar) {
 
   std::string tokens = oss.str();
 
-  if (!std::ifstream(tokens).good()) {
+  if (!FileExists(tokens)) {
     SHERPA_ONNX_LOGE(
         "No test data found, skipping TEST_cjkchar()."
         "You can download the test data by: "
@@ -62,7 +62,7 @@ TEST(TEXT2TOKEN, TEST_bpe) {
   oss.str("");
   oss << dir << "/text2token/bpe_en.vocab";
   std::string bpe = oss.str();
-  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+  if (!FileExists(tokens) || !FileExists(bpe)) {
     SHERPA_ONNX_LOGE(
         "No test data found, skipping TEST_bpe()."
         "You can download the test data by: "
@@ -100,7 +100,7 @@ TEST(TEXT2TOKEN, TEST_cjkchar_bpe) {
   oss.str("");
   oss << dir << "/text2token/bpe_mix.vocab";
   std::string bpe = oss.str();
-  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+  if (!FileExists(tokens) || !FileExists(bpe)) {
     SHERPA_ONNX_LOGE(
         "No test data found, skipping TEST_cjkchar_bpe()."
         "You can download the test data by: "
@@ -139,7 +139,7 @@ TEST(TEXT2TOKEN, TEST_bbpe) {
   oss.str("");
   oss << dir << "/text2token/bbpe.vocab";
   std::string bpe = oss.str();
-  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+  if (!FileExists(tokens) || !FileExists(bpe)) {
     SHERPA_ONNX_LOGE(
         "No test data found, skipping TEST_bbpe()."
         "You can download the test data by: "

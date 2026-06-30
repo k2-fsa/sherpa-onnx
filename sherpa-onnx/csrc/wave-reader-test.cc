@@ -16,6 +16,7 @@
 #endif
 
 #include "gtest/gtest.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 
 namespace sherpa_onnx {
 
@@ -66,7 +67,7 @@ TEST(WaveReader, TestNonWavFile) {
   TempFile temp_file(".webm");
 
   {
-    std::ofstream out(temp_file.path(), std::ios::binary);
+    auto out = OpenOutputFile(temp_file.path(), std::ios::binary);
     // Write some content that doesn't start with RIFF
     // (webm files typically start with EBML header: 0x1a45dfa3)
     const unsigned char webm_header[] = {
@@ -106,7 +107,7 @@ TEST(WaveReader, TestTruncatedWaveFile) {
   TempFile temp_file(".wav");
 
   {
-    std::ofstream out(temp_file.path(), std::ios::binary);
+    auto out = OpenOutputFile(temp_file.path(), std::ios::binary);
     // Write only partial WAV header (less than 44 bytes required)
     const unsigned char partial_wav[] = {
         'R',  'I',  'F',

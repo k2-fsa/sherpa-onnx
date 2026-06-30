@@ -13,10 +13,15 @@
 #include "QnnInterface.h"
 #include "System/QnnSystemInterface.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 template <typename T>
 std::vector<T> ReadFile(const std::string &filename) {
+#ifdef _WIN32
+  FILE *fp = _wfopen(sherpa_onnx::ToWideString(filename).c_str(), L"rb");
+#else
   FILE *fp = fopen(filename.c_str(), "rb");
+#endif
   if (!fp) {
     SHERPA_ONNX_LOGE("Failed to open '%s'", filename.c_str());
     return {};

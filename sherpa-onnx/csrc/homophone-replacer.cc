@@ -89,7 +89,7 @@ class HomophoneReplacer::Impl {
  public:
   explicit Impl(const HomophoneReplacerConfig &config) : config_(config) {
     {
-      std::ifstream is(config.lexicon);
+      auto is = OpenInputFile(config.lexicon);
       InitLexicon(is);
     }
 
