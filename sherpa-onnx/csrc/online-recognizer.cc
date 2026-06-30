@@ -252,7 +252,9 @@ void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
 }
 
 OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) const {
-  return impl_->GetResult(s);
+  auto r = impl_->GetResult(s);
+  r.text = RemoveLeadingSpaces(r.text);
+  return r;
 }
 
 bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {

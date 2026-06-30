@@ -172,6 +172,12 @@ std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() const {
 
 void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
+
+  for (int32_t i = 0; i < n; ++i) {
+    auto r = ss[i]->GetResult();
+    r.text = RemoveLeadingSpaces(r.text);
+    ss[i]->SetResult(r);
+  }
 }
 
 void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) {

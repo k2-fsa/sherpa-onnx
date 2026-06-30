@@ -1116,6 +1116,17 @@ std::string RemoveSpaceBetweenCjk(const std::string &text) {
   return Utf32ToUtf8(ans);
 }
 
+std::string RemoveLeadingSpaces(const std::string &text) {
+  size_t start = text.find_first_not_of(' ');
+  if (start == std::string::npos) {
+    return {};
+  }
+  if (start == 0) {
+    return text;
+  }
+  return text.substr(start);
+}
+
 std::string GetWord(const std::vector<std::string> &words, int32_t start,
                     int32_t end) {
   std::string ans;

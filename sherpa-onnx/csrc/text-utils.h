@@ -190,6 +190,8 @@ bool ContainsCJK(const std::u32string &text);
 
 std::string RemoveSpaceBetweenCjk(const std::string &text);
 
+std::string RemoveLeadingSpaces(const std::string &text);
+
 bool StringToBool(const std::string &s);
 
 // end is inclusive
