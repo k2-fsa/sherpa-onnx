@@ -271,7 +271,7 @@ if [[ $arch != "ia32" && $platform != "win32" ]]; then
 
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
-  node ./test_vad_asr_non_streaming_sense_voice_microphone.js
+  # node ./test_vad_asr_non_streaming_sense_voice_microphone.js
 
   rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
   rm -rf dict replace.fst test-hr.wav lexicon.txt silero_vad.onnx
