@@ -116,3 +116,7 @@ jobs:
           popd
 
           ./.github/scripts/test-nodejs-npm.sh
+
+      - name: Setup tmate session
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
