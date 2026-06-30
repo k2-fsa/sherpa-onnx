@@ -21,6 +21,10 @@ namespace sherpa_onnx {
 
 AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
   auto is = OpenInputFile(filename);
+  if (!is) {
+    SHERPA_ONNX_LOGE("Open label file failed: '%s'", filename.c_str());
+    SHERPA_ONNX_EXIT(-1);
+  }
   Init(is);
 }
 

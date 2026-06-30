@@ -10,19 +10,10 @@
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include "QnnInterface.h"
 #include "System/QnnSystemInterface.h"
 #include "sherpa-onnx/csrc/macros.h"
-
-#ifdef _WIN32
-namespace sherpa_onnx {
-std::wstring ToWideString(const std::string &s);
-}
-#endif
+#include "sherpa-onnx/csrc/text-utils.h"
 
 template <typename T>
 std::vector<T> ReadFile(const std::string &filename) {

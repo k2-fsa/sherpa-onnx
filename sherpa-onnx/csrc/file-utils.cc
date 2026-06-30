@@ -12,17 +12,15 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <sys/stat.h>
 #include <limits.h>
 #include <stdlib.h>
 #endif
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-#ifdef _WIN32
-std::wstring ToWideString(const std::string &s);
-std::string ToString(const std::wstring &s);
-#endif
 
 std::ifstream OpenInputFile(const std::string &filename,
                             std::ios_base::openmode mode) {
@@ -43,7 +41,14 @@ std::ofstream OpenOutputFile(const std::string &filename,
 }
 
 bool FileExists(const std::string &filename) {
-  return OpenInputFile(filename).good();
+#ifdef _WIN32
+  DWORD attributes = GetFileAttributesW(ToWideString(filename).c_str());
+  return attributes != INVALID_FILE_ATTRIBUTES &&
+         !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+#else
+  struct stat file_stat;
+  return stat(filename.c_str(), &file_stat) == 0 && S_ISREG(file_stat.st_mode);
+#endif
 }
 
 void AssertFileExists(const std::string &filename) {
