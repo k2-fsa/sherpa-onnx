@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument(
         "--model-id",
         type=str,
-        help="e.g., nvidia/parakeet-tdt_ctc-110m",
+        help="e.g., nvidia/parakeet-tdt-0.6b-v2",
         required=True,
     )
     return parser.parse_args()
@@ -138,7 +138,6 @@ def main():
     print(vars(args))
 
     asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=args.model_id)
-    asr_model.change_decoding_strategy(decoder_type="rnnt")
     asr_model.eval()
 
     asr_model.decoder._prepare_for_export()

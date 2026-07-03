@@ -275,8 +275,7 @@ def main():
             decoder_input_list.append((ans[-1], h, c))
             decoder_out, h, c = model.run_decoder(ans[-1], h, c)
 
-    if False:
-        # Don't quantize the decoder
+    if True:
         with open(f"{name}-decoder.txt", "w") as f:
             for i, (y, h, c) in enumerate(decoder_input_list):
                 y_name = f"{name}-{i}-y.raw"
@@ -289,7 +288,6 @@ def main():
                 c.tofile(c_name)
                 f.write(f"{y_name} {h_name} {c_name}\n")
 
-        # Don't quantize the joiner
         with open(f"{name}-joiner.txt", "w") as f:
             for i, (e, d) in enumerate(joiner_input_list):
                 e_name = f"{name}-{i}-joiner-e.raw"
