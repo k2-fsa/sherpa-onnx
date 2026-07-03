@@ -26,11 +26,11 @@ def main():
     configs = []
 
     for name, soc in soc_info_dict.items():
+        if soc.model.name == "SM8350":
+            continue
         for num_seconds, model_name in itertools.product(
             num_seconds_list, model_name_list
         ):
-            if soc.model.name != "SM8850":
-                continue
             configs.append(
                 Config(
                     soc=name,
