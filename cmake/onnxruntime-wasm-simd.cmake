@@ -11,7 +11,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.0/onnxruntime-wasm-static_lib-simd-1.27.0.zip")
-set(onnxruntime_HASH "SHA256=494fe587e8ba5f9742e574526e7cb9f1fd280bce7d087815b7153710ffa1db47")
+set(onnxruntime_HASH "SHA256=076680969c74225caf0a6d08c0be5edd2c242b081c33cede77dcc5eac355bbcf")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

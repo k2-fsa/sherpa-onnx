@@ -59,13 +59,13 @@ node ./test-offline-fire-red-asr-ctc.js
 
 rm -rf sherpa-onnx-fire-red-asr2-ctc-zh_en-int8-2026-02-25
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
-
-node ./test-offline-funasr-nano.js
-
-rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
+# curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+# tar xvf sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+# rm sherpa-onnx-funasr-nano-int8-2025-12-30.tar.bz2
+#
+# node ./test-offline-funasr-nano.js
+#
+# rm -rf sherpa-onnx-funasr-nano-int8-2025-12-30
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2
 tar xvf sherpa-onnx-medasr-ctc-en-int8-2025-12-25.tar.bz2

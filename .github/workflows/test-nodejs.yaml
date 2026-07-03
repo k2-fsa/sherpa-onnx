@@ -118,5 +118,6 @@ jobs:
           ./.github/scripts/test-nodejs-npm.sh
 
       - name: Setup tmate session
-        if: failure()
+        if: false
+        # if: failure()
         uses: mxschmitt/action-tmate@v3
