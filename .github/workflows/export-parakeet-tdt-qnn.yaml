@@ -6,9 +6,9 @@ on:
       - export-parakeet-tdt-qnn
   workflow_dispatch:
 
-concurrency:
-  group: export-parakeet-tdt-qnn-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: export-parakeet-tdt-qnn-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   onnx:
