@@ -60,9 +60,12 @@ jobs:
           python3 ./test_onnx.py --wav ./2.wav
 
           printf "0.raw\n1.raw\n2.raw\n" > encoder.txt
+          cat 0-decoder.txt 1-decoder.txt 2-decoder.txt > decoder.txt
+          cat 0-joiner.txt 1-joiner.txt 2-joiner.txt > joiner.txt
 
           ls -lh *.onnx*
           ls -lh *.raw
+          ls -lh *.txt
 
       - name: Collect models
         shell: bash
@@ -80,7 +83,7 @@ jobs:
           mv -v $src/encoder.* $dst
           mv -v $src/decoder.* $dst
           mv -v $src/joiner.* $dst
-          cp -v $src/tokens.txt $dst
+          cp -v $src/*.txt $dst
           cp -v $src/*.raw $dst
           cp -v $src/*.wav $dst
 
@@ -387,17 +390,21 @@ jobs:
             echo "Processing $m"
             mv -v $model_dir/${m}.* ./
             cp -v $model_dir/*.raw ./
+            cp -v $model_dir/*.txt ./
+
             ls -lh $m.*
             ls -lh *.raw
+            ls -lh *.txt
 
-            if [[ $m == 'encoder' ]]; then
+            if [[ $m == 'encoder' || $m == 'decoder' || $m == 'joiner' ]]; then
               # quantize only the encoder
               cat $m.txt
 
               qnn-onnx-converter \
                 --input_network ./$m.onnx \
                 --output_path ./quant/$m.cpp \
-                --float_bitwidth 16 \
+                --input_list $m.txt \
+                --use_native_input_files \
                 --act_bitwidth 16 \
                 --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             else

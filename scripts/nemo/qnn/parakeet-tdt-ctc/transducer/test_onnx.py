@@ -275,7 +275,7 @@ def main():
             decoder_input_list.append((ans[-1], h, c))
             decoder_out, h, c = model.run_decoder(ans[-1], h, c)
 
-    if False:
+    if True:
         # Don't quantize the decoder
         with open(f"{name}-decoder.txt", "w") as f:
             for i, (y, h, c) in enumerate(decoder_input_list):
