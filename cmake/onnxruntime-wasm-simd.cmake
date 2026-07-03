@@ -10,19 +10,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "BUILD_SHARED_LIBS should be OFF for WebAssembly")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.24.4/onnxruntime-wasm-static_lib-simd-1.24.4.zip")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/1.24.4/onnxruntime-wasm-static_lib-simd-1.24.4.zip")
-set(onnxruntime_HASH "SHA256=39826f0fdf636db78b3bc38ef88a7ad0ce3304d7a80186ba0e531701eae32db3")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.27.0/onnxruntime-wasm-static_lib-simd-1.27.0.zip")
+set(onnxruntime_HASH "SHA256=076680969c74225caf0a6d08c0be5edd2c242b081c33cede77dcc5eac355bbcf")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-wasm-static_lib-simd-1.24.4.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-wasm-static_lib-simd-1.24.4.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-wasm-static_lib-simd-1.24.4.zip
-  /tmp/onnxruntime-wasm-static_lib-simd-1.24.4.zip
-  /star-fj/fangjun/download/github/onnxruntime-wasm-static_lib-simd-1.24.4.zip
+  $ENV{HOME}/Downloads/onnxruntime-wasm-static_lib-simd-1.27.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-wasm-static_lib-simd-1.27.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-wasm-static_lib-simd-1.27.0.zip
+  /tmp/onnxruntime-wasm-static_lib-simd-1.27.0.zip
+  /star-fj/fangjun/download/github/onnxruntime-wasm-static_lib-simd-1.27.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -30,7 +29,6 @@ foreach(f IN LISTS possible_file_locations)
     set(onnxruntime_URL  "${f}")
     file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
     message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-    set(onnxruntime_URL2)
     break()
   endif()
 endforeach()
@@ -38,7 +36,6 @@ endforeach()
 FetchContent_Declare(onnxruntime
   URL
     ${onnxruntime_URL}
-    ${onnxruntime_URL2}
   URL_HASH          ${onnxruntime_HASH}
 )
 
