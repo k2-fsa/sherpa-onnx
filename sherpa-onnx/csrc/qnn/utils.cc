@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <cstring>
 
 #include <algorithm>
 #include <functional>
@@ -130,6 +131,36 @@ void FillData(Qnn_Tensor_t *t, const int32_t *data, int32_t n) {
   std::copy(data, data + n, out);
 }
 
+static uint16_t Float32ToFloat16(float f) {
+  uint32_t bits;
+  memcpy(&bits, &f, sizeof(bits));
+
+  uint32_t sign = (bits >> 16) & 0x8000;
+  int32_t exponent = ((bits >> 23) & 0xFF) - 127 + 15;
+  uint32_t mantissa = bits & 0x7FFFFF;
+
+  if (exponent <= 0) {
+    if (exponent < -10) {
+      return static_cast<uint16_t>(sign);
+    }
+    mantissa = (mantissa | 0x800000) >> (1 - exponent);
+    return static_cast<uint16_t>(sign | (mantissa >> 13));
+  }
+
+  if (exponent >= 31) {
+    return static_cast<uint16_t>(sign | 0x7C00);
+  }
+
+  return static_cast<uint16_t>(sign | (exponent << 10) | (mantissa >> 13));
+}
+
+void FillDataFloat16(Qnn_Tensor_t *t, const float *data, int32_t n) {
+  uint16_t *out = reinterpret_cast<uint16_t *>(t->v1.clientBuf.data);
+  for (int32_t i = 0; i < n; ++i) {
+    out[i] = Float32ToFloat16(data[i]);
+  }
+}
+
 void GetDataNonQuant(const Qnn_Tensor_t *t, float *data, int32_t n) {
   const float *p = reinterpret_cast<const float *>(t->v1.clientBuf.data);
   std::copy(p, p + n, data);
@@ -149,6 +180,42 @@ void GetData(const Qnn_Tensor_t *t, float *data, int32_t n) {
 void GetData(const Qnn_Tensor_t *t, int32_t *data, int32_t n) {
   const int32_t *p = reinterpret_cast<const int32_t *>(t->v1.clientBuf.data);
   std::copy(p, p + n, data);
+}
+
+static float Float16ToFloat32(uint16_t h) {
+  uint32_t sign = (h & 0x8000) << 16;
+  uint32_t exponent = (h >> 10) & 0x1F;
+  uint32_t mantissa = h & 0x3FF;
+
+  uint32_t bits;
+  if (exponent == 0) {
+    if (mantissa == 0) {
+      bits = sign;
+    } else {
+      exponent = 127 - 15 + 1;
+      while ((mantissa & 0x400) == 0) {
+        mantissa <<= 1;
+        exponent--;
+      }
+      mantissa &= 0x3FF;
+      bits = sign | (exponent << 23) | (mantissa << 13);
+    }
+  } else if (exponent == 31) {
+    bits = sign | 0x7F800000 | (mantissa << 13);
+  } else {
+    bits = sign | ((exponent - 15 + 127) << 23) | (mantissa << 13);
+  }
+
+  float result;
+  memcpy(&result, &bits, sizeof(result));
+  return result;
+}
+
+void GetDataFloat16(const Qnn_Tensor_t *t, float *data, int32_t n) {
+  const uint16_t *p = reinterpret_cast<const uint16_t *>(t->v1.clientBuf.data);
+  for (int32_t i = 0; i < n; ++i) {
+    data[i] = Float16ToFloat32(p[i]);
+  }
 }
 
 static void FreeTensorV1(Qnn_Tensor_t *t) {

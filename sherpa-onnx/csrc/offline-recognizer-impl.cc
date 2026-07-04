@@ -3,13 +3,14 @@
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
-#include "sherpa-onnx/csrc/ort-env.h"
 
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "sherpa-onnx/csrc/ort-env.h"
 
 #if __ANDROID_API__ >= 9
 
@@ -68,6 +69,7 @@
 #if SHERPA_ONNX_ENABLE_QNN
 #include "sherpa-onnx/csrc/qnn/offline-paraformer-model-qnn.h"
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-parakeet-ctc-qnn-impl.h"
+#include "sherpa-onnx/csrc/qnn/offline-recognizer-parakeet-tdt-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-transducer-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-zipformer-ctc-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-sense-voice-model-qnn.h"
@@ -191,6 +193,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerSenseVoiceTplImpl<OfflineSenseVoiceModelQnn>>(
           config);
+    } else if (IsQnnTransducerArtifact(config.model_config.transducer) &&
+               config.model_config.model_type == "nemo_transducer") {
+      return std::make_unique<OfflineRecognizerParakeetTdtQnnImpl>(config);
     } else if (IsQnnTransducerArtifact(config.model_config.transducer)) {
       return std::make_unique<OfflineRecognizerTransducerQnnImpl>(config);
     } else if (!config.model_config.zipformer_ctc.model.empty() ||
@@ -208,15 +213,14 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
                     .empty()) {
       return std::make_unique<OfflineRecognizerParakeetCtcQnnImpl>(config);
     } else if (!config.model_config.whisper.encoder.empty() ||
-               !config.model_config.whisper.qnn_config.context_binary
-                    .empty()) {
+               !config.model_config.whisper.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, offline transducer, Zipformer CTC, "
-          "NeMo CTC (Parakeet), and Whisper models are currently supported by "
-          "QNN for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, Zipformer transducer, Zipformer CTC, "
+          "NeMo CTC (Parakeet), Parakeet TDT, and Whisper models are "
+          "currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -554,8 +558,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
           mgr, config);
     } else if (IsQnnTransducerArtifact(config.model_config.transducer)) {
       SHERPA_ONNX_LOGE(
-          "QNN offline transducer does not support loading from asset manager. "
-          "Please copy model files to writable storage and use file paths.");
+          "QNN Zipformer transducer does not support loading from asset "
+          "manager. Please copy model files to writable storage and use file "
+          "paths.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     } else if (!config.model_config.zipformer_ctc.model.empty() ||
@@ -574,15 +579,14 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
                     .empty()) {
       return std::make_unique<OfflineRecognizerParakeetCtcQnnImpl>(mgr, config);
     } else if (!config.model_config.whisper.encoder.empty() ||
-               !config.model_config.whisper.qnn_config.context_binary
-                    .empty()) {
+               !config.model_config.whisper.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
-          "Only SenseVoice, Paraformer, offline transducer, Zipformer CTC, "
-          "NeMo CTC (Parakeet), and Whisper models are currently supported by "
-          "QNN for non-streaming ASR.");
+          "Only SenseVoice, Paraformer, Zipformer transducer, Zipformer CTC, "
+          "NeMo CTC (Parakeet), Parakeet TDT, and Whisper models are "
+          "currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
