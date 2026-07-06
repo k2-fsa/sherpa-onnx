@@ -28,6 +28,9 @@ def main():
     for name, soc in soc_info_dict.items():
         if soc.model.name == "SM8350":
             continue
+
+        if soc.model.name != "SM8850":
+            continue
         for chunk_size_ms, model_name in itertools.product(
             chunk_size_ms_list, model_name_list
         ):

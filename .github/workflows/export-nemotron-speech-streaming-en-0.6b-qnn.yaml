@@ -392,15 +392,15 @@ jobs:
 
           for m in encoder decoder joiner; do
             echo "Processing $m"
-            mv -v $model_dir/${m}.* ./
-            cp -v $model_dir/*.raw ./
-            cp -v $model_dir/*.txt ./
+            mv  $model_dir/${m}.* ./
+            cp  $model_dir/*.raw ./
+            cp  $model_dir/*.txt ./
 
             ls -lh $m.*
             ls -lh *.raw
             ls -lh *.txt
 
-            if [[ $m == 'encoder2' || $m == 'joiner2' ]]; then
+            if [[ $m == 'encoder' || $m == 'joiner' ]]; then
               # quantize only the encoder and joiner
               cat $m.txt
 
@@ -508,8 +508,8 @@ jobs:
           mv *.tar.bz2 ./so
 
       - name: Setup tmate session
-        if: false
-        # if: failure()
+        # if: false
+        if: failure()
         uses: mxschmitt/action-tmate@v3
 
       - name: Show files
