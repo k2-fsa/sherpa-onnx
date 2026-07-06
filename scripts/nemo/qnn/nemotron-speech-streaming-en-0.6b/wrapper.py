@@ -4,7 +4,50 @@
 import argparse
 
 import nemo.collections.asr as nemo_asr
+import nemo.collections.asr.modules.conformer_encoder as conformer_mod
 import torch
+
+
+def patched_streaming_post_process(self, rets, keep_all_outputs=True):
+    if len(rets) == 2:
+        return rets[0], rets[1], None, None, None
+
+    (
+        encoded,
+        encoded_len,
+        cache_last_channel_next,
+        cache_last_time_next,
+        cache_last_channel_next_len,
+    ) = rets
+
+    if (
+        cache_last_channel_next is not None
+        and self.streaming_cfg.last_channel_cache_size > 0
+    ):
+        cache_size = int(self.streaming_cfg.last_channel_cache_size)
+        total_size = cache_last_channel_next.shape[2]
+        start_idx = total_size - cache_size
+        cache_last_channel_next = cache_last_channel_next.narrow(
+            2, start_idx, cache_size
+        )
+
+    if self.streaming_cfg.valid_out_len > 0 and (
+        not keep_all_outputs or self.att_context_style == "regular"
+    ):
+        valid_len = int(self.streaming_cfg.valid_out_len)
+        encoded = encoded.narrow(2, 0, valid_len)
+        encoded_len = torch.clamp(encoded_len, max=valid_len)
+
+    return (
+        encoded,
+        encoded_len,
+        cache_last_channel_next,
+        cache_last_time_next,
+        cache_last_channel_next_len,
+    )
+
+
+conformer_mod.ConformerEncoder.streaming_post_process = patched_streaming_post_process
 
 
 def get_args():
@@ -43,8 +86,8 @@ class EncoderWrapper(torch.nn.Module):
         print(cache_last_channel_len.shape, cache_last_channel_len)
 
         return (
-            cache_last_channel,
-            cache_last_time,
+            cache_last_channel.transpose(0, 1),
+            cache_last_time.transpose(0, 1),
             cache_last_channel_len.to(torch.int32),
         )
 
@@ -66,7 +109,7 @@ class EncoderWrapper(torch.nn.Module):
           encoder_out: (N, C, T)
         """
         x_lens = torch.tensor([x.shape[2]], dtype=torch.int64)
-        encoder_out, encoder_out_len, *states = self.model.encoder(
+        encoder_out, encoder_out_len, *states = self.model.encoder.forward_for_export(
             audio_signal=x,
             length=x_lens,
             cache_last_channel=cache_last_channel,
