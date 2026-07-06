@@ -62,8 +62,7 @@ console.log('Started');
 const wave = sherpa_onnx.readWave(waveFilename);
 
 function decode(hotwords) {
-  const stream = hotwords === undefined ? recognizer.createStream() :
-                                          recognizer.createStream(hotwords);
+  const stream = recognizer.createStream(hotwords);
   stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
   recognizer.decode(stream);
   return recognizer.getResult(stream).text;

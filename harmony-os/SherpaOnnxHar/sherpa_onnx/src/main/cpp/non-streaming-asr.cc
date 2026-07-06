@@ -688,6 +688,15 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
     stream = SherpaOnnxCreateOfflineStream(recognizer);
   }
 
+  if (!stream) {
+    Napi::TypeError::New(env,
+                         "Failed to create offline stream. Please check if "
+                         "your model and decoding method support hotwords.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, const_cast<SherpaOnnxOfflineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
