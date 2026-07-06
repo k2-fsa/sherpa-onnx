@@ -146,6 +146,7 @@ The following tables list the examples in this folder.
 |[./test_asr_non_streaming_nemo_canary.js](./test_asr_non_streaming_nemo_canary.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [Canary](https://k2-fsa.github.io/sherpa/onnx/nemo/canary.html#sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8-english-spanish-german-french) model|
 |[./test_asr_non_streaming_zipformer_ctc.js](./test_asr_non_streaming_zipformer_ctc.js)|Non-streaming speech recognition from a file using a Zipformer CTC model with greedy search|
 |[./test_asr_non_streaming_nemo_parakeet_tdt_v2.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with greedy search|
+|[./test_asr_non_streaming_nemo_parakeet_tdt_v2_hotwords.js](./test_asr_non_streaming_nemo_parakeet_tdt_v2_hotwords.js)|Non-streaming speech recognition from a file using a [NeMo](https://github.com/NVIDIA/NeMo) [parakeet-tdt-0.6b-v2](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/nemo-transducer-models.html#sherpa-onnx-nemo-parakeet-tdt-0-6b-v2-int8-english) model with modified_beam_search and per-stream [hotwords](https://k2-fsa.github.io/sherpa/onnx/hotwords/index.html)|
 |[./test_asr_non_streaming_dolphin_ctc.js](./test_asr_non_streaming_dolphin_ctc.js)|Non-streaming speech recognition from a file using a [Dolphinhttps://github.com/DataoceanAI/Dolphin]) CTC model with greedy search|
 |[./test_asr_non_streaming_paraformer.js](./test_asr_non_streaming_paraformer.js)|Non-streaming speech recognition from a file using [Paraformer](https://github.com/alibaba-damo-academy/FunASR)|
 |[./test_asr_non_streaming_paraformer_itn.js](./test_asr_non_streaming_paraformer_itn.js)|Non-streaming speech recognition from a file using [Paraformer](https://github.com/alibaba-damo-academy/FunASR) with ITN|
@@ -443,6 +444,9 @@ tar xvf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 rm sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 
 node ./test_asr_non_streaming_nemo_parakeet_tdt_v2.js
+
+# Per-stream hotwords (contextual biasing) with modified_beam_search
+node ./test_asr_non_streaming_nemo_parakeet_tdt_v2_hotwords.js
 ```
 
 ### Non-streaming speech recognition with Zipformer CTC models
