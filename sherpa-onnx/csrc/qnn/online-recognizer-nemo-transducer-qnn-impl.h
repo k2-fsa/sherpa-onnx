@@ -35,6 +35,12 @@ inline OnlineRecognizerResult ConvertResult(
     int32_t frames_since_start) {
   OnlineRecognizerResult r;
 
+  // The first token is the initial blank_id_ used to bootstrap the decoder.
+  // Remove it before processing.
+  if (!src.tokens.empty()) {
+    src.tokens.erase(src.tokens.begin());
+  }
+
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
   r.ys_probs = std::move(src.ys_probs);
@@ -186,6 +192,7 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
             ++t;
           }
         } else {
+          ++r.num_trailing_blanks;
           ++t;
           num_symbols = 0;
         }

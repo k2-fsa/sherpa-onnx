@@ -127,6 +127,13 @@ class OnlineNemoTransducerModelQnn::Impl {
       SHERPA_ONNX_EXIT(-1);
     }
 
+    if (states->size() < state_input_names_.size()) {
+      SHERPA_ONNX_LOGE("states size %d is less than expected %d",
+                        static_cast<int32_t>(states->size()),
+                        static_cast<int32_t>(state_input_names_.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
 
     // Features come in as [num_frames, feat_dim] row-major, which matches
@@ -192,6 +199,11 @@ class OnlineNemoTransducerModelQnn::Impl {
   std::pair<std::vector<float>, std::vector<std::vector<float>>>
   RunDecoder(int32_t token, std::vector<std::vector<float>> states) const {
     std::lock_guard<std::mutex> lock(mutex_);
+
+    if (states.size() < 2) {
+      SHERPA_ONNX_LOGE("states should have at least 2 elements (h and c)");
+      SHERPA_ONNX_EXIT(-1);
+    }
 
     // states[0] = h, states[1] = c
     decoder_->SetInputTensorData("y", &token, 1);
@@ -403,6 +415,8 @@ class OnlineNemoTransducerModelQnn::Impl {
           SHERPA_ONNX_LOGE(
               "Invalid window size/shift in encoder input name '%s'",
               name.c_str());
+          SHERPA_ONNX_EXIT(-1);
+        }
 
         normalization_type_.clear();
         if (parts.size() == 4) {
@@ -415,8 +429,6 @@ class OnlineNemoTransducerModelQnn::Impl {
                 parts[3].c_str(), name.c_str());
             SHERPA_ONNX_EXIT(-1);
           }
-        }
-          SHERPA_ONNX_EXIT(-1);
         }
 
         break;
