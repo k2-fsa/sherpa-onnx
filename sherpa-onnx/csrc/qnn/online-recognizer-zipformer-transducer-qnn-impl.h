@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -115,8 +116,7 @@ class QnnGreedySearchDecoder {
               const OnlineZipformerTransducerModelQnn &model,
               OnlineTransducerDecoderResultNoOrt *r) const {
     auto logit = model.RunJoiner(encoder_out, r->decoder_out);
-    auto y = static_cast<int32_t>(
-        std::distance(logit.begin(), std::max_element(logit.begin(), logit.end())));
+    auto y = MaxElementIndex(logit.data(), logit.size());
 
     if (y != blank_id_) {
       r->tokens.push_back(y);
@@ -290,7 +290,6 @@ class OnlineRecognizerZipformerTransducerQnnImpl
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
     for (int32_t i = 0; i != n; ++i) {
       auto *s = ss[i];
-      EnsureInitialized(s);
 
       std::vector<float> features =
           s->GetFrames(s->GetNumProcessedFrames(), model_->ChunkSize());
@@ -323,7 +322,6 @@ class OnlineRecognizerZipformerTransducerQnnImpl
   }
 
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
-    EnsureInitialized(s);
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
     auto r = qnn_impl::ConvertQnnResult(
@@ -336,8 +334,6 @@ class OnlineRecognizerZipformerTransducerQnnImpl
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
-    EnsureInitialized(s);
-
     if (!config_.enable_endpoint) {
       return false;
     }
@@ -351,8 +347,6 @@ class OnlineRecognizerZipformerTransducerQnnImpl
   }
 
   void Reset(OnlineStream *s) const override {
-    EnsureInitialized(s);
-
     int32_t context_size = model_->ContextSize();
 
     const auto &last = s->GetQnnResult();
@@ -381,15 +375,6 @@ class OnlineRecognizerZipformerTransducerQnnImpl
   }
 
  private:
-  void EnsureInitialized(OnlineStream *s) const {
-    if (!s->GetQnnStates().empty()) {
-      return;
-    }
-
-    s->SetQnnStates(model_->GetEncoderInitStates());
-    s->SetQnnResult(result_template_);
-  }
-
   void InitResultTemplate() {
     result_template_ = GetEmptyResult();
   }
