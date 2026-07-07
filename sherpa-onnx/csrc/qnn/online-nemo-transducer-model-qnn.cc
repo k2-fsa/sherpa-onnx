@@ -15,6 +15,7 @@
 #include "sherpa-onnx/csrc/qnn/online-nemo-transducer-model-qnn.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <mutex>  // NOLINT
