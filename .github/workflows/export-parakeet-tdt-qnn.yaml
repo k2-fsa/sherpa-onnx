@@ -470,9 +470,9 @@ jobs:
 
           for p in x86_64-linux-clang aarch64-android; do
             if [[ $p == x86_64-linux-clang ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-transducer-linux-x64
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-linux-x64
             elif [[ $p == aarch64-android ]]; then
-              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-transducer-android-aarch64
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.num_seconds }}s-android-aarch64
             else
               echo "Unknown $p"
               exit -1

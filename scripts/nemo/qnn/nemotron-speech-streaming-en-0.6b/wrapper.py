@@ -43,7 +43,10 @@ def patched_forward_internal(
     #    where the model is always in eval/inference mode.
     if length is None:
         length = audio_signal.new_full(
-            (audio_signal.size(0),), audio_signal.size(-1), dtype=torch.int64, device=audio_signal.device
+            (audio_signal.size(0),),
+            audio_signal.size(-1),
+            dtype=torch.int64,
+            device=audio_signal.device,
         )
 
     cur_att_context_size = self.att_context_size
@@ -56,9 +59,16 @@ def patched_forward_internal(
         else:
             audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
             length = length.to(torch.int64)
-            if self.streaming_cfg.drop_extra_pre_encoded > 0 and cache_last_channel is not None:
-                audio_signal = audio_signal[:, self.streaming_cfg.drop_extra_pre_encoded :, :]
-                length = (length - self.streaming_cfg.drop_extra_pre_encoded).clamp(min=0)
+            if (
+                self.streaming_cfg.drop_extra_pre_encoded > 0
+                and cache_last_channel is not None
+            ):
+                audio_signal = audio_signal[
+                    :, self.streaming_cfg.drop_extra_pre_encoded :, :
+                ]
+                length = (length - self.streaming_cfg.drop_extra_pre_encoded).clamp(
+                    min=0
+                )
 
         if self.reduction_position is not None and cache_last_channel is not None:
             raise ValueError("Caching with reduction feature is not supported yet!")
@@ -78,7 +88,7 @@ def patched_forward_internal(
         cache_len = 0
         offset = None
 
-    if self.self_attention_model == 'rope':
+    if self.self_attention_model == "rope":
         if self.xscale:
             audio_signal = audio_signal * self.xscale
         audio_signal = self.dropout_pre_encoder(audio_signal)
@@ -135,9 +145,11 @@ def patched_forward_internal(
             cache_last_time_next.append(cache_last_time_cur)
 
         if self.reduction_position == lth:
-            audio_signal, length = self.reduction_subsampling(x=audio_signal, lengths=length)
+            audio_signal, length = self.reduction_subsampling(
+                x=audio_signal, lengths=length
+            )
             max_audio_length = audio_signal.size(1)
-            if self.self_attention_model != 'rope':
+            if self.self_attention_model != "rope":
                 _, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
             pad_mask, att_mask = self._create_masks(
                 att_context_size=cur_att_context_size,
@@ -151,7 +163,9 @@ def patched_forward_internal(
         audio_signal = self.out_proj(audio_signal)
 
     if self.reduction_position == -1:
-        audio_signal, length = self.reduction_subsampling(x=audio_signal, lengths=length)
+        audio_signal, length = self.reduction_subsampling(
+            x=audio_signal, lengths=length
+        )
 
     audio_signal = torch.transpose(audio_signal, 1, 2)
     length = length.to(dtype=torch.int64)
@@ -321,9 +335,9 @@ class JoinerWrapper(torch.nn.Module):
         encoder_out: feature tensor, (1, 1, encoder_dim)
         decoder_out: feature tensor, (1, 1, decoder_dim)
         """
-        log_probs = self.model.joint.joint(encoder_out, decoder_out)
+        logits = self.model.joint.joint(encoder_out, decoder_out)
 
-        return log_probs
+        return logits
 
 
 def export_encoder(asr_model, window_size, window_shift):
@@ -386,7 +400,7 @@ def export_joiner(asr_model, encoder_dim, decoder_dim):
         "joiner.onnx",
         opset_version=13,
         input_names=["encoder_out", "decoder_out"],
-        output_names=["log_probs"],
+        output_names=["logits"],
     )
 
 
