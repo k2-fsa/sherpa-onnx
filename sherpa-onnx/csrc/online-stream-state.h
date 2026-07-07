@@ -27,6 +27,10 @@ struct OnlineTransducerDecoderResultNoOrt {
   std::vector<float> context_scores;
   std::vector<float> decoder_out;
   Hypotheses hyps;
+
+  // Decoder states for models with LSTM decoders (e.g., nemo_transducer).
+  // Each element is a flat state tensor (h, c, etc.). Ignored by zipformer.
+  std::vector<std::vector<float>> states;
 };
 
 }  // namespace sherpa_onnx

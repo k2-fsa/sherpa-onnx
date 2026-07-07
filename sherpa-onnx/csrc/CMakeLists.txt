@@ -263,6 +263,7 @@ if(SHERPA_ONNX_ENABLE_QNN)
     ./qnn/offline-whisper-model-qnn.cc
     ./qnn/offline-zipformer-transducer-model-qnn.cc
     ./qnn/offline-zipformer-ctc-model-qnn.cc
+    ./qnn/online-nemo-transducer-model-qnn.cc
     ./qnn/online-zipformer-transducer-model-qnn.cc
     ./qnn/qnn-backend.cc
     ./qnn/qnn-model.cc

@@ -339,6 +339,7 @@ class OnlineZipformerTransducerModelQnn::Impl {
     has_processed_lens_ = encoder_->HasTensor("processed_lens");
 
     encoder_input_name_.clear();
+    bool has_parakeet_pattern = false;
     for (const auto &name : encoder_->InputTensorNames()) {
       if (name == "x") {
         encoder_input_name_ = name;
@@ -349,10 +350,25 @@ class OnlineZipformerTransducerModelQnn::Impl {
         // V1: only "cached_*" inputs are streaming states
         state_input_names_.push_back(name);
       }
+
+      // Detect Parakeet TDT encoder patterns: x_window_shift or
+      // cache_last_channel
+      if (name.size() > 2 && name[0] == 'x' && name[1] == '_') {
+        has_parakeet_pattern = true;
+      }
+      if (name == "cache_last_channel") {
+        has_parakeet_pattern = true;
+      }
     }
 
     if (encoder_input_name_.empty()) {
-      SHERPA_ONNX_LOGE("The encoder model does not have input 'x'");
+      if (has_parakeet_pattern) {
+        SHERPA_ONNX_LOGE(
+            "This looks like a nemo_transducer model, "
+            "not a Zipformer transducer. Please set --model-type=nemo_transducer");
+      } else {
+        SHERPA_ONNX_LOGE("The encoder model does not have input 'x'");
+      }
       SHERPA_ONNX_EXIT(-1);
     }
 
