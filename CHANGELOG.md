@@ -1,3 +1,24 @@
+## 1.13.4
+
+* Add ApplyHomophoneReplacer in OfflineRecognizerQwen3ASRImpl (#3729)
+* Add C++ runtime for nemotron-speech-streaming-en-0.6b with QNN (#3728)
+* Export nemotron-speech-streaming-en-0.6b to QNN (#3725)
+* Add C++ runtime for Parakeet TDT models with QNN (#3720)
+* Export Parakeet TDT models to QNN (#3719)
+* Update onnxruntime to 1.27.0 (#3718)
+* Remove leading spaces from ASR results (#3711)
+* Fix file related operations on Windows by using wide characters (#3710)
+* Remove spaces right before a punctuation in ASR result (#3709)
+* Fix installing espeak-ng-data directory (#3708)
+* Fix building with ninja (#3702)
+* Add C++ runtime for Whisper with Qualcomm NPU using QNN (#3699)
+* Export Whisper models to QNN (#3697)
+* Export the transducer branch of parakeet-tdt-ctc to QNN (#3693)
+* Export Parakeet-TDT-CTC to QNN (#3692)
+* Add C++ runtime for Parakeet CTC with QNN (#3688)
+* Export Parakeet CTC models to QNN (#3686)
+* Support per-stream hotwords in the JavaScript (node-addon) API (#3723)
+
 ## 1.13.3
 
 * Update onnxruntime to 1.26.0 for iOS (#3678)
