@@ -1107,6 +1107,8 @@ void OfflineRecognizerQwen3ASRImpl::Decode(OfflineStream *stream) const {
   OfflineRecognitionResult r =
       GenerateText(std::move(audio_features), valid_frames, stream);
 
+  r.text = ApplyHomophoneReplacer(std::move(r.text));
+
   stream->SetResult(r);
 }
 
