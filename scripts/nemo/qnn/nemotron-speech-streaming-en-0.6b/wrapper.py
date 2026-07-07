@@ -6,6 +6,168 @@ import argparse
 import nemo.collections.asr as nemo_asr
 import nemo.collections.asr.modules.conformer_encoder as conformer_mod
 import torch
+import torch.nn as nn
+
+
+def patched_forward_internal(
+    self,
+    audio_signal,
+    length,
+    cache_last_channel=None,
+    cache_last_time=None,
+    cache_last_channel_len=None,
+    bypass_pre_encode=False,
+):
+    # Patched inference-only version of ConformerEncoder.forward_internal for QNN export.
+    #
+    # Based on the original at:
+    #   ../nemo/nemo/collections/asr/modules/conformer_encoder.py:636
+    #
+    # Three changes from the original NeMo implementation:
+    #
+    # 1. Replaced `torch.neg(cache_last_channel_len) + cache_len` with
+    #    `cache_len - cache_last_channel_len`. They are mathematically equivalent,
+    #    but the original produces a Neg op in the ONNX graph which the Qualcomm
+    #    QNN converter (qnn-onnx-converter) does not support, causing:
+    #      [ ERROR ] OpConfig validation failed for ElementWiseUnary
+    #      [ ERROR ] QnnModel::addNode() validating node node_neg failed.
+    #
+    # 2. Cast attention masks from bool to float before slicing, then back to
+    #    bool after slicing. QNN's StridedSlice does not support boolean tensors,
+    #    causing:
+    #      [ ERROR ] OpConfig validation failed for StridedSlice
+    #      [ ERROR ] QnnModel::addNode() validating node node_slice_3 failed.
+    #
+    # 3. Removed training-only code paths (stochastic depth, interctc loss capture,
+    #    random att_context_size selection) since this is only used during export
+    #    where the model is always in eval/inference mode.
+    if length is None:
+        length = audio_signal.new_full(
+            (audio_signal.size(0),), audio_signal.size(-1), dtype=torch.int64, device=audio_signal.device
+        )
+
+    cur_att_context_size = self.att_context_size
+
+    if not bypass_pre_encode:
+        audio_signal = torch.transpose(audio_signal, 1, 2)
+
+        if isinstance(self.pre_encode, nn.Linear):
+            audio_signal = self.pre_encode(audio_signal)
+        else:
+            audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)
+            length = length.to(torch.int64)
+            if self.streaming_cfg.drop_extra_pre_encoded > 0 and cache_last_channel is not None:
+                audio_signal = audio_signal[:, self.streaming_cfg.drop_extra_pre_encoded :, :]
+                length = (length - self.streaming_cfg.drop_extra_pre_encoded).clamp(min=0)
+
+        if self.reduction_position is not None and cache_last_channel is not None:
+            raise ValueError("Caching with reduction feature is not supported yet!")
+
+    max_audio_length = audio_signal.size(1)
+    if cache_last_channel is not None:
+        cache_len = self.streaming_cfg.last_channel_cache_size
+        cache_keep_size = max_audio_length - self.streaming_cfg.cache_drop_size
+        max_audio_length = max_audio_length + cache_len
+        padding_length = length + cache_len
+        # Original: offset = torch.neg(cache_last_channel_len) + cache_len
+        # Changed to subtraction to avoid the Neg op that QNN rejects (see docstring).
+        offset = cache_len - cache_last_channel_len
+    else:
+        padding_length = length
+        cache_last_channel_next = None
+        cache_len = 0
+        offset = None
+
+    if self.self_attention_model == 'rope':
+        if self.xscale:
+            audio_signal = audio_signal * self.xscale
+        audio_signal = self.dropout_pre_encoder(audio_signal)
+        pos_emb = None
+    else:
+        audio_signal, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
+
+    pad_mask, att_mask = self._create_masks(
+        att_context_size=cur_att_context_size,
+        padding_length=padding_length,
+        max_audio_length=max_audio_length,
+        offset=offset,
+        device=audio_signal.device,
+    )
+
+    # Cast masks from bool to float so that QNN StridedSlice can handle them.
+    # QNN does not support StridedSlice on boolean tensors.
+    # Cast back to bool before passing to layers below.
+    pad_mask = pad_mask.to(torch.float32)
+    if att_mask is not None:
+        att_mask = att_mask.to(torch.float32)
+
+    if cache_last_channel is not None:
+        pad_mask = pad_mask[:, cache_len:]
+        if att_mask is not None:
+            att_mask = att_mask[:, cache_len:]
+        cache_last_time_next = []
+        cache_last_channel_next = []
+
+    # Cast masks back to bool for the attention layers.
+    pad_mask = pad_mask.to(torch.bool)
+    if att_mask is not None:
+        att_mask = att_mask.to(torch.bool)
+
+    for lth, layer in enumerate(self.layers):
+        if cache_last_channel is not None:
+            cache_last_channel_cur = cache_last_channel[lth]
+            cache_last_time_cur = cache_last_time[lth]
+        else:
+            cache_last_channel_cur = None
+            cache_last_time_cur = None
+        audio_signal = layer(
+            x=audio_signal,
+            att_mask=att_mask,
+            pos_emb=pos_emb,
+            pad_mask=pad_mask,
+            cache_last_channel=cache_last_channel_cur,
+            cache_last_time=cache_last_time_cur,
+        )
+
+        if cache_last_channel_cur is not None:
+            (audio_signal, cache_last_channel_cur, cache_last_time_cur) = audio_signal
+            cache_last_channel_next.append(cache_last_channel_cur)
+            cache_last_time_next.append(cache_last_time_cur)
+
+        if self.reduction_position == lth:
+            audio_signal, length = self.reduction_subsampling(x=audio_signal, lengths=length)
+            max_audio_length = audio_signal.size(1)
+            if self.self_attention_model != 'rope':
+                _, pos_emb = self.pos_enc(x=audio_signal, cache_len=cache_len)
+            pad_mask, att_mask = self._create_masks(
+                att_context_size=cur_att_context_size,
+                padding_length=length,
+                max_audio_length=max_audio_length,
+                offset=offset,
+                device=audio_signal.device,
+            )
+
+    if self.out_proj is not None:
+        audio_signal = self.out_proj(audio_signal)
+
+    if self.reduction_position == -1:
+        audio_signal, length = self.reduction_subsampling(x=audio_signal, lengths=length)
+
+    audio_signal = torch.transpose(audio_signal, 1, 2)
+    length = length.to(dtype=torch.int64)
+
+    if cache_last_channel is not None:
+        cache_last_channel_next = torch.stack(cache_last_channel_next, dim=0)
+        cache_last_time_next = torch.stack(cache_last_time_next, dim=0)
+        return (
+            audio_signal,
+            length,
+            cache_last_channel_next,
+            cache_last_time_next,
+            torch.clamp(cache_last_channel_len + cache_keep_size, max=cache_len),
+        )
+    else:
+        return audio_signal, length
 
 
 def patched_streaming_post_process(self, rets, keep_all_outputs=True):
@@ -47,6 +209,11 @@ def patched_streaming_post_process(self, rets, keep_all_outputs=True):
     )
 
 
+# Monkey-patch NeMo's ConformerEncoder to produce an ONNX graph that
+# QNN can consume. forward_internal avoids unsupported Neg and
+# StridedSlice-on-bool ops; streaming_post_process simplifies the
+# cache/output handling.
+conformer_mod.ConformerEncoder.forward_internal = patched_forward_internal
 conformer_mod.ConformerEncoder.streaming_post_process = patched_streaming_post_process
 
 

@@ -13,15 +13,14 @@ import soundfile as sf
 """
 =========./encoder.onnx==========
 NodeArg(name='x_121_112', type='tensor(float)', shape=[1, 128, 121])
-NodeArg(name='cache_last_channel', type='tensor(float)', shape=[24, 1, 70, 1024])
-NodeArg(name='cache_last_time', type='tensor(float)', shape=[24, 1, 1024, 8])
+NodeArg(name='cache_last_channel', type='tensor(float)', shape=[1, 24, 70, 1024])
+NodeArg(name='cache_last_time', type='tensor(float)', shape=[1, 24, 1024, 8])
 NodeArg(name='cache_last_channel_len', type='tensor(int32)', shape=[1])
 -----
 NodeArg(name='encoder_out', type='tensor(float)', shape=[1, 1024, 14])
-NodeArg(name='next_cache_last_channel', type='tensor(float)', shape=[24, 1, 70, 1024])
-NodeArg(name='next_cache_last_time', type='tensor(float)', shape=[24, 1, 1024, 8])
+NodeArg(name='next_cache_last_channel', type='tensor(float)', shape=[1, 24, 70, 1024])
+NodeArg(name='next_cache_last_time', type='tensor(float)', shape=[1, 24, 1024, 8])
 NodeArg(name='next_cache_last_channel_len', type='tensor(int32)', shape=[1])
-
 =========./decoder.onnx==========
 NodeArg(name='y', type='tensor(int32)', shape=[1, 1])
 NodeArg(name='h', type='tensor(float)', shape=[2, 1, 640])
@@ -30,12 +29,11 @@ NodeArg(name='c', type='tensor(float)', shape=[2, 1, 640])
 NodeArg(name='decoder_out', type='tensor(float)', shape=[1, 1, 640])
 NodeArg(name='next_h', type='tensor(float)', shape=[2, 1, 640])
 NodeArg(name='next_c', type='tensor(float)', shape=[2, 1, 640])
-
 =========./joiner.onnx==========
 NodeArg(name='encoder_out', type='tensor(float)', shape=[1, 1, 1024])
 NodeArg(name='decoder_out', type='tensor(float)', shape=[1, 1, 640])
 -----
-NodeArg(name='logits', type='tensor(float)', shape=[1, 1, 1, 1025])
+NodeArg(name='log_probs', type='tensor(float)', shape=[1, 1, 1, 1025])
 """
 
 
