@@ -18,8 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # chunk_size_ms: [80, 160, 560, 1120]
-        chunk_size_ms: [1120]
+        chunk_size_ms: [80, 160, 560, 1120]
         model_id: ["nemotron-speech-streaming-en-0.6b"]
 
     steps:
