@@ -165,8 +165,8 @@ class OnlineNemoTransducerModelQnn::Impl {
         auto data = encoder_->GetOutputTensorData(name);
         if (state_needs_transpose_[i]) {
           const auto &out_shape = state_output_shapes_[i];
-          data = Transpose012To120(data.data(), out_shape[0], out_shape[1],
-                                      out_shape[2]);
+          data = Transpose012To120(data.data(), out_shape[1], out_shape[2],
+                                      out_shape[3]);
         }
         (*states)[i].float_data = std::move(data);
       }
@@ -523,8 +523,8 @@ class OnlineNemoTransducerModelQnn::Impl {
         // input [1, d1, d2, d0] -> output [1, d0, d1, d2]
         if (in_shape.size() != 4 || out_shape.size() != 4 ||
             in_shape[0] != 1 || out_shape[0] != 1 ||
-            in_shape[1] != out_shape[3] || in_shape[2] != out_shape[1] ||
-            in_shape[3] != out_shape[2]) {
+            in_shape[1] != out_shape[2] || in_shape[2] != out_shape[3] ||
+            in_shape[3] != out_shape[1]) {
           SHERPA_ONNX_LOGE(
               "Inconsistent cache shapes for '%s': input [%d,%d,%d,%d] "
               "output [%d,%d,%d,%d]",
@@ -536,15 +536,6 @@ class OnlineNemoTransducerModelQnn::Impl {
           SHERPA_ONNX_EXIT(-1);
         }
       }
-    }
-
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("encoder input '%s': [1, %d, %d]",
-                        encoder_input_name_.c_str(), window_size_, feat_dim_);
-      SHERPA_ONNX_LOGE("encoder output 'encoder_out': [1, %d, %d]",
-                        num_encoder_frames_, encoder_out_dim_);
-      SHERPA_ONNX_LOGE("window_size: %d, window_shift: %d, subsampling: %d",
-                        window_size_, window_shift_, subsampling_factor_);
     }
   }
 
