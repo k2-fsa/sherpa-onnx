@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "node-cpal": "^0.1.1",
-    "sherpa-onnx-node": "^1.13.3"
+    "sherpa-onnx-node": "^1.13.4"
   }
 }
