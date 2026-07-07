@@ -170,6 +170,7 @@ tar xvf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 rm sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2
 
 node ./test_asr_non_streaming_nemo_parakeet_tdt_v2.js
+node ./test_asr_non_streaming_nemo_parakeet_tdt_v2_hotwords.js
 rm -rf sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8
 
 echo "----------non-streaming ASR dolphin CTC----------"

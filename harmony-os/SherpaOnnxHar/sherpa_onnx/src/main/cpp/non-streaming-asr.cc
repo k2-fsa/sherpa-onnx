@@ -649,9 +649,9 @@ Napi::Value CreateOfflineRecognizerAsyncWrapper(
 static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 1 argument. Given: " << info.Length();
+    os << "Expect only 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -661,7 +661,7 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(
         env,
-        "You should pass an offline recognizer pointer as the only argument")
+        "You should pass an offline recognizer pointer as the first argument")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -670,8 +670,32 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
   const SherpaOnnxOfflineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
 
-  const SherpaOnnxOfflineStream *stream =
-      SherpaOnnxCreateOfflineStream(recognizer);
+  const SherpaOnnxOfflineStream *stream = nullptr;
+  if (info.Length() == 2) {
+    // Optional per-stream hotwords for contextual biasing. Note that only
+    // transducer models decoded with modified_beam_search support hotwords.
+    if (!info[1].IsString()) {
+      Napi::TypeError::New(env, "Argument 2 should be a string.")
+          .ThrowAsJavaScriptException();
+
+      return {};
+    }
+
+    std::string hotwords = info[1].As<Napi::String>().Utf8Value();
+    stream =
+        SherpaOnnxCreateOfflineStreamWithHotwords(recognizer, hotwords.c_str());
+  } else {
+    stream = SherpaOnnxCreateOfflineStream(recognizer);
+  }
+
+  if (!stream) {
+    Napi::TypeError::New(env,
+                         "Failed to create offline stream. Please check if "
+                         "your model and decoding method support hotwords.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, const_cast<SherpaOnnxOfflineStream *>(stream),
