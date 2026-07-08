@@ -1,0 +1,110 @@
+FROM ubuntu:22.04
+
+ARG QNN_SDK_VERSION=2.40.0.251030
+ARG QNN_TOOLKIT_URL=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v${QNN_SDK_VERSION}.zip
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Use bash as default shell (envsetup.sh requires bash syntax)
+SHELL ["/bin/bash", "-c"]
+
+# Install basic system dependencies (Ubuntu 22.04 ships Python 3.10 natively)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    unzip \
+    software-properties-common \
+    lsb-release \
+    adb \
+    clang \
+    libc++-dev \
+    libc++abi-dev \
+    libclang-dev \
+    libsndfile1 \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Android NDK r29 (placed early so failures surface quickly)
+ARG ANDROID_NDK_VERSION=29.0.14206865
+ARG ANDROID_NDK_REVISION=r29
+RUN curl -SL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_REVISION}-linux.zip \
+    && unzip -q /tmp/ndk.zip -d /opt \
+    && rm -f /tmp/ndk.zip
+ENV ANDROID_NDK_LATEST_HOME=/opt/android-ndk-${ANDROID_NDK_REVISION}
+ENV PATH=${ANDROID_NDK_LATEST_HOME}:${PATH}
+
+# Verify NDK is set up correctly
+RUN ndk-build --help
+
+# Download, install QNN SDK toolkit, then remove the zip in the same layer
+WORKDIR /opt
+RUN curl -SL -O ${QNN_TOOLKIT_URL} \
+    && unzip v${QNN_SDK_VERSION}.zip \
+    && rm -f v${QNN_SDK_VERSION}.zip
+
+# Set QNN SDK environment variables
+ENV QNN_SDK_ROOT=/opt/qairt/${QNN_SDK_VERSION}
+ENV PATH=${QNN_SDK_ROOT}/bin/x86_64-linux-clang:${QNN_SDK_ROOT}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${QNN_SDK_ROOT}/lib/x86_64-linux-clang:${LD_LIBRARY_PATH}
+
+# Install linux dependencies required by QNN SDK (source envsetup.sh first, matching workflow)
+RUN cd ${QNN_SDK_ROOT}/bin && . envsetup.sh \
+    && yes | ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create and activate a Python 3.10 virtual environment
+RUN python3 -m venv /opt/py310
+ENV VIRTUAL_ENV=/opt/py310
+ENV PATH=/opt/py310/bin:${PATH}
+
+# Install all Python dependencies in a single layer to minimize image size
+# The virtual environment is already active via ENV PATH above
+RUN . /opt/py310/bin/activate && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    mock \
+    numpy \
+    opencv-python \
+    optuna \
+    packaging \
+    pandas \
+    paramiko \
+    pathlib2 \
+    pillow \
+    plotly \
+    protobuf \
+    psutil \
+    pydantic \
+    pytest \
+    pyyaml \
+    rich \
+    scikit-optimize \
+    scipy \
+    six \
+    tabulate \
+    typing-extensions \
+    xlsxwriter \
+    && python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true \
+    && pip install --no-cache-dir \
+    torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
+    kaldi_native_fbank \
+    "numpy<2" \
+    onnx==1.17.0 \
+    onnxruntime \
+    soundfile \
+    librosa \
+    onnxsim \
+    sentencepiece \
+    pyyaml \
+    && pip cache purge 2>/dev/null || true
+
+# Verify QNN tools are accessible (source envsetup.sh first, matching workflow)
+RUN cd ${QNN_SDK_ROOT}/bin && . envsetup.sh \
+    && qnn-onnx-converter --help \
+    && qnn-model-lib-generator --help \
+    && qnn-net-run --help
+
+WORKDIR /workspace

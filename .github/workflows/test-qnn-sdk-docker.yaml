@@ -1,0 +1,70 @@
+name: test-qnn-sdk-docker
+
+on:
+  push:
+    branches:
+      - docker-qnn
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show system information
+        shell: bash
+        run: |
+          df -h
+
+          pwd
+          id
+          cat /etc/*version
+          ls -lh
+
+      - name: Show Python version
+        shell: bash
+        run: |
+          python3 --version
+          which python3
+
+      - name: Show environment variables
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: $ANDROID_NDK_LATEST_HOME"
+          echo "PATH: $PATH"
+          echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+          echo "QNN_SDK_ROOT: $QNN_SDK_ROOT"
+
+      - name: qnn-onnx-converter show help
+        shell: bash
+        run: |
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+
+          which qnn-onnx-converter
+          qnn-onnx-converter --help
+
+      - name: qnn-model-lib-generator help
+        shell: bash
+        run: |
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+
+          which qnn-model-lib-generator
+          echo "qnn-model-lib-generator --help"
+
+      - name: qnn-net-run help
+        shell: bash
+        run: |
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+
+          which qnn-net-run
+          qnn-net-run --help
