@@ -42,8 +42,18 @@ jobs:
           pip install kaldi-native-fbank
           pip install soundfile librosa
 
+      - name: Install sherpa-onnx for testing
+        shell: bash
+        run: |
+          pip install sherpa-onnx-bin
+          which sherpa-onnx
+
+          sherpa-onnx-version
+
       - name: Run
         shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd scripts/nemo/nemotron-3.5-asr-streaming-0.6b
 
@@ -55,6 +65,36 @@ jobs:
           ls -lh */
 
           echo "---"
+
+      - name: Test onnx models
+        shell: bash
+        run: |
+          pip install sherpa-onnx-bin
+          which sherpa-onnx
+
+          wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
+
+          src=scripts/nemo/nemotron-3.5-asr-streaming-0.6b
+
+          for chunk in 80 160 560 1120; do
+            echo "test $chunk int8"
+
+            sherpa-onnx \
+              --encoder=$src/$chunk/encoder.int8.onnx \
+              --decoder=$src/$chunk/decoder.int8.onnx \
+              --joiner=$src/$chunk/joiner.int8.onnx \
+              --tokens=$src/tokens.txt \
+              ./2086-149220-0033.wav
+
+            echo "test $chunk float32"
+
+            sherpa-onnx \
+              --encoder=$src/$chunk/encoder.onnx \
+              --decoder=$src/$chunk/decoder.onnx \
+              --joiner=$src/$chunk/joiner.onnx \
+              --tokens=$src/tokens.txt \
+              ./2086-149220-0033.wav
+          done
 
       - name: Collect results
         shell: bash
