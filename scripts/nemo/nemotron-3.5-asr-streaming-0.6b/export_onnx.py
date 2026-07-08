@@ -426,7 +426,7 @@ def main():
     print("streaming_cfg", asr_model.encoder.streaming_cfg)
     print("prompt_dictionary", prompt_dictionary)
 
-    chunk_size_ms_list = [80, 160, 560, 1120]
+    chunk_size_ms_list = [80, 160, 320, 560, 1120]
     for ms in chunk_size_ms_list:
         chunk_size = ms // 80 - 1
         print("chunk_size", chunk_size)
