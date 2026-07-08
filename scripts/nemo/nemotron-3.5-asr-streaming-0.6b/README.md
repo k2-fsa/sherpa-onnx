@@ -33,7 +33,7 @@ pip install soundfile librosa
 python3 ./export_onnx.py
 ```
 
-The script exports 80ms, 160ms, 560ms, and 1120ms chunk sizes.
+The script exports 80ms, 160ms, 320ms, 560ms, and 1120ms chunk sizes.
 
 ## Decode
 

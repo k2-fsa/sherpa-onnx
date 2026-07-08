@@ -137,8 +137,7 @@ def get_prompt_dictionary(asr_model) -> Dict[str, int]:
     for language in ["en", "ja"]:
         if not any(k == language or k.startswith(f"{language}-") for k in ans):
             raise RuntimeError(
-                "cfg.model_defaults.prompt_dictionary is missing "
-                f"'{language}'"
+                "cfg.model_defaults.prompt_dictionary is missing " f"'{language}'"
             )
 
     return ans
@@ -218,8 +217,7 @@ class PromptedStreamingEncoder(torch.nn.Module):
         for attr in ["encoder", "prompt_kernel", "num_prompts"]:
             if not hasattr(asr_model, attr):
                 raise RuntimeError(
-                    "Expected a prompt-conditioned NeMo model with "
-                    f"'{attr}'"
+                    "Expected a prompt-conditioned NeMo model with " f"'{attr}'"
                 )
 
         self.encoder = asr_model.encoder
@@ -266,9 +264,7 @@ class PromptedStreamingEncoder(torch.nn.Module):
             1.0,
         )
 
-        encoded = self.prompt_kernel(torch.cat([encoded, prompt], dim=-1)).to(
-            out_dtype
-        )
+        encoded = self.prompt_kernel(torch.cat([encoded, prompt], dim=-1)).to(out_dtype)
         encoded = encoded.transpose(1, 2)  # (B, T, D) -> (B, D, T)
 
         return encoded, encoded_len, channel_next, time_next, channel_len_next
@@ -326,9 +322,7 @@ def export_prompted_encoder(
 ):
     device, dtype = _module_device_and_dtype(asr_model.encoder)
 
-    audio_signal = torch.zeros(
-        1, 128, window_size, dtype=dtype, device=device
-    )
+    audio_signal = torch.zeros(1, 128, window_size, dtype=dtype, device=device)
     length = torch.full((1,), window_size, dtype=torch.int64, device=device)
     cache_last_channel = torch.zeros(
         1,
@@ -426,11 +420,11 @@ def main():
     print("streaming_cfg", asr_model.encoder.streaming_cfg)
     print("prompt_dictionary", prompt_dictionary)
 
-    chunk_size_ms_list = [80, 160, 560, 1120]
+    chunk_size_ms_list = [80, 160, 320, 560, 1120]
     for ms in chunk_size_ms_list:
         chunk_size = ms // 80 - 1
         print("chunk_size", chunk_size)
-        asr_model.encoder.set_default_att_context_size([70, chunk_size])
+        asr_model.encoder.set_default_att_context_size([56, chunk_size])
 
         print("streaming_cfg", asr_model.encoder.streaming_cfg)
         print("att_context_size", asr_model.encoder.att_context_size)

@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -112,10 +112,12 @@ jobs:
           models=(
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-int8-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
             sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
           )
@@ -127,6 +129,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Release
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -134,6 +137,15 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-*-int8-2026-06-11.tar.bz2
+          overwrite: true
           tag: asr-models
 
       - name: Publish to huggingface
@@ -151,10 +163,12 @@ jobs:
             models=(
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-int8-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
               sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
             )
