@@ -37,8 +37,7 @@ jobs:
           # instructs installing NeMo from main.
           BRANCH='main'
           pip install Cython packaging
-          # pip install "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@$BRANCH"
-          pip install "git+https://github.com/NVIDIA/NeMo.git@main#egg=nemo_toolkit[asr]"
+          pip install "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@$BRANCH"
           pip install onnxruntime ipython sentencepiece
           pip install kaldi-native-fbank
           pip install soundfile librosa
