@@ -59,7 +59,9 @@ fn try_main() -> Result<(), DynError> {
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    if link_mode == LinkMode::Shared && matches!(target_os.as_str(), "linux" | "macos") {
+    if link_mode == LinkMode::Shared
+        && matches!(target_os.as_str(), "linux" | "macos" | "android")
+    {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
         emit_relative_rpath(&target_os);
         copy_unix_runtime_libs(&lib_dir, &target_os)?;
@@ -129,6 +131,12 @@ fn download_prebuilt_libs(
         return Ok(lib_dir);
     }
 
+    // Android archives use jniLibs/{abi}/ instead of lib/. Check both.
+    let android_lib_dir = extracted_dir.join("jniLibs").join(android_abi(target_arch));
+    if android_lib_dir.is_dir() {
+        return Ok(android_lib_dir);
+    }
+
     fs::create_dir_all(&cache_root)?;
 
     let archive_path = cache_root.join(&archive_name);
@@ -182,6 +190,14 @@ fn download_prebuilt_libs(
     }
 
     if !lib_dir.is_dir() {
+        // Android archives use jniLibs/{abi}/ instead of lib/.
+        let android_lib_dir = extracted_dir
+            .join("jniLibs")
+            .join(android_abi(target_arch));
+        if android_lib_dir.is_dir() {
+            eprintln!("Downloaded sherpa-onnx Android libs to {}", android_lib_dir.display());
+            return Ok(android_lib_dir);
+        }
         return Err(format!(
             "Downloaded archive did not contain a lib directory: {}",
             lib_dir.display()
@@ -192,6 +208,18 @@ fn download_prebuilt_libs(
     eprintln!("Downloaded sherpa-onnx libs to {}", extracted_dir.display());
 
     Ok(lib_dir)
+}
+
+/// Map a Rust target architecture to the Android ABI directory name used
+/// in the prebuilt jniLibs/ layout.
+fn android_abi(target_arch: &str) -> &str {
+    match target_arch {
+        "aarch64" => "arm64-v8a",
+        "arm" => "armeabi-v7a",
+        "x86" => "x86",
+        "x86_64" => "x86_64",
+        _ => "arm64-v8a",
+    }
 }
 
 fn archive_name(
@@ -230,6 +258,10 @@ fn archive_name(
         }
         (LinkMode::Shared, "windows", "x86_64") => {
             format!("sherpa-onnx-v{version}-win-x64-shared-MT-Release-lib.tar.bz2")
+        }
+        // Android: one archive with all ABIs under jniLibs/{abi}/.
+        (LinkMode::Shared, "android", _) => {
+            format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
         _ => return Err(format!(
             "Unsupported target for sherpa-onnx prebuilt libs: os={target_os}, arch={target_arch}"
@@ -282,7 +314,7 @@ fn target_dir_from_out_dir(out_dir: &Path) -> Result<PathBuf, DynError> {
 
 fn emit_relative_rpath(target_os: &str) {
     match target_os {
-        "linux" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
+        "linux" | "android" => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
         "macos" => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
         _ => {}
     }
@@ -311,9 +343,9 @@ fn copy_unix_runtime_libs(lib_dir: &Path, target_os: &str) -> Result<(), DynErro
         .filter(|path| {
             path.file_name()
                 .and_then(OsStr::to_str)
-                .map(|name| match target_os {
-                    "linux" => name.contains(".so"),
-                    "macos" => name.ends_with(".dylib"),
+                 .map(|name| match target_os {
+                     "linux" | "android" => name.contains(".so"),
+                     "macos" => name.ends_with(".dylib"),
                     _ => false,
                 })
                 .unwrap_or(false)
