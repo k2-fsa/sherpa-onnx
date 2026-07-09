@@ -3,17 +3,17 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/v1.8.5-2026-04-11.tar.gz")
-  set(openfst_HASH "SHA256=57fbc4b950ae81b1a0e1e298af15652da968a6723a592b7874e9b4027a80a5b4")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip")
+  set(openfst_HASH "SHA256=0a78698ec4b23f7ce1d2053cfe23b2b8c43df69c649fcd46481ad4fb62f40070")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-1.8.5-2026-04-11.tar.gz
-    ${CMAKE_SOURCE_DIR}/openfst-1.8.5-2026-04-11.tar.gz
-    ${CMAKE_BINARY_DIR}/openfst-1.8.5-2026-04-11.tar.gz
-    /tmp/openfst-1.8.5-2026-04-11.tar.gz
-    /star-fj/fangjun/download/github/openfst-1.8.5-2026-04-11.tar.gz
+    $ENV{HOME}/Downloads/openfst-ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip
+    ${CMAKE_SOURCE_DIR}/openfst-ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip
+    ${CMAKE_BINARY_DIR}/openfst-ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip
+    /tmp/openfst-ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip
+    /star-fj/fangjun/download/github/openfst-ae4c5f0e416e9ed2db1044d9396e1f60a1ae5f7e.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
