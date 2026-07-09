@@ -260,7 +260,7 @@ fn archive_name(
             format!("sherpa-onnx-v{version}-win-x64-shared-MT-Release-lib.tar.bz2")
         }
         // Android: one archive with all ABIs under jniLibs/{abi}/.
-        (LinkMode::Shared, "android", _) => {
+        (LinkMode::Shared, "android", "aarch64" | "arm" | "x86" | "x86_64") => {
             format!("sherpa-onnx-v{version}-android.tar.bz2")
         }
         _ => return Err(format!(
