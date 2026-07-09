@@ -148,7 +148,7 @@ class OnnxModel:
         c = np.zeros(c_shape, dtype=np.float32)
         return h, c
 
-    def run_encoder(self, x: np.ndarray, states):
+    def run_encoder(self, x: np.ndarray, states, prompt_index):
         encoder_out, *next_states = self.encoder.run(
             [
                 self.encoder.get_outputs()[0].name,
@@ -161,6 +161,7 @@ class OnnxModel:
                 self.encoder.get_inputs()[1].name: states[0],
                 self.encoder.get_inputs()[2].name: states[1],
                 self.encoder.get_inputs()[3].name: states[2],
+                self.encoder.get_inputs()[4].name: prompt_index,
             },
         )
         return encoder_out, next_states
@@ -259,6 +260,7 @@ def main():
     features.tofile(f"{name}-features.raw")
 
     encoder_states = model.get_encoder_state()
+    prompt_index = np.array([101], dtype=np.int32)
 
     max_symbols_per_frame = 10
 
@@ -267,9 +269,9 @@ def main():
         if f.shape[0] < window_size:
             break
 
-        encoder_input_list.append([f, encoder_states])
+        encoder_input_list.append([f, encoder_states, prompt_index])
         encoder_out, encoder_states = model.run_encoder(
-            f[None].transpose(0, 2, 1), encoder_states
+            f[None].transpose(0, 2, 1), encoder_states, prompt_index
         )
         encoder_out = encoder_out.transpose(0, 2, 1)
 
@@ -300,7 +302,7 @@ def main():
 
     if True:
         with open(f"{name}-encoder.txt", "w") as f:
-            for i, (x, states) in enumerate(encoder_input_list):
+            for i, (x, states, prompt_index) in enumerate(encoder_input_list):
                 x_name = f"{name}-{i}-x.raw"
                 x.tofile(x_name)
 
@@ -313,7 +315,10 @@ def main():
                 s2_name = f"{name}-{i}-s2.raw"
                 states[2].tofile(s2_name)
 
-                f.write(f"{x_name} {s0_name} {s1_name} {s2_name}\n")
+                prompt_name = f"{name}-{i}-prompt.raw"
+                prompt_index.tofile(prompt_name)
+
+                f.write(f"{x_name} {s0_name} {s1_name} {s2_name} {prompt_name}\n")
 
         with open(f"{name}-decoder.txt", "w") as f:
             for i, (y, h, c) in enumerate(decoder_input_list):

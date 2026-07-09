@@ -3,6 +3,11 @@ FROM ubuntu:22.04
 ARG QNN_SDK_VERSION=2.40.0.251030
 ARG QNN_TOOLKIT_URL=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v${QNN_SDK_VERSION}.zip
 
+LABEL org.opencontainers.image.title="QNN SDK ${QNN_SDK_VERSION}" \
+      org.opencontainers.image.description="Pre-built development environment for Qualcomm AI Engine Direct (QNN) SDK ${QNN_SDK_VERSION}, used by sherpa-onnx to convert and run ASR/TTS models on Qualcomm Snapdragon chipsets (e.g. SM8850). Includes: Android NDK r29 (${ANDROID_NDK_VERSION}) for cross-compiling to aarch64-android; Python 3.10 virtualenv with PyTorch, ONNX, onnxruntime, and QNN Python dependencies; QNN CLI tools (qnn-onnx-converter, qnn-model-lib-generator, qnn-context-binary-generator, qnn-net-run) for quantizing ONNX models to QNN context binaries targeting HTP/DSP backends. Typical workflow: mount model files, source envsetup.sh, run qnn-onnx-converter to quantize, then qnn-context-binary-generator to produce .bin files deployable on-device." \
+      org.opencontainers.image.source="https://github.com/k2-fsa/sherpa-onnx" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Use bash as default shell (envsetup.sh requires bash syntax)
@@ -51,8 +56,10 @@ ENV PATH=${QNN_SDK_ROOT}/bin/x86_64-linux-clang:${QNN_SDK_ROOT}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${QNN_SDK_ROOT}/lib/x86_64-linux-clang:${LD_LIBRARY_PATH}
 
 # Install linux dependencies required by QNN SDK (source envsetup.sh first, matching workflow)
-RUN cd ${QNN_SDK_ROOT}/bin && . envsetup.sh \
-    && yes | ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true \
+# apt-get update is needed because check-linux-dependency.sh runs apt-get install
+RUN apt-get update \
+    && cd ${QNN_SDK_ROOT}/bin && . envsetup.sh \
+    && { yes | ${QNN_SDK_ROOT}/bin/check-linux-dependency.sh || true; } \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and activate a Python 3.10 virtual environment
@@ -66,7 +73,7 @@ RUN . /opt/py310/bin/activate && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
     mock \
-    numpy \
+    "numpy<2" \
     opencv-python \
     optuna \
     packaging \
@@ -87,19 +94,17 @@ RUN . /opt/py310/bin/activate && \
     tabulate \
     typing-extensions \
     xlsxwriter \
-    && python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true \
+    && { python3 "${QNN_SDK_ROOT}/bin/check-python-dependency" || true; } \
     && pip install --no-cache-dir \
     torch==2.0.0+cpu -f https://download.pytorch.org/whl/torch \
     kaldi_native_fbank \
-    "numpy<2" \
     onnx==1.17.0 \
     onnxruntime \
     soundfile \
     librosa \
     onnxsim \
     sentencepiece \
-    pyyaml \
-    && pip cache purge 2>/dev/null || true
+    && { pip cache purge 2>/dev/null || true; }
 
 # Verify QNN tools are accessible (source envsetup.sh first, matching workflow)
 RUN cd ${QNN_SDK_ROOT}/bin && . envsetup.sh \

@@ -101,7 +101,7 @@ jobs:
         run: |
           src=scripts/nemo/nemotron-3.5-asr-streaming-0.6b
 
-          for chunk in 80 160 560 1120; do
+          for chunk in 80 160 320 560 1120; do
             d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
             mkdir -p $d
 
@@ -145,8 +145,11 @@ jobs:
         run: |
           mkdir test_wavs
           pushd test_wavs
-          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
-          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+
+          for lang in ar de es fr ja ko uk vi zh; do
+            wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
+          done
+
           popd
 
           models=(

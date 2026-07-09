@@ -1,0 +1,414 @@
+name: export-nemotron-3.5-asr-streaming-0.6b-qnn
+
+on:
+  push:
+    branches:
+      - nemotron-3.5-qnn
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemotron-3.5-asr-streaming-qnn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Export onnx
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # chunk_size_ms: [80, 160, 320, 560, 1120]
+        chunk_size_ms: [1120]
+        model_id: ["nemotron-3.5-asr-streaming-0.6b"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Export models
+        shell: bash
+        run: |
+          chunk_size_ms=${{ matrix.chunk_size_ms }}
+
+          # https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b
+          model_id=${{ matrix.model_id }}
+
+          echo "chunk_size_ms: $chunk_size_ms"
+          echo "model_id: $model_id"
+
+          cd scripts/nemo/qnn/nemotron-3.5-asr-streaming-0.6b
+
+
+          ./run.sh $chunk_size_ms nvidia/$model_id
+
+          rm -f  onnx__* layers* Constant* pre_encode*
+
+          ls -lh *.onnx*
+
+          for lang in ar de es fr ja ko uk vi zh; do
+            wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
+            python3 ./test_onnx.py --wav ./$lang.wav
+          done
+          ls -lh *.wav
+
+          cat *-encoder.txt > encoder.txt
+          cat *-decoder.txt > decoder.txt
+          cat *-joiner.txt  > joiner.txt
+
+          ls -l encoder* decoder* joiner*
+
+          # ls -lh *.onnx*
+          # ls -lh *.txt
+          # ls -lh *.raw | head
+
+      - name: Setup tmate session
+        if: failure()
+        # if: false
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Collect models
+        shell: bash
+        run: |
+          chunk_size_ms=${{ matrix.chunk_size_ms }}
+
+          # https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b
+          model_id=${{ matrix.model_id }}
+
+          src=scripts/nemo/qnn/nemotron-3.5-asr-streaming-0.6b
+          dst=${model_id}-${chunk_size_ms}
+
+          mkdir -p $dst
+
+          mv -v $src/encoder.* $dst
+          mv -v $src/decoder.* $dst
+          mv -v $src/joiner.* $dst
+          cp -v $src/*.txt $dst
+          cp $src/*.raw $dst
+          cp -v $src/*.wav $dst
+
+          ls -lh $dst/
+          tar cjvf $dst.tar.bz2 $dst
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.model_id }}-${{ matrix.chunk_size_ms }}
+          path: ./*.tar.bz2
+
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          # outputting for debugging purposes
+          python3 .github/scripts/export-qnn/generate_nemotron_35_asr_streaming.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_nemotron_35_asr_streaming.py)
+
+          # deprecated
+          # echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  qnn:
+    needs: [generate_build_matrix, onnx]
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.chunk_size_ms }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.chunk_size_ms }}
+          path: /tmp/
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Show tmp
+        shell: bash
+        run: |
+          chunk_size_ms=${{ matrix.chunk_size_ms }}
+          model_id=${{ matrix.model_name }}
+
+          dir=$PWD
+          mkdir -p model-files/$chunk_size_ms
+
+          ls -lh /tmp/
+
+          pushd /tmp
+          echo "chunk_size_ms: $chunk_size_ms"
+
+          src=${model_id}-${chunk_size_ms}
+
+
+          ls -lh $src.tar.bz2
+
+          tar xvf $src.tar.bz2
+          rm $src.tar.bz2
+
+          echo "---"
+
+          ls -lh $src/*
+          popd
+
+          mv -v /tmp/$src/* $dir/model-files/$chunk_size_ms/
+
+      - name: Show files
+        shell: bash
+        run: |
+          ls -lh model-files
+          echo "---"
+          ls -lh model-files/*
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Show ndk-build help
+        shell: bash
+        run: |
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          ndk-build --help
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Maximize Runner Swap Space
+        uses: pierotofy/set-swap-space@v1.0
+        with:
+          swap-size-gb: 12
+
+      - name: Run ${{ matrix.model_type }}
+        shell: bash
+        run: |
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
+          chunk_size_ms=${{ matrix.chunk_size_ms }}
+          model_dir=$PWD/model-files/$chunk_size_ms
+          soc=${{ matrix.soc }}
+
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/encoder.onnx
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/decoder.onnx
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/joiner.onnx
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+
+          echo "export to qnn"
+          echo "----------$chunk_size_ms----------"
+
+          for m in encoder decoder joiner; do
+            echo "Processing $m"
+            mv  $model_dir/${m}.* ./
+            cp  $model_dir/*.raw ./
+            cp  $model_dir/*.txt ./
+
+            ls -lh $m.*
+            ls -lh *.raw || head
+            ls -lh *.txt
+
+            if [[ $m == 'encoder' || $m == 'joiner' ]]; then
+              # quantize only the encoder and joiner
+              cat $m.txt
+
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --input_list $m.txt \
+                --use_native_input_files \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+            else
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --float_bitwidth 16 \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+            fi
+
+            ls -lh quant
+
+            python3 ./scripts/qnn/generate_config.py  \
+                --soc $soc \
+                --graph-name $m \
+                --output-dir ./quant/my-config-$m \
+                --qnn-sdk-root $QNN_SDK_ROOT
+
+            ls -lh quant/my-config-$m
+
+            head -n100 ./quant/my-config-$m/*.json
+
+            python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+                -c quant/$m.cpp \
+                -b quant/$m.bin \
+                -o quant/model_libs > ${m}-log-generator.txt 2>&1
+
+            ls -lh quant/model_libs
+            echo "---"
+            ls -lh quant/model_libs/x86_64-linux-clang
+            echo "---"
+            ls -lh quant/model_libs/aarch64-android
+
+            $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+              --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+              --model ./quant/model_libs/x86_64-linux-clang/lib$m.so \
+              --output_dir ./quant/binary \
+              --binary_file $m \
+              --config_file ./quant/my-config-$m/htp_backend_extensions.json > ${m}-log-generator.txt 2>&1
+
+            ls -lh quant/binary/
+          done
+
+          readelf -lW quant/model_libs/*/lib*.so
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-${{ matrix.model_name }}-${{ matrix.chunk_size_ms }}ms
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          cp -v quant/binary/*.bin $d/
+          cp -v $model_dir/tokens.txt $d
+          cp -v $model_dir/*.wav $d/test_wavs
+
+          echo "chunk_size_ms=${chunk_size_ms}ms" > $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          mkdir -p binary
+          mv *.tar.bz2 ./binary/
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.chunk_size_ms }}s-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-${{ matrix.model_name }}-${{ matrix.chunk_size_ms }}s-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v quant/model_libs/$p/lib*.so $d/
+            cp -v $model_dir/tokens.txt $d
+            cp -v $model_dir/*.wav $d/test_wavs
+
+            echo "chunk_size_ms=${chunk_size_ms}ms" > $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mkdir -p so
+
+          mv *.tar.bz2 ./so
+
+      - name: Setup tmate session
+        # if: false
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Show files
+        shell: bash
+        run: |
+          echo "---so---"
+          ls -lh so
+
+          echo "---binary---"
+          ls -lh binary
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.soc }}-${{ matrix.chunk_size_ms }}-${{ matrix.model_type }}-json
+          path: ./quant/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-binary-3
