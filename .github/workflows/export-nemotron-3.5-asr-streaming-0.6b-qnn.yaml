@@ -25,12 +25,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache ONNX models
+        id: cache-onnx
+        uses: actions/cache@v4
+        with:
+          path: ./*.tar.bz2
+          key: onnx-${{ matrix.model_id }}-${{ matrix.chunk_size_ms }}
+
       - name: Setup Python
+        if: steps.cache-onnx.outputs.cache-hit != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Export models
+        if: steps.cache-onnx.outputs.cache-hit != 'true'
         shell: bash
         run: |
           chunk_size_ms=${{ matrix.chunk_size_ms }}
@@ -67,11 +76,12 @@ jobs:
           # ls -lh *.raw | head
 
       - name: Setup tmate session
-        if: failure()
+        if: failure() && steps.cache-onnx.outputs.cache-hit != 'true'
         # if: false
         uses: mxschmitt/action-tmate@v3
 
       - name: Collect models
+        if: steps.cache-onnx.outputs.cache-hit != 'true'
         shell: bash
         run: |
           chunk_size_ms=${{ matrix.chunk_size_ms }}
@@ -95,7 +105,8 @@ jobs:
           tar cjvf $dst.tar.bz2 $dst
           ls -lh *.tar.bz2
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.model_id }}-${{ matrix.chunk_size_ms }}
           path: ./*.tar.bz2
@@ -209,11 +220,6 @@ jobs:
         shell: bash
         run: |
           df -h
-
-      - name: Maximize Runner Swap Space
-        uses: pierotofy/set-swap-space@v1.0
-        with:
-          swap-size-gb: 12
 
       - name: Run ${{ matrix.model_type }}
         shell: bash

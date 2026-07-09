@@ -1,12 +1,15 @@
+# https://docs.qualcomm.com/bundle/publicresource/topics/80-63442-10/linux_setup.html
 FROM ubuntu:22.04
 
 ARG QNN_SDK_VERSION=2.40.0.251030
 ARG QNN_TOOLKIT_URL=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v${QNN_SDK_VERSION}.zip
 
-LABEL org.opencontainers.image.title="QNN SDK ${QNN_SDK_VERSION}" \
-      org.opencontainers.image.description="Pre-built development environment for Qualcomm AI Engine Direct (QNN) SDK ${QNN_SDK_VERSION}, used by sherpa-onnx to convert and run ASR/TTS models on Qualcomm Snapdragon chipsets (e.g. SM8850). Includes: Android NDK r29 (${ANDROID_NDK_VERSION}) for cross-compiling to aarch64-android; Python 3.10 virtualenv with PyTorch, ONNX, onnxruntime, and QNN Python dependencies; QNN CLI tools (qnn-onnx-converter, qnn-model-lib-generator, qnn-context-binary-generator, qnn-net-run) for quantizing ONNX models to QNN context binaries targeting HTP/DSP backends. Typical workflow: mount model files, source envsetup.sh, run qnn-onnx-converter to quantize, then qnn-context-binary-generator to produce .bin files deployable on-device." \
-      org.opencontainers.image.source="https://github.com/k2-fsa/sherpa-onnx" \
-      org.opencontainers.image.licenses="Apache-2.0"
+# See https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#labelling-container-images
+
+LABEL org.opencontainers.image.title="QNN SDK ${QNN_SDK_VERSION}"
+LABEL org.opencontainers.image.description="Pre-built development environment for Qualcomm AI Engine Direct (QNN) SDK ${QNN_SDK_VERSION}, used by sherpa-onnx to convert and run ASR/TTS models on Qualcomm Snapdragon chipsets (e.g. SM8850). Includes: Android NDK r29 (${ANDROID_NDK_VERSION}) for cross-compiling to aarch64-android; Python 3.10 virtualenv with PyTorch, ONNX, onnxruntime, and QNN Python dependencies; QNN CLI tools (qnn-onnx-converter, qnn-model-lib-generator, qnn-context-binary-generator, qnn-net-run) for quantizing ONNX models to QNN context binaries targeting HTP/DSP backends. Typical workflow: mount model files, source envsetup.sh, run qnn-onnx-converter to quantize, then qnn-context-binary-generator to produce .bin files deployable on-device."
+LABEL org.opencontainers.image.source="https://github.com/k2-fsa/sherpa-onnx"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -15,6 +18,13 @@ SHELL ["/bin/bash", "-c"]
 
 # Install basic system dependencies (Ubuntu 22.04 ships Python 3.10 natively)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    bzip2 \
+    file \
+    gcc \
+    g++ \
+    less \
+    make \
+    vim \
     ca-certificates \
     curl \
     unzip \
