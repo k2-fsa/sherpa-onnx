@@ -3,6 +3,7 @@ FROM ubuntu:22.04
 
 ARG QNN_SDK_VERSION=2.40.0.251030
 ARG QNN_TOOLKIT_URL=https://huggingface.co/csukuangfj/qnn-toolkit/resolve/main/v${QNN_SDK_VERSION}.zip
+ARG ANDROID_NDK_VERSION=29.0.14206865
 
 # See https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#labelling-container-images
 
@@ -43,7 +44,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Android NDK r29 (placed early so failures surface quickly)
-ARG ANDROID_NDK_VERSION=29.0.14206865
 ARG ANDROID_NDK_REVISION=r29
 RUN curl -SL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_REVISION}-linux.zip \
     && unzip -q /tmp/ndk.zip -d /opt \

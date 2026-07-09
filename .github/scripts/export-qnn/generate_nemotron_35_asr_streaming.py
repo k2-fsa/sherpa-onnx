@@ -21,15 +21,11 @@ def main():
 
     model_name_list = ["nemotron-3.5-asr-streaming-0.6b"]
     chunk_size_ms_list = [80, 160, 320, 560, 1120]
-    chunk_size_ms_list = [1120]
 
     configs = []
 
     for name, soc in soc_info_dict.items():
         if soc.model.name == "SM8350":
-            continue
-
-        if soc.model.name != "SM8850":
             continue
         for chunk_size_ms, model_name in itertools.product(
             chunk_size_ms_list, model_name_list

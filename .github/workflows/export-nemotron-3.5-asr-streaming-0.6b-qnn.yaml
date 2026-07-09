@@ -3,7 +3,7 @@ name: export-nemotron-3.5-asr-streaming-0.6b-qnn
 on:
   push:
     branches:
-      - nemotron-3.5-qnn
+      - nemotron-3.5-qnn-2
   workflow_dispatch:
 
 concurrency:
@@ -18,8 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # chunk_size_ms: [80, 160, 320, 560, 1120]
-        chunk_size_ms: [1120]
+        chunk_size_ms: [80, 160, 320, 560, 1120]
         model_id: ["nemotron-3.5-asr-streaming-0.6b"]
 
     steps:
@@ -59,7 +58,7 @@ jobs:
 
           ls -lh *.onnx*
 
-          for lang in ar de es fr ja ko uk vi zh; do
+          for lang in ar de en es fr ja ko uk vi zh; do
             wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
             python3 ./test_onnx.py --wav ./$lang.wav
           done
@@ -71,9 +70,9 @@ jobs:
 
           ls -l encoder* decoder* joiner*
 
-          # ls -lh *.onnx*
-          # ls -lh *.txt
-          # ls -lh *.raw | head
+          ls -lh *.onnx*
+          ls -lh *.txt
+          ls -lh *.raw || head
 
       - name: Setup tmate session
         if: failure() && steps.cache-onnx.outputs.cache-hit != 'true'

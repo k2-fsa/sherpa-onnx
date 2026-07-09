@@ -27,7 +27,8 @@ class OnlineNemoTransducerModelQnn {
 
   std::vector<float> RunEncoder(std::vector<float> features,
                                 int32_t num_frames,
-                                std::vector<OnlineStreamStateTensor> *states) const;
+                                std::vector<OnlineStreamStateTensor> *states,
+                                int32_t prompt_index = -1) const;
 
   // Run the LSTM decoder.
   //
@@ -49,6 +50,11 @@ class OnlineNemoTransducerModelQnn {
   int32_t DecoderDim() const;
   int32_t SubsamplingFactor() const;
   const std::string &NormalizationType() const;
+
+  // Get the prompt ID for a given language (e.g., "en-US", "zh-CN").
+  // Returns the prompt ID for "auto" for empty or unknown language
+  // (logs warning for unknown).
+  int32_t GetLanguagePromptId(const std::string &language) const;
 
   // Get the initial zero-filled decoder states (e.g., [h, c] for LSTM).
   std::vector<std::vector<float>> GetDecoderInitState() const;

@@ -22,6 +22,7 @@
 #include <numeric>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -73,6 +74,48 @@ static int64_t NumElements(const std::vector<int64_t> &shape) {
                          std::multiplies<int64_t>());
 }
 
+// clang-format off
+// Hardcoded prompt dictionary for Nemotron 3.5 ASR.
+// Maps language codes to prompt IDs used by the encoder's prompt_index input.
+// From the model config: default is 'auto' -> 101.
+static const std::unordered_map<std::string, int32_t> &GetPromptDictionary() {
+  static const std::unordered_map<std::string, int32_t> dict = {
+      {"en-US", 0},   {"en", 0},       {"en-GB", 1},    {"enGB", 1},
+      {"es-ES", 2},   {"esES", 2},     {"es-US", 3},    {"es", 3},
+      {"zh-CN", 4},   {"zh-ZH", 4},   {"zh-TW", 5},    {"hi-IN", 6},
+      {"hi", 6},      {"hi-HI", 6},    {"ar-AR", 7},    {"ar", 7},
+      {"fr-FR", 8},   {"fr", 8},       {"de-DE", 9},    {"de", 9},
+      {"ja-JP", 10},  {"ja-JA", 10},   {"ru-RU", 11},   {"ru", 11},
+      {"pt-BR", 12},  {"pt-PT", 13},   {"pt", 13},      {"ko-KR", 14},
+      {"ko", 14},     {"ko-KO", 14},   {"it-IT", 15},   {"it", 15},
+      {"nl-NL", 16},  {"nl", 16},      {"pl-PL", 17},   {"pl", 17},
+      {"tr-TR", 18},  {"tr", 18},      {"uk-UA", 19},   {"uk", 19},
+      {"ro-RO", 20},  {"ro", 20},      {"el-GR", 21},   {"el", 21},
+      {"cs-CZ", 22},  {"cs", 22},      {"hu-HU", 23},   {"hu", 23},
+      {"sv-SE", 24},  {"sv", 24},      {"da-DK", 25},   {"da", 25},
+      {"fi-FI", 26},  {"fi", 26},      {"no-NO", 27},   {"no", 27},
+      {"nb-NO", 103}, {"nb", 103},     {"nn-NO", 104},  {"nn", 104},
+      {"sk-SK", 28},  {"sk", 28},      {"hr-HR", 29},   {"hr", 29},
+      {"bg-BG", 30},  {"bg", 30},      {"lt-LT", 31},   {"lt", 31},
+      {"et-EE", 60},  {"et", 60},      {"lv-LV", 61},   {"lv", 61},
+      {"sl-SI", 62},  {"sl", 62},      {"th-TH", 32},   {"vi-VN", 33},
+      {"id-ID", 34},  {"ms-MY", 35},   {"bn-IN", 36},   {"ur-PK", 37},
+      {"fa-IR", 38},  {"ta-IN", 39},   {"te-IN", 40},   {"mr-IN", 41},
+      {"gu-IN", 42},  {"kn-IN", 43},   {"ml-IN", 44},   {"si-LK", 45},
+      {"ne-NP", 46},  {"km-KH", 47},   {"sw-KE", 48},   {"am-ET", 49},
+      {"ha-NG", 50},  {"zu-ZA", 51},   {"yo-NG", 52},   {"ig-NG", 53},
+      {"af-ZA", 54},  {"rw-RW", 55},   {"so-SO", 56},   {"ny-MW", 57},
+      {"ln-CD", 58},  {"or-KE", 59},   {"he-IL", 64},   {"ku-TR", 65},
+      {"az-AZ", 66},  {"ka-GE", 67},   {"hy-AM", 68},   {"uz-UZ", 69},
+      {"tg-TJ", 70},  {"ky-KG", 71},   {"qu-PE", 80},   {"ay-BO", 81},
+      {"gn-PY", 82},  {"nah-MX", 83},  {"mi-NZ", 96},   {"haw-US", 97},
+      {"sm-WS", 98},  {"to-TO", 99},   {"fr-CA", 100},  {"mt-MT", 102},
+      {"auto", 101},
+  };
+  return dict;
+}
+// clang-format on
+
 }  // namespace
 
 class OnlineNemoTransducerModelQnn::Impl {
@@ -113,8 +156,8 @@ class OnlineNemoTransducerModelQnn::Impl {
   //     cache_last_channel_len: (1,) int32
   //
   //   Outputs:
-  //     encoder_out:              (1, num_encoder_frames, encoder_out_dim) float
-  //     next_cache_last_channel:  (1, 24, 70, 1024) float
+  //     encoder_out:              (1, num_encoder_frames, encoder_out_dim)
+  //     float next_cache_last_channel:  (1, 24, 70, 1024) float
   //     next_cache_last_time:     (1, 24, 1024, 8) float
   //     next_cache_last_channel_len: (1,) int32
   //
@@ -122,7 +165,8 @@ class OnlineNemoTransducerModelQnn::Impl {
   //   We transpose once on output (Transpose012To120) and store in QNN input
   //   format, so no transpose is needed on the next call.
   std::vector<float> RunEncoder(std::vector<float> features, int32_t num_frames,
-                                std::vector<OnlineStreamStateTensor> *states) const {
+                                std::vector<OnlineStreamStateTensor> *states,
+                                int32_t prompt_index) const {
     if (!states) {
       SHERPA_ONNX_LOGE("states pointer is null");
       SHERPA_ONNX_EXIT(-1);
@@ -130,8 +174,8 @@ class OnlineNemoTransducerModelQnn::Impl {
 
     if (states->size() < state_input_names_.size()) {
       SHERPA_ONNX_LOGE("states size %d is less than expected %d",
-                        static_cast<int32_t>(states->size()),
-                        static_cast<int32_t>(state_input_names_.size()));
+                       static_cast<int32_t>(states->size()),
+                       static_cast<int32_t>(state_input_names_.size()));
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -158,6 +202,11 @@ class OnlineNemoTransducerModelQnn::Impl {
       }
     }
 
+    // Set prompt_index for Nemotron 3.5 ASR models.
+    if (has_prompt_index_ && prompt_index >= 0) {
+      encoder_->SetInputTensorData("prompt_index", &prompt_index, 1);
+    }
+
     encoder_->Run();
 
     std::vector<float> encoder_out =
@@ -174,10 +223,18 @@ class OnlineNemoTransducerModelQnn::Impl {
         if (state_needs_transpose_[i]) {
           const auto &out_shape = state_output_shapes_[i];
           data = Transpose012To120(data.data(), out_shape[1], out_shape[2],
-                                      out_shape[3]);
+                                   out_shape[3]);
         }
         (*states)[i].float_data = std::move(data);
       }
+    }
+
+    // If encoder_out is [1, encoder_out_dim, num_frames], transpose to
+    // [1, num_frames, encoder_out_dim] so that frame t is at
+    // p + t * encoder_out_dim.
+    if (encoder_out_needs_transpose_) {
+      encoder_out = Transpose(encoder_out.data(), encoder_out_dim_,
+                              num_encoder_frames_);
     }
 
     return encoder_out;
@@ -197,8 +254,8 @@ class OnlineNemoTransducerModelQnn::Impl {
   //
   //   Note: h/c input layout (d0, d1, 1) differs from next_h/next_c output
   //   layout (d0, 1, d1), but since one dim is 1 the flat buffer is the same.
-  std::pair<std::vector<float>, std::vector<std::vector<float>>>
-  RunDecoder(int32_t token, std::vector<std::vector<float>> states) const {
+  std::pair<std::vector<float>, std::vector<std::vector<float>>> RunDecoder(
+      int32_t token, std::vector<std::vector<float>> states) const {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (states.size() < 2) {
@@ -252,9 +309,30 @@ class OnlineNemoTransducerModelQnn::Impl {
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
   const std::string &NormalizationType() const { return normalization_type_; }
 
+  int32_t GetLanguagePromptId(const std::string &language) const {
+    const auto &dict = GetPromptDictionary();
+    if (language.empty()) {
+      return dict.at("auto");
+    }
+    auto it = dict.find(language);
+    if (it != dict.end()) {
+      return it->second;
+    }
+    SHERPA_ONNX_LOGE("Unknown language '%s' for Nemotron 3.5 ASR.",
+                     language.c_str());
+    std::string available;
+    for (const auto &p : dict) {
+      if (!available.empty()) {
+        available += ", ";
+      }
+      available += p.first;
+    }
+    SHERPA_ONNX_LOGE("Available languages: %s", available.c_str());
+    return dict.at("auto");
+  }
+
   std::vector<std::vector<float>> GetDecoderInitState() const {
-    return {std::vector<float>(h_size_, 0.f),
-            std::vector<float>(c_size_, 0.f)};
+    return {std::vector<float>(h_size_, 0.f), std::vector<float>(c_size_, 0.f)};
   }
 
  private:
@@ -277,8 +355,8 @@ class OnlineNemoTransducerModelQnn::Impl {
   }
 
   void ParseContextBinaries() {
-    SplitStringToVector(config_.transducer.qnn_config.context_binary, ",",
-                        true, &context_binaries_);
+    SplitStringToVector(config_.transducer.qnn_config.context_binary, ",", true,
+                        &context_binaries_);
     if (!context_binaries_.empty() && context_binaries_.size() != 3) {
       SHERPA_ONNX_LOGE(
           "There should be 3 files for online parakeet TDT context binary. "
@@ -302,8 +380,7 @@ class OnlineNemoTransducerModelQnn::Impl {
     }
 
     if (config_.debug && ok) {
-      SHERPA_ONNX_LOGE("Saved context binary to '%s'.",
-                        context_binary.c_str());
+      SHERPA_ONNX_LOGE("Saved context binary to '%s'.", context_binary.c_str());
       SHERPA_ONNX_LOGE("Remember to also provide libQnnSystem.so.");
     }
   }
@@ -443,8 +520,9 @@ class OnlineNemoTransducerModelQnn::Impl {
     }
 
     // Identify cache state inputs (cache_last_channel, cache_last_time,
-    // cache_last_channel_len).
+    // cache_last_channel_len) and optional prompt_index.
     state_input_names_.clear();
+    has_prompt_index_ = false;
     for (const auto &name : encoder_->InputTensorNames()) {
       if (name == encoder_input_name_) {
         continue;
@@ -452,6 +530,8 @@ class OnlineNemoTransducerModelQnn::Impl {
       if (name == "cache_last_channel" || name == "cache_last_time" ||
           name == "cache_last_channel_len") {
         state_input_names_.push_back(name);
+      } else if (name == "prompt_index") {
+        has_prompt_index_ = true;
       }
     }
 
@@ -479,8 +559,7 @@ class OnlineNemoTransducerModelQnn::Impl {
     // The ONNX model uses [1, feat_dim, window_size] but the QNN converter
     // changes the layout to [1, window_size, feat_dim].
     auto x_shape = encoder_->TensorShape(encoder_input_name_);
-    if (x_shape.size() != 3 || x_shape[0] != 1 ||
-        x_shape[1] != window_size_) {
+    if (x_shape.size() != 3 || x_shape[0] != 1 || x_shape[1] != window_size_) {
       SHERPA_ONNX_LOGE(
           "The encoder input x should be of shape [1, %d, feat_dim]. "
           "Actual: [1, %d, %d]",
@@ -493,21 +572,6 @@ class OnlineNemoTransducerModelQnn::Impl {
     auto out_shape = encoder_->TensorShape("encoder_out");
     if (out_shape.size() != 3 || out_shape[0] != 1) {
       SHERPA_ONNX_LOGE("The encoder output should be of shape [1, ?, ?]");
-      SHERPA_ONNX_EXIT(-1);
-    }
-
-    encoder_out_dim_ = out_shape[2];
-    num_encoder_frames_ = out_shape[1];
-
-    // Each chunk of window_shift input frames produces num_encoder_frames_
-    // output frames, so the subsampling factor is window_shift /
-    // num_encoder_frames_.
-    subsampling_factor_ = window_shift_ / num_encoder_frames_;
-    if (subsampling_factor_ <= 0) {
-      SHERPA_ONNX_LOGE(
-          "Invalid subsampling factor: %d (window_shift=%d, "
-          "num_encoder_frames=%d)",
-          subsampling_factor_, window_shift_, num_encoder_frames_);
       SHERPA_ONNX_EXIT(-1);
     }
 
@@ -534,16 +598,14 @@ class OnlineNemoTransducerModelQnn::Impl {
       if (needs_transpose) {
         // Validate that the transpose is consistent:
         // input [1, d1, d2, d0] -> output [1, d0, d1, d2]
-        if (in_shape.size() != 4 || out_shape.size() != 4 ||
-            in_shape[0] != 1 || out_shape[0] != 1 ||
-            in_shape[1] != out_shape[2] || in_shape[2] != out_shape[3] ||
-            in_shape[3] != out_shape[1]) {
+        if (in_shape.size() != 4 || out_shape.size() != 4 || in_shape[0] != 1 ||
+            out_shape[0] != 1 || in_shape[1] != out_shape[2] ||
+            in_shape[2] != out_shape[3] || in_shape[3] != out_shape[1]) {
           SHERPA_ONNX_LOGE(
               "Inconsistent cache shapes for '%s': input [%d,%d,%d,%d] "
               "output [%d,%d,%d,%d]",
-              name.c_str(), in_shape[0], in_shape[1], in_shape[2],
-              in_shape[3], out_shape[0], out_shape[1], out_shape[2],
-              out_shape[3]);
+              name.c_str(), in_shape[0], in_shape[1], in_shape[2], in_shape[3],
+              out_shape[0], out_shape[1], out_shape[2], out_shape[3]);
           SHERPA_ONNX_LOGE(
               "Expected: input [1, d1, d2, d0] -> output [1, d0, d1, d2]");
           SHERPA_ONNX_EXIT(-1);
@@ -609,8 +671,7 @@ class OnlineNemoTransducerModelQnn::Impl {
     if (c_shape.size() != 3 || c_shape[0] != num_layers || c_shape[2] != 1) {
       SHERPA_ONNX_LOGE(
           "Expected decoder input 'c' shape [%d, ?, 1]. Actual: [%d, %d, %d]",
-          num_layers,
-          c_shape.size() > 0 ? c_shape[0] : 0,
+          num_layers, c_shape.size() > 0 ? c_shape[0] : 0,
           c_shape.size() > 1 ? c_shape[1] : 0,
           c_shape.size() > 2 ? c_shape[2] : 0);
       SHERPA_ONNX_EXIT(-1);
@@ -632,11 +693,11 @@ class OnlineNemoTransducerModelQnn::Impl {
     if (config_.debug) {
       SHERPA_ONNX_LOGE("decoder input 'y': [1, 1]");
       SHERPA_ONNX_LOGE("decoder input 'h': [%d, 1, %d]", num_layers,
-                        hidden_dim);
+                       hidden_dim);
       SHERPA_ONNX_LOGE("decoder input 'c': [%d, 1, %d]", num_layers,
-                        hidden_dim);
+                       hidden_dim);
       SHERPA_ONNX_LOGE("decoder output 'decoder_out': [1, 1, %d]",
-                        decoder_out_dim_);
+                       decoder_out_dim_);
     }
   }
 
@@ -666,25 +727,55 @@ class OnlineNemoTransducerModelQnn::Impl {
 
     // QNN joiner input shapes: encoder_out = (1, encoder_out_dim, 1),
     // decoder_out = (1, decoder_out_dim, 1)
+    //
+    // Read encoder_out_dim from the joiner input (not from the encoder output)
+    // because the encoder_out shape layout differs between models
     auto encoder_in_shape = joiner_->TensorShape(joiner_encoder_input_name_);
     if (encoder_in_shape.size() != 3 || encoder_in_shape[0] != 1 ||
-        encoder_in_shape[1] != encoder_out_dim_ || encoder_in_shape[2] != 1) {
+        encoder_in_shape[2] != 1) {
       SHERPA_ONNX_LOGE(
-          "The joiner input '%s' should be [1, %d, 1]. Actual: [%d, %d, %d]",
-          joiner_encoder_input_name_.c_str(), encoder_out_dim_,
-          encoder_in_shape[0], encoder_in_shape[1], encoder_in_shape[2]);
+          "The joiner input '%s' should be [1, ?, 1]. Actual: [%d, %d, %d]",
+          joiner_encoder_input_name_.c_str(), encoder_in_shape[0],
+          encoder_in_shape[1], encoder_in_shape[2]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+    encoder_out_dim_ = encoder_in_shape[1];
+
+    // Compute num_encoder_frames from the encoder output shape and
+    // encoder_out_dim (read from the joiner input above).
+    // encoder_out shape differs between models:
+    //   nemotron-speech-streaming-en-0.6b: [1, num_frames, encoder_out_dim]
+    //   nemotron-3.5-asr-streaming-0.6b:  [1, encoder_out_dim, num_frames]
+    // We use encoder_out_dim to determine which dimension is num_frames
+    // and whether the encoder output needs to be transposed.
+    auto enc_out_shape = encoder_->TensorShape("encoder_out");
+    int64_t total = enc_out_shape[1] * enc_out_shape[2];
+    num_encoder_frames_ = static_cast<int32_t>(total / encoder_out_dim_);
+
+    // If encoder_out is [1, encoder_out_dim, num_frames], we need to
+    // transpose it to [1, num_frames, encoder_out_dim] before returning.
+    // If it is [1, num_frames, encoder_out_dim], no transpose needed.
+    encoder_out_needs_transpose_ = (enc_out_shape[1] == encoder_out_dim_);
+
+    subsampling_factor_ = window_shift_ / num_encoder_frames_;
+    if (subsampling_factor_ <= 0) {
+      SHERPA_ONNX_LOGE(
+          "Invalid subsampling factor: %d (window_shift=%d, "
+          "num_encoder_frames=%d)",
+          subsampling_factor_, window_shift_, num_encoder_frames_);
       SHERPA_ONNX_EXIT(-1);
     }
 
     auto decoder_in_shape = joiner_->TensorShape(joiner_decoder_input_name_);
     if (decoder_in_shape.size() != 3 || decoder_in_shape[0] != 1 ||
-        decoder_in_shape[1] != decoder_out_dim_ || decoder_in_shape[2] != 1) {
+        decoder_in_shape[2] != 1) {
       SHERPA_ONNX_LOGE(
-          "The joiner input '%s' should be [1, %d, 1]. Actual: [%d, %d, %d]",
-          joiner_decoder_input_name_.c_str(), decoder_out_dim_,
-          decoder_in_shape[0], decoder_in_shape[1], decoder_in_shape[2]);
+          "The joiner input '%s' should be [1, ?, 1]. Actual: [%d, %d, %d]",
+          joiner_decoder_input_name_.c_str(), decoder_in_shape[0],
+          decoder_in_shape[1], decoder_in_shape[2]);
       SHERPA_ONNX_EXIT(-1);
     }
+    decoder_out_dim_ = decoder_in_shape[1];
 
     auto out_shape = joiner_->TensorShape(joiner_output_name_);
     // The joiner output can be 2D [1, vocab_size] or 4D [1, 1, 1, vocab_size]
@@ -700,13 +791,20 @@ class OnlineNemoTransducerModelQnn::Impl {
     vocab_size_ = out_shape.back();
 
     if (config_.debug) {
-      SHERPA_ONNX_LOGE("joiner input '%s': [1, %d]",
-                        joiner_encoder_input_name_.c_str(), encoder_out_dim_);
-      SHERPA_ONNX_LOGE("joiner input '%s': [1, %d]",
-                        joiner_decoder_input_name_.c_str(), decoder_out_dim_);
+      SHERPA_ONNX_LOGE("encoder_out shape: [%d, %d, %d]", enc_out_shape[0],
+                       enc_out_shape[1], enc_out_shape[2]);
+      SHERPA_ONNX_LOGE("encoder_out_dim: %d, num_encoder_frames: %d, "
+                       "needs_transpose: %d",
+                       encoder_out_dim_, num_encoder_frames_,
+                       encoder_out_needs_transpose_);
+      SHERPA_ONNX_LOGE("subsampling_factor: %d", subsampling_factor_);
+      SHERPA_ONNX_LOGE("joiner input '%s': [1, %d, 1]",
+                       joiner_encoder_input_name_.c_str(), encoder_out_dim_);
+      SHERPA_ONNX_LOGE("joiner input '%s': [1, %d, 1]",
+                       joiner_decoder_input_name_.c_str(), decoder_out_dim_);
       SHERPA_ONNX_LOGE("joiner output '%s': rank %d, vocab_size %d",
-                        joiner_output_name_.c_str(),
-                        static_cast<int32_t>(out_shape.size()), vocab_size_);
+                       joiner_output_name_.c_str(),
+                       static_cast<int32_t>(out_shape.size()), vocab_size_);
     }
   }
 
@@ -740,6 +838,7 @@ class OnlineNemoTransducerModelQnn::Impl {
   int32_t window_size_ = 0;
   int32_t window_shift_ = 0;
   int32_t num_encoder_frames_ = 0;
+  bool encoder_out_needs_transpose_ = false;
   int32_t subsampling_factor_ = 0;
   int32_t feat_dim_ = 0;
   int32_t encoder_out_dim_ = 0;
@@ -748,6 +847,7 @@ class OnlineNemoTransducerModelQnn::Impl {
   int32_t h_size_ = 0;
   int32_t c_size_ = 0;
   std::string normalization_type_;  // "" or "per_feature"
+  bool has_prompt_index_ = false;
 };
 
 OnlineNemoTransducerModelQnn::OnlineNemoTransducerModelQnn(
@@ -768,8 +868,9 @@ OnlineNemoTransducerModelQnn::GetEncoderInitStates() const {
 
 std::vector<float> OnlineNemoTransducerModelQnn::RunEncoder(
     std::vector<float> features, int32_t num_frames,
-    std::vector<OnlineStreamStateTensor> *states) const {
-  return impl_->RunEncoder(std::move(features), num_frames, states);
+    std::vector<OnlineStreamStateTensor> *states, int32_t prompt_index) const {
+  return impl_->RunEncoder(std::move(features), num_frames, states,
+                           prompt_index);
 }
 
 std::pair<std::vector<float>, std::vector<std::vector<float>>>
@@ -813,6 +914,11 @@ int32_t OnlineNemoTransducerModelQnn::SubsamplingFactor() const {
 
 const std::string &OnlineNemoTransducerModelQnn::NormalizationType() const {
   return impl_->NormalizationType();
+}
+
+int32_t OnlineNemoTransducerModelQnn::GetLanguagePromptId(
+    const std::string &language) const {
+  return impl_->GetLanguagePromptId(language);
 }
 
 std::vector<std::vector<float>>
