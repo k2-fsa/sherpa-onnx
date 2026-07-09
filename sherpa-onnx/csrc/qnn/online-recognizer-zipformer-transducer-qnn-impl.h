@@ -63,7 +63,6 @@ inline OnlineRecognizerResult ConvertQnnResult(
 
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
-  r.ys_probs = std::move(src.ys_probs);
 
   std::string text;
   for (auto i : src.tokens) {

@@ -349,8 +349,7 @@ std::vector<float> &OnlineStream::GetParaformerAlphaCache() {
   return impl_->GetParaformerAlphaCache();
 }
 
-void OnlineStream::SetOption(const std::string &key,
-                             const std::string &value) {
+void OnlineStream::SetOption(const std::string &key, const std::string &value) {
   impl_->SetOption(key, value);
 }
 

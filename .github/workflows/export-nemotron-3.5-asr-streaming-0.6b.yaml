@@ -3,7 +3,7 @@ name: export-nemotron-3-5-asr-streaming-06b
 on:
   push:
     branches:
-      - export-nemotron-3-5-asr-streaming
+      - nemotron-3.5-qnn-2
   workflow_dispatch:
 
 concurrency:
@@ -11,23 +11,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  export-nemotron-3-5-asr-streaming-0-6b-to-onnx:
+  onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: nemotron-3-5-asr-streaming-0-6b-to-onnx
-    runs-on: ${{ matrix.os }}
+    name: Export onnx ${{ matrix.chunk_size_ms }}ms
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
-        python-version: ["3.12"]
+        chunk_size_ms: [80, 160, 320, 560, 1120]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
 
       - name: Install NeMo
         shell: bash
@@ -50,14 +49,14 @@ jobs:
 
           sherpa-onnx-version
 
-      - name: Run
+      - name: Export ${{ matrix.chunk_size_ms }}ms
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd scripts/nemo/nemotron-3.5-asr-streaming-0.6b
 
-          python3 ./export_onnx.py
+          python3 ./export_onnx.py --chunk-size-ms ${{ matrix.chunk_size_ms }}
 
           ls -lh
           echo "---"
@@ -66,7 +65,7 @@ jobs:
 
           echo "---"
 
-      - name: Test onnx models
+      - name: Test ${{ matrix.chunk_size_ms }}ms onnx models
         shell: bash
         run: |
           pip install sherpa-onnx-bin
@@ -75,91 +74,86 @@ jobs:
           wget https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
 
           src=scripts/nemo/nemotron-3.5-asr-streaming-0.6b
+          chunk=${{ matrix.chunk_size_ms }}
 
-          for chunk in 80 160 560 1120; do
-            echo "test $chunk int8"
+          echo "test $chunk int8"
 
-            sherpa-onnx \
-              --encoder=$src/$chunk/encoder.int8.onnx \
-              --decoder=$src/$chunk/decoder.int8.onnx \
-              --joiner=$src/$chunk/joiner.int8.onnx \
-              --tokens=$src/tokens.txt \
-              ./2086-149220-0033.wav
+          sherpa-onnx \
+            --encoder=$src/$chunk/encoder.int8.onnx \
+            --decoder=$src/$chunk/decoder.int8.onnx \
+            --joiner=$src/$chunk/joiner.int8.onnx \
+            --tokens=$src/tokens.txt \
+            ./2086-149220-0033.wav
 
-            echo "test $chunk float32"
+          echo "test $chunk float32"
 
-            sherpa-onnx \
-              --encoder=$src/$chunk/encoder.onnx \
-              --decoder=$src/$chunk/decoder.onnx \
-              --joiner=$src/$chunk/joiner.onnx \
-              --tokens=$src/tokens.txt \
-              ./2086-149220-0033.wav
-          done
+          sherpa-onnx \
+            --encoder=$src/$chunk/encoder.onnx \
+            --decoder=$src/$chunk/decoder.onnx \
+            --joiner=$src/$chunk/joiner.onnx \
+            --tokens=$src/tokens.txt \
+            ./2086-149220-0033.wav
 
-      - name: Collect results
+      - name: Collect ${{ matrix.chunk_size_ms }}ms results
         shell: bash
         run: |
           src=scripts/nemo/nemotron-3.5-asr-streaming-0.6b
+          chunk=${{ matrix.chunk_size_ms }}
 
-          for chunk in 80 160 560 1120; do
-            d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
-            mkdir -p $d
+          d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
+          mkdir -p $d
 
-            cp -av $src/$chunk/encoder.onnx $d/
-            cp -av $src/$chunk/encoder.data $d/
-            cp -av $src/$chunk/decoder.onnx $d/
-            cp -av $src/$chunk/joiner.onnx $d/
-            cp -av $src/tokens.txt $d/
-            cat >$d/README.md <<EOF
-            # Introduction
-            This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
+          cp -av $src/$chunk/encoder.onnx $d/
+          cp -av $src/$chunk/encoder.data $d/
+          cp -av $src/$chunk/decoder.onnx $d/
+          cp -av $src/$chunk/joiner.onnx $d/
+          cp -av $src/tokens.txt $d/
 
-            The chunk size is ${chunk}ms for the exported ONNX model.
+          cat >$d/README.md <<EOF
+          # Introduction
+          This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
 
-            Use per-stream language strings such as "en", "ja", or "auto".
+          The chunk size is ${chunk}ms for the exported ONNX model.
+
+          Use per-stream language strings such as "en", "ja", or "auto".
           EOF
 
-            ls -lh $d
+          ls -lh $d
 
-            d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-int8-2026-06-11
-            mkdir -p $d
+          d=sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-int8-2026-06-11
+          mkdir -p $d
 
-            cp -av $src/${chunk}/encoder.int8.onnx $d/
-            cp -av $src/${chunk}/decoder.int8.onnx $d/
-            cp -av $src/${chunk}/joiner.int8.onnx $d/
-            cp -av $src/tokens.txt $d/
-            cat >$d/README.md <<EOF
-            # Introduction
-            This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
+          cp -av $src/${chunk}/encoder.int8.onnx $d/
+          cp -av $src/${chunk}/decoder.int8.onnx $d/
+          cp -av $src/${chunk}/joiner.int8.onnx $d/
+          cp -av $src/tokens.txt $d/
+          cat >$d/README.md <<EOF
+          # Introduction
+          This model is from https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b
 
-            The chunk size is ${chunk}ms for the exported ONNX model.
+          The chunk size is ${chunk}ms for the exported ONNX model.
 
-            Use per-stream language strings such as "en", "ja", or "auto".
+          Use per-stream language strings such as "en", "ja", or "auto".
           EOF
 
-            ls -lh $d
-          done
+          ls -lh $d
 
       - name: Download test waves
         shell: bash
         run: |
           mkdir test_wavs
           pushd test_wavs
-          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/en.wav
-          curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/test_wavs/ja.wav
+
+          for lang in ar de es fr ja ko uk vi zh; do
+            wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
+          done
+
           popd
 
+          chunk=${{ matrix.chunk_size_ms }}
           models=(
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-int8-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
-            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-int8-2026-06-11
+            sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
           )
           for m in ${models[@]}; do
             cp -av test_wavs $m
@@ -200,17 +194,10 @@ jobs:
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
+            chunk=${{ matrix.chunk_size_ms }}
             models=(
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-int8-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-int8-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-int8-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-int8-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-80ms-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-160ms-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-320ms-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-2026-06-11
-              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-1120ms-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-int8-2026-06-11
+              sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-${chunk}ms-2026-06-11
             )
 
             for m in ${models[@]}; do

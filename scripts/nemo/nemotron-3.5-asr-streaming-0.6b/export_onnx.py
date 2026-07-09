@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright      2026  Julian Pscheid
+import argparse
 import inspect
 import json
 import os
@@ -259,6 +260,18 @@ def export_prompted_encoder(
 
 @torch.no_grad()
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--chunk-size-ms",
+        type=int,
+        required=True,
+        choices=[80, 160, 320, 560, 1120],
+        help="Chunk size in milliseconds",
+    )
+    args = parser.parse_args()
+
+    ms = args.chunk_size_ms
+
     model_name = "nvidia/nemotron-3.5-asr-streaming-0.6b"
 
     asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
@@ -274,118 +287,116 @@ def main():
     print("streaming_cfg", asr_model.encoder.streaming_cfg)
     print("prompt_dictionary", prompt_dictionary)
 
-    chunk_size_ms_list = [80, 160, 320, 560, 1120]
-    for ms in chunk_size_ms_list:
-        chunk_size = ms // 80 - 1
-        print("chunk_size", chunk_size)
-        asr_model.encoder.set_default_att_context_size([56, chunk_size])
+    chunk_size = ms // 80 - 1
+    print("chunk_size", chunk_size)
+    asr_model.encoder.set_default_att_context_size([56, chunk_size])
 
-        print("streaming_cfg", asr_model.encoder.streaming_cfg)
-        print("att_context_size", asr_model.encoder.att_context_size)
-        print(
-            "pre_encode_cache_size",
-            asr_model.encoder.streaming_cfg.pre_encode_cache_size,
+    print("streaming_cfg", asr_model.encoder.streaming_cfg)
+    print("att_context_size", asr_model.encoder.att_context_size)
+    print(
+        "pre_encode_cache_size",
+        asr_model.encoder.streaming_cfg.pre_encode_cache_size,
+    )
+
+    if isinstance(asr_model.encoder.streaming_cfg.pre_encode_cache_size, list):
+        pre_encode_cache_size = (
+            asr_model.encoder.streaming_cfg.pre_encode_cache_size[1]
+        )
+    else:
+        pre_encode_cache_size = (
+            asr_model.encoder.streaming_cfg.pre_encode_cache_size
         )
 
-        if isinstance(asr_model.encoder.streaming_cfg.pre_encode_cache_size, list):
-            pre_encode_cache_size = (
-                asr_model.encoder.streaming_cfg.pre_encode_cache_size[1]
-            )
-        else:
-            pre_encode_cache_size = (
-                asr_model.encoder.streaming_cfg.pre_encode_cache_size
-            )
+    if isinstance(asr_model.encoder.streaming_cfg.chunk_size, list):
+        chunk_size = asr_model.encoder.streaming_cfg.chunk_size[1]
+    else:
+        chunk_size = asr_model.encoder.streaming_cfg.chunk_size
 
-        if isinstance(asr_model.encoder.streaming_cfg.chunk_size, list):
-            chunk_size = asr_model.encoder.streaming_cfg.chunk_size[1]
-        else:
-            chunk_size = asr_model.encoder.streaming_cfg.chunk_size
+    window_size = chunk_size + pre_encode_cache_size
 
-        window_size = chunk_size + pre_encode_cache_size
+    print("chunk_size", chunk_size)
+    print("pre_encode_cache_size", pre_encode_cache_size)
+    print("window_size", window_size)
 
-        print("chunk_size", chunk_size)
-        print("pre_encode_cache_size", pre_encode_cache_size)
-        print("window_size", window_size)
+    chunk_shift = chunk_size
 
-        chunk_shift = chunk_size
+    # cache_last_channel: (batch_size, dim1, dim2, dim3)
+    cache_last_channel_dim1 = len(asr_model.encoder.layers)
+    cache_last_channel_dim2 = (
+        asr_model.encoder.streaming_cfg.last_channel_cache_size
+    )
+    cache_last_channel_dim3 = asr_model.encoder.d_model
 
-        # cache_last_channel: (batch_size, dim1, dim2, dim3)
-        cache_last_channel_dim1 = len(asr_model.encoder.layers)
-        cache_last_channel_dim2 = (
-            asr_model.encoder.streaming_cfg.last_channel_cache_size
+    # cache_last_time: (batch_size, dim1, dim2, dim3)
+    cache_last_time_dim1 = len(asr_model.encoder.layers)
+    cache_last_time_dim2 = asr_model.encoder.d_model
+    cache_last_time_dim3 = asr_model.encoder.conv_context_size[0]
+
+    asr_model.set_export_config({"cache_support": True})
+
+    export_prompted_encoder(
+        asr_model=asr_model,
+        window_size=window_size,
+        cache_last_channel_dim1=cache_last_channel_dim1,
+        cache_last_channel_dim2=cache_last_channel_dim2,
+        cache_last_channel_dim3=cache_last_channel_dim3,
+        cache_last_time_dim1=cache_last_time_dim1,
+        cache_last_time_dim2=cache_last_time_dim2,
+        cache_last_time_dim3=cache_last_time_dim3,
+        auto_prompt_id=auto_prompt_id,
+    )
+    asr_model.decoder.export("decoder.onnx")
+    asr_model.joint.export("joiner.onnx")
+
+    normalize_type = asr_model.cfg.preprocessor.normalize
+    if normalize_type == "NA":
+        normalize_type = ""
+
+    meta_data = {
+        "vocab_size": asr_model.decoder.vocab_size,
+        "window_size": window_size,
+        "chunk_size_ms": ms,
+        "chunk_shift": chunk_shift,
+        "normalize_type": normalize_type,
+        "cache_last_channel_dim1": cache_last_channel_dim1,
+        "cache_last_channel_dim2": cache_last_channel_dim2,
+        "cache_last_channel_dim3": cache_last_channel_dim3,
+        "cache_last_time_dim1": cache_last_time_dim1,
+        "cache_last_time_dim2": cache_last_time_dim2,
+        "cache_last_time_dim3": cache_last_time_dim3,
+        "pred_rnn_layers": asr_model.decoder.pred_rnn_layers,
+        "pred_hidden": asr_model.decoder.pred_hidden,
+        "subsampling_factor": 8,
+        "feat_dim": 128,
+        "model_type": type(asr_model).__name__,
+        "version": "1",
+        "model_author": "NeMo",
+        "url": f"https://huggingface.co/{model_name}",
+        "comment": "Only the transducer branch is exported",
+        "prompt_dictionary": json.dumps(
+            _normalize_prompt_dictionary(prompt_dictionary), sort_keys=True
+        ),
+        "auto_prompt_id": auto_prompt_id,
+    }
+    print("meta_data", meta_data)
+    add_meta_data("encoder.onnx", meta_data)
+
+    for m in ["encoder", "decoder", "joiner"]:
+        quantize_dynamic(
+            model_input=f"{m}.onnx",
+            model_output=f"{m}.int8.onnx",
+            weight_type=QuantType.QUInt8,
         )
-        cache_last_channel_dim3 = asr_model.encoder.d_model
 
-        # cache_last_time: (batch_size, dim1, dim2, dim3)
-        cache_last_time_dim1 = len(asr_model.encoder.layers)
-        cache_last_time_dim2 = asr_model.encoder.d_model
-        cache_last_time_dim3 = asr_model.encoder.conv_context_size[0]
+    Path(str(ms)).mkdir(exist_ok=True)
+    for suffix in ["onnx", "data"]:
+        for p in Path(".").glob(f"*.{suffix}"):
+            p.rename(Path(str(ms)) / p.name)
 
-        asr_model.set_export_config({"cache_support": True})
-
-        export_prompted_encoder(
-            asr_model=asr_model,
-            window_size=window_size,
-            cache_last_channel_dim1=cache_last_channel_dim1,
-            cache_last_channel_dim2=cache_last_channel_dim2,
-            cache_last_channel_dim3=cache_last_channel_dim3,
-            cache_last_time_dim1=cache_last_time_dim1,
-            cache_last_time_dim2=cache_last_time_dim2,
-            cache_last_time_dim3=cache_last_time_dim3,
-            auto_prompt_id=auto_prompt_id,
-        )
-        asr_model.decoder.export("decoder.onnx")
-        asr_model.joint.export("joiner.onnx")
-
-        normalize_type = asr_model.cfg.preprocessor.normalize
-        if normalize_type == "NA":
-            normalize_type = ""
-
-        meta_data = {
-            "vocab_size": asr_model.decoder.vocab_size,
-            "window_size": window_size,
-            "chunk_size_ms": ms,
-            "chunk_shift": chunk_shift,
-            "normalize_type": normalize_type,
-            "cache_last_channel_dim1": cache_last_channel_dim1,
-            "cache_last_channel_dim2": cache_last_channel_dim2,
-            "cache_last_channel_dim3": cache_last_channel_dim3,
-            "cache_last_time_dim1": cache_last_time_dim1,
-            "cache_last_time_dim2": cache_last_time_dim2,
-            "cache_last_time_dim3": cache_last_time_dim3,
-            "pred_rnn_layers": asr_model.decoder.pred_rnn_layers,
-            "pred_hidden": asr_model.decoder.pred_hidden,
-            "subsampling_factor": 8,
-            "feat_dim": 128,
-            "model_type": type(asr_model).__name__,
-            "version": "1",
-            "model_author": "NeMo",
-            "url": f"https://huggingface.co/{model_name}",
-            "comment": "Only the transducer branch is exported",
-            "prompt_dictionary": json.dumps(
-                _normalize_prompt_dictionary(prompt_dictionary), sort_keys=True
-            ),
-            "auto_prompt_id": auto_prompt_id,
-        }
-        print("meta_data", meta_data)
-        add_meta_data("encoder.onnx", meta_data)
-
-        for m in ["encoder", "decoder", "joiner"]:
-            quantize_dynamic(
-                model_input=f"{m}.onnx",
-                model_output=f"{m}.int8.onnx",
-                weight_type=QuantType.QUInt8,
-            )
-
-        Path(str(ms)).mkdir(exist_ok=True)
-        for suffix in ["onnx", "data"]:
-            for p in Path(".").glob(f"*.{suffix}"):
-                p.rename(Path(str(ms)) / p.name)
-
-        print(meta_data)
-        print(f"Saved exported models to {ms}")
-        remove_export_scratch_files()
-        os.system(f"ls -lh {ms}")
+    print(meta_data)
+    print(f"Saved exported models to {ms}")
+    remove_export_scratch_files()
+    os.system(f"ls -lh {ms}")
 
 
 if __name__ == "__main__":

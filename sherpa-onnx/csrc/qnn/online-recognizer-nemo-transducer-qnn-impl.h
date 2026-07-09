@@ -6,11 +6,13 @@
 #define SHERPA_ONNX_CSRC_QNN_ONLINE_RECOGNIZER_NEMO_TRANSDUCER_QNN_IMPL_H_
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <memory>
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -34,16 +36,8 @@ inline OnlineRecognizerResult ConvertResult(
     float frame_shift_ms, int32_t subsampling_factor, int32_t segment,
     int32_t frames_since_start) {
   OnlineRecognizerResult r;
-
-  // The first token is the initial blank_id_ used to bootstrap the decoder.
-  // Remove it before processing.
-  if (!src.tokens.empty()) {
-    src.tokens.erase(src.tokens.begin());
-  }
-
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
-  r.ys_probs = std::move(src.ys_probs);
 
   std::string text;
   for (auto i : src.tokens) {
@@ -98,6 +92,7 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
       sym_ = SymbolTable(config.model_config.tokens, true);
     }
     ValidateBlankId();
+    InitLanguageTagTokenIds();
     SetupFeatConfig();
     InitResultTemplate();
   }
@@ -117,6 +112,7 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
       sym_ = SymbolTable(mgr, config.model_config.tokens);
     }
     ValidateBlankId();
+    InitLanguageTagTokenIds();
     SetupFeatConfig();
     InitResultTemplate();
   }
@@ -145,11 +141,17 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
     for (int32_t i = 0; i != n; ++i) {
       auto *s = ss[i];
+
+      // Get prompt index for Nemotron 3.5 ASR.
+      int32_t prompt_index =
+          model_->GetLanguagePromptId(s->GetOption("language"));
+
       std::vector<float> features =
           s->GetFrames(s->GetNumProcessedFrames(), model_->WindowSize());
 
       auto encoder_out = model_->RunEncoder(
-          std::move(features), model_->WindowSize(), &s->GetQnnStates());
+          std::move(features), model_->WindowSize(), &s->GetQnnStates(),
+          prompt_index);
 
       int32_t num_processed = s->GetNumProcessedFrames();
       // Each encoder output frame corresponds to subsampling_factor input
@@ -204,9 +206,18 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
 
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
     int32_t frame_shift_ms = 10;
-    auto r = nemo_transducer_qnn_impl::ConvertResult(
-        s->GetQnnResult(), sym_, frame_shift_ms, subsampling_factor_,
-        s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    const auto &decoder_result = s->GetQnnResult();
+    bool has_language_tag = !language_tag_token_ids_.empty() &&
+                            ContainsLanguageTag(decoder_result);
+    auto r = has_language_tag
+                 ? nemo_transducer_qnn_impl::ConvertResult(
+                       FilterLanguageTags(decoder_result), sym_, frame_shift_ms,
+                       subsampling_factor_, s->GetCurrentSegment(),
+                       s->GetNumFramesSinceStart())
+                 : nemo_transducer_qnn_impl::ConvertResult(
+                       decoder_result, sym_, frame_shift_ms,
+                       subsampling_factor_, s->GetCurrentSegment(),
+                       s->GetNumFramesSinceStart());
     r.text = ApplyInverseTextNormalization(std::move(r.text));
     r.text = ApplyHomophoneReplacer(std::move(r.text));
     return r;
@@ -228,13 +239,11 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
 
   void Reset(OnlineStream *s) const override {
     const auto &last = s->GetQnnResult();
-    if (!last.tokens.empty() && last.tokens.back() != blank_id_ &&
-        static_cast<int32_t>(last.tokens.size()) > 1) {
+    if (!last.tokens.empty()) {
       s->GetCurrentSegment() += 1;
     }
 
     OnlineTransducerDecoderResultNoOrt r;
-    r.tokens.push_back(blank_id_);
 
     // Carry over decoder states from the last result for warm-up.
     if (!last.states.empty()) {
@@ -286,9 +295,9 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
   }
 
   void InitResultTemplate() {
-    result_template_.tokens.push_back(blank_id_);
-
     // Run decoder with blank to get the initial decoder_out and states.
+    // Do NOT add blank to tokens — follow the ONNX impl pattern where
+    // r.tokens only contains non-blank tokens.
     auto [decoder_out, next_states] =
         model_->RunDecoder(blank_id_, model_->GetDecoderInitState());
     result_template_.decoder_out = std::move(decoder_out);
@@ -298,6 +307,72 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
   }
 
  private:
+  static bool IsLanguageTagToken(const std::string &sym) {
+    if (sym.size() < 4 || sym.front() != '<' || sym.back() != '>') {
+      return false;
+    }
+
+    size_t i = 1;
+    int32_t num_lowercase = 0;
+    while (i + 1 < sym.size() && num_lowercase != 3 &&
+           std::islower(static_cast<unsigned char>(sym[i]))) {
+      ++i;
+      ++num_lowercase;
+    }
+
+    if (num_lowercase < 2) {
+      return false;
+    }
+
+    if (i == sym.size() - 1) {
+      return true;
+    }
+
+    if (sym[i] != '-' || i + 3 != sym.size() - 1) {
+      return false;
+    }
+
+    return std::isupper(static_cast<unsigned char>(sym[i + 1])) &&
+           std::isupper(static_cast<unsigned char>(sym[i + 2]));
+  }
+
+  bool ContainsLanguageTag(
+      const OnlineTransducerDecoderResultNoOrt &src) const {
+    for (auto token : src.tokens) {
+      if (language_tag_token_ids_.count(token)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void InitLanguageTagTokenIds() {
+    for (int32_t i = 0; i != sym_.NumSymbols(); ++i) {
+      if (sym_.Contains(i) && IsLanguageTagToken(sym_[i])) {
+        language_tag_token_ids_.insert(i);
+      }
+    }
+  }
+
+  OnlineTransducerDecoderResultNoOrt FilterLanguageTags(
+      const OnlineTransducerDecoderResultNoOrt &src) const {
+    OnlineTransducerDecoderResultNoOrt ans;
+    ans.frame_offset = src.frame_offset;
+    ans.num_trailing_blanks = src.num_trailing_blanks;
+
+    for (size_t i = 0; i != src.tokens.size(); ++i) {
+      if (language_tag_token_ids_.count(src.tokens[i])) {
+        continue;
+      }
+      ans.tokens.push_back(src.tokens[i]);
+      if (i < src.timestamps.size()) {
+        ans.timestamps.push_back(src.timestamps[i]);
+      }
+    }
+
+    return ans;
+  }
+
   OnlineRecognizerConfig config_;
   Endpoint endpoint_;
   std::unique_ptr<OnlineNemoTransducerModelQnn> model_;
@@ -306,6 +381,7 @@ class OnlineRecognizerNemoTransducerQnnImpl : public OnlineRecognizerImpl {
   int32_t blank_id_ = 0;
   int32_t subsampling_factor_ = 8;  // will be overwritten in InitResultTemplate
   OnlineTransducerDecoderResultNoOrt result_template_;
+  std::unordered_set<int64_t> language_tag_token_ids_;
 };
 
 }  // namespace sherpa_onnx

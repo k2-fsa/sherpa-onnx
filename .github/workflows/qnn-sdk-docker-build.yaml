@@ -3,7 +3,7 @@ name: Build docker image for qnn SDK
 on:
   push:
     branches:
-      - docker-qnn-2
+      - docker-qnn
   workflow_dispatch:
 
 jobs:
