@@ -79,10 +79,21 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
     ans.samples.insert(ans.samples.end(), samples.begin() + i,
                        samples.begin() + interval.start);
     i = interval.end;
-    int32_t n = static_cast<int32_t>((interval.end - interval.start) * scale);
+    int32_t len = interval.end - interval.start;
+    int32_t n = static_cast<int32_t>(len * scale);
 
-    ans.samples.insert(ans.samples.end(), samples.begin() + interval.start,
-                       samples.begin() + interval.start + n);
+    if (n <= len) {
+      ans.samples.insert(ans.samples.end(), samples.begin() + interval.start,
+                         samples.begin() + interval.start + n);
+    } else {
+      // scale > 1: copying n samples from interval.start would run past the
+      // end of the pause into the following speech (audible as a repeated
+      // word onset) and can read out of bounds on the final interval.
+      // Copy the pause once, then extend it with silence.
+      ans.samples.insert(ans.samples.end(), samples.begin() + interval.start,
+                         samples.begin() + interval.end);
+      ans.samples.insert(ans.samples.end(), n - len, 0.0f);
+    }
   }
 
   if (i < num_samples) {
