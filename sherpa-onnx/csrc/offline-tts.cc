@@ -31,19 +31,26 @@ struct SilenceInterval {
   int32_t end;
 };
 
+// Supported range for --tts-silence-scale. The lower bound keeps a pause from
+// collapsing to nothing; the upper bound is a sanity limit, far below the
+// value at which interval_length * scale would overflow an int32_t.
+static constexpr float kMinSilenceScale = 0.01f;
+static constexpr float kMaxSilenceScale = 10.0f;
+
 GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   if (scale == 1) {
     return *this;
   }
 
-  // scale is used to shorten long pauses, so it is normally within (0, 1).
-  // Values outside this range are rejected: n below is computed as
-  // interval_length * scale and converted to an int32_t, and NaN, infinity or
-  // a very large scale make that conversion undefined. Note that any
-  // comparison with NaN is false, so NaN is rejected here as well.
-  if (!(scale >= 0.01f && scale <= 2.0f)) {
-    SHERPA_ONNX_LOGE("Silence scale %f is not in [0.01, 2]. Skip scaling.",
-                     scale);
+  // scale is normally within (0, 1), since it is used to shorten long pauses,
+  // but scaling a pause up is also useful. Values outside the supported range
+  // are rejected: n below is computed as interval_length * scale and converted
+  // to an int32_t, and NaN, infinity or a very large scale make that
+  // conversion undefined. Note that any comparison with NaN is false, so NaN
+  // is rejected here as well.
+  if (!(scale >= kMinSilenceScale && scale <= kMaxSilenceScale)) {
+    SHERPA_ONNX_LOGE("Silence scale %f is not in [%.2f, %.2f]. Skip scaling.",
+                     scale, kMinSilenceScale, kMaxSilenceScale);
     return *this;
   }
   // if the interval is larger than 0.2 second, then we assume it is a pause
@@ -195,7 +202,7 @@ void OfflineTtsConfig::Register(ParseOptions *po) {
 
   po->Register("tts-silence-scale", &silence_scale,
                "Duration of the pause is scaled by this number. So a smaller "
-               "value leads to a shorter pause.");
+               "value leads to a shorter pause. Must be in [0.01, 10].");
 }
 
 bool OfflineTtsConfig::Validate() const {
@@ -221,8 +228,10 @@ bool OfflineTtsConfig::Validate() const {
     }
   }
 
-  if (silence_scale < 0.001) {
-    SHERPA_ONNX_LOGE("--tts-silence-scale '%.3f' is too small", silence_scale);
+  if (!(silence_scale >= kMinSilenceScale &&
+        silence_scale <= kMaxSilenceScale)) {
+    SHERPA_ONNX_LOGE("--tts-silence-scale '%.3f' is not in [%.2f, %.2f]",
+                     silence_scale, kMinSilenceScale, kMaxSilenceScale);
     return false;
   }
 
