@@ -35,6 +35,17 @@ GeneratedAudio GeneratedAudio::ScaleSilence(float scale) const {
   if (scale == 1) {
     return *this;
   }
+
+  // scale is used to shorten long pauses, so it is normally within (0, 1).
+  // Values outside this range are rejected: n below is computed as
+  // interval_length * scale and converted to an int32_t, and NaN, infinity or
+  // a very large scale make that conversion undefined. Note that any
+  // comparison with NaN is false, so NaN is rejected here as well.
+  if (!(scale >= 0.01f && scale <= 2.0f)) {
+    SHERPA_ONNX_LOGE("Silence scale %f is not in [0.01, 2]. Skip scaling.",
+                     scale);
+    return *this;
+  }
   // if the interval is larger than 0.2 second, then we assume it is a pause
   int32_t threshold = static_cast<int32_t>(sample_rate * 0.2);
 
