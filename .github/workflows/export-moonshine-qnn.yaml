@@ -153,6 +153,7 @@ jobs:
       matrix:
         ${{ fromJson(needs.generate_qnn_batches.outputs.batch0) }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/qnn-moonshine
         with:
           model_name: ${{ matrix.model_name }}
@@ -171,6 +172,7 @@ jobs:
       matrix:
         ${{ fromJson(needs.generate_qnn_batches.outputs.batch1) }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/qnn-moonshine
         with:
           model_name: ${{ matrix.model_name }}
@@ -189,6 +191,7 @@ jobs:
       matrix:
         ${{ fromJson(needs.generate_qnn_batches.outputs.batch2) }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/qnn-moonshine
         with:
           model_name: ${{ matrix.model_name }}
@@ -207,6 +210,7 @@ jobs:
       matrix:
         ${{ fromJson(needs.generate_qnn_batches.outputs.batch3) }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/qnn-moonshine
         with:
           model_name: ${{ matrix.model_name }}
