@@ -211,16 +211,25 @@ class TextDecoderTensorCache(nn.Module):
         )
 
         cos, sin = position_embeddings
-        cos = cos.unsqueeze(1)
+        cos = cos.unsqueeze(1)  # (1, 1, 1, rotary_dim)
         sin = sin.unsqueeze(1)
         rotary_dim = cos.shape[-1]
-        cos_half = cos[..., : rotary_dim // 2].repeat_interleave(2, dim=-1)
-        sin_half = sin[..., : rotary_dim // 2].repeat_interleave(2, dim=-1)
 
-        # Repeat to match num_heads for QNN compatibility (avoid broadcasting)
+        # Interleave cos/sin without repeat_interleave (avoids 5D tensors for QNN)
+        # cos[..., :half] has shape (1, 1, 1, half), expand to (1, 1, 1, rotary_dim)
+        cos_half = cos[..., : rotary_dim // 2]
+        sin_half = sin[..., : rotary_dim // 2]
+        cos_expanded = torch.zeros_like(cos)
+        sin_expanded = torch.zeros_like(sin)
+        cos_expanded[..., 0::2] = cos_half
+        cos_expanded[..., 1::2] = cos_half
+        sin_expanded[..., 0::2] = sin_half
+        sin_expanded[..., 1::2] = sin_half
+
+        # Expand to match num_heads: (1, 1, 1, rotary_dim) -> (1, num_heads, 1, rotary_dim)
         num_heads = self.decoder.layers[0].self_attn.config.num_attention_heads
-        cos_half = cos_half.repeat(1, num_heads, 1, 1)
-        sin_half = sin_half.repeat(1, num_heads, 1, 1)
+        cos_expanded = cos_expanded.repeat(1, num_heads, 1, 1)
+        sin_expanded = sin_expanded.repeat(1, num_heads, 1, 1)
 
         def rotate_half(x):
             x1 = x[..., 0::2]
@@ -230,7 +239,7 @@ class TextDecoderTensorCache(nn.Module):
         def apply_rotary(x):
             x_rot = x[..., :rotary_dim]
             x_pass = x[..., rotary_dim:]
-            x_rot = x_rot * cos_half + rotate_half(x_rot) * sin_half
+            x_rot = x_rot * cos_expanded + rotate_half(x_rot) * sin_expanded
             return torch.cat([x_rot, x_pass], dim=-1)
 
         this_self_kv_pair = []

@@ -19,7 +19,9 @@ class Config:
 
 def main():
     model_name_list = ["moonshine-base-zh", "moonshine-tiny"]
+    model_name_list = ["moonshine-tiny"]
     num_seconds_list = [3, 5, 8, 10]
+    num_seconds_list = [10]
 
     configs = []
 

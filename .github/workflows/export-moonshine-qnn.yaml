@@ -18,8 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model_name: ["moonshine-base-zh", "moonshine-tiny"]
-        num_seconds: [3, 5, 8, 10]
+        # model_name: ["moonshine-base-zh", "moonshine-tiny"]
+        # num_seconds: [3, 5, 8, 10]
+        model_name: ["moonshine-tiny"]
+        num_seconds: [10]
 
     steps:
       - uses: actions/checkout@v4
