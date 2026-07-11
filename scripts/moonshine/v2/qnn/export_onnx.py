@@ -48,6 +48,15 @@ def causal_mask_1d(n: int, L: int, device=None, dtype=torch.int32):
     return mask
 
 
+def patch_layernorm_bias(model):
+    """Add dummy bias to LayerNorm layers that don't have bias (for QNN compatibility)."""
+    for module in model.modules():
+        if isinstance(module, nn.LayerNorm) and module.bias is None:
+            module.bias = nn.Parameter(torch.zeros(module.normalized_shape, device=module.weight.device, dtype=module.weight.dtype))
+    return model
+
+
+
 # ---------------------------------------------------------------------------
 # Encoder: returns per-layer cross K/V
 # ---------------------------------------------------------------------------
@@ -289,7 +298,8 @@ class TextDecoderTensorCache(nn.Module):
 def token_to_bytes(token: str) -> bytes:
     """Convert a token string to bytes, handling byte tokens like <0xE5>."""
     import re
-    match = re.match(r'^<0x([0-9A-Fa-f]{2})>$', token)
+
+    match = re.match(r"^<0x([0-9A-Fa-f]{2})>$", token)
     if match:
         return bytes([int(match.group(1), 16)])
     else:
@@ -339,6 +349,9 @@ def main():
         args.model_name, torch_dtype=torch.float32, attn_implementation="eager"
     )
     model.eval()
+
+    # Patch LayerNorm to have bias for QNN compatibility
+    model = patch_layernorm_bias(model)
 
     config = model.config
     num_layers = len(model.model.decoder.layers)
@@ -393,9 +406,9 @@ def main():
         (dummy_audio,),
         encoder_filename,
         dynamo=True,
+        opset_version=18,
         input_names=["audio"],
         output_names=output_names,
-        # No dynamic_shapes -> all fixed
     )
 
     # Re-save without external data to avoid duplication
@@ -404,6 +417,21 @@ def main():
     data_file = encoder_filename + ".data"
     if os.path.exists(data_file):
         os.remove(data_file)
+
+    # Simplify with onnxsim to fix QNN converter issues
+    try:
+        import onnxsim
+        print("  Simplifying encoder with onnxsim...")
+        model_onnx = onnx.load(encoder_filename)
+        model_sim, ok = onnxsim.simplify(model_onnx)
+        if ok:
+            onnx.save(model_sim, encoder_filename)
+            print("  Simplified successfully")
+        else:
+            print("  Warning: onnxsim failed, using original model")
+    except ImportError:
+        print("  Warning: onnxsim not installed, skipping simplification")
+
 
     add_meta_data(encoder_filename, meta)
     print(f"  Saved to {encoder_filename}")
@@ -458,9 +486,9 @@ def main():
         (dummy_tokens, dummy_self_kv, dummy_cross_kv, dummy_offset, dummy_mask),
         decoder_filename,
         dynamo=True,
+        opset_version=18,
         input_names=input_names,
         output_names=output_names,
-        # No dynamic_shapes -> all fixed
     )
 
     # Re-save without external data to avoid duplication
@@ -469,6 +497,21 @@ def main():
     data_file = decoder_filename + ".data"
     if os.path.exists(data_file):
         os.remove(data_file)
+
+    # Simplify with onnxsim to fix QNN converter issues
+    try:
+        import onnxsim
+        print("  Simplifying decoder with onnxsim...")
+        model_onnx = onnx.load(decoder_filename)
+        model_sim, ok = onnxsim.simplify(model_onnx)
+        if ok:
+            onnx.save(model_sim, decoder_filename)
+            print("  Simplified successfully")
+        else:
+            print("  Warning: onnxsim failed, using original model")
+    except ImportError:
+        print("  Warning: onnxsim not installed, skipping simplification")
+
 
     add_meta_data(decoder_filename, meta)
     print(f"  Saved to {decoder_filename}")

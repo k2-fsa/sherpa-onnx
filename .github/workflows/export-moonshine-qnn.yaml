@@ -35,7 +35,7 @@ jobs:
           python3 -m pip install \
             torch torchaudio \
             transformers \
-            onnxruntime onnx soundfile librosa onnxscript
+            onnxruntime onnx soundfile librosa onnxscript onnxsim
 
       - name: Export models
         shell: bash
@@ -95,6 +95,7 @@ jobs:
           cp -v $src/*.wav $dst/
           cp -v $src/*.raw $dst/ 2>/dev/null || true
           cp -v $src/*-encoder.txt $dst/ 2>/dev/null || true
+          cp -v $src/*-decoder.txt $dst/ 2>/dev/null || true
 
           ls -lh $dst/
           tar cjvf $dst.tar.bz2 $dst
@@ -247,11 +248,13 @@ jobs:
             cp $model_dir/tokens.txt ./
             cp $model_dir/*.raw ./ 2>/dev/null || true
             cp $model_dir/*-encoder.txt ./ 2>/dev/null || true
+            cp $model_dir/*-decoder.txt ./ 2>/dev/null || true
 
             ls -lh $m.onnx
             ls -lh tokens.txt
             ls -lh *.raw || true
             ls -lh *-encoder.txt || true
+            ls -lh *-decoder.txt || true
 
             if [[ $m == 'encoder' ]]; then
               # quantize encoder using raw input files
@@ -266,13 +269,24 @@ jobs:
                 --act_bitwidth 16 \
                 --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             else
-              # decoder uses float
+              # quantize decoder using raw input files
+              cat *-decoder.txt > decoder.txt
+              head -5 decoder.txt
+
               qnn-onnx-converter \
                 --input_network ./$m.onnx \
                 --output_path ./quant/$m.cpp \
                 --float_bitwidth 16 \
                 --act_bitwidth 16 \
                 --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+
+              # qnn-onnx-converter \
+              #   --input_network ./$m.onnx \
+              #   --output_path ./quant/$m.cpp \
+              #   --input_list decoder.txt \
+              #   --use_native_input_files \
+              #   --act_bitwidth 16 \
+              #   --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             fi
 
             ls -lh quant

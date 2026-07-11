@@ -80,18 +80,13 @@ class OnnxModel:
         audio = audio[np.newaxis, :]  # (1, max_audio_len)
         return self.encoder.run(None, {"audio": audio})
 
-    def save_encoder_input(self, audio, name):
-        """Save encoder input as raw file for quantization."""
-        # Pad or truncate to fixed audio length
+    def get_padded_audio(self, audio):
+        """Pad or truncate audio to fixed length."""
         if len(audio) < self.max_audio_len:
             audio = np.pad(audio, (0, self.max_audio_len - len(audio)))
         else:
             audio = audio[: self.max_audio_len]
-
-        raw_file = f"{name}-audio.raw"
-        audio.tofile(raw_file)
-        print(f"Saved encoder input to {raw_file}")
-        return raw_file
+        return audio
 
     def get_self_cache(self) -> List[np.ndarray]:
         """Pre-allocated zero caches: [self_k_0, self_v_0, self_k_1, self_v_1, ...]."""
@@ -207,18 +202,101 @@ def main():
     audio = load_audio(args.wav)
     print(f"Audio: {audio.shape}, {len(audio)/16000:.2f}s")
 
-    # Save encoder input for quantization
     name = Path(args.wav).stem
-    raw_file = model.save_encoder_input(audio, name)
+
+    # Pad audio to fixed length
+    audio_padded = model.get_padded_audio(audio)
+
+    # Run encoder and collect inputs/outputs for quantization
+    encoder_input_list = []
+    decoder_input_list = []
+
+    # Save encoder input
+    audio_raw = f"{name}-audio.raw"
+    audio_padded.tofile(audio_raw)
+    encoder_input_list.append(audio_raw)
+    print(f"Saved encoder input: {audio_raw}")
+
+    # Run encoder to get cross KV
+    cross_kv = model.run_encoder(audio_padded)
+
+    # Save cross KV outputs (these become decoder inputs)
+    for i in range(model.num_layers):
+        cross_k_raw = f"{name}-cross_k_{i}.raw"
+        cross_v_raw = f"{name}-cross_v_{i}.raw"
+        cross_kv[2 * i].tofile(cross_k_raw)
+        cross_kv[2 * i + 1].tofile(cross_v_raw)
+
+    # Run decoder step by step and collect inputs
+    self_kv = model.get_self_cache()
+    offset = np.array([0], dtype=np.int32)
+    token_id = 1  # BOS
+    max_len = int(len(audio) / 16000 * 15)
+    tokens = []
+
+    for step in range(max_len):
+        if offset.item() >= model.max_seq_len:
+            break
+
+        token = np.array([[token_id]], dtype=np.int64)
+        mask = causal_mask_1d(offset.item(), model.max_seq_len)
+
+        # Save decoder inputs for this step
+        step_prefix = f"{name}-step{step}"
+        token_raw = f"{step_prefix}-token.raw"
+        offset_raw = f"{step_prefix}-offset.raw"
+        mask_raw = f"{step_prefix}-mask.raw"
+
+        token.tofile(token_raw)
+        offset.tofile(offset_raw)
+        mask.tofile(mask_raw)
+
+        # Save self KV caches
+        for i in range(model.num_layers):
+            self_k_raw = f"{step_prefix}-self_k_{i}.raw"
+            self_v_raw = f"{step_prefix}-self_v_{i}.raw"
+            self_kv[2 * i].tofile(self_k_raw)
+            self_kv[2 * i + 1].tofile(self_v_raw)
+
+        # Run decoder
+        logits, this_kv = model.run_decoder(token, self_kv, cross_kv, offset, mask)
+
+        # Update cache externally
+        for i in range(len(this_kv)):
+            self_kv[i][:, offset.item() : offset.item() + 1, :] = this_kv[i]
+
+        token_id = int(np.argmax(logits[0, 0]))
+        offset += 1
+
+        if token_id == 2:  # EOS
+            break
+        tokens.append(token_id)
 
     # Create {name}-encoder.txt for quantization
     encoder_list_file = f"{name}-encoder.txt"
     with open(encoder_list_file, "w") as f:
-        f.write(f"{raw_file}\n")
+        for raw_file in encoder_input_list:
+            f.write(f"{raw_file}\n")
     print(f"Saved {encoder_list_file}")
 
-    print("Decoding...")
-    tokens = model.decode(audio)
+    # Create {name}-decoder.txt for quantization
+    decoder_list_file = f"{name}-decoder.txt"
+    with open(decoder_list_file, "w") as f:
+        for step in range(len(tokens) + 1):  # +1 for BOS step
+            step_prefix = f"{name}-step{step}"
+            # token, self_k_0, self_v_0, ..., self_k_N, self_v_N, cross_k_0, cross_v_0, ..., cross_k_N, cross_v_N, offset, mask
+            parts = [f"{step_prefix}-token.raw"]
+            for i in range(model.num_layers):
+                parts.append(f"{step_prefix}-self_k_{i}.raw")
+                parts.append(f"{step_prefix}-self_v_{i}.raw")
+            for i in range(model.num_layers):
+                parts.append(f"{name}-cross_k_{i}.raw")
+                parts.append(f"{name}-cross_v_{i}.raw")
+            parts.append(f"{step_prefix}-offset.raw")
+            parts.append(f"{step_prefix}-mask.raw")
+            f.write(" ".join(parts) + "\n")
+    print(f"Saved {decoder_list_file}")
+
     print(f"Tokens ({len(tokens)}): {tokens}")
 
     id2token = load_tokens(args.tokens)
