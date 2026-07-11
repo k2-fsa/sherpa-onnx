@@ -271,20 +271,21 @@ jobs:
                 --act_bitwidth 16 \
                 --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             else
-              # decoder: float32 weights, no --float_bitwidth (matches whisper)
-              qnn-onnx-converter \
-                --input_network ./$m.onnx \
-                --output_path ./quant/$m.cpp \
-                --act_bitwidth 16 \
-                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
-
               # qnn-onnx-converter \
               #   --input_network ./$m.onnx \
               #   --output_path ./quant/$m.cpp \
-              #   --input_list decoder.txt \
-              #   --use_native_input_files \
               #   --act_bitwidth 16 \
               #   --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+              cat *-decoder.txt > decoder.txt
+              cat decoder.txt
+
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --input_list decoder.txt \
+                --use_native_input_files \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
             fi
 
             ls -lh quant
