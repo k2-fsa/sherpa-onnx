@@ -844,6 +844,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     list(APPEND sherpa_onnx_test_srcs
       sentence-piece-tokenizer-test.cc
       piper-phonemize-test.cc
+      offline-tts-supertonic-unicode-processor-test.cc
     )
   endif()
 
