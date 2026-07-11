@@ -1,0 +1,423 @@
+name: export-moonshine-qnn
+
+on:
+  push:
+    branches:
+      - export-moonshine-qnn
+  workflow_dispatch:
+
+concurrency:
+  group: export-moonshine-qnn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Export onnx
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model_name: ["moonshine-base-zh", "moonshine-tiny"]
+        num_seconds: [3, 5, 8, 10]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install \
+            torch torchaudio \
+            transformers \
+            onnxruntime onnx soundfile librosa onnxscript
+
+      - name: Export models
+        shell: bash
+        run: |
+          model_name=${{ matrix.model_name }}
+          num_seconds=${{ matrix.num_seconds }}
+
+          echo "model_name: $model_name"
+          echo "num_seconds: $num_seconds"
+
+          cd scripts/moonshine/v2/qnn
+
+          python3 ./export_onnx.py \
+            --model-name UsefulSensors/$model_name \
+            --max-len $num_seconds
+
+          ls -lh *.onnx *.txt
+
+      - name: Download test wav
+        shell: bash
+        run: |
+          cd scripts/moonshine/v2/qnn
+
+          model_name=${{ matrix.model_name }}
+          if [[ $model_name == moonshine-base-zh ]]; then
+            wget -q -O 0.wav https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/zh.wav
+          elif [[ $model_name == moonshine-tiny ]]; then
+            wget -q -O 0.wav https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/en.wav
+          else
+            echo "Unknown model: $model_name"
+            exit 1
+          fi
+
+          ls -lh *.wav
+
+      - name: Test models
+        shell: bash
+        run: |
+          cd scripts/moonshine/v2/qnn
+
+          python3 ./test_onnx.py --wav ./0.wav
+
+      - name: Collect models
+        shell: bash
+        run: |
+          model_name=${{ matrix.model_name }}
+          num_seconds=${{ matrix.num_seconds }}
+
+          src=scripts/moonshine/v2/qnn
+          dst=${model_name}-${num_seconds}s
+
+          mkdir -p $dst
+
+          mv -v $src/encoder.onnx $dst/
+          mv -v $src/decoder.onnx $dst/
+          cp -v $src/tokens.txt $dst/
+          cp -v $src/*.wav $dst/
+          cp -v $src/*.raw $dst/ 2>/dev/null || true
+          cp -v $src/*-encoder.txt $dst/ 2>/dev/null || true
+
+          ls -lh $dst/
+          tar cjvf $dst.tar.bz2 $dst
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.num_seconds }}s
+          path: ./*.tar.bz2
+
+  generate_build_matrix:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generating build matrix
+        id: set-matrix
+        run: |
+          python3 .github/scripts/export-qnn/generate_moonshine.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_moonshine.py)
+
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  qnn:
+    needs: [generate_build_matrix, onnx]
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.num_seconds }}s
+          path: /tmp/
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Extract model files
+        shell: bash
+        run: |
+          model_name=${{ matrix.model_name }}
+          num_seconds=${{ matrix.num_seconds }}
+
+          dir=$PWD
+          mkdir -p model-files
+
+          ls -lh /tmp/
+
+          pushd /tmp
+          echo "model_name: $model_name"
+          echo "num_seconds: $num_seconds"
+
+          src=${model_name}-${num_seconds}s
+
+          ls -lh $src.tar.bz2
+
+          tar xvf $src.tar.bz2
+          rm $src.tar.bz2
+
+          echo "---"
+
+          ls -lh $src/*
+          popd
+
+          mv -v /tmp/$src/* $dir/model-files/
+
+      - name: Show files
+        shell: bash
+        run: |
+          ls -lh model-files
+          echo "---"
+          ls -lh model-files/*
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Create directories
+        shell: bash
+        run: |
+          mkdir so binary
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Show ndk-build help
+        shell: bash
+        run: |
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+          ndk-build --help
+
+      - name: Show space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Run QNN conversion
+        shell: bash
+        run: |
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+
+          export LDFLAGS="-Wl,-z,max-page-size=16384"
+          dir=$PWD
+          model_dir=$PWD/model-files
+          soc=${{ matrix.soc }}
+          model_name=${{ matrix.model_name }}
+          num_seconds=${{ matrix.num_seconds }}
+
+          # Rename moonshine-tiny to moonshine-tiny-en for language tag
+          if [[ $model_name == moonshine-tiny ]]; then
+            dst_name=moonshine-tiny-en
+          else
+            dst_name=$model_name
+          fi
+
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/encoder.onnx
+          python3 ./scripts/pyannote/segmentation/show-onnx.py --filename $model_dir/decoder.onnx
+
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+
+          echo "export to qnn"
+          echo "----------${model_name}-${num_seconds}s----------"
+
+          for m in encoder decoder; do
+            echo "Processing $m"
+            cp $model_dir/$m.onnx ./
+            cp $model_dir/tokens.txt ./
+            cp $model_dir/*.raw ./ 2>/dev/null || true
+            cp $model_dir/*-encoder.txt ./ 2>/dev/null || true
+
+            ls -lh $m.onnx
+            ls -lh tokens.txt
+            ls -lh *.raw || true
+            ls -lh *-encoder.txt || true
+
+            if [[ $m == 'encoder' ]]; then
+              # quantize encoder using raw input files
+              cat *-encoder.txt > encoder.txt
+              cat encoder.txt
+
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --input_list encoder.txt \
+                --use_native_input_files \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+            else
+              # decoder uses float
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --float_bitwidth 16 \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log-converter.txt 2>&1
+            fi
+
+            ls -lh quant
+
+            python3 ./scripts/qnn/generate_config.py  \
+                --soc $soc \
+                --graph-name $m \
+                --output-dir ./quant/my-config-$m \
+                --qnn-sdk-root $QNN_SDK_ROOT
+
+            ls -lh quant/my-config-$m
+
+            head -n100 ./quant/my-config-$m/*.json
+
+            python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+                -c quant/$m.cpp \
+                -b quant/$m.bin \
+                -o quant/model_libs > ${m}-log-generator.txt 2>&1
+
+            ls -lh quant/model_libs
+            echo "---"
+            ls -lh quant/model_libs/x86_64-linux-clang
+            echo "---"
+            ls -lh quant/model_libs/aarch64-android
+
+            $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+              --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+              --model ./quant/model_libs/x86_64-linux-clang/lib$m.so \
+              --output_dir ./quant/binary \
+              --binary_file $m \
+              --config_file ./quant/my-config-$m/htp_backend_extensions.json > ${m}-log-generator.txt 2>&1
+
+            ls -lh quant/binary/
+          done
+
+          readelf -lW quant/model_libs/*/lib*.so
+
+          echo "collect results"
+
+          d=sherpa-onnx-qnn-${{ matrix.soc }}-binary-${dst_name}-${num_seconds}s
+          mkdir -p $d
+          mkdir -p $d/test_wavs
+          cp -v quant/binary/*.bin $d/
+          cp -v $model_dir/tokens.txt $d
+          cp -v $model_dir/*.wav $d/test_wavs
+
+          echo "model_name=${dst_name}" > $d/info.txt
+          echo "num_seconds=${num_seconds}s" >> $d/info.txt
+
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+          ls -lh *.tar.bz2
+          rm -rf $d
+
+          mkdir -p binary
+          mv *.tar.bz2 ./binary/
+
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-${dst_name}-${num_seconds}s-linux-x64
+            elif [[ $p == aarch64-android ]]; then
+              d=sherpa-onnx-qnn-${dst_name}-${num_seconds}s-android-aarch64
+            else
+              echo "Unknown $p"
+              exit -1
+            fi
+
+            mkdir -p $d
+            mkdir -p $d/test_wavs
+
+            cp -v quant/model_libs/$p/lib*.so $d/
+            cp -v $model_dir/tokens.txt $d
+            cp -v $model_dir/*.wav $d/test_wavs
+
+            echo "model_name=${model_name}" > $d/info.txt
+            echo "num_seconds=${num_seconds}s" >> $d/info.txt
+            echo "target=$p" >> $d/info.txt
+
+            ls -lh $d
+            tar cjfv $d.tar.bz2 $d
+            ls -lh *.tar.bz2
+            rm -rf $d
+          done
+
+          echo "----show---"
+          ls -lh *.tar.bz2
+
+          mkdir -p so
+
+          mv *.tar.bz2 ./so
+
+      - name: Setup tmate session
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Show files
+        shell: bash
+        run: |
+          echo "---so---"
+          ls -lh so
+
+          echo "---binary---"
+          ls -lh binary
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.soc }}-${{ matrix.num_seconds }}s-json
+          path: ./quant/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-binary-3
