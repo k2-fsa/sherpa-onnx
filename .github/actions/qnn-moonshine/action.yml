@@ -12,6 +12,10 @@ inputs:
   soc:
     description: Target SoC (e.g., SM8850)
     required: true
+  repo_token:
+    description: GitHub token for releases
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -134,7 +138,7 @@ runs:
         file: ./so/*.tar.bz2
         overwrite: true
         repo_name: k2-fsa/sherpa-onnx
-        repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+        repo_token: ${{ inputs.repo_token }}
         tag: asr-models-qnn-3
 
     - name: Release
@@ -145,7 +149,7 @@ runs:
         file: ./binary/*.tar.bz2
         overwrite: true
         repo_name: k2-fsa/sherpa-onnx
-        repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+        repo_token: ${{ inputs.repo_token }}
         tag: asr-models-qnn-binary-3
 
     - name: Release

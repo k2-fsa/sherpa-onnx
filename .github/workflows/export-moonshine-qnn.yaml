@@ -159,6 +159,7 @@ jobs:
           model_name: ${{ matrix.model_name }}
           num_seconds: ${{ matrix.num_seconds }}
           soc: ${{ matrix.soc }}
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
 
   qnn_batch1:
     needs: [generate_qnn_batches, qnn_batch0]
@@ -178,6 +179,7 @@ jobs:
           model_name: ${{ matrix.model_name }}
           num_seconds: ${{ matrix.num_seconds }}
           soc: ${{ matrix.soc }}
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
 
   qnn_batch2:
     needs: [generate_qnn_batches, qnn_batch1]
@@ -197,6 +199,7 @@ jobs:
           model_name: ${{ matrix.model_name }}
           num_seconds: ${{ matrix.num_seconds }}
           soc: ${{ matrix.soc }}
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
 
   qnn_batch3:
     needs: [generate_qnn_batches, qnn_batch2]
@@ -216,3 +219,4 @@ jobs:
           model_name: ${{ matrix.model_name }}
           num_seconds: ${{ matrix.num_seconds }}
           soc: ${{ matrix.soc }}
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
