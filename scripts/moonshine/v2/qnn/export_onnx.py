@@ -205,7 +205,7 @@ class TextDecoderTensorCache(nn.Module):
 
         # Always decoding 1 token: position_id = offset
         position_ids = offset.to(torch.long).reshape(1, 1)  # (1, 1)
-        hidden_states = self.decoder.embed_tokens(tokens)
+        hidden_states = self.decoder.embed_tokens(tokens.to(torch.long))
         position_embeddings = self.decoder.rotary_emb(
             hidden_states, position_ids=position_ids
         )
@@ -458,7 +458,7 @@ def main():
     print("\nExporting decoder...")
     decoder = TextDecoderTensorCache(model)
 
-    dummy_tokens = torch.tensor([[1]], dtype=torch.int64)
+    dummy_tokens = torch.tensor([[1]], dtype=torch.int32)
     dummy_self_kv = []
     for _ in range(num_layers):
         dummy_self_kv.append(

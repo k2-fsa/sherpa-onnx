@@ -137,7 +137,7 @@ class OnnxModel:
                 print(f"Warning: reached max_seq_len={self.max_seq_len}, stopping")
                 break
 
-            token = np.array([[token_id]], dtype=np.int64)
+            token = np.array([[token_id]], dtype=np.int32)
             mask = causal_mask_1d(offset.item(), self.max_seq_len)
 
             logits, this_kv = self.run_decoder(token, self_kv, cross_kv, offset, mask)
@@ -238,7 +238,7 @@ def main():
         if offset.item() >= model.max_seq_len:
             break
 
-        token = np.array([[token_id]], dtype=np.int64)
+        token = np.array([[token_id]], dtype=np.int32)
         mask = causal_mask_1d(offset.item(), model.max_seq_len)
 
         # Save decoder inputs for this step
