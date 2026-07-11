@@ -117,8 +117,10 @@ def split_self_attention(
         k_n = k_n.repeat_interleave(r, dim=1)
         v_n = v_n.repeat_interleave(r, dim=1)
 
-    qk_cache = (q * scale) @ (k_c * scale).transpose(-1, -2)
-    qk_new = (q * scale) @ (k_n * scale).transpose(-1, -2)
+    # Move scale after matmul to avoid intermediate tensors for QNN compatibility
+    scale_sq = scale * scale
+    qk_cache = (q @ k_c.transpose(-1, -2)) * scale_sq
+    qk_new = (q @ k_n.transpose(-1, -2)) * scale_sq
 
     qk_cache = qk_cache.masked_fill(mask.view(1, 1, 1, max_seq).to(torch.bool), -60000)
 
@@ -168,7 +170,9 @@ def cross_attention(
         k = k.repeat_interleave(r, dim=1)
         v = v.repeat_interleave(r, dim=1)
 
-    w = F.softmax((q * scale) @ (k * scale).transpose(-1, -2), dim=-1).to(q.dtype)
+    # Move scale after matmul to avoid intermediate tensors for QNN compatibility
+    scale_sq = scale * scale
+    w = F.softmax((q @ k.transpose(-1, -2)) * scale_sq, dim=-1).to(q.dtype)
     out = w @ v
 
     if head_dim_padding > 0:
@@ -212,6 +216,11 @@ class TextDecoderTensorCache(nn.Module):
         rotary_dim = cos.shape[-1]
         cos_half = cos[..., : rotary_dim // 2].repeat_interleave(2, dim=-1)
         sin_half = sin[..., : rotary_dim // 2].repeat_interleave(2, dim=-1)
+
+        # Repeat to match num_heads for QNN compatibility (avoid broadcasting)
+        num_heads = self.decoder.layers[0].self_attn.config.num_attention_heads
+        cos_half = cos_half.repeat(1, num_heads, 1, 1)
+        sin_half = sin_half.repeat(1, num_heads, 1, 1)
 
         def rotate_half(x):
             x1 = x[..., 0::2]
