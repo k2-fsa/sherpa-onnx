@@ -241,23 +241,6 @@ def main():
         token = np.array([[token_id]], dtype=np.int32)
         mask = causal_mask_1d(offset.item(), model.max_seq_len)
 
-        # Save decoder inputs for this step
-        step_prefix = f"{name}-step{step}"
-        token_raw = f"{step_prefix}-token.raw"
-        offset_raw = f"{step_prefix}-offset.raw"
-        mask_raw = f"{step_prefix}-mask.raw"
-
-        token.tofile(token_raw)
-        offset.tofile(offset_raw)
-        mask.tofile(mask_raw)
-
-        # Save self KV caches
-        for i in range(model.num_layers):
-            self_k_raw = f"{step_prefix}-self_k_{i}.raw"
-            self_v_raw = f"{step_prefix}-self_v_{i}.raw"
-            self_kv[2 * i].tofile(self_k_raw)
-            self_kv[2 * i + 1].tofile(self_v_raw)
-
         # Run decoder
         logits, this_kv = model.run_decoder(token, self_kv, cross_kv, offset, mask)
 
@@ -278,24 +261,6 @@ def main():
         for raw_file in encoder_input_list:
             f.write(f"{raw_file}\n")
     print(f"Saved {encoder_list_file}")
-
-    # Create {name}-decoder.txt for quantization
-    decoder_list_file = f"{name}-decoder.txt"
-    with open(decoder_list_file, "w") as f:
-        for step in range(len(tokens) + 1):  # +1 for BOS step
-            step_prefix = f"{name}-step{step}"
-            # token, self_k_0, self_v_0, ..., self_k_N, self_v_N, cross_k_0, cross_v_0, ..., cross_k_N, cross_v_N, offset, mask
-            parts = [f"{step_prefix}-token.raw"]
-            for i in range(model.num_layers):
-                parts.append(f"{step_prefix}-self_k_{i}.raw")
-                parts.append(f"{step_prefix}-self_v_{i}.raw")
-            for i in range(model.num_layers):
-                parts.append(f"{name}-cross_k_{i}.raw")
-                parts.append(f"{name}-cross_v_{i}.raw")
-            parts.append(f"{step_prefix}-offset.raw")
-            parts.append(f"{step_prefix}-mask.raw")
-            f.write(" ".join(parts) + "\n")
-    print(f"Saved {decoder_list_file}")
 
     print(f"Tokens ({len(tokens)}): {tokens}")
 

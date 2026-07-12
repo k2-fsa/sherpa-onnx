@@ -6,9 +6,9 @@ on:
       - export-moonshine-qnn
   workflow_dispatch:
 
-concurrency:
-  group: export-moonshine-qnn-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: export-moonshine-qnn-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   generate_onnx_matrix:
@@ -77,9 +77,6 @@ jobs:
           model_name=${{ matrix.model_name }}
           lang="${model_name##*-}"
           echo "model_name: $model_name, lang: $lang"
-          if [[ $lang == "base" || $lang == "tiny" ]]; then
-            lang=en
-          fi
 
           wget -q -O 0.wav https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$lang.wav
           ls -lh *.wav
@@ -106,7 +103,6 @@ jobs:
           cp -v $src/*.wav $dst/
           cp -v $src/*.raw $dst/ 2>/dev/null || true
           cp -v $src/*-encoder.txt $dst/ 2>/dev/null || true
-          cp -v $src/*-decoder.txt $dst/ 2>/dev/null || true
 
           ls -lh $dst/
           tar cjvf $dst.tar.bz2 $dst
@@ -117,106 +113,185 @@ jobs:
           name: ${{ matrix.model_name }}-${{ matrix.num_seconds }}s
           path: ./*.tar.bz2
 
-  # Generate all QNN batch matrices in one job
-  generate_qnn_batches:
+  generate_build_matrix:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ubuntu-latest
     outputs:
-      batch0: ${{ steps.gen.outputs.batch0 }}
-      batch1: ${{ steps.gen.outputs.batch1 }}
-      batch2: ${{ steps.gen.outputs.batch2 }}
-      batch3: ${{ steps.gen.outputs.batch3 }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Generate all batch matrices
-        id: gen
+
+      - name: Generating build matrix
+        id: set-matrix
         run: |
-          python3 .github/scripts/export-qnn/generate_moonshine.py --num-batches
-          for i in 0 1 2 3; do
-            MATRIX=$(python3 .github/scripts/export-qnn/generate_moonshine.py --batch $i 4)
-            echo "batch${i}=$MATRIX" >> $GITHUB_OUTPUT
+          python3 .github/scripts/export-qnn/generate_moonshine.py
+          MATRIX=$(python3 .github/scripts/export-qnn/generate_moonshine.py)
+
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  qnn:
+    needs: [generate_build_matrix, onnx]
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
+    strategy:
+      fail-fast: false
+      matrix:
+        ${{ fromJson(needs.generate_build_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.model_name }}-${{ matrix.num_seconds }}s
+          path: /tmp/
+
+      - name: Extract and convert
+        shell: bash
+        run: |
+          model_name=${{ matrix.model_name }}
+          num_seconds=${{ matrix.num_seconds }}
+          soc=${{ matrix.soc }}
+
+          if [[ $model_name == moonshine-tiny ]]; then
+            dst_name=moonshine-tiny-en
+          elif [[ $model_name == moonshine-base ]]; then
+            dst_name=moonshine-base-en
+          else
+            dst_name=$model_name
+          fi
+
+          dir=$PWD
+          mkdir -p model-files
+          pushd /tmp
+          src=${model_name}-${num_seconds}s
+          tar xvf $src.tar.bz2
+          popd
+          mv -v /tmp/$src/* $dir/model-files/
+          model_dir=$PWD/model-files
+
+          mkdir so binary
+
+          pushd $QNN_SDK_ROOT/bin
+          source envsetup.sh
+          popd
+          export PATH=${ANDROID_NDK_LATEST_HOME}:$PATH
+
+          for m in encoder decoder; do
+            cp $model_dir/$m.onnx ./
+            cp $model_dir/tokens.txt ./
+
+            if [[ $m == 'encoder' ]]; then
+              cat $model_dir/*-encoder.txt > encoder.txt 2>/dev/null || true
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --input_list encoder.txt \
+                --use_native_input_files \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log.txt 2>&1
+            else
+              qnn-onnx-converter \
+                --input_network ./$m.onnx \
+                --output_path ./quant/$m.cpp \
+                --act_bitwidth 16 \
+                --bias_bitwidth 32 > ${m}-log.txt 2>&1
+            fi
+
+            python3 ./scripts/qnn/generate_config.py \
+              --soc $soc --graph-name $m \
+              --output-dir ./quant/my-config-$m --qnn-sdk-root $QNN_SDK_ROOT
+
+            python3 "${QNN_SDK_ROOT}/bin/x86_64-linux-clang/qnn-model-lib-generator" \
+              -c quant/$m.cpp -b quant/$m.bin \
+              -o quant/model_libs > ${m}-gen.txt 2>&1
+
+            $QNN_SDK_ROOT/bin/x86_64-linux-clang/qnn-context-binary-generator \
+              --backend $QNN_SDK_ROOT/lib/x86_64-linux-clang/libQnnHtp.so \
+              --model ./quant/model_libs/x86_64-linux-clang/lib$m.so \
+              --output_dir ./quant/binary --binary_file $m \
+              --config_file ./quant/my-config-$m/htp_backend_extensions.json > ${m}-ctx.txt 2>&1
           done
 
-  # QNN conversion jobs - chained sequentially to stay under 220 limit
-  # batch0 → batch1 → batch2 → batch3
-  qnn_batch0:
-    needs: [generate_qnn_batches, onnx]
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: QNN-b0 ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
-    strategy:
-      fail-fast: false
-      matrix:
-        ${{ fromJson(needs.generate_qnn_batches.outputs.batch0) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/qnn-moonshine
-        with:
-          model_name: ${{ matrix.model_name }}
-          num_seconds: ${{ matrix.num_seconds }}
-          soc: ${{ matrix.soc }}
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          d=sherpa-onnx-qnn-${soc}-binary-${dst_name}-${num_seconds}s
+          mkdir -p $d/test_wavs
+          cp -v quant/binary/*.bin $d/
+          cp -v $model_dir/tokens.txt $d
+          cp -v $model_dir/*.wav $d/test_wavs
+          echo "model_name=${dst_name}" > $d/info.txt
+          echo "num_seconds=${num_seconds}s" >> $d/info.txt
+          tar cjfv $d.tar.bz2 $d
+          mkdir -p binary
+          mv *.tar.bz2 ./binary/
 
-  qnn_batch1:
-    needs: [generate_qnn_batches, qnn_batch0]
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: QNN-b1 ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
-    strategy:
-      fail-fast: false
-      matrix:
-        ${{ fromJson(needs.generate_qnn_batches.outputs.batch1) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/qnn-moonshine
-        with:
-          model_name: ${{ matrix.model_name }}
-          num_seconds: ${{ matrix.num_seconds }}
-          soc: ${{ matrix.soc }}
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          for p in x86_64-linux-clang aarch64-android; do
+            if [[ $p == x86_64-linux-clang ]]; then
+              d=sherpa-onnx-qnn-${dst_name}-${num_seconds}s-linux-x64
+            else
+              d=sherpa-onnx-qnn-${dst_name}-${num_seconds}s-android-aarch64
+            fi
+            mkdir -p $d/test_wavs
+            cp -v quant/model_libs/$p/lib*.so $d/
+            cp -v $model_dir/tokens.txt $d
+            cp -v $model_dir/*.wav $d/test_wavs
+            echo "model_name=${dst_name}" > $d/info.txt
+            echo "num_seconds=${num_seconds}s" >> $d/info.txt
+            echo "target=$p" >> $d/info.txt
+            tar cjfv $d.tar.bz2 $d
+            rm -rf $d
+          done
 
-  qnn_batch2:
-    needs: [generate_qnn_batches, qnn_batch1]
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: QNN-b2 ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
-    strategy:
-      fail-fast: false
-      matrix:
-        ${{ fromJson(needs.generate_qnn_batches.outputs.batch2) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/qnn-moonshine
-        with:
-          model_name: ${{ matrix.model_name }}
-          num_seconds: ${{ matrix.num_seconds }}
-          soc: ${{ matrix.soc }}
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          mkdir -p so
+          mv *.tar.bz2 ./so
 
-  qnn_batch3:
-    needs: [generate_qnn_batches, qnn_batch2]
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: QNN-b3 ${{ matrix.model_name }} ${{ matrix.soc }} ${{ matrix.num_seconds }}s
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository_owner }}/qnn-sdk:2.40
-    strategy:
-      fail-fast: false
-      matrix:
-        ${{ fromJson(needs.generate_qnn_batches.outputs.batch3) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/qnn-moonshine
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          model_name: ${{ matrix.model_name }}
-          num_seconds: ${{ matrix.num_seconds }}
-          soc: ${{ matrix.soc }}
+          name: ${{ matrix.model_name }}-${{ matrix.soc }}-${{ matrix.num_seconds }}s-json
+          path: ./quant/*.json
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models-qnn-binary-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && matrix.soc == 'SM8850'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./so/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-3
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./binary/*.tar.bz2
+          overwrite: true
+          tag: asr-models-qnn-binary-3
