@@ -261,6 +261,7 @@ if(SHERPA_ONNX_ENABLE_QNN)
     ./qnn/offline-sense-voice-model-qnn.cc
     ./qnn/offline-paraformer-model-qnn.cc
     ./qnn/offline-whisper-model-qnn.cc
+    ./qnn/offline-moonshine-model-qnn.cc
     ./qnn/offline-zipformer-transducer-model-qnn.cc
     ./qnn/offline-zipformer-ctc-model-qnn.cc
     ./qnn/online-nemo-transducer-model-qnn.cc

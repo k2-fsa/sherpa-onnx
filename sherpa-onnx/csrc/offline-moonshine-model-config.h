@@ -7,6 +7,7 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/qnn-config.h"
 
 namespace sherpa_onnx {
 
@@ -26,6 +27,8 @@ struct OfflineMoonshineModelConfig {
   std::string cached_decoder;
 
   std::string merged_decoder;
+
+  QnnConfig qnn_config;
 
   OfflineMoonshineModelConfig() = default;
   OfflineMoonshineModelConfig(const std::string &preprocessor,
