@@ -220,13 +220,6 @@ def main():
     # Run encoder to get cross KV
     cross_kv = model.run_encoder(audio_padded)
 
-    # Save cross KV outputs (these become decoder inputs)
-    for i in range(model.num_layers):
-        cross_k_raw = f"{name}-cross_k_{i}.raw"
-        cross_v_raw = f"{name}-cross_v_{i}.raw"
-        cross_kv[2 * i].tofile(cross_k_raw)
-        cross_kv[2 * i + 1].tofile(cross_v_raw)
-
     # Run decoder step by step and collect inputs
     self_kv = model.get_self_cache()
     offset = np.array([0], dtype=np.int32)

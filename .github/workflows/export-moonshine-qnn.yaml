@@ -189,9 +189,11 @@ jobs:
           for m in encoder decoder; do
             cp $model_dir/$m.onnx ./
             cp $model_dir/tokens.txt ./
+            cp $model_dir/*.raw ./
+            cp $model_dir/*.txt ./
 
             if [[ $m == 'encoder' ]]; then
-              cat $model_dir/*-encoder.txt > encoder.txt 2>/dev/null || true
+              cat *-encoder.txt > encoder.txt 2>/dev/null || true
               qnn-onnx-converter \
                 --input_network ./$m.onnx \
                 --output_path ./quant/$m.cpp \
