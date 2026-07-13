@@ -19,18 +19,16 @@ static bool IsQnnModelLibFile(const std::string &filename) {
 
 static bool IsQnnMoonshineArtifact(const OfflineMoonshineModelConfig &config) {
   return IsQnnModelLibFile(config.encoder) ||
-         IsQnnModelLibFile(config.merged_decoder) ||
+         IsQnnModelLibFile(config.decoder) ||
          !config.qnn_config.context_binary.empty();
 }
 
-static bool ValidateQnnContextBinaries(const std::string &context_binary,
-                                       std::vector<std::string> &filenames) {
-  filenames.clear();
-
+static bool ValidateQnnContextBinaries(const std::string &context_binary) {
   if (context_binary.empty()) {
     return true;
   }
 
+  std::vector<std::string> filenames;
   SplitStringToVector(context_binary, ",", true, &filenames);
   if (filenames.size() != 2) {
     SHERPA_ONNX_LOGE(
@@ -49,8 +47,9 @@ void OfflineMoonshineModelConfig::Register(ParseOptions *po) {
       "Path to onnx preprocessor of moonshine v1, e.g., preprocess.onnx");
 
   po->Register("moonshine-encoder", &encoder,
-               "Path to onnx encoder of moonshine v1 or v2, e.g., encode.onnx "
-               "for v1, encoder_model.onnx for v2");
+               "Path to moonshine encoder. Can be an ONNX model (v1 or v2) "
+               "or a QNN model library (*.so) when no context binary is "
+               "provided.");
 
   po->Register("moonshine-uncached-decoder", &uncached_decoder,
                "Path to onnx uncached_decoder of moonshine v1, e.g., "
@@ -61,8 +60,12 @@ void OfflineMoonshineModelConfig::Register(ParseOptions *po) {
       "Path to onnx cached_decoder of moonshine v1, e.g., cached_decode.onnx");
 
   po->Register("moonshine-merged-decoder", &merged_decoder,
-               "Path to onnx merged decoder of moonshine v2, e.g., "
-               "decoder_model_merged.onnx");
+               "Path to moonshine v2 merged decoder ONNX model "
+               "(decoder_model_merged.onnx).");
+
+  po->Register("moonshine-decoder", &decoder,
+               "Path to moonshine decoder for QNN. Can be a model library "
+               "(*.so) when no context binary is provided.");
 
   std::string prefix = "moonshine";
   ParseOptions p(prefix, po);
@@ -73,9 +76,7 @@ bool OfflineMoonshineModelConfig::Validate() const {
   bool uses_qnn = IsQnnMoonshineArtifact(*this);
 
   if (uses_qnn) {
-    std::vector<std::string> context_binaries;
-    if (!ValidateQnnContextBinaries(qnn_config.context_binary,
-                                    context_binaries)) {
+    if (!ValidateQnnContextBinaries(qnn_config.context_binary)) {
       return false;
     }
 
@@ -83,17 +84,30 @@ bool OfflineMoonshineModelConfig::Validate() const {
       return false;
     }
 
-    // When using context binaries, encoder/decoder lib files are not required
-    if (qnn_config.context_binary.empty()) {
-      // Need model lib files if no context binary
+    // Parse context binaries to check each independently
+    std::vector<std::string> context_filenames;
+    if (!qnn_config.context_binary.empty()) {
+      SplitStringToVector(qnn_config.context_binary, ",", true,
+                          &context_filenames);
+    }
+
+    bool has_encoder_context =
+        context_filenames.size() == 2 && FileExists(context_filenames[0]);
+    bool has_decoder_context =
+        context_filenames.size() == 2 && FileExists(context_filenames[1]);
+
+    if (!has_encoder_context) {
       if (encoder.empty()) {
-        SHERPA_ONNX_LOGE("Please provide --moonshine-encoder");
+        SHERPA_ONNX_LOGE(
+            "Please provide --moonshine-encoder or encoder context binary");
         return false;
       }
+    }
 
-      if (merged_decoder.empty()) {
+    if (!has_decoder_context) {
+      if (decoder.empty()) {
         SHERPA_ONNX_LOGE(
-            "Please provide --moonshine-merged-decoder for QNN");
+            "Please provide --moonshine-decoder or decoder context binary");
         return false;
       }
     }
@@ -187,6 +201,7 @@ std::string OfflineMoonshineModelConfig::ToString() const {
   os << "uncached_decoder=\"" << uncached_decoder << "\", ";
   os << "cached_decoder=\"" << cached_decoder << "\", ";
   os << "merged_decoder=\"" << merged_decoder << "\", ";
+  os << "decoder=\"" << decoder << "\", ";
   if (!qnn_config.backend_lib.empty()) {
     os << "qnn_config=" << qnn_config.ToString() << ", ";
   }

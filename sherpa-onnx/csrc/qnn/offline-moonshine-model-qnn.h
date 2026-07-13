@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-model-config.h"
-#include "sherpa-onnx/csrc/offline-moonshine-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-moonshine-decoder.h"
 
 namespace sherpa_onnx {
 

@@ -28,6 +28,9 @@ struct OfflineMoonshineModelConfig {
 
   std::string merged_decoder;
 
+  // For QNN: path to decoder model lib (*.so) or context binary
+  std::string decoder;
+
   QnnConfig qnn_config;
 
   OfflineMoonshineModelConfig() = default;

@@ -218,6 +218,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(config);
     } else if (!config.model_config.moonshine.encoder.empty() ||
+               !config.model_config.moonshine.decoder.empty() ||
                !config.model_config.moonshine.qnn_config.context_binary.empty()) {
       return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(config);
     } else {

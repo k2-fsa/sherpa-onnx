@@ -39,10 +39,12 @@ class OfflineRecognizerMoonshineQnnImpl : public OfflineRecognizerImpl {
                                     const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
-        symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineMoonshineModelQnn>(mgr,
-                                                          config.model_config)) {
-    Init();
+        symbol_table_(mgr, config_.model_config.tokens) {
+    SHERPA_ONNX_LOGE(
+        "Moonshine QNN does not support asset manager. "
+        "Please copy all files from assets to SD card and set assetManager to "
+        "null");
+    SHERPA_ONNX_EXIT(-1);
   }
 
   void Init() {

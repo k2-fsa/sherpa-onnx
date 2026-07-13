@@ -78,10 +78,8 @@ class OfflineMoonshineModelQnn::Impl {
     // QNN expects (1, hidden_size, enc_seq_len) instead of (1, enc_seq_len, hidden_size)
     std::vector<std::vector<float>> cross_kv(num_layers_ * 2);
     for (int32_t i = 0; i < num_layers_; ++i) {
-      auto cross_k = encoder_model_->GetOutputTensorData(
-          "cross_k_" + std::to_string(i));
-      auto cross_v = encoder_model_->GetOutputTensorData(
-          "cross_v_" + std::to_string(i));
+      auto cross_k = encoder_model_->GetOutputTensorData(encoder_cross_k_[i]);
+      auto cross_v = encoder_model_->GetOutputTensorData(encoder_cross_v_[i]);
 
       cross_kv[i * 2] = Transpose(cross_k.data(), enc_seq_len_, hidden_size_);
       cross_kv[i * 2 + 1] = Transpose(cross_v.data(), enc_seq_len_, hidden_size_);
@@ -100,8 +98,9 @@ class OfflineMoonshineModelQnn::Impl {
     std::vector<float> logits;
 
     // Assume ~15 tokens per second, with safety limit
+    int32_t active_audio_len = std::min(static_cast<int32_t>(audio.size()), max_audio_len_);
     int32_t max_tokens = std::min(mask_size_,
-                                   static_cast<int32_t>(audio_samples.size() / 16000.0 * 15));
+                                   static_cast<int32_t>(active_audio_len / 16000.0 * 15));
     max_tokens = std::min(max_tokens, mask_size_ - 1);
 
     while (offset < max_tokens) {
@@ -208,10 +207,10 @@ class OfflineMoonshineModelQnn::Impl {
                                                    config_.debug);
     } else {
       // Need model lib file
-      const auto &decoder_path = config_.moonshine.merged_decoder;
+      const auto &decoder_path = config_.moonshine.decoder;
       if (decoder_path.empty()) {
         SHERPA_ONNX_LOGE(
-            "Please provide --moonshine-merged-decoder or context binary for decoder");
+            "Please provide --moonshine-decoder or context binary for decoder");
         SHERPA_ONNX_EXIT(-1);
       }
 
@@ -239,15 +238,27 @@ class OfflineMoonshineModelQnn::Impl {
   void PostInitEncoder() {
     // Get encoder input shape: audio (1, max_audio_len)
     auto audio_shape = encoder_model_->TensorShape("audio");
+    if (audio_shape.size() < 2) {
+      SHERPA_ONNX_LOGE("Invalid encoder audio tensor rank");
+      SHERPA_ONNX_EXIT(-1);
+    }
     max_audio_len_ = audio_shape[1];
 
     // Get encoder output shape: cross_k_0 (1, enc_seq_len, hidden_size)
     auto cross_k_shape = encoder_model_->TensorShape("cross_k_0");
+    if (cross_k_shape.size() < 3) {
+      SHERPA_ONNX_LOGE("Invalid encoder cross_k_0 tensor rank");
+      SHERPA_ONNX_EXIT(-1);
+    }
     enc_seq_len_ = cross_k_shape[1];
     hidden_size_ = cross_k_shape[2];
 
     // Count layers from encoder outputs
     const auto &output_names = encoder_model_->OutputTensorNames();
+    if (output_names.empty() || output_names.size() % 2 != 0) {
+      SHERPA_ONNX_LOGE("Invalid encoder cross-KV output count");
+      SHERPA_ONNX_EXIT(-1);
+    }
     num_layers_ = output_names.size() / 2;
 
     if (config_.debug) {
@@ -273,10 +284,18 @@ class OfflineMoonshineModelQnn::Impl {
 
     // Get mask size
     auto mask_shape = decoder_model_->TensorShape("mask");
+    if (mask_shape.size() < 1) {
+      SHERPA_ONNX_LOGE("Invalid decoder mask tensor rank");
+      SHERPA_ONNX_EXIT(-1);
+    }
     mask_size_ = mask_shape[0];
 
     // Get vocab size from logits
     auto logits_shape = decoder_model_->TensorShape("logits");
+    if (logits_shape.size() < 3) {
+      SHERPA_ONNX_LOGE("Invalid decoder logits tensor rank");
+      SHERPA_ONNX_EXIT(-1);
+    }
     vocab_size_ = logits_shape[2];
 
     // Self KV cache size: max_seq_len * hidden_size
