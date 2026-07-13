@@ -10,21 +10,21 @@ import itertools
 
 
 model_name_list = [
-    "moonshine-base-zh",
-    "moonshine-base-ja",
-    "moonshine-base-uk",
-    "moonshine-base-vi",
-    "moonshine-base-ar",
-    "moonshine-base-ko",
-    "moonshine-tiny-ja",
+    #  "moonshine-base-zh",
+    #  "moonshine-base-ja",
+    #  "moonshine-base-uk",
+    #  "moonshine-base-vi",
+    #  "moonshine-base-ar",
+    #  "moonshine-base-ko",
+    #  "moonshine-tiny-ja",
     # 210
-    #  "moonshine-tiny-ar",
-    #  "moonshine-tiny-ko",
-    #  "moonshine-tiny-zh",
-    #  "moonshine-tiny-vi",
-    #  "moonshine-tiny-uk",
-    #  "moonshine-base",
-    #  "moonshine-tiny",
+    "moonshine-tiny-ar",
+    "moonshine-tiny-ko",
+    "moonshine-tiny-zh",
+    "moonshine-tiny-vi",
+    "moonshine-tiny-uk",
+    "moonshine-base",
+    "moonshine-tiny",
 ]
 
 num_seconds_list = [5, 8, 10]
@@ -43,6 +43,8 @@ def main():
     configs = []
 
     for name, soc in soc_info_dict.items():
+        if soc.model.name == "SM8350":
+            continue
         for num_seconds, model_name in itertools.product(
             num_seconds_list, model_name_list
         ):
