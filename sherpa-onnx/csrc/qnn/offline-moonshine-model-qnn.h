@@ -29,8 +29,6 @@ class OfflineMoonshineModelQnn {
    */
   OfflineMoonshineDecoderResult Run(const std::vector<float> &audio_samples) const;
 
-  int32_t MaxSeqLen() const;
-
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

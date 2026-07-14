@@ -122,8 +122,6 @@ class OfflineMoonshineModelQnn::Impl {
     return r;
   }
 
-  int32_t MaxSeqLen() const { return mask_size_; }
-
  private:
   void InitEncoder() {
     const auto &qnn_config = config_.moonshine.qnn_config;
@@ -452,10 +450,6 @@ OfflineMoonshineModelQnn::~OfflineMoonshineModelQnn() = default;
 OfflineMoonshineDecoderResult OfflineMoonshineModelQnn::Run(
     const std::vector<float> &audio_samples) const {
   return impl_->Run(audio_samples);
-}
-
-int32_t OfflineMoonshineModelQnn::MaxSeqLen() const {
-  return impl_->MaxSeqLen();
 }
 
 #if __ANDROID_API__ >= 9
