@@ -149,7 +149,9 @@ bool OfflineModelConfig::Validate() const {
     return sense_voice.Validate();
   }
 
-  if (!moonshine.encoder.empty()) {
+  if (!moonshine.encoder.empty() ||
+      !moonshine.decoder.empty() ||
+      !moonshine.qnn_config.context_binary.empty()) {
     return moonshine.Validate();
   }
 

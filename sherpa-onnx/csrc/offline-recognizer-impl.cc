@@ -74,6 +74,7 @@
 #include "sherpa-onnx/csrc/qnn/offline-recognizer-zipformer-ctc-qnn-impl.h"
 #include "sherpa-onnx/csrc/qnn/offline-sense-voice-model-qnn.h"
 #include "sherpa-onnx/csrc/qnn/offline-whisper-model-qnn.h"
+#include "sherpa-onnx/csrc/qnn/offline-recognizer-moonshine-qnn-impl.h"
 #endif
 
 namespace sherpa_onnx {
@@ -216,11 +217,15 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
                !config.model_config.whisper.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(config);
+    } else if (!config.model_config.moonshine.encoder.empty() ||
+               !config.model_config.moonshine.decoder.empty() ||
+               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+      return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice, Paraformer, Zipformer transducer, Zipformer CTC, "
-          "NeMo CTC (Parakeet), Parakeet TDT, and Whisper models are "
-          "currently supported by QNN for non-streaming ASR.");
+          "NeMo CTC (Parakeet), Parakeet TDT, Whisper, and Moonshine models "
+          "are currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
@@ -582,11 +587,14 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
                !config.model_config.whisper.qnn_config.context_binary.empty()) {
       return std::make_unique<
           OfflineRecognizerWhisperTplImpl<OfflineWhisperModelQnn>>(mgr, config);
+    } else if (!config.model_config.moonshine.encoder.empty() ||
+               !config.model_config.moonshine.qnn_config.context_binary.empty()) {
+      return std::make_unique<OfflineRecognizerMoonshineQnnImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Only SenseVoice, Paraformer, Zipformer transducer, Zipformer CTC, "
-          "NeMo CTC (Parakeet), Parakeet TDT, and Whisper models are "
-          "currently supported by QNN for non-streaming ASR.");
+          "NeMo CTC (Parakeet), Parakeet TDT, Whisper, and Moonshine models "
+          "are currently supported by QNN for non-streaming ASR.");
       SHERPA_ONNX_EXIT(-1);
       return nullptr;
     }
