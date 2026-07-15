@@ -124,7 +124,7 @@ jobs:
 
       - name: Publish to huggingface
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN0 }}
         uses: nick-fields/retry@v3
         with:
           max_attempts: 20
@@ -195,6 +195,9 @@ jobs:
               vits-piper-eu_ES-maider-medium
               vits-piper-eu_ES-antton-medium
               vits-piper-ur_PK-fasih-medium
+              vits-piper-pt_BR-cadu-medium
+              vits-piper-pt_BR-cadu-medium-int8
+              vits-piper-pt_BR-cadu-medium-fp16
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
@@ -203,7 +206,7 @@ jobs:
               fi
 
               rm -rf huggingface
-              git clone https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
               cp -a $src/* ./huggingface
               pushd huggingface
               git lfs track "*.onnx"
@@ -217,7 +220,7 @@ jobs:
               git add .
               git status
               git commit -m "add models"
-              git push https://csukuangfj2:$HF_TOKEN@huggingface.co/csukuangfj2/$d main
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
               popd
 
             done
