@@ -115,6 +115,9 @@ def main():
     else:
         voice = config["espeak"]["voice"]
 
+    if voice == "pt-PT":
+        voice = "pt"
+
     has_g2pw = 0
     has_espeak = 1
 
