@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cerrno>
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
@@ -14,6 +15,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -132,20 +140,9 @@ class OfflineQwen3ASRModel::Impl {
         is_cpu_provider_(config.provider == "cpu" || config.provider.empty()) {
     const auto &c = config_.qwen3_asr;
 
-    conv_sess_ = std::make_unique<Ort::Session>(
-        env_, SHERPA_ONNX_TO_ORT_PATH(c.conv_frontend), sess_opts_conv_);
-
-    InitConvFrontend(nullptr, 0);
-
-    encoder_sess_ = std::make_unique<Ort::Session>(
-        env_, SHERPA_ONNX_TO_ORT_PATH(c.encoder), sess_opts_encoder_);
-
-    InitEncoder(nullptr, 0);
-
-    decoder_sess_ = std::make_unique<Ort::Session>(
-        env_, SHERPA_ONNX_TO_ORT_PATH(c.decoder), sess_opts_decoder_);
-
-    InitDecoder(nullptr, 0);
+    InitConvFrontendFromFile(c.conv_frontend);
+    InitEncoderFromFile(c.encoder);
+    InitDecoderFromFile(c.decoder);
 
     InitIoBindingConfig();
   }
@@ -194,7 +191,105 @@ class OfflineQwen3ASRModel::Impl {
     InitIoBindingConfig();
   }
 
+  ~Impl() {
+    decoder_sess_.reset();
+    encoder_sess_.reset();
+    conv_sess_.reset();
+    UnmapModel(&decoder_model_);
+    UnmapModel(&encoder_model_);
+    UnmapModel(&conv_model_);
+  }
+
  private:
+  struct MappedModel {
+    void *data = nullptr;
+    size_t size = 0;
+  };
+
+  void InitConvFrontendFromFile(const std::string &filename) {
+#if defined(_WIN32)
+    conv_sess_ = std::make_unique<Ort::Session>(env_,
+                                                SHERPA_ONNX_TO_ORT_PATH(filename),
+                                                sess_opts_conv_);
+    InitConvFrontend(nullptr, 0);
+#else
+    MapModel(filename, "qwen3_asr.conv_frontend", &conv_model_);
+    InitConvFrontend(conv_model_.data, conv_model_.size);
+#endif
+  }
+
+  void InitEncoderFromFile(const std::string &filename) {
+#if defined(_WIN32)
+    encoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(filename), sess_opts_encoder_);
+    InitEncoder(nullptr, 0);
+#else
+    MapModel(filename, "qwen3_asr.encoder", &encoder_model_);
+    InitEncoder(encoder_model_.data, encoder_model_.size);
+#endif
+  }
+
+  void InitDecoderFromFile(const std::string &filename) {
+#if defined(_WIN32)
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, SHERPA_ONNX_TO_ORT_PATH(filename), sess_opts_decoder_);
+    InitDecoder(nullptr, 0);
+#else
+    MapModel(filename, "qwen3_asr.decoder", &decoder_model_);
+    InitDecoder(decoder_model_.data, decoder_model_.size);
+#endif
+  }
+
+#if !defined(_WIN32)
+  void MapModel(const std::string &filename, const char *name,
+                MappedModel *mapped_model) {
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd == -1) {
+      SHERPA_ONNX_LOGE("Failed to open %s '%s': %s", name, filename.c_str(),
+                       std::strerror(errno));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    struct stat st;
+    if (fstat(fd, &st) == -1) {
+      SHERPA_ONNX_LOGE("Failed to stat %s '%s': %s", name, filename.c_str(),
+                       std::strerror(errno));
+      close(fd);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (st.st_size <= 0) {
+      SHERPA_ONNX_LOGE("%s '%s' has invalid size: %lld", name, filename.c_str(),
+                       static_cast<long long>(st.st_size));
+      close(fd);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    void *data = mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    int32_t saved_errno = errno;
+    close(fd);
+
+    if (data == MAP_FAILED) {
+      SHERPA_ONNX_LOGE("Failed to mmap %s '%s': %s", name, filename.c_str(),
+                       std::strerror(saved_errno));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    mapped_model->data = data;
+    mapped_model->size = static_cast<size_t>(st.st_size);
+  }
+
+  void UnmapModel(MappedModel *mapped_model) {
+    if (mapped_model->data) {
+      munmap(mapped_model->data, mapped_model->size);
+      mapped_model->data = nullptr;
+      mapped_model->size = 0;
+    }
+  }
+#else
+  void UnmapModel(MappedModel *) {}
+#endif
+
   void InitIoBindingConfig() {
     use_cuda_iobinding_ =
         (!is_cpu_provider_ && IsCudaProvider(config_.provider));
@@ -758,6 +853,10 @@ class OfflineQwen3ASRModel::Impl {
   Ort::SessionOptions sess_opts_conv_;
   Ort::SessionOptions sess_opts_encoder_;
   Ort::SessionOptions sess_opts_decoder_;
+
+  MappedModel conv_model_;
+  MappedModel encoder_model_;
+  MappedModel decoder_model_;
 
   std::unique_ptr<Ort::Session> conv_sess_;
   std::unique_ptr<Ort::Session> encoder_sess_;
