@@ -4,8 +4,17 @@ import torch
 
 
 class UNet(torch.nn.Module):
-    def __init__(self):
+    # Spleeter selects the two activations from configs/<model>/base_config.json.
+    # 2stems ships "params": {}, i.e. the unet.unet defaults LeakyReLU(0.2)/ReLU.
+    # 4stems ships conv_activation=ELU and deconv_activation=ELU.
+    #
+    # The architecture and every weight shape are identical either way, so the
+    # wrong choice loads without complaint and silently returns garbage. Defaults
+    # here match 2stems, so existing callers are unaffected.
+    def __init__(self, conv_activation="LeakyReLU", deconv_activation="ReLU"):
         super().__init__()
+        self.conv_activation = conv_activation
+        self.deconv_activation = deconv_activation
         self.conv = torch.nn.Conv2d(2, 16, kernel_size=5, stride=(2, 2), padding=0)
         self.bn = torch.nn.BatchNorm2d(
             16, track_running_stats=True, eps=1e-3, momentum=0.01
@@ -66,6 +75,20 @@ class UNet(torch.nn.Module):
         # output logit is False, so we need self.up7
         self.up7 = torch.nn.Conv2d(1, 2, kernel_size=4, dilation=2, padding=3)
 
+    def _conv_act(self, x):
+        if self.conv_activation == "ELU":
+            return torch.nn.functional.elu(x)
+        if self.conv_activation == "ReLU":
+            return torch.nn.functional.relu(x)
+        return torch.nn.functional.leaky_relu(x, negative_slope=0.2)
+
+    def _deconv_act(self, x):
+        if self.deconv_activation == "ELU":
+            return torch.nn.functional.elu(x)
+        if self.deconv_activation == "LeakyReLU":
+            return torch.nn.functional.leaky_relu(x, negative_slope=0.2)
+        return torch.nn.functional.relu(x)
+
     def forward(self, x):
         """
         Args:
@@ -80,76 +103,68 @@ class UNet(torch.nn.Module):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         conv1 = self.conv(x)
         batch1 = self.bn(conv1)
-        rel1 = torch.nn.functional.leaky_relu(batch1, negative_slope=0.2)
+        rel1 = self._conv_act(batch1)
 
         x = torch.nn.functional.pad(rel1, (1, 2, 1, 2), "constant", 0)
         conv2 = self.conv1(x)  # (3, 32, 128, 256)
         batch2 = self.bn1(conv2)
-        rel2 = torch.nn.functional.leaky_relu(
-            batch2, negative_slope=0.2
-        )  # (3, 32, 128, 256)
+        rel2 = self._conv_act(batch2)  # (3, 32, 128, 256)
 
         x = torch.nn.functional.pad(rel2, (1, 2, 1, 2), "constant", 0)
         conv3 = self.conv2(x)  # (3, 64, 64, 128)
         batch3 = self.bn2(conv3)
-        rel3 = torch.nn.functional.leaky_relu(
-            batch3, negative_slope=0.2
-        )  # (3, 64, 64, 128)
+        rel3 = self._conv_act(batch3)  # (3, 64, 64, 128)
 
         x = torch.nn.functional.pad(rel3, (1, 2, 1, 2), "constant", 0)
         conv4 = self.conv3(x)  # (3, 128, 32, 64)
         batch4 = self.bn3(conv4)
-        rel4 = torch.nn.functional.leaky_relu(
-            batch4, negative_slope=0.2
-        )  # (3, 128, 32, 64)
+        rel4 = self._conv_act(batch4)  # (3, 128, 32, 64)
 
         x = torch.nn.functional.pad(rel4, (1, 2, 1, 2), "constant", 0)
         conv5 = self.conv4(x)  # (3, 256, 16, 32)
         batch5 = self.bn4(conv5)
-        rel6 = torch.nn.functional.leaky_relu(
-            batch5, negative_slope=0.2
-        )  # (3, 256, 16, 32)
+        rel6 = self._conv_act(batch5)  # (3, 256, 16, 32)
 
         x = torch.nn.functional.pad(rel6, (1, 2, 1, 2), "constant", 0)
         conv6 = self.conv5(x)  # (3, 512, 8, 16)
 
         up1 = self.up1(conv6)
         up1 = up1[:, :, 1:-2, 1:-2]  # (3, 256, 16, 32)
-        up1 = torch.nn.functional.relu(up1)
+        up1 = self._deconv_act(up1)
         batch7 = self.bn5(up1)
         merge1 = torch.cat([conv5, batch7], axis=1)  # (3, 512, 16, 32)
 
         up2 = self.up2(merge1)
         up2 = up2[:, :, 1:-2, 1:-2]
-        up2 = torch.nn.functional.relu(up2)
+        up2 = self._deconv_act(up2)
         batch8 = self.bn6(up2)
 
         merge2 = torch.cat([conv4, batch8], axis=1)  # (3, 256, 32, 64)
 
         up3 = self.up3(merge2)
         up3 = up3[:, :, 1:-2, 1:-2]
-        up3 = torch.nn.functional.relu(up3)
+        up3 = self._deconv_act(up3)
         batch9 = self.bn7(up3)
 
         merge3 = torch.cat([conv3, batch9], axis=1)  # (3, 128, 64, 128)
 
         up4 = self.up4(merge3)
         up4 = up4[:, :, 1:-2, 1:-2]
-        up4 = torch.nn.functional.relu(up4)
+        up4 = self._deconv_act(up4)
         batch10 = self.bn8(up4)
 
         merge4 = torch.cat([conv2, batch10], axis=1)  # (3, 64, 128, 256)
 
         up5 = self.up5(merge4)
         up5 = up5[:, :, 1:-2, 1:-2]
-        up5 = torch.nn.functional.relu(up5)
+        up5 = self._deconv_act(up5)
         batch11 = self.bn9(up5)
 
         merge5 = torch.cat([conv1, batch11], axis=1)  # (3, 32, 256, 512)
 
         up6 = self.up6(merge5)
         up6 = up6[:, :, 1:-2, 1:-2]
-        up6 = torch.nn.functional.relu(up6)
+        up6 = self._deconv_act(up6)
         batch12 = self.bn10(up6)  # (3, 1, 512, 1024)  = (T, 1, 512, 1024)
 
         up7 = self.up7(batch12)
