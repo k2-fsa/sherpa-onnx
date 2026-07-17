@@ -19,16 +19,16 @@ def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
 
-def add_meta_data(filename, prefix, model):
-    conv_activation, deconv_activation = ACTIVATIONS[model]
+def add_meta_data(filename, prefix, model_id):
+    conv_activation, deconv_activation = ACTIVATIONS[model_id]
     meta_data = {
         "model_type": "spleeter",
         "sample_rate": 44100,
         "version": 1,
         "model_url": "https://github.com/deezer/spleeter",
-        "stems": len(STEMS[model]),
+        "stems": len(STEMS[model_id]),
         "comment": prefix,
-        "model_name": f"{model}.tar.gz",
+        "model_name": f"{model_id}.tar.gz",
         # Recorded so the next reader does not have to rediscover that 4stems
         # is ELU and 2stems is not.
         "conv_activation": conv_activation,

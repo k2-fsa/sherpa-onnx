@@ -2,6 +2,18 @@
 
 import torch
 
+# Resolved once at construction, and an unknown name raises rather than quietly
+# falling through to a default. That matters more than it looks: the reason this
+# parameter exists at all is that Spleeter's 2stems and 4stems have identical
+# architectures and identical weight shapes, so a wrong activation loads without
+# complaint and returns garbage. A silent default would reintroduce exactly the
+# failure this is here to prevent.
+_ACTIVATIONS = {
+    "ELU": lambda x: torch.nn.functional.elu(x),
+    "ReLU": lambda x: torch.nn.functional.relu(x),
+    "LeakyReLU": lambda x: torch.nn.functional.leaky_relu(x, negative_slope=0.2),
+}
+
 
 class UNet(torch.nn.Module):
     # Spleeter selects the two activations from configs/<model>/base_config.json.
@@ -13,8 +25,16 @@ class UNet(torch.nn.Module):
     # here match 2stems, so existing callers are unaffected.
     def __init__(self, conv_activation="LeakyReLU", deconv_activation="ReLU"):
         super().__init__()
+        for name in (conv_activation, deconv_activation):
+            if name not in _ACTIVATIONS:
+                raise ValueError(
+                    f"unknown activation {name!r}; "
+                    f"expected one of {sorted(_ACTIVATIONS)}"
+                )
         self.conv_activation = conv_activation
         self.deconv_activation = deconv_activation
+        self._conv_act = _ACTIVATIONS[conv_activation]
+        self._deconv_act = _ACTIVATIONS[deconv_activation]
         self.conv = torch.nn.Conv2d(2, 16, kernel_size=5, stride=(2, 2), padding=0)
         self.bn = torch.nn.BatchNorm2d(
             16, track_running_stats=True, eps=1e-3, momentum=0.01
@@ -74,20 +94,6 @@ class UNet(torch.nn.Module):
 
         # output logit is False, so we need self.up7
         self.up7 = torch.nn.Conv2d(1, 2, kernel_size=4, dilation=2, padding=3)
-
-    def _conv_act(self, x):
-        if self.conv_activation == "ELU":
-            return torch.nn.functional.elu(x)
-        if self.conv_activation == "ReLU":
-            return torch.nn.functional.relu(x)
-        return torch.nn.functional.leaky_relu(x, negative_slope=0.2)
-
-    def _deconv_act(self, x):
-        if self.deconv_activation == "ELU":
-            return torch.nn.functional.elu(x)
-        if self.deconv_activation == "LeakyReLU":
-            return torch.nn.functional.leaky_relu(x, negative_slope=0.2)
-        return torch.nn.functional.relu(x)
 
     def forward(self, x):
         """
