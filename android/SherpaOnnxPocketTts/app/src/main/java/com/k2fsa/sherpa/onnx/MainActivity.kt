@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -341,17 +342,23 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun copyGeneratedWavToUri(destUri: Uri) {
-        try {
-            val srcFile = File(generatedWavPath)
-            contentResolver.openOutputStream(destUri)?.use { output ->
-                srcFile.inputStream().use { input ->
-                    input.copyTo(output)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val srcFile = File(generatedWavPath)
+                contentResolver.openOutputStream(destUri)?.use { output ->
+                    srcFile.inputStream().use { input ->
+                        input.copyTo(output)
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(applicationContext, getString(R.string.msg_audio_saved), Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to save audio", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(applicationContext, getString(R.string.err_save_audio), Toast.LENGTH_SHORT).show()
                 }
             }
-            Toast.makeText(applicationContext, getString(R.string.msg_audio_saved), Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save audio", e)
-            Toast.makeText(applicationContext, getString(R.string.err_save_audio), Toast.LENGTH_SHORT).show()
         }
     }
 
