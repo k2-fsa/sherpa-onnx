@@ -193,6 +193,11 @@ class MainActivity : ComponentActivity() {
                     isGenerating = true
                     hasGeneratedAudio = false
                     
+                    mediaPlayer?.stop()
+                    mediaPlayer?.release()
+                    mediaPlayer = null
+                    isPlaying = false
+                    
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
                             val tempFile = File(context.cacheDir, "ref.wav")
