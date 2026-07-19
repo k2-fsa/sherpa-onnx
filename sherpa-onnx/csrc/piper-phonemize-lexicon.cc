@@ -133,9 +133,14 @@ static std::vector<int64_t> PiperPhonemesToIdsVits(
   int32_t eos = token2id.at(U'$');
 
   std::vector<int64_t> ans;
-  ans.reserve(phonemes.size());
+  // bos + pad after bos + (phoneme + pad) * N + eos
+  ans.reserve(phonemes.size() * 2 + 3);
 
   ans.push_back(bos);
+  // Match piper-phonemize phoneme_ids.cpp and OfflineTtsImpl::AddBlank():
+  // pad must follow bos so every phoneme (including the first) is framed.
+  // See https://github.com/k2-fsa/sherpa-onnx/issues/3721
+  ans.push_back(pad);
   for (auto p : phonemes) {
     if (token2id.count(p)) {
       ans.push_back(token2id.at(p));
