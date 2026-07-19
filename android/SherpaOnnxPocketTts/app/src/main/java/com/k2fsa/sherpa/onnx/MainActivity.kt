@@ -212,7 +212,15 @@ class MainActivity : ComponentActivity() {
                     generationJob = coroutineScope.launch(Dispatchers.IO) {
                         try {
                             val tempFile = File(context.cacheDir, "ref.wav")
-                            context.contentResolver.openInputStream(refUri)?.use { input ->
+                            val inputStream = context.contentResolver.openInputStream(refUri)
+                            if (inputStream == null) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, context.getString(R.string.err_read_file), Toast.LENGTH_SHORT).show()
+                                    isGenerating = false
+                                }
+                                return@launch
+                            }
+                            inputStream.use { input ->
                                 tempFile.outputStream().use { output ->
                                     input.copyTo(output)
                                 }
