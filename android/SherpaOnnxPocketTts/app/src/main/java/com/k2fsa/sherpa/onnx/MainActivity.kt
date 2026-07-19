@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -123,10 +124,10 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    Toast.makeText(context, "This doesn't look like a valid WAV file", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.err_invalid_wav), Toast.LENGTH_LONG).show()
                 } catch (e: Exception) {
                     Log.e(TAG, "Error checking WAV header", e)
-                    Toast.makeText(context, "Failed to read file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.err_read_file), Toast.LENGTH_SHORT).show()
                 }
             }
             referenceWavUri = null
@@ -139,7 +140,7 @@ class MainActivity : ComponentActivity() {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("PocketTTS Voice Cloning Demo", style = MaterialTheme.typography.h5)
+            Text(stringResource(R.string.title_main), style = MaterialTheme.typography.h5)
 
             Button(
                 onClick = { 
@@ -147,13 +148,13 @@ class MainActivity : ComponentActivity() {
                 }, 
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (referenceWavUri != null) "WAV Selected" else "Pick Reference WAV")
+                Text(if (referenceWavUri != null) stringResource(R.string.btn_wav_selected) else stringResource(R.string.btn_pick_wav))
             }
 
             OutlinedTextField(
                 value = text,
                 onValueChange = { newValue -> text = newValue },
-                label = { Text("Text to synthesize") },
+                label = { Text(stringResource(R.string.label_text_input)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 10,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -166,27 +167,28 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-            Text("Steps: ${steps.toInt()}")
+            Text("${stringResource(R.string.label_steps)} ${steps.toInt()}")
             Slider(value = steps, onValueChange = { steps = it }, valueRange = 1f..50f)
 
-            Text("Temperature: ${String.format("%.2f", temperature)}")
+            Text("${stringResource(R.string.label_temperature)} ${String.format("%.2f", temperature)}")
             Slider(value = temperature, onValueChange = { temperature = it }, valueRange = 0.1f..2.0f)
 
-            Text("Speed: ${String.format("%.2f", speed)}")
+            Text("${stringResource(R.string.label_speed)} ${String.format("%.2f", speed)}")
             Slider(value = speed, onValueChange = { speed = it }, valueRange = 0.5f..2.0f)
 
             Button(
                 onClick = {
                     if (tts == null) {
-                        Toast.makeText(context, "TTS not initialized", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.err_tts_not_init), Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    if (referenceWavUri == null) {
-                        Toast.makeText(context, "Please pick a reference WAV", Toast.LENGTH_SHORT).show()
+                    val refUri = referenceWavUri
+                    if (refUri == null) {
+                        Toast.makeText(context, context.getString(R.string.err_pick_wav), Toast.LENGTH_SHORT).show()
                         return@Button
                     }
                     if (text.isBlank()) {
-                        Toast.makeText(context, "Text cannot be empty", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.err_empty_text), Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
@@ -201,7 +203,7 @@ class MainActivity : ComponentActivity() {
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
                             val tempFile = File(context.cacheDir, "ref.wav")
-                            context.contentResolver.openInputStream(referenceWavUri!!)?.use { input ->
+                            context.contentResolver.openInputStream(refUri)?.use { input ->
                                 tempFile.outputStream().use { output ->
                                     input.copyTo(output)
                                 }
@@ -210,7 +212,7 @@ class MainActivity : ComponentActivity() {
                             val wave = WaveReader.readWave(tempFile.absolutePath)
                             if (wave.samples.isEmpty()) {
                                 withContext(Dispatchers.Main) {
-                                    Toast.makeText(context, "Failed to read WAV", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.err_read_wav), Toast.LENGTH_SHORT).show()
                                     isGenerating = false
                                 }
                                 return@launch
@@ -235,16 +237,16 @@ class MainActivity : ComponentActivity() {
                                 if (success) {
                                     hasGeneratedAudio = true
                                     generatedDuration = duration
-                                    Toast.makeText(context, "Generation successful!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.msg_gen_success), Toast.LENGTH_SHORT).show()
                                 } else {
-                                    Toast.makeText(context, "Failed to save generated audio", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.err_save_audio), Toast.LENGTH_SHORT).show()
                                 }
                                 isGenerating = false
                             }
                         } catch (e: Exception) {
                             Log.e(TAG, "Generation failed", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Generation failed: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "${context.getString(R.string.err_gen_failed)} ${e.message}", Toast.LENGTH_LONG).show()
                                 isGenerating = false
                             }
                         }
@@ -256,9 +258,9 @@ class MainActivity : ComponentActivity() {
                 if (isGenerating) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colors.onPrimary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Generating...")
+                    Text(stringResource(R.string.btn_generating))
                 } else {
-                    Text("Generate")
+                    Text(stringResource(R.string.btn_generate))
                 }
             }
 
@@ -268,41 +270,57 @@ class MainActivity : ComponentActivity() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (hasGeneratedAudio) {
-                    Text("Duration: ${String.format("%.2f", generatedDuration)}s", style = MaterialTheme.typography.body2)
+                    Text("${stringResource(R.string.label_duration)} ${String.format("%.2f", generatedDuration)}s", style = MaterialTheme.typography.body2)
                 }
 
                 Button(
                     onClick = {
                         mediaPlayer?.stop()
                         mediaPlayer?.release()
-                        mediaPlayer = MediaPlayer.create(context, Uri.fromFile(File(generatedWavPath)))
-                        mediaPlayer?.setOnCompletionListener { isPlaying = false }
-                        mediaPlayer?.start()
-                        isPlaying = true
-                    },
-                    enabled = hasGeneratedAudio
-                ) { Text("Play") }
-                
-                Button(
-                    onClick = {
-                        if (isPlaying) {
-                            mediaPlayer?.pause()
-                            isPlaying = false
-                        } else {
-                            mediaPlayer?.start()
+                        val mp = MediaPlayer.create(context, Uri.fromFile(File(generatedWavPath)))
+                        if (mp != null) {
+                            mediaPlayer = mp
+                            mp.setOnCompletionListener { isPlaying = false }
+                            mp.start()
                             isPlaying = true
+                        } else {
+                            mediaPlayer = null
+                            isPlaying = false
+                            Toast.makeText(context, context.getString(R.string.err_play_audio), Toast.LENGTH_SHORT).show()
                         }
                     },
                     enabled = hasGeneratedAudio
-                ) { Text(if (isPlaying) "Pause" else "Resume") }
+                ) { Text(stringResource(R.string.btn_play)) }
+                
+                Button(
+                    onClick = {
+                        val mp = mediaPlayer
+                        if (mp != null) {
+                            if (isPlaying) {
+                                mp.pause()
+                                isPlaying = false
+                            } else {
+                                try {
+                                    mp.start()
+                                    isPlaying = true
+                                } catch (e: IllegalStateException) {
+                                    Log.e(TAG, "Failed to start MediaPlayer", e)
+                                }
+                            }
+                        }
+                    },
+                    enabled = hasGeneratedAudio
+                ) { Text(if (isPlaying) stringResource(R.string.btn_pause) else stringResource(R.string.btn_resume)) }
                 
                 Button(
                     onClick = {
                         mediaPlayer?.stop()
+                        mediaPlayer?.release()
+                        mediaPlayer = null
                         isPlaying = false
                     },
                     enabled = hasGeneratedAudio
-                ) { Text("Stop") }
+                ) { Text(stringResource(R.string.btn_stop)) }
             }
 
             Button(
@@ -310,7 +328,7 @@ class MainActivity : ComponentActivity() {
                 enabled = hasGeneratedAudio,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save to Device")
+                Text(stringResource(R.string.btn_save))
             }
         }
     }
@@ -323,10 +341,10 @@ class MainActivity : ComponentActivity() {
                     input.copyTo(output)
                 }
             }
-            Toast.makeText(applicationContext, "Audio saved successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, getString(R.string.msg_audio_saved), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save audio", e)
-            Toast.makeText(applicationContext, "Failed to save audio", Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, getString(R.string.err_save_audio), Toast.LENGTH_SHORT).show()
         }
     }
 
