@@ -41,7 +41,7 @@ struct Args {
     provider: String,
 
     /// Enable debug logs
-    #[arg(long, default_value_t = false)]
+    #[arg(long, action = clap::ArgAction::SetTrue)]
     debug: bool,
 
     /// Number of threads
@@ -88,7 +88,11 @@ fn main() {
         println!("Decoded text: {}", result.text);
 
         let total_elapsed = creation_elapsed + recognition_elapsed;
-        let rtf = recognition_elapsed / audio_duration;
+        let rtf = if audio_duration > 0.0 {
+            recognition_elapsed / audio_duration
+        } else {
+            0.0
+        };
         println!("\n=== Performance Summary ===");
         println!("Audio duration          : {:.3} seconds", audio_duration);
         println!("Recognizer creation time: {:.3} seconds", creation_elapsed);
