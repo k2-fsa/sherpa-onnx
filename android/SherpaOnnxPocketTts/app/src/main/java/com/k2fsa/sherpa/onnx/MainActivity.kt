@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
         var isGenerating by remember { mutableStateOf(false) }
         var isPlaying by remember { mutableStateOf(false) }
         var hasGeneratedAudio by remember { mutableStateOf(false) }
+        var generatedDuration by remember { mutableStateOf(0f) }
 
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
@@ -175,10 +176,12 @@ class MainActivity : ComponentActivity() {
                             
                             val audio = tts!!.generateWithConfig(text, genConfig)
                             val success = audio.save(generatedWavPath)
+                            val duration = audio.samples.size.toFloat() / audio.sampleRate
                             
                             withContext(Dispatchers.Main) {
                                 if (success) {
                                     hasGeneratedAudio = true
+                                    generatedDuration = duration
                                     Toast.makeText(context, "Generation successful!", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(context, "Failed to save generated audio", Toast.LENGTH_SHORT).show()
@@ -208,8 +211,13 @@ class MainActivity : ComponentActivity() {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                if (hasGeneratedAudio) {
+                    Text("Duration: ${String.format("%.2f", generatedDuration)}s", style = MaterialTheme.typography.body2)
+                }
+
                 Button(
                     onClick = {
                         mediaPlayer?.stop()
