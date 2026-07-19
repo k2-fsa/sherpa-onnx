@@ -12,12 +12,13 @@ namespace sherpa_onnx {
 
 struct OfflineSpeakerSegmentationPyannoteModelConfig {
   std::string model;
+  float window_shift_ratio = 0.1f;
 
   OfflineSpeakerSegmentationPyannoteModelConfig() = default;
 
   explicit OfflineSpeakerSegmentationPyannoteModelConfig(
-      const std::string &model)
-      : model(model) {}
+      const std::string &model, float window_shift_ratio = 0.1f)
+      : model(model), window_shift_ratio(window_shift_ratio) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
