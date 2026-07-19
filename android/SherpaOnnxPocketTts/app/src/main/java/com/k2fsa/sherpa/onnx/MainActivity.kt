@@ -20,8 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -32,6 +36,7 @@ class MainActivity : ComponentActivity() {
     private var tts: OfflineTts? = null
     private var mediaPlayer: MediaPlayer? = null
     private var generatedWavPath: String = ""
+    private var generationJob: Job? = null
 
     private val saveLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
         if (uri != null) {
@@ -111,6 +116,9 @@ class MainActivity : ComponentActivity() {
         ) { uri: Uri? ->
             if (uri != null) {
                 try {
+                    referenceWavUri?.let { oldUri ->
+                        context.contentResolver.releasePersistableUriPermission(oldUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
                     context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
                         val buffer = ByteArray(12)
@@ -170,10 +178,10 @@ class MainActivity : ComponentActivity() {
             Text("${stringResource(R.string.label_steps)} ${steps.toInt()}")
             Slider(value = steps, onValueChange = { steps = it }, valueRange = 1f..50f)
 
-            Text("${stringResource(R.string.label_temperature)} ${String.format("%.2f", temperature)}")
+            Text("${stringResource(R.string.label_temperature)} ${String.format(Locale.US, "%.2f", temperature)}")
             Slider(value = temperature, onValueChange = { temperature = it }, valueRange = 0.1f..2.0f)
 
-            Text("${stringResource(R.string.label_speed)} ${String.format("%.2f", speed)}")
+            Text("${stringResource(R.string.label_speed)} ${String.format(Locale.US, "%.2f", speed)}")
             Slider(value = speed, onValueChange = { speed = it }, valueRange = 0.5f..2.0f)
 
             Button(
@@ -200,7 +208,7 @@ class MainActivity : ComponentActivity() {
                     mediaPlayer = null
                     isPlaying = false
                     
-                    coroutineScope.launch(Dispatchers.IO) {
+                    generationJob = coroutineScope.launch(Dispatchers.IO) {
                         try {
                             val tempFile = File(context.cacheDir, "ref.wav")
                             context.contentResolver.openInputStream(refUri)?.use { input ->
@@ -270,7 +278,7 @@ class MainActivity : ComponentActivity() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (hasGeneratedAudio) {
-                    Text("${stringResource(R.string.label_duration)} ${String.format("%.2f", generatedDuration)}s", style = MaterialTheme.typography.body2)
+                    Text("${stringResource(R.string.label_duration)} ${String.format(Locale.US, "%.2f", generatedDuration)}s", style = MaterialTheme.typography.body2)
                 }
 
                 Button(
@@ -314,9 +322,8 @@ class MainActivity : ComponentActivity() {
                 
                 Button(
                     onClick = {
-                        mediaPlayer?.stop()
-                        mediaPlayer?.release()
-                        mediaPlayer = null
+                        mediaPlayer?.pause()
+                        mediaPlayer?.seekTo(0)
                         isPlaying = false
                     },
                     enabled = hasGeneratedAudio
@@ -351,6 +358,9 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
+        runBlocking {
+            generationJob?.cancelAndJoin()
+        }
         tts?.release()
     }
 }
