@@ -45,8 +45,22 @@ class MainActivity : ComponentActivity() {
         generatedWavPath = File(filesDir, "generated.wav").absolutePath
 
         setContent {
-            MaterialTheme {
-                PocketTtsApp()
+            val darkColor = androidx.compose.ui.graphics.Color(0xFF1A1A1A)
+            val customColors = lightColors(
+                background = androidx.compose.ui.graphics.Color.White,
+                surface = androidx.compose.ui.graphics.Color.White,
+                onBackground = darkColor,
+                onSurface = darkColor,
+                primary = androidx.compose.ui.graphics.Color(0xFF6200EE)
+            )
+            MaterialTheme(colors = customColors) {
+                Surface(
+                    color = MaterialTheme.colors.background,
+                    contentColor = MaterialTheme.colors.onBackground,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    PocketTtsApp()
+                }
             }
         }
     }
@@ -92,9 +106,30 @@ class MainActivity : ComponentActivity() {
         val coroutineScope = rememberCoroutineScope()
 
         val wavPickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
+            contract = ActivityResultContracts.OpenDocument()
         ) { uri: Uri? ->
-            referenceWavUri = uri
+            if (uri != null) {
+                try {
+                    context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val buffer = ByteArray(12)
+                        val bytesRead = inputStream.read(buffer)
+                        if (bytesRead == 12) {
+                            val riff = String(buffer, 0, 4)
+                            val wave = String(buffer, 8, 4)
+                            if (riff == "RIFF" && wave == "WAVE") {
+                                referenceWavUri = uri
+                                return@rememberLauncherForActivityResult
+                            }
+                        }
+                    }
+                    Toast.makeText(context, "This doesn't look like a valid WAV file", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking WAV header", e)
+                    Toast.makeText(context, "Failed to read file", Toast.LENGTH_SHORT).show()
+                }
+            }
+            referenceWavUri = null
         }
 
         Column(
@@ -106,7 +141,12 @@ class MainActivity : ComponentActivity() {
         ) {
             Text("PocketTTS Voice Cloning Demo", style = MaterialTheme.typography.h5)
 
-            Button(onClick = { wavPickerLauncher.launch("audio/wav") }, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { 
+                    wavPickerLauncher.launch(arrayOf("audio/wav", "audio/x-wav", "audio/wave", "application/octet-stream"))
+                }, 
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(if (referenceWavUri != null) "WAV Selected" else "Pick Reference WAV")
             }
 
@@ -115,7 +155,15 @@ class MainActivity : ComponentActivity() {
                 onValueChange = { newValue -> text = newValue },
                 label = { Text("Text to synthesize") },
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 10
+                maxLines = 10,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = MaterialTheme.colors.onBackground,
+                    unfocusedLabelColor = MaterialTheme.colors.onBackground,
+                    focusedLabelColor = MaterialTheme.colors.primary,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
+                    focusedBorderColor = MaterialTheme.colors.primary,
+                    cursorColor = MaterialTheme.colors.primary
+                )
             )
 
             Text("Steps: ${steps.toInt()}")
