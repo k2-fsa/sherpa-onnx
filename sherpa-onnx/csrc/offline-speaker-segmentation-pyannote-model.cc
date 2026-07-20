@@ -6,6 +6,7 @@
 #include "sherpa-onnx/csrc/ort-env.h"
 #include "sherpa-onnx/csrc/macros.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -96,7 +97,7 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     const double window_shift =
         static_cast<double>(config_.pyannote.window_shift_ratio) *
         meta_data_.window_size;
-    if (!(window_shift >= 1)) {
+    if (std::isnan(window_shift) || window_shift < 1) {
       SHERPA_ONNX_LOGE(
           "Computed Pyannote window shift %f is less than 1 sample or "
           "invalid. Clamping it to 1 sample.",
