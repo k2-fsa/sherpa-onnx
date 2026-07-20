@@ -12,6 +12,9 @@ rm -rf sherpa-onnx-cohere-transcribe-*
 ./run-qwen3-asr.sh
 rm -rf sherpa-onnx-qwen3-*
 
+./run-funasr-nano.sh
+rm -rf sherpa-onnx-funasr-nano-*
+
 ./run-audio-tagging-zipformer.sh
 rm -rf sherpa-onnx-zipformer-small-audio-tagging-2024-04-15
 
