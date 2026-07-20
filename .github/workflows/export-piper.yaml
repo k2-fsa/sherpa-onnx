@@ -198,6 +198,10 @@ jobs:
               vits-piper-pt_BR-cadu-medium
               vits-piper-pt_BR-cadu-medium-int8
               vits-piper-pt_BR-cadu-medium-fp16
+              vits-piper-cy_GB-bu_tts-medium
+              vits-piper-sv_SE-lisa-medium
+              vits-piper-ne_NP-chitwan-medium
+              vits-piper-pt_BR-jeff-medium
             )
             for d in ${dirs[@]}; do
               src=scripts/piper/release/$d
