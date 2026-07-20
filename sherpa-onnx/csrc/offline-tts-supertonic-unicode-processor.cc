@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/offline-tts-supertonic-unicode-processor.h"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <cstddef>
@@ -28,6 +29,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-supertonic-nfkd-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -45,161 +47,26 @@ static constexpr int32_t kHangulNcount = kHangulVcount * kHangulTcount;  // 588
 static constexpr int32_t kHangulScount =
     kHangulLcount * kHangulNcount;  // 11172  // NOLINT
 
-// Latin NFKD decompositions via switch (no static map allocation).
-// Returns true if codepoint was decomposed, false otherwise.
-static bool DecomposeLatin(uint32_t codepoint, std::vector<uint16_t> *out) {
-  auto push2 = [&](uint16_t a, uint16_t b) {
-    out->push_back(a);
-    out->push_back(b);
-  };
-  switch (codepoint) {
-    case 0x00C1:
-      push2(0x0041, 0x0301);
-      return true;
-    case 0x00C9:
-      push2(0x0045, 0x0301);
-      return true;
-    case 0x00CD:
-      push2(0x0049, 0x0301);
-      return true;
-    case 0x00D3:
-      push2(0x004F, 0x0301);
-      return true;
-    case 0x00DA:
-      push2(0x0055, 0x0301);
-      return true;
-    case 0x00E1:
-      push2(0x0061, 0x0301);
-      return true;
-    case 0x00E9:
-      push2(0x0065, 0x0301);
-      return true;
-    case 0x00ED:
-      push2(0x0069, 0x0301);
-      return true;
-    case 0x00F3:
-      push2(0x006F, 0x0301);
-      return true;
-    case 0x00FA:
-      push2(0x0075, 0x0301);
-      return true;
-    case 0x00C0:
-      push2(0x0041, 0x0300);
-      return true;
-    case 0x00C8:
-      push2(0x0045, 0x0300);
-      return true;
-    case 0x00CC:
-      push2(0x0049, 0x0300);
-      return true;
-    case 0x00D2:
-      push2(0x004F, 0x0300);
-      return true;
-    case 0x00D9:
-      push2(0x0055, 0x0300);
-      return true;
-    case 0x00E0:
-      push2(0x0061, 0x0300);
-      return true;
-    case 0x00E8:
-      push2(0x0065, 0x0300);
-      return true;
-    case 0x00EC:
-      push2(0x0069, 0x0300);
-      return true;
-    case 0x00F2:
-      push2(0x006F, 0x0300);
-      return true;
-    case 0x00F9:
-      push2(0x0075, 0x0300);
-      return true;
-    case 0x00C2:
-      push2(0x0041, 0x0302);
-      return true;
-    case 0x00CA:
-      push2(0x0045, 0x0302);
-      return true;
-    case 0x00CE:
-      push2(0x0049, 0x0302);
-      return true;
-    case 0x00D4:
-      push2(0x004F, 0x0302);
-      return true;
-    case 0x00DB:
-      push2(0x0055, 0x0302);
-      return true;
-    case 0x00E2:
-      push2(0x0061, 0x0302);
-      return true;
-    case 0x00EA:
-      push2(0x0065, 0x0302);
-      return true;
-    case 0x00EE:
-      push2(0x0069, 0x0302);
-      return true;
-    case 0x00F4:
-      push2(0x006F, 0x0302);
-      return true;
-    case 0x00FB:
-      push2(0x0075, 0x0302);
-      return true;
-    case 0x00C3:
-      push2(0x0041, 0x0303);
-      return true;
-    case 0x00D1:
-      push2(0x004E, 0x0303);
-      return true;
-    case 0x00D5:
-      push2(0x004F, 0x0303);
-      return true;
-    case 0x00E3:
-      push2(0x0061, 0x0303);
-      return true;
-    case 0x00F1:
-      push2(0x006E, 0x0303);
-      return true;
-    case 0x00F5:
-      push2(0x006F, 0x0303);
-      return true;
-    case 0x00C4:
-      push2(0x0041, 0x0308);
-      return true;
-    case 0x00CB:
-      push2(0x0045, 0x0308);
-      return true;
-    case 0x00CF:
-      push2(0x0049, 0x0308);
-      return true;
-    case 0x00D6:
-      push2(0x004F, 0x0308);
-      return true;
-    case 0x00DC:
-      push2(0x0055, 0x0308);
-      return true;
-    case 0x00E4:
-      push2(0x0061, 0x0308);
-      return true;
-    case 0x00EB:
-      push2(0x0065, 0x0308);
-      return true;
-    case 0x00EF:
-      push2(0x0069, 0x0308);
-      return true;
-    case 0x00F6:
-      push2(0x006F, 0x0308);
-      return true;
-    case 0x00FC:
-      push2(0x0075, 0x0308);
-      return true;
-    case 0x00C7:
-      push2(0x0043, 0x0327);
-      return true;
-    case 0x00E7:
-      push2(0x0063, 0x0327);
-      return true;
-    default:
-      return false;
+// Look up the generated NFKD table (BMP, Hangul excluded). The reference
+// implementation of Supertonic applies unicodedata.normalize("NFKD", text)
+// before indexing, and the unicode indexer only knows decomposed characters:
+// precomposed ones (e.g. Romanian ă/ș/ț, Czech č, Polish ą) map to -1 and
+// would be silently dropped without this step.
+// Returns true if the codepoint was decomposed, false otherwise.
+static bool DecomposeNfkd(uint32_t codepoint, std::vector<uint16_t> *out) {
+  if (codepoint > 0xFFFF) return false;
+
+  const uint16_t *first = kNfkdCodepoints;
+  const uint16_t *last = kNfkdCodepoints + kNfkdTableSize;
+  const uint16_t *it =
+      std::lower_bound(first, last, static_cast<uint16_t>(codepoint));
+  if (it == last || *it != codepoint) return false;
+
+  int32_t i = static_cast<int32_t>(it - first);
+  for (int32_t k = kNfkdOffsets[i]; k != kNfkdOffsets[i + 1]; ++k) {
+    out->push_back(kNfkdPool[k]);
   }
+  return true;
 }
 
 static void DecomposeCharacter(uint32_t codepoint,
@@ -218,7 +85,7 @@ static void DecomposeCharacter(uint32_t codepoint,
     return;
   }
 
-  if (DecomposeLatin(codepoint, output)) return;
+  if (DecomposeNfkd(codepoint, output)) return;
 
   if (codepoint > 0xFFFF) return;
   output->push_back(static_cast<uint16_t>(codepoint));
@@ -335,6 +202,11 @@ SupertonicUnicodeProcessor::SupertonicUnicodeProcessor(
   }
   std::vector<char> buf = ReadFile(mgr, unicode_indexer_path);
   indexer_ = LoadIndexerFromPathImpl(buf, unicode_indexer_path);
+}
+
+void SupertonicUnicodeProcessor::DecomposeCodepoint(
+    uint32_t codepoint, std::vector<uint16_t> *output) {
+  DecomposeCharacter(codepoint, output);
 }
 
 std::string SupertonicUnicodeProcessor::PreprocessText(
