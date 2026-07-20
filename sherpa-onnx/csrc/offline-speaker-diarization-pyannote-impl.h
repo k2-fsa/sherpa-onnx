@@ -5,10 +5,8 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEAKER_DIARIZATION_PYANNOTE_IMPL_H_
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <memory>
-#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -20,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
+#include "sherpa-onnx/csrc/timer.h"
 
 namespace sherpa_onnx {
 
@@ -98,16 +97,16 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const override {
-    const auto process_begin = std::chrono::steady_clock::now();
-    const auto segmentation_begin = process_begin;
+    Timer total_timer(config_.segmentation.debug);
+    Timer segmentation_timer(config_.segmentation.debug);
     std::vector<Matrix2D> segmentations = RunSpeakerSegmentationModel(audio, n);
-    const auto segmentation_end = std::chrono::steady_clock::now();
     // segmentations[i] is for chunk_i
     // Each matrix is of shape (num_frames, num_powerset_classes)
     if (segmentations.empty()) {
       // Timings are intentionally not logged since n can be non-positive.
       return {};
     }
+    segmentation_timer.Log("OfflineSpeakerDiarization: segmentation");
 
     std::vector<Matrix2DInt32> labels;
     labels.reserve(segmentations.size());
@@ -126,10 +125,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
       OfflineSpeakerDiarizationResult result =
           HandleOneChunkSpecialCase(labels[0], n);
 
-      const auto process_end = std::chrono::steady_clock::now();
       if (config_.segmentation.debug) {
-        LogTimings(process_begin, process_end, segmentation_begin,
-                   segmentation_end, std::nullopt, std::nullopt, n);
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
       }
 
       return result;
@@ -141,10 +138,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Int32RowVector speakers_per_frame = ComputeSpeakersPerFrame(labels);
 
     if (speakers_per_frame.maxCoeff() == 0) {
-      const auto process_end = std::chrono::steady_clock::now();
       if (config_.segmentation.debug) {
-        LogTimings(process_begin, process_end, segmentation_begin,
-                   segmentation_end, std::nullopt, std::nullopt, n);
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
       }
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
       return {};
@@ -158,11 +153,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
     std::vector<int32_t> valid_indexes;
     valid_indexes.reserve(chunk_speaker_samples_list_pair.second.size());
 
-    const auto embedding_begin = std::chrono::steady_clock::now();
+    Timer embedding_timer(config_.segmentation.debug);
     Matrix2D embeddings =
         ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
                           &valid_indexes, std::move(callback), callback_arg);
-    const auto embedding_end = std::chrono::steady_clock::now();
+    embedding_timer.Log("OfflineSpeakerDiarization: embedding");
 
     if (valid_indexes.size() != chunk_speaker_samples_list_pair.second.size()) {
       std::vector<Int32Pair> chunk_speaker_pair;
@@ -189,17 +184,14 @@ class OfflineSpeakerDiarizationPyannoteImpl
       chunk_speaker_samples_list_pair.second = std::move(sample_indexes);
     }
 
-    const auto clustering_begin = std::chrono::steady_clock::now();
+    Timer clustering_timer(config_.segmentation.debug);
     std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
-    const auto clustering_end = std::chrono::steady_clock::now();
+    clustering_timer.Log("OfflineSpeakerDiarization: clustering");
 
     if (cluster_labels.empty()) {
-      const auto process_end = std::chrono::steady_clock::now();
       if (config_.segmentation.debug) {
-        LogTimings(process_begin, process_end, segmentation_begin,
-                   segmentation_end, embedding_end - embedding_begin,
-                   clustering_end - clustering_begin, n);
+        LogTotal(static_cast<float>(total_timer.Elapsed()), n);
       }
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
       return {};
@@ -221,45 +213,27 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     auto result = ComputeResult(final_labels);
 
-    const auto process_end = std::chrono::steady_clock::now();
     if (config_.segmentation.debug) {
-      LogTimings(process_begin, process_end, segmentation_begin,
-                 segmentation_end, embedding_end - embedding_begin,
-                 clustering_end - clustering_begin, n);
+      LogTotal(static_cast<float>(total_timer.Elapsed()), n);
     }
 
     return result;
   }
 
  private:
-  void LogTimings(
-      const std::chrono::steady_clock::time_point &process_begin,
-      const std::chrono::steady_clock::time_point &process_end,
-      const std::chrono::steady_clock::time_point &segmentation_begin,
-      const std::chrono::steady_clock::time_point &segmentation_end,
-      std::optional<std::chrono::duration<float>> embedding_duration,
-      std::optional<std::chrono::duration<float>> clustering_duration,
-      int32_t num_samples) const {
-    float segmentation_seconds =
-        std::chrono::duration<float>(segmentation_end - segmentation_begin)
-            .count();
-    float total_seconds =
-        std::chrono::duration<float>(process_end - process_begin).count();
+  void LogTotal(float total_seconds, int32_t num_samples) const {
     float audio_duration = static_cast<float>(num_samples) / SampleRate();
 
-    SHERPA_ONNX_LOGE("OfflineSpeakerDiarization: segmentation %.3f s",
-                     segmentation_seconds);
-    if (embedding_duration) {
-      SHERPA_ONNX_LOGE("OfflineSpeakerDiarization: embedding %.3f s",
-                       embedding_duration->count());
-    }
-    if (clustering_duration) {
-      SHERPA_ONNX_LOGE("OfflineSpeakerDiarization: clustering %.3f s",
-                       clustering_duration->count());
-    }
+#if __OHOS__
+    SHERPA_ONNX_LOGE(
+        "OfflineSpeakerDiarization: total %{public}.3f s, audio "
+        "%{public}.3f s, RTF %{public}.3f",
+        total_seconds, audio_duration, total_seconds / audio_duration);
+#else
     SHERPA_ONNX_LOGE(
         "OfflineSpeakerDiarization: total %.3f s, audio %.3f s, RTF %.3f",
         total_seconds, audio_duration, total_seconds / audio_duration);
+#endif
   }
 
   void Init() { InitPowersetMapping(); }
