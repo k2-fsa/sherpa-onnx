@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 
+#include <exception>
 #include <fstream>
 #include <locale>
 #include <map>
@@ -63,10 +64,20 @@ void CallPhonemizeEspeak(const std::string &text,
                          std::vector<std::vector<piper::Phoneme>> *phonemes) {
   static std::mutex espeak_mutex;
 
+  // keep multi threads from calling into piper::phonemize_eSpeak
   std::lock_guard<std::mutex> lock(espeak_mutex);
 
-  // keep multi threads from calling into piper::phonemize_eSpeak
-  piper::phonemize_eSpeak(text, config, *phonemes);
+  try {
+    piper::phonemize_eSpeak(text, config, *phonemes);
+  } catch (const std::exception &ex) {
+    // piper::phonemize_eSpeak() throws if espeak-ng does not recognize
+    // config.voice, e.g., when a user passes an unsupported --kokoro-lang.
+    // Return no phonemes so that the caller fails the generation instead
+    // of the uncaught exception terminating the whole process.
+    SHERPA_ONNX_LOGE("Failed to phonemize '%s' with espeak-ng voice '%s': %s",
+                     text.c_str(), config.voice.c_str(), ex.what());
+    phonemes->clear();
+  }
 }
 
 static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
