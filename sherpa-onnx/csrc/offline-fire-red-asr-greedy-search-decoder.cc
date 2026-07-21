@@ -48,6 +48,8 @@ OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
   num_possible_tokens =
       std::min<int32_t>(num_possible_tokens, meta_data.max_len / 2);
+  // clamp against pathological inputs so cache_len stays positive
+  num_possible_tokens = std::max<int32_t>(num_possible_tokens, 0);
 
   // The decoder loop below runs at most num_possible_tokens steps and the
   // offset advances by 1 per step, so num_possible_tokens + 4 cache entries
