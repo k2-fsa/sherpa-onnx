@@ -19,7 +19,8 @@ sherpa-onnx Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.dependency 'FlutterMacOS'
-  s.vendored_libraries = '*.dylib'
+  s.preserve_paths = 'sherpa-onnx.xcframework/**/*'
+  s.vendored_frameworks = 'sherpa-onnx.xcframework'
 
   s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
