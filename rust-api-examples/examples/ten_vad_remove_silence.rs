@@ -40,6 +40,13 @@ fn main() -> anyhow::Result<()> {
         sample_rate, input_num_samples, input_duration
     );
 
+    if sample_rate != 16000 {
+        anyhow::bail!(
+            "ten-vad expects a sample rate of 16000 Hz, but the input file has {} Hz",
+            sample_rate
+        );
+    }
+
     // Configure VAD
     let mut ten_vad_config = TenVadModelConfig::default();
     ten_vad_config.model = Some(args.ten_vad_model);
@@ -68,7 +75,7 @@ fn main() -> anyhow::Result<()> {
     let vad = VoiceActivityDetector::create(&vad_config, 30.0)
         .ok_or_else(|| anyhow::anyhow!("Failed to create VoiceActivityDetector"))?;
 
-    let mut speech_samples = Vec::new();
+    let mut speech_samples = Vec::with_capacity(input_num_samples as usize);
 
     for chunk in wave.samples().chunks(window_size) {
         vad.accept_waveform(chunk);
