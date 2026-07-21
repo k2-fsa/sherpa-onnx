@@ -74,9 +74,9 @@ class OfflineFireRedAsrModel {
    *  - n_layer_self_v_cache A 5-D tensor of shape
    *              (num_decoder_layers, 1, alloc_len, num_head, head_dim).
    *
-   * @param alloc_len Number of frames to allocate for the cache. If it is
-   *                  not positive or is larger than the model's max_len,
-   *                  then max_len is used.
+   * @param alloc_len Number of decoder steps (token positions) to allocate for
+   *                  the cache. If it is not positive or is larger than the
+   *                  model's max_len, then max_len is used.
    */
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache(
       int32_t alloc_len = -1) const;
