@@ -44,7 +44,20 @@ OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
 
   std::vector<OfflineFireRedAsrDecoderResult> ans(1);
 
-  auto self_kv_cache = model_->GetInitialSelfKVCache();
+  // assume at most 6 tokens per second
+  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
+  num_possible_tokens =
+      std::min<int32_t>(num_possible_tokens, meta_data.max_len / 2);
+  // clamp against pathological inputs so cache_len stays positive
+  num_possible_tokens = std::max<int32_t>(num_possible_tokens, 0);
+
+  // The decoder loop below runs at most num_possible_tokens steps and the
+  // offset advances by 1 per step, so num_possible_tokens + 4 cache entries
+  // are provably sufficient. Allocating less than max_len greatly reduces
+  // the per-step cache I/O, which dominates the decoder cost.
+  int32_t cache_len =
+      std::min<int32_t>(meta_data.max_len, num_possible_tokens + 4);
+  auto self_kv_cache = model_->GetInitialSelfKVCache(cache_len);
 
   std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
              Ort::Value>
@@ -54,11 +67,6 @@ OfflineFireRedAsrGreedySearchDecoder::Decode(Ort::Value cross_k,
                      std::move(cross_k),
                      std::move(cross_v),
                      std::move(offset)};
-
-  // assume at most 6 tokens per second
-  int32_t num_possible_tokens = num_feature_frames / 100.0 * 6;
-  num_possible_tokens =
-      std::min<int32_t>(num_possible_tokens, meta_data.max_len / 2);
 
   for (int32_t i = 0; i < num_possible_tokens; ++i) {
     decoder_out = model_->ForwardDecoder(View(&tokens),
