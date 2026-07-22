@@ -3,7 +3,7 @@ name: jar
 on:
   push:
     branches:
-      - refactor-jar
+      - refactor-jar-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -222,7 +222,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-native*.jar
 
       - name: Release jar
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -241,7 +241,7 @@ jobs:
           file: ./sherpa-onnx/java-api/sherpa-onnx-jvm*.jar
 
       - name: Release jar
-        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-24.04-arm'
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-24.04-arm'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
