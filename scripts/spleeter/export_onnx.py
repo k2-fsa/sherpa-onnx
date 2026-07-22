@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import argparse
+
 import onnx
 import onnxmltools
 import torch
 from onnxmltools.utils.float16_converter import convert_float_to_float16
 from onnxruntime.quantization import QuantType, quantize_dynamic
 
+from convert_to_torch import ACTIVATIONS, STEMS
 from unet import UNet
 
 
@@ -16,15 +19,20 @@ def export_onnx_fp16(onnx_fp32_path, onnx_fp16_path):
     onnxmltools.utils.save_model(onnx_fp16_model, onnx_fp16_path)
 
 
-def add_meta_data(filename, prefix):
+def add_meta_data(filename, prefix, model_id):
+    conv_activation, deconv_activation = ACTIVATIONS[model_id]
     meta_data = {
         "model_type": "spleeter",
-        "sample_rate": 41000,
+        "sample_rate": 44100,
         "version": 1,
         "model_url": "https://github.com/deezer/spleeter",
-        "stems": 2,
+        "stems": len(STEMS[model_id]),
         "comment": prefix,
-        "model_name": "2stems.tar.gz",
+        "model_name": f"{model_id}.tar.gz",
+        # Recorded so the next reader does not have to rediscover that 4stems
+        # is ELU and 2stems is not.
+        "conv_activation": conv_activation,
+        "deconv_activation": deconv_activation,
     }
     model = onnx.load(filename)
 
@@ -44,13 +52,13 @@ def add_meta_data(filename, prefix):
     onnx.save(model, filename)
 
 
-def export(model, prefix):
+def export(net, prefix, model):
     num_splits = 1
     x = torch.rand(2, num_splits, 512, 1024, dtype=torch.float32)
 
-    filename = f"./2stems/{prefix}.onnx"
+    filename = f"./{model}/{prefix}.onnx"
     torch.onnx.export(
-        model,
+        net,
         x,
         filename,
         input_names=["x"],
@@ -61,33 +69,30 @@ def export(model, prefix):
         opset_version=13,
     )
 
-    add_meta_data(filename, prefix)
+    add_meta_data(filename, prefix, model)
 
-    filename_int8 = f"./2stems/{prefix}.int8.onnx"
+    filename_int8 = f"./{model}/{prefix}.int8.onnx"
     quantize_dynamic(
         model_input=filename,
         model_output=filename_int8,
         weight_type=QuantType.QUInt8,
     )
 
-    filename_fp16 = f"./2stems/{prefix}.fp16.onnx"
+    filename_fp16 = f"./{model}/{prefix}.fp16.onnx"
     export_onnx_fp16(filename, filename_fp16)
 
 
 @torch.no_grad()
 def main():
-    vocals = UNet()
-    state_dict = torch.load("./2stems/vocals.pt", map_location="cpu")
-    vocals.load_state_dict(state_dict)
-    vocals.eval()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, default="2stems", choices=list(STEMS))
+    args = parser.parse_args()
 
-    accompaniment = UNet()
-    state_dict = torch.load("./2stems/accompaniment.pt", map_location="cpu")
-    accompaniment.load_state_dict(state_dict)
-    accompaniment.eval()
-
-    export(vocals, "vocals")
-    export(accompaniment, "accompaniment")
+    for name in STEMS[args.model]:
+        net = UNet(*ACTIVATIONS[args.model])
+        net.load_state_dict(torch.load(f"./{args.model}/{name}.pt", map_location="cpu"))
+        net.eval()
+        export(net, name, args.model)
 
 
 if __name__ == "__main__":
