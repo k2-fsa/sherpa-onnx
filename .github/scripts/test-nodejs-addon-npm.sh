@@ -340,6 +340,7 @@ rm vits-piper-en_GB-cori-medium.tar.bz2
 
 node ./test_tts_non_streaming_vits_piper_en.js
 node ./test_tts_non_streaming_vits_piper_en_async.js
+node ./test_tts_async_callback_stress.js ./vits-piper-en_GB-cori-medium 30
 rm -rf vits-piper-en_GB-cori-medium
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
