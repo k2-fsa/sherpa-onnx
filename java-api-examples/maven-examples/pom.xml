@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.k2fsa.sherpa.onnx</groupId>
+    <artifactId>sherpa-onnx-maven-example</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>sherpa-onnx Maven Example</name>
+    <description>Example project demonstrating how to use sherpa-onnx via Maven</description>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- ============================================================ -->
+        <!-- Approach 1: Simple — one dependency pulls in everything.     -->
+        <!-- ============================================================ -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa</groupId>
+            <artifactId>sherpa-onnx</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
+
+        <!-- ============================================================ -->
+        <!-- Approach 2 (recommended): Multi-module — split JVM API and   -->
+        <!-- native libs so you only ship the platform you need.          -->
+        <!-- ============================================================ -->
+
+        <!-- 1. JVM core API Jar -->
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-jvm</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 2. Platform native lib — uncomment ONE for your target platform -->
+
+        <!-- macOS ARM64 (Apple Silicon) -->
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-osx-aarch64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+
+        <!-- macOS x64 (Intel) -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-osx-x64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
+
+        <!-- Linux x64 -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-linux-x64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
+
+        <!-- Linux ARM64 -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-linux-aarch64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
+
+        <!-- Windows x64 -->
+        <!--
+        <dependency>
+            <groupId>com.github.k2-fsa.sherpa-onnx</groupId>
+            <artifactId>sherpa-onnx-native-lib-win-x64</artifactId>
+            <version>refactor-jar-SNAPSHOT</version>
+        </dependency>
+        -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.k2fsa.sherpa.onnx.example.VersionTest</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

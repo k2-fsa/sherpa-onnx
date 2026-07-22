@@ -400,3 +400,265 @@ jobs:
         with:
           name: tts-wav-files-${{ matrix.os }}
           path: java-api-examples/*.wav
+
+  run_maven_test:
+    runs-on: ${{ matrix.os }}
+    name: maven-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+            native_lib: linux-x64
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+            native_lib: linux-aarch64
+
+          - os: macos-latest
+            arch: "arm64"
+            native_lib: osx-aarch64
+
+          - os: macos-15-intel
+            arch: "x64"
+            native_lib: osx-x64
+
+          - os: windows-2022
+            arch: "x64"
+            native_lib: win-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Update pom.xml for this platform
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+
+          native_lib=${{ matrix.native_lib }}
+
+          # Comment out all native lib dependency blocks, then uncomment the target one
+          python3 << 'PYEOF'
+          import re
+
+          native_lib = "${{ matrix.native_lib }}"
+          target_artifact = f"sherpa-onnx-native-lib-{native_lib}"
+
+          with open("pom.xml", "r") as f:
+              content = f.read()
+
+          # Pattern to match a native lib dependency block (commented or not)
+          # Each block has a platform comment, then the dependency (possibly wrapped in <!-- -->)
+          pattern = re.compile(
+              r'(        <!-- [A-Za-z][^\n]*-->\n)'        # platform comment line
+              r'(        <!--\n)?'                          # optional opening comment
+              r'(        <dependency>\n'
+              r'            <groupId>com\.github\.k2-fsa\.sherpa-onnx</groupId>\n'
+              r'            <artifactId>(sherpa-onnx-native-lib-[^<]+)</artifactId>\n'
+              r'            <version>[^<]+</version>\n'
+              r'        </dependency>\n)'
+              r'(        -->\n)?',                          # optional closing comment
+              re.MULTILINE
+          )
+
+          def replace_block(m):
+              comment_line = m.group(1)
+              dep_block = m.group(3)
+              artifact = m.group(4)
+
+              if artifact == target_artifact:
+                  # Uncomment: return without comment markers
+                  return comment_line + dep_block
+              else:
+                  # Comment out: wrap in <!-- -->
+                  return comment_line + "        <!--\n" + dep_block + "        -->\n"
+
+          content = pattern.sub(replace_block, content)
+
+          with open("pom.xml", "w") as f:
+              f.write(content)
+          PYEOF
+
+      - name: Show pom.xml for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/maven-examples/pom.xml
+
+      - name: Build maven example
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+          mvn package
+
+          ls -lh target/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+
+          echo "=== Jar size ==="
+          ls -lh target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run maven example
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+          java -jar target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar
+
+  run_maven_test_approach1:
+    runs-on: ${{ matrix.os }}
+    name: maven-approach1-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+
+          - os: macos-latest
+            arch: "arm64"
+
+          - os: macos-15-intel
+            arch: "x64"
+
+          - os: windows-2022
+            arch: "x64"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Write pom.xml for Approach 1
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+
+          cat > pom.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project xmlns="http://maven.apache.org/POM/4.0.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+              <modelVersion>4.0.0</modelVersion>
+
+              <groupId>com.k2fsa.sherpa.onnx</groupId>
+              <artifactId>sherpa-onnx-maven-example</artifactId>
+              <version>1.0-SNAPSHOT</version>
+              <packaging>jar</packaging>
+
+              <name>sherpa-onnx Maven Example</name>
+              <description>Example project demonstrating how to use sherpa-onnx via Maven</description>
+
+              <repositories>
+                  <repository>
+                      <id>jitpack.io</id>
+                      <url>https://jitpack.io</url>
+                  </repository>
+              </repositories>
+
+              <dependencies>
+                  <dependency>
+                      <groupId>com.github.k2-fsa</groupId>
+                      <artifactId>sherpa-onnx</artifactId>
+                      <version>refactor-jar-SNAPSHOT</version>
+                  </dependency>
+              </dependencies>
+
+              <build>
+                  <plugins>
+                      <plugin>
+                          <groupId>org.apache.maven.plugins</groupId>
+                          <artifactId>maven-compiler-plugin</artifactId>
+                          <version>3.11.0</version>
+                          <configuration>
+                              <source>1.8</source>
+                              <target>1.8</target>
+                          </configuration>
+                      </plugin>
+                      <plugin>
+                          <groupId>org.apache.maven.plugins</groupId>
+                          <artifactId>maven-jar-plugin</artifactId>
+                          <version>3.3.0</version>
+                          <configuration>
+                              <archive>
+                                  <manifest>
+                                      <mainClass>com.k2fsa.sherpa.onnx.example.VersionTest</mainClass>
+                                  </manifest>
+                              </archive>
+                          </configuration>
+                      </plugin>
+                      <plugin>
+                          <groupId>org.apache.maven.plugins</groupId>
+                          <artifactId>maven-shade-plugin</artifactId>
+                          <version>3.5.1</version>
+                          <executions>
+                              <execution>
+                                  <phase>package</phase>
+                                  <goals>
+                                      <goal>shade</goal>
+                                  </goals>
+                              </execution>
+                          </executions>
+                      </plugin>
+                  </plugins>
+              </build>
+          </project>
+          EOF
+
+      - name: Show pom.xml for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/maven-examples/pom.xml
+
+      - name: Build maven example (Approach 1)
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+          mvn package
+
+          ls -lh target/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+
+          echo "=== Jar size ==="
+          ls -lh target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run maven example
+        shell: bash
+        run: |
+          cd java-api-examples/maven-examples
+          java -jar target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar
