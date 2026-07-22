@@ -790,6 +790,13 @@ static void SettleIfReady(Napi::Env env,
     return;
   }
 
+  if (state->audio == nullptr) {
+    state->deferred.Reject(
+        Napi::Error::New(env, "TTS generation produced no audio").Value());
+    state->settled = true;
+    return;
+  }
+
   Napi::Object ans = Napi::Object::New(env);
   if (state->use_external_buffer) {
     const SherpaOnnxGeneratedAudio *audio = state->audio;
@@ -1020,7 +1027,7 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
     state_->generation_done = true;
     state_->audio = audio_;
     state_->use_external_buffer = use_external_buffer_;
-    if (sentinel_failed_) {
+    if (sentinel_failed_ || tsfn_closing_) {
       // No drain signal will ever arrive; fail the generation instead of
       // leaving the promise pending forever
       if (state_->error.empty()) {
@@ -1238,7 +1245,7 @@ class TtsGenerateWithConfigWorker : public Napi::AsyncWorker {
     state_->generation_done = true;
     state_->audio = audio_;
     state_->use_external_buffer = use_external_buffer_;
-    if (sentinel_failed_) {
+    if (sentinel_failed_ || tsfn_closing_) {
       // No drain signal will ever arrive; fail the generation instead of
       // leaving the promise pending forever
       if (state_->error.empty()) {

@@ -65,6 +65,11 @@ async function sequential(tts) {
         return 1;
       },
     });
+    // drain-before-settle guarantees every delivered callback ran by now
+    if (chunks === 0) {
+      console.error(`FAIL: no progress callbacks fired in iteration ${i}`);
+      process.exit(1);
+    }
     totalChunks += chunks;
     if (i === warmup - 1) steadyStateBase = rssMb();
   }
@@ -131,10 +136,11 @@ async function throwing(tts) {
         uncaught.message}`);
     process.exit(1);
   }
-  if (rejection === null ||
-      !String(rejection.message).includes('callback boom')) {
-    console.error(`FAIL: expected rejection carrying the thrown error, got ${
-        rejection === null ? 'resolution' : rejection.message}`);
+  if (rejection === null || !(rejection instanceof Error) ||
+      !rejection.message.includes('callback boom')) {
+    console.error(
+        `FAIL: expected rejection containing the thrown message, got ${
+            rejection === null ? 'resolution' : rejection.message}`);
     process.exit(1);
   }
   if (calls !== 1) {
@@ -209,6 +215,10 @@ async function copyBuffer(tts) {
   });
   if (!r.samples || r.samples.length === 0) {
     console.error('FAIL: enableExternalBuffer:false returned no samples');
+    process.exit(1);
+  }
+  if (chunks === 0) {
+    console.error('FAIL: no progress callback fired in copy-buffer generation');
     process.exit(1);
   }
   console.log(`copy-buffer: ${chunks} chunks, ${r.samples.length} samples`);
