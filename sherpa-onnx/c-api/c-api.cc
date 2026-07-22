@@ -866,6 +866,24 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     r->ys_log_probs = nullptr;
   }
 
+  // Copy vocab_log_probs (flattened row-major: count * vocab_size)
+  if (!result.vocab_log_probs.empty() &&
+      static_cast<int32_t>(result.vocab_log_probs.size()) == r->count &&
+      !result.vocab_log_probs[0].empty()) {
+    int32_t vocab_size =
+        static_cast<int32_t>(result.vocab_log_probs[0].size());
+    r->vocab_size = vocab_size;
+    float *flat = new float[r->count * vocab_size];
+    for (int32_t i = 0; i < r->count; ++i) {
+      std::copy(result.vocab_log_probs[i].begin(),
+                result.vocab_log_probs[i].end(), flat + i * vocab_size);
+    }
+    r->vocab_log_probs = flat;
+  } else {
+    r->vocab_log_probs = nullptr;
+    r->vocab_size = 0;
+  }
+
   // Copy segment-level timestamps (from Whisper with segment timestamps)
   auto segment_count = result.segment_texts.size();
   if (segment_count > 0 && result.segment_timestamps.size() == segment_count &&
@@ -909,6 +927,8 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     r->segment_texts_arr = nullptr;
   }
 
+  // NB: vocab_log_probs / vocab_size are set above (before the segment block).
+
   return r;
 }
 
@@ -929,6 +949,7 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
     delete[] r->segment_durations;
     delete[] r->segment_texts;
     delete[] r->segment_texts_arr;
+    delete[] r->vocab_log_probs;
     delete r;
   }
 }

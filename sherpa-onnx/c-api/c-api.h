@@ -1517,6 +1517,21 @@ typedef struct SherpaOnnxOfflineRecognizerResult {
 
   /** Number of segment entries in the segment-level arrays. */
   int32_t segment_count;
+
+  /**
+   * Optional flattened vocabulary log-probability matrix.
+   *
+   * When non-NULL, this is a contiguous row-major array of
+   * @c count * @c vocab_size floats. Row @c i (starting at offset
+   * <code>i * vocab_size</code>) holds the full log-probability distribution
+   * over the vocabulary for the @c i-th emitted token.
+   *
+   * Used for entropy-based confidence estimation.
+   */
+  const float *vocab_log_probs;
+
+  /** Vocabulary size (number of columns in @c vocab_log_probs). */
+  int32_t vocab_size;
 } SherpaOnnxOfflineRecognizerResult;
 
 /**
