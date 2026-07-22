@@ -662,3 +662,478 @@ jobs:
         run: |
           cd java-api-examples/maven-examples
           java -jar target/sherpa-onnx-maven-example-1.0-SNAPSHOT.jar
+
+  run_gradle_test:
+    runs-on: ${{ matrix.os }}
+    name: gradle-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+            native_lib: linux-x64
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+            native_lib: linux-aarch64
+
+          - os: macos-latest
+            arch: "arm64"
+            native_lib: osx-aarch64
+
+          - os: macos-15-intel
+            arch: "x64"
+            native_lib: osx-x64
+
+          - os: windows-2022
+            arch: "x64"
+            native_lib: win-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Update build.gradle for this platform
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+
+          native_lib=${{ matrix.native_lib }}
+
+          python3 << 'PYEOF'
+          import re
+
+          native_lib = "${{ matrix.native_lib }}"
+          target_artifact = f"sherpa-onnx-native-lib-{native_lib}"
+
+          with open("build.gradle", "r") as f:
+              content = f.read()
+
+          # Comment out all active native lib lines
+          def comment_active_lines(content):
+              lines = content.split('\n')
+              result = []
+              for line in lines:
+                  stripped = line.strip()
+                  if stripped.startswith("implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-"):
+                      if target_artifact in stripped:
+                          # This is our target - ensure it's uncommented
+                          result.append(line)
+                      else:
+                          # Comment it out
+                          result.append('    // ' + stripped)
+                  else:
+                      result.append(line)
+              return '\n'.join(result)
+
+          # Uncomment the target line if it's commented
+          def uncomment_target(content):
+              lines = content.split('\n')
+              result = []
+              for line in lines:
+                  stripped = line.strip()
+                  if stripped.startswith("// implementation 'com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-"):
+                      if target_artifact in stripped:
+                          # Uncomment this line
+                          result.append('    ' + stripped[3:])
+                      else:
+                          result.append(line)
+                  else:
+                      result.append(line)
+              return '\n'.join(result)
+
+          content = comment_active_lines(content)
+          content = uncomment_target(content)
+
+          with open("build.gradle", "w") as f:
+              f.write(content)
+          PYEOF
+
+      - name: Show build.gradle for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/gradle-examples/build.gradle
+
+      - name: Build gradle example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+          ./gradlew build --info
+
+          ls -lh build/libs/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+
+          echo "=== Jar size ==="
+          ls -lh build/libs/sherpa-onnx-gradle-example.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l build/libs/sherpa-onnx-gradle-example.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run gradle example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+          ./gradlew run --info
+
+  run_gradle_test_approach1:
+    runs-on: ${{ matrix.os }}
+    name: gradle-approach1-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+
+          - os: macos-latest
+            arch: "arm64"
+
+          - os: macos-15-intel
+            arch: "x64"
+
+          - os: windows-2022
+            arch: "x64"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Write build.gradle for Approach 1
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+
+          cat > build.gradle << 'EOF'
+          plugins {
+              id 'application'
+              id 'java'
+          }
+
+          application {
+              mainClass = 'com.k2fsa.sherpa.onnx.example.VersionTest'
+          }
+
+          repositories {
+              mavenCentral()
+              maven { url 'https://jitpack.io' }
+          }
+
+          dependencies {
+              implementation 'com.github.k2-fsa:sherpa-onnx:refactor-jar-SNAPSHOT'
+          }
+
+          java {
+              sourceCompatibility = JavaVersion.VERSION_1_8
+              targetCompatibility = JavaVersion.VERSION_1_8
+          }
+
+          tasks.named('jar') {
+              manifest {
+                  attributes(
+                      'Main-Class': 'com.k2fsa.sherpa.onnx.example.VersionTest'
+                  )
+              }
+              duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+              from {
+                  configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+              }
+          }
+          EOF
+
+      - name: Show build.gradle for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/gradle-examples/build.gradle
+
+      - name: Build gradle example (Approach 1)
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+          ./gradlew build --info
+
+          ls -lh build/libs/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+
+          echo "=== Jar size ==="
+          ls -lh build/libs/sherpa-onnx-gradle-example.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l build/libs/sherpa-onnx-gradle-example.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run gradle example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-examples
+          ./gradlew run --info
+
+  run_gradle_kts_test:
+    runs-on: ${{ matrix.os }}
+    name: gradle-kts-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+            native_lib: linux-x64
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+            native_lib: linux-aarch64
+
+          - os: macos-latest
+            arch: "arm64"
+            native_lib: osx-aarch64
+
+          - os: macos-15-intel
+            arch: "x64"
+            native_lib: osx-x64
+
+          - os: windows-2022
+            arch: "x64"
+            native_lib: win-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Update build.gradle.kts for this platform
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+
+          native_lib=${{ matrix.native_lib }}
+
+          python3 << 'PYEOF'
+          import re
+
+          native_lib = "${{ matrix.native_lib }}"
+          target_artifact = f"sherpa-onnx-native-lib-{native_lib}"
+
+          with open("build.gradle.kts", "r") as f:
+              content = f.read()
+
+          # Comment out all active native lib lines
+          def comment_active_lines(content):
+              lines = content.split('\n')
+              result = []
+              for line in lines:
+                  stripped = line.strip()
+                  if stripped.startswith('implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-'):
+                      if target_artifact in stripped:
+                          result.append(line)
+                      else:
+                          result.append('    // ' + stripped)
+                  else:
+                      result.append(line)
+              return '\n'.join(result)
+
+          # Uncomment the target line if it's commented
+          def uncomment_target(content):
+              lines = content.split('\n')
+              result = []
+              for line in lines:
+                  stripped = line.strip()
+                  if stripped.startswith('// implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-native-lib-'):
+                      if target_artifact in stripped:
+                          result.append('    ' + stripped[3:])
+                      else:
+                          result.append(line)
+                  else:
+                      result.append(line)
+              return '\n'.join(result)
+
+          content = comment_active_lines(content)
+          content = uncomment_target(content)
+
+          with open("build.gradle.kts", "w") as f:
+              f.write(content)
+          PYEOF
+
+      - name: Show build.gradle.kts for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/gradle-kts-examples/build.gradle.kts
+
+      - name: Build gradle kts example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+          ./gradlew build --info
+
+          ls -lh build/libs/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+
+          echo "=== Jar size ==="
+          ls -lh build/libs/sherpa-onnx-gradle-kts-example.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l build/libs/sherpa-onnx-gradle-kts-example.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run gradle kts example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+          ./gradlew run --info
+
+  run_gradle_kts_test_approach1:
+    runs-on: ${{ matrix.os }}
+    name: gradle-kts-approach1-${{ matrix.os }} ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: "x64"
+
+          - os: ubuntu-24.04-arm
+            arch: "arm64"
+
+          - os: macos-latest
+            arch: "arm64"
+
+          - os: macos-15-intel
+            arch: "x64"
+
+          - os: windows-2022
+            arch: "x64"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Show java version
+        shell: bash
+        run: |
+          java --version
+          javac --version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Write build.gradle.kts for Approach 1
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+
+          cat > build.gradle.kts << 'EOF'
+          plugins {
+              application
+              java
+          }
+
+          application {
+              mainClass.set("com.k2fsa.sherpa.onnx.example.VersionTest")
+          }
+
+          repositories {
+              mavenCentral()
+              maven { url = uri("https://jitpack.io") }
+          }
+
+          dependencies {
+              implementation("com.github.k2-fsa:sherpa-onnx:refactor-jar-SNAPSHOT")
+          }
+
+          java {
+              sourceCompatibility = JavaVersion.VERSION_1_8
+              targetCompatibility = JavaVersion.VERSION_1_8
+          }
+
+          tasks.jar {
+              manifest {
+                  attributes("Main-Class" to "com.k2fsa.sherpa.onnx.example.VersionTest")
+              }
+              duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+              from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+          }
+          EOF
+
+      - name: Show build.gradle.kts for debugging
+        shell: bash
+        run: |
+          cat java-api-examples/gradle-kts-examples/build.gradle.kts
+
+      - name: Build gradle kts example (Approach 1)
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+          ./gradlew build --info
+
+          ls -lh build/libs/*.jar
+
+      - name: Verify jar contents
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+
+          echo "=== Jar size ==="
+          ls -lh build/libs/sherpa-onnx-gradle-kts-example.jar
+
+          echo "=== Native libs in jar ==="
+          unzip -l build/libs/sherpa-onnx-gradle-kts-example.jar | grep -E "\.so$|\.dylib$|\.dll$" || true
+
+      - name: Run gradle kts example
+        shell: bash
+        run: |
+          cd java-api-examples/gradle-kts-examples
+          ./gradlew run --info
